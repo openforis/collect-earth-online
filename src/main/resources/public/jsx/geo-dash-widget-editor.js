@@ -12,6 +12,7 @@ class BasicLayout extends React.PureComponent {
             widgets: [],
             imagery: [],
             isEditing: false,
+            addCustomImagery: false,
             selectedWidgetType: "-1",
             selectedDataType: "-1",
             widgetTitle: "",
@@ -269,20 +270,23 @@ class BasicLayout extends React.PureComponent {
     };
 
     addCustomImagery = imagery => {
-        fetch(this.props.documentRoot + "/add-geodash-imagery",
-              {
-                  method: "post",
-                  headers: {
-                      "Accept": "application/json",
-                      "Content-Type": "application/json",
-                  },
-                  body: JSON.stringify(imagery),
-              })
-            .then(response => {
-                if (!response.ok) {
-                    console.log("Error adding custom imagery to institution. See console for details.");
-                }
-            });
+        if(this.state.addCustomImagery === true) {
+            fetch(this.props.documentRoot + "/add-geodash-imagery",
+                {
+                    method: "post",
+                    headers: {
+                        "Accept": "application/json",
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify(imagery),
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        alert("Error adding custom imagery to institution. See console for details.")
+                        console.log(response);
+                    }
+                });
+        }
     };
 
     buildImageryObject = img => {
@@ -326,6 +330,7 @@ class BasicLayout extends React.PureComponent {
     onWidgetTypeSelectChanged = event => {
         this.setState({
             selectedWidgetType: event.target.value,
+            addCustomImagery: false,
             selectedDataType: "-1",
             widgetTitle: "",
             imageCollection: "",
@@ -377,6 +382,7 @@ class BasicLayout extends React.PureComponent {
     onCancelNewWidget = () => {
         this.setState({
             selectedWidgetType: "-1",
+            addCustomImagery: false,
             selectedDataTypeDual: "-1",
             isEditing: false,
             selectedDataType: "-1",
@@ -624,6 +630,7 @@ class BasicLayout extends React.PureComponent {
                 if (response.ok) {
                     this.setState({
                         widgets: [...this.state.widgets, widget],
+                        addCustomImagery: false,
                         selectedWidgetType: "-1",
                         selectedDataTypeDual: "-1",
                         isEditing: false,
@@ -657,6 +664,10 @@ class BasicLayout extends React.PureComponent {
 
     onWidgetTitleChange = event => {
         this.setState({ widgetTitle: event.target.value });
+    };
+
+    onaddCustomImageryChange = event => {
+        this.setState({ addCustomImagery: event.target.checked });
     };
 
     onImageCollectionChange = event => {
@@ -1063,6 +1074,19 @@ class BasicLayout extends React.PureComponent {
         />
     </div>;
 
+    getCustomImageryCheckbox = () => <div className="form-group">
+            <label htmlFor="addCustomImagery">Add Asset to institution basemaps</label>
+            <input
+                type="checkbox"
+                name="addCustomImagery"
+                id="addCustomImagery"
+                value={this.state.addCustomImagery}
+                className="form-control"
+                onChange={() => this.setState({ addCustomImagery: event.target.checked })}
+                style={{width:"auto", display: "inline-block", marginLeft: "8px"}}
+            />
+        </div>;
+
     getNextStepButton = () => this.state.selectedWidgetType === "DualImageCollection"
         ?
             <button
@@ -1164,6 +1188,7 @@ class BasicLayout extends React.PureComponent {
                     />
                 </div>
                 {this.getImageParamsBlock()}
+                {this.getCustomImageryCheckbox()}
             </React.Fragment>;
         } else if (this.state.selectedDataType === "-1") {
             return "";
@@ -1353,6 +1378,7 @@ class BasicLayout extends React.PureComponent {
                             style={{ overflow: "hidden", overflowWrap: "break-word", resize: "vertical" }}
                         />
                     </div>
+                    {this.getCustomImageryCheckbox()}
                     {this.getNextStepButton()}
                 </React.Fragment>;
             } else if (((this.state.selectedDataType === "imageCollectionAsset"
@@ -1383,6 +1409,7 @@ class BasicLayout extends React.PureComponent {
                             style={{ overflow: "hidden", overflowWrap: "break-word", resize: "vertical" }}
                         />
                     </div>
+                    {this.getCustomImageryCheckbox()}
                     <button
                         type="button"
                         className="btn btn-secondary"
@@ -1424,6 +1451,7 @@ class BasicLayout extends React.PureComponent {
                     </div>
                     <label>Select the Date Range you would like</label>
                     {this.getDateRangeControl()}
+                    {this.getCustomImageryCheckbox()}
                     {this.getNextStepButton()}
                 </React.Fragment>;
             } else if ((this.state.selectedWidgetType === "ImageCollection"
@@ -1475,6 +1503,7 @@ class BasicLayout extends React.PureComponent {
                             id="eDate_new_cookedDual"
                         />
                     </div>
+                    {this.getCustomImageryCheckbox()}
                     <button
                         type="button"
                         className="btn btn-secondary"
