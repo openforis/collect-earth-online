@@ -28,7 +28,8 @@ const blankProject = {
     samplesPerPlot: "",
     surveyQuestions: [],
     surveyRules: [],
-}
+};
+
 class Project extends React.Component {
     constructor(props) {
         super(props);
