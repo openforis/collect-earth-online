@@ -9,30 +9,31 @@ import { convertSampleValuesToSurveyQuestions } from "./utils/surveyUtils";
 import { encodeFileAsBase64 } from "./utils/fileUtils.js";
 import { utils } from "../js/utils.js";
 
+const blankProject = {
+    archived: false,
+    availability: "nonexistent",
+    baseMapSource: "",
+    boundary: null,
+    description: "",
+    id: 0,
+    name: "",
+    numPlots: "",
+    plotDistribution: "random",
+    plotShape: "circle",
+    plotSize: "",
+    plotSpacing: "",
+    privacyLevel: "public",
+    sampleDistribution: "random",
+    sampleResolution: "",
+    samplesPerPlot: "",
+    surveyQuestions: [],
+    surveyRules: [],
+}
 class Project extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
-            projectDetails: {
-                archived: false,
-                availability: "nonexistent",
-                baseMapSource: "",
-                boundary: null,
-                description: "",
-                id: 0,
-                name: "",
-                numPlots: "",
-                plotDistribution: "random",
-                plotShape: "circle",
-                plotSize: "",
-                plotSpacing: "",
-                privacyLevel: "public",
-                sampleDistribution: "random",
-                sampleResolution: "",
-                samplesPerPlot: "",
-                surveyQuestions: [],
-                surveyRules: [],
-            },
+            projectDetails: blankProject,
             useTemplatePlots: false,
             useTemplateWidgets: false,
             imageryList: [],
@@ -229,30 +230,17 @@ class Project extends React.Component {
     setProjectTemplate = (newTemplateId) => {
         if (parseInt(newTemplateId) === 0) {
             this.setState({
-                projectDetails: {
-                    archived: false,
-                    availability: "nonexistent",
-                    baseMapSource: "",
-                    boundary: null,
-                    description: "",
-                    id: 0,
-                    name: "",
-                    numPlots: "",
-                    plotDistribution: "random",
-                    plotShape: "circle",
-                    plotSize: "",
-                    plotSpacing: "",
-                    privacyLevel: "public",
-                    sampleDistribution: "random",
-                    sampleResolution: "",
-                    samplesPerPlot: "",
-                    surveyQuestions: [],
-                    surveyRules: [],
-                },
+                projectDetails: blankProject,
                 plotList: [],
+                coordinates: {
+                    lonMin: "",
+                    latMin: "",
+                    lonMax: "",
+                    latMax: "",
+                },
                 useTemplatePlots: false,
                 useTemplateWidgets: false,
-                hasNoRules: true
+                hasNoRules: true,
             });
             mercator.removeLayerByTitle(this.state.mapConfig, "currentAOI");
             mercator.removeLayerByTitle(this.state.mapConfig, "projectPlots");
