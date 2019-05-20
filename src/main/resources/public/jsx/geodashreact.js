@@ -326,14 +326,10 @@ class MapWidget extends React.Component {
         } else {
             let source = null;
             if(basemap.id === 1) {
-                console.log("it was 1");
                 source = mercator.createSource({"type":"BingMaps","imageryId":"Aerial","accessToken":"AlQPbThspGcsiCnczC-2QVOYU9u_PrteLw6dxNQls99dmLXcr9-qWCM5J4Y2G-pS"});
             } else if(basemap.id === 2) {
-                console.log("it was 2");
                 source = mercator.createSource({"type":"BingMaps","imageryId":"AerialWithLabels","accessToken":"AlQPbThspGcsiCnczC-2QVOYU9u_PrteLw6dxNQls99dmLXcr9-qWCM5J4Y2G-pS"});
             } else {
-                console.log("it was 3");
-                console.log(basemap.sourceConfig);
                 source = mercator.createSource(basemap.sourceConfig);
             }
             raster = new ol.layer.Tile({
