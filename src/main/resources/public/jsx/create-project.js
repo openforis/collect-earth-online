@@ -80,7 +80,7 @@ class Project extends React.Component {
                 this.showTemplateBounds();
             } else {
                 mercator.removeLayerByTitle(this.state.mapConfig, "projectPlots");
-                this.showDragBoxDraw();
+                this.showDragBoxDraw(this.state.projectDetails.id === 0);
             }
         }
 
@@ -242,8 +242,6 @@ class Project extends React.Component {
                 useTemplateWidgets: false,
                 hasNoRules: true,
             });
-            mercator.removeLayerByTitle(this.state.mapConfig, "currentAOI");
-            mercator.removeLayerByTitle(this.state.mapConfig, "projectPlots");
         } else {
             const templateProject = this.state.projectList.find(p => p.id === newTemplateId);
             const newSurveyQuestions = convertSampleValuesToSurveyQuestions(templateProject.sampleValues);
@@ -319,7 +317,8 @@ class Project extends React.Component {
             });
     };
 
-    showDragBoxDraw = () => {
+    showDragBoxDraw = (clearBox) => {
+        if (clearBox) mercator.removeLayerByTitle(this.state.mapConfig, "currentAOI");
         const displayDragBoxBounds = (dragBox) => {
             const extent = dragBox.getGeometry().clone().transform("EPSG:3857", "EPSG:4326").getExtent();
             mercator.removeLayerByTitle(this.state.mapConfig, "currentAOI");
