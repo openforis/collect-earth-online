@@ -317,15 +317,9 @@ class MapWidget extends React.Component {
 
     getRasterByBasemapConfig = basemap =>
         new ol.layer.Tile({
-            source: (basemap == null)      ? new ol.source.OSM()
-                  : (basemap.id === "osm") ? new ol.source.OSM()
-                  : (basemap.id === 1)     ? mercator.createSource({ "type": "BingMaps",
-                                                                     "imageryId": "Aerial",
-                                                                     "accessToken": "AlQPbThspGcsiCnczC-2QVOYU9u_PrteLw6dxNQls99dmLXcr9-qWCM5J4Y2G-pS" })
-                  : (basemap.id === 2)     ? mercator.createSource({ "type": "BingMaps",
-                                                                     "imageryId": "AerialWithLabels",
-                                                                     "accessToken": "AlQPbThspGcsiCnczC-2QVOYU9u_PrteLw6dxNQls99dmLXcr9-qWCM5J4Y2G-pS" })
-                  : mercator.createSource(basemap.sourceConfig),
+            source: (basemap === null || basemap.id === "osm")
+                ? new ol.source.OSM()
+                : mercator.createSource(basemap.sourceConfig),
         });
 
     getGatewayPath = (widget, collectionName) => {
