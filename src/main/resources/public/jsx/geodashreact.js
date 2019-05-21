@@ -5,7 +5,6 @@ import { mercator } from "../js/mercator-openlayers.js";
 class Geodash extends React.Component {
     constructor(props) {
         super(props);
-
         this.state = {
             widgets: [ ],
             callbackComplete: false,
@@ -87,7 +86,7 @@ class Geodash extends React.Component {
             mapCenter:center,
             mapZoom:zoom
         });
-    }
+    };
 
     updateSize = which => {
         which.isFull ? document.body.classList.remove("bodyfull") : document.body.classList.add("bodyfull");
@@ -190,11 +189,11 @@ class Widget extends React.Component {
 
     generategridcolumn = (x, w) => (x + 1) + " / span " + w;
 
-    generategridrow = (y, h)=> (y + 1) + " / span " + h;
+    generategridrow = (y, h) => (y + 1) + " / span " + h;
 
     getColumnClass = c => c.includes("span 12") ? " fullcolumnspan" : c.includes("span 9") ? " columnSpan9" : c.includes("span 6") ? " columnSpan6" : " columnSpan3";
 
-    getRowClass = r =>r.includes("span 2") ? " rowSpan2" : r.includes("span 3") ? " rowSpan3" : " rowSpan1";
+    getRowClass = r => r.includes("span 2") ? " rowSpan2" : r.includes("span 3") ? " rowSpan3" : " rowSpan1";
 
     getClassNames = (fullState, c, r) => fullState ? "placeholder fullwidget" : "placeholder" + this.getColumnClass(c) + this.getRowClass(r);
 
@@ -270,7 +269,6 @@ class Widget extends React.Component {
         }
     };
 
-
     getWidgetInnerHtml = (widget, onSliderChange, onSwipeChange) => {
         const wtext = widget.properties[0];
         if (this.imageCollectionList.includes(wtext) || (widget.dualImageCollection && widget.dualImageCollection != null) || (widget.ImageAsset && widget.ImageAsset.length > 0) || (widget.ImageCollectionAsset && widget.ImageCollectionAsset.length > 0)) {
@@ -317,27 +315,18 @@ class MapWidget extends React.Component {
         };
     }
 
-    getRasterByBasemapConfig = basemap => {
-        let raster;
-        if (basemap == null || basemap.id === "osm") {
-            raster = new ol.layer.Tile({
-                source: new ol.source.OSM(),
-            });
-        } else {
-            let source = null;
-            if(basemap.id === 1) {
-                source = mercator.createSource({"type":"BingMaps","imageryId":"Aerial","accessToken":"AlQPbThspGcsiCnczC-2QVOYU9u_PrteLw6dxNQls99dmLXcr9-qWCM5J4Y2G-pS"});
-            } else if(basemap.id === 2) {
-                source = mercator.createSource({"type":"BingMaps","imageryId":"AerialWithLabels","accessToken":"AlQPbThspGcsiCnczC-2QVOYU9u_PrteLw6dxNQls99dmLXcr9-qWCM5J4Y2G-pS"});
-            } else {
-                source = mercator.createSource(basemap.sourceConfig);
-            }
-            raster = new ol.layer.Tile({
-                source: source,
-            });
-        }
-        return raster;
-    };
+    getRasterByBasemapConfig = basemap =>
+        new ol.layer.Tile({
+            source: (basemap == null)      ? new ol.source.OSM()
+                  : (basemap.id === "osm") ? new ol.source.OSM()
+                  : (basemap.id === 1)     ? mercator.createSource({ "type": "BingMaps",
+                                                                     "imageryId": "Aerial",
+                                                                     "accessToken": "AlQPbThspGcsiCnczC-2QVOYU9u_PrteLw6dxNQls99dmLXcr9-qWCM5J4Y2G-pS" })
+                  : (basemap.id === 2)     ? mercator.createSource({ "type": "BingMaps",
+                                                                     "imageryId": "AerialWithLabels",
+                                                                     "accessToken": "AlQPbThspGcsiCnczC-2QVOYU9u_PrteLw6dxNQls99dmLXcr9-qWCM5J4Y2G-pS" })
+                  : mercator.createSource(basemap.sourceConfig),
+    });
 
     getGatewayPath = (widget, collectionName) => {
         const fts = {
