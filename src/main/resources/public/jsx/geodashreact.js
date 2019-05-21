@@ -445,7 +445,7 @@ class MapWidget extends React.Component {
 
     getInstitutionBaseMap = basemap => {
         if(!basemap) {
-            return imagery[0];
+            return this.props.imageryList[0];
         } else {
             return this.props.imageryList.find(imagery => {
                 return imagery.id === basemap.id;
