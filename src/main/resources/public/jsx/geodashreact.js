@@ -319,7 +319,12 @@ class MapWidget extends React.Component {
         new ol.layer.Tile({
             source: (basemap === null || basemap.id === "osm")
                 ? new ol.source.OSM()
-                : mercator.createSource(basemap.sourceConfig),
+                : (basemap.id === 1 || basemap.id === 2)
+                    ? mercator.createSource({
+                        "type": "EarthWatch",
+                        "connectId": "f371dd55-96c4-41b7-ac26-662b3fa3d7f8",
+                      })
+                    : mercator.createSource(basemap.sourceConfig),
         });
 
     getGatewayPath = (widget, collectionName) => {
