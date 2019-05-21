@@ -45,7 +45,6 @@ class Geodash extends React.Component {
         fetch(this.props.documentRoot + "/get-all-imagery?institutionId=" + this.state.institution)
             .then(response => response.ok ? response.json() : Promise.reject(response))
             .then(data => this.setState({ imageryList: data }))
-
     };
 
     componentDidMount() {
@@ -66,7 +65,7 @@ class Geodash extends React.Component {
             );
     }
 
-    handleFullScreen = (widget, control) => {
+    handleFullScreen = (widget) => {
         const widgets = [...this.state.widgets];
         const index = widgets.indexOf(widget);
         widgets[index] = { ...widget };
@@ -239,7 +238,7 @@ class Widget extends React.Component {
                             <li style={{ display: "inline" }}>
                                 <a
                                     className="list-inline panel-actions panel-fullscreen"
-                                    onClick={() => this.props.onFullScreen(this.props.widget, this)}
+                                    onClick={() => this.props.onFullScreen(this.props.widget)}
                                     role="button"
                                     title="Toggle Fullscreen"
                                 >
@@ -267,7 +266,7 @@ class Widget extends React.Component {
                                 <li style={{ display: "inline" }}>
                                     <a
                                         className="list-inline panel-actions panel-fullscreen"
-                                        onClick={() => this.props.onFullScreen(this.props.widget, this)}
+                                        onClick={() => this.props.onFullScreen(this.props.widget)}
                                         role="button"
                                         title="Toggle Fullscreen"
                                     >
@@ -287,22 +286,22 @@ class Widget extends React.Component {
     getWidgetInnerHtml = (widget, onSliderChange, onSwipeChange) => {
         const wtext = widget.properties[0];
         if (this.imageCollectionList.includes(wtext) || (widget.dualImageCollection && widget.dualImageCollection != null) || (widget.ImageAsset && widget.ImageAsset.length > 0) || (widget.ImageCollectionAsset && widget.ImageCollectionAsset.length > 0)) {
-            this.widgetRef = <MapWidget
-                widget={widget}
-                mapCenter={this.props.mapCenter}
-                mapZoom={this.props.mapZoom}
-                projAOI={this.props.projAOI}
-                projPairAOI={this.props.projPairAOI}
-                onSliderChange={onSliderChange}
-                onSwipeChange={onSwipeChange}
-                syncMapWidgets={this.syncMapWidgets}
-                getParameterByName={this.props.getParameterByName}
-                documentRoot={this.props.documentRoot}
-                setCenterAndZoom={this.props.setCenterAndZoom}
-                imageryList={this.props.imageryList}
-            />;
+
             return <div className="front">
-                {this.widgetRef}
+                        <MapWidget
+                            widget={widget}
+                            mapCenter={this.props.mapCenter}
+                            mapZoom={this.props.mapZoom}
+                            projAOI={this.props.projAOI}
+                            projPairAOI={this.props.projPairAOI}
+                            onSliderChange={onSliderChange}
+                            onSwipeChange={onSwipeChange}
+                            syncMapWidgets={this.syncMapWidgets}
+                            getParameterByName={this.props.getParameterByName}
+                            documentRoot={this.props.documentRoot}
+                            setCenterAndZoom={this.props.setCenterAndZoom}
+                            imageryList={this.props.imageryList}
+                        />
             </div>;
         } else if (this.graphControlList.includes(wtext)) {
             return <div className="front"><GraphWidget widget={widget} projPairAOI={this.props.projPairAOI} documentRoot={this.props.documentRoot}/></div>;
