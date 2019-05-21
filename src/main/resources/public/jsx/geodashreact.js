@@ -317,7 +317,7 @@ class MapWidget extends React.Component {
 
     getRasterByBasemapConfig = basemap =>
         new ol.layer.Tile({
-            source: (basemap === null || basemap.id === "osm")
+            source: (!basemap || basemap.id === "osm")
                 ? new ol.source.OSM()
                 : (basemap.id === 1 || basemap.id === 2)
                     ? mercator.createSource({
