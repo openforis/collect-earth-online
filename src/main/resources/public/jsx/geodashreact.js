@@ -13,6 +13,8 @@ class Geodash extends React.Component {
             projAOI: this.getParameterByName("aoi"),
             projPairAOI: "",
             pid: this.getParameterByName("pid"),
+            mapCenter:null,
+            mapZoom:null,
         };
         const theSplit = decodeURI(this.state.projAOI).replace("[", "").replace("]", "").split(",");
         this.state.projPairAOI = "[["
@@ -79,6 +81,13 @@ class Geodash extends React.Component {
         this.setState({ widgets });
     };
 
+    setCenterAndZoom = (center, zoom) => {
+        this.setState({
+            mapCenter:center,
+            mapZoom:zoom
+        });
+    };
+
     updateSize = which => {
         which.isFull ? document.body.classList.remove("bodyfull") : document.body.classList.add("bodyfull");
         const doc = document.documentElement;
@@ -103,6 +112,9 @@ class Geodash extends React.Component {
                 callbackComplete={this.state.callbackComplete}
                 getParameterByName={this.getParameterByName}
                 documentRoot={this.props.documentRoot}
+                mapCenter={this.state.mapCenter}
+                mapZoom={this.state.mapZoom}
+                setCenterAndZoom={this.setCenterAndZoom}
             />
         );
     }
@@ -124,6 +136,9 @@ class Widgets extends React.Component {
                         onSwipeChange = {this.props.onSwipeChange}
                         getParameterByName={this.props.getParameterByName}
                         documentRoot={this.props.documentRoot}
+                        mapCenter={this.props.mapCenter}
+                        mapZoom={this.props.mapZoom}
+                        setCenterAndZoom={this.props.setCenterAndZoom}
                     />
                 ))}
             </div> );
@@ -174,11 +189,11 @@ class Widget extends React.Component {
 
     generategridcolumn = (x, w) => (x + 1) + " / span " + w;
 
-    generategridrow = (y, h)=> (y + 1) + " / span " + h;
+    generategridrow = (y, h) => (y + 1) + " / span " + h;
 
     getColumnClass = c => c.includes("span 12") ? " fullcolumnspan" : c.includes("span 9") ? " columnSpan9" : c.includes("span 6") ? " columnSpan6" : " columnSpan3";
 
-    getRowClass = r =>r.includes("span 2") ? " rowSpan2" : r.includes("span 3") ? " rowSpan3" : " rowSpan1";
+    getRowClass = r => r.includes("span 2") ? " rowSpan2" : r.includes("span 3") ? " rowSpan3" : " rowSpan1";
 
     getClassNames = (fullState, c, r) => fullState ? "placeholder fullwidget" : "placeholder" + this.getColumnClass(c) + this.getRowClass(r);
 
@@ -257,7 +272,20 @@ class Widget extends React.Component {
     getWidgetInnerHtml = (widget, onSliderChange, onSwipeChange) => {
         const wtext = widget.properties[0];
         if (this.imageCollectionList.includes(wtext) || (widget.dualImageCollection && widget.dualImageCollection != null) || (widget.ImageAsset && widget.ImageAsset.length > 0) || (widget.ImageCollectionAsset && widget.ImageCollectionAsset.length > 0)) {
-            return <div className="front"><MapWidget widget={widget} projAOI={this.props.projAOI} projPairAOI={this.props.projPairAOI} onSliderChange={onSliderChange} onSwipeChange={onSwipeChange} getParameterByName={this.props.getParameterByName} documentRoot={this.props.documentRoot}/>
+            return <div className="front">
+                        <MapWidget
+                            widget={widget}
+                            mapCenter={this.props.mapCenter}
+                            mapZoom={this.props.mapZoom}
+                            projAOI={this.props.projAOI}
+                            projPairAOI={this.props.projPairAOI}
+                            onSliderChange={onSliderChange}
+                            onSwipeChange={onSwipeChange}
+                            syncMapWidgets={this.syncMapWidgets}
+                            getParameterByName={this.props.getParameterByName}
+                            documentRoot={this.props.documentRoot}
+                            setCenterAndZoom={this.props.setCenterAndZoom}
+                        />
 
             </div>;
         } else if (this.graphControlList.includes(wtext)) {
@@ -282,23 +310,23 @@ class MapWidget extends React.Component {
             mapRef: null,
             opacity: 90,
             geeTimeOut: null,
+            internalExtent:null,
+            mapCenter:null
         };
     }
 
-    getRasterByBasemapConfig = basemap => {
-        let raster;
-        if (basemap == null || basemap.id === "osm") {
-            raster = new ol.layer.Tile({
-                source: new ol.source.OSM(),
-            });
-        } else {
-            const source = mercator.createSource(basemap.sourceConfig);
-            raster = new ol.layer.Tile({
-                source: source,
-            });
-        }
-        return raster;
-    };
+    getRasterByBasemapConfig = basemap =>
+        new ol.layer.Tile({
+            source: (basemap == null)      ? new ol.source.OSM()
+                  : (basemap.id === "osm") ? new ol.source.OSM()
+                  : (basemap.id === 1)     ? mercator.createSource({ "type": "BingMaps",
+                                                                     "imageryId": "Aerial",
+                                                                     "accessToken": "AlQPbThspGcsiCnczC-2QVOYU9u_PrteLw6dxNQls99dmLXcr9-qWCM5J4Y2G-pS" })
+                  : (basemap.id === 2)     ? mercator.createSource({ "type": "BingMaps",
+                                                                     "imageryId": "AerialWithLabels",
+                                                                     "accessToken": "AlQPbThspGcsiCnczC-2QVOYU9u_PrteLw6dxNQls99dmLXcr9-qWCM5J4Y2G-pS" })
+                  : mercator.createSource(basemap.sourceConfig),
+        });
 
     getGatewayPath = (widget, collectionName) => {
         const fts = {
@@ -397,7 +425,12 @@ class MapWidget extends React.Component {
                 this.addDualLayer(mapid, token, widgetid);
             }, 1000);
         }
-    }
+    };
+
+    centerAndZoomMap = (center, zoom) => {
+        this.state.mapRef.getView().setCenter(center);
+        this.state.mapRef.getView().setZoom(zoom);
+    };
 
     componentDidMount() {
         const widget = this.props.widget;
@@ -429,8 +462,10 @@ class MapWidget extends React.Component {
         }
 
         map.on("movestart", this.pauseGeeLayer);
-        map.on("moveend", e => this.resumeGeeLayer(e));
-        this.setState({ mapRef: map });
+        map.on("moveend", e => {
+                this.props.setCenterAndZoom(e.map.getView().getCenter(), e.map.getView().getZoom());
+                this.resumeGeeLayer(e);
+            });
 
         if (projAOI === "") {
             projAOI = [-108.30322265625, 21.33544921875, -105.347900390625, 23.53271484375];
@@ -439,17 +474,18 @@ class MapWidget extends React.Component {
                 projAOI = JSON.parse(projAOI);
             }
         }
-        if (projAOI) {
-            map.getView().fit(
-                ol.proj.transform([projAOI[0], projAOI[1]], "EPSG:4326", "EPSG:3857").concat(ol.proj.transform([projAOI[2], projAOI[3]], "EPSG:4326", "EPSG:3857")),
-                map.getSize()
-            );
-        } else {
-            map.getView().fit(
-                projAOI,
-                map.getSize()
-            );
+        map.getView().fit(
+            ol.proj.transform([projAOI[0], projAOI[1]], "EPSG:4326", "EPSG:3857").concat(ol.proj.transform([projAOI[2], projAOI[3]], "EPSG:4326", "EPSG:3857")),
+            map.getSize()
+        );
+
+        if (!this.props.mapCenter) {
+            this.props.setCenterAndZoom(map.getView().getCenter(), map.getView().getZoom());
         }
+
+        this.setState({
+            mapRef: map
+        });
 
         const postObject = {};
         let collectionName = "";
@@ -729,10 +765,14 @@ class MapWidget extends React.Component {
             return false;
         }
         return true;
-    }
+    };
 
     componentDidUpdate() {
         this.state.mapRef.updateSize();
+
+        if(this.props.mapCenter) {
+            this.centerAndZoomMap(this.props.mapCenter, this.props.mapZoom);
+        }
     }
 
     getSliderControl = () => {
@@ -820,7 +860,7 @@ class MapWidget extends React.Component {
                             lyr.setVisible(true);
                         }
                     });
-                }, 1000),
+                }, Math.floor(Math.random()*(1250-950+1)+950)),
             });
         } catch (e) {
             console.log(e.message);
@@ -838,7 +878,7 @@ class MapWidget extends React.Component {
                         console.log("trying to reload the tile: " );
                         console.log(error.tile);
                         error.tile.load();
-                    }, 1000);
+                    }, Math.floor(Math.random()*(1250-950+1)+950));
                 } catch (e) {
                     console.log(e.message);
                 }
@@ -850,7 +890,7 @@ class MapWidget extends React.Component {
             if (!isDual) {
                 this.addBuffer(this.state.mapRef);
             }
-        }, 250);
+        }, Math.floor(Math.random()*(300-200+1)+200));
     };
 
     addDualLayer = (imageid, token, mapdiv) => {
