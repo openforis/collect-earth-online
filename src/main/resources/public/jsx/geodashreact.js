@@ -792,9 +792,7 @@ class MapWidget extends React.Component {
             this.state.wasFull = this.props.widget.isFull;
         }
         if(this.props.mapCenter) {
-            window.setTimeout(() => {
-                this.centerAndZoomMap(this.props.mapCenter, this.props.mapZoom)
-            }, Math.floor(Math.random()*(350-150+1)+150));
+            this.centerAndZoomMap(this.props.mapCenter, this.props.mapZoom);
         }
     }
 
