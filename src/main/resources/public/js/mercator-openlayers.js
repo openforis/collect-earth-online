@@ -87,7 +87,7 @@ mercator.createSource = function (sourceConfig) {
         });
     } else if (sourceConfig.type == "EarthWatch") {
         return new ol.source.XYZ({
-            url: "https://earthwatch.digitalglobe.com/earthservice/tmsaccess/tms/1.0.0/DigitalGlobe:ImageryTileService@EPSG:3857@jpg/{z}/{x}/{y}.jpg?connectId=" + sourceConfig.connectId,
+            url: "https://earthwatch.digitalglobe.com/earthservice/tmsaccess/tms/1.0.0/DigitalGlobe:ImageryTileService@EPSG:3857@jpg/{z}/{x}/{-y}.jpg?connectId=" + sourceConfig.connectId,
             attribution: "© DigitalGlobe, Inc",
         });
     } else if (sourceConfig.type == "Planet") {
