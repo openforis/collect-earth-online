@@ -113,7 +113,8 @@ public class Views {
 
     public static Route account(FreeMarkerEngine freemarker) {
         Function<Request, String> getAccountId = (req) -> req.params(":id");
-        return makeAuthenticatedRoute("Account", freemarker,
+        return makeAuthenticatedRoute("Account",
+                                      freemarker,
                                       Map.of("account_id", getAccountId));
     }
 
@@ -123,22 +124,25 @@ public class Views {
 
     public static Route reviewInstitution(FreeMarkerEngine freemarker, String storage) {
         Function<Request, String> getInstitutionId = (req) -> req.params(":id");
-        return makeRoute("Review-Institution", freemarker,
-                Map.of("of_users_api_url", CeoConfig.ofUsersApiUrl,
-                        "institution_id", getInstitutionId,
-                        "storage", storage));
+        return makeRoute("Review-Institution",
+                         freemarker,
+                         Map.of("of_users_api_url", CeoConfig.ofUsersApiUrl,
+                                "institution_id", getInstitutionId,
+                                "storage", storage));
     }
 
     public static Route collection(FreeMarkerEngine freemarker) {
         Function<Request, String> getProjectId = (req) -> req.params(":id");
-        return makeRoute("Collection", freemarker,
+        return makeRoute("Collection", 
+                         freemarker,
                          Map.of("project_id", getProjectId));
     }
 
     public static Route createProject(FreeMarkerEngine freemarker) {
         Function<Request, String> getInstitutionId = (req) -> req.queryParams("institution");
-        return makeRoute("Create-Project", freemarker,
-                                      Map.of("institution_id", getInstitutionId));
+        return makeRoute("Create-Project", 
+                         freemarker,
+                         Map.of("institution_id", getInstitutionId));
     }
 
     public static Route reviewProject(FreeMarkerEngine freemarker) {
@@ -150,20 +154,23 @@ public class Views {
     public static Route projectDashboard(FreeMarkerEngine freemarker) {
         Function<Request, String> getProjectId = (req) -> req.params(":id");
         Function<Request, String> getInstitutionId = (req) -> req.queryParams("institution");
-        return makeRoute("Project-Dashboard", freemarker,
-                Map.of("project_id", getProjectId,
-                        "institution_id", getInstitutionId));
+        return makeRoute("Project-Dashboard", 
+                         freemarker,
+                         Map.of("project_id", getProjectId,
+                                "institution_id", getInstitutionId));
     }
 
     public static Route institutionDashboard(FreeMarkerEngine freemarker) {
         Function<Request, String> getInstitutionId = (req) -> req.params(":id");
-        return makeRoute("Institution-Dashboard", freemarker,
-                                      Map.of("institution_id", getInstitutionId));
+        return makeRoute("Institution-Dashboard",
+                         freemarker,
+                         Map.of("institution_id", getInstitutionId));
     }
 
     public static Route login(FreeMarkerEngine freemarker) {
         Function<Request, String> getReturnUrl = (req) -> req.queryParams("returnurl");
-        return makeRoute("Login", freemarker,
+        return makeRoute("Login",
+                         freemarker,
                          Map.of("returnurl", getReturnUrl));
     }
 
@@ -178,32 +185,37 @@ public class Views {
     public static Route passwordReset(FreeMarkerEngine freemarker) {
         Function<Request, String> getEmail = (req) -> req.queryParams("email");
         Function<Request, String> getPasswordResetKey = (req) -> req.queryParams("password-reset-key");
-        return makeRoute("Password-Reset", freemarker,
+        return makeRoute("Password-Reset",
+                         freemarker,
                          Map.of("email", getEmail,
                                 "password_reset_key", getPasswordResetKey));
     }
 
     public static Route geodash(FreeMarkerEngine freemarker) {
         Function<Request, String> getEditable = (req) -> req.queryParams("editable");
-        return makeRoute("Geo-Dash", freemarker,
+        return makeRoute("Geo-Dash",
+                         freemarker,
                          Map.of("editable", getEditable));
     }
 
     public static Route geodashHelp(FreeMarkerEngine freemarker) {
         Function<Request, String> getBrowserLanguage = (req) -> req.raw().getLocale().getLanguage();
-        return makeRoute("GeoDashHelp", freemarker,
+        return makeRoute("GeoDashHelp",
+                         freemarker,
                          Map.of("browserLanguage", getBrowserLanguage));
     }
 
     public static Route editWidgetLayout(FreeMarkerEngine freemarker) {
         Function<Request, String> getPid = (req) -> req.queryParams("pid");
-        return makeAuthenticatedRoute("Widget-Layout-Editor", freemarker,
+        return makeAuthenticatedRoute("Widget-Layout-Editor",
+                                      freemarker,
                                       Map.of("project_id", getPid));
     }
 
     public static Route testWidgetLayout(FreeMarkerEngine freemarker) {
         Function<Request, String> getPid = (req) -> req.queryParams("pid");
-        return makeAuthenticatedRoute("Test-Layout-Editor", freemarker,
+        return makeAuthenticatedRoute("Test-Layout-Editor",
+                                      freemarker,
                                       Map.of("project_id", getPid));
     }
 
