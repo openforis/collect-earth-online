@@ -326,7 +326,7 @@ class MapWidget extends React.Component {
                                                                      "imageryId": "AerialWithLabels",
                                                                      "accessToken": "AlQPbThspGcsiCnczC-2QVOYU9u_PrteLw6dxNQls99dmLXcr9-qWCM5J4Y2G-pS" })
                   : mercator.createSource(basemap.sourceConfig),
-    });
+        });
 
     getGatewayPath = (widget, collectionName) => {
         const fts = {
