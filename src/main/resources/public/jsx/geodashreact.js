@@ -10,6 +10,7 @@ class Geodash extends React.Component {
             callbackComplete: false,
             left: 0,
             ptop: 0,
+            institution: this.getParameterByName("institution") ? this.getParameterByName("institution"): "3",
             projAOI: this.getParameterByName("aoi"),
             projPairAOI: "",
             pid: this.getParameterByName("pid"),
@@ -40,20 +41,32 @@ class Geodash extends React.Component {
             : null;
     };
 
+    getImageryList = () => {
+        fetch(this.props.documentRoot + "/get-all-imagery?institutionId=" + this.state.institution)
+            .then(response => response.ok ? response.json() : Promise.reject(response))
+            .then(data => this.setState({ imageryList: data }))
+
+    };
+
     componentDidMount() {
-        fetch(this.props.documentRoot + "/geo-dash/id/" + this.state.pid)
-            .then(response => response.json())
-            .then(data => data.widgets.map(widget =>{
-                widget.isFull = false;
-                widget.opacity = "0.9";
-                widget.sliderType = "opacity";
-                widget.swipeValue = "1.0";
-                return widget;
-            }))
-            .then(data => this.setState({ widgets: data, callbackComplete: true }));
+        fetch(this.props.documentRoot + "/get-all-imagery?institutionId=" + this.state.institution)
+            .then(response => response.ok ? response.json() : Promise.reject(response))
+            .then(data => this.setState({ imageryList: data }))
+            .then(() =>
+                fetch(this.props.documentRoot + "/geo-dash/id/" + this.state.pid)
+                    .then(response => response.json())
+                    .then(data => data.widgets.map(widget =>{
+                        widget.isFull = false;
+                        widget.opacity = "0.9";
+                        widget.sliderType = "opacity";
+                        widget.swipeValue = "1.0";
+                        return widget;
+                    }))
+                    .then(data => this.setState({ widgets: data, callbackComplete: true }))
+            );
     }
 
-    handleFullScreen = widget => {
+    handleFullScreen = (widget, control) => {
         const widgets = [...this.state.widgets];
         const index = widgets.indexOf(widget);
         widgets[index] = { ...widget };
@@ -115,6 +128,7 @@ class Geodash extends React.Component {
                 mapCenter={this.state.mapCenter}
                 mapZoom={this.state.mapZoom}
                 setCenterAndZoom={this.setCenterAndZoom}
+                imageryList={this.state.imageryList}
             />
         );
     }
@@ -139,6 +153,7 @@ class Widgets extends React.Component {
                         mapCenter={this.props.mapCenter}
                         mapZoom={this.props.mapZoom}
                         setCenterAndZoom={this.props.setCenterAndZoom}
+                        imageryList={this.props.imageryList}
                     />
                 ))}
             </div> );
@@ -224,7 +239,7 @@ class Widget extends React.Component {
                             <li style={{ display: "inline" }}>
                                 <a
                                     className="list-inline panel-actions panel-fullscreen"
-                                    onClick={() => this.props.onFullScreen(this.props.widget)}
+                                    onClick={() => this.props.onFullScreen(this.props.widget, this)}
                                     role="button"
                                     title="Toggle Fullscreen"
                                 >
@@ -252,7 +267,7 @@ class Widget extends React.Component {
                                 <li style={{ display: "inline" }}>
                                     <a
                                         className="list-inline panel-actions panel-fullscreen"
-                                        onClick={() => this.props.onFullScreen(this.props.widget)}
+                                        onClick={() => this.props.onFullScreen(this.props.widget, this)}
                                         role="button"
                                         title="Toggle Fullscreen"
                                     >
@@ -272,21 +287,22 @@ class Widget extends React.Component {
     getWidgetInnerHtml = (widget, onSliderChange, onSwipeChange) => {
         const wtext = widget.properties[0];
         if (this.imageCollectionList.includes(wtext) || (widget.dualImageCollection && widget.dualImageCollection != null) || (widget.ImageAsset && widget.ImageAsset.length > 0) || (widget.ImageCollectionAsset && widget.ImageCollectionAsset.length > 0)) {
+            this.widgetRef = <MapWidget
+                widget={widget}
+                mapCenter={this.props.mapCenter}
+                mapZoom={this.props.mapZoom}
+                projAOI={this.props.projAOI}
+                projPairAOI={this.props.projPairAOI}
+                onSliderChange={onSliderChange}
+                onSwipeChange={onSwipeChange}
+                syncMapWidgets={this.syncMapWidgets}
+                getParameterByName={this.props.getParameterByName}
+                documentRoot={this.props.documentRoot}
+                setCenterAndZoom={this.props.setCenterAndZoom}
+                imageryList={this.props.imageryList}
+            />;
             return <div className="front">
-                        <MapWidget
-                            widget={widget}
-                            mapCenter={this.props.mapCenter}
-                            mapZoom={this.props.mapZoom}
-                            projAOI={this.props.projAOI}
-                            projPairAOI={this.props.projPairAOI}
-                            onSliderChange={onSliderChange}
-                            onSwipeChange={onSwipeChange}
-                            syncMapWidgets={this.syncMapWidgets}
-                            getParameterByName={this.props.getParameterByName}
-                            documentRoot={this.props.documentRoot}
-                            setCenterAndZoom={this.props.setCenterAndZoom}
-                        />
-
+                {this.widgetRef}
             </div>;
         } else if (this.graphControlList.includes(wtext)) {
             return <div className="front"><GraphWidget widget={widget} projPairAOI={this.props.projPairAOI} documentRoot={this.props.documentRoot}/></div>;
@@ -311,7 +327,8 @@ class MapWidget extends React.Component {
             opacity: 90,
             geeTimeOut: null,
             internalExtent:null,
-            mapCenter:null
+            mapCenter:null,
+            wasFull:false,
         };
     }
 
@@ -319,12 +336,7 @@ class MapWidget extends React.Component {
         new ol.layer.Tile({
             source: (!basemap || basemap.id === "osm")
                 ? new ol.source.OSM()
-                : (basemap.id === 1 || basemap.id === 2)
-                    ? mercator.createSource({
-                        "type": "EarthWatch",
-                        "connectId": "f371dd55-96c4-41b7-ac26-662b3fa3d7f8",
-                      })
-                    : mercator.createSource(basemap.sourceConfig),
+                : mercator.createSource(basemap.sourceConfig),
         });
 
     getGatewayPath = (widget, collectionName) => {
@@ -431,10 +443,19 @@ class MapWidget extends React.Component {
         this.state.mapRef.getView().setZoom(zoom);
     };
 
+    getInstitutionBaseMap = basemap => {
+        if(!basemap) {
+            return imagery[0];
+        } else {
+            return this.props.imageryList.find(imagery => {
+                return imagery.id === basemap.id;
+            });
+        }
+    };
+
     componentDidMount() {
         const widget = this.props.widget;
-        const basemap = widget.baseMap;
-        const raster = this.getRasterByBasemapConfig(basemap);
+        const raster = this.getRasterByBasemapConfig(this.getInstitutionBaseMap(widget.baseMap));
         let projAOI = this.props.projAOI;
         const projPairAOI = this.props.projPairAOI;
 
@@ -767,10 +788,14 @@ class MapWidget extends React.Component {
     };
 
     componentDidUpdate() {
-        this.state.mapRef.updateSize();
-
+        if(this.props.widget.isFull !== this.state.wasFull) {
+            this.state.mapRef.updateSize();
+            this.state.wasFull = this.props.widget.isFull;
+        }
         if(this.props.mapCenter) {
-            this.centerAndZoomMap(this.props.mapCenter, this.props.mapZoom);
+            window.setTimeout(() => {
+                this.centerAndZoomMap(this.props.mapCenter, this.props.mapZoom)
+            }, Math.floor(Math.random()*(350-150+1)+150));
         }
     }
 

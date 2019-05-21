@@ -131,8 +131,8 @@ class BasicLayout extends React.PureComponent {
             .then(response => response.ok ? response.json() : Promise.reject(response))
             .then(data => {
                 this.setState({
-                    imagery: [{ title: "Open Street Maps", id: "osm" }, ...data],
-                    widgetBaseMap: "osm",
+                    imagery: data,
+                    widgetBaseMap: data[0].id,
                 });
             })
             .catch(response => {
