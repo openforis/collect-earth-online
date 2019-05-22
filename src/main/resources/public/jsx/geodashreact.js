@@ -41,12 +41,6 @@ class Geodash extends React.Component {
             : null;
     };
 
-    getImageryList = () => {
-        fetch(this.props.documentRoot + "/get-all-imagery?institutionId=" + this.state.institution)
-            .then(response => response.ok ? response.json() : Promise.reject(response))
-            .then(data => this.setState({ imageryList: data }))
-    };
-
     componentDidMount() {
         fetch(this.props.documentRoot + "/get-all-imagery?institutionId=" + this.state.institution)
             .then(response => response.ok ? response.json() : Promise.reject(response))
@@ -789,7 +783,7 @@ class MapWidget extends React.Component {
     componentDidUpdate() {
         if(this.props.widget.isFull !== this.state.wasFull) {
             this.state.mapRef.updateSize();
-            this.state.wasFull = this.props.widget.isFull;
+            this.setState({wasFull: this.props.widget.isFull});
         }
         if(this.props.mapCenter) {
             this.centerAndZoomMap(this.props.mapCenter, this.props.mapZoom);
