@@ -31,7 +31,7 @@ class Collection extends React.Component {
             userImages: {},
             storedInterval: null,
             KMLFeatures: null,
-            hasGeoDash: false
+            hasGeoDash: false,
         };
     }
 
@@ -81,7 +81,7 @@ class Collection extends React.Component {
         // Inititialize on new plot
         if (this.state.currentPlot && this.state.currentPlot !== prevState.currentPlot) {
             this.showProjectPlot();
-            if(this.state.hasGeoDash) {
+            if (this.state.hasGeoDash) {
                 this.showGeoDash();
             }
             clearInterval(this.state.storedInterval);
@@ -608,14 +608,6 @@ class Collection extends React.Component {
         return attributes[this.state.currentImagery.title] || {};
     };
 
-    validateCurrentSelection = (selectedFeatures, questionId) => {
-        const visibleSamples = this.getVisibleSamples(questionId);
-
-        return selectedFeatures.getArray()
-            .map(sf => sf.get("sampleId"))
-            .every(sid => visibleSamples.some(vs => vs.id === sid));
-    };
-
     getChildQuestions = (currentQuestionId) => {
         const { surveyQuestions } = this.state.currentProject;
         const { question, id } = surveyQuestions.find(sq => sq.id === currentQuestionId);
@@ -633,10 +625,16 @@ class Collection extends React.Component {
 
     intersection = (array1, array2) => array1.filter(value => array2.includes(value));
 
-    getSelectedSampleIds = () => {
+    getSelectedSampleIds = (question) => {
         const allFeatures = mercator.getAllFeatures(this.state.mapConfig, "currentSamples");
         const selectedFeatures = mercator.getSelectedSamples(this.state.mapConfig).getArray();
-        return (selectedFeatures.length === 0 ? allFeatures : selectedFeatures).map(sf => sf.get("sampleId"));
+
+        return (
+            (selectedFeatures.length === 0 && question.answered.length === 0)
+            || Object.keys(this.state.userSamples).length === 1
+                    ? allFeatures
+                    : selectedFeatures
+        ).map(sf => sf.get("sampleId"));
     };
 
     checkRuleTextMatch = (surveyRule, questionToSet, answerId, answerText) => {
@@ -664,7 +662,7 @@ class Collection extends React.Component {
             const answeredQuestions = this.state.currentProject.surveyQuestions
                 .filter(q => surveyRule.questions.includes(q.id) && q.answered.length > 0 && q.id !== questionToSet.id);
             if (surveyRule.questions.length === answeredQuestions.length + 1) {
-                const sampleIds = this.getSelectedSampleIds();
+                const sampleIds = this.getSelectedSampleIds(questionToSet);
                 const answeredSampleIds = answeredQuestions.map(q => q.answered.map(a => a.sampleId));
                 const commonSampleIds = answeredSampleIds.reduce(this.intersection, sampleIds);
                 if (commonSampleIds.length > 0) {
@@ -700,7 +698,7 @@ class Collection extends React.Component {
             const answeredQuestions2 = this.state.currentProject.surveyQuestions
                 .filter(q => surveyRule.questionSetIds2.includes(q.id) && q.answered.length > 0 && q.id !== questionToSet.id);
             if (surveyRule.questionSetIds1.length + surveyRule.questionSetIds2.length === answeredQuestions1.length + answeredQuestions2.length + 1) {
-                const sampleIds = this.getSelectedSampleIds();
+                const sampleIds = this.getSelectedSampleIds(questionToSet);
                 const answeredSampleIds1 = answeredQuestions1.map(q => q.answered.map(a => a.sampleId));
                 const commonSampleIds1 = answeredSampleIds1.reduce(this.intersection, sampleIds);
                 const answeredSampleIds2 = answeredQuestions2.map(q => q.answered.map(a => a.sampleId));
@@ -758,7 +756,7 @@ class Collection extends React.Component {
         if (surveyRule.question1 === questionToSet.id && surveyRule.answer1 === answerId) {
             const ques2 = this.state.currentProject.surveyQuestions.find(q => q.id === surveyRule.question2);
             if (ques2.answered.some(ans => ans.answerId === surveyRule.answer2)) {
-                const ques1Ids = this.getSelectedSampleIds();
+                const ques1Ids = this.getSelectedSampleIds(questionToSet);
                 const ques2Ids = ques2.answered.filter(ans => ans.answerId === surveyRule.answer2).map(a => a.sampleId);
                 const commonSampleIds = this.intersection(ques1Ids, ques2Ids);
                 if (commonSampleIds.length > 0) {
@@ -772,7 +770,7 @@ class Collection extends React.Component {
         } else if (surveyRule.question2 === questionToSet.id && surveyRule.answer2 === answerId) {
             const ques1 = this.state.currentProject.surveyQuestions.find(q => q.id === surveyRule.question1);
             if (ques1.answered.some(ans => ans.answerId === surveyRule.answer1)) {
-                const ques2Ids = this.getSelectedSampleIds();
+                const ques2Ids = this.getSelectedSampleIds(questionToSet);
                 const ques1Ids = ques1.answered.filter(ans => ans.answerId === surveyRule.answer1).map(a => a.sampleId);
                 const commonSampleIds = this.intersection(ques1Ids, ques2Ids);
                 if (commonSampleIds.length > 0) {
@@ -802,19 +800,19 @@ class Collection extends React.Component {
             .find(msg => msg !== null);
 
     setCurrentValue = (questionToSet, answerId, answerText) => {
+        const sampleIds = this.getSelectedSampleIds(questionToSet);
         const ruleError = this.rulesViolated(questionToSet, answerId, answerText);
-        const selectedFeatures = mercator.getSelectedSamples(this.state.mapConfig);
 
-        if (ruleError) {
+        if (sampleIds.some(sid => questionToSet.visible.every(vs => vs.id !== sid))) {
+            alert("Invalid Selection. Try selecting the question before answering.");
+            return false;
+        } else if (sampleIds.length === 0) {
+            alert("You must make a selection after some samples have been answered");
+            return false;
+        } else if (ruleError) {
             alert(ruleError);
             return false;
-        } else if (Object.keys(this.state.userSamples).length === 1
-                   || (selectedFeatures && selectedFeatures.getLength()
-                       && this.validateCurrentSelection(selectedFeatures, questionToSet.id))) {
-
-            const sampleIds = Object.keys(this.state.userSamples).length === 1
-                  ? [Object.keys(this.state.userSamples)[0]]
-                  : selectedFeatures.getArray().map(sf => sf.get("sampleId"));
+        } else {
 
             const newSamples = sampleIds.reduce((acc, sampleId) => {
                 const newQuestion = {
@@ -853,12 +851,6 @@ class Collection extends React.Component {
                 selectedQuestion: questionToSet,
             });
             return true;
-        } else if (selectedFeatures && selectedFeatures.getLength() === 0) {
-            alert("No samples selected. Please click some first.");
-            return false;
-        } else {
-            alert("Invalid Selection. Try selecting the question before answering.");
-            return false;
         }
     };
 
@@ -907,7 +899,7 @@ class Collection extends React.Component {
             });
     };
 
-    getVisibleSamples = (currentQuestionId) => {
+    calcVisibleSamples = (currentQuestionId) => {
         const { currentProject : { surveyQuestions }, userSamples } = this.state;
         const { parentQuestion, parentAnswer } = surveyQuestions.find(sq => sq.id === currentQuestionId);
         const parentQuestionText = parentQuestion === -1
@@ -921,7 +913,7 @@ class Collection extends React.Component {
                 .find(sq => sq.id === parentQuestion).answers
                 .find(ans => parentAnswer === -1 || ans.id === parentAnswer).answer;
 
-            return this.getVisibleSamples(parentQuestion)
+            return this. calcVisibleSamples(parentQuestion)
                 .filter(sample => {
                     const sampleAnswer = userSamples[sample.id][parentQuestionText]
                           && userSamples[sample.id][parentQuestionText].answer;
@@ -932,7 +924,7 @@ class Collection extends React.Component {
 
     updateQuestionStatus = () => {
         const newSurveyQuestions = this.state.currentProject.surveyQuestions.map(sq => {
-            const visibleSamples = this.getVisibleSamples(sq.id);
+            const visibleSamples = this. calcVisibleSamples(sq.id);
             return ({
                 ...sq,
                 visible: visibleSamples,
