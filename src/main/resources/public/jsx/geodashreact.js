@@ -10,12 +10,13 @@ class Geodash extends React.Component {
             callbackComplete: false,
             left: 0,
             ptop: 0,
-            institution: this.getParameterByName("institution") ? this.getParameterByName("institution"): "3",
+            institution: this.getParameterByName("institution") ? this.getParameterByName("institution") : "3",
             projAOI: this.getParameterByName("aoi"),
             projPairAOI: "",
             pid: this.getParameterByName("pid"),
             mapCenter:null,
             mapZoom:null,
+            imageryList:[],
         };
         const theSplit = decodeURI(this.state.projAOI).replace("[", "").replace("]", "").split(",");
         this.state.projPairAOI = "[["
@@ -48,7 +49,7 @@ class Geodash extends React.Component {
             .then(() =>
                 fetch(this.props.documentRoot + "/geo-dash/id/" + this.state.pid)
                     .then(response => response.json())
-                    .then(data => data.widgets.map(widget =>{
+                    .then(data => data.widgets.map(widget => {
                         widget.isFull = false;
                         widget.opacity = "0.9";
                         widget.sliderType = "opacity";
@@ -279,8 +280,10 @@ class Widget extends React.Component {
 
     getWidgetInnerHtml = (widget, onSliderChange, onSwipeChange) => {
         const wtext = widget.properties[0];
-        if (this.imageCollectionList.includes(wtext) || (widget.dualImageCollection && widget.dualImageCollection != null) || (widget.ImageAsset && widget.ImageAsset.length > 0) || (widget.ImageCollectionAsset && widget.ImageCollectionAsset.length > 0)) {
-
+        if (this.imageCollectionList.includes(wtext)
+            || (widget.dualImageCollection && widget.dualImageCollection != null)
+            || (widget.ImageAsset && widget.ImageAsset.length > 0)
+            || (widget.ImageCollectionAsset && widget.ImageCollectionAsset.length > 0)) {
             return <div className="front">
                         <MapWidget
                             widget={widget}
@@ -436,15 +439,9 @@ class MapWidget extends React.Component {
         this.state.mapRef.getView().setZoom(zoom);
     };
 
-    getInstitutionBaseMap = basemap => {
-        if(!basemap) {
-            return this.props.imageryList[0];
-        } else {
-            return this.props.imageryList.find(imagery => {
-                return imagery.id === basemap.id;
-            });
-        }
-    };
+    getInstitutionBaseMap = basemap => !basemap
+        ? this.props.imageryList[0]
+        : this.props.imageryList.find(imagery => imagery.id === basemap.id);
 
     componentDidMount() {
         const widget = this.props.widget;
