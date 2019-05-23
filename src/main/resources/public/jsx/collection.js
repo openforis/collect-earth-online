@@ -807,13 +807,12 @@ class Collection extends React.Component {
             alert("Invalid Selection. Try selecting the question before answering.");
             return false;
         } else if (sampleIds.length === 0) {
-            alert("You must make a selection after some samples have been answered");
+            alert("You must make a selection after some samples have been answered.");
             return false;
         } else if (ruleError) {
             alert(ruleError);
             return false;
         } else {
-
             const newSamples = sampleIds.reduce((acc, sampleId) => {
                 const newQuestion = {
                     questionId: questionToSet.id,
@@ -913,7 +912,7 @@ class Collection extends React.Component {
                 .find(sq => sq.id === parentQuestion).answers
                 .find(ans => parentAnswer === -1 || ans.id === parentAnswer).answer;
 
-            return this. calcVisibleSamples(parentQuestion)
+            return this.calcVisibleSamples(parentQuestion)
                 .filter(sample => {
                     const sampleAnswer = userSamples[sample.id][parentQuestionText]
                           && userSamples[sample.id][parentQuestionText].answer;
@@ -924,7 +923,7 @@ class Collection extends React.Component {
 
     updateQuestionStatus = () => {
         const newSurveyQuestions = this.state.currentProject.surveyQuestions.map(sq => {
-            const visibleSamples = this. calcVisibleSamples(sq.id);
+            const visibleSamples = this.calcVisibleSamples(sq.id);
             return ({
                 ...sq,
                 visible: visibleSamples,
