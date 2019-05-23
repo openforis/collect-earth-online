@@ -17,6 +17,8 @@ class Geodash extends React.Component {
             mapCenter:null,
             mapZoom:null,
             imageryList:[],
+            initCenter:null,
+            initZoom:null,
         };
         const theSplit = decodeURI(this.state.projAOI).replace("[", "").replace("]", "").split(",");
         this.state.projPairAOI = "[["
@@ -89,10 +91,21 @@ class Geodash extends React.Component {
     };
 
     setCenterAndZoom = (center, zoom) => {
-        this.setState({
-            mapCenter:center,
-            mapZoom:zoom
-        });
+        !this.state.initCenter
+            ? this.setState({
+                initCenter:center,
+                initZoom:zoom,
+                mapCenter:center,
+                mapZoom:zoom
+            })
+            : this.setState({
+                mapCenter:center,
+                mapZoom:zoom
+            });
+    };
+
+    resetCenterAndZoom = () => {
+        this.setCenterAndZoom(this.state.initCenter, this.state.initZoom);
     };
 
     updateSize = which => {
@@ -123,6 +136,7 @@ class Geodash extends React.Component {
                 mapZoom={this.state.mapZoom}
                 setCenterAndZoom={this.setCenterAndZoom}
                 imageryList={this.state.imageryList}
+                resetCenterAndZoom={this.resetCenterAndZoom}
             />
         );
     }
@@ -148,6 +162,7 @@ class Widgets extends React.Component {
                         mapZoom={this.props.mapZoom}
                         setCenterAndZoom={this.props.setCenterAndZoom}
                         imageryList={this.props.imageryList}
+                        resetCenterAndZoom={this.props.resetCenterAndZoom}
                     />
                 ))}
             </div> );
@@ -226,26 +241,7 @@ class Widget extends React.Component {
                                      : this.generategridrow(widget.layout.y, widget.layout.h),
                 }}
             >
-                <div className="panel panel-default" id={"widget_" + widget.id}>
-                    <div className="panel-heading">
-                        <ul className="list-inline panel-actions pull-right">
-                            <li style={{ display: "inline" }}>{widget.name}</li>
-                            <li style={{ display: "inline" }}>
-                                <a
-                                    className="list-inline panel-actions panel-fullscreen"
-                                    onClick={() => this.props.onFullScreen(this.props.widget)}
-                                    role="button"
-                                    title="Toggle Fullscreen"
-                                >
-                                    <span className="fas fa-expand-arrows-alt" style={{ color: "#31BAB0" }}/>
-                                </a>
-                            </li>
-                        </ul>
-                    </div>
-                    <div id={"widget-container_" + widget.id} className="widget-container">
-                        {this.getWidgetInnerHtml(widget, onSliderChange, onSwipeChange)}
-                    </div>
-                </div>
+                {this.getCommonWidgetLayout(widget, onSliderChange, onSwipeChange)}
             </div>);
         } else {
             return (
@@ -254,36 +250,53 @@ class Widget extends React.Component {
                     ? "fullwidget columnSpan3 rowSpan1 placeholder"
                     : "columnSpan3 rowSpan1 placeholder"}
                 >
-                    <div className="panel panel-default" id={"widget_" + widget.id}>
-                        <div className="panel-heading">
-                            <ul className="list-inline panel-actions pull-right">
-                                <li style={{ display: "inline" }}>{widget.name}</li>
-                                <li style={{ display: "inline" }}>
-                                    <a
-                                        className="list-inline panel-actions panel-fullscreen"
-                                        onClick={() => this.props.onFullScreen(this.props.widget)}
-                                        role="button"
-                                        title="Toggle Fullscreen"
-                                    >
-                                        <span className="fas fa-expand-arrows-alt" style={{ color: "#31BAB0" }}/>
-                                    </a>
-                                </li>
-                            </ul>
-                        </div>
-                        <div id={"widget-container_" + widget.id} className="widget-container">
-                            {this.getWidgetInnerHtml(widget, onSliderChange, onSwipeChange)}
-                        </div>
-                    </div>
+                    {this.getCommonWidgetLayout(widget, onSliderChange, onSwipeChange)}
                 </div>);
         }
     };
 
+    getCommonWidgetLayout = (widget, onSliderChange, onSwipeChange) => {
+        return <div className="panel panel-default" id={"widget_" + widget.id}>
+            <div className="panel-heading">
+                <ul className="list-inline panel-actions pull-right">
+                    <li style={{ display: "inline" }}>{widget.name}</li>
+                    <li style={{ display: "inline" }}>
+                        <a
+                            className="list-inline panel-actions panel-fullscreen"
+                            onClick={() => this.props.onFullScreen(this.props.widget)}
+                            role="button"
+                            title="Toggle Fullscreen"
+                        >
+                            <span className="fas fa-expand-arrows-alt" style={{ color: "#31BAB0" }}/>
+                        </a>
+                    </li>
+                    {this.getResetMapButton(widget)}
+                </ul>
+            </div>
+            <div id={"widget-container_" + widget.id} className="widget-container">
+                {this.getWidgetInnerHtml(widget, onSliderChange, onSwipeChange)}
+            </div>
+        </div>
+    };
+
+    getResetMapButton = widget => {
+        if (this.isMapWidget(widget)) {
+            return <li style={{ display: "inline"}}>
+                <a
+                    className="list-inline panel-actions panel-fullscreen"
+                    onClick={() => this.props.resetCenterAndZoom()}
+                    role="button"
+                    title="Recenter"
+                    style={{ marginRight: "10px" }}
+                >
+                    <span className="fas fa-map-marker-alt" style={{ color: "#31BAB0" }}/>
+                </a>
+            </li>;
+        }
+    };
+
     getWidgetInnerHtml = (widget, onSliderChange, onSwipeChange) => {
-        const wtext = widget.properties[0];
-        if (this.imageCollectionList.includes(wtext)
-            || (widget.dualImageCollection && widget.dualImageCollection != null)
-            || (widget.ImageAsset && widget.ImageAsset.length > 0)
-            || (widget.ImageCollectionAsset && widget.ImageCollectionAsset.length > 0)) {
+        if (this.isMapWidget(widget)) {
             return <div className="front">
                         <MapWidget
                             widget={widget}
@@ -298,15 +311,23 @@ class Widget extends React.Component {
                             documentRoot={this.props.documentRoot}
                             setCenterAndZoom={this.props.setCenterAndZoom}
                             imageryList={this.props.imageryList}
+                            resetCenterAndZoom={this.props.resetCenterAndZoom}
                         />
             </div>;
-        } else if (this.graphControlList.includes(wtext)) {
+        } else if (this.graphControlList.includes(widget.properties[0])) {
             return <div className="front"><GraphWidget widget={widget} projPairAOI={this.props.projPairAOI} documentRoot={this.props.documentRoot}/></div>;
-        } else if (wtext === "getStats") {
+        } else if (widget.properties[0] === "getStats") {
             return <div className="front"><StatsWidget widget={widget} projPairAOI={this.props.projPairAOI} documentRoot={this.props.documentRoot}/></div>;
         } else {
             return <img src="data:image/gif;base64,R0lGODlhAQABAIAAAHd3dwAAACH5BAAAAAAALAAAAAABAAEAAAICRAEAOw==" width ="200" height ="200" className="img-responsive" />;
         }
+    };
+
+    isMapWidget = widget => {
+        return this.imageCollectionList.includes(widget.properties[0])
+            || (widget.dualImageCollection && widget.dualImageCollection != null)
+            || (widget.ImageAsset && widget.ImageAsset.length > 0)
+            || (widget.ImageCollectionAsset && widget.ImageCollectionAsset.length > 0);
     };
 
     render() {
