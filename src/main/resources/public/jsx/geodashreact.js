@@ -34,16 +34,6 @@ class Geodash extends React.Component {
             + theSplit[1] + "]]";
     }
 
-    getParameterByName = (name, url) => {
-        const regex = new RegExp("[?&]" + name.replace(/[\[\]]/g, "\\$&") + "(=([^&#]*)|&|#|$)");
-        const results = regex.exec(decodeURIComponent(url || window.location.href));
-        return results
-            ? results[2]
-                ? decodeURIComponent(results[2].replace(/\+/g, " "))
-                : ""
-            : null;
-    };
-
     componentDidMount() {
         fetch(this.props.documentRoot + "/get-all-imagery?institutionId=" + this.state.institution)
             .then(response => response.ok ? response.json() : Promise.reject(response))
@@ -61,6 +51,16 @@ class Geodash extends React.Component {
                     .then(data => this.setState({ widgets: data, callbackComplete: true }))
             );
     }
+
+    getParameterByName = (name, url) => {
+        const regex = new RegExp("[?&]" + name.replace(/[\[\]]/g, "\\$&") + "(=([^&#]*)|&|#|$)");
+        const results = regex.exec(decodeURIComponent(url || window.location.href));
+        return results
+            ? results[2]
+                ? decodeURIComponent(results[2].replace(/\+/g, " "))
+                : ""
+            : null;
+    };
 
     handleFullScreen = (widget) => {
         const widgets = [...this.state.widgets];
@@ -223,26 +223,27 @@ class Widget extends React.Component {
 
     getWidgetHtml = (widget, onSliderChange, onSwipeChange) => {
         if (widget.gridcolumn || widget.layout) {
-            return (<div
-                className={this.getClassNames(widget.isFull,
-                                                       widget.gridcolumn != null
-                                                           ? widget.gridcolumn
-                                                           : "",
-                                                       widget.gridrow != null
-                                                           ? widget.gridrow
-                                                           : widget.layout != null
-                                                               ? "span " + widget.layout.h : "")}
-                style={{
-                    gridColumn:widget.gridcolumn != null
-                             ? widget.gridcolumn
-                             : this.generategridcolumn(widget.layout.x, widget.layout.w),
-                    gridRow:widget.gridrow != null
-                                     ? widget.gridrow
-                                     : this.generategridrow(widget.layout.y, widget.layout.h),
-                }}
-            >
-                {this.getCommonWidgetLayout(widget, onSliderChange, onSwipeChange)}
-            </div>);
+            return (
+                <div
+                    className={this.getClassNames(widget.isFull,
+                                                           widget.gridcolumn != null
+                                                               ? widget.gridcolumn
+                                                               : "",
+                                                           widget.gridrow != null
+                                                               ? widget.gridrow
+                                                               : widget.layout != null
+                                                                   ? "span " + widget.layout.h : "")}
+                    style={{
+                        gridColumn:widget.gridcolumn != null
+                                 ? widget.gridcolumn
+                                 : this.generategridcolumn(widget.layout.x, widget.layout.w),
+                        gridRow:widget.gridrow != null
+                                         ? widget.gridrow
+                                         : this.generategridrow(widget.layout.y, widget.layout.h),
+                    }}
+                >
+                    {this.getCommonWidgetLayout(widget, onSliderChange, onSwipeChange)}
+                </div>);
         } else {
             return (
                 <div
@@ -339,126 +340,9 @@ class MapWidget extends React.Component {
             mapRef: null,
             opacity: 90,
             geeTimeOut: null,
-            internalExtent:null,
-            mapCenter:null,
             wasFull:false,
         };
     }
-
-    getRasterByBasemapConfig = basemap =>
-        new ol.layer.Tile({
-            source: (!basemap || basemap.id === "osm")
-                ? new ol.source.OSM()
-                : mercator.createSource(basemap.sourceConfig),
-        });
-
-    getGatewayPath = (widget, collectionName) => {
-        const fts = {
-            "LANDSAT5": "Landsat5Filtered",
-            "LANDSAT7": "Landsat7Filtered",
-            "LANDSAT8": "Landsat8Filtered",
-            "Sentinel2": "FilteredSentinel",
-        };
-        const resourcePath = (widget.filterType && widget.filterType.length > 0)
-            ? fts[widget.filterType]
-            : (widget.ImageAsset && widget.ImageAsset.length > 0)
-                ? "image"
-                : (widget.ImageCollectionAsset && widget.ImageCollectionAsset.length > 0)
-                    ? "ImageCollectionAsset"
-                    : (widget.properties && "ImageCollectionCustom" === widget.properties[0])
-                        ? "meanImageByMosaicCollections"
-                        : (collectionName.trim().length > 0)
-                            ? "cloudMaskImageByMosaicCollection"
-                            : "ImageCollectionbyIndex";
-        return resourcePath;
-    };
-
-    getImageParams = widget => {
-        let visParams;
-        if (widget.visParams) {
-            if (typeof widget.visParams === "string") {
-                try {
-                    visParams = JSON.parse(widget.visParams);
-                } catch (e) {
-                    visParams = widget.visParams;
-                }
-            } else {
-                visParams = widget.visParams;
-            }
-        } else {
-            let min;
-            let max;
-            try {
-                if (widget.min > 0) {
-                    min = widget.min;
-                }
-
-                if (widget.max > 0) {
-                    max = widget.max;
-                }
-            } catch (e) {
-                console.log(e.message);
-            }
-            visParams = {
-                min: min,
-                max: max,
-                bands: widget.bands,
-            };
-        }
-        return visParams;
-    };
-
-    pauseGeeLayer = e => {
-        const layers = e.target.getLayers().getArray();
-        layers.forEach(lyr => {
-            if (lyr.get("id") && lyr.get("id").indexOf("widget") === 0) {
-                lyr.setVisible(false);
-            }
-        });
-    };
-
-    getRequestedIndex = collectionName => collectionName === "ImageCollectionNDVI"
-            ? "NDVI"
-            : collectionName === "ImageCollectionEVI"
-                ? "EVI"
-                : collectionName === "ImageCollectionEVI2"
-                    ? "EVI2"
-                    : collectionName === "ImageCollectionNDMI"
-                        ? "NDMI"
-                        : collectionName === "ImageCollectionNDWI"
-                            ? "NDWI"
-                            : "";
-
-    convertCollectionName = collectionName => collectionName === "ImageCollectionNDVI"
-            ? ""
-            : collectionName === "ImageCollectionEVI"
-                ? ""
-                : collectionName === "ImageCollectionEVI2"
-                    ? ""
-                    : collectionName === "ImageCollectionNDMI"
-                        ? ""
-                        : collectionName === "ImageCollectionNDWI"
-                            ? ""
-                            : collectionName;
-
-    addSecondMapLayer = (mapid, token, widgetid) => {
-        if (this.state.mapRef) {
-            this.addDualLayer(mapid, token, widgetid);
-        } else {
-            setTimeout(() => {
-                this.addDualLayer(mapid, token, widgetid);
-            }, 1000);
-        }
-    };
-
-    centerAndZoomMap = (center, zoom) => {
-        this.state.mapRef.getView().setCenter(center);
-        this.state.mapRef.getView().setZoom(zoom);
-    };
-
-    getInstitutionBaseMap = basemap => !basemap
-        ? this.props.imageryList[0]
-        : this.props.imageryList.find(imagery => imagery.id === basemap.id);
 
     componentDidMount() {
         const widget = this.props.widget;
@@ -779,6 +663,16 @@ class MapWidget extends React.Component {
         window.addEventListener("resize", () => this.handleResize());
     }
 
+    componentDidUpdate() {
+        if (this.props.widget.isFull !== this.state.wasFull) {
+            this.state.mapRef.updateSize();
+            this.setState({ wasFull: this.props.widget.isFull });
+        }
+        if (this.props.mapCenter) {
+            this.centerAndZoomMap(this.props.mapCenter, this.props.mapZoom);
+        }
+    }
+
     createTileServerFromCache = (storageItem, widgetId, isSecond) => {
         const currentDate = new Date();
         currentDate.setDate(currentDate.getDate() - 1);
@@ -794,15 +688,120 @@ class MapWidget extends React.Component {
         return true;
     };
 
-    componentDidUpdate() {
-        if (this.props.widget.isFull !== this.state.wasFull) {
-            this.state.mapRef.updateSize();
-            this.setState({ wasFull: this.props.widget.isFull });
+    getRasterByBasemapConfig = basemap =>
+        new ol.layer.Tile({
+            source: (!basemap || basemap.id === "osm")
+                ? new ol.source.OSM()
+                : mercator.createSource(basemap.sourceConfig),
+        });
+
+    getGatewayPath = (widget, collectionName) => {
+        const fts = {
+            "LANDSAT5": "Landsat5Filtered",
+            "LANDSAT7": "Landsat7Filtered",
+            "LANDSAT8": "Landsat8Filtered",
+            "Sentinel2": "FilteredSentinel",
+        };
+        const resourcePath = (widget.filterType && widget.filterType.length > 0)
+            ? fts[widget.filterType]
+            : (widget.ImageAsset && widget.ImageAsset.length > 0)
+                ? "image"
+                : (widget.ImageCollectionAsset && widget.ImageCollectionAsset.length > 0)
+                    ? "ImageCollectionAsset"
+                    : (widget.properties && "ImageCollectionCustom" === widget.properties[0])
+                        ? "meanImageByMosaicCollections"
+                        : (collectionName.trim().length > 0)
+                            ? "cloudMaskImageByMosaicCollection"
+                            : "ImageCollectionbyIndex";
+        return resourcePath;
+    };
+
+    getImageParams = widget => {
+        let visParams;
+        if (widget.visParams) {
+            if (typeof widget.visParams === "string") {
+                try {
+                    visParams = JSON.parse(widget.visParams);
+                } catch (e) {
+                    visParams = widget.visParams;
+                }
+            } else {
+                visParams = widget.visParams;
+            }
+        } else {
+            let min;
+            let max;
+            try {
+                if (widget.min > 0) {
+                    min = widget.min;
+                }
+
+                if (widget.max > 0) {
+                    max = widget.max;
+                }
+            } catch (e) {
+                console.log(e.message);
+            }
+            visParams = {
+                min: min,
+                max: max,
+                bands: widget.bands,
+            };
         }
-        if (this.props.mapCenter) {
-            this.centerAndZoomMap(this.props.mapCenter, this.props.mapZoom);
+        return visParams;
+    };
+
+    pauseGeeLayer = e => {
+        const layers = e.target.getLayers().getArray();
+        layers.forEach(lyr => {
+            if (lyr.get("id") && lyr.get("id").indexOf("widget") === 0) {
+                lyr.setVisible(false);
+            }
+        });
+    };
+
+    getRequestedIndex = collectionName => collectionName === "ImageCollectionNDVI"
+            ? "NDVI"
+            : collectionName === "ImageCollectionEVI"
+                ? "EVI"
+                : collectionName === "ImageCollectionEVI2"
+                    ? "EVI2"
+                    : collectionName === "ImageCollectionNDMI"
+                        ? "NDMI"
+                        : collectionName === "ImageCollectionNDWI"
+                            ? "NDWI"
+                            : "";
+
+    convertCollectionName = collectionName => collectionName === "ImageCollectionNDVI"
+            ? ""
+            : collectionName === "ImageCollectionEVI"
+                ? ""
+                : collectionName === "ImageCollectionEVI2"
+                    ? ""
+                    : collectionName === "ImageCollectionNDMI"
+                        ? ""
+                        : collectionName === "ImageCollectionNDWI"
+                            ? ""
+                            : collectionName;
+
+    addSecondMapLayer = (mapid, token, widgetid) => {
+        if (this.state.mapRef) {
+            this.addDualLayer(mapid, token, widgetid);
+        } else {
+            setTimeout(() => {
+                this.addDualLayer(mapid, token, widgetid);
+            }, 1000);
         }
-    }
+    };
+
+    centerAndZoomMap = (center, zoom) => {
+        this.state.mapRef.getView().setCenter(center);
+        this.state.mapRef.getView().setZoom(zoom);
+    };
+
+    getInstitutionBaseMap = basemap => !basemap
+        ? this.props.imageryList[0]
+        : this.props.imageryList.find(imagery => imagery.id === basemap.id);
 
     getSliderControl = () => {
         const widget = this.props.widget;
@@ -840,17 +839,18 @@ class MapWidget extends React.Component {
                 />
             </div>;
         } else {
-            return <input
-                type = "range"
-                className = "mapRange"
-                id = {"rangeWidget_" + widget.id}
-                value = {this.state.opacity}
-                min = "0"
-                max = "1"
-                step = ".01"
-                onChange = {evt => this.onOpacityChange( evt )}
-                onInput = {evt => this.onOpacityChange( evt )}
-            />;
+            return (
+                <input
+                    type = "range"
+                    className = "mapRange"
+                    id = {"rangeWidget_" + widget.id}
+                    value = {this.state.opacity}
+                    min = "0"
+                    max = "1"
+                    step = ".01"
+                    onChange = {evt => this.onOpacityChange( evt )}
+                    onInput = {evt => this.onOpacityChange( evt )}
+                />);
         }
     };
 
@@ -1009,8 +1009,8 @@ class MapWidget extends React.Component {
                 fetch(this.props.documentRoot + "/get-proj-plot/" + projectID + "/" + plotID)
                     .then(res => res.json())
                     .then(data => {
-                        const _geojson_object = typeof(data) === "string" ? JSON.parse(data) : data;
-                        const vectorSource = mercator.geometryToVectorSource(mercator.parseGeoJson(_geojson_object.geom, true));
+                        const geojsonObject = typeof(data) === "string" ? JSON.parse(data) : data;
+                        const vectorSource = mercator.geometryToVectorSource(mercator.parseGeoJson(geojsonObject.geom, true));
                         const mapConfig = {};
                         mapConfig.map = whichMap;
                         const style = [
@@ -1024,8 +1024,8 @@ class MapWidget extends React.Component {
                         ];
                         mercator.addVectorLayer(mapConfig, "geeLayer", vectorSource, style);
 
-                        if (_geojson_object.samples) {
-                            _geojson_object.samples.forEach(element => {
+                        if (geojsonObject.samples) {
+                            geojsonObject.samples.forEach(element => {
                                 const vectorSource = mercator.geometryToVectorSource(mercator.parseGeoJson(element.geom, true));
                                 mercator.addVectorLayer(mapConfig, "geeLayer", vectorSource, style);
                             });
@@ -1051,7 +1051,6 @@ class GraphWidget extends React.Component {
         super(props);
         this.state = {
             graphRef: null,
-            isFull:this.props.widget.isFull,
         };
         Date.prototype.yyyymmdd = function() {
             const mm = this.getMonth() + 1; // getMonth() is zero-based
@@ -1063,12 +1062,6 @@ class GraphWidget extends React.Component {
             ].join("-");
         };
     }
-
-    sortData = (a, b) => {
-        if (a[0] < b[0]) return -1;
-        if (a[0] > b[0]) return 1;
-        return 0;
-    };
 
     componentDidMount() {
         const widget = this.props.widget;
@@ -1118,6 +1111,12 @@ class GraphWidget extends React.Component {
     componentDidUpdate() {
         this.handleResize();
     }
+
+    sortData = (a, b) => {
+        if (a[0] < b[0]) return -1;
+        if (a[0] > b[0]) return 1;
+        return 0;
+    };
 
     handleResize = () => {
         try {
@@ -1213,30 +1212,6 @@ class StatsWidget extends React.Component {
         this.state = { totalPop:"", area:"", elevation:"" };
     }
 
-    numberWithCommas = x => {
-        if (typeof x === "number") {
-            try {
-                const parts = x.toString().split(".");
-                parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-                return parts.join(".");
-            } catch (e) {
-                console.warn(e.message);
-            }
-        }
-        return "N/A";
-    };
-
-    calculateArea = poly => {
-        const sphere = new ol.Sphere(6378137);
-        const area_m = sphere.geodesicArea(poly);
-        let area_ha = area_m / 10000;
-        if (area_ha < 0) {
-            area_ha = area_ha * -1;
-        }
-        area_ha = Math.round(area_ha * Math.pow(10, 4)) / Math.pow(10, 4);
-        return this.numberWithCommas(area_ha);
-    };
-
     componentDidMount() {
         const projPairAOI = this.props.projPairAOI;
         fetch(this.props.documentRoot + "/geo-dash/gateway-request", {
@@ -1259,6 +1234,30 @@ class StatsWidget extends React.Component {
                 }
             });
     }
+
+    numberWithCommas = x => {
+        if (typeof x === "number") {
+            try {
+                const parts = x.toString().split(".");
+                parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+                return parts.join(".");
+            } catch (e) {
+                console.warn(e.message);
+            }
+        }
+        return "N/A";
+    };
+
+    calculateArea = poly => {
+        const sphere = new ol.Sphere(6378137);
+        const areaM = sphere.geodesicArea(poly);
+        let areaHa = areaM / 10000;
+        if (areaHa < 0) {
+            areaHa = areaHa * -1;
+        }
+        areaHa = Math.round(areaHa * Math.pow(10, 4)) / Math.pow(10, 4);
+        return this.numberWithCommas(areaHa);
+    };
 
     render() {
         const widget = this.props.widget;
