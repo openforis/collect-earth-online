@@ -96,11 +96,11 @@ class Geodash extends React.Component {
                 initCenter:center,
                 initZoom:zoom,
                 mapCenter:center,
-                mapZoom:zoom
+                mapZoom:zoom,
             })
             : this.setState({
                 mapCenter:center,
-                mapZoom:zoom
+                mapZoom:zoom,
             });
     };
 
@@ -255,33 +255,31 @@ class Widget extends React.Component {
         }
     };
 
-    getCommonWidgetLayout = (widget, onSliderChange, onSwipeChange) => {
-        return <div className="panel panel-default" id={"widget_" + widget.id}>
-            <div className="panel-heading">
-                <ul className="list-inline panel-actions pull-right">
-                    <li style={{ display: "inline" }}>{widget.name}</li>
-                    <li style={{ display: "inline" }}>
-                        <a
-                            className="list-inline panel-actions panel-fullscreen"
-                            onClick={() => this.props.onFullScreen(this.props.widget)}
-                            role="button"
-                            title="Toggle Fullscreen"
-                        >
-                            <span className="fas fa-expand-arrows-alt" style={{ color: "#31BAB0" }}/>
-                        </a>
-                    </li>
-                    {this.getResetMapButton(widget)}
-                </ul>
-            </div>
-            <div id={"widget-container_" + widget.id} className="widget-container">
-                {this.getWidgetInnerHtml(widget, onSliderChange, onSwipeChange)}
-            </div>
+    getCommonWidgetLayout = (widget, onSliderChange, onSwipeChange) => <div className="panel panel-default" id={"widget_" + widget.id}>
+        <div className="panel-heading">
+            <ul className="list-inline panel-actions pull-right">
+                <li style={{ display: "inline" }}>{widget.name}</li>
+                <li style={{ display: "inline" }}>
+                    <a
+                        className="list-inline panel-actions panel-fullscreen"
+                        onClick={() => this.props.onFullScreen(this.props.widget)}
+                        role="button"
+                        title="Toggle Fullscreen"
+                    >
+                        <span className="fas fa-expand-arrows-alt" style={{ color: "#31BAB0" }}/>
+                    </a>
+                </li>
+                {this.getResetMapButton(widget)}
+            </ul>
         </div>
-    };
+        <div id={"widget-container_" + widget.id} className="widget-container">
+            {this.getWidgetInnerHtml(widget, onSliderChange, onSwipeChange)}
+        </div>
+    </div>;
 
     getResetMapButton = widget => {
         if (this.isMapWidget(widget)) {
-            return <li style={{ display: "inline"}}>
+            return <li style={{ display: "inline" }}>
                 <a
                     className="list-inline panel-actions panel-fullscreen"
                     onClick={() => this.props.resetCenterAndZoom()}
@@ -298,21 +296,21 @@ class Widget extends React.Component {
     getWidgetInnerHtml = (widget, onSliderChange, onSwipeChange) => {
         if (this.isMapWidget(widget)) {
             return <div className="front">
-                        <MapWidget
-                            widget={widget}
-                            mapCenter={this.props.mapCenter}
-                            mapZoom={this.props.mapZoom}
-                            projAOI={this.props.projAOI}
-                            projPairAOI={this.props.projPairAOI}
-                            onSliderChange={onSliderChange}
-                            onSwipeChange={onSwipeChange}
-                            syncMapWidgets={this.syncMapWidgets}
-                            getParameterByName={this.props.getParameterByName}
-                            documentRoot={this.props.documentRoot}
-                            setCenterAndZoom={this.props.setCenterAndZoom}
-                            imageryList={this.props.imageryList}
-                            resetCenterAndZoom={this.props.resetCenterAndZoom}
-                        />
+                <MapWidget
+                    widget={widget}
+                    mapCenter={this.props.mapCenter}
+                    mapZoom={this.props.mapZoom}
+                    projAOI={this.props.projAOI}
+                    projPairAOI={this.props.projPairAOI}
+                    onSliderChange={onSliderChange}
+                    onSwipeChange={onSwipeChange}
+                    syncMapWidgets={this.syncMapWidgets}
+                    getParameterByName={this.props.getParameterByName}
+                    documentRoot={this.props.documentRoot}
+                    setCenterAndZoom={this.props.setCenterAndZoom}
+                    imageryList={this.props.imageryList}
+                    resetCenterAndZoom={this.props.resetCenterAndZoom}
+                />
             </div>;
         } else if (this.graphControlList.includes(widget.properties[0])) {
             return <div className="front"><GraphWidget widget={widget} projPairAOI={this.props.projPairAOI} documentRoot={this.props.documentRoot}/></div>;
@@ -323,12 +321,10 @@ class Widget extends React.Component {
         }
     };
 
-    isMapWidget = widget => {
-        return this.imageCollectionList.includes(widget.properties[0])
+    isMapWidget = widget => this.imageCollectionList.includes(widget.properties[0])
             || (widget.dualImageCollection && widget.dualImageCollection != null)
             || (widget.ImageAsset && widget.ImageAsset.length > 0)
             || (widget.ImageCollectionAsset && widget.ImageCollectionAsset.length > 0);
-    };
 
     render() {
         const { widget } = this.props;
@@ -494,9 +490,9 @@ class MapWidget extends React.Component {
 
         map.on("movestart", this.pauseGeeLayer);
         map.on("moveend", e => {
-                this.props.setCenterAndZoom(e.map.getView().getCenter(), e.map.getView().getZoom());
-                this.resumeGeeLayer(e);
-            });
+            this.props.setCenterAndZoom(e.map.getView().getCenter(), e.map.getView().getZoom());
+            this.resumeGeeLayer(e);
+        });
 
         if (projAOI === "") {
             projAOI = [-108.30322265625, 21.33544921875, -105.347900390625, 23.53271484375];
@@ -515,7 +511,7 @@ class MapWidget extends React.Component {
         }
 
         this.setState({
-            mapRef: map
+            mapRef: map,
         });
 
         const postObject = {};
@@ -799,11 +795,11 @@ class MapWidget extends React.Component {
     };
 
     componentDidUpdate() {
-        if(this.props.widget.isFull !== this.state.wasFull) {
+        if (this.props.widget.isFull !== this.state.wasFull) {
             this.state.mapRef.updateSize();
-            this.setState({wasFull: this.props.widget.isFull});
+            this.setState({ wasFull: this.props.widget.isFull });
         }
-        if(this.props.mapCenter) {
+        if (this.props.mapCenter) {
             this.centerAndZoomMap(this.props.mapCenter, this.props.mapZoom);
         }
     }
@@ -893,7 +889,7 @@ class MapWidget extends React.Component {
                             lyr.setVisible(true);
                         }
                     });
-                }, Math.floor(Math.random()*(1250-950+1)+950)),
+                }, Math.floor(Math.random() * (1250 - 950 + 1) + 950)),
             });
         } catch (e) {
             console.log(e.message);
@@ -911,7 +907,7 @@ class MapWidget extends React.Component {
                         console.log("trying to reload the tile: " );
                         console.log(error.tile);
                         error.tile.load();
-                    }, Math.floor(Math.random()*(1250-950+1)+950));
+                    }, Math.floor(Math.random() * (1250 - 950 + 1) + 950));
                 } catch (e) {
                     console.log(e.message);
                 }
@@ -923,7 +919,7 @@ class MapWidget extends React.Component {
             if (!isDual) {
                 this.addBuffer(this.state.mapRef);
             }
-        }, Math.floor(Math.random()*(300-200+1)+200));
+        }, Math.floor(Math.random() * (300 - 200 + 1) + 200));
     };
 
     addDualLayer = (imageid, token, mapdiv) => {
