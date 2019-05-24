@@ -179,10 +179,10 @@ class MapPanel extends React.Component {
                         <div className="empty-div" style={{ height: "50vh" }}/>
                         <div className="my-auto no-gutters text-center">
                             <div className={this.props.showSidePanel ? "" : "d-none"}>
-                                <div className={"fa fa-caret-left"} />
+                                {"\u25C0"}
                             </div>
                             <div className={this.props.showSidePanel ? "d-none" : ""}>
-                                <div className={"fa fa-caret-right"} />
+                                {"\u25B6"}
                             </div>
                         </div>
                     </div>

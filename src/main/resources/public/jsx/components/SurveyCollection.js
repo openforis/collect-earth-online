@@ -454,7 +454,7 @@ class AnswerDropDown extends React.Component {
                             cursor: "pointer",
                         }}
                     >
-                        <i className={"fa fa-caret-down"} />
+                        {"\u25BC"}
                     </button>
                 </div>
                 <div

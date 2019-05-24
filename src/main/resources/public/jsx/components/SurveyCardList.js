@@ -79,16 +79,18 @@ class SurveyCard extends React.Component {
                                     className="btn btn-outline-lightgreen my-1 px-3 py-0"
                                     onClick={() => this.swapQuestionIds(-1)}
                                     disabled={surveyQuestion.id === topLevelNodeIds[0]}
-                                    style={{opacity: surveyQuestion.id === topLevelNodeIds[0] ? "0.25" : "1.0"}}>
-                                    <i className={"fa fa-caret-up"}/>
+                                    style={{ opacity: surveyQuestion.id === topLevelNodeIds[0] ? "0.25" : "1.0" }}
+                                >
+                                    {"\u25B2"}
                                 </button>
                                 <button
                                     type="button"
                                     className="btn btn-outline-lightgreen my-1 px-3 py-0"
                                     onClick={() => this.swapQuestionIds(1)}
                                     disabled={surveyQuestion.id === topLevelNodeIds[topLevelNodeIds.length - 1]}
-                                    style={{opacity: surveyQuestion.id === topLevelNodeIds[topLevelNodeIds.length - 1] ? "0.25" : "1.0"}}>
-                                    <i className={"fa fa-caret-down"}/>
+                                    style={{ opacity: surveyQuestion.id === topLevelNodeIds[topLevelNodeIds.length - 1] ? "0.25" : "1.0" }}
+                                >
+                                    {"\u25BC"}
                                 </button>
                             </div>
                         }
@@ -134,7 +136,7 @@ function SurveyQuestionTree({
             <div className="SurveyQuestionTree__question d-flex border-top pt-3 pb-1">
                 {[...Array(indentLevel)].map((e, i) =>
                     <div key={i} className="pl-4">
-                        <i className={"fa fa-arrow-right"} />
+                        {"\u27a1"}
                     </div>
                 )}
 
