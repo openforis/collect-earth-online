@@ -52,7 +52,7 @@ import spark.Response;
 public class PostgresProjects implements Projects {
 
     private Request redirectCommon(Request req, Response res, String queryFn) {
-        final var userId = Integer.parseInt(req.session().attributes().contains("userid") ? req.session().attribute("userid") : "0");
+        final var userId = Integer.parseInt(req.session().attributes().contains("userid") ? req.session().attribute("userid").toString() : "0");
         final var pProjectId = req.params(":id");
         final var qProjectId = req.queryParams("pid");
 

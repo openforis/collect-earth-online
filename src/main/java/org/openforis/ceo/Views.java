@@ -20,7 +20,7 @@ public class Views {
 
     public static void redirectAuth(Request req, Response res, Boolean authorized, Integer userId) {
         if (!authorized) {
-            if(userId > 0){
+            if (userId > 0) {
                 res.redirect(CeoConfig.documentRoot + "/home");
             } else {
                 res.redirect(CeoConfig.documentRoot
@@ -133,28 +133,29 @@ public class Views {
 
     public static Route collection(FreeMarkerEngine freemarker) {
         Function<Request, String> getProjectId = (req) -> req.params(":id");
-        return makeRoute("Collection", 
+        return makeRoute("Collection",
                          freemarker,
                          Map.of("project_id", getProjectId));
     }
 
     public static Route createProject(FreeMarkerEngine freemarker) {
         Function<Request, String> getInstitutionId = (req) -> req.queryParams("institution");
-        return makeRoute("Create-Project", 
+        return makeRoute("Create-Project",
                          freemarker,
                          Map.of("institution_id", getInstitutionId));
     }
 
     public static Route reviewProject(FreeMarkerEngine freemarker) {
         Function<Request, String> getProjectId = (req) -> req.params(":id");
-        return makeRoute("Review-Project", freemarker,
-                Map.of("project_id", getProjectId));
+        return makeRoute("Review-Project",
+                         freemarker,
+                         Map.of("project_id", getProjectId));
     }
 
     public static Route projectDashboard(FreeMarkerEngine freemarker) {
         Function<Request, String> getProjectId = (req) -> req.params(":id");
         Function<Request, String> getInstitutionId = (req) -> req.queryParams("institution");
-        return makeRoute("Project-Dashboard", 
+        return makeRoute("Project-Dashboard",
                          freemarker,
                          Map.of("project_id", getProjectId,
                                 "institution_id", getInstitutionId));
