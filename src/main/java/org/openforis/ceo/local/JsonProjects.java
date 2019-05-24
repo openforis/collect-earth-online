@@ -83,7 +83,7 @@ public class JsonProjects implements Projects {
         final var privacyLevel = project.get("privacyLevel").getAsString();
         final var availability = project.get("availability").getAsString();
 
-        redirectAuth(req, res, canSeeProject(role, privacyLevel, availability) && (collect || role.equals("admin")), userId);
+        redirectAuth(req, res, canSeeProject(role, privacyLevel, availability, userId) && (collect || role.equals("admin")), userId);
 
         return req;
     }
@@ -95,17 +95,17 @@ public class JsonProjects implements Projects {
         return redirectCommon(req, res, false);
     }
 
-    private Boolean canSeeProject(String role, String privacyLevel, String availability) {
+    private Boolean canSeeProject(String role, String privacyLevel, String availability, Integer userId) {
         if (role.equals("admin")) {
-            return (privacyLevel.equals("public") ||
-                    privacyLevel.equals("private") ||
-                    privacyLevel.equals("institution"))
-                    && (availability.equals("unpublished") ||
-                    availability.equals("published") ||
-                    availability.equals("closed"));
+            return !availability.equals("archived");
         } else if (role.equals("member")) {
             return (privacyLevel.equals("public") ||
-                    privacyLevel.equals("institution"))
+                    privacyLevel.equals("institution") ||
+                    privacyLevel.equals("users"))
+                    && availability.equals("published");
+        } else if (userId > 0) {
+            return (privacyLevel.equals("public") ||
+                    privacyLevel.equals("users"))
                     && availability.equals("published");
         } else {
             return privacyLevel.equals("public") && availability.equals("published");
@@ -114,17 +114,18 @@ public class JsonProjects implements Projects {
 
     public String getAllProjects(Request req, Response res) {
         var userId = req.queryParamOrDefault("userId", "0");
+        var intUserId = Integer.parseInt(userId.isEmpty() ? "0" : userId);
         var institutionId = req.queryParamOrDefault("institutionId", "");
         var projects = elementToArray(readJsonFile("project-list.json"));
 
-        var institutionRoles = (new JsonUsers()).getInstitutionRoles(userId.isEmpty() ? 0 : Integer.parseInt(userId));
+        var institutionRoles = (new JsonUsers()).getInstitutionRoles(intUserId);
         var filteredProjects = toStream(projects)
             .filter(project -> project.get("archived").getAsBoolean() == false)
             .filter(project -> {
                 var role = institutionRoles.getOrDefault(project.get("institution").getAsInt(), "");
                 var privacyLevel = project.get("privacyLevel").getAsString();
                 var availability = project.get("availability").getAsString();
-                return canSeeProject(role, privacyLevel, availability);
+                return canSeeProject(role, privacyLevel, availability, intUserId);
             })
             .map(project -> {
                 var role = institutionRoles.getOrDefault(project.get("institution").getAsInt(), "");

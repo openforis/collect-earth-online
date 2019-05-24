@@ -41,21 +41,21 @@ export function ProjectInfo({ name, description, privacyLevel, setProjectDetail 
                             onChange={() => setProjectDetail("privacyLevel", "public")}
                         />
                         <label className="form-check-label" htmlFor="privacy-public">
-                            Public: <i>All Users</i>
+                            Public: <i>All</i>
                         </label>
                     </div>
                     <div className="form-check form-check-inline">
                         <input
                             className="form-check-input"
                             type="radio"
-                            id="privacy-private"
+                            id="privacy-public"
                             name="privacy-level"
-                            value="private"
-                            onChange={() => setProjectDetail("privacyLevel", "private")}
-                            checked={privacyLevel === "private"}
+                            value="public"
+                            checked={privacyLevel === "users"}
+                            onChange={() => setProjectDetail("privacyLevel", "users")}
                         />
-                        <label className="form-check-label" htmlFor="privacy-private">
-                            Private: <i>Group Admins</i>
+                        <label className="form-check-label" htmlFor="privacy-public">
+                            Users: <i>Logged In Users</i>
                         </label>
                     </div>
                     <div className="form-check form-check-inline">
@@ -70,6 +70,20 @@ export function ProjectInfo({ name, description, privacyLevel, setProjectDetail 
                         />
                         <label className="form-check-label" htmlFor="privacy-institution">
                             Institution: <i>Group Members</i>
+                        </label>
+                    </div>
+                    <div className="form-check form-check-inline">
+                        <input
+                            className="form-check-input"
+                            type="radio"
+                            id="privacy-private"
+                            name="privacy-level"
+                            value="private"
+                            onChange={() => setProjectDetail("privacyLevel", "private")}
+                            checked={privacyLevel === "private"}
+                        />
+                        <label className="form-check-label" htmlFor="privacy-private">
+                            Private: <i>Group Admins</i>
                         </label>
                     </div>
                 </div>
