@@ -99,13 +99,13 @@ class MapPanel extends React.Component {
 
     componentDidUpdate(prevProps, prevState) {
         if (this.state.mapConfig == null && this.props.imagery.length > 0 && prevProps.imagery.length === 0) {
-            const bingAerialLayer = this.props.imagery.find(
+            const homePageLayer = this.props.imagery.find(
                 function (imagery) {
-                    return imagery.title === "BingAerial";
+                    return imagery.title === "DigitalGlobeRecentImagery";
                 }
             );
-            const mapConfig = mercator.createMap("home-map-pane", [0.0, 0.0], 1, [bingAerialLayer]);
-            mercator.setVisibleLayer(mapConfig, bingAerialLayer.title);
+            const mapConfig = mercator.createMap("home-map-pane", [0.0, 0.0], 1, [homePageLayer]);
+            mercator.setVisibleLayer(mapConfig, homePageLayer.title);
             this.setState({ mapConfig: mapConfig });
         }
         if (this.state.mapConfig && this.props.projects.length > 0
