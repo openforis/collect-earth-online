@@ -1,5 +1,4 @@
 #!/bin/sh
-mkdir -p src/main/resources/template/compiled
 for filename in src/main/resources/template/freemarker/*
     do
     basename=`printf $(basename "$filename") | sed -e 's/.ftl//g' -e 's/-/_/g'`
