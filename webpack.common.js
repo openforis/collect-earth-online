@@ -1,4 +1,5 @@
 const path = require("path");
+const exec = require("child_process").exec;
 
 module.exports = {
     entry: {
@@ -54,12 +55,35 @@ module.exports = {
             },
         ],
     },
+    plugins: [
+        {
+            apply: (compiler) => {
+                compiler.hooks.beforeCompile.tap("BeforeRunPlugin", () => {
+                    exec("rm -f ./src/main/resources/public/js/*.bundle.js*", (err, stdout, stderr) => {
+                        if (stdout) process.stdout.write(stdout);
+                        if (stderr) process.stderr.write(stderr);
+                    });
+                    exec("rm -f ./target/classes/public/js/*.bundle.js*", (err, stdout, stderr) => {
+                        if (stdout) process.stdout.write(stdout);
+                        if (stderr) process.stderr.write(stderr);
+                    });
+                });
+            },
+        },
+    ],
     optimization: {
         minimize: true,
         splitChunks: {
             chunks: "all",
             maxInitialRequests: Infinity,
-            minSize: 10000,
+            minSize: 0,
+            cacheGroups: {
+                commons: {
+                    name: "common-vendor-files-chunk", // This name needs to be longer than the longest entry point name
+                    chunks: "all",
+                    minChunks: 10, // 10 is all the pages, this chuck will be items for all the pages
+                },
+            },
         },
     },
 };

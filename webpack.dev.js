@@ -1,6 +1,7 @@
 const merge = require("webpack-merge");
 const common = require("./webpack.common.js");
 const path = require("path");
+const exec = require("child_process").exec;
 
 module.exports = merge(common, {
     mode: "development",
@@ -12,4 +13,16 @@ module.exports = merge(common, {
         library: "[name]",
         libraryTarget: "var"
     },
+    plugins: [
+        {
+            apply: (compiler) => {
+                compiler.hooks.afterEmit.tap("AfterEmitPlugin", (compilation) => {
+                    exec("sh generate-templates.sh target/classes/public/js", (err, stdout, stderr) => {
+                        if (stdout) process.stdout.write(stdout);
+                        if (stderr) process.stderr.write(stderr);
+                    });
+                });
+            },
+        },
+    ],
 });
