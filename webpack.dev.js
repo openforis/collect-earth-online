@@ -21,6 +21,10 @@ module.exports = merge(common, {
                         if (stdout) process.stdout.write(stdout);
                         if (stderr) process.stderr.write(stderr);
                     });
+                    exec("cp src/main/resources/template/freemarker/* target/classes/template/freemarker/", (err, stdout, stderr) => {
+                        if (stdout) process.stdout.write(stdout);
+                        if (stderr) process.stderr.write(stderr);
+                    });
                 });
             },
         },
