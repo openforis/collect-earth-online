@@ -27,6 +27,8 @@ export function UnicodeIcon({ icon, backgroundColor }) {
         : icon === "magnify" ? <>&#x1F50D;</>
         : icon === "info" ? <>&#x24D8;</>
         : icon === "save" ? <>&#x1F4BE;</>
+        : icon === "expand" ? <>&#x21F1;</>
+        : icon === "collapse" ? <>&#x21F2;</>
         : icon === "add" ?
             <span
                 className="mr-1 px-1"
