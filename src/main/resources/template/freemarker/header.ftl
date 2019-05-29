@@ -47,7 +47,6 @@
         <!-- Fonts -->
         <!-- <link rel="stylesheet" type="text/css" href="${root}/css/google-fonts-open-sans.css"> -->
         <!-- <link rel="stylesheet" type="text/css" href="${root}/css/google-fonts-oswald.css"> -->
-        <script type="text/javascript" src="${root}/js/fontawesome-all.min.js" defer></script>
 
         <!-- Gary's custom styles and scripts -->
         <!-- <link rel="stylesheet" type="text/css" href="${root}/css/stylesheet.css"> -->

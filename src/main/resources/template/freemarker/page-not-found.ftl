@@ -4,7 +4,7 @@
 <div class="container absolute-center">
     <section id="page-not-found" class="row justify-content-center">
         <div class="col-sm-6">
-            <h1 class="display-1 text-danger"><i class="fa fa-times-circle"></i></h1>
+            <h1 class="display-1 text-danger">&#x20E0;</h1>
             <h2 class="text-danger">Page Not Found</h2>
             <p class="error-message">
                 There's no page at the address you requested. If you entered
