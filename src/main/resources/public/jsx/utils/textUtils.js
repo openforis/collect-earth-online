@@ -22,7 +22,7 @@ export function UnicodeIcon({ icon, backgroundColor }) {
         : icon === "downCaret" ? <>&#x25BC;</>
         : icon === "rightArrow" ? <>&#x27a1;</>
         : icon === "edit" ? <>&#x270D;</>
-        : icon === "trashIcon" ? <span style={{ fontWeight: "normal" }}> &#x1F5D1;</span>
+        : icon === "trash" ? <span style={{ fontWeight: "normal" }}> &#x1F5D1;</span>
         : icon === "noAction" ? <span className="mx-2">&#x20E0;</span>
         : icon === "magnify" ? <>&#x1F50D;</>
         : icon === "info" ? <>&#x24D8;</>
