@@ -2,7 +2,7 @@ import React, { Fragment } from "react";
 import ReactDOM from "react-dom";
 
 import InstitutionEditor from "./components/InstitutionEditor";
-import { sortAlphabetically, capitalizeFirst, UnicodeIcon } from "./utils/textUtils.js";
+import { sortAlphabetically, capitalizeFirst, UnicodeIcon } from "./utils/textUtils";
 
 class ReviewInstitution extends React.Component {
     constructor(props) {
