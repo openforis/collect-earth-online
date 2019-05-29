@@ -26,6 +26,7 @@
      return decodeURIComponent(results[2].replace(/\+/g, " "));
  }
 </script>
+<script type="text/javascript" src="${root}/js/vendors~geo_dash.bundle.js"></script>
 <script type="text/javascript" src="${root}/js/geo_dash.bundle.js"></script>
 <script type="text/javascript">
  window.onload = function () {

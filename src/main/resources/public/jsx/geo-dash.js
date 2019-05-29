@@ -1,5 +1,6 @@
 import React from "react";
 import ReactDOM from "react-dom";
+import Highcharts from "highcharts";
 import { mercator } from "../js/mercator-openlayers.js";
 
 class Geodash extends React.Component {

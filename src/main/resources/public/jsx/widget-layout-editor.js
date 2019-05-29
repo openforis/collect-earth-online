@@ -2,6 +2,9 @@ import React from "react";
 import ReactDOM from "react-dom";
 import _ from "lodash";
 import RGL, { WidthProvider } from "react-grid-layout";
+import jQuery from "jquery";
+window.$ = window.jQuery = jQuery;
+
 const ReactGridLayout = WidthProvider(RGL);
 
 class BasicLayout extends React.PureComponent {
