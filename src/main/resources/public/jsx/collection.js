@@ -314,14 +314,14 @@ class Collection extends React.Component {
         .map(k => encodeURIComponent(k) + "=" + encodeURIComponent(params[k]))
         .join("&");
 
-    checkPlotSamples = (plotData) => {
+    plotHasSamples = (plotData) => {
         if (plotData.samples.length === 0) {
             alert("This plot has no samples. Please flag the plot.");
             return false;
         } else {
             return true;
         }
-    }
+    };
 
     getPlotData = (plotId) => {
         fetch(this.props.documentRoot + "/get-plot-by-id"
@@ -346,7 +346,7 @@ class Collection extends React.Component {
                         prevPlotButtonDisabled: false,
                         nextPlotButtonDisabled: false,
                     });
-                    this.checkPlotSamples(newPlot);
+                    this.plotHasSamples(newPlot);
                 }
             })
             .catch(response => {
@@ -382,7 +382,7 @@ class Collection extends React.Component {
                         ...this.newPlotValues(newPlot),
                         prevPlotButtonDisabled: plotId === -1,
                     });
-                    this.checkPlotSamples(newPlot);
+                    this.plotHasSamples(newPlot);
                 }
             })
             .catch(response => {
@@ -414,7 +414,7 @@ class Collection extends React.Component {
                         ...this.newPlotValues(newPlot),
                         nextPlotButtonDisabled: false,
                     });
-                    this.checkPlotSamples(newPlot);
+                    this.plotHasSamples(newPlot);
                 }
             })
             .catch(response => {
@@ -642,8 +642,8 @@ class Collection extends React.Component {
     intersection = (array1, array2) => array1.filter(value => array2.includes(value));
 
     getSelectedSampleIds = (question) => {
-        const allFeatures = mercator.getAllFeatures(this.state.mapConfig, "currentSamples");
-        const selectedFeatures = mercator.getSelectedSamples(this.state.mapConfig).getArray();
+        const allFeatures = mercator.getAllFeatures(this.state.mapConfig, "currentSamples") || [];
+        const selectedFeatures = mercator.getSelectedSamples(this.state.mapConfig) ? mercator.getSelectedSamples(this.state.mapConfig).getArray() : [];
 
         return (
             (selectedFeatures.length === 0 && question.answered.length === 0)
@@ -815,11 +815,10 @@ class Collection extends React.Component {
             .map(surveyRule => this.ruleFunctions[surveyRule.ruleType](surveyRule, questionToSet, answerId, answerText))
             .find(msg => msg !== null);
 
-    setCurrentValue = (questionToSet, answerId, answerText) => {
-        const sampleIds = this.getSelectedSampleIds(questionToSet);
-        const ruleError = this.rulesViolated(questionToSet, answerId, answerText);
-
-        if (sampleIds.some(sid => questionToSet.visible.every(vs => vs.id !== sid))) {
+    checkSelection = (sampleIds, ruleError, questionToSet) => {
+        if (!this.plotHasSamples(this.state.currentPlot)) {
+            return false;
+        } else if (sampleIds.some(sid => questionToSet.visible.every(vs => vs.id !== sid))) {
             alert("Invalid Selection. Try selecting the question before answering.");
             return false;
         } else if (sampleIds.length === 0) {
@@ -829,6 +828,15 @@ class Collection extends React.Component {
             alert(ruleError);
             return false;
         } else {
+            return true;
+        }
+    };
+
+    setCurrentValue = (questionToSet, answerId, answerText) => {
+        const sampleIds = this.getSelectedSampleIds(questionToSet);
+        const ruleError = this.rulesViolated(questionToSet, answerId, answerText);
+
+        if (this.checkSelection(sampleIds, ruleError, questionToSet)) {
             const newSamples = sampleIds.reduce((acc, sampleId) => {
                 const newQuestion = {
                     questionId: questionToSet.id,
