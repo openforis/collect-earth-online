@@ -78,7 +78,7 @@ class Collection extends React.Component {
         // Update map when state changes
         //
 
-        // Inititialize on new plot
+        // Initialize when new plot
         if (this.state.currentPlot && this.state.currentPlot !== prevState.currentPlot) {
             this.showProjectPlot();
             if (this.state.hasGeoDash) {
@@ -88,12 +88,15 @@ class Collection extends React.Component {
             this.setState({ storedInterval: setInterval(() => this.resetPlotLock, 2.3 * 60 * 1000) });
         }
 
-        // Update Samples
-        if (this.state.currentPlot && this.state.currentPlot === prevState.currentPlot) {
-            // Changing questions shows different set of samples
+        // Conditions required for samples to be shown
+        if (this.state.currentPlot
+            && this.state.selectedQuestion.visible
+            && this.state.selectedQuestion.visible.length > 0) {
+
+            // Changing conditions for which samples need to be re-drawn
             if (this.state.selectedQuestion.id !== prevState.selectedQuestion.id
                 || this.state.sampleOutlineBlack !== prevState.sampleOutlineBlack
-                || (this.state.userSamples !== prevState.userSamples && this.state.selectedQuestion.visible)
+                || this.state.userSamples !== prevState.userSamples
                 || !prevState.selectedQuestion.visible) {
 
                 this.showPlotSamples();
@@ -311,6 +314,15 @@ class Collection extends React.Component {
         .map(k => encodeURIComponent(k) + "=" + encodeURIComponent(params[k]))
         .join("&");
 
+    checkPlotSamples = (plotData) => {
+        if (plotData.samples.length === 0) {
+            alert("This plot has no samples. Please flag the plot.");
+            return false;
+        } else {
+            return true;
+        }
+    }
+
     getPlotData = (plotId) => {
         fetch(this.props.documentRoot + "/get-plot-by-id"
               + this.getQueryString({
@@ -334,6 +346,7 @@ class Collection extends React.Component {
                         prevPlotButtonDisabled: false,
                         nextPlotButtonDisabled: false,
                     });
+                    this.checkPlotSamples(newPlot);
                 }
             })
             .catch(response => {
@@ -369,6 +382,7 @@ class Collection extends React.Component {
                         ...this.newPlotValues(newPlot),
                         prevPlotButtonDisabled: plotId === -1,
                     });
+                    this.checkPlotSamples(newPlot);
                 }
             })
             .catch(response => {
@@ -400,6 +414,7 @@ class Collection extends React.Component {
                         ...this.newPlotValues(newPlot),
                         nextPlotButtonDisabled: false,
                     });
+                    this.checkPlotSamples(newPlot);
                 }
             })
             .catch(response => {
@@ -483,10 +498,10 @@ class Collection extends React.Component {
                                 "currentSamples",
                                 mercator.samplesToVectorSource(visible),
                                 this.state.sampleOutlineBlack
-                                ? visible.length > 0 && visible[0].geom
+                                ? visible[0].geom
                                     ? ceoMapStyles.blackPolygon
                                     : ceoMapStyles.blackCircle
-                                : visible.length > 0 && visible[0].geom
+                                : visible[0].geom
                                     ? ceoMapStyles.whitePolygon
                                     : ceoMapStyles.whiteCircle);
         mercator.enableSelection(mapConfig,
