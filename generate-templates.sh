@@ -13,3 +13,4 @@ for filename in src/main/resources/template/freemarker/*
     mv "$filename.tmp" "$filename"
 done
 
+cp src/main/resources/template/freemarker/* target/classes/template/freemarker/

@@ -59,11 +59,13 @@ module.exports = {
         {
             apply: (compiler) => {
                 compiler.hooks.beforeCompile.tap("BeforeRunPlugin", () => {
-                    exec("rm -f ./src/main/resources/public/js/*.bundle.js*", (err, stdout, stderr) => {
+                    exec("rm -f ./target/classes/public/js/*.bundle.js*", (err, stdout, stderr) => {
                         if (stdout) process.stdout.write(stdout);
                         if (stderr) process.stderr.write(stderr);
                     });
-                    exec("rm -f ./target/classes/public/js/*.bundle.js*", (err, stdout, stderr) => {
+                });
+                compiler.hooks.afterEmit.tap("AfterEmitPlugin", () => {
+                    exec("sh generate-templates.sh target/classes/public/js", (err, stdout, stderr) => {
                         if (stdout) process.stdout.write(stdout);
                         if (stderr) process.stderr.write(stderr);
                     });
@@ -81,7 +83,7 @@ module.exports = {
                 commons: {
                     name: "common-vendor-files-chunk", // This name needs to be longer than the longest entry point name
                     chunks: "all",
-                    minChunks: 10, // 10 is all the pages, this chuck will be items for all the pages
+                    minChunks: 10, // 10 is all the pages to make this chuck items for all the pages
                 },
             },
         },
