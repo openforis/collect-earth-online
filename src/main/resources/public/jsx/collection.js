@@ -483,10 +483,10 @@ class Collection extends React.Component {
                                 "currentSamples",
                                 mercator.samplesToVectorSource(visible),
                                 this.state.sampleOutlineBlack
-                                ? visible[0].geom
+                                ? visible.length > 0 && visible[0].geom
                                     ? ceoMapStyles.blackPolygon
                                     : ceoMapStyles.blackCircle
-                                : visible[0].geom
+                                : visible.length > 0 && visible[0].geom
                                     ? ceoMapStyles.whitePolygon
                                     : ceoMapStyles.whiteCircle);
         mercator.enableSelection(mapConfig,
