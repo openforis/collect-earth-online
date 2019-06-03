@@ -1224,7 +1224,7 @@ public class JsonProjects implements Projects {
         if (noSamplesCnt > 0) {
             throw new  RuntimeException("This files used do not have correctly overlapping data. "
                                         + noSamplesCnt
-                                        + " plots are missing sample data");
+                                        + " plots are missing sample data.");
         }
 
         // Write the plot data to a new plot-data-<id>.json file

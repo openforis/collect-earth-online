@@ -26,4 +26,3 @@ CREATE OR REPLACE FUNCTION plots_missing_samples(_project_uid integer)
         AND sample_uid IS NULL
 
 $$ LANGUAGE SQL;
-

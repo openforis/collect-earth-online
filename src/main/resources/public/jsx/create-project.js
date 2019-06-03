@@ -142,8 +142,8 @@ class Project extends React.Component {
             )
                 .then(response => response.ok ? response.text() : Promise.reject(response))
                 .then(data => {
-                    const isNumeric = (n) => !isNaN(parseFloat(n)) && parseInt(n);
-                    if (isNumeric(data) && parseInt(data)) {
+                    const isNumeric = (n) => !isNaN(parseFloat(n)) && isFinite(n);
+                    if (isNumeric(data)) {
                         window.location = this.props.documentRoot + "/review-project/" + data;
                         return Promise.resolve();
                     } else {
