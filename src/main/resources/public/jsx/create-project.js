@@ -26,7 +26,7 @@ class Project extends React.Component {
                 plotShape: "circle",
                 plotSize: "",
                 plotSpacing: "",
-                privacyLevel: "public",
+                privacyLevel: "users",
                 sampleDistribution: "random",
                 sampleResolution: "",
                 samplesPerPlot: "",

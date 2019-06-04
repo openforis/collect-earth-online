@@ -40,7 +40,11 @@ export function ProjectInfo({ name, description, privacyLevel, setProjectDetail 
                             checked={privacyLevel === "public"}
                             onChange={() => setProjectDetail("privacyLevel", "public")}
                         />
-                        <label className="form-check-label" htmlFor="privacy-public">
+                        <label
+                            className="form-check-label"
+                            htmlFor="privacy-public"
+                            title="All users including those who are not logged in"
+                        >
                             Public: <i>All</i>
                         </label>
                     </div>
