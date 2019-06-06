@@ -61,30 +61,31 @@ export class SurveyCollection extends React.Component {
     };
 
     getTopColor = (node) => this.checkAllSubAnswers(node.id)
-                                ? "0px 0px 15px 4px green inset"
+                                ? "0px 0px 6px 4px #3bb9d6 inset"
                                 : node.answered.length > 0
-                                    ? "0px 0px 15px 4px yellow inset"
-                                    : "0px 0px 15px 4px red inset";
+                                    ? "0px 0px 6px 4px yellow inset"
+                                    : "0px 0px 6px 4px red inset";
 
     getNodeById = (id) => this.props.surveyQuestions.find(sq => sq.id === id);
 
-    getRulesById = (id) => {
-        const rules = this.props.surveyRules.filter(rule => (rule.questionId && rule.questionId === id)
-            || (rule.questions && rule.questions.includes(id))
-            || (rule.questionSetIds1 && (rule.questionSetIds1.includes(id) || rule.questionSetIds2.includes(id)))
-            || (rule.question1 && (rule.question1 === id || rule.question2 === id)));
-        return rules.map(r =>
-             r.questionId
-                ? r.regex
-                    ? "Rule: " + r.ruleType + " | Question '" + r.questionsText + "' should match the pattern: " + r.regex + "."
-                    : "Rule: " + r.ruleType + " | Question '" + r.questionsText + "' should be between " + r.min + " and " + r.max + "."
-                : r.questions
-                    ? "Rule: " + r.ruleType + " | Questions '" + r.questionsText + "' should sum up to " + r.validSum + "."
-                    : r.questionSetIds1
-                        ? "Rule: " + r.ruleType + " | Sum of '" + r.questionSetText1 + "' should be equal to sum of  '" + r.questionSetText2 + "'."
-                        : "Rule: " + r.ruleType + " | 'Question1: " + r.questionText1 + ", Answer1: " + r.answerText1 + "' is not compatible with 'Question2: " + r.questionText2 + ", Answer2: " + r.answerText2 + "'."
-        ).join("\n");
-    };
+    getRulesById = (id) =>
+        (this.props.surveyRules || [])
+            .filter(rule =>
+                (rule.questionId && rule.questionId === id)
+                    || (rule.questions && rule.questions.includes(id))
+                    || (rule.questionSetIds1 && (rule.questionSetIds1.includes(id) || rule.questionSetIds2.includes(id)))
+                    || (rule.question1 && (rule.question1 === id || rule.question2 === id)))
+            .map(r =>
+                r.questionId
+                    ? r.regex
+                        ? "Rule: " + r.ruleType + " | Question '" + r.questionsText + "' should match the pattern: " + r.regex + "."
+                        : "Rule: " + r.ruleType + " | Question '" + r.questionsText + "' should be between " + r.min + " and " + r.max + "."
+                    : r.questions
+                        ? "Rule: " + r.ruleType + " | Questions '" + r.questionsText + "' should sum up to " + r.validSum + "."
+                        : r.questionSetIds1
+                            ? "Rule: " + r.ruleType + " | Sum of '" + r.questionSetText1 + "' should be equal to sum of  '" + r.questionSetText2 + "'."
+                            : "Rule: " + r.ruleType + " | 'Question1: " + r.questionText1 + ", Answer1: " + r.answerText1 + "' is not compatible with 'Question2: " + r.questionText2 + ", Answer2: " + r.answerText2 + "'.")
+            .join("\n");
 
     render() {
         return (
@@ -170,10 +171,10 @@ class SurveyQuestionTree extends React.Component {
         const childNodes = this.props.surveyQuestions.filter(surveyNode => surveyNode.parentQuestion === this.props.surveyNode.id);
 
         const shadowColor = this.props.surveyNode.answered.length === 0
-                            ? "0px 0px 15px 4px red inset"
+                            ? "0px 0px 6px 4px red inset"
                             : this.props.surveyNode.answered.length === this.props.surveyNode.visible.length
-                                ? "0px 0px 15px 4px green inset"
-                                : "0px 0px 15px 4px yellow inset";
+                                ? "0px 0px 6px 5px #3bb9d6 inset"
+                                : "0px 0px 6px 4px yellow inset";
         return (
             <fieldset className={"mb-1 justify-content-center text-center"}>
                 <div className="SurveyQuestionTree__question-buttons btn-block my-2 d-flex">
@@ -319,7 +320,7 @@ class AnswerInput extends React.Component {
         if (this.props.surveyNode.id !== prevProps.surveyNode.id) {
             const matchingNode = this.props.surveyNode.answered
                 .find(a => a.answerId === this.props.surveyNode.answers[0].id);
-            this.setState({ newInput: matchingNode ? matchingNode.answerText : ""});
+            this.setState({ newInput: matchingNode ? matchingNode.answerText : "" });
         }
         if (this.props.selectedSampleId !== prevProps.selectedSampleId) {
             this.resetInputText();
@@ -335,7 +336,7 @@ class AnswerInput extends React.Component {
         });
     }
 
-    updateInputValue = (value) => this.setState({newInput: value});
+    updateInputValue = (value) => this.setState({ newInput: value });
 
     render() {
         const { surveyNode, surveyNode: { answers, dataType }, setCurrentValue } = this.props;

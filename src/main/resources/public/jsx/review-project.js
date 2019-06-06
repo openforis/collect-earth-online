@@ -597,23 +597,23 @@ function ProjectManagement(props) {
                         className="btn btn-outline-lightgreen btn-sm col-6"
                         value="Configure Geo-Dash"
                         onClick={props.configureGeoDash}
-                        style={{ display: project.projectDetails.availability === "unpublished" || project.projectDetails.availability === "published" ? "block" : "none" }}
                     />
                 </div>
-                <div className="d-flex justify-content-between mb-2">
+                <div
+                    className="d-flex justify-content-between mb-2"
+                    style={{ display: ["published", "closed"].includes(project.projectDetails.availability) ? "block" : "none !important" }}
+                >
                     <input
                         type="button"
                         className="btn btn-outline-lightgreen btn-sm col-6 mr-2"
                         value="Download Plot Data"
                         onClick={props.downloadPlotData}
-                        style={{ display: project.projectDetails.availability === "published" || project.projectDetails.availability === "closed" ? "block" : "none" }}
                     />
                     <input
                         type="button"
                         className="btn btn-outline-lightgreen btn-sm col-6"
                         value="Download Sample Data"
                         onClick={props.downloadSampleData}
-                        style={{ display: project.projectDetails.availability === "published" || project.projectDetails.availability === "closed" ? "block" : "none" }}
                     />
                 </div>
                 <div id="spinner"></div>

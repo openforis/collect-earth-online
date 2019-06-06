@@ -21,7 +21,7 @@ import spark.Response;
 public class PostgresInstitutions implements Institutions {
 
     public Request redirectNonAdmin(Request req, Response res) {
-        final var userId = Integer.parseInt(req.session().attributes().contains("userid") ? req.session().attribute("userid") : "0");
+        final var userId = Integer.parseInt(req.session().attributes().contains("userid") ? req.session().attribute("userid").toString() : "0");
         final var pInstitutionId = req.params(":id");
         final var qInstitutionId = req.queryParams("institution");
 

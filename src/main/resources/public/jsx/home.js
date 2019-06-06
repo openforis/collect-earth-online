@@ -97,12 +97,15 @@ class MapPanel extends React.Component {
         };
     }
 
-    // FIXME: Set this.props.imagery.slice(2,3) back to .slice(0,1) once DG layers are reinstated.
-    // FIXME: Set this.props.imagery[2].title back to .imagery[0].title once DG layers are reinstated.
     componentDidUpdate(prevProps, prevState) {
         if (this.state.mapConfig == null && this.props.imagery.length > 0 && prevProps.imagery.length === 0) {
-            const mapConfig = mercator.createMap("home-map-pane", [0.0, 0.0], 1, this.props.imagery.slice(2, 3));
-            mercator.setVisibleLayer(mapConfig, this.props.imagery[2].title);
+            const homePageLayer = this.props.imagery.find(
+                function (imagery) {
+                    return imagery.title === "DigitalGlobeRecentImagery";
+                }
+            );
+            const mapConfig = mercator.createMap("home-map-pane", [0.0, 0.0], 1, [homePageLayer]);
+            mercator.setVisibleLayer(mapConfig, homePageLayer.title);
             this.setState({ mapConfig: mapConfig });
         }
         if (this.state.mapConfig && this.props.projects.length > 0
