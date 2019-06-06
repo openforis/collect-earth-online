@@ -1228,11 +1228,17 @@ public class JsonProjects implements Projects {
                                 return newSample;
                             })
                         .collect(intoJsonArray);
-
                     newPlot.add("samples", newSamples);
                     return newPlot;
                 })
             .collect(intoJsonArray);
+
+        var noSamplesCnt = filterJsonArray(newPlots, p -> p.get("samples").getAsJsonArray().size() == 0).size();
+        if (noSamplesCnt > 0) {
+            throw new RuntimeException("The uploaded plot and sample files do not have correctly overlapping data. "
+                                       + noSamplesCnt
+                                       + " plots have no samples.");
+        }
 
         // Write the plot data to a new plot-data-<id>.json file
         writeJsonFile("plot-data-" + newProject.get("id").getAsString() + ".json", newPlots);
