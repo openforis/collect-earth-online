@@ -52,13 +52,13 @@ export function ProjectInfo({ name, description, privacyLevel, setProjectDetail 
                         <input
                             className="form-check-input"
                             type="radio"
-                            id="privacy-public"
+                            id="privacy-users"
                             name="privacy-level"
-                            value="public"
+                            value="users"
                             checked={privacyLevel === "users"}
                             onChange={() => setProjectDetail("privacyLevel", "users")}
                         />
-                        <label className="form-check-label" htmlFor="privacy-public">
+                        <label className="form-check-label" htmlFor="privacy-users">
                             Users: <i>Logged In Users</i>
                         </label>
                     </div>
