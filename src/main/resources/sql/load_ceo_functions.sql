@@ -481,7 +481,7 @@ $$ LANGUAGE SQL;
 CREATE OR REPLACE FUNCTION get_institution_user_roles(_user_rid integer)
  RETURNS TABLE (
     institution_rid    integer,
-    role              text
+    role               text
  ) AS $$
 
         SELECT institution_rid, title

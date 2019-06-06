@@ -4,7 +4,6 @@ import static javax.servlet.http.HttpServletResponse.SC_NO_CONTENT;
 import static org.openforis.ceo.utils.DatabaseUtils.connect;
 import static org.openforis.ceo.utils.JsonUtils.expandResourcePath;
 import static org.openforis.ceo.utils.JsonUtils.parseJson;
-import static org.openforis.ceo.utils.PartUtils.partToString;
 import static org.openforis.ceo.utils.PartUtils.writeFilePartBase64;
 import static org.openforis.ceo.utils.ProjectUtils.padBounds;
 import static org.openforis.ceo.utils.ProjectUtils.reprojectBounds;
@@ -23,6 +22,7 @@ import static org.openforis.ceo.utils.ProjectUtils.makeGeoJsonPolygon;
 import static org.openforis.ceo.utils.ProjectUtils.getSampleValueTranslations;
 import static org.openforis.ceo.utils.ProjectUtils.deleteShapeFileDirectories;
 import static org.openforis.ceo.utils.ProjectUtils.runBashScriptForProject;
+import static org.openforis.ceo.Views.redirectAuth;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
@@ -35,7 +35,6 @@ import java.sql.PreparedStatement;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Timestamp;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -51,6 +50,41 @@ import spark.Response;
 
 
 public class PostgresProjects implements Projects {
+
+    private Request redirectCommon(Request req, Response res, String queryFn) {
+        final var userId = Integer.parseInt(req.session().attributes().contains("userid") ? req.session().attribute("userid").toString() : "0");
+        final var pProjectId = req.params(":id");
+        final var qProjectId = req.queryParams("pid");
+
+        final var projectId = pProjectId != null
+            ? Integer.parseInt(pProjectId)
+            : qProjectId != null
+                ? Integer.parseInt(qProjectId)
+                : 0;
+
+        try (var conn = connect();
+             var pstmt = conn.prepareStatement("SELECT * FROM " + queryFn + "(?, ?)")) {
+
+            pstmt.setInt(1, userId);
+            pstmt.setInt(2, projectId);
+
+            try(var rs = pstmt.executeQuery()) {
+                redirectAuth(req, res, rs.next() && rs.getBoolean(queryFn), userId);
+            }
+
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+        }
+        return req;
+    }
+
+    public Request redirectNoCollect(Request req, Response res) {
+        return redirectCommon(req, res, "can_user_collect");
+    }
+
+    public Request redirectNoEdit(Request req, Response res) {
+        return redirectCommon(req, res, "can_user_edit");
+    }
 
     private static JsonObject buildProjectJson(ResultSet rs) {
         var newProject = new JsonObject();

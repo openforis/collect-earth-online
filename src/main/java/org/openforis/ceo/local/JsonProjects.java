@@ -35,6 +35,7 @@ import static org.openforis.ceo.utils.ProjectUtils.outputRawCsv;
 import static org.openforis.ceo.utils.ProjectUtils.padBounds;
 import static org.openforis.ceo.utils.ProjectUtils.reprojectBounds;
 import static org.openforis.ceo.utils.ProjectUtils.runBashScriptForProject;
+import static org.openforis.ceo.Views.redirectAuth;
 
 import com.google.gson.JsonObject;
 import com.google.gson.JsonArray;
@@ -65,71 +66,83 @@ import spark.Response;
 
 public class JsonProjects implements Projects {
 
+    private Request redirectCommon(Request req, Response res, Boolean collect) {
+        final var userId = Integer.parseInt(req.session().attributes().contains("userid") ? req.session().attribute("userid").toString() : "0");
+        final var pProjectId = req.params(":id");
+        final var qProjectId = req.queryParams("pid");
+
+        final var projectId = pProjectId != null
+            ? pProjectId
+            : qProjectId != null
+                ? qProjectId
+                : "0";
+
+        final var project = singleProjectJson(projectId);
+        final var institutionRoles = (new JsonUsers()).getInstitutionRoles(userId);
+        final var role = institutionRoles.getOrDefault(project.get("institution").getAsInt(), "");
+        final var privacyLevel = project.get("privacyLevel").getAsString();
+        final var availability = project.get("availability").getAsString();
+
+        redirectAuth(req, res, canSeeProject(role, privacyLevel, availability) && (collect || role.equals("admin")), userId);
+
+        return req;
+    }
+    public Request redirectNoCollect(Request req, Response res) {
+        return redirectCommon(req, res, true);
+    }
+
+    public Request redirectNoEdit(Request req, Response res) {
+        return redirectCommon(req, res, false);
+    }
+
+    private Boolean canSeeProject(String role, String privacyLevel, String availability) {
+        if (role.equals("admin")) {
+            return (privacyLevel.equals("public") ||
+                    privacyLevel.equals("private") ||
+                    privacyLevel.equals("institution"))
+                    && (availability.equals("unpublished") ||
+                    availability.equals("published") ||
+                    availability.equals("closed"));
+        } else if (role.equals("member")) {
+            return (privacyLevel.equals("public") ||
+                    privacyLevel.equals("institution"))
+                    && availability.equals("published");
+        } else {
+            return privacyLevel.equals("public") && availability.equals("published");
+        }
+    }
+
     public String getAllProjects(Request req, Response res) {
-        var userId = req.queryParams("userId");
-        var institutionId = req.queryParams("institutionId");
+        var userId = req.queryParamOrDefault("userId", "0");
+        var institutionId = req.queryParamOrDefault("institutionId", "");
         var projects = elementToArray(readJsonFile("project-list.json"));
 
-        if (userId == null || userId.isEmpty()) {
-            // Not logged in
-            var filteredProjects = toStream(projects)
-                    .filter(project -> project.get("archived").getAsBoolean() == false
-                            && project.get("privacyLevel").getAsString().equals("public")
-                            && project.get("availability").getAsString().equals("published"))
-                    .map(project -> {
-                        project.addProperty("editable", false);
-                        project.addProperty("validBoundary", true);
-                        return project;
-                    });
-            if (institutionId == null || institutionId.isEmpty()) {
-                return filteredProjects.collect(intoJsonArray).toString();
-            } else {
-                return filteredProjects
-                        .filter(project -> project.get("institution").getAsString().equals(institutionId))
-                        .collect(intoJsonArray)
-                        .toString();
-            }
+        var institutionRoles = (new JsonUsers()).getInstitutionRoles(userId.isEmpty() ? 0 : Integer.parseInt(userId));
+        var filteredProjects = toStream(projects)
+            .filter(project -> project.get("archived").getAsBoolean() == false)
+            .filter(project -> {
+                var role = institutionRoles.getOrDefault(project.get("institution").getAsInt(), "");
+                var privacyLevel = project.get("privacyLevel").getAsString();
+                var availability = project.get("availability").getAsString();
+                return canSeeProject(role, privacyLevel, availability);
+            })
+            .map(project -> {
+                var role = institutionRoles.getOrDefault(project.get("institution").getAsInt(), "");
+                if (role.equals("admin")) {
+                    project.addProperty("editable", true);
+                } else {
+                    project.addProperty("editable", false);
+                }
+                project.addProperty("validBoundary", true);
+                return project;
+            });
+        if (institutionId.equals("")) {
+            return filteredProjects.collect(intoJsonArray).toString();
         } else {
-            var institutionRoles = (new JsonUsers()).getInstitutionRoles(Integer.parseInt(userId));
-            var filteredProjects = toStream(projects)
-                    .filter(project -> project.get("archived").getAsBoolean() == false)
-                    .filter(project -> {
-                        var role = institutionRoles.getOrDefault(project.get("institution").getAsInt(), "");
-                        var privacyLevel = project.get("privacyLevel").getAsString();
-                        var availability = project.get("availability").getAsString();
-                        if (role.equals("admin")) {
-                            return (privacyLevel.equals("public") ||
-                                    privacyLevel.equals("private") ||
-                                    privacyLevel.equals("institution"))
-                                    && (availability.equals("unpublished") ||
-                                    availability.equals("published") ||
-                                    availability.equals("closed"));
-                        } else if (role.equals("member")) {
-                            return (privacyLevel.equals("public") ||
-                                    privacyLevel.equals("institution"))
-                                    && availability.equals("published");
-                        } else {
-                            return privacyLevel.equals("public") && availability.equals("published");
-                        }
-                    })
-                    .map(project -> {
-                        var role = institutionRoles.getOrDefault(project.get("institution").getAsInt(), "");
-                        if (role.equals("admin")) {
-                            project.addProperty("editable", true);
-                        } else {
-                            project.addProperty("editable", false);
-                        }
-                        project.addProperty("validBoundary", true);
-                        return project;
-                    });
-            if (institutionId == null || institutionId.isEmpty()) {
-                return filteredProjects.collect(intoJsonArray).toString();
-            } else {
-                return filteredProjects
-                        .filter(project -> project.get("institution").getAsString().equals(institutionId))
-                        .collect(intoJsonArray)
-                        .toString();
-            }
+            return filteredProjects
+                    .filter(project -> project.get("institution").getAsString().equals(institutionId))
+                    .collect(intoJsonArray)
+                    .toString();
         }
     }
 

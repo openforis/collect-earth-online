@@ -61,7 +61,7 @@
 </nav>
 <script type="text/javascript">
 	function openHelp(){
-        var win = window.open("geo-dash/geodashhelp", "_blank");
+        var win = window.open("geo-dash/geodash-help", "_blank");
         win.focus();
 	}
 </script>
