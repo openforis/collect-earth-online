@@ -973,7 +973,7 @@ class Collection extends React.Component {
                 <label htmlFor="radio2" className="form-check-label">White</label>
             </div>
         </div>
-    )
+    );
 
     render() {
         const plotId = this.state.currentPlot

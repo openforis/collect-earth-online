@@ -33,8 +33,8 @@ class ProjectDashboard extends React.Component {
             this.setState({
                 projectDetails: {
                     ...this.state.projectDetails,
-                    baseMapSource:  this.state.projectDetails.baseMapSource
-                                                                || this.state.imageryList[0].title,
+                    baseMapSource: this.state.projectDetails.baseMapSource
+                                   || this.state.imageryList[0].title,
                 },
                 isMapShown: true,
             });
