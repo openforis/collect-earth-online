@@ -728,9 +728,9 @@ public class PostgresProjects implements Projects {
                 pstmt.setInt(1, projectId);
                 try (var rs = pstmt.executeQuery()) {
                     if (rs.next() && rs.getInt("plots_missing_samples") > 0) {
-                        throw new  RuntimeException("This files used do not have correctly overlapping data. "
-                                                    + rs.getInt("plots_missing_samples")
-                                                    + " plots are missing sample data.");
+                        throw new RuntimeException("The uploaded plot and sample files do not have correctly overlapping data. "
+                                                   + rs.getInt("plots_missing_samples")
+                                                   + " plots have no samples.");
                     }
                 }
             }
