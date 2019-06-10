@@ -31,3 +31,24 @@ CREATE OR REPLACE FUNCTION can_user_edit(_user_rid integer, _project_uid integer
     )
 
 $$ LANGUAGE SQL;
+
+-- Returns all rows in projects for a user_id with roles.
+CREATE OR REPLACE FUNCTION select_all_user_projects(_user_rid integer)
+ RETURNS setOf project_return AS $$
+
+    SELECT p.*, (CASE WHEN role IS NULL THEN FALSE ELSE role = 'admin' END) AS editable
+    FROM project_boundary as p
+    LEFT JOIN get_institution_user_roles(_user_rid) AS roles
+        USING (institution_rid)
+    WHERE (role = 'admin' AND p.availability <> 'archived')
+        OR (role = 'member'
+            AND p.privacy_level IN ('public', 'institution', 'users')
+            AND p.availability = 'published')
+        OR (_user_rid > 0
+            AND p.privacy_level IN ('public', 'users')
+            AND p.availability = 'published')
+        OR (p.privacy_level IN ('public')
+            AND p.availability = 'published')
+    ORDER BY project_uid
+
+$$ LANGUAGE SQL;
