@@ -68,9 +68,9 @@ class Geodash extends React.Component {
         widgets[index] = { ...widget };
         widgets[index].isFull = !widgets[index].isFull;
         this.setState({ widgets },
-            () => {
-                this.updateSize(widget);
-            }
+                      () => {
+                          this.updateSize(widget);
+                      }
         );
     };
 
@@ -190,25 +190,25 @@ class Widget extends React.Component {
     constructor(props) {
         super(props);
         this.imageCollectionList = ["ImageElevation",
-            "ImageCollectionCustom",
-            "addImageCollection",
-            "ndviImageCollection",
-            "ImageCollectionNDVI",
-            "ImageCollectionEVI",
-            "ImageCollectionEVI2",
-            "ImageCollectionNDWI",
-            "ImageCollectionNDMI",
-            "ImageCollectionLANDSAT5",
-            "ImageCollectionLANDSAT7",
-            "ImageCollectionLANDSAT8",
-            "ImageCollectionSentinel2"];
+                                    "ImageCollectionCustom",
+                                    "addImageCollection",
+                                    "ndviImageCollection",
+                                    "ImageCollectionNDVI",
+                                    "ImageCollectionEVI",
+                                    "ImageCollectionEVI2",
+                                    "ImageCollectionNDWI",
+                                    "ImageCollectionNDMI",
+                                    "ImageCollectionLANDSAT5",
+                                    "ImageCollectionLANDSAT7",
+                                    "ImageCollectionLANDSAT8",
+                                    "ImageCollectionSentinel2"];
         this.graphControlList = ["customTimeSeries",
-            "timeSeriesGraph",
-            "ndviTimeSeries",
-            "ndwiTimeSeries",
-            "eviTimeSeries",
-            "evi2TimeSeries",
-            "ndmiTimeSeries"];
+                                 "timeSeriesGraph",
+                                 "ndviTimeSeries",
+                                 "ndwiTimeSeries",
+                                 "eviTimeSeries",
+                                 "evi2TimeSeries",
+                                 "ndmiTimeSeries"];
     }
 
     generateGridColumn = (x, w) => (x + 1) + " / span " + w;
@@ -224,23 +224,23 @@ class Widget extends React.Component {
     getWidgetHtml = (widget, onSliderChange, onSwipeChange) => {
         if (widget.gridcolumn || widget.layout) {
             return (<div
-                    className={
-                        this.getClassNames(widget.isFull,
-                            widget.gridcolumn || "",
-                            widget.gridrow || (widget.layout && "span " + widget.layout.h) || ""
-                        )
-                    }
-                    style={{
-                        gridColumn:widget.gridcolumn != null
+                className={
+                    this.getClassNames(widget.isFull,
+                                       widget.gridcolumn || "",
+                                       widget.gridrow || (widget.layout && "span " + widget.layout.h) || ""
+                    )
+                }
+                style={{
+                    gridColumn:widget.gridcolumn != null
                             ? widget.gridcolumn
                             : this.generateGridColumn(widget.layout.x, widget.layout.w),
-                        gridRow:widget.gridrow != null
+                    gridRow:widget.gridrow != null
                             ? widget.gridrow
                             : this.generateGridRow(widget.layout.y, widget.layout.h),
-                    }}
-                >
-                    {this.getCommonWidgetLayout(widget, onSliderChange, onSwipeChange)}
-                </div>
+                }}
+            >
+                {this.getCommonWidgetLayout(widget, onSliderChange, onSwipeChange)}
+            </div>
             );
         } else {
             return (
@@ -415,10 +415,10 @@ class MapWidget extends React.Component {
 
     convertCollectionName = collectionName =>
         ["ImageCollectionNDVI",
-            "ImageCollectionEVI",
-            "ImageCollectionEVI2",
-            "ImageCollectionNDMI",
-            "ImageCollectionNDWI"].includes(collectionName)
+         "ImageCollectionEVI",
+         "ImageCollectionEVI2",
+         "ImageCollectionNDMI",
+         "ImageCollectionNDWI"].includes(collectionName)
             ? ""
             : collectionName;
 
@@ -946,10 +946,10 @@ class MapWidget extends React.Component {
                 const bufferPolygon = new ol.geom.Polygon(
                     [
                         [[bufferedExtent[0], bufferedExtent[1]],
-                            [bufferedExtent[0], bufferedExtent[3]],
-                            [bufferedExtent[2], bufferedExtent[3]],
-                            [bufferedExtent[2], bufferedExtent[1]],
-                            [bufferedExtent[0], bufferedExtent[1]]],
+                         [bufferedExtent[0], bufferedExtent[3]],
+                         [bufferedExtent[2], bufferedExtent[3]],
+                         [bufferedExtent[2], bufferedExtent[1]],
+                         [bufferedExtent[0], bufferedExtent[1]]],
                     ]
                 );
                 const bufferedFeature = new ol.Feature(bufferPolygon);
@@ -1039,8 +1039,8 @@ class GraphWidget extends React.Component {
             const dd = this.getDate();
 
             return [this.getFullYear(),
-                (mm > 9 ? "" : "0") + mm,
-                (dd > 9 ? "" : "0") + dd,
+                    (mm > 9 ? "" : "0") + mm,
+                    (dd > 9 ? "" : "0") + dd,
             ].join("-");
         };
     }
