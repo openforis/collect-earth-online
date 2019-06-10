@@ -761,10 +761,16 @@ public class PostgresProjects implements Projects {
             try (var pstmt = conn.prepareStatement("SELECT * FROM plots_missing_samples(?)")) {
                 pstmt.setInt(1, projectId);
                 try (var rs = pstmt.executeQuery()) {
-                    if (rs.next() && rs.getInt("plots_missing_samples") > 0) {
+                    var idList = new ArrayList<String>();
+                    while (rs.next()) {
+                        idList.add(rs.getString("plot_id"));
+                    }
+                    if (idList.size() > 0) {
+                        var topTen = "[" + String.join(",", idList.subList(0, Math.min(idList.size(), 2))) + "]";
                         throw new RuntimeException("The uploaded plot and sample files do not have correctly overlapping data. "
-                                                   + rs.getInt("plots_missing_samples")
-                                                   + " plots have no samples.");
+                                                   + idList.size()
+                                                   + " plots have no samples. The first 10 are: "
+                                                   + topTen);
                     }
                 }
             }
