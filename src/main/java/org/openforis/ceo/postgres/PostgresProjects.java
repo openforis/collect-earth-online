@@ -757,6 +757,16 @@ public class PostgresProjects implements Projects {
                 });
             }
 
+            // Check if project boundary is valid.
+            try (var pstmt = conn.prepareStatement("SELECT * FROM valid_boundary((SELECT boundary FROM projects WHERE project_uid = ?))")) {
+                pstmt.setInt(1, projectId);
+                try (var rs = pstmt.executeQuery()) {
+                    if (rs.next() && !rs.getBoolean("valid_boundary")) {
+                        throw new RuntimeException("The project boundary is invalid. This can come from improper coordinates or projection when uploading shape or csv data.");
+                    }
+                }
+            }
+
             //Check if all plots have a sample
             try (var pstmt = conn.prepareStatement("SELECT * FROM plots_missing_samples(?)")) {
                 pstmt.setInt(1, projectId);
