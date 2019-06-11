@@ -11,6 +11,7 @@ import static spark.Spark.port;
 import static spark.Spark.post;
 import static spark.Spark.secure;
 import static spark.Spark.staticFileLocation;
+import static spark.Spark.staticFiles;
 
 import freemarker.template.Configuration;
 import freemarker.template.TemplateExceptionHandler;
@@ -73,6 +74,7 @@ public class Server implements SparkApplication {
 
         // Serve static files from src/main/resources/public/
         staticFileLocation("/public");
+        staticFiles.expireTime(6000);
 
         // Allow token-based authentication if users are not logged in and we are using the COLLECT database
         if (databaseType.equals("COLLECT")) {
@@ -86,7 +88,6 @@ public class Server implements SparkApplication {
         get("/",                                      Views.home(freemarker));
         get("/about",                                 Views.about(freemarker));
         get("/account/:id",                           Views.account(freemarker));
-        get("/card-test",                             Views.cardTest(freemarker));
         get("/create-institution",                    Views.createInstitution(freemarker));
         get("/create-project",                        (req, res) -> Views.createProject(freemarker).handle(institutions.redirectNonAdmin(req, res), res));
         get("/collection/:id",                        (req, res) -> Views.collection(freemarker).handle(projects.redirectNoCollect(req, res), res));
@@ -102,7 +103,6 @@ public class Server implements SparkApplication {
         get("/review-institution/:id",                Views.reviewInstitution(freemarker, databaseType.equals("COLLECT") ? "remote" : "local"));
         get("/review-project/:id",                    (req, res) -> Views.reviewProject(freemarker).handle(projects.redirectNoEdit(req, res), res));
         get("/support",                               Views.support(freemarker));
-        get("/test-layout-editor",                    Views.testWidgetLayout(freemarker));
         get("/widget-layout-editor",                  Views.editWidgetLayout(freemarker));
 
         // Routing Table: HTML pages (with side effects)

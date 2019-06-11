@@ -83,7 +83,7 @@ public class JsonUtils {
 
     public static Collector<JsonElement, ?, JsonArray> intoJsonArray =
         Collector.of(JsonArray::new, JsonArray::add,
-                     (left, right) -> { left.addAll(right); return left; });
+                    (left, right) -> { left.addAll(right); return left; });
 
     public static JsonArray mapJsonArray(JsonArray array, Function<JsonObject, JsonObject> mapper) {
         return toStream(array)
