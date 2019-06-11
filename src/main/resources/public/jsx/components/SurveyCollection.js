@@ -189,7 +189,7 @@ class SurveyQuestionTree extends React.Component {
                     <button
                         type="button"
                         id={this.props.surveyNode.question + "_" + this.props.surveyNode.id}
-                        className="text-center btn btn-outline-lightgreen btn-sm col overflow-hidden text-truncate"
+                        className="text-center btn btn-outline-lightgreen btn-sm col text-truncate"
                         title={this.props.getRulesById(this.props.surveyNode.id).length > 0 ? this.props.getRulesById(this.props.surveyNode.id) : "No rules apply to this question."}
                         style={{
                             boxShadow: `${(this.props.surveyNode.id === this.props.selectedQuestion.id)
@@ -242,7 +242,7 @@ function AnswerButton({ surveyNode, surveyNode: { answers, answered }, selectedS
             <li key={uid} className="mb-1">
                 <button
                     type="button"
-                    className="btn btn-outline-darkgray btn-sm btn-block pl-1 overflow-hidden text-truncate"
+                    className="btn btn-outline-darkgray btn-sm btn-block pl-1 text-truncate"
                     title={ans.answer}
                     id={ans.answer + "_" + ans.id}
                     name={ans.answer + "_" + ans.id}
@@ -277,7 +277,7 @@ function AnswerRadioButton({ surveyNode, surveyNode: { answers, answered }, sele
             <li key={uid} className="mb-1">
                 <button
                     type="button"
-                    className="btn btn-outline-darkgray btn-sm btn-block pl-1 overflow-hidden text-truncate"
+                    className="btn btn-outline-darkgray btn-sm btn-block pl-1 text-truncate"
                     title={ans.answer}
                     id={ans.answer + "_" + ans.id}
                     name={ans.answer + "_" + ans.id}

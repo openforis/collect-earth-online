@@ -1440,7 +1440,7 @@ class ProjectTitle extends React.Component {
         return (
             <div style={{ height: "3rem", cursor: "default" }} onClick={() => this.setState({ showStats: !this.state.showStats })}>
                 <h2
-                    className="header overflow-hidden text-truncate"
+                    className="header text-truncate"
                     title={props.projectName}
                     style={{ height: "100%", marginBottom: "0" }}
                 >

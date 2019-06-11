@@ -542,12 +542,7 @@ class ProjectPopup extends React.Component {
                                             <td className="small col-6 pr-0">
                                                 <a
                                                     href={this.props.documentRoot + "/collection/" + feature.get("projectId")}
-                                                    className="btn btn-sm btn-block btn-outline-lightgreen"
-                                                    style={{
-                                                        whiteSpace: "nowrap",
-                                                        overflow: "hidden",
-                                                        textOverflow: "ellipsis",
-                                                    }}
+                                                    className="btn btn-sm btn-block btn-outline-lightgreen text-truncate"
                                                 >
                                                     {feature.get("name")}
                                                 </a>
