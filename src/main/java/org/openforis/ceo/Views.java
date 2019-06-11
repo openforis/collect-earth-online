@@ -189,16 +189,6 @@ public class Views {
                                       Map.of("project_id", getPid));
     }
 
-    public static Route testWidgetLayout(FreeMarkerEngine freemarker) {
-        Function<Request, String> getPid = (req) -> req.queryParams("pid");
-        return makeAuthenticatedRoute("Test-Layout-Editor", freemarker,
-                                      Map.of("project_id", getPid));
-    }
-
-    public static Route cardTest(FreeMarkerEngine freemarker) {
-        return makeRoute("Card-Test", freemarker);
-    }
-
     public static Route pageNotFound(FreeMarkerEngine freemarker) {
         return makeRoute("Page-Not-Found", freemarker);
     }
