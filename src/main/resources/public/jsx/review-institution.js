@@ -579,12 +579,8 @@ class Project extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
-            boxShadow: "",
+            boxShadow: null,
         };
-    }
-
-    componentDidMount() {
-        this.projectHighlight();
     }
 
     projectHighlight = () => {
@@ -614,9 +610,12 @@ class Project extends React.Component {
                     className="btn btn-sm btn-outline-lightgreen btn-block text-truncate"
                     title={project.name}
                     onClick={() => window.location = documentRoot + "/collection/" + project.id}
-                    style={{
-                        boxShadow: this.state.boxShadow,
+                    onMouseOver={() => {
+                        if (this.state.boxShadow === null) {
+                            this.setState({ boxShadow: "" }, this.projectHighlight());
+                        }
                     }}
+                    style={this.state.boxShadow ? { boxShadow: this.state.boxShadow } : {}}
                 >
                     {project.name}
                 </button>
