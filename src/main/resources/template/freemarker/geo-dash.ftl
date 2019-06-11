@@ -26,12 +26,10 @@
      return decodeURIComponent(results[2].replace(/\+/g, " "));
  }
 </script>
-<script type="text/javascript" src="${root}/js/vendors~account~collection~create_institution~create_project~geodashreact~home~institution_dashboard~93ace93a.bundle.js"></script>
-<script type="text/javascript" src="${root}/js/collection~create_project~geodashreact~home~project_dashboard~review_project.bundle.js"></script>
-<script type="text/javascript" src="${root}/js/geodashreact.bundle.js"></script>
+<script type="text/javascript" src="${root}/js/geo_dash.bundle.js"></script>
 <script type="text/javascript">
  window.onload = function () {
-     geodashreact.renderGeodashPage("${root}");
+     geo_dash.renderGeodashPage("${root}");
  };
 </script>
 <#include "end-content.ftl">

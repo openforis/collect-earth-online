@@ -9,6 +9,9 @@
         <title>Collect Earth Online</title>
         <link rel="shortcut icon" href="${root}/favicon.ico">
 
+        <script type="text/javascript" src="${root}/js/vendors~account~collection~create_institution~create_project~geo_dash~home~institution_dashboard~pro~fb47a95c.bundle.js"></script>
+        <script type="text/javascript" src="${root}/js/collection~create_project~geo_dash~home~project_dashboard~review_project.bundle.js"></script>
+
         <!-- Various hacks to make Internet Explorer work right -->
         <link rel="stylesheet" type="text/css" href="${root}/css/ie10-viewport-bug-workaround.css">
         <script type="text/javascript" src="${root}/js/ie-emulation-modes-warning.js"></script>
@@ -28,62 +31,20 @@
 
         <!-- Bootstrap -->
         <link rel="stylesheet" type="text/css" href="${root}/css/bootstrap.min.css">
-        <script type="text/javascript" src="${root}/js/bootstrap.min.js"></script>
 
         <!-- Highcharts -->
         <script type="text/javascript" src="${root}/js/highcharts.js"></script>
 
-        <!-- Popper -->
-        <script type="text/javascript" src="${root}/js/popper.min.js"></script>
-
-        <!-- Angular -->
-        <script type="text/javascript" src="${root}/js/angular.min.js"></script>
-
         <!-- OpenLayers3.20.1 -->
         <link rel="stylesheet" type="text/css" href="${root}/css/openlayers-3.20.1.css">
-        <link rel="stylesheet" type="text/css" href="${root}/css/ol3-popup.css" />
         <script type="text/javascript" src="${root}/js/openlayers-3.20.1.js"></script>
-        <script type="text/javascript" src="${root}/js/ol3-popup.js"></script>
-        <!-- Fonts -->
-        <!-- <link rel="stylesheet" type="text/css" href="${root}/css/google-fonts-open-sans.css"> -->
-        <!-- <link rel="stylesheet" type="text/css" href="${root}/css/google-fonts-oswald.css"> -->
-
-        <!-- Gary's custom styles and scripts -->
-        <!-- <link rel="stylesheet" type="text/css" href="${root}/css/stylesheet.css"> -->
-        <!-- <script type="text/javascript" src="${root}/js/mercator-openlayers.js"></script> -->
-        <!-- <script type="text/javascript" src="${root}/js/utils.js"></script> -->
 
         <!-- Jerome's custom styles and scripts -->
         <link rel="stylesheet" type="text/css" href="${root}/css/custom.css">
-        <script type="text/javascript" src="${root}/js/custom.js"></script>
 
         <!-- Billy's custom styles and scripts -->
         <link rel="stylesheet" type="text/css" href="${root}/css/geo-dash.css">
 
-        <!-- Stefano's styles and scripts for Collect integration -->
-        <#if navlink == "Card-Test">
-            <link rel="stylesheet" type="text/css" href="/collect/earthFiles/jquery/jquery-ui.css">
-            <link rel="stylesheet" type="text/css" href="/collect/earthFiles/jquery/jquery.selectBoxIt.css">
-            <link rel="stylesheet" type="text/css" href="/collect/earthFiles/jquery/jquery-steps.css">
-            <link rel="stylesheet" type="text/css" href="/collect/earthFiles/bootstrap/3.3.7/bootstrap.min.css">
-            <link rel="stylesheet" type="text/css" href="/collect/earthFiles/bootstrap/bootstrap-datetimepicker.min.css">
-            <link rel="stylesheet" type="text/css" href="/collect/earthFiles/css/of-collect-forms.css">
-            <script type="text/javascript" src="/collect/earthFiles/jquery/jquery-3.3.1.min.js"></script>
-            <script type="text/javascript" src="/collect/earthFiles/jquery/jquery-ui.js"></script>
-            <script type="text/javascript" src="/collect/earthFiles/jquery/jquery.blockUI.js"></script>
-            <script type="text/javascript" src="/collect/earthFiles/jquery/jquery.selectBoxIt.min.js"></script>
-            <script type="text/javascript" src="/collect/earthFiles/jquery/jquery.steps.openforis.js"></script>
-            <script type="text/javascript" src="/collect/earthFiles/bootstrap/3.3.7/bootstrap.min.js"></script>
-            <script type="text/javascript" src="/collect/earthFiles/bootstrap/moment.js"></script>
-            <script type="text/javascript" src="/collect/earthFiles/bootstrap/bootstrap-datetimepicker.min.js"></script>
-            <script type="text/javascript" src="/collect/earthFiles/openforis/of.js"></script>
-            <script type="text/javascript" src="/collect/earthFiles/openforis/of-objects.js"></script>
-            <script type="text/javascript" src="/collect/earthFiles/openforis/of-arrays.js"></script>
-            <script type="text/javascript" src="/collect/earthFiles/openforis/of-ui.js"></script>
-            <script type="text/javascript" src="/collect/earthFiles/openforis/of-ui-forms.js"></script>
-            <script type="text/javascript" src="/collect/earthFiles/openforis/of-ui-forms-validation.js"></script>
-            <script type="text/javascript" src="/collect/earthFiles/js/of_collect_forms.js"></script>
-        </#if>
         <#include "googleanalytics.ftl" ignore_missing=true>
     </head>
     <body style="padding-top:60px;">

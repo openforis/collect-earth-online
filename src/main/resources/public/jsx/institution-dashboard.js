@@ -1,11 +1,11 @@
-import React from 'react';
-import ReactDOM from 'react-dom';
+import React from "react";
+import ReactDOM from "react-dom";
 
 class InstitutionDashboard extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
-            details: []
+            details: [],
         };
     }
 
@@ -27,7 +27,7 @@ class InstitutionDashboard extends React.Component {
     };
 
     setDetails = (projects) => {
-        let details = this.state.details;
+        const details = this.state.details;
         projects.forEach(proj => {
             fetch(this.props.documentRoot + "/get-project-stats/" + proj.id)
                 .then(response => response.ok ? response.json() : Promise.reject(response))
@@ -40,9 +40,9 @@ class InstitutionDashboard extends React.Component {
                         analyzedPlots: data.analyzedPlots,
                         flaggedPlots: data.flaggedPlots,
                         contributors: data.contributors,
-                        members: data.members
+                        members: data.members,
                     });
-                    this.setState({details: details});
+                    this.setState({ details: details });
                 })
                 .catch(response => {
                     console.log(response);
@@ -54,23 +54,23 @@ class InstitutionDashboard extends React.Component {
     render() {
         return (
             <React.Fragment>
-                <div className="bg-darkgreen mb-3 no-container-margin" style={{width: "100%", margin: "0 10px 0 10px"}}>
+                <div className="bg-darkgreen mb-3 no-container-margin" style={{ width: "100%", margin: "0 10px 0 10px" }}>
                     <h1>Institution Dashboard</h1>
                 </div>
-                <table id="srd" style={{width: "1000px", margin: "10px", color: "rgb(49, 186, 176)"}}>
+                <table id="srd" style={{ width: "1000px", margin: "10px", color: "rgb(49, 186, 176)" }}>
                     <thead>
-                    <tr>
-                        <th>Project Name</th>
-                        <th>Members</th>
-                        <th>Contributors</th>
-                        <th>Total Plots</th>
-                        <th>Flagged Plots</th>
-                        <th>Analyzed Plots</th>
-                        <th>Unanalyzed Plots</th>
-                    </tr>
+                        <tr>
+                            <th>Project Name</th>
+                            <th>Members</th>
+                            <th>Contributors</th>
+                            <th>Total Plots</th>
+                            <th>Flagged Plots</th>
+                            <th>Analyzed Plots</th>
+                            <th>Unanalyzed Plots</th>
+                        </tr>
                     </thead>
                     <tbody>
-                    <ProjectList details={this.state.details}/>
+                        <ProjectList details={this.state.details}/>
                     </tbody>
                 </table>
             </React.Fragment>
@@ -94,8 +94,11 @@ function ProjectList(props) {
 
 export function renderInstitutionDashboardPage(args) {
     ReactDOM.render(
-        <InstitutionDashboard documentRoot={args.documentRoot} userId={args.userId}
-                              institutionId={args.institutionId}/>,
+        <InstitutionDashboard
+            documentRoot={args.documentRoot}
+            userId={args.userId}
+            institutionId={args.institutionId}
+        />,
         document.getElementById("institution-dashboard")
     );
 }

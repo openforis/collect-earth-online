@@ -19,14 +19,9 @@
    1. Remove outdated and unnecessary files.
 ** ServerTest.java
    1. Write a unit test suite.
-** Server.java
-   1. Get deploy/clientkeystore signed by a certificate authority.
-   2. Add secure("deploy/clientkeystore", "ceocert", null, null); to declareLocalStorageRoutes() and declareRemoteStorageRoutes() to enable HTTPS sitewide. https://spark.apache.org/docs/latest/security.html
-   3. Remove /card-test route from declareRemoteStorageRoutes() once survey cards are added to the Project page.
 ** Views.java
    1. Make sure institution() works when OF_USERS_API_URL="";
    2. Remove the "role" attribute from Freemarker data.
-   3. Remove cardTest() once survey cards are added to the Project page.
    4. Verify that all Freemarker data parameters are used:
       |--------------------+--------------------------------------------------------|
       | home.ftl           | defaults                                               |
@@ -63,10 +58,6 @@
 ** header.ftl
    1. Import Stefano's styles and scripts on the Collection page once the Card Test page has been removed.
    2. Ask Billy if we are actually using datepicker.css.
-** n-navbar.ftl
-   1. Remove this file.
-** o-navbar.ftl
-   1. Remove this file.
 ** logo-banner.ftl
    1. Remove ADPC logo.
    2. Add SERVIR-Mekong to the third line along with Google and SIG.
@@ -75,15 +66,8 @@
    1. The login() function's returnurl and querystring arguments expand recursively. (see Users.java)
    2. Add OAuth2.0 support to CEO logins (using e.g. a Google, LinkedIn, or Facebook account).
    3. Load a user's Gravatar image in the page header when logged in (https://en.gravatar.com).
-** test-jerome.ftl
-   1. Remove this file.
-** home.ftl
-   1. Ask Jerome to fix the sidebar visibility toggling or remove it entirely.
-   2. Shrink home-map-pane so we can see the scalebar.
 ** support.ftl
    1. Add tutorials and demo material from Karis' team.
-** Projects.java
-   1. Review the whole file.
 ** project.ftl
    1. Move the OpenLayers icon up onto the map by fixing its style.
    2. Enable the date-related project stats.
@@ -118,35 +102,15 @@
    3. Switch the "Go To First Plot" button with the "Skip" and "Flag Plot As Bad" buttons using ng-if in collection.ftl.
    4. Move the calls in loadRandomPlot() and loadPlotById() into a function in mercator-openlayers.js.
    5. Merge loadRandomPlot() and loadPlotById().
-** card-test.ftl
-   1. Finish reviewing the whole file.
-   2. Make the survey cards behave correctly:
-      - When the page loads:
-        1. [X] Show nothing in the sidebar for value selection.
-      - When the user selects a plot:
-        1. [ ] Store the collectRecordId attribute of the selected plot.
-        2. [X] Call the rootentitypath=/plot URL to get the plot-level survey cards.
-        3. [X] Embed the plot-level survey cards in the page.
-        4. [X] Call CollectForms() with sampleIds = null or sampleIds = [] (because no points have been chosen yet).
-      - When the user selects some sample points:
-        1. [ ] Store the sampleId attributes of the selected samples.
-        2. [X] Call the rootentitypath=/plot/subplot URL to get the subplot survey cards.
-        3. [X] Erase the plot-level survey cards.
-        4. [X] Embed the subplot survey cards in the page.
-        5. [X] Call CollectForms() with sampleIds = [the points I selected].
-   3. Remove this file once survey cards are added to the Project page.
 ** account.ftl
    1. Review the whole file.
    2. Rename to Operator page.
 ** account.js
    1. Review the whole file.
    2. Implement server-side endpoints to make Billy's user stats work correctly.
-** institution.ftl
+** institution.js
    1. Finish reviewing the whole file.
-   2. Add maxlength=1000 to the description textarea.
    3. Allow users to view/edit the imagery parameters after a new layer has been added to an institution.
-   4. Show total number of active and completed projects and highlight project buttons differently based on this.
-   5. Show the list of institution users only if the user is logged in and a member of the institution.
    6. Add a more generic image server interface:
       - Include Google Maps, Bing Maps, and DigitalGlobe Maps forms
       - Include WMS server (e.g., Geoserver) form

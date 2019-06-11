@@ -79,7 +79,7 @@ class Collection extends React.Component {
         // Update map when state changes
         //
 
-        // Inititialize on new plot
+        // Initialize when new plot
         if (this.state.currentPlot && this.state.currentPlot !== prevState.currentPlot) {
             this.showProjectPlot();
             if (this.state.hasGeoDash) {
@@ -89,12 +89,15 @@ class Collection extends React.Component {
             this.setState({ storedInterval: setInterval(() => this.resetPlotLock, 2.3 * 60 * 1000) });
         }
 
-        // Update Samples
-        if (this.state.currentPlot && this.state.currentPlot === prevState.currentPlot) {
-            // Changing questions shows different set of samples
+        // Conditions required for samples to be shown
+        if (this.state.currentPlot
+            && this.state.selectedQuestion.visible
+            && this.state.selectedQuestion.visible.length > 0) {
+
+            // Changing conditions for which samples need to be re-drawn
             if (this.state.selectedQuestion.id !== prevState.selectedQuestion.id
                 || this.state.sampleOutlineBlack !== prevState.sampleOutlineBlack
-                || (this.state.userSamples !== prevState.userSamples && this.state.selectedQuestion.visible)
+                || this.state.userSamples !== prevState.userSamples
                 || !prevState.selectedQuestion.visible) {
 
                 this.showPlotSamples();
@@ -312,6 +315,15 @@ class Collection extends React.Component {
         .map(k => encodeURIComponent(k) + "=" + encodeURIComponent(params[k]))
         .join("&");
 
+    plotHasSamples = (plotData) => {
+        if (plotData.samples.length === 0) {
+            alert("This plot has no samples. Please flag the plot.");
+            return false;
+        } else {
+            return true;
+        }
+    };
+
     getPlotData = (plotId) => {
         fetch(this.props.documentRoot + "/get-plot-by-id"
               + this.getQueryString({
@@ -335,6 +347,7 @@ class Collection extends React.Component {
                         prevPlotButtonDisabled: false,
                         nextPlotButtonDisabled: false,
                     });
+                    this.plotHasSamples(newPlot);
                 }
             })
             .catch(response => {
@@ -370,6 +383,7 @@ class Collection extends React.Component {
                         ...this.newPlotValues(newPlot),
                         prevPlotButtonDisabled: plotId === -1,
                     });
+                    this.plotHasSamples(newPlot);
                 }
             })
             .catch(response => {
@@ -401,6 +415,7 @@ class Collection extends React.Component {
                         ...this.newPlotValues(newPlot),
                         nextPlotButtonDisabled: false,
                     });
+                    this.plotHasSamples(newPlot);
                 }
             })
             .catch(response => {
@@ -628,8 +643,8 @@ class Collection extends React.Component {
     intersection = (array1, array2) => array1.filter(value => array2.includes(value));
 
     getSelectedSampleIds = (question) => {
-        const allFeatures = mercator.getAllFeatures(this.state.mapConfig, "currentSamples");
-        const selectedFeatures = mercator.getSelectedSamples(this.state.mapConfig).getArray();
+        const allFeatures = mercator.getAllFeatures(this.state.mapConfig, "currentSamples") || [];
+        const selectedFeatures = mercator.getSelectedSamples(this.state.mapConfig) ? mercator.getSelectedSamples(this.state.mapConfig).getArray() : [];
 
         return (
             (selectedFeatures.length === 0 && question.answered.length === 0)
@@ -801,11 +816,10 @@ class Collection extends React.Component {
             .map(surveyRule => this.ruleFunctions[surveyRule.ruleType](surveyRule, questionToSet, answerId, answerText))
             .find(msg => msg !== null);
 
-    setCurrentValue = (questionToSet, answerId, answerText) => {
-        const sampleIds = this.getSelectedSampleIds(questionToSet);
-        const ruleError = this.rulesViolated(questionToSet, answerId, answerText);
-
-        if (sampleIds.some(sid => questionToSet.visible.every(vs => vs.id !== sid))) {
+    checkSelection = (sampleIds, ruleError, questionToSet) => {
+        if (!this.plotHasSamples(this.state.currentPlot)) {
+            return false;
+        } else if (sampleIds.some(sid => questionToSet.visible.every(vs => vs.id !== sid))) {
             alert("Invalid Selection. Try selecting the question before answering.");
             return false;
         } else if (sampleIds.length === 0) {
@@ -815,6 +829,15 @@ class Collection extends React.Component {
             alert(ruleError);
             return false;
         } else {
+            return true;
+        }
+    };
+
+    setCurrentValue = (questionToSet, answerId, answerText) => {
+        const sampleIds = this.getSelectedSampleIds(questionToSet);
+        const ruleError = this.rulesViolated(questionToSet, answerId, answerText);
+
+        if (this.checkSelection(sampleIds, ruleError, questionToSet)) {
             const newSamples = sampleIds.reduce((acc, sampleId) => {
                 const newQuestion = {
                     questionId: questionToSet.id,
@@ -974,7 +997,7 @@ class Collection extends React.Component {
                 <label htmlFor="radio2" className="form-check-label">White</label>
             </div>
         </div>
-    )
+    );
 
     render() {
         const plotId = this.state.currentPlot
@@ -1250,7 +1273,7 @@ class PlotNavigation extends React.Component {
         <a
             className="btn btn-outline-lightgreen btn-sm btn-block my-2"
             href={"data:earth.kml+xml application/vnd.google-earth.kmz, "
-                + encodeURIComponent(this.state.KMLFeatures)}
+                + encodeURIComponent(this.props.KMLFeatures)}
             download={"ceo_" + this.props.projectId + "_" + this.props.plotId + ".kml"}
         >
             Download Plot KML

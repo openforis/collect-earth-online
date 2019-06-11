@@ -11,8 +11,8 @@ module.exports = {
         project_dashboard:      path.resolve(__dirname, "src/main/resources/public/jsx/project-dashboard.js"),
         institution_dashboard:  path.resolve(__dirname, "src/main/resources/public/jsx/institution-dashboard.js"),
         account:                path.resolve(__dirname, "src/main/resources/public/jsx/account.js"),
-        geodashreact:           path.resolve(__dirname, "src/main/resources/public/jsx/geodashreact.js"),
-        widgetlayouteditor:     path.resolve(__dirname, "src/main/resources/public/jsx/geo-dash-widget-editor.js")
+        geo_dash:               path.resolve(__dirname, "src/main/resources/public/jsx/geo-dash.js"),
+        widget_layout_editor:   path.resolve(__dirname, "src/main/resources/public/jsx/widget-layout-editor.js"),
     },
     module: {
         rules: [
@@ -24,39 +24,42 @@ module.exports = {
                     options: {
                         presets: [
                             "@babel/preset-env",
-                            "@babel/preset-react"
+                            "@babel/preset-react",
                         ],
                         plugins: [
                             "@babel/plugin-proposal-class-properties",
-                            "lodash"
-                        ]
-                    }
+                            "lodash",
+                        ],
+                    },
                 },
             },
             {
                 test: /\.css$/,
                 use: [
                     "style-loader",
-                    "css-loader"
-                ]
+                    "css-loader",
+                ],
             },
             {
                 test: /\.(png|svg|jpg|gif)$/,
                 use: [
-                    "file-loader"
-                ]
+                    "file-loader",
+                ],
             },
             {
                 test: /\.(woff|woff2|eot|ttf|otf)$/,
                 use: [
-                    "file-loader"
-                ]
-            }
-        ]
+                    "file-loader",
+                ],
+            },
+        ],
     },
     optimization: {
+        minimize: true,
         splitChunks: {
-            chunks: "all"
-        }
-    }
+            chunks: "all",
+            maxInitialRequests: Infinity,
+            minSize: 10000,
+        },
+    },
 };

@@ -10,6 +10,7 @@ import static org.openforis.ceo.utils.JsonUtils.parseJson;
 import static org.openforis.ceo.utils.JsonUtils.readJsonFile;
 import static org.openforis.ceo.utils.JsonUtils.writeJsonFile;
 import static org.openforis.ceo.utils.PartUtils.writeFilePartBase64;
+import static org.openforis.ceo.Views.redirectAuth;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
@@ -20,6 +21,25 @@ import spark.Request;
 import spark.Response;
 
 public class JsonInstitutions implements Institutions {
+
+    public Request redirectNonAdmin(Request req, Response res) {
+        final var userId = req.session().attributes().contains("userid") ? req.session().attribute("userid").toString() : "0";
+        final var pInstitutionId = req.params(":id");
+        final var qInstitutionId = req.queryParams("institution");
+
+        final var institutionId = pInstitutionId != null
+            ? Integer.parseInt(pInstitutionId)
+            : qInstitutionId != null
+                ? Integer.parseInt(qInstitutionId)
+                : 0;
+
+        var matchingInstitution = getInstitutionById(institutionId);
+        if (matchingInstitution.isPresent()) {
+            final var admins = matchingInstitution.get().has("admins") ? matchingInstitution.get().get("admins").getAsJsonArray() : new JsonArray();
+            redirectAuth(req, res, admins.contains(parseJson(userId)), Integer.parseInt(userId));
+        }
+        return req;
+    }
 
     public String getAllInstitutions(Request req, Response res) {
         var institutions = elementToArray(readJsonFile("institution-list.json"));
@@ -63,14 +83,14 @@ public class JsonInstitutions implements Institutions {
             final var logo = jsonInputs.get("logo").getAsString();
             final var base64Image = jsonInputs.get("base64Image").getAsString();
             final var description = jsonInputs.get("description").getAsString();
-            
+
             // Read in the existing institution list
             var institutions = elementToArray(readJsonFile("institution-list.json"));
 
             // Generate a new institution id
             final var newInstitutionId = getNextId(institutions);
             // Upload the logo image if one was provided
-            final var logoFileName = !logo.equals("") 
+            final var logoFileName = !logo.equals("")
                                     ? writeFilePartBase64(
                                             logo,
                                             base64Image,
@@ -94,8 +114,8 @@ public class JsonInstitutions implements Institutions {
             var newInstitution = new JsonObject();
             newInstitution.addProperty("id", newInstitutionId);
             newInstitution.addProperty("name", name);
-            newInstitution.addProperty("logo", logoFileName != null 
-                                                ? "img/institution-logos/" + logoFileName 
+            newInstitution.addProperty("logo", logoFileName != null
+                                                ? "img/institution-logos/" + logoFileName
                                                 : "");
             newInstitution.addProperty("description", description);
             newInstitution.addProperty("url", url);
@@ -125,7 +145,7 @@ public class JsonInstitutions implements Institutions {
             final var description = jsonInputs.get("description").getAsString();
 
             // Upload the logo image if one was provided
-            final var logoFileName = !logo.equals("") 
+            final var logoFileName = !logo.equals("")
                                     ? writeFilePartBase64(
                                             logo,
                                             base64Image,
@@ -139,8 +159,8 @@ public class JsonInstitutions implements Institutions {
                         institution.addProperty("name", name);
                         institution.addProperty("url", url);
                         institution.addProperty("description", description);
-                        institution.addProperty("logo", logoFileName != null 
-                                                        ? "img/institution-logos/" + logoFileName 
+                        institution.addProperty("logo", logoFileName != null
+                                                        ? "img/institution-logos/" + logoFileName
                                                         : institution.get("logo").getAsString());
                         return institution;
                     } else {
