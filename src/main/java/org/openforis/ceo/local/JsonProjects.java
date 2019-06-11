@@ -1241,7 +1241,7 @@ public class JsonProjects implements Projects {
             throw new RuntimeException("The uploaded plot and sample files do not have correctly overlapping data. "
                                        + noSamples.size()
                                        + " plots have no samples. The first 10 are: "
-                                       + topTen );
+                                       + topTen);
         }
 
         // Write the plot data to a new plot-data-<id>.json file
