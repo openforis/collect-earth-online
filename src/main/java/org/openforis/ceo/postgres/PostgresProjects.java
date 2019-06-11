@@ -776,7 +776,7 @@ public class PostgresProjects implements Projects {
                         idList.add(rs.getString("plot_id"));
                     }
                     if (idList.size() > 0) {
-                        var topTen = "[" + String.join(",", idList.subList(0, Math.min(idList.size(), 2))) + "]";
+                        var topTen = "[" + String.join(",", idList.subList(0, Math.min(idList.size(), 10))) + "]";
                         throw new RuntimeException("The uploaded plot and sample files do not have correctly overlapping data. "
                                                    + idList.size()
                                                    + " plots have no samples. The first 10 are: "
