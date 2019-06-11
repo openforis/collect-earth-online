@@ -823,4 +823,12 @@ public class CollectProjects implements Projects {
             return Integer.parseInt(userIdStr);
         }
     }
+
+    public Request redirectNoCollect(Request req, Response res) {
+        return req;
+    }
+
+    public Request redirectNoEdit(Request req, Response res) {
+        return req;
+    }
 }
