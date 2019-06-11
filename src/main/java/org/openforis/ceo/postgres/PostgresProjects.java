@@ -4,7 +4,6 @@ import static javax.servlet.http.HttpServletResponse.SC_NO_CONTENT;
 import static org.openforis.ceo.utils.DatabaseUtils.connect;
 import static org.openforis.ceo.utils.JsonUtils.expandResourcePath;
 import static org.openforis.ceo.utils.JsonUtils.parseJson;
-import static org.openforis.ceo.utils.PartUtils.partToString;
 import static org.openforis.ceo.utils.PartUtils.writeFilePartBase64;
 import static org.openforis.ceo.utils.ProjectUtils.padBounds;
 import static org.openforis.ceo.utils.ProjectUtils.reprojectBounds;
@@ -23,6 +22,7 @@ import static org.openforis.ceo.utils.ProjectUtils.makeGeoJsonPolygon;
 import static org.openforis.ceo.utils.ProjectUtils.getSampleValueTranslations;
 import static org.openforis.ceo.utils.ProjectUtils.deleteShapeFileDirectories;
 import static org.openforis.ceo.utils.ProjectUtils.runBashScriptForProject;
+import static org.openforis.ceo.Views.redirectAuth;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
@@ -35,7 +35,6 @@ import java.sql.PreparedStatement;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Timestamp;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -51,6 +50,41 @@ import spark.Response;
 
 
 public class PostgresProjects implements Projects {
+
+    private Request redirectCommon(Request req, Response res, String queryFn) {
+        final var userId = Integer.parseInt(req.session().attributes().contains("userid") ? req.session().attribute("userid").toString() : "0");
+        final var pProjectId = req.params(":id");
+        final var qProjectId = req.queryParams("pid");
+
+        final var projectId = pProjectId != null
+            ? Integer.parseInt(pProjectId)
+            : qProjectId != null
+                ? Integer.parseInt(qProjectId)
+                : 0;
+
+        try (var conn = connect();
+             var pstmt = conn.prepareStatement("SELECT * FROM " + queryFn + "(?, ?)")) {
+
+            pstmt.setInt(1, userId);
+            pstmt.setInt(2, projectId);
+
+            try(var rs = pstmt.executeQuery()) {
+                redirectAuth(req, res, rs.next() && rs.getBoolean(queryFn), userId);
+            }
+
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+        }
+        return req;
+    }
+
+    public Request redirectNoCollect(Request req, Response res) {
+        return redirectCommon(req, res, "can_user_collect");
+    }
+
+    public Request redirectNoEdit(Request req, Response res) {
+        return redirectCommon(req, res, "can_user_edit");
+    }
 
     private static JsonObject buildProjectJson(ResultSet rs) {
         var newProject = new JsonObject();
@@ -723,6 +757,18 @@ public class PostgresProjects implements Projects {
                 });
             }
 
+            //Check if all plots have a sample
+            try (var pstmt = conn.prepareStatement("SELECT * FROM plots_missing_samples(?)")) {
+                pstmt.setInt(1, projectId);
+                try (var rs = pstmt.executeQuery()) {
+                    if (rs.next() && rs.getInt("plots_missing_samples") > 0) {
+                        throw new RuntimeException("The uploaded plot and sample files do not have correctly overlapping data. "
+                                                   + rs.getInt("plots_missing_samples")
+                                                   + " plots have no samples.");
+                    }
+                }
+            }
+
             // Update numPlots and samplesPerPlot to match the numbers that were generated
             try (var pstmt = conn.prepareStatement("SELECT * FROM update_project_counts(?)")) {
                 pstmt.setInt(1, projectId);
@@ -798,10 +844,10 @@ public class PostgresProjects implements Projects {
             newProject.addProperty("availability", "unpublished");
             newProject.addProperty("createdDate", LocalDate.now().toString());
 
-            final var lonMin =             getOrZero(newProject,"lonMin").getAsDouble();
-            final var latMin =             getOrZero(newProject,"latMin").getAsDouble();
-            final var lonMax =             getOrZero(newProject,"lonMax").getAsDouble();
-            final var latMax =             getOrZero(newProject,"latMax").getAsDouble();
+            final var lonMin = getOrZero(newProject, "lonMin").getAsDouble();
+            final var latMin = getOrZero(newProject, "latMin").getAsDouble();
+            final var lonMax = getOrZero(newProject, "lonMax").getAsDouble();
+            final var latMax = getOrZero(newProject, "latMax").getAsDouble();
             newProject.addProperty("boundary", makeGeoJsonPolygon(lonMin, latMin, lonMax, latMax).toString());
 
             var SQL = "SELECT * FROM create_project(?,?,?,?,?,ST_SetSRID(ST_GeomFromGeoJSON(?), 4326),?,?,?,?,?,?,?,?,?,?::JSONB,?::JSONB,?::date,?::JSONB)";
@@ -900,23 +946,9 @@ public class PostgresProjects implements Projects {
             deleteFiles(newProjectId);
             deleteShapeFileDirectories(newProjectId);
             try (var conn = connect()) {
-                try (var pstmt = conn.prepareStatement("DELETE FROM projects WHERE id = ?")) {
+                try (var pstmt = conn.prepareStatement("SELECT delete_project(?)")) {
                     pstmt.setInt(1, newProjectId);
                     pstmt.execute();
-                } catch (SQLException sql) {
-                }
-                // CSV checks before adding so samples would never be added
-                try (var pstmt = conn.prepareStatement("DROP TABLE project_" + newProjectId + "_plots_csv")) {
-                    pstmt.execute();
-                } catch (SQLException sql) {
-                }
-                try (var pstmt = conn.prepareStatement("DROP TABLE project_" + newProjectId + "_plots_shp")) {
-                    pstmt.execute();
-                } catch (SQLException sql) {
-                }
-                try (var pstmt = conn.prepareStatement("DROP TABLE project_" + newProjectId + "_samples_shp")) {
-                    pstmt.execute();
-                } catch (SQLException sql) {
                 }
             } catch (SQLException sql) {
             }

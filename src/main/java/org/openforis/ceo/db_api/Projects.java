@@ -6,6 +6,8 @@ import spark.Response;
 
 public interface Projects {
 
+    Request redirectNoCollect(Request req, Response res);
+    Request redirectNoEdit(Request req, Response res);
     String getAllProjects(Request req, Response res);
     String getProjectById(Request req, Response res);
     String getProjectStats(Request req, Response res);

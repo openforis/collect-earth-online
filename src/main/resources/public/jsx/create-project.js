@@ -22,7 +22,7 @@ const blankProject = {
     plotShape: "circle",
     plotSize: "",
     plotSpacing: "",
-    privacyLevel: "public",
+    privacyLevel: "users",
     sampleDistribution: "random",
     sampleResolution: "",
     samplesPerPlot: "",
@@ -140,11 +140,18 @@ class Project extends React.Component {
                       }),
                   }
             )
-                .then(response => response.ok ? response.json() : Promise.reject(response))
-                .then(data => window.location = this.props.documentRoot + "/review-project/" + data)
+                .then(response => response.ok ? response.text() : Promise.reject(response))
+                .then(data => {
+                    const isNumeric = (n) => !isNaN(parseFloat(n)) && isFinite(n);
+                    if (isNumeric(data)) {
+                        window.location = this.props.documentRoot + "/review-project/" + data;
+                        return Promise.resolve();
+                    } else {
+                        return Promise.reject(data);
+                    }
+                })
                 .catch(response => {
-                    console.log(response);
-                    alert("Error creating project. See console for details.");
+                    alert("Error creating project. \n\n" + response);
                 })
                 .finally(utils.hide_element("spinner"));
         }
