@@ -1234,11 +1234,14 @@ public class JsonProjects implements Projects {
                 })
             .collect(intoJsonArray);
 
-        var noSamplesCnt = filterJsonArray(newPlots, p -> p.get("samples").getAsJsonArray().size() == 0).size();
-        if (noSamplesCnt > 0) {
+        var noSamples = filterJsonArray(newPlots, p -> p.get("samples").getAsJsonArray().size() == 0);
+        var topTen = toStream(noSamples).map(p -> p.get("plotId")).limit(10).collect(intoJsonArray).toString();
+
+        if (noSamples.size() > 0) {
             throw new RuntimeException("The uploaded plot and sample files do not have correctly overlapping data. "
-                                       + noSamplesCnt
-                                       + " plots have no samples.");
+                                       + noSamples.size()
+                                       + " plots have no samples. The first 10 are: "
+                                       + topTen);
         }
 
         // Write the plot data to a new plot-data-<id>.json file

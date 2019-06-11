@@ -757,14 +757,30 @@ public class PostgresProjects implements Projects {
                 });
             }
 
+            // Check if project boundary is valid.
+            try (var pstmt = conn.prepareStatement("SELECT * FROM valid_boundary((SELECT boundary FROM projects WHERE project_uid = ?))")) {
+                pstmt.setInt(1, projectId);
+                try (var rs = pstmt.executeQuery()) {
+                    if (rs.next() && !rs.getBoolean("valid_boundary")) {
+                        throw new RuntimeException("The project boundary is invalid. This can come from improper coordinates or projection when uploading shape or csv data.");
+                    }
+                }
+            }
+
             //Check if all plots have a sample
             try (var pstmt = conn.prepareStatement("SELECT * FROM plots_missing_samples(?)")) {
                 pstmt.setInt(1, projectId);
                 try (var rs = pstmt.executeQuery()) {
-                    if (rs.next() && rs.getInt("plots_missing_samples") > 0) {
+                    var idList = new ArrayList<String>();
+                    while (rs.next()) {
+                        idList.add(rs.getString("plot_id"));
+                    }
+                    if (idList.size() > 0) {
+                        var topTen = "[" + String.join(",", idList.subList(0, Math.min(idList.size(), 10))) + "]";
                         throw new RuntimeException("The uploaded plot and sample files do not have correctly overlapping data. "
-                                                   + rs.getInt("plots_missing_samples")
-                                                   + " plots have no samples.");
+                                                   + idList.size()
+                                                   + " plots have no samples. The first 10 are: "
+                                                   + topTen);
                     }
                 }
             }
