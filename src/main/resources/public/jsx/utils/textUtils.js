@@ -16,19 +16,19 @@ export function capitalizeFirst(str) {
 
 export function UnicodeIcon({ icon, backgroundColor }) {
     return (
-        icon === "leftCaret" ? <>&#x25C0;</>
-        : icon === "rightCaret" ? <>&#x25B6;</>
-        : icon === "upCaret" ? <>&#x25B2;</>
-        : icon === "downCaret" ? <>&#x25BC;</>
-        : icon === "rightArrow" ? <>&#x27a1;</>
-        : icon === "edit" ? <>&#x270D;</>
-        : icon === "trash" ? <span style={{ fontWeight: "normal" }}> &#x1F5D1;</span>
-        : icon === "noAction" ? <span className="mx-2">&#x20E0;</span>
-        : icon === "magnify" ? <>&#x1F50D;</>
-        : icon === "info" ? <>&#x24D8;</>
-        : icon === "save" ? <>&#x1F4BE;</>
-        : icon === "expand" ? <>&#x21F1;</>
-        : icon === "collapse" ? <>&#x21F2;</>
+        icon === "leftCaret" ? "\u25C0"
+        : icon === "rightCaret" ? "\u25B6"
+        : icon === "upCaret" ? "\u25B2"
+        : icon === "downCaret" ? "\u25BC"
+        : icon === "rightArrow" ? "\u27A1"
+        : icon === "edit" ? "\u270D"
+        : icon === "trash" ? <span style={{ fontWeight: "normal" }}>{"\uD83D\uDDD1"}</span>
+        : icon === "noAction" ? <span className="mx-2">{"\u20E0"}</span>
+        : icon === "magnify" ? "\uD83D\uDD0D"
+        : icon === "info" ? "\u24D8"
+        : icon === "save" ? "\uD83D\uDCBE"
+        : icon === "expand" ? "\u21F1"
+        : icon === "collapse" ? "\u21F2"
         : icon === "add" ?
             <span
                 className="mr-1 px-1"
@@ -40,7 +40,7 @@ export function UnicodeIcon({ icon, backgroundColor }) {
                     marginTop: "2px",
                 }}
             >
-                &#x2795;
+                {"\u2795"}
             </span>
         : ""
     );
