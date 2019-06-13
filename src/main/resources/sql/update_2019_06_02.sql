@@ -2,7 +2,15 @@ CREATE OR REPLACE FUNCTION delete_project(_project_uid integer)
  RETURNS void AS $$
 
  BEGIN
-    DELETE FROM projects WHERE project_uid = _project_uid;
+    DELETE FROM plots
+    WHERE plot_uid IN (
+        SELECT plot_uid
+        FROM projects
+        INNER JOIN plots
+            ON project_uid = project_rid
+            AND project_uid = _project_uid);
+
+    UPDATE projects SET availability='archived' WHERE project_uid = _project_uid;
 
     EXECUTE
     'DROP TABLE IF EXISTS ext_tables.project_' || _project_uid || '_plots_csv;'

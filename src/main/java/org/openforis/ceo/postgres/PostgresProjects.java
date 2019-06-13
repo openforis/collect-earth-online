@@ -11,6 +11,8 @@ import static org.openforis.ceo.utils.ProjectUtils.createGriddedPointsInBounds;
 import static org.openforis.ceo.utils.ProjectUtils.createGriddedSampleSet;
 import static org.openforis.ceo.utils.ProjectUtils.createRandomPointsInBounds;
 import static org.openforis.ceo.utils.ProjectUtils.createRandomSampleSet;
+import static org.openforis.ceo.utils.ProjectUtils.countGriddedSampleSet;
+import static org.openforis.ceo.utils.ProjectUtils.countGriddedPoints;
 import static org.openforis.ceo.utils.ProjectUtils.outputAggregateCsv;
 import static org.openforis.ceo.utils.ProjectUtils.outputRawCsv;
 import static org.openforis.ceo.utils.ProjectUtils.getOrEmptyString;
@@ -696,6 +698,19 @@ public class PostgresProjects implements Projects {
                     throw new  RuntimeException(e);
                 }
 
+                // FIXME check csv, shp files for too many plots before creating samples
+
+                var plotsPerSample =
+                    sampleDistribution.equals("gridded") ? countGriddedSampleSet(plotSize, sampleResolution)
+                    : sampleDistribution.equals("random") ? samplesPerPlot
+                    : 0;
+
+                if (plotsPerSample > 200) {
+                    throw new RuntimeException("This action will create "
+                                               + plotsPerSample
+                                               + " samples per plot. The maximum auto generated allowed is 200");
+                }
+
                 // if both are files, adding plots and samples is done inside PG
                 if (List.of("csv", "shp").contains(sampleDistribution)) {
                     try (var pstmt =
@@ -731,6 +746,34 @@ public class PostgresProjects implements Projects {
                 final var bottom = paddedBounds[1];
                 final var right = paddedBounds[2];
                 final var top = paddedBounds[3];
+
+                var totalPlots =
+                    plotDistribution.equals("gridded")
+                        ? countGriddedPoints(left, bottom, right, top, plotSpacing)
+                        : numPlots;
+
+                if (totalPlots > 5000) {
+                    throw new RuntimeException("This action will create "
+                                               + totalPlots
+                                               + " plots. The maximum auto generated allowed is 5,000");
+                }
+
+                var plotsPerSample =
+                    sampleDistribution.equals("gridded")
+                        ? countGriddedSampleSet(plotSize, sampleResolution)
+                        : samplesPerPlot;
+
+                if (plotsPerSample > 200) {
+                    throw new RuntimeException("This action will create "
+                                               + plotsPerSample
+                                               + " samples per plot.The maximum auto generated allowed is 200");
+                }
+
+                if (totalPlots * plotsPerSample > 50000) {
+                    throw new RuntimeException("This action will create "
+                                               + totalPlots * plotsPerSample
+                                               + " total samples. The maximum auto generated allowed is 50,000");
+                }
 
                 // Generate the plot objects and their associated sample points
                 final var newPlotCenters =
