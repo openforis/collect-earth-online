@@ -45,6 +45,8 @@
         <!-- Billy's custom styles and scripts -->
         <link rel="stylesheet" type="text/css" href="${root}/css/geo-dash.css">
 
+        <script type="text/javascript" src="${root}/js/fontawesome-all.min.js" defer></script>
+
         <#include "googleanalytics.ftl" ignore_missing=true>
     </head>
     <body style="padding-top:60px;">
