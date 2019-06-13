@@ -1157,7 +1157,7 @@ public class JsonProjects implements Projects {
             : plotDistribution.equals("csv") ? csvPlotPoints.size()
             : shpPlotCenters.size();
 
-        if (totalPlots == 0) {throw new RuntimeException("Plot file is emtpy");}
+        if (totalPlots == 0) {throw new RuntimeException("Plot file is empty");}
 
         var plotsPerSample =
             sampleDistribution.equals("random") ? samplesPerPlot

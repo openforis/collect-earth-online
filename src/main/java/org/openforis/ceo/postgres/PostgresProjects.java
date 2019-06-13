@@ -688,7 +688,7 @@ public class PostgresProjects implements Projects {
                     pstmt.setDouble(2, plotSize);
                     pstmt.execute();
                 } catch (SQLException e) {
-                    throw new RuntimeException("Error cleaning external tables", e);
+                    throw new RuntimeException("Error cleaning external tables.", e);
                 }
 
                 var extPlotCount = 0;
@@ -703,10 +703,10 @@ public class PostgresProjects implements Projects {
                         }
                     };
                 } catch (SQLException e) {
-                    throw new RuntimeException("Error counting data", e);
+                    throw new RuntimeException("Error counting data.", e);
                 }
 
-                if (extPlotCount == 0) {throw new RuntimeException("Plot file is emtpy");}
+                if (extPlotCount == 0) {throw new RuntimeException("Plot file is empty.");}
 
                 var plotsPerSample =
                     sampleDistribution.equals("gridded") ? countGriddedSampleSet(plotSize, sampleResolution)
@@ -722,7 +722,7 @@ public class PostgresProjects implements Projects {
                         pstmt.setInt(1, projectId);
                         pstmt.execute();
                     } catch (SQLException e) {
-                        throw new RuntimeException("Error merging both files", e);
+                        throw new RuntimeException("Error merging both files.", e);
                     }
                 // Add plots from file and use returned plot ID to create samples
                 } else {
@@ -737,7 +737,7 @@ public class PostgresProjects implements Projects {
                             }
                         }
                     } catch (SQLException e) {
-                        throw new RuntimeException("Error adding plot file", e);
+                        throw new RuntimeException("Error adding plot file.", e);
                     }
                 }
             } else {
@@ -753,6 +753,8 @@ public class PostgresProjects implements Projects {
                     plotDistribution.equals("gridded")
                         ? countGriddedPoints(left, bottom, right, top, plotSpacing)
                         : numPlots;
+
+                if (totalPlots == 0) {throw new RuntimeException("You cannot create a project with 0 plots.");}
 
                 var plotsPerSample =
                     sampleDistribution.equals("gridded")

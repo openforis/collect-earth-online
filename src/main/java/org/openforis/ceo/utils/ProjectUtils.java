@@ -483,21 +483,21 @@ public class ProjectUtils {
         if (plots > plotLimit) {
             throw new RuntimeException("This action will create "
                                        + numFormat(plots)
-                                       + " plots. The maximum allowed for the selected distrobution types is "
+                                       + " plots. The maximum allowed for the selected distribution types is "
                                        + numFormat(plotLimit) + ".");
         }
 
         if (perPlot > perPlotLimit) {
             throw new RuntimeException("This action will create "
                                        + numFormat(perPlot)
-                                       + " samples per plot.The maximum allowed for the selected distrobution types is "
+                                       + " samples per plot.The maximum allowed for the selected distribution types is "
                                        + numFormat(perPlotLimit) + ".");
         }
 
         if (plots * perPlot > sampleLimit) {
             throw new RuntimeException("This action will create "
                                        + numFormat(plots * perPlot)
-                                       + " total samples. The maximum allowed for the selected distrobution types is "
+                                       + " total samples. The maximum allowed for the selected distribution types is "
                                        + numFormat(sampleLimit) + ".");
         }
     }
