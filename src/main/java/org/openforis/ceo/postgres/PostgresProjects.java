@@ -708,7 +708,7 @@ public class PostgresProjects implements Projects {
                 if (plotsPerSample > 200) {
                     throw new RuntimeException("This action will create "
                                                + plotsPerSample
-                                               + " samples per plot. The maximum auto generated allowed is 200");
+                                               + " samples per plot. The maximum auto generated allowed is 200.");
                 }
 
                 // if both are files, adding plots and samples is done inside PG
@@ -755,7 +755,7 @@ public class PostgresProjects implements Projects {
                 if (totalPlots > 5000) {
                     throw new RuntimeException("This action will create "
                                                + totalPlots
-                                               + " plots. The maximum auto generated allowed is 5,000");
+                                               + " plots. The maximum auto generated allowed is 5,000.");
                 }
 
                 var plotsPerSample =
@@ -766,13 +766,13 @@ public class PostgresProjects implements Projects {
                 if (plotsPerSample > 200) {
                     throw new RuntimeException("This action will create "
                                                + plotsPerSample
-                                               + " samples per plot.The maximum auto generated allowed is 200");
+                                               + " samples per plot.The maximum auto generated allowed is 200.");
                 }
 
                 if (totalPlots * plotsPerSample > 50000) {
                     throw new RuntimeException("This action will create "
                                                + totalPlots * plotsPerSample
-                                               + " total samples. The maximum auto generated allowed is 50,000");
+                                               + " total samples. The maximum auto generated allowed is 50,000.");
                 }
 
                 // Generate the plot objects and their associated sample points
