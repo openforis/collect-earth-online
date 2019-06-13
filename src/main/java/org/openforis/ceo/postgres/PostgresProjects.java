@@ -7,6 +7,7 @@ import static org.openforis.ceo.utils.JsonUtils.parseJson;
 import static org.openforis.ceo.utils.PartUtils.writeFilePartBase64;
 import static org.openforis.ceo.utils.ProjectUtils.padBounds;
 import static org.openforis.ceo.utils.ProjectUtils.reprojectBounds;
+import static org.openforis.ceo.utils.ProjectUtils.checkPlotLimits;
 import static org.openforis.ceo.utils.ProjectUtils.createGriddedPointsInBounds;
 import static org.openforis.ceo.utils.ProjectUtils.createGriddedSampleSet;
 import static org.openforis.ceo.utils.ProjectUtils.createRandomPointsInBounds;
@@ -562,11 +563,9 @@ public class PostgresProjects implements Projects {
 
     private static String loadExternalData(Connection conn, String distribution, Integer projectId, String extFile, String plotsOrSamples, List<String> mustInclude) {
         try {
-            System.out.println(distribution);
             if (distribution.equals("csv")) {
                 final var table_name = "project_" +  projectId + "_" + plotsOrSamples + "_csv";
                 // add empty table to the database
-                System.out.println("create");
                 try (var pstmt = conn.prepareStatement("SELECT * FROM create_new_table(?,?)")) {
                     pstmt.setString(1, table_name);
                     pstmt.setString(2, loadCsvHeaders(extFile, mustInclude));
@@ -576,14 +575,12 @@ public class PostgresProjects implements Projects {
                 runBashScriptForProject(projectId, plotsOrSamples, "csv2postgres.sh", "/csv");
                 var renameFrom = loadCsvHeadersToRename(extFile);
                 // rename columns
-                System.out.println("rename");
                 try (var pstmt = conn.prepareStatement("SELECT * FROM rename_col(?,?,?)")) {
                     pstmt.setString(1,table_name);
                     pstmt.setString(2,renameFrom[0]);
                     pstmt.setString(3,"lon");
                     pstmt.execute();
                 }
-                System.out.println("rename2");
                 try (var pstmt = conn.prepareStatement("SELECT * FROM rename_col(?,?,?)")) {
                     pstmt.setString(1,table_name);
                     pstmt.setString(2,renameFrom[1]);
@@ -591,8 +588,6 @@ public class PostgresProjects implements Projects {
                     pstmt.execute();
                 }
                 // add index for reference
-
-                System.out.println("index");
                 try (var pstmt = conn.prepareStatement("SELECT * FROM add_index_col(?)")) {
                     pstmt.setString(1,table_name);
                     pstmt.execute();
@@ -621,7 +616,7 @@ public class PostgresProjects implements Projects {
                 pstmt.execute();
             } catch (SQLException s) {
                 System.out.println(s.getMessage());
-                throw new RuntimeException("Incorrect sql columns or datatypes");
+                throw new RuntimeException("Plot file failed to load.");
             }
             return plots_table;
         } catch (Exception e) {
@@ -638,11 +633,11 @@ public class PostgresProjects implements Projects {
             final var samples_table = loadExternalData(conn, sampleDistribution, projectId, samplesFile, "samples", List.of("plotId", "sampleId"));
             if (List.of("csv", "shp").contains(sampleDistribution)) {
                 // check if data is also correct after being loaded
-                try (var pstmt = conn.prepareStatement("SELECT * FROM select_partial_table_by_name(?)")) {
+                try (var pstmt = conn.prepareStatement("SELECT * FROM select_partial_sample_table_by_name(?)")) {
                     pstmt.setString(1,samples_table);
                     pstmt.execute();
                 } catch (SQLException s) {
-                    throw new RuntimeException("Missing sql columns");
+                    throw new RuntimeException("Sample file failed to load.");
                 }
                 return samples_table;
             } else {
@@ -685,8 +680,7 @@ public class PostgresProjects implements Projects {
                     pstmt.setString(3, checkLoadSamples(conn, sampleDistribution, projectId, samplesFile));
                     pstmt.execute();
                 } catch (SQLException e) {
-                    System.out.println("catch update");
-                    throw new  RuntimeException(e);
+                    throw new RuntimeException("Error updating project table.", e);
                 }
                 try (var pstmt =
                     conn.prepareStatement("SELECT * FROM cleanup_project_tables(?,?)")) {
@@ -694,22 +688,32 @@ public class PostgresProjects implements Projects {
                     pstmt.setDouble(2, plotSize);
                     pstmt.execute();
                 } catch (SQLException e) {
-                    System.out.println("catch clean");
-                    throw new  RuntimeException(e);
+                    throw new RuntimeException("Error cleaning external tables", e);
                 }
 
-                // FIXME check csv, shp files for too many plots before creating samples
+                var extPlotCount = 0;
+                var extSampleCount = 0;
+                try (var pstmt =
+                    conn.prepareStatement("SELECT * FROM ext_table_count(?)")) {
+                    pstmt.setInt(1, projectId);
+                    try(var rs = pstmt.executeQuery()) {
+                        if (rs.next()) {
+                            extPlotCount = rs.getInt("plot_count");
+                            extSampleCount = rs.getInt("sample_count");
+                        }
+                    };
+                } catch (SQLException e) {
+                    throw new RuntimeException("Error counting data", e);
+                }
+
+                if (extPlotCount == 0) {throw new RuntimeException("Plot file is emtpy");}
 
                 var plotsPerSample =
                     sampleDistribution.equals("gridded") ? countGriddedSampleSet(plotSize, sampleResolution)
                     : sampleDistribution.equals("random") ? samplesPerPlot
-                    : 0;
+                    : (extSampleCount / extPlotCount);
 
-                if (plotsPerSample > 200) {
-                    throw new RuntimeException("This action will create "
-                                               + plotsPerSample
-                                               + " samples per plot. The maximum auto generated allowed is 200.");
-                }
+                checkPlotLimits(extPlotCount, 50000, plotsPerSample, 200, 350000);
 
                 // if both are files, adding plots and samples is done inside PG
                 if (List.of("csv", "shp").contains(sampleDistribution)) {
@@ -718,8 +722,7 @@ public class PostgresProjects implements Projects {
                         pstmt.setInt(1, projectId);
                         pstmt.execute();
                     } catch (SQLException e) {
-                        System.out.println("catch adding 2");
-                        throw new  RuntimeException(e);
+                        throw new RuntimeException("Error merging both files", e);
                     }
                 // Add plots from file and use returned plot ID to create samples
                 } else {
@@ -734,8 +737,7 @@ public class PostgresProjects implements Projects {
                             }
                         }
                     } catch (SQLException e) {
-                        System.out.println("catch adding 1");
-                        throw new  RuntimeException(e);
+                        throw new RuntimeException("Error adding plot file", e);
                     }
                 }
             } else {
@@ -752,28 +754,12 @@ public class PostgresProjects implements Projects {
                         ? countGriddedPoints(left, bottom, right, top, plotSpacing)
                         : numPlots;
 
-                if (totalPlots > 5000) {
-                    throw new RuntimeException("This action will create "
-                                               + totalPlots
-                                               + " plots. The maximum auto generated allowed is 5,000.");
-                }
-
                 var plotsPerSample =
                     sampleDistribution.equals("gridded")
                         ? countGriddedSampleSet(plotSize, sampleResolution)
                         : samplesPerPlot;
 
-                if (plotsPerSample > 200) {
-                    throw new RuntimeException("This action will create "
-                                               + plotsPerSample
-                                               + " samples per plot.The maximum auto generated allowed is 200.");
-                }
-
-                if (totalPlots * plotsPerSample > 50000) {
-                    throw new RuntimeException("This action will create "
-                                               + totalPlots * plotsPerSample
-                                               + " total samples. The maximum auto generated allowed is 50,000.");
-                }
+                checkPlotLimits(totalPlots, 5000, plotsPerSample, 200, 50000);
 
                 // Generate the plot objects and their associated sample points
                 final var newPlotCenters =
