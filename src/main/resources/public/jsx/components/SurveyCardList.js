@@ -1,5 +1,6 @@
 import React, { Fragment } from "react";
 import { removeEnumerator } from "../utils/surveyUtils";
+import { UnicodeIcon } from "../utils/textUtils";
 
 export default function SurveyCardList(props) {
     const topLevelNodes = props.surveyQuestions
@@ -31,8 +32,8 @@ class SurveyCard extends React.Component {
             showQuestions: true,
             surveyRules: [],
             currentRules: [],
-        }
-    };
+        };
+    }
 
     swapQuestionIds = (upOrDown) => {
         const myId = this.props.surveyQuestion.id;
@@ -81,7 +82,7 @@ class SurveyCard extends React.Component {
                                     disabled={surveyQuestion.id === topLevelNodeIds[0]}
                                     style={{ opacity: surveyQuestion.id === topLevelNodeIds[0] ? "0.25" : "1.0" }}
                                 >
-                                    {"\u25B2"}
+                                    <UnicodeIcon icon="upCaret"/>
                                 </button>
                                 <button
                                     type="button"
@@ -90,7 +91,7 @@ class SurveyCard extends React.Component {
                                     disabled={surveyQuestion.id === topLevelNodeIds[topLevelNodeIds.length - 1]}
                                     style={{ opacity: surveyQuestion.id === topLevelNodeIds[topLevelNodeIds.length - 1] ? "0.25" : "1.0" }}
                                 >
-                                    {"\u25BC"}
+                                    <UnicodeIcon icon="downCaret"/>
                                 </button>
                             </div>
                         }
@@ -136,7 +137,7 @@ function SurveyQuestionTree({
             <div className="SurveyQuestionTree__question d-flex border-top pt-3 pb-1">
                 {[...Array(indentLevel)].map((e, i) =>
                     <div key={i} className="pl-4">
-                        {"\u27a1"}
+                        <UnicodeIcon icon="rightArrow"/>
                     </div>
                 )}
 

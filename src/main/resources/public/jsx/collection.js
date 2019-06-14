@@ -3,6 +3,7 @@ import ReactDOM from "react-dom";
 import { mercator, ceoMapStyles } from "../js/mercator-openlayers.js";
 import { SurveyCollection } from "./components/SurveyCollection";
 import { convertSampleValuesToSurveyQuestions } from "./utils/surveyUtils";
+import { UnicodeIcon } from "./utils/textUtils";
 
 class Collection extends React.Component {
     constructor(props) {
@@ -1164,8 +1165,6 @@ function SideBar(props) {
 function CollapsableTitle({ title, showGroup, toggleShow }) {
     const buttonDownStyle = { width: "1.5rem", height: "1.5rem", paddingTop: "1px", paddingLeft: "3px" };
     const buttonRightStyle = { width: "1.5rem", height: "1.5rem", paddingTop: "0px", paddingLeft: "6px", fontSize: ".8rem" };
-    const downArrow = "\u25BC";
-    const rightArrow = "\u25B6";
     return (
         <div className="PlotNavigation__Title row">
             <h3
@@ -1173,7 +1172,7 @@ function CollapsableTitle({ title, showGroup, toggleShow }) {
                 style={showGroup ? buttonDownStyle : buttonRightStyle}
                 onClick={toggleShow}
             >
-                {showGroup ? downArrow : rightArrow}
+                {showGroup ? <UnicodeIcon icon="downCaret"/> : <UnicodeIcon icon="rightCaret"/>}
             </h3>
             <h3 className="ml-2">{title}</h3>
         </div>
@@ -1217,26 +1216,24 @@ class PlotNavigation extends React.Component {
 
     navButtons = () => (
         <div className="PlotNavigation__nav-buttons row justify-content-center" id="plot-nav">
-            <input
-                id="prev-plot-button"
+            <button
                 className="btn btn-outline-lightgreen"
                 type="button"
-                name="new-plot"
-                value={"\u25C0"}
                 onClick={this.props.prevPlot}
                 style={{ opacity: this.props.prevPlotButtonDisabled ? "0.25" : "1.0" }}
                 disabled={this.props.prevPlotButtonDisabled}
-            />
-            <input
-                id="new-plot-button"
+            >
+                <UnicodeIcon icon="leftCaret"/>
+            </button>
+            <button
                 className="btn btn-outline-lightgreen mx-1"
                 type="button"
-                name="new-plot"
-                value={"\u25B6"}
                 onClick={this.props.nextPlot}
                 style={{ opacity: this.props.nextPlotButtonDisabled ? "0.25" : "1.0" }}
                 disabled={this.props.nextPlotButtonDisabled}
-            />
+            >
+                <UnicodeIcon icon="rightCaret"/>
+            </button>
             <input
                 type="text"
                 id="plotId"
@@ -1245,14 +1242,13 @@ class PlotNavigation extends React.Component {
                 value={this.state.newPlotInput}
                 onChange={e => this.updateNewPlotId(e.target.value)}
             />
-            <input
-                id="goto-plot-button"
+            <button
                 className="btn btn-outline-lightgreen"
                 type="button"
-                name="goto-plot"
-                value="Go to plot"
                 onClick={() => this.props.goToPlot(this.state.newPlotInput)}
-            />
+            >
+                Go to plot
+            </button>
         </div>
     );
 
@@ -1444,7 +1440,7 @@ class ProjectTitle extends React.Component {
                     title={props.projectName}
                     style={{ height: "100%", marginBottom: "0" }}
                 >
-                    {"\u25BC " + props.projectName}
+                    <UnicodeIcon icon="downCaret"/>{" " + props.projectName}
                 </h2>
                 {this.state.showStats &&
                 <ProjectStats

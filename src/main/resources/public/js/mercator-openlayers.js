@@ -543,7 +543,7 @@ mercator.getPolygonStyle = function (fillColor, borderColor, borderWidth) {
 
 const ceoMapStyles = {
     icon:          mercator.getIconStyle("favicon.ico"),
-    ceoIcon:       mercator.getIconStyle("ceoicon.png"),
+    ceoIcon:       mercator.getIconStyle("img/ceoicon.png"),
     redPoint:      mercator.getCircleStyle(5, null, "#8b2323", 2),
     bluePoint:     mercator.getCircleStyle(5, null, "#23238b", 2),
     yellowPoint:   mercator.getCircleStyle(5, null, "yellow", 2),
@@ -987,7 +987,7 @@ mercator.getPopupContent = function (mapConfig, documentRoot, feature) {
         const zoomLink = "<button onclick=\"mercator.zoomMapToExtent(mapConfig, "
             + mercator.getClusterExtent(feature) + ")\" "
             + "class=\"mt-0 mb-0 btn btn-sm btn-block btn-outline-yellow\" style=\"cursor:pointer; min-width:350px;\">"
-            + "\ud83d\udd0d Zoom to cluster</button>";
+            + "\uD83D\uDD0D Zoom to cluster</button>";
         return title + contentStart + tableStart + tableRows + tableEnd + zoomLink + contentEnd;
     } else {
         return title + contentStart + tableStart + tableRows + tableEnd + contentEnd;
