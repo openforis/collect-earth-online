@@ -104,21 +104,21 @@ class MapPanel extends React.Component {
                     return imagery.title === "DigitalGlobeRecentImagery";
                 }
             );
-            const mapConfig = mercator.createMap("home-map-pane", [0.0, 0.0], 1, [homePageLayer]);
+            const mapConfig = mercator.createMap("home-map-pane", [70, 15], 2.1, [homePageLayer]);
             mercator.setVisibleLayer(mapConfig, homePageLayer.title);
             this.setState({ mapConfig: mapConfig });
         }
         if (this.state.mapConfig && this.props.projects.length > 0
             && (!prevState.mapConfig || prevProps.projects.length === 0)) {
 
-            this.addProjectMarkersAndZoom(this.state.mapConfig,
-                                          this.props.projects,
-                                          this.props.documentRoot,
-                                          40); // clusterDistance = 40, use null to disable clustering
+            this.addProjectMarkers(this.state.mapConfig,
+                                   this.props.projects,
+                                   this.props.documentRoot,
+                                   40); // clusterDistance = 40, use null to disable clustering
         }
     }
 
-    addProjectMarkersAndZoom(mapConfig, projects, documentRoot, clusterDistance) {
+    addProjectMarkers(mapConfig, projects, documentRoot, clusterDistance) {
         const projectSource = mercator.projectsToVectorSource(projects.filter(project => project.boundary));
         if (clusterDistance == null) {
             mercator.addVectorLayer(mapConfig,
@@ -143,7 +143,6 @@ class MapPanel extends React.Component {
                                  overlay.setPosition(undefined);
                              }
                          });
-        mercator.zoomMapToExtent(mapConfig, projectSource.getExtent());
     }
 
     showProjectPopup(overlay, feature) {
