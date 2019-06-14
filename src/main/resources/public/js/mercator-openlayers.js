@@ -933,32 +933,6 @@ mercator.isCluster = function (feature) {
     return feature && feature.get("features") && feature.get("features").length > 0;
 };
 
-// [Pure] Returns a string of HTML representing several table rows
-// that describe the passed in project.
-mercator.makeRows = function () {
-    const rowStart = "<tr class=\"d-flex\">";
-    const rowEnd = "</tr>";
-    const leftColStart = "<td class=\"small col-6 px-0 my-auto\">";
-    const rightColStart = "<td class=\"small col-6 pr-0\">";
-    const colEnd = "</td>";
-    const linkStart = "<a href=\"" + "{documentRoot}" + "/collection/" + "{project.get(\"projectId\")}" + "\" "
-                  + "class=\"btn btn-sm btn-block btn-outline-lightgreen\" "
-                  + "style=\"white-space:nowrap; overflow:hidden; text-overflow:ellipsis\">";
-    const linkEnd = "</a>";
-    return rowStart
-        + leftColStart + "<h3 class=\"my-auto\">Name</h3>" + colEnd
-        + rightColStart + linkStart + "{project.get(\"name\")}" + linkEnd + colEnd
-        + rowEnd
-        + rowStart
-        + leftColStart + "Description" + colEnd
-        + rightColStart + "{(project.get(\"description\")} == \"\" ? \"N/A\" : project.get(\"description\"))}" + colEnd
-        + rowEnd
-        + rowStart
-        + leftColStart + "Number of plots" + colEnd
-        + rightColStart + "{project.get(\"numPlots\")}" + colEnd
-        + rowEnd;
-};
-
 // [Pure] Returns the minimum extent that bounds all of the
 // subfeatures in the passed in clusterFeature.
 mercator.getClusterExtent = function (clusterFeature) {
@@ -968,41 +942,6 @@ mercator.getClusterExtent = function (clusterFeature) {
         }
     );
     return (new ol.geom.LineString(clusterPoints)).getExtent();
-};
-
-// [Pure] Returns a string of HTML to display in a popup box on the map.
-mercator.getPopupContent = function (mapConfig, documentRoot, feature) {
-    const title = "<div class=\"cTitle\"><h1>"
-              + (mercator.isCluster(feature) ? "Cluster info" : "Project info")
-              + "</h1></div>";
-    const contentStart = "<div class=\"cContent\">";
-    const tableStart = "<table class=\"table table-sm\"><tbody>";
-    const tableRows = mercator.isCluster(feature)
-        ? feature.get("features").map(mercator.makeRows.bind(null, documentRoot)).join("\n")
-        : mercator.makeRows(documentRoot, feature);
-    const tableEnd = "</tbody></table>";
-    const contentEnd = "</div>";
-
-    if (mercator.isCluster(feature) && feature.get("features").length > 1) {
-        const zoomLink = "<button onclick=\"mercator.zoomMapToExtent(mapConfig, "
-            + mercator.getClusterExtent(feature) + ")\" "
-            + "class=\"mt-0 mb-0 btn btn-sm btn-block btn-outline-yellow\" style=\"cursor:pointer; min-width:350px;\">"
-            + "\ud83d\udd0d Zoom to cluster</button>";
-        return title + contentStart + tableStart + tableRows + tableEnd + zoomLink + contentEnd;
-    } else {
-        return title + contentStart + tableStart + tableRows + tableEnd + contentEnd;
-    }
-};
-
-// [Side Effects] Updates the overlay element's innerHTML with fields
-// containing the feature's name, description, and numPlots fields as
-// well as a link to its data collection page and then displays the
-// overlay on the map at the feature's coordinates.
-mercator.showProjectPopup = function (mapConfig, overlay, documentRoot, feature) {
-    overlay.getElement().innerHTML = mercator.getPopupContent(mapConfig, documentRoot, feature);
-    overlay.setPosition(mercator.isCluster(feature)
-                        ? feature.get("features")[0].getGeometry().getCoordinates()
-                        : feature.getGeometry().getCoordinates());
 };
 
 // [Pure] Returns a new vector source containing points for each of
@@ -1030,51 +969,6 @@ mercator.projectsToVectorSource = function (projects) {
         }
     );
     return new ol.source.Vector({ features: features });
-};
-
-// [Side Effects] Adds a new vector layer called "projectMarkers" to
-// mapConfig's map object containing icons at each of the project's
-// AOI centers. Also adds a dynamic overlay popup to the map which
-// shows a brief project description whenever a project icon is
-// clicked. If clusterDistance is not null, the new vector source will
-// cluster the projects. Finally, zooms the map view to the new
-// layer's extent.
-mercator.addProjectMarkersAndZoom = function (mapConfig, projects, documentRoot, clusterDistance) {
-    const projectSource = mercator.projectsToVectorSource(projects);
-
-    if (clusterDistance == null) {
-        mercator.addVectorLayer(mapConfig,
-                                "projectMarkers",
-                                projectSource,
-                                ceoMapStyles.ceoIcon);
-    } else {
-        const clusterSource = new ol.source.Cluster({
-            source:   projectSource,
-            distance: clusterDistance,
-        });
-        mercator.addVectorLayer(mapConfig,
-                                "projectMarkers",
-                                clusterSource,
-                                function (feature) {
-                                    const numProjects = feature.get("features").length;
-                                    return mercator.getCircleStyle(10, "#3399cc", "#ffffff", 1, numProjects, "#ffffff");
-                                });
-    }
-
-    mercator.addOverlay(mapConfig, "projectPopup");
-    //let overlay = mercator.getOverlayByTitle(mapConfig, "projectPopup");
-    // mapConfig.map.on("click",
-    //                  function (event) {
-    //                      if (mapConfig.map.hasFeatureAtPixel(event.pixel)) {
-    //                          mapConfig.map.forEachFeatureAtPixel(event.pixel,
-    //                                                              mercator.showProjectPopup.bind(null, mapConfig, overlay, documentRoot));
-    //                      } else {
-    //                          overlay.setPosition(undefined);
-    //                      }
-    //                  });
-
-    mercator.zoomMapToExtent(mapConfig, projectSource.getExtent());
-    return mapConfig;
 };
 
 // [Side Effects] Adds a new vector layer called "currentPlots" to
@@ -1140,7 +1034,6 @@ mercator.getKMLFromFeatures = function (features) {
 *****************************************************************************/
 //
 // FIXME: Move ceoMapStyles out of Mercator.js
-// FIXME: Move mercator.getPopupContent() out of Mercator.js (it is hard-coded to CEO's home page)
 // FIXME: change calls from remove_plot_layer to mercator.removeLayerByTitle(mapConfig, layerTitle)
 // FIXME: change calls from draw_polygon to:
 //        mercator.removeLayerByTitle(mapConfig, "currentAOI");
@@ -1178,9 +1071,6 @@ mercator.getKMLFromFeatures = function (features) {
 // FIXME: change calls from highlight_sample to mercator.highlightSampleGeometry
 // FIXME: change calls from enable_dragbox_draw to enableDragBoxDraw(mapConfig, displayDragBoxBounds)
 // FIXME: change calls from disable_dragbox_draw to disableDragBoxDraw
-// FIXME: change calls from draw_project_markers to:
-//        mercator.addProjectMarkersAndZoom(mapConfig, projects, documentRoot, clusterDistance);
-//        mercator.zoomMapToLayer(mapConfig, "projectMarkers");
 // FIXME: change references to pID in home.js to projectId
 // FIXME: change calls from draw_project_points to:
 //        mercator.removeLayerByTitle(mapConfig, "currentPlots");
