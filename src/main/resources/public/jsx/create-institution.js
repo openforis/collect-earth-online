@@ -15,26 +15,40 @@ class CreateInstitution extends React.Component {
             },
         };
     }
-
+    getInstitutions = () => fetch(this.props.documentRoot + "/get-all-institutions")
+        .then(response => response.ok ? response.json() : Promise.reject(response))
+        .then(data => {
+            if (data.length > 0) {
+                this.setState({ institutions: data });
+                return Promise.resolve();
+            } else {
+                return Promise.reject("No institutions found");
+            }
+        });
     createInstitution = () => {
-        fetch(this.props.documentRoot + "/create-institution",
-              {
-                  method: "POST",
-                  body: JSON.stringify({
-                      userId: this.props.userId,
-                      name: this.state.newInstitutionDetails.name,
-                      logo: this.state.newInstitutionDetails.logo,
-                      base64Image: this.state.newInstitutionDetails.base64Image,
-                      url: this.state.newInstitutionDetails.url,
-                      description: this.state.newInstitutionDetails.description,
-                  }),
-              })
-            .then(response => response.ok ? response.json() : Promise.reject(response))
-            .then(data => window.location = this.props.documentRoot + "/review-institution/" + data.id)
-            .catch(response => {
-                console.log(response);
-                alert("Error creating institution. See console for details.");
-            });
+        const insts = this.getInstitutions.filter(inst => inst.name === this.state.newInstitutionDetails.name);
+        if (insts.length > 0) {
+            alert("Duplicate institution! Please review this institution to update it - https://ceodev.servirglobal.net/review-institution/" + insts[0].id);
+        } else {
+            fetch(this.props.documentRoot + "/create-institution",
+                  {
+                      method: "POST",
+                      body: JSON.stringify({
+                          userId: this.props.userId,
+                          name: this.state.newInstitutionDetails.name,
+                          logo: this.state.newInstitutionDetails.logo,
+                          base64Image: this.state.newInstitutionDetails.base64Image,
+                          url: this.state.newInstitutionDetails.url,
+                          description: this.state.newInstitutionDetails.description,
+                      }),
+                  })
+                .then(response => response.ok ? response.json() : Promise.reject(response))
+                .then(data => window.location = this.props.documentRoot + "/review-institution/" + data.id)
+                .catch(response => {
+                    console.log(response);
+                    alert("Error creating institution. See console for details.");
+                });
+        }
     }
 
     setInstitutionDetails = (key, newValue) => this.setState({
