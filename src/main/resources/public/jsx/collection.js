@@ -160,7 +160,7 @@ class Collection extends React.Component {
                 : Array.isArray(eval(data.widgets))
                     ? eval(data.widgets)
                     : [];
-            this.setState({hasGeoDash: widgets.length > 0});
+            this.setState({ hasGeoDash: widgets.length > 0 });
             return Promise.resolve("resolved");
         });
 
@@ -583,32 +583,38 @@ class Collection extends React.Component {
     };
 
     postValuesToDB = () => {
-        fetch(this.props.documentRoot + "/add-user-samples",
-              {
-                  method: "post",
-                  headers: {
-                      "Accept": "application/json",
-                      "Content-Type": "application/json",
-                  },
-                  body: JSON.stringify({
-                      projectId: this.props.projectId,
-                      plotId: this.state.currentPlot.id,
-                      userName: this.props.userName,
-                      userId: this.props.userId,
-                      confidence: -1,
-                      collectionStart: this.state.collectionStart,
-                      userSamples: this.state.userSamples,
-                      userImages: this.state.userImages,
-                  }),
-              })
-            .then(response => {
-                if (response.ok) {
-                    this.nextPlot();
-                } else {
-                    console.log(response);
-                    alert("Error saving your assignments to the database. See console for details.");
-                }
-            });
+        if (this.state.currentProject.availability === "unpublished") {
+            alert("Please publish the project before starting the survey.");
+        } else if (this.state.currentProject.availability === "closed") {
+            alert("This project has been closed and is no longer accepting survey input.");
+        } else {
+            fetch(this.props.documentRoot + "/add-user-samples",
+                  {
+                      method: "post",
+                      headers: {
+                          "Accept": "application/json",
+                          "Content-Type": "application/json",
+                      },
+                      body: JSON.stringify({
+                          projectId: this.props.projectId,
+                          plotId: this.state.currentPlot.id,
+                          userName: this.props.userName,
+                          userId: this.props.userId,
+                          confidence: -1,
+                          collectionStart: this.state.collectionStart,
+                          userSamples: this.state.userSamples,
+                          userImages: this.state.userImages,
+                      }),
+                  })
+                .then(response => {
+                    if (response.ok) {
+                        this.nextPlot();
+                    } else {
+                        console.log(response);
+                        alert("Error saving your assignments to the database. See console for details.");
+                    }
+                });
+        }
     };
 
     getImageryAttributes = () => {

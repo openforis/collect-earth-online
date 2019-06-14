@@ -81,6 +81,12 @@ public class Server implements SparkApplication {
             before("/*", new CeoAuthFilter());
         }
 
+        // Take query param for flash message and add to session attributes
+        before((request, response) -> {
+            var flashMessage = request.queryParams("flash_message");
+            request.session().attribute("flash_message", flashMessage != null ? flashMessage : "");
+        });
+
         // GZIP all responses to improve download speeds
         after((request, response) -> { response.header("Content-Encoding", "gzip"); });
 
