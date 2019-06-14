@@ -1,6 +1,7 @@
 import React, { Fragment } from "react";
 
 import { removeEnumerator } from "../utils/surveyUtils";
+import { UnicodeIcon } from "../utils/textUtils";
 
 export class SurveyCollection extends React.Component {
     constructor(props) {
@@ -454,7 +455,7 @@ class AnswerDropDown extends React.Component {
                             cursor: "pointer",
                         }}
                     >
-                        {"\u25BC"}
+                        <UnicodeIcon icon="downCaret"/>
                     </button>
                 </div>
                 <div

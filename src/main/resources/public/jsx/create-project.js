@@ -6,7 +6,7 @@ import { ProjectInfo, ProjectAOI, PlotReview, SampleReview } from "./components/
 import { mercator, ceoMapStyles } from "../js/mercator-openlayers.js";
 import { SurveyDesign } from "./components/SurveyDesign";
 import { convertSampleValuesToSurveyQuestions } from "./utils/surveyUtils";
-import { encodeFileAsBase64 } from "./utils/fileUtils.js";
+import { encodeFileAsBase64 } from "./utils/fileUtils";
 import { utils } from "../js/utils.js";
 
 const blankProject = {

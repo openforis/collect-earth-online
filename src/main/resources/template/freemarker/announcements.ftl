@@ -1,5 +1,5 @@
 <div style="">
     <p style="color:#eec922; background-color:#e63232; text-align:center; padding:5px; margin:0px;">
-         CEO has exceded the maximum requests for the Bing Maps license. Bing will be un-available until we can rectify this issue.
+         We have re-enabled the Bing Maps layers sitewide once again.
     </p>
 </div>

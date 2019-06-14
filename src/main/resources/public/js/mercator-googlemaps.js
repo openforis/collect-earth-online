@@ -368,7 +368,7 @@ mercator.getPolygonStyle = function (fillColor, borderColor, borderWidth) {
 
 var ceoMapStyles1 = {
     icon:         mercator.getIconStyle("favicon.ico"),
-    ceoIcon:      "ceoicon.png",
+    ceoIcon:      "img/ceoicon.png",
     redPoint:     mercator.getCircleStyle(5, null, "#8b2323", 2),
     bluePoint:    mercator.getCircleStyle(5, null, "#23238b", 2),
     redCircle:    mercator.getCircleStyle(5, null, "red", 2),

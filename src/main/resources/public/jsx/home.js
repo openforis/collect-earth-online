@@ -1,7 +1,7 @@
 import React, { Fragment } from "react";
 import ReactDOM from "react-dom";
 import { mercator, ceoMapStyles } from "../js/mercator-openlayers.js";
-import { sortAlphabetically } from "./utils/textUtils.js";
+import { sortAlphabetically, UnicodeIcon } from "./utils/textUtils";
 
 class Home extends React.Component {
     constructor(props) {
@@ -177,11 +177,11 @@ class MapPanel extends React.Component {
                     >
                         <div className="empty-div" style={{ height: "50vh" }}/>
                         <div className="my-auto no-gutters text-center">
-                            <div className={this.props.showSidePanel ? "" : "d-none"} style={{ fontSize: ".8rem" }}>
-                                {"\u25C0"}
+                            <div className={this.props.showSidePanel ? "" : "d-none"}>
+                                <UnicodeIcon icon="leftCaret"/>
                             </div>
-                            <div className={this.props.showSidePanel ? "d-none" : ""} style={{ fontSize: ".8rem" }}>
-                                {"\u25B6"}
+                            <div className={this.props.showSidePanel ? "d-none" : ""}>
+                                <UnicodeIcon icon="rightCaret"/>
                             </div>
                         </div>
                     </div>
@@ -409,7 +409,7 @@ function CreateInstitutionButton(props) {
                 style={{ display:"block" }}
                 href={props.documentRoot + "/create-institution"}
             >
-                <span className="fa fa-file" /> Create New Institution
+                <UnicodeIcon icon="add" backgroundColor="#31BAB0"/> Create New Institution
             </a>
         </div>
     );
@@ -448,7 +448,9 @@ class Institution extends React.Component {
                                 className="institution_info btn btn-sm btn-outline-lightgreen"
                                 href={props.documentRoot + "/review-institution/" + props.id}
                             >
-                                <span className="fa fa-info" style={{ color: "white" }} />
+                                <span style={{ color: "white", fontSize: "1rem" }}>
+                                    <UnicodeIcon icon="info"/>
+                                </span>
                             </a>
                         </div>
                     </div>
@@ -488,9 +490,14 @@ function Project(props) {
                 <div className="col-lg-10 pr-lg-1">
                     <a
                         className="view-project btn btn-sm btn-outline-lightgreen btn-block"
+                        style={{
+                            whiteSpace: "nowrap",
+                            overflow: "hidden",
+                            textOverflow: "ellipsis",
+                        }}
                         href={props.documentRoot + "/collection/" + props.id}
                     >
-                        {props.name}
+                        {props.name || "*un-named*"}
                     </a>
                 </div>
                 <div className="col-lg-2 pl-lg-0">
@@ -498,7 +505,7 @@ function Project(props) {
                         className="edit-project btn btn-sm btn-outline-yellow btn-block"
                         href={props.documentRoot + "/review-project/" + props.id}
                     >
-                        <span className="fa fa-edit" />
+                        <UnicodeIcon icon="edit"/>
                     </a>
                 </div>
             </div>
@@ -576,7 +583,7 @@ class ProjectPopup extends React.Component {
                         display: this.props.features.length > 1 ? "block" : "none",
                     }}
                 >
-                    <span className="fa fa-search-plus"/>Zoom to cluster
+                    <UnicodeIcon icon="magnify"/> Zoom to cluster
                 </button>
             </div>
         );
