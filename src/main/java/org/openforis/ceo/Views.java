@@ -21,12 +21,17 @@ public class Views {
     public static void redirectAuth(Request req, Response res, Boolean authorized, Integer userId) {
         if (!authorized) {
             if (userId > 0) {
-                res.redirect(CeoConfig.documentRoot + "/home?flash_message=You do not have permission to " + req.uri() + ".");
+                res.redirect(CeoConfig.documentRoot
+                             + "/home?flash_message=You do not have permission to access "
+                             + req.uri()
+                             + ".");
             } else {
                 res.redirect(CeoConfig.documentRoot
-                + "/login?returnurl="
-                + req.uri()
-                + "&flash_message=You must login to see " + req.uri() + ".");
+                             + "/login?returnurl="
+                             + req.uri()
+                             + "&flash_message=You must login to see "
+                             + req.uri()
+                             + ".");
             }
         }
     }

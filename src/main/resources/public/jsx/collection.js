@@ -582,8 +582,10 @@ class Collection extends React.Component {
     };
 
     postValuesToDB = () => {
-        if (this.state.currentProject.availability !== "unpublished") {
+        if (this.state.currentProject.availability === "unpublished") {
             alert("Please publish the project before starting the survey.");
+        } else if (this.state.currentProject.availability === "closed") {
+            alert("This project has been closed and is no longer accepting survey input.");
         } else {
             fetch(this.props.documentRoot + "/add-user-samples",
                   {
