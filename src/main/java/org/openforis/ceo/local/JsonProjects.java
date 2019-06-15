@@ -1150,22 +1150,22 @@ public class JsonProjects implements Projects {
         var right = paddedBounds[2];
         var top = paddedBounds[3];
 
-        // Check prospect project size
+        // Check prospective project size
         var totalPlots =
             plotDistribution.equals("random") ? numPlots
             : plotDistribution.equals("gridded") ? countGriddedPoints(left, bottom, right, top, plotSpacing)
             : plotDistribution.equals("csv") ? csvPlotPoints.size()
             : shpPlotCenters.size();
 
-        if (totalPlots == 0) {throw new RuntimeException("Plot file is empty");}
+        if (totalPlots == 0) {throw new RuntimeException("Plot file is empty.");}
 
-        var plotsPerSample =
+        var computedSamplesPerPlot =
             sampleDistribution.equals("random") ? samplesPerPlot
             : sampleDistribution.equals("gridded") ? countGriddedSampleSet(plotSize, sampleResolution)
             : sampleDistribution.equals("csv") ? (csvSamplePointsFinal.size() / totalPlots)
             : (shpSampleCentersFinal.size() / totalPlots);
 
-        checkPlotLimits(totalPlots, 5000, plotsPerSample, 200, 50000);
+        checkPlotLimits(totalPlots, 5000, computedSamplesPerPlot, 200, 50000);
 
         // Generate the plot objects and their associated sample points
         var newPlotCenters =

@@ -468,7 +468,7 @@ public class ProjectUtils {
         deleteShapeFileDirectory("project-" + projectId + "-samples");
     }
 
-    // Some older data contains a useless string fromat for collection time.
+    // Some older data contains a useless string format for collection time.
     public static Long collectTimeIgnoreString (JsonObject plot){
         try {
             return getOrZero(plot, "collectionTime").getAsLong();
@@ -483,21 +483,21 @@ public class ProjectUtils {
         if (plots > plotLimit) {
             throw new RuntimeException("This action will create "
                                        + numFormat(plots)
-                                       + " plots. The maximum allowed for the selected distribution types is "
+                                       + " plots. The maximum allowed for the selected plot distribution is "
                                        + numFormat(plotLimit) + ".");
         }
 
         if (perPlot > perPlotLimit) {
             throw new RuntimeException("This action will create "
                                        + numFormat(perPlot)
-                                       + " samples per plot.The maximum allowed for the selected distribution types is "
+                                       + " samples per plot. The maximum allowed for the selected plot distribution is "
                                        + numFormat(perPlotLimit) + ".");
         }
 
         if (plots * perPlot > sampleLimit) {
             throw new RuntimeException("This action will create "
                                        + numFormat(plots * perPlot)
-                                       + " total samples. The maximum allowed for the selected distribution types is "
+                                       + " total samples. The maximum allowed for the selected plot distribution is "
                                        + numFormat(sampleLimit) + ".");
         }
     }

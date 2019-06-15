@@ -701,19 +701,19 @@ public class PostgresProjects implements Projects {
                             extPlotCount = rs.getInt("plot_count");
                             extSampleCount = rs.getInt("sample_count");
                         }
-                    };
+                    }
                 } catch (SQLException e) {
                     throw new RuntimeException("Error counting data.", e);
                 }
 
                 if (extPlotCount == 0) {throw new RuntimeException("Plot file is empty.");}
 
-                var plotsPerSample =
+                var computedSamplesPerPlot =
                     sampleDistribution.equals("gridded") ? countGriddedSampleSet(plotSize, sampleResolution)
                     : sampleDistribution.equals("random") ? samplesPerPlot
                     : (extSampleCount / extPlotCount);
 
-                checkPlotLimits(extPlotCount, 50000, plotsPerSample, 200, 350000);
+                checkPlotLimits(extPlotCount, 50000, computedSamplesPerPlot, 200, 350000);
 
                 // if both are files, adding plots and samples is done inside PG
                 if (List.of("csv", "shp").contains(sampleDistribution)) {
