@@ -1,4 +1,5 @@
 const path = require("path");
+const exec = require("child_process").exec;
 
 module.exports = {
     entry: {
@@ -13,6 +14,12 @@ module.exports = {
         account:                path.resolve(__dirname, "src/main/resources/public/jsx/account.js"),
         geo_dash:               path.resolve(__dirname, "src/main/resources/public/jsx/geo-dash.js"),
         widget_layout_editor:   path.resolve(__dirname, "src/main/resources/public/jsx/widget-layout-editor.js"),
+    },
+    output: {
+        path: path.resolve(__dirname, "target/classes/public/js"),
+        filename: "[name].bundle.js",
+        library: "[name]",
+        libraryTarget: "var",
     },
     module: {
         rules: [
@@ -54,12 +61,37 @@ module.exports = {
             },
         ],
     },
+    plugins: [
+        {
+            apply: (compiler) => {
+                compiler.hooks.beforeCompile.tap("BeforeRunPlugin", () => {
+                    exec("rm -f ./target/classes/public/js/*.bundle.js*", (err, stdout, stderr) => {
+                        if (stdout) process.stdout.write(stdout);
+                        if (stderr) process.stderr.write(stderr);
+                    });
+                });
+                compiler.hooks.afterEmit.tap("AfterEmitPlugin", () => {
+                    exec("sh generate-templates.sh target/classes/public/js", (err, stdout, stderr) => {
+                        if (stdout) process.stdout.write(stdout);
+                        if (stderr) process.stderr.write(stderr);
+                    });
+                });
+            },
+        },
+    ],
     optimization: {
         minimize: true,
         splitChunks: {
             chunks: "all",
             maxInitialRequests: Infinity,
-            minSize: 10000,
+            minSize: 0,
+            cacheGroups: {
+                commons: {
+                    name: "common-vendor-files-chunk", // This name needs to be longer than the longest entry point name
+                    chunks: "all",
+                    minChunks: 10, // 10 is all the pages to make this chuck items for all the pages
+                },
+            },
         },
     },
 };
