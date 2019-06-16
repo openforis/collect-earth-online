@@ -623,6 +623,7 @@ class SurveyRules extends React.Component {
         array.map(function(obj){
             if (obj.id > maxid) maxid = obj.id;
         });
+        return maxid;
     };
 
     addSurveyRule = (ruleType) => {
