@@ -52,7 +52,6 @@ class CreateInstitution extends React.Component {
             if (insts.length > 0) {
                 alert("Duplicate institution! Please review this institution to update it - https://ceodev.servirglobal.net/review-institution/" + insts[0].id);
             }
-            console.log(insts);
         } else {
             this.setState({
                 newInstitutionDetails: {
