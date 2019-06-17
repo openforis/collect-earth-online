@@ -1,7 +1,7 @@
 import React, { Fragment } from "react";
 import ReactDOM from "react-dom";
 import { mercator, ceoMapStyles } from "../js/mercator-openlayers.js";
-import { sortAlphabetically } from "./utils/textUtils.js";
+import { sortAlphabetically, UnicodeIcon } from "./utils/textUtils";
 
 class Home extends React.Component {
     constructor(props) {
@@ -99,26 +99,26 @@ class MapPanel extends React.Component {
 
     componentDidUpdate(prevProps, prevState) {
         if (this.state.mapConfig == null && this.props.imagery.length > 0 && prevProps.imagery.length === 0) {
-            const bingAerialLayer = this.props.imagery.find(
+            const homePageLayer = this.props.imagery.find(
                 function (imagery) {
-                    return imagery.title === "BingAerial";
+                    return imagery.title === "DigitalGlobeRecentImagery";
                 }
             );
-            const mapConfig = mercator.createMap("home-map-pane", [0.0, 0.0], 1, [bingAerialLayer]);
-            mercator.setVisibleLayer(mapConfig, bingAerialLayer.title);
+            const mapConfig = mercator.createMap("home-map-pane", [70, 15], 2.1, [homePageLayer]);
+            mercator.setVisibleLayer(mapConfig, homePageLayer.title);
             this.setState({ mapConfig: mapConfig });
         }
         if (this.state.mapConfig && this.props.projects.length > 0
             && (!prevState.mapConfig || prevProps.projects.length === 0)) {
 
-            this.addProjectMarkersAndZoom(this.state.mapConfig,
-                                          this.props.projects,
-                                          this.props.documentRoot,
-                                          40); // clusterDistance = 40, use null to disable clustering
+            this.addProjectMarkers(this.state.mapConfig,
+                                   this.props.projects,
+                                   this.props.documentRoot,
+                                   40); // clusterDistance = 40, use null to disable clustering
         }
     }
 
-    addProjectMarkersAndZoom(mapConfig, projects, documentRoot, clusterDistance) {
+    addProjectMarkers(mapConfig, projects, documentRoot, clusterDistance) {
         const projectSource = mercator.projectsToVectorSource(projects.filter(project => project.boundary));
         if (clusterDistance == null) {
             mercator.addVectorLayer(mapConfig,
@@ -143,7 +143,6 @@ class MapPanel extends React.Component {
                                  overlay.setPosition(undefined);
                              }
                          });
-        mercator.zoomMapToExtent(mapConfig, projectSource.getExtent());
     }
 
     showProjectPopup(overlay, feature) {
@@ -179,10 +178,10 @@ class MapPanel extends React.Component {
                         <div className="empty-div" style={{ height: "50vh" }}/>
                         <div className="my-auto no-gutters text-center">
                             <div className={this.props.showSidePanel ? "" : "d-none"}>
-                                <div className={"fa fa-caret-left"} />
+                                <UnicodeIcon icon="leftCaret"/>
                             </div>
                             <div className={this.props.showSidePanel ? "d-none" : ""}>
-                                <div className={"fa fa-caret-right"} />
+                                <UnicodeIcon icon="rightCaret"/>
                             </div>
                         </div>
                     </div>
@@ -410,7 +409,7 @@ function CreateInstitutionButton(props) {
                 style={{ display:"block" }}
                 href={props.documentRoot + "/create-institution"}
             >
-                <span className="fa fa-file" /> Create New Institution
+                <UnicodeIcon icon="add" backgroundColor="#31BAB0"/> Create New Institution
             </a>
         </div>
     );
@@ -449,7 +448,9 @@ class Institution extends React.Component {
                                 className="institution_info btn btn-sm btn-outline-lightgreen"
                                 href={props.documentRoot + "/review-institution/" + props.id}
                             >
-                                <span className="fa fa-info" style={{ color: "white" }} />
+                                <span style={{ color: "white", fontSize: "1rem" }}>
+                                    <UnicodeIcon icon="info"/>
+                                </span>
                             </a>
                         </div>
                     </div>
@@ -489,9 +490,14 @@ function Project(props) {
                 <div className="col-lg-10 pr-lg-1">
                     <a
                         className="view-project btn btn-sm btn-outline-lightgreen btn-block"
+                        style={{
+                            whiteSpace: "nowrap",
+                            overflow: "hidden",
+                            textOverflow: "ellipsis",
+                        }}
                         href={props.documentRoot + "/collection/" + props.id}
                     >
-                        {props.name}
+                        {props.name || "*un-named*"}
                     </a>
                 </div>
                 <div className="col-lg-2 pl-lg-0">
@@ -499,7 +505,7 @@ function Project(props) {
                         className="edit-project btn btn-sm btn-outline-yellow btn-block"
                         href={props.documentRoot + "/review-project/" + props.id}
                     >
-                        <span className="fa fa-edit" />
+                        <UnicodeIcon icon="edit"/>
                     </a>
                 </div>
             </div>
@@ -577,7 +583,7 @@ class ProjectPopup extends React.Component {
                         display: this.props.features.length > 1 ? "block" : "none",
                     }}
                 >
-                    <span className="fa fa-search-plus"/>Zoom to cluster
+                    <UnicodeIcon icon="magnify"/> Zoom to cluster
                 </button>
             </div>
         );

@@ -1,6 +1,7 @@
 import React from "react";
 import ReactDOM from "react-dom";
 import { mercator } from "../js/mercator-openlayers.js";
+import { UnicodeIcon } from "./utils/textUtils";
 
 class Geodash extends React.Component {
     constructor(props) {
@@ -263,10 +264,11 @@ class Widget extends React.Component {
                     <a
                         className="list-inline panel-actions panel-fullscreen"
                         onClick={() => this.props.onFullScreen(this.props.widget)}
+                        style={{ color: "#31BAB0" }}
                         role="button"
                         title="Toggle Fullscreen"
                     >
-                        <span className="fas fa-expand-arrows-alt" style={{ color: "#31BAB0" }}/>
+                        {widget.isFull ? <UnicodeIcon icon="collapse"/> : <UnicodeIcon icon="expand"/>}
                     </a>
                 </li>
                 {this.getResetMapButton(widget)}
@@ -287,7 +289,7 @@ class Widget extends React.Component {
                     title="Recenter"
                     style={{ marginRight: "10px" }}
                 >
-                    <span className="fas fa-map-marker-alt" style={{ color: "#31BAB0" }}/>
+                    <img src="img/ceoicon.png"/>
                 </a>
             </li>;
         }

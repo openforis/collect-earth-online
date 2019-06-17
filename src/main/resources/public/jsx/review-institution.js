@@ -2,7 +2,7 @@ import React, { Fragment } from "react";
 import ReactDOM from "react-dom";
 
 import InstitutionEditor from "./components/InstitutionEditor";
-import { sortAlphabetically, capitalizeFirst } from "./utils/textUtils.js";
+import { sortAlphabetically, capitalizeFirst, UnicodeIcon } from "./utils/textUtils";
 
 class ReviewInstitution extends React.Component {
     constructor(props) {
@@ -46,7 +46,7 @@ class ReviewInstitution extends React.Component {
                     documentRoot={this.props.documentRoot}
                     institutionId={this.props.institutionId}
                     isAdmin={this.state.isAdmin}
-                    of_users_api_url={this.props.of_users_api_url}
+                    ofUsersApiUrl={this.props.ofUsersApiUrl}
                     storage={this.props.storage}
                     setIsAdmin={this.setIsAdmin}
                     userId={this.props.userId}
@@ -214,8 +214,7 @@ class InstitutionDescription extends React.Component {
                 className="btn btn-sm btn-outline-lightgreen btn-block mt-0"
                 onClick={this.updateInstitution}
             >
-                <span className="fa fa-save mr-1"/>
-                Save Changes
+                <UnicodeIcon icon="save"/> Save Changes
             </button>
         </div>
         <div className="col-6">
@@ -224,13 +223,13 @@ class InstitutionDescription extends React.Component {
                 className="btn btn-sm btn-outline-danger btn-block mt-0"
                 onClick={this.toggleEditMode}
             >
-                <span className="fa fa-ban mr-1"/>Cancel Changes
+                <UnicodeIcon icon="noAction"/> Cancel Changes
             </button>
         </div>
     </div>;
 
     render() {
-        const { documentRoot, of_users_api_url, storage } = this.props;
+        const { documentRoot, ofUsersApiUrl, storage } = this.props;
         return this.state.editMode
         ?
             <InstitutionEditor
@@ -251,7 +250,7 @@ class InstitutionDescription extends React.Component {
                                     className="img-fluid"
                                     src={storage !== null && storage === "local"
                                     ? documentRoot + "/" + this.state.institutionDetails.logo
-                                    : of_users_api_url + "/group/logo/" + this.state.institutionDetails.id}
+                                    : ofUsersApiUrl + "/group/logo/" + this.state.institutionDetails.id}
                                     alt="logo"
                                 />
                             </a>
@@ -277,7 +276,7 @@ class InstitutionDescription extends React.Component {
                                 className="btn btn-sm btn-outline-lightgreen btn-block mt-0"
                                 onClick={this.toggleEditMode}
                             >
-                                <span className="fa fa-edit mr-1"/>Edit
+                                <UnicodeIcon icon="edit"/> Edit
                             </button>
                         </div>
                         <div className="col-3">
@@ -287,7 +286,7 @@ class InstitutionDescription extends React.Component {
                                 className="btn btn-sm btn-outline-danger btn-block mt-0"
                                 onClick={this.deleteInstitution}
                             >
-                                <span className="fa fa-trash-alt mr-1"/>Delete
+                                <UnicodeIcon icon="trash"/> Delete
                             </button>
                         </div>
                         <div className="col-3">
@@ -295,7 +294,8 @@ class InstitutionDescription extends React.Component {
                                 id="institution-dashboard"
                                 type="button"
                                 className="btn btn-sm btn-outline-lightgreen btn-block mt-0"
-                                onClick={this.gotoInstitutionDashboard}>
+                                onClick={this.gotoInstitutionDashboard}
+                            >
                                 Go to Dashboard
                             </button>
                         </div>
@@ -383,7 +383,7 @@ class ImageryList extends React.Component {
                                     className="btn btn-sm btn-block btn-outline-yellow py-2 font-weight-bold"
                                     onClick={this.toggleEditMode}
                                 >
-                                    <span className="fa fa-plus-square mr-1"/>Add New Imagery
+                                    <UnicodeIcon icon="add" backgroundColor="#f1c00f"/>Add New Imagery
                                 </button>
 
                             </div>
@@ -505,14 +505,14 @@ class NewImagery extends React.Component {
                             className="btn btn-sm btn-block btn-outline-yellow btn-group py-2 font-weight-bold"
                             onClick={this.addCustomImagery}
                         >
-                            <span className="fa fa-plus-square mr-1 mt-1"/>Add New Imagery
+                            <UnicodeIcon icon="add" backgroundColor="#f1c00f"/>Add New Imagery
                         </button>
                         <button
                             type="button"
                             className="btn btn-sm btn-block btn-outline-danger btn-group py-2 font-weight-bold"
                             onClick={this.props.toggleEditMode}
                         >
-                            <span className="fa fa-ban mr-1 mt-1"/>Discard
+                            <UnicodeIcon icon="noAction"/> Discard
                         </button>
                     </div>
                 </div>
@@ -540,7 +540,7 @@ function Imagery({ isAdmin, title, deleteImagery, isInstitutionImage }) {
                 type="button"
                 onClick={deleteImagery}
             >
-                <span className="fa fa-trash-alt mr-1"/>
+                <UnicodeIcon icon="trash"/>
             </button>
         </div>
         }
@@ -558,7 +558,7 @@ function ProjectList({ isAdmin, institutionId, projectList, documentRoot }) {
                         className="btn btn-sm btn-block btn-outline-yellow py-2 font-weight-bold"
                         onClick={() => window.location = documentRoot + "/create-project?institution=" + institutionId}
                     >
-                        <span className="fa fa-plus-square mr-1"/>Create New Project
+                        <UnicodeIcon icon="add" backgroundColor="#f1c00f"/>Create New Project
                     </button>
                 </div>
             </div>
@@ -626,7 +626,7 @@ class Project extends React.Component {
                     className="edit-project btn btn-sm btn-outline-yellow btn-block px-3"
                     href={documentRoot + "/review-project/" + project.id}
                 >
-                    <span className="fa fa-edit"/>
+                    <UnicodeIcon icon="edit"/>
                 </a>
             </div>
             }
@@ -854,7 +854,7 @@ class NewUserButtons extends React.Component {
                             className="btn btn-sm btn-outline-yellow btn-block py-2 font-weight-bold"
                             onClick={() => this.checkUserEmail() && this.addUser()}
                         >
-                            <span className="fa fa-plus-square mr-1"/>Add User
+                            <UnicodeIcon icon="add" backgroundColor="#f1c00f"/>Add User
                         </button>
                     </div>
                 </div>
@@ -867,7 +867,7 @@ class NewUserButtons extends React.Component {
                     id="request-membership-button"
                     onClick={this.props.requestMembership}
                 >
-                    <span className="fa fa-plus- mr-1"/>Request membership
+                    <UnicodeIcon icon="add" backgroundColor="#f1c00f"/>Request membership
                 </button>
             </div>
             }
@@ -881,7 +881,7 @@ export function renderReviewInstitutionPage(args) {
             documentRoot={args.documentRoot}
             userId={args.userId === "" ? -1 : parseInt(args.userId)}
             institutionId={args.institutionId === "" ? -1 : parseInt(args.institutionId)}
-            of_users_api_url={args.of_users_api_url}
+            ofUsersApiUrl={args.of_users_api_url}
             storage={args.storage}
         />,
         document.getElementById("institution")

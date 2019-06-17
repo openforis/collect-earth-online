@@ -4,7 +4,6 @@ import static javax.servlet.http.HttpServletResponse.SC_NO_CONTENT;
 import static org.openforis.ceo.utils.DatabaseUtils.connect;
 import static org.openforis.ceo.utils.JsonUtils.expandResourcePath;
 import static org.openforis.ceo.utils.JsonUtils.parseJson;
-import static org.openforis.ceo.utils.PartUtils.partToString;
 import static org.openforis.ceo.utils.PartUtils.writeFilePartBase64;
 import static org.openforis.ceo.utils.ProjectUtils.padBounds;
 import static org.openforis.ceo.utils.ProjectUtils.reprojectBounds;
@@ -12,6 +11,8 @@ import static org.openforis.ceo.utils.ProjectUtils.createGriddedPointsInBounds;
 import static org.openforis.ceo.utils.ProjectUtils.createGriddedSampleSet;
 import static org.openforis.ceo.utils.ProjectUtils.createRandomPointsInBounds;
 import static org.openforis.ceo.utils.ProjectUtils.createRandomSampleSet;
+import static org.openforis.ceo.utils.ProjectUtils.countGriddedSampleSet;
+import static org.openforis.ceo.utils.ProjectUtils.countGriddedPoints;
 import static org.openforis.ceo.utils.ProjectUtils.outputAggregateCsv;
 import static org.openforis.ceo.utils.ProjectUtils.outputRawCsv;
 import static org.openforis.ceo.utils.ProjectUtils.getOrEmptyString;
@@ -23,6 +24,7 @@ import static org.openforis.ceo.utils.ProjectUtils.makeGeoJsonPolygon;
 import static org.openforis.ceo.utils.ProjectUtils.getSampleValueTranslations;
 import static org.openforis.ceo.utils.ProjectUtils.deleteShapeFileDirectories;
 import static org.openforis.ceo.utils.ProjectUtils.runBashScriptForProject;
+import static org.openforis.ceo.Views.redirectAuth;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
@@ -35,7 +37,6 @@ import java.sql.PreparedStatement;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Timestamp;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -51,6 +52,41 @@ import spark.Response;
 
 
 public class PostgresProjects implements Projects {
+
+    private Request redirectCommon(Request req, Response res, String queryFn) {
+        final var userId = Integer.parseInt(req.session().attributes().contains("userid") ? req.session().attribute("userid").toString() : "0");
+        final var pProjectId = req.params(":id");
+        final var qProjectId = req.queryParams("pid");
+
+        final var projectId = pProjectId != null
+            ? Integer.parseInt(pProjectId)
+            : qProjectId != null
+                ? Integer.parseInt(qProjectId)
+                : 0;
+
+        try (var conn = connect();
+             var pstmt = conn.prepareStatement("SELECT * FROM " + queryFn + "(?, ?)")) {
+
+            pstmt.setInt(1, userId);
+            pstmt.setInt(2, projectId);
+
+            try(var rs = pstmt.executeQuery()) {
+                redirectAuth(req, res, rs.next() && rs.getBoolean(queryFn), userId);
+            }
+
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+        }
+        return req;
+    }
+
+    public Request redirectNoCollect(Request req, Response res) {
+        return redirectCommon(req, res, "can_user_collect");
+    }
+
+    public Request redirectNoEdit(Request req, Response res) {
+        return redirectCommon(req, res, "can_user_edit");
+    }
 
     private static JsonObject buildProjectJson(ResultSet rs) {
         var newProject = new JsonObject();
@@ -662,6 +698,19 @@ public class PostgresProjects implements Projects {
                     throw new  RuntimeException(e);
                 }
 
+                // FIXME check csv, shp files for too many plots before creating samples
+
+                var plotsPerSample =
+                    sampleDistribution.equals("gridded") ? countGriddedSampleSet(plotSize, sampleResolution)
+                    : sampleDistribution.equals("random") ? samplesPerPlot
+                    : 0;
+
+                if (plotsPerSample > 200) {
+                    throw new RuntimeException("This action will create "
+                                               + plotsPerSample
+                                               + " samples per plot. The maximum auto generated allowed is 200.");
+                }
+
                 // if both are files, adding plots and samples is done inside PG
                 if (List.of("csv", "shp").contains(sampleDistribution)) {
                     try (var pstmt =
@@ -698,6 +747,34 @@ public class PostgresProjects implements Projects {
                 final var right = paddedBounds[2];
                 final var top = paddedBounds[3];
 
+                var totalPlots =
+                    plotDistribution.equals("gridded")
+                        ? countGriddedPoints(left, bottom, right, top, plotSpacing)
+                        : numPlots;
+
+                if (totalPlots > 5000) {
+                    throw new RuntimeException("This action will create "
+                                               + totalPlots
+                                               + " plots. The maximum auto generated allowed is 5,000.");
+                }
+
+                var plotsPerSample =
+                    sampleDistribution.equals("gridded")
+                        ? countGriddedSampleSet(plotSize, sampleResolution)
+                        : samplesPerPlot;
+
+                if (plotsPerSample > 200) {
+                    throw new RuntimeException("This action will create "
+                                               + plotsPerSample
+                                               + " samples per plot.The maximum auto generated allowed is 200.");
+                }
+
+                if (totalPlots * plotsPerSample > 50000) {
+                    throw new RuntimeException("This action will create "
+                                               + totalPlots * plotsPerSample
+                                               + " total samples. The maximum auto generated allowed is 50,000.");
+                }
+
                 // Generate the plot objects and their associated sample points
                 final var newPlotCenters =
                     plotDistribution.equals("random")
@@ -721,6 +798,34 @@ public class PostgresProjects implements Projects {
                         System.out.println(e.getMessage());
                     }
                 });
+            }
+
+            // Check if project boundary is valid.
+            try (var pstmt = conn.prepareStatement("SELECT * FROM valid_boundary((SELECT boundary FROM projects WHERE project_uid = ?))")) {
+                pstmt.setInt(1, projectId);
+                try (var rs = pstmt.executeQuery()) {
+                    if (rs.next() && !rs.getBoolean("valid_boundary")) {
+                        throw new RuntimeException("The project boundary is invalid. This can come from improper coordinates or projection when uploading shape or csv data.");
+                    }
+                }
+            }
+
+            //Check if all plots have a sample
+            try (var pstmt = conn.prepareStatement("SELECT * FROM plots_missing_samples(?)")) {
+                pstmt.setInt(1, projectId);
+                try (var rs = pstmt.executeQuery()) {
+                    var idList = new ArrayList<String>();
+                    while (rs.next()) {
+                        idList.add(rs.getString("plot_id"));
+                    }
+                    if (idList.size() > 0) {
+                        var topTen = "[" + String.join(",", idList.subList(0, Math.min(idList.size(), 10))) + "]";
+                        throw new RuntimeException("The uploaded plot and sample files do not have correctly overlapping data. "
+                                                   + idList.size()
+                                                   + " plots have no samples. The first 10 are: "
+                                                   + topTen);
+                    }
+                }
             }
 
             // Update numPlots and samplesPerPlot to match the numbers that were generated
@@ -798,10 +903,10 @@ public class PostgresProjects implements Projects {
             newProject.addProperty("availability", "unpublished");
             newProject.addProperty("createdDate", LocalDate.now().toString());
 
-            final var lonMin =             getOrZero(newProject,"lonMin").getAsDouble();
-            final var latMin =             getOrZero(newProject,"latMin").getAsDouble();
-            final var lonMax =             getOrZero(newProject,"lonMax").getAsDouble();
-            final var latMax =             getOrZero(newProject,"latMax").getAsDouble();
+            final var lonMin = getOrZero(newProject, "lonMin").getAsDouble();
+            final var latMin = getOrZero(newProject, "latMin").getAsDouble();
+            final var lonMax = getOrZero(newProject, "lonMax").getAsDouble();
+            final var latMax = getOrZero(newProject, "latMax").getAsDouble();
             newProject.addProperty("boundary", makeGeoJsonPolygon(lonMin, latMin, lonMax, latMax).toString());
 
             var SQL = "SELECT * FROM create_project(?,?,?,?,?,ST_SetSRID(ST_GeomFromGeoJSON(?), 4326),?,?,?,?,?,?,?,?,?,?::JSONB,?::JSONB,?::date,?::JSONB)";
@@ -900,23 +1005,9 @@ public class PostgresProjects implements Projects {
             deleteFiles(newProjectId);
             deleteShapeFileDirectories(newProjectId);
             try (var conn = connect()) {
-                try (var pstmt = conn.prepareStatement("DELETE FROM projects WHERE id = ?")) {
+                try (var pstmt = conn.prepareStatement("SELECT delete_project(?)")) {
                     pstmt.setInt(1, newProjectId);
                     pstmt.execute();
-                } catch (SQLException sql) {
-                }
-                // CSV checks before adding so samples would never be added
-                try (var pstmt = conn.prepareStatement("DROP TABLE project_" + newProjectId + "_plots_csv")) {
-                    pstmt.execute();
-                } catch (SQLException sql) {
-                }
-                try (var pstmt = conn.prepareStatement("DROP TABLE project_" + newProjectId + "_plots_shp")) {
-                    pstmt.execute();
-                } catch (SQLException sql) {
-                }
-                try (var pstmt = conn.prepareStatement("DROP TABLE project_" + newProjectId + "_samples_shp")) {
-                    pstmt.execute();
-                } catch (SQLException sql) {
                 }
             } catch (SQLException sql) {
             }

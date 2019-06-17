@@ -3,6 +3,7 @@ import ReactDOM from "react-dom";
 import { mercator, ceoMapStyles } from "../js/mercator-openlayers.js";
 import { SurveyCollection } from "./components/SurveyCollection";
 import { convertSampleValuesToSurveyQuestions } from "./utils/surveyUtils";
+import { UnicodeIcon } from "./utils/textUtils";
 
 class Collection extends React.Component {
     constructor(props) {
@@ -31,7 +32,7 @@ class Collection extends React.Component {
             userImages: {},
             storedInterval: null,
             KMLFeatures: null,
-            hasGeoDash: false
+            hasGeoDash: false,
         };
     }
 
@@ -78,22 +79,25 @@ class Collection extends React.Component {
         // Update map when state changes
         //
 
-        // Inititialize on new plot
+        // Initialize when new plot
         if (this.state.currentPlot && this.state.currentPlot !== prevState.currentPlot) {
             this.showProjectPlot();
-            if(this.state.hasGeoDash) {
+            if (this.state.hasGeoDash) {
                 this.showGeoDash();
             }
             clearInterval(this.state.storedInterval);
             this.setState({ storedInterval: setInterval(() => this.resetPlotLock, 2.3 * 60 * 1000) });
         }
 
-        // Update Samples
-        if (this.state.currentPlot && this.state.currentPlot === prevState.currentPlot) {
-            // Changing questions shows different set of samples
+        // Conditions required for samples to be shown
+        if (this.state.currentPlot
+            && this.state.selectedQuestion.visible
+            && this.state.selectedQuestion.visible.length > 0) {
+
+            // Changing conditions for which samples need to be re-drawn
             if (this.state.selectedQuestion.id !== prevState.selectedQuestion.id
                 || this.state.sampleOutlineBlack !== prevState.sampleOutlineBlack
-                || (this.state.userSamples !== prevState.userSamples && this.state.selectedQuestion.visible)
+                || this.state.userSamples !== prevState.userSamples
                 || !prevState.selectedQuestion.visible) {
 
                 this.showPlotSamples();
@@ -156,7 +160,7 @@ class Collection extends React.Component {
                 : Array.isArray(eval(data.widgets))
                     ? eval(data.widgets)
                     : [];
-            this.setState({hasGeoDash: widgets.length > 0});
+            this.setState({ hasGeoDash: widgets.length > 0 });
             return Promise.resolve("resolved");
         });
 
@@ -311,6 +315,15 @@ class Collection extends React.Component {
         .map(k => encodeURIComponent(k) + "=" + encodeURIComponent(params[k]))
         .join("&");
 
+    plotHasSamples = (plotData) => {
+        if (plotData.samples.length === 0) {
+            alert("This plot has no samples. Please flag the plot.");
+            return false;
+        } else {
+            return true;
+        }
+    };
+
     getPlotData = (plotId) => {
         fetch(this.props.documentRoot + "/get-plot-by-id"
               + this.getQueryString({
@@ -334,6 +347,7 @@ class Collection extends React.Component {
                         prevPlotButtonDisabled: false,
                         nextPlotButtonDisabled: false,
                     });
+                    this.plotHasSamples(newPlot);
                 }
             })
             .catch(response => {
@@ -369,6 +383,7 @@ class Collection extends React.Component {
                         ...this.newPlotValues(newPlot),
                         prevPlotButtonDisabled: plotId === -1,
                     });
+                    this.plotHasSamples(newPlot);
                 }
             })
             .catch(response => {
@@ -400,6 +415,7 @@ class Collection extends React.Component {
                         ...this.newPlotValues(newPlot),
                         nextPlotButtonDisabled: false,
                     });
+                    this.plotHasSamples(newPlot);
                 }
             })
             .catch(response => {
@@ -567,32 +583,38 @@ class Collection extends React.Component {
     };
 
     postValuesToDB = () => {
-        fetch(this.props.documentRoot + "/add-user-samples",
-              {
-                  method: "post",
-                  headers: {
-                      "Accept": "application/json",
-                      "Content-Type": "application/json",
-                  },
-                  body: JSON.stringify({
-                      projectId: this.props.projectId,
-                      plotId: this.state.currentPlot.id,
-                      userName: this.props.userName,
-                      userId: this.props.userId,
-                      confidence: -1,
-                      collectionStart: this.state.collectionStart,
-                      userSamples: this.state.userSamples,
-                      userImages: this.state.userImages,
-                  }),
-              })
-            .then(response => {
-                if (response.ok) {
-                    this.nextPlot();
-                } else {
-                    console.log(response);
-                    alert("Error saving your assignments to the database. See console for details.");
-                }
-            });
+        if (this.state.currentProject.availability === "unpublished") {
+            alert("Please publish the project before starting the survey.");
+        } else if (this.state.currentProject.availability === "closed") {
+            alert("This project has been closed and is no longer accepting survey input.");
+        } else {
+            fetch(this.props.documentRoot + "/add-user-samples",
+                  {
+                      method: "post",
+                      headers: {
+                          "Accept": "application/json",
+                          "Content-Type": "application/json",
+                      },
+                      body: JSON.stringify({
+                          projectId: this.props.projectId,
+                          plotId: this.state.currentPlot.id,
+                          userName: this.props.userName,
+                          userId: this.props.userId,
+                          confidence: -1,
+                          collectionStart: this.state.collectionStart,
+                          userSamples: this.state.userSamples,
+                          userImages: this.state.userImages,
+                      }),
+                  })
+                .then(response => {
+                    if (response.ok) {
+                        this.nextPlot();
+                    } else {
+                        console.log(response);
+                        alert("Error saving your assignments to the database. See console for details.");
+                    }
+                });
+        }
     };
 
     getImageryAttributes = () => {
@@ -607,14 +629,6 @@ class Collection extends React.Component {
             },
         };
         return attributes[this.state.currentImagery.title] || {};
-    };
-
-    validateCurrentSelection = (selectedFeatures, questionId) => {
-        const visibleSamples = this.getVisibleSamples(questionId);
-
-        return selectedFeatures.getArray()
-            .map(sf => sf.get("sampleId"))
-            .every(sid => visibleSamples.some(vs => vs.id === sid));
     };
 
     getChildQuestions = (currentQuestionId) => {
@@ -634,10 +648,16 @@ class Collection extends React.Component {
 
     intersection = (array1, array2) => array1.filter(value => array2.includes(value));
 
-    getSelectedSampleIds = () => {
-        const allFeatures = mercator.getAllFeatures(this.state.mapConfig, "currentSamples");
-        const selectedFeatures = mercator.getSelectedSamples(this.state.mapConfig).getArray();
-        return (selectedFeatures.length === 0 ? allFeatures : selectedFeatures).map(sf => sf.get("sampleId"));
+    getSelectedSampleIds = (question) => {
+        const allFeatures = mercator.getAllFeatures(this.state.mapConfig, "currentSamples") || [];
+        const selectedFeatures = mercator.getSelectedSamples(this.state.mapConfig) ? mercator.getSelectedSamples(this.state.mapConfig).getArray() : [];
+
+        return (
+            (selectedFeatures.length === 0 && question.answered.length === 0)
+            || Object.keys(this.state.userSamples).length === 1
+                    ? allFeatures
+                    : selectedFeatures
+        ).map(sf => sf.get("sampleId"));
     };
 
     checkRuleTextMatch = (surveyRule, questionToSet, answerId, answerText) => {
@@ -665,7 +685,7 @@ class Collection extends React.Component {
             const answeredQuestions = this.state.currentProject.surveyQuestions
                 .filter(q => surveyRule.questions.includes(q.id) && q.answered.length > 0 && q.id !== questionToSet.id);
             if (surveyRule.questions.length === answeredQuestions.length + 1) {
-                const sampleIds = this.getSelectedSampleIds();
+                const sampleIds = this.getSelectedSampleIds(questionToSet);
                 const answeredSampleIds = answeredQuestions.map(q => q.answered.map(a => a.sampleId));
                 const commonSampleIds = answeredSampleIds.reduce(this.intersection, sampleIds);
                 if (commonSampleIds.length > 0) {
@@ -701,7 +721,7 @@ class Collection extends React.Component {
             const answeredQuestions2 = this.state.currentProject.surveyQuestions
                 .filter(q => surveyRule.questionSetIds2.includes(q.id) && q.answered.length > 0 && q.id !== questionToSet.id);
             if (surveyRule.questionSetIds1.length + surveyRule.questionSetIds2.length === answeredQuestions1.length + answeredQuestions2.length + 1) {
-                const sampleIds = this.getSelectedSampleIds();
+                const sampleIds = this.getSelectedSampleIds(questionToSet);
                 const answeredSampleIds1 = answeredQuestions1.map(q => q.answered.map(a => a.sampleId));
                 const commonSampleIds1 = answeredSampleIds1.reduce(this.intersection, sampleIds);
                 const answeredSampleIds2 = answeredQuestions2.map(q => q.answered.map(a => a.sampleId));
@@ -759,7 +779,7 @@ class Collection extends React.Component {
         if (surveyRule.question1 === questionToSet.id && surveyRule.answer1 === answerId) {
             const ques2 = this.state.currentProject.surveyQuestions.find(q => q.id === surveyRule.question2);
             if (ques2.answered.some(ans => ans.answerId === surveyRule.answer2)) {
-                const ques1Ids = this.getSelectedSampleIds();
+                const ques1Ids = this.getSelectedSampleIds(questionToSet);
                 const ques2Ids = ques2.answered.filter(ans => ans.answerId === surveyRule.answer2).map(a => a.sampleId);
                 const commonSampleIds = this.intersection(ques1Ids, ques2Ids);
                 if (commonSampleIds.length > 0) {
@@ -773,7 +793,7 @@ class Collection extends React.Component {
         } else if (surveyRule.question2 === questionToSet.id && surveyRule.answer2 === answerId) {
             const ques1 = this.state.currentProject.surveyQuestions.find(q => q.id === surveyRule.question1);
             if (ques1.answered.some(ans => ans.answerId === surveyRule.answer1)) {
-                const ques2Ids = this.getSelectedSampleIds();
+                const ques2Ids = this.getSelectedSampleIds(questionToSet);
                 const ques1Ids = ques1.answered.filter(ans => ans.answerId === surveyRule.answer1).map(a => a.sampleId);
                 const commonSampleIds = this.intersection(ques1Ids, ques2Ids);
                 if (commonSampleIds.length > 0) {
@@ -802,21 +822,28 @@ class Collection extends React.Component {
             .map(surveyRule => this.ruleFunctions[surveyRule.ruleType](surveyRule, questionToSet, answerId, answerText))
             .find(msg => msg !== null);
 
-    setCurrentValue = (questionToSet, answerId, answerText) => {
-        const ruleError = this.rulesViolated(questionToSet, answerId, answerText);
-        const selectedFeatures = mercator.getSelectedSamples(this.state.mapConfig);
-
-        if (ruleError) {
+    checkSelection = (sampleIds, ruleError, questionToSet) => {
+        if (!this.plotHasSamples(this.state.currentPlot)) {
+            return false;
+        } else if (sampleIds.some(sid => questionToSet.visible.every(vs => vs.id !== sid))) {
+            alert("Invalid Selection. Try selecting the question before answering.");
+            return false;
+        } else if (sampleIds.length === 0) {
+            alert("You must make a selection after some samples have been answered.");
+            return false;
+        } else if (ruleError) {
             alert(ruleError);
             return false;
-        } else if (Object.keys(this.state.userSamples).length === 1
-                   || (selectedFeatures && selectedFeatures.getLength()
-                       && this.validateCurrentSelection(selectedFeatures, questionToSet.id))) {
+        } else {
+            return true;
+        }
+    };
 
-            const sampleIds = Object.keys(this.state.userSamples).length === 1
-                  ? [Object.keys(this.state.userSamples)[0]]
-                  : selectedFeatures.getArray().map(sf => sf.get("sampleId"));
+    setCurrentValue = (questionToSet, answerId, answerText) => {
+        const sampleIds = this.getSelectedSampleIds(questionToSet);
+        const ruleError = this.rulesViolated(questionToSet, answerId, answerText);
 
+        if (this.checkSelection(sampleIds, ruleError, questionToSet)) {
             const newSamples = sampleIds.reduce((acc, sampleId) => {
                 const newQuestion = {
                     questionId: questionToSet.id,
@@ -854,12 +881,6 @@ class Collection extends React.Component {
                 selectedQuestion: questionToSet,
             });
             return true;
-        } else if (selectedFeatures && selectedFeatures.getLength() === 0) {
-            alert("No samples selected. Please click some first.");
-            return false;
-        } else {
-            alert("Invalid Selection. Try selecting the question before answering.");
-            return false;
         }
     };
 
@@ -908,7 +929,7 @@ class Collection extends React.Component {
             });
     };
 
-    getVisibleSamples = (currentQuestionId) => {
+    calcVisibleSamples = (currentQuestionId) => {
         const { currentProject : { surveyQuestions }, userSamples } = this.state;
         const { parentQuestion, parentAnswer } = surveyQuestions.find(sq => sq.id === currentQuestionId);
         const parentQuestionText = parentQuestion === -1
@@ -922,7 +943,7 @@ class Collection extends React.Component {
                 .find(sq => sq.id === parentQuestion).answers
                 .find(ans => parentAnswer === -1 || ans.id === parentAnswer).answer;
 
-            return this.getVisibleSamples(parentQuestion)
+            return this.calcVisibleSamples(parentQuestion)
                 .filter(sample => {
                     const sampleAnswer = userSamples[sample.id][parentQuestionText]
                           && userSamples[sample.id][parentQuestionText].answer;
@@ -933,7 +954,7 @@ class Collection extends React.Component {
 
     updateQuestionStatus = () => {
         const newSurveyQuestions = this.state.currentProject.surveyQuestions.map(sq => {
-            const visibleSamples = this.getVisibleSamples(sq.id);
+            const visibleSamples = this.calcVisibleSamples(sq.id);
             return ({
                 ...sq,
                 visible: visibleSamples,
@@ -982,7 +1003,7 @@ class Collection extends React.Component {
                 <label htmlFor="radio2" className="form-check-label">White</label>
             </div>
         </div>
-    )
+    );
 
     render() {
         const plotId = this.state.currentPlot
@@ -1150,8 +1171,6 @@ function SideBar(props) {
 function CollapsableTitle({ title, showGroup, toggleShow }) {
     const buttonDownStyle = { width: "1.5rem", height: "1.5rem", paddingTop: "1px", paddingLeft: "3px" };
     const buttonRightStyle = { width: "1.5rem", height: "1.5rem", paddingTop: "0px", paddingLeft: "6px", fontSize: ".8rem" };
-    const downArrow = "\u25BC";
-    const rightArrow = "\u25B6";
     return (
         <div className="PlotNavigation__Title row">
             <h3
@@ -1159,7 +1178,7 @@ function CollapsableTitle({ title, showGroup, toggleShow }) {
                 style={showGroup ? buttonDownStyle : buttonRightStyle}
                 onClick={toggleShow}
             >
-                {showGroup ? downArrow : rightArrow}
+                {showGroup ? <UnicodeIcon icon="downCaret"/> : <UnicodeIcon icon="rightCaret"/>}
             </h3>
             <h3 className="ml-2">{title}</h3>
         </div>
@@ -1203,26 +1222,24 @@ class PlotNavigation extends React.Component {
 
     navButtons = () => (
         <div className="PlotNavigation__nav-buttons row justify-content-center" id="plot-nav">
-            <input
-                id="prev-plot-button"
+            <button
                 className="btn btn-outline-lightgreen"
                 type="button"
-                name="new-plot"
-                value={"\u25C0"}
                 onClick={this.props.prevPlot}
                 style={{ opacity: this.props.prevPlotButtonDisabled ? "0.25" : "1.0" }}
                 disabled={this.props.prevPlotButtonDisabled}
-            />
-            <input
-                id="new-plot-button"
+            >
+                <UnicodeIcon icon="leftCaret"/>
+            </button>
+            <button
                 className="btn btn-outline-lightgreen mx-1"
                 type="button"
-                name="new-plot"
-                value={"\u25B6"}
                 onClick={this.props.nextPlot}
                 style={{ opacity: this.props.nextPlotButtonDisabled ? "0.25" : "1.0" }}
                 disabled={this.props.nextPlotButtonDisabled}
-            />
+            >
+                <UnicodeIcon icon="rightCaret"/>
+            </button>
             <input
                 type="text"
                 id="plotId"
@@ -1231,14 +1248,13 @@ class PlotNavigation extends React.Component {
                 value={this.state.newPlotInput}
                 onChange={e => this.updateNewPlotId(e.target.value)}
             />
-            <input
-                id="goto-plot-button"
+            <button
                 className="btn btn-outline-lightgreen"
                 type="button"
-                name="goto-plot"
-                value="Go to plot"
                 onClick={() => this.props.goToPlot(this.state.newPlotInput)}
-            />
+            >
+                Go to plot
+            </button>
         </div>
     );
 
@@ -1263,7 +1279,7 @@ class PlotNavigation extends React.Component {
         <a
             className="btn btn-outline-lightgreen btn-sm btn-block my-2"
             href={"data:earth.kml+xml application/vnd.google-earth.kmz, "
-                + encodeURIComponent(this.state.KMLFeatures)}
+                + encodeURIComponent(this.props.KMLFeatures)}
             download={"ceo_" + this.props.projectId + "_" + this.props.plotId + ".kml"}
         >
             Download Plot KML
@@ -1430,7 +1446,7 @@ class ProjectTitle extends React.Component {
                     title={props.projectName}
                     style={{ height: "100%", marginBottom: "0" }}
                 >
-                    {"\u25BC " + props.projectName}
+                    <UnicodeIcon icon="downCaret"/>{" " + props.projectName}
                 </h2>
                 {this.state.showStats &&
                 <ProjectStats

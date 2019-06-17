@@ -28,7 +28,7 @@ public class JsonUtils {
 
     private static final SimpleDateFormat DATE_FORMATTER = new SimpleDateFormat("yyyy-MM-dd");
 
-	public static String expandResourcePath(String filename) {
+    public static String expandResourcePath(String filename) {
         try {
             var uri = JsonUtils.class.getResource(filename).toURI();
             return Paths.get(uri).toFile().getAbsolutePath();
@@ -40,9 +40,9 @@ public class JsonUtils {
     public static JsonElement parseJson(String jsonString) {
         return (new JsonParser()).parse(jsonString == null || jsonString.equals("null") ? "[]" : jsonString);
     }
-    
+
     public static String toJson(Object obj) {
-    	return (new Gson()).toJson(obj);
+        return (new Gson()).toJson(obj);
     }
 
     public static synchronized JsonElement readJsonFile(String filename) {
@@ -83,7 +83,7 @@ public class JsonUtils {
 
     public static Collector<JsonElement, ?, JsonArray> intoJsonArray =
         Collector.of(JsonArray::new, JsonArray::add,
-                     (left, right) -> { left.addAll(right); return left; });
+                    (left, right) -> { left.addAll(right); return left; });
 
     public static JsonArray mapJsonArray(JsonArray array, Function<JsonObject, JsonObject> mapper) {
         return toStream(array)
@@ -122,11 +122,11 @@ public class JsonUtils {
             .get() + 1;
     }
 
-	public static JsonArray singletonArray(JsonElement el) {
-		var array = new JsonArray();
-		array.add(el);
-		return array;
-	}
+    public static JsonArray singletonArray(JsonElement el) {
+        var array = new JsonArray();
+        array.add(el);
+        return array;
+    }
 
     // Note: The JSON file must contain an array of objects.
     public static synchronized void mapJsonFile(String filename, Function<JsonObject, JsonObject> mapper) {
@@ -180,32 +180,32 @@ public class JsonUtils {
     }
 
     @SuppressWarnings("unchecked")
-	public static <T> T getMemberValue(JsonObject obj, String property, Class<T> type) {
-    	var el = findElement(obj, property);
-    	if (el == null || el.isJsonNull()) {
-    		return (T) null;
-    	} else if (type == String.class) {
-    		return (T) el.getAsString();
-    	} else if (type == Double.class) {
-    		return (T) Double.valueOf(el.getAsDouble());
-    	} else if (type == Integer.class) {
-    		return (T) Integer.valueOf(el.getAsInt());
-    	} else if (type == Boolean.class) {
-    		return (T) Boolean.valueOf(el.getAsBoolean());
-    	} else {
-    		throw new IllegalArgumentException("Unsupported type: " + type);
-    	}
+    public static <T> T getMemberValue(JsonObject obj, String property, Class<T> type) {
+        var el = findElement(obj, property);
+        if (el == null || el.isJsonNull()) {
+            return (T) null;
+        } else if (type == String.class) {
+            return (T) el.getAsString();
+        } else if (type == Double.class) {
+            return (T) Double.valueOf(el.getAsDouble());
+        } else if (type == Integer.class) {
+            return (T) Integer.valueOf(el.getAsInt());
+        } else if (type == Boolean.class) {
+            return (T) Boolean.valueOf(el.getAsBoolean());
+        } else {
+            throw new IllegalArgumentException("Unsupported type: " + type);
+        }
     }
-    
+
     public static String getDateAsString(JsonObject obj, String property) {
-    	var el = findElement(obj, property);
-    	if (el.isJsonNull()) {
-    		return null;
-    	} else {
-    		var dateStr = el.getAsString();
-			var date = new Date(Long.parseLong(dateStr));
-			return DATE_FORMATTER.format(date);
-    	}
+        var el = findElement(obj, property);
+        if (el.isJsonNull()) {
+            return null;
+        } else {
+            var dateStr = el.getAsString();
+            var date = new Date(Long.parseLong(dateStr));
+            return DATE_FORMATTER.format(date);
+        }
     }
 
 }

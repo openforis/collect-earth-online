@@ -306,6 +306,14 @@ public class ProjectUtils {
                 .toArray(Double[][]::new);
     }
 
+    public static Integer countGriddedPoints(double left, double bottom, double right, double top, double spacing) {
+        var xRange = right - left;
+        var yRange = top - bottom;
+        var xSteps = (int) Math.floor(xRange / spacing) + 1;
+        var ySteps = (int) Math.floor(yRange / spacing) + 1;
+        return xSteps * ySteps;
+    }
+
     // NOTE: Inputs are in Web Mercator and outputs are in WGS84 lat/lon
     public static Double[][] createGriddedPointsInBounds(double left, double bottom, double right, double top, double spacing) {
         var xRange = right - left;
@@ -348,6 +356,11 @@ public class ProjectUtils {
 
     private static double squareDistance(double x1, double y1, double x2, double y2) {
         return Math.pow(x2 - x1, 2.0) + Math.pow(y2 - y1, 2.0);
+    }
+
+    public static Integer countGriddedSampleSet(double plotSize, double sampleResolution) {
+        var steps = (int) Math.floor(plotSize / sampleResolution) + 1;
+        return steps * steps;
     }
 
     public static Double[][] createGriddedSampleSet(Double[] plotCenter, String plotShape, double plotSize, double sampleResolution) {
