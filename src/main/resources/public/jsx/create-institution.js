@@ -6,6 +6,7 @@ class CreateInstitution extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
+            institutions: [],
             newInstitutionDetails: {
                 name: "",
                 logo: "",
@@ -15,6 +16,18 @@ class CreateInstitution extends React.Component {
             },
         };
     }
+
+    componentDidMount() {
+        this.getInstitutions();
+    }
+
+    getInstitutions = () => fetch(this.props.documentRoot + "/get-all-institutions")
+        .then(response => response.ok ? response.json() : Promise.reject(response))
+        .then(data => this.setState({ institutions: data }))
+        .catch(response => {
+            console.log(response);
+            alert("Error downloading institution list. See console for details.");
+        });
 
     createInstitution = () => {
         fetch(this.props.documentRoot + "/create-institution",
@@ -35,13 +48,26 @@ class CreateInstitution extends React.Component {
                 console.log(response);
                 alert("Error creating institution. See console for details.");
             });
-    }
+    };
 
-    setInstitutionDetails = (key, newValue) => this.setState({
-        newInstitutionDetails: {
-            ...this.state.newInstitutionDetails, [key]: newValue,
-        },
-    });
+    getDuplicateInstByName = (k, v) => (k === "name")
+        ? this.state.institutions.find(inst => inst.name === v)
+        : null;
+
+    setInstitutionDetails = (key, newValue) => {
+        const duplicateInst = this.getDuplicateInstByName(key, newValue);
+        if (duplicateInst) {
+            alert("An institution with this name already exists. "
+                  + "Either select a different name or change the name of the duplicate institution here: "
+                  + window.location.origin + "/review-institution/" + duplicateInst.id);
+        } else {
+            this.setState({
+                newInstitutionDetails: {
+                    ...this.state.newInstitutionDetails, [key]: newValue,
+                },
+            });
+        }
+    };
 
     renderButtonGroup = () =>
         <input
