@@ -223,24 +223,25 @@ class Widget extends React.Component {
 
     getWidgetHtml = (widget, onSliderChange, onSwipeChange) => {
         if (widget.gridcolumn || widget.layout) {
-            return (<div
-                className={
-                    this.getClassNames(widget.isFull,
-                                       widget.gridcolumn || "",
-                                       widget.gridrow || (widget.layout && "span " + widget.layout.h) || ""
-                    )
-                }
-                style={{
-                    gridColumn:widget.gridcolumn != null
+            return (
+                <div
+                    className={
+                        this.getClassNames(widget.isFull,
+                                           widget.gridcolumn || "",
+                                           widget.gridrow || (widget.layout && "span " + widget.layout.h) || ""
+                        )
+                    }
+                    style={{
+                        gridColumn:widget.gridcolumn != null
                             ? widget.gridcolumn
                             : this.generateGridColumn(widget.layout.x, widget.layout.w),
-                    gridRow:widget.gridrow != null
+                        gridRow:widget.gridrow != null
                             ? widget.gridrow
                             : this.generateGridRow(widget.layout.y, widget.layout.h),
-                }}
-            >
-                {this.getCommonWidgetLayout(widget, onSliderChange, onSwipeChange)}
-            </div>
+                    }}
+                >
+                    {this.getCommonWidgetLayout(widget, onSliderChange, onSwipeChange)}
+                </div>
             );
         } else {
             return (
@@ -990,8 +991,8 @@ class MapWidget extends React.Component {
                 fetch(this.props.documentRoot + "/get-proj-plot/" + projectID + "/" + plotID)
                     .then(res => res.json())
                     .then(data => {
-                        const _geojson_object = typeof(data) === "string" ? JSON.parse(data) : data;
-                        const vectorSource = mercator.geometryToVectorSource(mercator.parseGeoJson(_geojson_object.geom, true));
+                        const geoJsonObject = typeof(data) === "string" ? JSON.parse(data) : data;
+                        const vectorSource = mercator.geometryToVectorSource(mercator.parseGeoJson(geoJsonObject.geom, true));
                         const mapConfig = {};
                         mapConfig.map = whichMap;
                         const style = [
@@ -1005,8 +1006,8 @@ class MapWidget extends React.Component {
                         ];
                         mercator.addVectorLayer(mapConfig, "geeLayer", vectorSource, style);
 
-                        if (_geojson_object.samples) {
-                            _geojson_object.samples.forEach(element => {
+                        if (geoJsonObject.samples) {
+                            geoJsonObject.samples.forEach(element => {
                                 const vectorSource = mercator.geometryToVectorSource(mercator.parseGeoJson(element.geom, true));
                                 mercator.addVectorLayer(mapConfig, "geeLayer", vectorSource, style);
                             });
@@ -1045,11 +1046,7 @@ class GraphWidget extends React.Component {
         };
     }
 
-    sortData = (a, b) => {
-        (a[0] < b[0]) ? -1
-            : (a[0] > b[0]) ? 1
-            : 0;
-    };
+    sortData = (a, b) => (a[0] < b[0]) ? -1 : (a[0] > b[0]) ? 1 : 0;
 
     componentDidMount() {
         const widget = this.props.widget;
@@ -1197,14 +1194,15 @@ class StatsWidget extends React.Component {
     numberWithCommas = x => {
         if (typeof x === "number") {
             try {
-                const parts = x.toString().split(".");
-                parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-                return parts.join(".");
+                const [quot, rem] = x.toString().split(".");
+                return [quot.replace(/\B(?=(\d{3})+(?!\d))/g, ","), rem].join(".");
             } catch (e) {
                 console.warn(e.message);
+                return "N/A";
             }
+        } else {
+            return "N/A";
         }
-        return "N/A";
     };
 
     calculateArea = poly => this.numberWithCommas(Math.round(Math.abs(new ol.Sphere(6378137).geodesicArea(poly))) / 10000);
