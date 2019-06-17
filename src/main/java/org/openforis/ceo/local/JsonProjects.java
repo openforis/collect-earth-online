@@ -18,10 +18,13 @@ import static org.openforis.ceo.utils.JsonUtils.toElementStream;
 import static org.openforis.ceo.utils.JsonUtils.toStream;
 import static org.openforis.ceo.utils.JsonUtils.writeJsonFile;
 import static org.openforis.ceo.utils.PartUtils.writeFilePartBase64;
+import static org.openforis.ceo.utils.ProjectUtils.checkPlotLimits;
 import static org.openforis.ceo.utils.ProjectUtils.createGriddedPointsInBounds;
 import static org.openforis.ceo.utils.ProjectUtils.createGriddedSampleSet;
 import static org.openforis.ceo.utils.ProjectUtils.createRandomPointsInBounds;
 import static org.openforis.ceo.utils.ProjectUtils.createRandomSampleSet;
+import static org.openforis.ceo.utils.ProjectUtils.countGriddedSampleSet;
+import static org.openforis.ceo.utils.ProjectUtils.countGriddedPoints;
 import static org.openforis.ceo.utils.ProjectUtils.deleteShapeFileDirectories;
 import static org.openforis.ceo.utils.ProjectUtils.getOrEmptyString;
 import static org.openforis.ceo.utils.ProjectUtils.getOrZero;
@@ -1146,6 +1149,23 @@ public class JsonProjects implements Projects {
         var bottom = paddedBounds[1];
         var right = paddedBounds[2];
         var top = paddedBounds[3];
+
+        // Check prospective project size
+        var totalPlots =
+            plotDistribution.equals("random") ? numPlots
+            : plotDistribution.equals("gridded") ? countGriddedPoints(left, bottom, right, top, plotSpacing)
+            : plotDistribution.equals("csv") ? csvPlotPoints.size()
+            : shpPlotCenters.size();
+
+        if (totalPlots == 0) {throw new RuntimeException("Plot file is empty.");}
+
+        var computedSamplesPerPlot =
+            sampleDistribution.equals("random") ? samplesPerPlot
+            : sampleDistribution.equals("gridded") ? countGriddedSampleSet(plotSize, sampleResolution)
+            : sampleDistribution.equals("csv") ? (csvSamplePointsFinal.size() / totalPlots)
+            : (shpSampleCentersFinal.size() / totalPlots);
+
+        checkPlotLimits(totalPlots, 5000, computedSamplesPerPlot, 200, 50000);
 
         // Generate the plot objects and their associated sample points
         var newPlotCenters =
