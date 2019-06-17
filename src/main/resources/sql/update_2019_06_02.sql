@@ -21,7 +21,6 @@ CREATE OR REPLACE FUNCTION delete_project(_project_uid integer)
 
 $$ LANGUAGE PLPGSQL;
 
-DROP FUNCTION plots_missing_samples(integer);
 CREATE OR REPLACE FUNCTION plots_missing_samples(_project_uid integer)
  RETURNS TABLE (plot_id integer) AS $$
 
