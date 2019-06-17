@@ -212,9 +212,9 @@ class Widget extends React.Component {
                                  "ndmiTimeSeries"];
     }
 
-    generategridcolumn = (x, w) => (x + 1) + " / span " + w;
+    generateGridColumn = (x, w) => (x + 1) + " / span " + w;
 
-    generategridrow = (y, h) => (y + 1) + " / span " + h;
+    generateGridRow = (y, h) => (y + 1) + " / span " + h;
 
     getColumnClass = c => c.includes("span 12") ? " fullcolumnspan" : c.includes("span 9") ? " columnSpan9" : c.includes("span 6") ? " columnSpan6" : " columnSpan3";
 
@@ -224,32 +224,32 @@ class Widget extends React.Component {
 
     getWidgetHtml = (widget, onSliderChange, onSwipeChange) => {
         if (widget.gridcolumn || widget.layout) {
-            return (<div
-                className={this.getClassNames(widget.isFull,
-                                                       widget.gridcolumn != null
-                                                           ? widget.gridcolumn
-                                                           : "",
-                                                       widget.gridrow != null
-                                                           ? widget.gridrow
-                                                           : widget.layout != null
-                                                               ? "span " + widget.layout.h : "")}
-                style={{
-                    gridColumn:widget.gridcolumn != null
-                             ? widget.gridcolumn
-                             : this.generategridcolumn(widget.layout.x, widget.layout.w),
-                    gridRow:widget.gridrow != null
-                                     ? widget.gridrow
-                                     : this.generategridrow(widget.layout.y, widget.layout.h),
-                }}
-            >
-                {this.getCommonWidgetLayout(widget, onSliderChange, onSwipeChange)}
-            </div>);
+            return (
+                <div
+                    className={
+                        this.getClassNames(widget.isFull,
+                                           widget.gridcolumn || "",
+                                           widget.gridrow || (widget.layout && "span " + widget.layout.h) || ""
+                        )
+                    }
+                    style={{
+                        gridColumn:widget.gridcolumn != null
+                            ? widget.gridcolumn
+                            : this.generateGridColumn(widget.layout.x, widget.layout.w),
+                        gridRow:widget.gridrow != null
+                            ? widget.gridrow
+                            : this.generateGridRow(widget.layout.y, widget.layout.h),
+                    }}
+                >
+                    {this.getCommonWidgetLayout(widget, onSliderChange, onSwipeChange)}
+                </div>
+            );
         } else {
             return (
                 <div
                     className={widget.isFull
-                    ? "fullwidget columnSpan3 rowSpan1 placeholder"
-                    : "columnSpan3 rowSpan1 placeholder"}
+                        ? "fullwidget columnSpan3 rowSpan1 placeholder"
+                        : "columnSpan3 rowSpan1 placeholder"}
                 >
                     {this.getCommonWidgetLayout(widget, onSliderChange, onSwipeChange)}
                 </div>);
@@ -324,9 +324,9 @@ class Widget extends React.Component {
     };
 
     isMapWidget = widget => this.imageCollectionList.includes(widget.properties[0])
-            || (widget.dualImageCollection && widget.dualImageCollection != null)
-            || (widget.ImageAsset && widget.ImageAsset.length > 0)
-            || (widget.ImageCollectionAsset && widget.ImageCollectionAsset.length > 0);
+        || (widget.dualImageCollection && widget.dualImageCollection != null)
+        || (widget.ImageAsset && widget.ImageAsset.length > 0)
+        || (widget.ImageCollectionAsset && widget.ImageCollectionAsset.length > 0);
 
     render() {
         const { widget } = this.props;
@@ -376,38 +376,23 @@ class MapWidget extends React.Component {
     };
 
     getImageParams = widget => {
-        let visParams;
         if (widget.visParams) {
             if (typeof widget.visParams === "string") {
                 try {
-                    visParams = JSON.parse(widget.visParams);
+                    return JSON.parse(widget.visParams);
                 } catch (e) {
-                    visParams = widget.visParams;
+                    return widget.visParams;
                 }
             } else {
-                visParams = widget.visParams;
+                return widget.visParams;
             }
         } else {
-            let min;
-            let max;
-            try {
-                if (widget.min > 0) {
-                    min = widget.min;
-                }
-
-                if (widget.max > 0) {
-                    max = widget.max;
-                }
-            } catch (e) {
-                console.log(e.message);
-            }
-            visParams = {
-                min: min,
-                max: max,
+            return {
+                min: (widget.min && widget.min > 0) ? widget.min : null,
+                max: (widget.max && widget.max > 0) ? widget.max : null,
                 bands: widget.bands,
             };
         }
-        return visParams;
     };
 
     pauseGeeLayer = e => {
@@ -420,28 +405,25 @@ class MapWidget extends React.Component {
     };
 
     getRequestedIndex = collectionName => collectionName === "ImageCollectionNDVI"
-            ? "NDVI"
-            : collectionName === "ImageCollectionEVI"
-                ? "EVI"
-                : collectionName === "ImageCollectionEVI2"
-                    ? "EVI2"
-                    : collectionName === "ImageCollectionNDMI"
-                        ? "NDMI"
-                        : collectionName === "ImageCollectionNDWI"
-                            ? "NDWI"
-                            : "";
+        ? "NDVI"
+        : collectionName === "ImageCollectionEVI"
+            ? "EVI"
+            : collectionName === "ImageCollectionEVI2"
+                ? "EVI2"
+                : collectionName === "ImageCollectionNDMI"
+                    ? "NDMI"
+                    : collectionName === "ImageCollectionNDWI"
+                        ? "NDWI"
+                        : "";
 
-    convertCollectionName = collectionName => collectionName === "ImageCollectionNDVI"
+    convertCollectionName = collectionName =>
+        ["ImageCollectionNDVI",
+         "ImageCollectionEVI",
+         "ImageCollectionEVI2",
+         "ImageCollectionNDMI",
+         "ImageCollectionNDWI"].includes(collectionName)
             ? ""
-            : collectionName === "ImageCollectionEVI"
-                ? ""
-                : collectionName === "ImageCollectionEVI2"
-                    ? ""
-                    : collectionName === "ImageCollectionNDMI"
-                        ? ""
-                        : collectionName === "ImageCollectionNDWI"
-                            ? ""
-                            : collectionName;
+            : collectionName;
 
     addSecondMapLayer = (mapid, token, widgetid) => {
         if (this.state.mapRef) {
@@ -1011,8 +993,8 @@ class MapWidget extends React.Component {
                 fetch(this.props.documentRoot + "/get-proj-plot/" + projectID + "/" + plotID)
                     .then(res => res.json())
                     .then(data => {
-                        const _geojson_object = typeof(data) === "string" ? JSON.parse(data) : data;
-                        const vectorSource = mercator.geometryToVectorSource(mercator.parseGeoJson(_geojson_object.geom, true));
+                        const geoJsonObject = typeof(data) === "string" ? JSON.parse(data) : data;
+                        const vectorSource = mercator.geometryToVectorSource(mercator.parseGeoJson(geoJsonObject.geom, true));
                         const mapConfig = {};
                         mapConfig.map = whichMap;
                         const style = [
@@ -1026,8 +1008,8 @@ class MapWidget extends React.Component {
                         ];
                         mercator.addVectorLayer(mapConfig, "geeLayer", vectorSource, style);
 
-                        if (_geojson_object.samples) {
-                            _geojson_object.samples.forEach(element => {
+                        if (geoJsonObject.samples) {
+                            geoJsonObject.samples.forEach(element => {
                                 const vectorSource = mercator.geometryToVectorSource(mercator.parseGeoJson(element.geom, true));
                                 mercator.addVectorLayer(mapConfig, "geeLayer", vectorSource, style);
                             });
@@ -1066,11 +1048,7 @@ class GraphWidget extends React.Component {
         };
     }
 
-    sortData = (a, b) => {
-        if (a[0] < b[0]) return -1;
-        if (a[0] > b[0]) return 1;
-        return 0;
-    };
+    sortData = (a, b) => (a[0] < b[0]) ? -1 : (a[0] > b[0]) ? 1 : 0;
 
     componentDidMount() {
         const widget = this.props.widget;
@@ -1218,26 +1196,18 @@ class StatsWidget extends React.Component {
     numberWithCommas = x => {
         if (typeof x === "number") {
             try {
-                const parts = x.toString().split(".");
-                parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-                return parts.join(".");
+                const [quot, rem] = x.toString().split(".");
+                return [quot.replace(/\B(?=(\d{3})+(?!\d))/g, ","), rem].join(".");
             } catch (e) {
                 console.warn(e.message);
+                return "N/A";
             }
+        } else {
+            return "N/A";
         }
-        return "N/A";
     };
 
-    calculateArea = poly => {
-        const sphere = new ol.Sphere(6378137);
-        const area_m = sphere.geodesicArea(poly);
-        let area_ha = area_m / 10000;
-        if (area_ha < 0) {
-            area_ha = area_ha * -1;
-        }
-        area_ha = Math.round(area_ha * Math.pow(10, 4)) / Math.pow(10, 4);
-        return this.numberWithCommas(area_ha);
-    };
+    calculateArea = poly => this.numberWithCommas(Math.round(Math.abs(new ol.Sphere(6378137).geodesicArea(poly))) / 10000);
 
     componentDidMount() {
         const projPairAOI = this.props.projPairAOI;
