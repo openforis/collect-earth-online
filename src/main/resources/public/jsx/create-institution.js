@@ -82,7 +82,7 @@ class CreateInstitution extends React.Component {
     render() {
         return (
             <InstitutionEditor
-                instTitle="Create New Institution"
+                title="Create New Institution"
                 name={this.state.newInstitutionDetails.name}
                 logo={this.state.newInstitutionDetails.logo}
                 url={this.state.newInstitutionDetails.url}
