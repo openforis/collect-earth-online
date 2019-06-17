@@ -6,6 +6,7 @@ class CreateInstitution extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
+            institutions: [],
             newInstitutionDetails: {
                 name: "",
                 logo: "",
@@ -15,16 +16,19 @@ class CreateInstitution extends React.Component {
             },
         };
     }
+
+    componentDidMount() {
+        this.getInstitutions();
+    }
+
     getInstitutions = () => fetch(this.props.documentRoot + "/get-all-institutions")
         .then(response => response.ok ? response.json() : Promise.reject(response))
-        .then(data => {
-            if (data.length > 0) {
-                this.setState({ institutions: data });
-                return Promise.resolve();
-            } else {
-                return Promise.reject("No institutions found");
-            }
+        .then(data => this.setState({ institutions: data }))
+        .catch(response => {
+            console.log(response);
+            alert("Error downloading institution list. See console for details.");
         });
+
     createInstitution = () => {
         fetch(this.props.documentRoot + "/create-institution",
               {
@@ -46,12 +50,16 @@ class CreateInstitution extends React.Component {
             });
     };
 
+    getDuplicateInstByName = (k, v) => (k === "name")
+        ? this.state.institutions.find(inst => inst.name === v)
+        : null;
+
     setInstitutionDetails = (key, newValue) => {
-        if (key === "name") {
-            const insts = this.getInstitutions().filter(inst => inst.name === newValue);
-            if (insts.length > 0) {
-                alert("Duplicate institution! Please review this institution to update it - https://ceodev.servirglobal.net/review-institution/" + insts[0].id);
-            }
+        const duplicateInst = this.getDuplicateInstByName(key, newValue);
+        if (duplicateInst) {
+            alert("An institution with this name already exists. "
+                  + "Either select a different name or change the name of the duplicate institution here: "
+                  + window.location.origin + "/review-institution/" + duplicateInst.id);
         } else {
             this.setState({
                 newInstitutionDetails: {
