@@ -490,14 +490,14 @@ public class ProjectUtils {
         if (perPlot > perPlotLimit) {
             throw new RuntimeException("This action will create "
                                        + numFormat(perPlot)
-                                       + " samples per plot. The maximum allowed for the selected plot distribution is "
+                                       + " samples per plot. The maximum allowed for the selected sample distribution is "
                                        + numFormat(perPlotLimit) + ".");
         }
 
         if (plots * perPlot > sampleLimit) {
             throw new RuntimeException("This action will create "
                                        + numFormat(plots * perPlot)
-                                       + " total samples. The maximum allowed for the selected plot distribution is "
+                                       + " total samples. The maximum allowed for the selected distribution types is "
                                        + numFormat(sampleLimit) + ".");
         }
     }
