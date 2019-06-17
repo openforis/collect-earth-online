@@ -618,13 +618,7 @@ class SurveyRules extends React.Component {
 
     };
 
-    getMaxId = (array) => {
-        let maxid = 0;
-        array.map(function(obj){
-            if (obj.id > maxid) maxid = obj.id;
-        });
-        return maxid;
-    };
+    getMaxId = (array) => array.reduce((maxId, obj) => Math.max(maxId, obj.id), 0);
 
     addSurveyRule = (ruleType) => {
         const rules = this.props.surveyRules.map(rule => {
