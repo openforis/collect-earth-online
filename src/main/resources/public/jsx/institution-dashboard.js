@@ -60,6 +60,7 @@ class InstitutionDashboard extends React.Component {
                 <table id="srd" style={{ width: "1000px", margin: "10px", color: "rgb(49, 186, 176)" }}>
                     <thead>
                         <tr>
+                            <th>Project Id</th>
                             <th>Project Name</th>
                             <th>Members</th>
                             <th>Contributors</th>
@@ -81,6 +82,7 @@ class InstitutionDashboard extends React.Component {
 function ProjectList(props) {
     return props.details.map((project, uid) =>
         <tr key={uid}>
+            <td>{project.id}</td>
             <td>{project.name}</td>
             <td>{project.members}</td>
             <td>{project.contributors}</td>
