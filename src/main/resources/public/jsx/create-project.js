@@ -104,7 +104,7 @@ class Project extends React.Component {
 
     createProject = () => {
         if (this.validateProject() && confirm("Do you REALLY want to create this project?")) {
-            this.setState({ showModal: true }, this.createProjectApi());
+            this.setState({ showModal: true }, this.createProjectApi);
         }
     };
 
