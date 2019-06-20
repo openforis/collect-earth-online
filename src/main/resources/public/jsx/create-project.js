@@ -143,10 +143,10 @@ class Project extends React.Component {
                   }),
               }
         )
-            .then(response => response.ok ? response.text() : Promise.reject(response))
+            .then(response => response.ok ? response.text() : Promise.reject(response.text()))
             .then(data => {
-                const isNumeric = n => isFinite(n) && n.trim().length === n.length;
-                if (isNumeric(data)) {
+                const isInteger = n => !isNaN(parseInt(n)) && isFinite(n) && !n.includes(".");
+                if (isInteger(data)) {
                     window.location = this.props.documentRoot + "/review-project/" + data;
                     return Promise.resolve();
                 } else {
@@ -154,8 +154,7 @@ class Project extends React.Component {
                 }
             })
             .catch(response => {
-                console.log(response);
-                alert("Error creating project. \n\n" + (typeof(response) === "string" ? response : "See console for details."));
+                alert("Error creating project.\n\n" + response);
                 this.setState({ showModal: false });
             });
 
