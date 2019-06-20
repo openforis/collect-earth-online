@@ -108,7 +108,7 @@ class Project extends React.Component {
         }
     };
 
-    createProjectApi = () => {
+    createProjectApi = () =>
         fetch(this.props.documentRoot + "/create-project",
               {
                   method: "POST",
@@ -145,7 +145,7 @@ class Project extends React.Component {
         )
             .then(response => response.ok ? response.text() : Promise.reject(response))
             .then(data => {
-                const isNumeric = (n) => !isNaN(parseFloat(n)) && isFinite(n);
+                const isNumeric = n => isFinite(n) && n.trim().length === n.length;
                 if (isNumeric(data)) {
                     window.location = this.props.documentRoot + "/review-project/" + data;
                     return Promise.resolve();
@@ -154,10 +154,10 @@ class Project extends React.Component {
                 }
             })
             .catch(response => {
-                alert("Error creating project. \n\n" + response);
+                console.log(response);
+                alert("Error creating project. \n\n" + (typeof(response) === "string" ? response : "See console for details."));
                 this.setState({ showModal: false });
             });
-    }
 
     validateProject = () => {
         const { projectDetails } = this.state;
