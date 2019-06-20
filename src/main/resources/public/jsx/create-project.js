@@ -7,7 +7,6 @@ import { mercator, ceoMapStyles } from "../js/mercator-openlayers.js";
 import { SurveyDesign } from "./components/SurveyDesign";
 import { convertSampleValuesToSurveyQuestions } from "./utils/surveyUtils";
 import { encodeFileAsBase64 } from "./utils/fileUtils";
-import { utils } from "../js/utils.js";
 
 const blankProject = {
     archived: false,
@@ -48,6 +47,7 @@ class Project extends React.Component {
             },
             projectList: [],
             hasNoRules: true,
+            showModal: false,
         };
     }
 
@@ -104,58 +104,59 @@ class Project extends React.Component {
 
     createProject = () => {
         if (this.validateProject() && confirm("Do you REALLY want to create this project?")) {
-            utils.show_element("spinner");
-
-            fetch(this.props.documentRoot + "/create-project",
-                  {
-                      method: "POST",
-                      contentType: "application/json; charset=utf-8",
-                      body: JSON.stringify({
-                          institution: this.props.institutionId,
-                          lonMin: this.state.coordinates.lonMin,
-                          lonMax: this.state.coordinates.lonMax,
-                          latMin: this.state.coordinates.latMin,
-                          latMax: this.state.coordinates.latMax,
-                          baseMapSource: this.state.projectDetails.baseMapSource,
-                          description: this.state.projectDetails.description,
-                          name: this.state.projectDetails.name,
-                          numPlots: this.state.projectDetails.numPlots,
-                          plotDistribution: this.state.projectDetails.plotDistribution,
-                          plotShape: this.state.projectDetails.plotShape,
-                          plotSize: this.state.projectDetails.plotSize,
-                          plotSpacing: this.state.projectDetails.plotSpacing,
-                          privacyLevel: this.state.projectDetails.privacyLevel,
-                          projectTemplate: this.state.projectDetails.id,
-                          sampleDistribution: this.state.projectDetails.sampleDistribution,
-                          samplesPerPlot: this.state.projectDetails.samplesPerPlot,
-                          sampleResolution: this.state.projectDetails.sampleResolution,
-                          sampleValues: this.state.projectDetails.surveyQuestions,
-                          surveyRules: this.state.projectDetails.surveyRules,
-                          plotFileName: this.state.projectDetails.plotFileName,
-                          plotFileBase64: this.state.projectDetails.plotFileBase64,
-                          sampleFileName: this.state.projectDetails.sampleFileName,
-                          sampleFileBase64: this.state.projectDetails.sampleFileBase64,
-                          useTemplatePlots: this.state.useTemplatePlots,
-                          useTemplateWidgets: this.state.useTemplateWidgets,
-                      }),
-                  }
-            )
-                .then(response => response.ok ? response.text() : Promise.reject(response))
-                .then(data => {
-                    const isNumeric = (n) => !isNaN(parseFloat(n)) && isFinite(n);
-                    if (isNumeric(data)) {
-                        window.location = this.props.documentRoot + "/review-project/" + data;
-                        return Promise.resolve();
-                    } else {
-                        return Promise.reject(data);
-                    }
-                })
-                .catch(response => {
-                    alert("Error creating project. \n\n" + response);
-                })
-                .finally(utils.hide_element("spinner"));
+            this.setState({ showModal: true }, this.createProjectApi);
         }
     };
+
+    createProjectApi = () =>
+        fetch(this.props.documentRoot + "/create-project",
+              {
+                  method: "POST",
+                  contentType: "application/json; charset=utf-8",
+                  body: JSON.stringify({
+                      institution: this.props.institutionId,
+                      lonMin: this.state.coordinates.lonMin,
+                      lonMax: this.state.coordinates.lonMax,
+                      latMin: this.state.coordinates.latMin,
+                      latMax: this.state.coordinates.latMax,
+                      baseMapSource: this.state.projectDetails.baseMapSource,
+                      description: this.state.projectDetails.description,
+                      name: this.state.projectDetails.name,
+                      numPlots: this.state.projectDetails.numPlots,
+                      plotDistribution: this.state.projectDetails.plotDistribution,
+                      plotShape: this.state.projectDetails.plotShape,
+                      plotSize: this.state.projectDetails.plotSize,
+                      plotSpacing: this.state.projectDetails.plotSpacing,
+                      privacyLevel: this.state.projectDetails.privacyLevel,
+                      projectTemplate: this.state.projectDetails.id,
+                      sampleDistribution: this.state.projectDetails.sampleDistribution,
+                      samplesPerPlot: this.state.projectDetails.samplesPerPlot,
+                      sampleResolution: this.state.projectDetails.sampleResolution,
+                      sampleValues: this.state.projectDetails.surveyQuestions,
+                      surveyRules: this.state.projectDetails.surveyRules,
+                      plotFileName: this.state.projectDetails.plotFileName,
+                      plotFileBase64: this.state.projectDetails.plotFileBase64,
+                      sampleFileName: this.state.projectDetails.sampleFileName,
+                      sampleFileBase64: this.state.projectDetails.sampleFileBase64,
+                      useTemplatePlots: this.state.useTemplatePlots,
+                      useTemplateWidgets: this.state.useTemplateWidgets,
+                  }),
+              }
+        )
+            .then(response => response.ok ? response.text() : Promise.reject(response.text()))
+            .then(data => {
+                const isInteger = n => !isNaN(parseInt(n)) && isFinite(n) && !n.includes(".");
+                if (isInteger(data)) {
+                    window.location = this.props.documentRoot + "/review-project/" + data;
+                    return Promise.resolve();
+                } else {
+                    return Promise.reject(data);
+                }
+            })
+            .catch(response => {
+                alert("Error creating project.\n\n" + response);
+                this.setState({ showModal: false });
+            });
 
     validateProject = () => {
         const { projectDetails } = this.state;
@@ -376,6 +377,7 @@ class Project extends React.Component {
     render() {
         return (
             <FormLayout id="project-design" title="Create Project">
+                {this.state.showModal && <LoadingModal/>}
                 {this.state.projectDetails &&
                     <Fragment>
                         <ProjectDesignForm
@@ -951,6 +953,16 @@ function ProjectManagement({ createProject }) {
                 </div>
             </div>
         </SectionBlock>
+    );
+}
+
+function LoadingModal() {
+    return (
+        <div style={{ position: "fixed", zIndex: "100", left: "0", top: "0", width: "100%", height: "100%", backgroundColor: "rgba(0,0,0,0.4)" }}>
+            <div style={{ width: "fit-content", margin: "20% auto", border: "1.5px solid", borderRadius: "5px", backgroundColor: "white" }}>
+                <label className="m-4">Please wait while project is being created.</label>
+            </div>
+        </div>
     );
 }
 

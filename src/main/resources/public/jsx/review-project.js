@@ -6,7 +6,6 @@ import { ProjectInfo, ProjectAOI, PlotReview, SampleReview } from "./components/
 import SurveyCardList from "./components/SurveyCardList";
 import { convertSampleValuesToSurveyQuestions } from "./utils/surveyUtils";
 import { mercator, ceoMapStyles } from "../js/mercator-openlayers.js";
-import { utils } from "../js/utils.js";
 
 class Project extends React.Component {
     constructor(props) {
@@ -61,7 +60,6 @@ class Project extends React.Component {
 
     updateProject = () => {
         if (this.validateProject() && confirm("Do you REALLY want to update this project?")) {
-            utils.show_element("spinner");
 
             fetch(this.props.documentRoot + "/update-project/" + this.state.projectDetails.id,
                   {
@@ -81,8 +79,7 @@ class Project extends React.Component {
                     } else {
                         alert("Project successfully updated!");
                     }
-                })
-                .finally(utils.hide_element("spinner"));
+                });
         }
     };
 
@@ -98,14 +95,12 @@ class Project extends React.Component {
 
     publishProject = () => {
         if (confirm("Do you REALLY want to publish this project?")) {
-            utils.show_element("spinner");
             fetch(this.props.documentRoot + "/publish-project/" + this.state.projectDetails.id,
                   {
                       method: "POST",
                   }
             )
                 .then(response => {
-                    utils.hide_element("spinner");
                     if (response.ok) {
                         this.setState({ projectDetails: { ...this.state.projectDetails, availability: "published" }});
                     } else {
@@ -118,13 +113,11 @@ class Project extends React.Component {
 
     closeProject = () => {
         if (confirm("Do you REALLY want to close this project?")) {
-            utils.show_element("spinner");
             fetch(this.props.documentRoot + "/close-project/" + this.state.projectDetails.id,
                   {
                       method: "POST",
                   })
                 .then(response => {
-                    utils.hide_element("spinner");
                     if (response.ok) {
                         this.setState({ projectDetails: { ...this.state.projectDetails, availability: "closed" }});
                     } else {
@@ -137,13 +130,11 @@ class Project extends React.Component {
 
     archiveProject = () => {
         if (confirm("Do you REALLY want to archive this project?!")) {
-            utils.show_element("spinner");
             fetch(this.props.documentRoot + "/archive-project/" + this.state.projectDetails.id,
                   {
                       method: "POST",
                   })
                 .then(response => {
-                    utils.hide_element("spinner");
                     if (response.ok) {
                         alert("Project " + this.state.projectDetails.id + " has been archived.");
                         window.location = this.props.documentRoot + "/home";
