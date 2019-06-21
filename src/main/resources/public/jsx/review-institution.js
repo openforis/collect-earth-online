@@ -402,149 +402,210 @@ class ImageryList extends React.Component {
     }
 }
 
+const imageryOptions = [
+    // Parameters can be defined one level deep. {paramParent: {paramChild: "", fields: "", fromJsonStr: ""}}
+    // A referenced parent must be entered as a json string
+    {
+        type: "GeoServer",
+        params: [
+            { key: "geoserverUrl", display: "GeoServer URL" },
+            { key: "LAYERS", display: "GeoServer Layer Name", parent: "geoserverParams" },
+            { key: "geoserverParams", display: "GeoServer Params (as JSON string)" },
+        ],
+        // FIXME, add url if help document is created.
+    },
+    {
+        type: "BingMaps",
+        params: [
+            { key: "imageryId", display: "Imagery Id" },
+            { key: "accessToken", display: "Access Token" },
+        ],
+        url: "https://docs.microsoft.com/en-us/bingmaps/getting-started/bing-maps-dev-center-help/getting-a-bing-maps-key",
+    },
+    {
+        type: "Planet",
+        params: [
+            { key: "year", display: "Year", type: "number" },
+            { key: "month", display: "Month", type: "number" },
+            { key: "accessToken", display: "Access Token" },
+        ],
+        url: "https://developers.planet.com/docs/api/",
+    },
+];
+
 class NewImagery extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
             newImageryTitle: "",
             newImageryAttribution: "",
-            newGeoServerURL: "",
-            newLayerName: "",
-            newGeoServerParams: "",
+            selectedType: 0,
+            newImageryParams: {},
         };
     }
 
-    addCustomImagery = () => {
-        fetch(this.props.documentRoot + "/add-institution-imagery",
-              {
-                  method: "POST",
-                  body: JSON.stringify({
-                      institutionId: this.props.institutionId,
-                      imageryTitle: this.state.newImageryTitle,
-                      imageryAttribution: this.state.newImageryAttribution,
-                      geoserverURL: this.state.newGeoServerURL,
-                      layerName: this.state.newLayerName,
-                      geoserverParams: this.state.newGeoServerParams,
-                  }),
-              })
-            .then(response => {
-                if (response.ok) {
-                    this.props.getImageryList();
-                    this.props.toggleEditMode();
-                } else {
-                    console.log(response);
-                    alert("Error adding imagery. See console for details.");
-                }
-            });
+    componentDidUpdate(prevProps, prevState) {
+        if (prevState.selectedType !== this.state.selectedType) {
+            this.setState({ newImageryParams: {} });
+        }
+    }
 
+    addCustomImagery = () => {
+        const sourceConfig = this.stackParams();
+        if (!this.checkAllParams()) {
+            alert("You must fill out all fields.");
+        } else if (sourceConfig.length === 0) {
+            alert("Invalid JSON in JSON field(s).");
+        } else {
+            fetch(this.props.documentRoot + "/add-institution-imagery",
+                  {
+                      method: "POST",
+                      body: JSON.stringify({
+                          institutionId: this.props.institutionId,
+                          imageryTitle: this.state.newImageryTitle,
+                          imageryAttribution: this.state.newImageryAttribution,
+                          sourceConfig: sourceConfig,
+                      }),
+                  })
+                .then(response => {
+                    if (response.ok) {
+                        this.props.getImageryList();
+                        this.props.toggleEditMode();
+                    } else {
+                        console.log(response);
+                        alert("Error adding imagery. See console for details. ");
+                    }
+                });
+        }
     };
 
+    stackParams = () => {
+        try {
+            const combined = Object.keys(this.state.newImageryParams).reduce((a, c) => {
+                const parentStr = imageryOptions[this.state.selectedType].params.find(p => p.key === c).parent;
+                if (parentStr) {
+                    const parentObj = JSON.parse(a[parentStr]);
+                    return { ...a, [c]: undefined, [parentStr]: { ...parentObj, [c]: this.state.newImageryParams[c] }};
+                } else {
+                    return a;
+                }
+            }, this.state.newImageryParams);
+
+            const cleared = Object.keys(combined).reduce((a, c) => {
+                const parentStr = imageryOptions[this.state.selectedType].params.find(p => p.key === c).parent;
+                if (parentStr) {
+                    return a;
+                } else {
+                    return { ...a, [c]: combined[c] };
+                }
+            }, {});
+
+            return { type: imageryOptions[this.state.selectedType].type, ...cleared };
+        } catch {
+            return "";
+        }
+    };
+
+    checkAllParams = () => this.state.newImageryTitle.length > 0
+        && this.state.newImageryAttribution.length > 0
+        && imageryOptions[this.state.selectedType].params
+            .every(o => this.state.newImageryParams[o.key] && this.state.newImageryParams[o.key].length > 0);
+
+    formInput = (title, type, value, callback) => (
+        <div className="mb-3" key={title}>
+            <label>{title}</label>
+            <input
+                className="form-control"
+                type={type}
+                autoComplete="off"
+                onChange={e => callback(e)}
+                value={value}
+            />
+        </div>
+    );
+
     render() {
-        return <div className="row" id="add-imagery">
-            <div className="col">
-                <div className="mb-2 p-2 border rounded">
-                    <div className="mb-3">
-                        <label htmlFor="newImageryTitle">Title</label>
-                        <input
-                            className="form-control"
-                            id="newImageryTitle"
-                            type="text"
-                            autoComplete="off"
-                            onChange={e => this.setState({ newImageryTitle: e.target.value })}
-                            value={this.state.newImageryTitle}
-                        />
+        return (
+            <div className="mb-2 p-2 border rounded">
+                {/* Selection for imagery type */}
+                <div className="mb-3">
+                    <label>Select Type</label>
+                    <select
+                        className="form-control"
+                        onChange={e => this.setState({ selectedType: e.target.value })}
+                        value={this.state.selectedType}
+                    >
+                        {imageryOptions.map((o, i) =>
+                            <option value={i} key={i}>{o.type}</option>
+                        )}
+                    </select>
+                </div>
+                {/* Add fields. Include same for all and unique to selected type. */}
+                {this.formInput("Title", "text", this.state.newImageryTitle, e => this.setState({ newImageryTitle: e.target.value }))}
+                {this.formInput("Attribution", "text", this.state.newImageryAttribution, e => this.setState({ newImageryAttribution: e.target.value }))}
+                {imageryOptions[this.state.selectedType].params.map(o =>
+                    this.formInput(o.display,
+                                   o.type || "text",
+                                   this.state.newImageryParams[o.json],
+                                   e => this.setState({ newImageryParams: { ...this.state.newImageryParams, [o.key]: e.target.value }}))
+                )}
+                {/* Show help URL if there is one. */}
+                {imageryOptions[this.state.selectedType].url &&
+                    <div className="mb-3" >
+                        <a href={imageryOptions[this.state.selectedType].url} target="_blank" rel="noreferrer noopener">
+                            Click here for help.
+                        </a>
                     </div>
-                    <div className="mb-3">
-                        <label htmlFor="newImageryAttribution">Attribution</label>
-                        <input
-                            className="form-control"
-                            id="newImageryAttribution"
-                            type="text"
-                            autoComplete="off"
-                            onChange={e => this.setState({ newImageryAttribution: e.target.value })}
-                            value={this.state.newImageryAttribution}
-                        />
-                    </div>
-                    <div className="mb-3">
-                        <label htmlFor="newGeoServerURL">GeoServer URL</label>
-                        <input
-                            className="form-control"
-                            id="newGeoServerURL"
-                            type="text"
-                            autoComplete="off"
-                            onChange={e => this.setState({ newGeoServerURL: e.target.value })}
-                            value={this.state.newGeoServerURL}
-                        />
-                    </div>
-                    <div className="mb-3">
-                        <label htmlFor="newLayerName">GeoServer Layer Name</label>
-                        <input
-                            className="form-control"
-                            id="newLayerName"
-                            type="text"
-                            autoComplete="off"
-                            onChange={e => this.setState({ newLayerName: e.target.value })}
-                            value={this.state.newLayerName}
-                        />
-                    </div>
-                    <div className="mb-3">
-                        <label htmlFor="newGeoServerParams">GeoServer Params<br/>(as JSON string)</label>
-                        <input
-                            className="form-control"
-                            id="newGeoServerParams"
-                            type="text"
-                            autoComplete="off"
-                            onChange={e => this.setState({ newGeoServerParams: e.target.value })}
-                            value={this.state.newGeoServerParams}
-                        />
-                    </div>
-                    <div className="btn-group-vertical btn-block">
-                        <button
-                            type="button"
-                            id="add-imagery-button"
-                            className="btn btn-sm btn-block btn-outline-yellow btn-group py-2 font-weight-bold"
-                            onClick={this.addCustomImagery}
-                        >
-                            <UnicodeIcon icon="add" backgroundColor="#f1c00f"/>Add New Imagery
-                        </button>
-                        <button
-                            type="button"
-                            className="btn btn-sm btn-block btn-outline-danger btn-group py-2 font-weight-bold"
-                            onClick={this.props.toggleEditMode}
-                        >
-                            <UnicodeIcon icon="noAction"/> Discard
-                        </button>
-                    </div>
+                }
+                {/* Action buttons for save and quit */}
+                <div className="btn-group-vertical btn-block">
+                    <button
+                        type="button"
+                        id="add-imagery-button"
+                        className="btn btn-sm btn-block btn-outline-yellow btn-group py-2 font-weight-bold"
+                        onClick={this.addCustomImagery}
+                    >
+                        <UnicodeIcon icon="add" backgroundColor="#f1c00f"/>Add New Imagery
+                    </button>
+                    <button
+                        type="button"
+                        className="btn btn-sm btn-block btn-outline-danger btn-group py-2 font-weight-bold"
+                        onClick={this.props.toggleEditMode}
+                    >
+                        <UnicodeIcon icon="noAction"/> Discard
+                    </button>
                 </div>
             </div>
-        </div>;
+        );
     }
 }
 
 function Imagery({ isAdmin, title, deleteImagery, isInstitutionImage }) {
-    return <div className="row mb-1">
-        <div className="col overflow-hidden">
-            <button
-                type="button"
-                title={title}
-                className="btn btn-outline-lightgreen btn-sm btn-block text-truncate"
-            >
-                {title}
-            </button>
+    return (
+        <div className="row mb-1">
+            <div className="col overflow-hidden">
+                <button
+                    type="button"
+                    title={title}
+                    className="btn btn-outline-lightgreen btn-sm btn-block text-truncate"
+                >
+                    {title}
+                </button>
+            </div>
+            {(isAdmin && isInstitutionImage) &&
+            <div className="pr-3">
+                <button
+                    className="btn btn-outline-danger btn-sm btn-block px-3"
+                    id="delete-imagery"
+                    type="button"
+                    onClick={deleteImagery}
+                >
+                    <UnicodeIcon icon="trash"/>
+                </button>
+            </div>
+            }
         </div>
-        {(isAdmin && isInstitutionImage) &&
-        <div className="pr-3">
-            <button
-                className="btn btn-outline-danger btn-sm btn-block px-3"
-                id="delete-imagery"
-                type="button"
-                onClick={deleteImagery}
-            >
-                <UnicodeIcon icon="trash"/>
-            </button>
-        </div>
-        }
-    </div>;
+    );
 }
 
 function ProjectList({ isAdmin, institutionId, projectList, documentRoot }) {
