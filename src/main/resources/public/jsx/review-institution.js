@@ -403,8 +403,8 @@ class ImageryList extends React.Component {
 }
 
 const imageryOptions = [
+    // Default type is text, default parent is none, a referenced parent must be entered as a json string
     // Parameters can be defined one level deep. {paramParent: {paramChild: "", fields: "", fromJsonStr: ""}}
-    // A referenced parent must be entered as a json string
     {
         type: "GeoServer",
         params: [
@@ -445,8 +445,9 @@ class NewImagery extends React.Component {
     }
 
     componentDidUpdate(prevProps, prevState) {
+        // Clear params different to each type.
         if (prevState.selectedType !== this.state.selectedType) {
-            this.setState({ newImageryParams: {} });
+            this.setState({ newImageryParams: {}});
         }
     }
 
@@ -455,6 +456,7 @@ class NewImagery extends React.Component {
         if (!this.checkAllParams()) {
             alert("You must fill out all fields.");
         } else if (sourceConfig.length === 0) {
+            // stackParams() will fail if parent is not entered as a JSON string.
             alert("Invalid JSON in JSON field(s).");
         } else {
             fetch(this.props.documentRoot + "/add-institution-imagery",
@@ -466,39 +468,35 @@ class NewImagery extends React.Component {
                           imageryAttribution: this.state.newImageryAttribution,
                           sourceConfig: sourceConfig,
                       }),
-                  })
-                .then(response => {
-                    if (response.ok) {
-                        this.props.getImageryList();
-                        this.props.toggleEditMode();
-                    } else {
-                        console.log(response);
-                        alert("Error adding imagery. See console for details. ");
-                    }
-                });
+                  }
+            ).then(response => {
+                if (response.ok) {
+                    this.props.getImageryList();
+                    this.props.toggleEditMode();
+                } else {
+                    console.log(response);
+                    alert("Error adding imagery. See console for details.");
+                }
+            });
         }
     };
 
     stackParams = () => {
         try {
+            // Add child values into parent JSON string.
             const combined = Object.keys(this.state.newImageryParams).reduce((a, c) => {
                 const parentStr = imageryOptions[this.state.selectedType].params.find(p => p.key === c).parent;
                 if (parentStr) {
                     const parentObj = JSON.parse(a[parentStr]);
-                    return { ...a, [c]: undefined, [parentStr]: { ...parentObj, [c]: this.state.newImageryParams[c] }};
+                    return { ...a, [parentStr]: { ...parentObj, [c]: this.state.newImageryParams[c] }};
                 } else {
                     return a;
                 }
             }, this.state.newImageryParams);
-
-            const cleared = Object.keys(combined).reduce((a, c) => {
-                const parentStr = imageryOptions[this.state.selectedType].params.find(p => p.key === c).parent;
-                if (parentStr) {
-                    return a;
-                } else {
-                    return { ...a, [c]: combined[c] };
-                }
-            }, {});
+            // Remove now un-needed child by key.
+            const cleared = Object.keys(combined)
+                .filter(k => !imageryOptions[this.state.selectedType].params.find(p => p.key === k).parent)
+                .reduce((a, c) => ({ ...a, [c]: combined[c] }), {});
 
             return { type: imageryOptions[this.state.selectedType].type, ...cleared };
         } catch {
