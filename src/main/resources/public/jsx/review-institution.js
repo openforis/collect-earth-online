@@ -429,7 +429,7 @@ const imageryOptions = [
             { key: "month", display: "Month", type: "number" },
             { key: "accessToken", display: "Access Token" },
         ],
-        url: "https://developers.planet.com/docs/api/",
+        url: "https://support.planet.com/hc/en-us/articles/212318178-What-is-my-API-key-",
     },
 ];
 
