@@ -80,7 +80,6 @@ class UserStats extends React.Component {
                                     title={`#${project.id} - ${project.name}`}
                                     plots={project.plotCount}
                                     analysisTime={project.analysisAverage}
-                                    wide
                                 />
                             ))}
                         </div>
