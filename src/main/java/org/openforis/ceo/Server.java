@@ -97,7 +97,7 @@ public class Server implements SparkApplication {
         get("/create-institution",                    Views.createInstitution(freemarker));
         get("/create-project",                        (req, res) -> Views.createProject(freemarker).handle(institutions.redirectNonAdmin(req, res), res));
         get("/collection/:id",                        (req, res) -> Views.collection(freemarker).handle(projects.redirectNoCollect(req, res), res));
-        get("/geo-dash",                              Views.geodash(freemarker));
+        get("/geo-dash",                              Views.geoDash(freemarker));
         get("/geo-dash/geodash-help",                 Views.geodashHelp(freemarker));
         get("/home",                                  Views.home(freemarker));
         get("/login",                                 Views.login(freemarker));
