@@ -1,5 +1,6 @@
 const path = require("path");
 const exec = require("child_process").exec;
+const fs = require("fs");
 
 module.exports = {
     entry: {
@@ -65,13 +66,37 @@ module.exports = {
         {
             apply: (compiler) => {
                 compiler.hooks.beforeCompile.tap("BeforeRunPlugin", () => {
-                    exec("rm -f ./target/classes/public/js/*.bundle.js*", (err, stdout, stderr) => {
-                        if (stdout) process.stdout.write(stdout);
-                        if (stderr) process.stderr.write(stderr);
-                    });
+                    // Remove old files to prevent conflicts.
+                    exec("rm -f ./target/classes/public/js/* ./src/main/resources/public/js/*.bundle.* ./target/classes/template/freemarker/*",
+                         (err, stdout, stderr) => {
+                             if (stdout) process.stdout.write(stdout);
+                             if (stderr) process.stderr.write(stderr);
+                         });
                 });
+
                 compiler.hooks.afterEmit.tap("AfterEmitPlugin", () => {
-                    exec("sh generate-templates.sh target/classes/public/js", (err, stdout, stderr) => {
+                    // Build freemarker files based on compiled js file.
+                    const jsScriptList = fs.readdirSync("./target/classes/public/js")
+                        .sort(a => a.includes("common") ? -1 : 1) // move common bundle to the top
+                        .sort(a => a.includes("~") ? -1 : 1) // move root bundles to the bottom
+                        .map(b => "<script type=\"text/javascript\" src=\"${root}/js/" + b + "\"></script>");
+                    const ftlFileList = fs.readdirSync("./src/main/resources/template/freemarker");
+
+                    ftlFileList.forEach(f => {
+                        const shortF = f.replace(".ftl", "").replace("-", "_");
+                        const bundleList = jsScriptList
+                            .filter(js => js.includes(shortF) || js.includes("common"))
+                            .join("\n");
+
+                        const fileIn = fs.readFileSync(path.join("./src/main/resources/template/freemarker", f), "utf-8");
+                        const jsScripts = "<!-- Auto Inserted Bundles -->\n" + bundleList + "\n<!-- End Auto Inserted Bundles -->";
+                        const fileOut = fileIn.replace(/<!-- Auto Inserted Bundles -->((.|\n)*)<!-- End Auto Inserted Bundles -->/, jsScripts);
+
+                        fs.writeFileSync(path.join("./target/classes/template/freemarker", f), fileOut, "utf-8");
+                    });
+
+                    // Copy remaining JS files that do not get compiled.
+                    exec("cp ./src/main/resources/public/js/*.js* ./target/classes/public/js/", (err, stdout, stderr) => {
                         if (stdout) process.stdout.write(stdout);
                         if (stderr) process.stderr.write(stderr);
                     });
@@ -87,7 +112,7 @@ module.exports = {
             minSize: 0,
             cacheGroups: {
                 commons: {
-                    name: "common-vendor-files-chunk", // This name needs to be longer than the longest entry point name
+                    name: "common~chunk",
                     chunks: "all",
                     minChunks: 10, // 10 is all the pages to make this chuck items for all the pages
                 },
