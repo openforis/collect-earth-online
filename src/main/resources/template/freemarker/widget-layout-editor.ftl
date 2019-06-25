@@ -10,9 +10,7 @@
 <div id="content"></div>
 
 <!-- Auto Inserted Bundles -->
-<script type="text/javascript" src="${root}/js/vendors~widget_layout_editor.bundle.js"></script>
-<script type="text/javascript" src="${root}/js/common-vendor-files-chunk.bundle.js"></script>
-<script type="text/javascript" src="${root}/js/widget_layout_editor.bundle.js"></script>
+
 <!-- End Auto Inserted Bundles -->
 
 <script type="text/javascript">

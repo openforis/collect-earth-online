@@ -4,9 +4,7 @@
 <div id="account"></div>
 
 <!-- Auto Inserted Bundles -->
-<script type="text/javascript" src="${root}/js/account~create_project~review_project.bundle.js"></script>
-<script type="text/javascript" src="${root}/js/common-vendor-files-chunk.bundle.js"></script>
-<script type="text/javascript" src="${root}/js/account.bundle.js"></script>
+
 <!-- End Auto Inserted Bundles -->
 
 <script type="text/javascript">
