@@ -1,5 +1,5 @@
 <#include "header.ftl">
-<#include "geodash-navbar.ftl">
+<#include "geo-dash-navbar.ftl">
 <#include "start-content.ftl">
 <br style="clear:both">
 <div class="container-fluid">
@@ -26,7 +26,11 @@
      return decodeURIComponent(results[2].replace(/\+/g, " "));
  }
 </script>
-<script type="text/javascript" src="${root}/js/geo_dash.bundle.js"></script>
+
+<!-- Auto Inserted Bundles -->
+
+<!-- End Auto Inserted Bundles -->
+
 <script type="text/javascript">
  window.onload = function () {
      geo_dash.renderGeodashPage("${root}");

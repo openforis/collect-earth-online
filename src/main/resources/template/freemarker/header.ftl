@@ -9,9 +9,6 @@
         <title>Collect Earth Online</title>
         <link rel="shortcut icon" href="${root}/favicon.ico">
 
-        <script type="text/javascript" src="${root}/js/vendors~account~collection~create_institution~create_project~geo_dash~home~institution_dashboard~pro~fb47a95c.bundle.js"></script>
-        <script type="text/javascript" src="${root}/js/collection~create_project~geo_dash~home~project_dashboard~review_project.bundle.js"></script>
-
         <!-- Various hacks to make Internet Explorer work right -->
         <link rel="stylesheet" type="text/css" href="${root}/css/ie10-viewport-bug-workaround.css">
         <script type="text/javascript" src="${root}/js/ie-emulation-modes-warning.js"></script>

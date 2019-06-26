@@ -37,14 +37,14 @@ export function StatsCell({ title, children }) {
     );
 }
 
-export function StatsRow({ title, plots, analysisTime, wide }) {
+export function StatsRow({ title, plots, analysisTime }) {
     return (
         <div className="StatsRow row mx-1 py-1 border-bottom">
-            <div className={wide ? "col-6" : "col-4"}>{title}</div>
-            <div className="col-1">
+            <div className="col-8">{title}</div>
+            <div className="col-2">
                 <span className="badge badge-pill bg-lightgreen">{plots} plots </span>
             </div>
-            <div className="col-1">
+            <div className="col-2">
                 {analysisTime ?
                     (
                         <span className="badge badge-pill bg-lightgreen">{analysisTime} sec/plot </span>

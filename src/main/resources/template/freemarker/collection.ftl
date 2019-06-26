@@ -5,7 +5,11 @@
     <#assign username = "guest">
 </#if>
 <div id="collection" class="row" style="height:-webkit-fill-available;"></div>
-<script type="text/javascript" src="${root}/js/collection.bundle.js"></script>
+
+<!-- Auto Inserted Bundles -->
+
+<!-- End Auto Inserted Bundles -->
+
 <script type="text/javascript">
  window.onload = function () {
      collection.renderCollectionPage({

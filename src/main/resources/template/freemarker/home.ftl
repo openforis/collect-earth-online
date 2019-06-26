@@ -3,7 +3,11 @@
 <#include "announcements.ftl">
 <#include "start-content.ftl">
 <div id="home"></div>
-<script type="text/javascript" src="${root}/js/home.bundle.js"></script>
+
+<!-- Auto Inserted Bundles -->
+
+<!-- End Auto Inserted Bundles -->
+
 <script type="text/javascript">
  window.onload = function () {
      home.renderHomePage({

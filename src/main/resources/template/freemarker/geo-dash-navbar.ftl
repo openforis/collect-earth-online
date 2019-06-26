@@ -1,6 +1,6 @@
 <nav class="navbar navbar-expand-lg navbar-light fixed-top pt-0 pb-0" style="background-color: white;" id="geodash-nav">
 	<div class="container-fluid">
-		<a class="navbar-brand" href="home">    
+		<a class="navbar-brand" href="home">
 			<img class= "img-fluid" id="ceo-site-logo" src="${root}/img/ceo-logo.png">
 		</a>
 		  <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
@@ -16,22 +16,22 @@
 				<#if username != "">
 			    	<#if navlink == "Logout">
 			            <li id="username" class="nav-item my-auto">
-			            	<span class="nav-link disabled">${username}</span> 
+			            	<span class="nav-link disabled">${username}</span>
 			            </li>
 			            <li class="nav-item my-auto">
 		   	            	<button type="button" class="btn btn-outline-danger btn-sm" onclick="location.href = '${root}/logout'">
 		           	     	Logout
-		                 	</button>	
-		                 </li>    
+		                 	</button>
+		                 </li>
 			            <#else>
 			            <li id="username" class="nav-item my-auto">
-			            <span class="nav-link disabled">${username}</span> 
+			            <span class="nav-link disabled">${username}</span>
 			            </li>
 			            <li  class="nav-item my-auto">
 		   	            <button type="button" class="btn btn-outline-danger btn-sm" onclick="location.href = '${root}/logout'">
 		           	      Logout
-		                 </button>	 
-		                 </li>   
+		                 </button>
+		                 </li>
 	               </#if>
 	        	<#else>
 	            	<#if navlink == "Login" || navlink == "Register">
@@ -61,7 +61,7 @@
 </nav>
 <script type="text/javascript">
 	function openHelp(){
-        var win = window.open("geo-dash/geodash-help", "_blank");
+        var win = window.open("geo-dash/geo-dash-help", "_blank");
         win.focus();
 	}
 </script>

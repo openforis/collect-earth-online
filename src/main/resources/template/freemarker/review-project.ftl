@@ -5,8 +5,11 @@
     <#assign project_id = "0">
 </#if>
 <div id="project"></div>
-<script type="text/javascript" src="${root}/js/create_project~review_project.bundle.js"></script>
-<script type="text/javascript" src="${root}/js/review_project.bundle.js"></script>
+
+<!-- Auto Inserted Bundles -->
+
+<!-- End Auto Inserted Bundles -->
+
 <script type="text/javascript">
  window.onload = function () {
      review_project.renderReviewProjectPage({

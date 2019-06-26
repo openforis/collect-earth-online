@@ -198,16 +198,16 @@ public class Views {
                                 "password_reset_key", getPasswordResetKey));
     }
 
-    public static Route geodash(FreeMarkerEngine freemarker) {
+    public static Route geoDash(FreeMarkerEngine freemarker) {
         Function<Request, String> getEditable = (req) -> req.queryParams("editable");
         return makeRoute("Geo-Dash",
                          freemarker,
                          Map.of("editable", getEditable));
     }
 
-    public static Route geodashHelp(FreeMarkerEngine freemarker) {
+    public static Route geoDashHelp(FreeMarkerEngine freemarker) {
         Function<Request, String> getBrowserLanguage = (req) -> req.raw().getLocale().getLanguage();
-        return makeRoute("GeoDashHelp",
+        return makeRoute("Geo-Dash-Help",
                          freemarker,
                          Map.of("browserLanguage", getBrowserLanguage));
     }

@@ -5,7 +5,11 @@
     <#assign institution_id = "0">
 </#if>
 <div id="institution-dashboard" class="row justify-content-center"></div>
-<script type="text/javascript" src="${root}/js/institution_dashboard.bundle.js"></script>
+
+<!-- Auto Inserted Bundles -->
+
+<!-- End Auto Inserted Bundles -->
+
 <script type="text/javascript">
     window.onload = function () {
         institution_dashboard.renderInstitutionDashboardPage({

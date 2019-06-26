@@ -15,7 +15,11 @@
     <#assign project_template_visibility = "d-none">
 </#if>
 <div id="project-dashboard" class="row justify-content-center"></div>
-<script type="text/javascript" src="${root}/js/project_dashboard.bundle.js"></script>
+
+<!-- Auto Inserted Bundles -->
+
+<!-- End Auto Inserted Bundles -->
+
 <script type="text/javascript">
     window.onload = function () {
         project_dashboard.renderProjectDashboardPage({

@@ -2,7 +2,11 @@
 <#include "navbar.ftl">
 <#include "start-content.ftl">
 <div id="account"></div>
-<script type="text/javascript" src="${root}/js/account.bundle.js"></script>
+
+<!-- Auto Inserted Bundles -->
+
+<!-- End Auto Inserted Bundles -->
+
 <script type="text/javascript">
  window.onload = function () {
      account.renderAccountPage({
