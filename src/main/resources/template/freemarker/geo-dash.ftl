@@ -1,5 +1,5 @@
 <#include "header.ftl">
-<#include "geodash-navbar.ftl">
+<#include "geo-dash-navbar.ftl">
 <#include "start-content.ftl">
 <br style="clear:both">
 <div class="container-fluid">

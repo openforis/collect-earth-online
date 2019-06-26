@@ -1,5 +1,5 @@
 <#include "header.ftl">
-<#include "geodash-navbar.ftl">
+<#include "geo-dash-navbar.ftl">
 <#include "start-content.ftl">
 <!-- FIXME: <link> tags belong in the <head> section - these should probably be bundled with webpack -->
 <link rel="stylesheet" type="text/css" href="https://rawgit.com/STRML/react-grid-layout/master/css/styles.css"/>

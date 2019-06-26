@@ -205,9 +205,9 @@ public class Views {
                          Map.of("editable", getEditable));
     }
 
-    public static Route geodashHelp(FreeMarkerEngine freemarker) {
+    public static Route geoDashHelp(FreeMarkerEngine freemarker) {
         Function<Request, String> getBrowserLanguage = (req) -> req.raw().getLocale().getLanguage();
-        return makeRoute("GeoDash-Help",
+        return makeRoute("Geo-Dash-Help",
                          freemarker,
                          Map.of("browserLanguage", getBrowserLanguage));
     }

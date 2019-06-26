@@ -38,7 +38,7 @@
         </p>
         <h1>Geo-Dash Help Center</h1>
         <p class="text-center col-lg-10 offset-lg-1 mb-4">
-            Please access the <a href="${root}/geo-dash/geodash-help" target="_blank">Geo-Dash Help Center</a> for details on configuring the Geo-Dash for your project.
+            Please access the <a href="${root}/geo-dash/geo-dash-help" target="_blank">Geo-Dash Help Center</a> for details on configuring the Geo-Dash for your project.
         </p>
     </div>
 </section>
