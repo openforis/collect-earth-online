@@ -429,7 +429,7 @@ const imageryOptions = [
             { key: "month", display: "Month", type: "number" },
             { key: "accessToken", display: "Access Token" },
         ],
-        url: "https://support.planet.com/hc/en-us/articles/212318178-What-is-my-API-key-",
+        url: "https://developers.planet.com/docs/quickstart/getting-started/",
     },
 ];
 
@@ -455,7 +455,7 @@ class NewImagery extends React.Component {
         const sourceConfig = this.stackParams();
         if (!this.checkAllParams()) {
             alert("You must fill out all fields.");
-        } else if (sourceConfig.length === 0) {
+        } else if (Object.keys(sourceConfig).length === 0) {
             // stackParams() will fail if parent is not entered as a JSON string.
             alert("Invalid JSON in JSON field(s).");
         } else {
@@ -483,24 +483,21 @@ class NewImagery extends React.Component {
 
     stackParams = () => {
         try {
-            // Add child values into parent JSON string.
-            const combined = Object.keys(this.state.newImageryParams).reduce((a, c) => {
-                const parentStr = imageryOptions[this.state.selectedType].params.find(p => p.key === c).parent;
-                if (parentStr) {
-                    const parentObj = JSON.parse(a[parentStr]);
-                    return { ...a, [parentStr]: { ...parentObj, [c]: this.state.newImageryParams[c] }};
-                } else {
-                    return a;
-                }
-            }, this.state.newImageryParams);
-            // Remove now un-needed child by key.
-            const cleared = Object.keys(combined)
-                .filter(k => !imageryOptions[this.state.selectedType].params.find(p => p.key === k).parent)
-                .reduce((a, c) => ({ ...a, [c]: combined[c] }), {});
+            const imageryParams = imageryOptions[this.state.selectedType].params;
+            return Object.keys(this.state.newImageryParams)
+                .sort(a => imageryParams.find(p => p.key === a).parent ? 1 : -1) // Sort params that require a parent to the bottom
+                .reduce((a, c) => {
+                    const parentStr = imageryParams.find(p => p.key === c).parent;
+                    if (parentStr) {
+                        const parentObj = JSON.parse(a[parentStr]);
+                        return { ...a, [parentStr]: { ...parentObj, [c]: this.state.newImageryParams[c] }};
+                    } else {
+                        return { ...a, [c]: this.state.newImageryParams[c] };
+                    }
+                }, { type: imageryOptions[this.state.selectedType].type });
 
-            return { type: imageryOptions[this.state.selectedType].type, ...cleared };
         } catch {
-            return "";
+            return {};
         }
     };
 
@@ -517,7 +514,7 @@ class NewImagery extends React.Component {
                 type={type}
                 autoComplete="off"
                 onChange={e => callback(e)}
-                value={value}
+                value={value || ""}
             />
         </div>
     );
@@ -544,7 +541,7 @@ class NewImagery extends React.Component {
                 {imageryOptions[this.state.selectedType].params.map(o =>
                     this.formInput(o.display,
                                    o.type || "text",
-                                   this.state.newImageryParams[o.json],
+                                   this.state.newImageryParams[o.key],
                                    e => this.setState({ newImageryParams: { ...this.state.newImageryParams, [o.key]: e.target.value }}))
                 )}
                 {/* Show help URL if there is one. */}
