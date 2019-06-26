@@ -463,6 +463,17 @@
             </li>
         </ol>
         <br style="clear:both;"/>
+        <br />
+        <h2 data-tag="gee_image_asset_creation"></h2>
+        <br class="previewbreak"/>
+        <iframe width="800" height="570" src="https://www.youtube.com/embed/l57IhmduVBQ" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+        <br style="clear:both;"/>
+
+        <br />
+        <h2 data-tag="gee_imageCollection_asset_creation"></h2>
+        <br class="previewbreak"/>
+        <iframe width="800" height="570" src="https://www.youtube.com/embed/7eIvltgDbXw" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+        <br style="clear:both;"/>
 
 
         <p><span data-tag="pre_sepal_link"></span> <a href="http://www.openforis.org/tools/sepal.html"
