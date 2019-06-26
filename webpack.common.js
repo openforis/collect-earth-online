@@ -1,5 +1,4 @@
 const path = require("path");
-const exec = require("child_process").exec;
 const fs = require("fs");
 
 module.exports = {
@@ -67,16 +66,18 @@ module.exports = {
             apply: (compiler) => {
                 compiler.hooks.beforeCompile.tap("BeforeRunPlugin", () => {
                     // Remove old files to prevent conflicts.
-                    exec("rm -f ./target/classes/public/js/* ./src/main/resources/public/js/*.bundle.* ./target/classes/template/freemarker/*",
-                         (err, stdout, stderr) => {
-                             if (stdout) process.stdout.write(stdout);
-                             if (stderr) process.stderr.write(stderr);
-                         });
+                    fs.readdirSync("./src/main/resources/public/js/")
+                        .filter(f => f.includes(".bundle.js"))
+                        .forEach(f => fs.unlinkSync(path.join("./src/main/resources/public/js/", f)));
+                    fs.readdirSync("./target/classes/public/js/")
+                        .forEach(f => fs.unlinkSync(path.join("./target/classes/public/js/", f)));
+                    fs.readdirSync("./target/classes/template/freemarker/")
+                        .forEach(f => fs.unlinkSync(path.join("./target/classes/template/freemarker/", f)));
                 });
 
                 compiler.hooks.afterEmit.tap("AfterEmitPlugin", () => {
                     // Build freemarker files based on compiled js file.
-                    const jsScriptList = fs.readdirSync("./target/classes/public/js")
+                    const compiledJsList = fs.readdirSync("./target/classes/public/js")
                         .sort(a => a.includes("common") ? -1 : 1) // move common bundle to the top
                         .sort(a => a.includes("~") ? -1 : 1) // move root bundles to the bottom
                         .map(b => "<script type=\"text/javascript\" src=\"${root}/js/" + b + "\"></script>");
@@ -84,7 +85,7 @@ module.exports = {
 
                     ftlFileList.forEach(f => {
                         const shortF = f.replace(".ftl", "").replace("-", "_");
-                        const bundleList = jsScriptList
+                        const bundleList = compiledJsList
                             .filter(js => js.includes(shortF) || js.includes("common"))
                             .join("\n");
 
@@ -96,10 +97,9 @@ module.exports = {
                     });
 
                     // Copy remaining JS files that do not get compiled.
-                    exec("cp ./src/main/resources/public/js/*.js* ./target/classes/public/js/", (err, stdout, stderr) => {
-                        if (stdout) process.stdout.write(stdout);
-                        if (stderr) process.stderr.write(stderr);
-                    });
+                    fs.readdirSync("./src/main/resources/public/js/")
+                        .forEach(f => fs.copyFileSync(path.join("./src/main/resources/public/js/", f),
+                                                      path.join("./target/classes/public/js/", f)));
                 });
             },
         },
@@ -114,7 +114,7 @@ module.exports = {
                 commons: {
                     name: "common~chunk",
                     chunks: "all",
-                    minChunks: 10, // 10 is all the pages to make this chuck items for all the pages
+                    minChunks: 10, // 10 is all the pages to make this chunck items for all the pages
                 },
             },
         },
