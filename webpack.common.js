@@ -84,7 +84,8 @@ module.exports = {
                     const ftlFileList = fs.readdirSync("./src/main/resources/template/freemarker");
 
                     ftlFileList.forEach(f => {
-                        const shortF = f.replace(".ftl", "").replace("-", "_");
+                        const shortF = f.replace(/.ftl/, "").replace(/-/g, "_");
+                        console.log(shortF)
                         const bundleList = compiledJsList
                             .filter(js => js.includes(shortF) || js.includes("common"))
                             .join("\n");
