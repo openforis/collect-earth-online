@@ -85,7 +85,6 @@ module.exports = {
 
                     ftlFileList.forEach(f => {
                         const shortF = f.replace(/.ftl/, "").replace(/-/g, "_");
-                        console.log(shortF)
                         const bundleList = compiledJsList
                             .filter(js => js.includes(shortF) || js.includes("common"))
                             .join("\n");
@@ -115,7 +114,7 @@ module.exports = {
                 commons: {
                     name: "common~chunk",
                     chunks: "all",
-                    minChunks: 10, // 10 is all the pages to make this chunck items for all the pages
+                    minChunks: 10, // 10 will make this chunk items for all the pages
                 },
             },
         },
