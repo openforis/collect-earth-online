@@ -496,7 +496,7 @@ class NewImagery extends React.Component {
                     }
                 }, { type: imageryOptions[this.state.selectedType].type });
 
-        } catch {
+        } catch (e) {
             return {};
         }
     };
