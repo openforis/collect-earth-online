@@ -315,7 +315,7 @@ class ImageryList extends React.Component {
         };
     }
 
-    //    Life Cycle Hooks    //
+    //    Life Cycle Methods    //
 
     componentDidMount() {
         this.getImageryList();
@@ -455,7 +455,7 @@ class NewImagery extends React.Component {
         };
     }
 
-    //    Lifecycle Hooks    //
+    //    Lifecycle Methods    //
 
     componentDidUpdate(prevProps, prevState) {
         // Clear params different to each type.
