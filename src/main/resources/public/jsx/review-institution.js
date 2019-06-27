@@ -315,6 +315,8 @@ class ImageryList extends React.Component {
         };
     }
 
+    //    Life Cycle Hooks    //
+
     componentDidMount() {
         this.getImageryList();
     }
@@ -324,6 +326,8 @@ class ImageryList extends React.Component {
             this.props.setImageryCount(this.state.imageryList.length);
         }
     }
+
+    //    Remote Calls    //
 
     getImageryList = () => {
         fetch(this.props.documentRoot + "/get-all-imagery?institutionId=" + this.props.institutionId)
@@ -359,7 +363,13 @@ class ImageryList extends React.Component {
         }
     };
 
+    //    State Modifications    //
+
     toggleEditMode = () => this.setState({ editMode: !this.state.editMode });
+
+    //    Helper Functions    //
+
+    titleIsTaken = (newTitle) => this.state.imageryList.some(i => i.title === newTitle);
 
     render() {
         return this.state.imageryList.length === 0
@@ -367,9 +377,10 @@ class ImageryList extends React.Component {
             : this.state.editMode
                 ?
                     <NewImagery
-                        getImageryList={this.getImageryList}
                         documentRoot={this.props.documentRoot}
+                        getImageryList={this.getImageryList}
                         institutionId={this.props.institutionId}
+                        titleIsTaken={this.titleIsTaken}
                         toggleEditMode={this.toggleEditMode}
                     />
                 :
@@ -444,6 +455,8 @@ class NewImagery extends React.Component {
         };
     }
 
+    //    Lifecycle Hooks    //
+
     componentDidUpdate(prevProps, prevState) {
         // Clear params different to each type.
         if (prevState.selectedType !== this.state.selectedType) {
@@ -451,10 +464,14 @@ class NewImagery extends React.Component {
         }
     }
 
+    //    Remote Calls    //
+
     addCustomImagery = () => {
         const sourceConfig = this.stackParams();
         if (!this.checkAllParams()) {
             alert("You must fill out all fields.");
+        } else if (this.props.titleIsTaken(this.state.newImageryTitle)) {
+            alert("The title '" + this.state.newImageryTitle + "' is already taken.");
         } else if (Object.keys(sourceConfig).length === 0) {
             // stackParams() will fail if parent is not entered as a JSON string.
             alert("Invalid JSON in JSON field(s).");
@@ -481,6 +498,8 @@ class NewImagery extends React.Component {
         }
     };
 
+    //    Helper Functions    //
+
     stackParams = () => {
         try {
             const imageryParams = imageryOptions[this.state.selectedType].params;
@@ -505,6 +524,8 @@ class NewImagery extends React.Component {
         && this.state.newImageryAttribution.length > 0
         && imageryOptions[this.state.selectedType].params
             .every(o => this.state.newImageryParams[o.key] && this.state.newImageryParams[o.key].length > 0);
+
+    //    Render Functions    //
 
     formInput = (title, type, value, callback) => (
         <div className="mb-3" key={title}>
