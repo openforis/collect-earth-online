@@ -48,27 +48,13 @@ public class JsonImagery implements Imagery {
             var institutionId         = jsonInputs.get("institutionId").getAsInt();
             var imageryTitle          = jsonInputs.get("imageryTitle").getAsString();
             var imageryAttribution    = jsonInputs.get("imageryAttribution").getAsString();
-            var geoserverURL          = jsonInputs.get("geoserverURL").getAsString();
-            var layerName             = jsonInputs.get("layerName").getAsString();
-            var geoserverParamsString = jsonInputs.get("geoserverParams").getAsString();
-            var geoserverParams       = geoserverParamsString.equals("")
-                                            ? new JsonObject()
-                                            : parseJson(geoserverParamsString).getAsJsonObject();
-
-            // Add layerName to geoserverParams
-            geoserverParams.addProperty("LAYERS", layerName);
+            var sourceConfig          = jsonInputs.get("sourceConfig").getAsJsonObject();
 
             // Read in the existing imagery list
             var imageryList = elementToArray(readJsonFile("imagery-list.json"));
 
             // Generate a new imagery id
             var newImageryId = getNextId(imageryList);
-
-            // Create a new source configuration for this imagery
-            var sourceConfig = new JsonObject();
-            sourceConfig.addProperty("type", "GeoServer");
-            sourceConfig.addProperty("geoserverUrl", geoserverURL);
-            sourceConfig.add("geoserverParams", geoserverParams);
 
             // Create a new imagery object
             var newImagery = new JsonObject();

@@ -59,21 +59,7 @@ public class PostgresImagery implements Imagery {
             var institutionId         = jsonInputs.get("institutionId").getAsInt();
             var imageryTitle          = jsonInputs.get("imageryTitle").getAsString();
             var imageryAttribution    = jsonInputs.get("imageryAttribution").getAsString();
-            var geoserverURL          = jsonInputs.get("geoserverURL").getAsString();
-            var layerName             = jsonInputs.get("layerName").getAsString();
-            var geoserverParamsString = jsonInputs.get("geoserverParams").getAsString();
-            var geoserverParams       = geoserverParamsString.equals("")
-                                            ? new JsonObject()
-                                            : parseJson(geoserverParamsString).getAsJsonObject();
-
-            // Add layerName to geoserverParams
-            geoserverParams.addProperty("LAYERS", layerName);
-
-            // Create a new source configuration for this imagery
-            var sourceConfig = new JsonObject();
-            sourceConfig.addProperty("type", "GeoServer");
-            sourceConfig.addProperty("geoserverUrl", geoserverURL);
-            sourceConfig.add("geoserverParams", geoserverParams);
+            var sourceConfig          = jsonInputs.get("sourceConfig").getAsJsonObject();
 
             try (var conn = connect();
                 var pstmt = conn.prepareStatement(
