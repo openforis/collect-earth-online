@@ -43,5 +43,7 @@
   "widgets_realtime":"Widgets are updated in real time",
   "view_rendered":"View rendered results in the Geo-Dash window",
   "pre_sepal_link":"Please access ",
-  "post_sepal_link":" for more information about SEPAL."
+  "post_sepal_link":" for more information about SEPAL.",
+  "gee_image_asset_creation": "Video tutorial to create GEE image assets",
+  "gee_imageCollection_asset_creation": "Video tutorial to create GEE imageCollection assets"
 }
