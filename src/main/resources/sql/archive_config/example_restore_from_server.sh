@@ -1,6 +1,6 @@
 #!/bin/sh
 # WARNING, this will wipe out your existing postgres cluster (all databases)
-# WARNING, this script is and example of how to create a local download and restore script.
+# WARNING, this script is only an example of how to create a local download and restore script.
 # Replace each step with specifics to your system.
 # Replace settings in 'recover.conf' to match your system.
 
