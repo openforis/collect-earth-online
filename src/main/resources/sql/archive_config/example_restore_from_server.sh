@@ -10,6 +10,11 @@
 scp -r openforis@collect.earth:~/ceo-pg-bk-sym /mnt/shr/
 # scp -r openforis@ceodev.servirglobal.net:~/ceo-pg-bk-sym /mnt/shr/
 
+# If you have rsync you can download only the changes
+# To add to git bash on Windows https://blog.tiger-workshop.com/add-rsync-to-git-bash-for-windows/
+# rsync -au /mnt/shr/ openforis@collect.earth:~/ceo-pg-bk-sym
+# rsync -au /mnt/shr/ openforis@ceodev.servirglobal.net:~/ceo-pg-bk-sym
+
 # Stop the server
 sudo systemctl stop postgresql
 # Remove old DB

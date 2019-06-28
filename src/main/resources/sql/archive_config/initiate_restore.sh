@@ -1,6 +1,7 @@
 #!/bin/sh
 # WARNING, this script is specifically for the existing Arch servers running CEO.
 # For other systems replace each step with specifics to your system.
+# After restoring, you may need to re-setup archiving (CEO Arch servers, yes)
 
 # Stop the server
 sudo systemctl stop postgresql
