@@ -129,7 +129,7 @@ class Project extends React.Component {
     };
 
     archiveProject = () => {
-        if (confirm("Do you REALLY want to delete this project?!")) {
+        if (confirm("Do you REALLY want to delete this project?  This operation cannot be undone.")) {
             fetch(this.props.documentRoot + "/archive-project/" + this.state.projectDetails.id,
                   {
                       method: "POST",
