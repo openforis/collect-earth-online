@@ -20,6 +20,32 @@ import spark.Response;
  */
 public class PostgresInstitutions implements Institutions {
 
+    public Boolean isInstAdmin(Request req) {
+        final var userId = Integer.parseInt(req.session().attributes().contains("userid") ? req.session().attribute("userid").toString() : "0");
+        final var pInstitutionId = req.params(":id");
+        final var qInstitutionId = req.queryParams("institution");
+
+        final var institutionId = pInstitutionId != null
+            ? Integer.parseInt(pInstitutionId)
+            : qInstitutionId != null
+                ? Integer.parseInt(qInstitutionId)
+                : 0;
+
+        try (var conn = connect();
+             var pstmt = conn.prepareStatement("SELECT * FROM is_institution_user_admin(?, ?)")) {
+
+            pstmt.setInt(1, userId);
+            pstmt.setInt(2, institutionId);
+
+            try(var rs = pstmt.executeQuery()) {
+                return rs.next() && rs.getBoolean("is_institution_user_admin");
+            }
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+            return false;
+        }
+    }
+
     public Request redirectNonInstAdmin(Request req, Response res) {
         final var userId = Integer.parseInt(req.session().attributes().contains("userid") ? req.session().attribute("userid").toString() : "0");
         final var pInstitutionId = req.params(":id");

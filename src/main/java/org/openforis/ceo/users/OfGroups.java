@@ -44,8 +44,8 @@ public class OfGroups implements Institutions {
                 var hiddenInstitutions = Arrays.asList("default_public_group", "admin_private_group");
                 var visibleGroups = filterJsonArray(groups, group ->
                                                     group.get("enabled").getAsBoolean() == true
-                                                    && (!group.get("name").getAsString().endsWith("_private_group") || 
-                                                        privateInstitutionName != null && group.get("name").getAsString().equals(privateInstitutionName)) 
+                                                    && (!group.get("name").getAsString().endsWith("_private_group") ||
+                                                        privateInstitutionName != null && group.get("name").getAsString().equals(privateInstitutionName))
                                                     && !hiddenInstitutions.contains(group.get("name").getAsString()));
                 var institutions = mapJsonArray(visibleGroups, group -> {
                         var institution = new JsonObject();
@@ -290,13 +290,13 @@ public class OfGroups implements Institutions {
             return "";
         }
     }
-    
+
     public static JsonArray getResourceIds(int institutionId, String resourceType) throws IOException {
         var url = String.format(OF_USERS_API_URL + "group/%d/resources/%s", institutionId, resourceType);
         var response = prepareGetRequest(url).execute();
         return getResponseAsJson(response).getAsJsonArray();
     }
-    
+
     public static String associateResource(int institutionId, String resourceType, String resourceId) throws IOException {
         preparePostRequest(String.format(OF_USERS_API_URL + "group/%d/resources/%s/%s", institutionId, resourceType, resourceId))
             .execute();
@@ -311,6 +311,11 @@ public class OfGroups implements Institutions {
 
     public Request redirectNonInstAdmin(Request req, Response res) {
         return req;
+    }
+
+    @Override
+    public Boolean isInstAdmin(Request req) {
+        return null;
     }
 
 }

@@ -69,6 +69,34 @@ import spark.Response;
 
 public class JsonProjects implements Projects {
 
+    private Boolean checkAuthCommon(Request req, Boolean collect) {
+        final var userId = Integer.parseInt(req.session().attributes().contains("userid") ? req.session().attribute("userid").toString() : "0");
+        final var pProjectId = req.params(":id");
+        final var qProjectId = req.queryParams("pid");
+
+        final var projectId = pProjectId != null
+            ? pProjectId
+            : qProjectId != null
+                ? qProjectId
+                : "0";
+
+        final var project = singleProjectJson(projectId);
+        final var institutionRoles = (new JsonUsers()).getInstitutionRoles(userId);
+        final var role = institutionRoles.getOrDefault(project.get("institution").getAsInt(), "");
+        final var privacyLevel = project.get("privacyLevel").getAsString();
+        final var availability = project.get("availability").getAsString();
+
+        return canSeeProject(role, privacyLevel, availability, userId) && (collect || role.equals("admin"));
+    }
+
+    public Boolean canCollect(Request req) {
+        return checkAuthCommon(req, true);
+    }
+
+    public Boolean isProjAdmin(Request req) {
+        return checkAuthCommon(req, false);
+    }
+
     private Request redirectCommon(Request req, Response res, Boolean collect) {
         final var userId = Integer.parseInt(req.session().attributes().contains("userid") ? req.session().attribute("userid").toString() : "0");
         final var pProjectId = req.params(":id");
@@ -90,6 +118,7 @@ public class JsonProjects implements Projects {
 
         return req;
     }
+
     public Request redirectNoCollect(Request req, Response res) {
         return redirectCommon(req, res, true);
     }

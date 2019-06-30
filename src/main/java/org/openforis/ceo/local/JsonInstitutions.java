@@ -22,6 +22,26 @@ import spark.Response;
 
 public class JsonInstitutions implements Institutions {
 
+    public Boolean isInstAdmin(Request req) {
+        final var userId = req.session().attributes().contains("userid") ? req.session().attribute("userid").toString() : "0";
+        final var pInstitutionId = req.params(":id");
+        final var qInstitutionId = req.queryParams("institution");
+
+        final var institutionId = pInstitutionId != null
+            ? Integer.parseInt(pInstitutionId)
+            : qInstitutionId != null
+                ? Integer.parseInt(qInstitutionId)
+                : 0;
+
+        var matchingInstitution = getInstitutionById(institutionId);
+        if (matchingInstitution.isPresent()) {
+            final var admins = matchingInstitution.get().has("admins") ? matchingInstitution.get().get("admins").getAsJsonArray() : new JsonArray();
+            return admins.contains(parseJson(userId));
+        } else {
+            return false;
+        }
+    }
+
     public Request redirectNonInstAdmin(Request req, Response res) {
         final var userId = req.session().attributes().contains("userid") ? req.session().attribute("userid").toString() : "0";
         final var pInstitutionId = req.params(":id");

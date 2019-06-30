@@ -12,11 +12,15 @@ import static spark.Spark.post;
 import static spark.Spark.secure;
 import static spark.Spark.staticFileLocation;
 import static spark.Spark.staticFiles;
+import static spark.Spark.halt;
 
 import freemarker.template.Configuration;
 import freemarker.template.TemplateExceptionHandler;
 import java.io.File;
+import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
+
 import org.openforis.ceo.collect.CollectImagery;
 import org.openforis.ceo.collect.CollectPlots;
 import org.openforis.ceo.collect.CollectProjects;
@@ -83,6 +87,54 @@ public class Server implements SparkApplication {
 
         // Take query param for flash message and add to session attributes
         before((request, response) -> {
+            // All the variable URLs are numbers (ie project number) so filter them out to the base route.
+            // This is still a hack to make up for the non uniform ways to make a api or html request. 
+            var baseUri = Arrays.stream(request.uri().split("/")).filter(a -> !a.matches("-?\\d+")).collect(Collectors.joining("/"));
+
+            // Check for logged in on API routes and block
+            if (List.of("/get-institution-users",
+                        "/update-project-user-stats",
+                        "/request-institution-membership",
+                        "/get-institution-details",
+                        "/create-institution")
+                    .contains(baseUri) && request.session().attribute("userid") == null) {
+                halt(403, "Forbidden!");
+            };
+            // Check for collect permission on API routes and block
+            if (List.of("/get-project-by-id",
+                        "/get-project-stats",
+                        "/get-next-plot",
+                        "/get-plot-by-id",
+                        "/get-prev-plot",
+                        "/get-project-plots",
+                        "/get-proj-plot",
+                        "/add-user-samples",
+                        "/flag-plot",
+                        "/release-plot-locks",
+                        "/reset-plot-lock",
+                        "/get-all-imagery").contains(baseUri) && !projects.canCollect(request)) {
+                halt(403, "Forbidden!");
+            };
+            // Check for proj admin permission on API routes and block
+            if (List.of("/dump-project-aggregate-data",
+                        "/dump-project-raw-data",
+                        "/archive-project",
+                        "/close-project",
+                        "/create-project",
+                        "/publish-project",
+                        "/update-project").contains(baseUri) && !projects.isProjAdmin(request)) {
+                halt(403, "Forbidden!");
+            };
+            // Check for inst admin permission on API routes and block
+            if (List.of("/get-all-users",
+                        "/update-user-institution-role",
+                        "/archive-institution",
+                        "/update-institution",
+                        "/add-institution-imagery").contains(baseUri) && !institutions.isInstAdmin(request)) {
+                halt(403, "Forbidden!");
+            };
+
+            // Add flash message from queryParams (needed on redirects)
             var flashMessage = request.queryParams("flash_message");
             request.session().attribute("flash_message", flashMessage != null ? flashMessage : "");
         });

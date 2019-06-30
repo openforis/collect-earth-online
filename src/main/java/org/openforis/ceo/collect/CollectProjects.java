@@ -831,4 +831,12 @@ public class CollectProjects implements Projects {
     public Request redirectNonProjAdmin(Request req, Response res) {
         return req;
     }
+
+    public Boolean canCollect(Request req) {
+        return true;
+    }
+
+    public Boolean isProjAdmin(Request req) {
+        return true;
+    }
 }

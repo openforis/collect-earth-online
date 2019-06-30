@@ -54,6 +54,41 @@ import spark.Response;
 
 public class PostgresProjects implements Projects {
 
+    public Boolean checkAuthCommon(Request req, String queryFn) {
+        final var userId = Integer.parseInt(req.session().attributes().contains("userid") ? req.session().attribute("userid").toString() : "0");
+        final var pProjectId = req.params(":id");
+        final var qProjectId = req.queryParams("pid");
+
+        final var projectId = pProjectId != null
+            ? Integer.parseInt(pProjectId)
+            : qProjectId != null
+                ? Integer.parseInt(qProjectId)
+                : 0;
+
+        try (var conn = connect();
+             var pstmt = conn.prepareStatement("SELECT * FROM " + queryFn + "(?, ?)")) {
+
+            pstmt.setInt(1, userId);
+            pstmt.setInt(2, projectId);
+
+            try(var rs = pstmt.executeQuery()) {
+                return rs.next() && rs.getBoolean(queryFn);
+            }
+
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+            return false;
+        }
+    }
+
+    public Boolean canCollect(Request req) {
+        return checkAuthCommon(req, "can_user_collect");
+    }
+
+    public Boolean isProjAdmin(Request req) {
+        return checkAuthCommon(req, "can_user_edit");
+    }
+
     private Request redirectCommon(Request req, Response res, String queryFn) {
         final var userId = Integer.parseInt(req.session().attributes().contains("userid") ? req.session().attribute("userid").toString() : "0");
         final var pProjectId = req.params(":id");
