@@ -71,8 +71,8 @@ public class JsonProjects implements Projects {
 
     private Boolean checkAuthCommon(Request req, Boolean collect) {
         final var userId = Integer.parseInt(req.session().attributes().contains("userid") ? req.session().attribute("userid").toString() : "0");
-        final var pProjectId = req.params(":id");
-        final var qProjectId = req.queryParams("pid");
+        final var pProjectId = req.params(":projId");
+        final var qProjectId = req.queryParams("projectId");
 
         final var projectId = pProjectId != null
             ? pProjectId
@@ -99,8 +99,8 @@ public class JsonProjects implements Projects {
 
     private Request redirectCommon(Request req, Response res, Boolean collect) {
         final var userId = Integer.parseInt(req.session().attributes().contains("userid") ? req.session().attribute("userid").toString() : "0");
-        final var pProjectId = req.params(":id");
-        final var qProjectId = req.queryParams("pid");
+        final var pProjectId = req.params(":projId");
+        final var qProjectId = req.queryParams("projectId");
 
         final var projectId = pProjectId != null
             ? pProjectId
@@ -190,7 +190,7 @@ public class JsonProjects implements Projects {
     }
 
     public String getProjectById(Request req, Response res) {
-        var projectId = req.params(":id");
+        var projectId = req.params(":projId");
         return singleProjectJson(projectId).toString();
     }
 
@@ -259,7 +259,7 @@ public class JsonProjects implements Projects {
     }
 
     public String getProjectStats(Request req, Response res) {
-        var projectId = req.params(":id");
+        var projectId = req.params(":projId");
         var plots = elementToArray(readJsonFile("plot-data-" + projectId + ".json"));
         var flaggedPlots = filterJsonArray(plots, plot -> plot.get("flagged").getAsBoolean() == true);
         var analyzedPlots = filterJsonArray(plots, plot -> plot.get("analyses").getAsInt() > 0);
@@ -497,7 +497,7 @@ public class JsonProjects implements Projects {
     }
 
     public HttpServletResponse dumpProjectAggregateData(Request req, Response res) {
-        final var projectId = req.params(":id");
+        final var projectId = req.params(":projId");
         final var projects = elementToArray(readJsonFile("project-list.json"));
         final var matchingProject = findInJsonArray(projects, project -> project.get("id").getAsString().equals(projectId));
         DateFormat simple = new SimpleDateFormat("dd MMM yyyy HH:mm:ss");
@@ -579,7 +579,7 @@ public class JsonProjects implements Projects {
     }
 
     public HttpServletResponse dumpProjectRawData(Request req, Response res) {
-        final var projectId = req.params(":id");
+        final var projectId = req.params(":projId");
         final var projects = elementToArray(readJsonFile("project-list.json"));
         final var matchingProject = findInJsonArray(projects, project -> project.get("id").getAsString().equals(projectId));
         DateFormat simple = new SimpleDateFormat("dd MMM yyyy HH:mm:ss");
@@ -707,7 +707,7 @@ public class JsonProjects implements Projects {
     }
 
     public String publishProject(Request req, Response res) {
-        var projectId = req.params(":id");
+        var projectId = req.params(":projId");
         mapJsonFile("project-list.json",
                 project -> {
                     if (project.get("id").getAsString().equals(projectId)) {
@@ -722,7 +722,7 @@ public class JsonProjects implements Projects {
     }
 
     public String closeProject(Request req, Response res) {
-        var projectId = req.params(":id");
+        var projectId = req.params(":projId");
         mapJsonFile("project-list.json",
                 project -> {
                     if (project.get("id").getAsString().equals(projectId)) {
@@ -737,7 +737,7 @@ public class JsonProjects implements Projects {
     }
 
     public String archiveProject(Request req, Response res) {
-        var projectId = req.params(":id");
+        var projectId = req.params(":projId");
         mapJsonFile("project-list.json",
                 project -> {
                     if (project.get("id").getAsString().equals(projectId)) {
@@ -756,7 +756,7 @@ public class JsonProjects implements Projects {
         final var jsonInputs = parseJson(req.body()).getAsJsonObject();
         mapJsonFile("project-list.json",
                 project -> {
-                    if (project.get("id").getAsString().equals(req.params(":id"))) {
+                    if (project.get("id").getAsString().equals(req.params(":projId"))) {
                         project.addProperty("name",          getOrEmptyString(jsonInputs, "name").getAsString());
                         project.addProperty("description",   getOrEmptyString(jsonInputs, "description").getAsString());
                         project.addProperty("privacyLevel",  getOrEmptyString(jsonInputs, "privacyLevel").getAsString());
@@ -1312,7 +1312,7 @@ public class JsonProjects implements Projects {
 
             newProject.addProperty("baseMapSource", jsonInputs.get("baseMapSource").getAsString());
             newProject.addProperty("description", jsonInputs.get("description").getAsString());
-            newProject.addProperty("institution", jsonInputs.get("institution").getAsInt());
+            newProject.addProperty("institution", jsonInputs.get("institutionId").getAsInt());
             newProject.addProperty("lonMin", getOrZero(jsonInputs,"lonMin").getAsDouble());
             newProject.addProperty("latMin", getOrZero(jsonInputs,"latMin").getAsDouble());
             newProject.addProperty("lonMax", getOrZero(jsonInputs,"lonMax").getAsDouble());

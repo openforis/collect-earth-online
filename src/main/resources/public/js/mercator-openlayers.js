@@ -1071,7 +1071,6 @@ mercator.getKMLFromFeatures = function (features) {
 // FIXME: change calls from highlight_sample to mercator.highlightSampleGeometry
 // FIXME: change calls from enable_dragbox_draw to enableDragBoxDraw(mapConfig, displayDragBoxBounds)
 // FIXME: change calls from disable_dragbox_draw to disableDragBoxDraw
-// FIXME: change references to pID in home.js to projectId
 // FIXME: change calls from draw_project_points to:
 //        mercator.removeLayerByTitle(mapConfig, "currentPlots");
 //        mercator.addPlotLayer(mapConfig, plots);

@@ -907,7 +907,6 @@ mercator1.drawSquare = function (mapConfig, layerTitle, vectorSource, style) {
 // FIXME: change calls from highlight_sample to mercator.highlightSamplePoint
 // FIXME: change calls from enable_dragbox_draw to enableDragBoxDraw(mapConfig, displayDragBoxBounds)
 // FIXME: change calls from disable_dragbox_draw to disableDragBoxDraw
-// FIXME: change references to pID in home.js to projectId
 // FIXME: change calls from draw_project_markers to:
 //        mercator.addProjectMarkers(mapConfig, projects, documentRoot);
 //        mercator.zoomMapToLayer(mapConfig, "projectMarkers");

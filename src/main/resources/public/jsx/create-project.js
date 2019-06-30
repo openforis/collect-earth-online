@@ -114,7 +114,7 @@ class Project extends React.Component {
                   method: "POST",
                   contentType: "application/json; charset=utf-8",
                   body: JSON.stringify({
-                      institution: this.props.institutionId,
+                      institutionId: this.props.institutionId,
                       lonMin: this.state.coordinates.lonMin,
                       lonMax: this.state.coordinates.lonMax,
                       latMin: this.state.coordinates.latMin,

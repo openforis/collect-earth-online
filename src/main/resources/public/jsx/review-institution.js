@@ -632,7 +632,7 @@ function ProjectList({ isAdmin, institutionId, projectList, documentRoot }) {
                         id="create-project"
                         type="button"
                         className="btn btn-sm btn-block btn-outline-yellow py-2 font-weight-bold"
-                        onClick={() => window.location = documentRoot + "/create-project?institution=" + institutionId}
+                        onClick={() => window.location = documentRoot + "/create-project?institutionId=" + institutionId}
                     >
                         <UnicodeIcon icon="add" backgroundColor="#f1c00f"/>Create New Project
                     </button>

@@ -120,7 +120,7 @@ public class OfGroups implements Institutions {
     }
 
     public String getInstitutionDetails(Request req, Response res) {
-        var institutionId = Integer.parseInt(req.params(":id"));
+        var institutionId = Integer.parseInt(req.params(":instId"));
         var matchingInstitution = getInstitutionById(institutionId);
         if (matchingInstitution.isPresent()) {
             return matchingInstitution.get().toString();
@@ -221,7 +221,7 @@ public class OfGroups implements Institutions {
     }
     public String updateInstitution(Request req, Response res) {
         try {
-            var institutionId = req.params(":id");
+            var institutionId = req.params(":instId");
 
             // Create a new multipart config for the servlet
             // NOTE: This is for Jetty. Under Tomcat, this is handled in the webapp/META-INF/context.xml file.
@@ -277,7 +277,7 @@ public class OfGroups implements Institutions {
     }
 
     public String archiveInstitution(Request req, Response res) {
-        var institutionId = req.params(":id");
+        var institutionId = req.params(":instId");
         var url = String.format(OF_USERS_API_URL + "group/%s", institutionId);
         var data = new GenericData();
         data.put("enabled", false);

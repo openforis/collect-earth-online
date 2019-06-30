@@ -267,7 +267,7 @@ public class PostgresUsers implements Users {
     }
 
     public String getInstitutionUsers(Request req, Response res) {
-        final var institutionId = req.params(":id");
+        final var institutionId = req.params(":intsId");
 
         try (var conn = connect();
                 var pstmt = conn.prepareStatement("SELECT * FROM get_all_users_by_institution_id(?)")) {
@@ -293,7 +293,7 @@ public class PostgresUsers implements Users {
     }
 
     public String getUserStats(Request req, Response res) {
-        var userName =     Integer.parseInt(req.params(":userid"));
+        var userName =     Integer.parseInt(req.params(":userId"));
         try (var conn = connect();
              var pstmt = conn.prepareStatement("SELECT * FROM get_user_stats(?)");) {
 

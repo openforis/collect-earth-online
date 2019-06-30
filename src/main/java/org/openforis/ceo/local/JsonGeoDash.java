@@ -33,7 +33,7 @@ import spark.Response;
 public class JsonGeoDash implements GeoDash {
 
     public synchronized String geodashId(Request req, Response res) {
-        var projectId = req.params(":id");
+        var projectId = req.params(":projId");
         var projectTitle = req.queryParams("title");
 
         var projects = elementToArray(readJsonFile("proj.json"));
@@ -78,11 +78,6 @@ public class JsonGeoDash implements GeoDash {
         }
     }
 
-    public synchronized String updateDashBoardById(Request req, Response res) {
-        /* Code will go here to update dashboard*/
-        return "";
-    }
-    
     public synchronized String createDashBoardWidgetById(Request req, Response res) {
         var jsonInputs = parseJson(req.body()).getAsJsonObject();
         var dashboardId = jsonInputs.get("dashID").getAsString();
@@ -106,7 +101,7 @@ public class JsonGeoDash implements GeoDash {
 
     // FIXME: the new react design is using the body to pass the widget JSON (see PostgresGeoDash for updated form)
     public synchronized String updateDashBoardWidgetById(Request req, Response res) {
-        var widgetId = req.params(":id");
+        var widgetId = req.params(":widgetId");
         var jsonInputs = elementToObject(parseJson(req.body()));
         var dashboardId = jsonInputs.get("dashID").getAsString();
         var widgetJson = jsonInputs.get("widgetJSON").getAsString();
@@ -132,7 +127,7 @@ public class JsonGeoDash implements GeoDash {
     }
 
     public synchronized String deleteDashBoardWidgetById(Request req, Response res) {
-        var widgetId = req.params(":id");
+        var widgetId = req.params(":widgetId");
         var jsonInputs = elementToObject(parseJson(req.body()));
         var dashboardId = jsonInputs.get("dashID").getAsString();
         var dashboard = elementToObject(readJsonFile("dash-" + dashboardId + ".json"));

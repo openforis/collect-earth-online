@@ -162,7 +162,7 @@ class Project extends React.Component {
                 this.props.documentRoot + "/widget-layout-editor?editable=true&"
                 + encodeURIComponent(
                     "institutionId=" + this.state.projectDetails.institution
-                    + "&pid=" + this.state.projectDetails.id
+                    + "&projectId=" + this.state.projectDetails.id
                 ),
                 "_geo-dash");
         }

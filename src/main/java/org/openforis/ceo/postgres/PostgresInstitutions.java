@@ -22,8 +22,8 @@ public class PostgresInstitutions implements Institutions {
 
     public Boolean isInstAdmin(Request req) {
         final var userId = Integer.parseInt(req.session().attributes().contains("userid") ? req.session().attribute("userid").toString() : "0");
-        final var pInstitutionId = req.params(":id");
-        final var qInstitutionId = req.queryParams("institution");
+        final var pInstitutionId = req.params(":instId");
+        final var qInstitutionId = req.queryParams("institutionId");
 
         final var institutionId = pInstitutionId != null
             ? Integer.parseInt(pInstitutionId)
@@ -48,8 +48,8 @@ public class PostgresInstitutions implements Institutions {
 
     public Request redirectNonInstAdmin(Request req, Response res) {
         final var userId = Integer.parseInt(req.session().attributes().contains("userid") ? req.session().attribute("userid").toString() : "0");
-        final var pInstitutionId = req.params(":id");
-        final var qInstitutionId = req.queryParams("institution");
+        final var pInstitutionId = req.params(":instId");
+        final var qInstitutionId = req.queryParams("institutionId");
 
         final var institutionId = pInstitutionId != null
             ? Integer.parseInt(pInstitutionId)
@@ -143,7 +143,7 @@ public class PostgresInstitutions implements Institutions {
     }
 
     public String getInstitutionDetails(Request req, Response res) {
-        var institutionId = Integer.parseInt(req.params(":id"));
+        var institutionId = Integer.parseInt(req.params(":instId"));
         return getInstitutionById(institutionId);
     }
 
@@ -212,7 +212,7 @@ public class PostgresInstitutions implements Institutions {
     }
 
     public String updateInstitution(Request req, Response res) {
-        final var institutionId = req.params(":id");
+        final var institutionId = req.params(":instId");
 
         final var jsonInputs = parseJson(req.body()).getAsJsonObject();
         final var name = jsonInputs.get("name").getAsString();
@@ -260,7 +260,7 @@ public class PostgresInstitutions implements Institutions {
     }
 
     public String archiveInstitution(Request req, Response res) {
-        var institutionId = Integer.parseInt(req.params(":id"));
+        var institutionId = Integer.parseInt(req.params(":instId"));
         try (var conn = connect();
             var pstmt = conn.prepareStatement("SELECT * FROM archive_institution(?)")) {
 

@@ -41,7 +41,7 @@ class BasicLayout extends React.PureComponent {
             widgetCloudScoreDual: "",
             formReady: false,
             wizardStep: 1,
-            pid: this.getParameterByName("pid"),
+            projectId: this.getParameterByName("projectId"),
             institutionID: this.getParameterByName("institutionId") ? this.getParameterByName("institutionId") : "1",
             theURI: this.props.documentRoot + "/geo-dash",
         };
@@ -95,7 +95,7 @@ class BasicLayout extends React.PureComponent {
                 : "/img/graphsample.gif";
 
     componentDidMount() {
-        fetch(this.state.theURI + "/id/" + this.state.pid)
+        fetch(this.state.theURI + "/id/" + this.state.projectId)
             .then(response => response.ok ? response.json() : Promise.reject(response))
             .then(data => {
                 const widgets = Array.isArray(data.widgets)
@@ -211,7 +211,7 @@ class BasicLayout extends React.PureComponent {
 
     updateServerWidgets = () => {
         this.state.widgets.forEach( widget => {
-            const ajaxurl = this.state.theURI + "/updatewidget/widget/" + widget.id;
+            const ajaxurl = this.state.theURI + "/updatewidget" + widget.id;
             this.serveItUp(ajaxurl, widget);
         });
     };
@@ -237,7 +237,7 @@ class BasicLayout extends React.PureComponent {
     };
 
     deleteWidgetFromServer = widget => {
-        const ajaxurl = this.state.theURI + "/deletewidget/widget/" + widget.id;
+        const ajaxurl = this.state.theURI + "/deletewidget/" + widget.id;
         this.serveItUp(ajaxurl, widget);
     };
 
@@ -613,7 +613,7 @@ class BasicLayout extends React.PureComponent {
             }
         }
 
-        fetch(this.state.theURI + "/createwidget/widget",
+        fetch(this.state.theURI + "/createwidget",
               {
                   method: "post",
                   headers: {
@@ -621,7 +621,7 @@ class BasicLayout extends React.PureComponent {
                       "Content-Type": "application/json",
                   },
                   body: JSON.stringify({
-                      pID: this.state.pid,
+                      projectId: this.state.projectId,
                       dashID: this.state.dashboardID,
                       widgetJSON: JSON.stringify(widget),
                   }),
