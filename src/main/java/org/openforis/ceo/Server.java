@@ -93,23 +93,28 @@ public class Server implements SparkApplication {
         // Routing Table: HTML pages (with no side effects)
         get("/",                                      Views.home(freemarker));
         get("/about",                                 Views.about(freemarker));
-        get("/account/:id",                           Views.account(freemarker));
-        get("/create-institution",                    Views.createInstitution(freemarker));
-        get("/create-project",                        (req, res) -> Views.createProject(freemarker).handle(institutions.redirectNonAdmin(req, res), res));
-        get("/collection/:id",                        (req, res) -> Views.collection(freemarker).handle(projects.redirectNoCollect(req, res), res));
         get("/geo-dash",                              Views.geoDash(freemarker));
         get("/geo-dash/geo-dash-help",                Views.geoDashHelp(freemarker));
         get("/home",                                  Views.home(freemarker));
         get("/login",                                 Views.login(freemarker));
         get("/password",                              Views.password(freemarker));
         get("/password-reset",                        Views.passwordReset(freemarker));
-        get("/project-dashboard/:id",                 (req, res) -> Views.projectDashboard(freemarker).handle(projects.redirectNoEdit(req, res), res));
-        get("/institution-dashboard/:id",             (req, res) -> Views.institutionDashboard(freemarker).handle(institutions.redirectNonAdmin(req, res), res));
         get("/register",                              Views.register(freemarker));
         get("/review-institution/:id",                Views.reviewInstitution(freemarker, databaseType.equals("COLLECT") ? "remote" : "local"));
-        get("/review-project/:id",                    (req, res) -> Views.reviewProject(freemarker).handle(projects.redirectNoEdit(req, res), res));
         get("/support",                               Views.support(freemarker));
         get("/widget-layout-editor",                  Views.editWidgetLayout(freemarker));
+
+        // Routing Table: HTML pages (with permissions, redirect on false permissions)
+        // Inst Admin = admin by institution ID
+        // Collect = user can see project by project ID
+        // Project Admin = admin by project ID, not archived
+        get("/account/:id",                           Views.account(freemarker));  // Logged in authentication in Views
+        get("/create-institution",                    Views.createInstitution(freemarker)); // Logged in authentication in Views
+        get("/create-project",                        (req, res) -> Views.createProject(freemarker).handle(institutions.redirectNonInstAdmin(req, res), res));
+        get("/collection/:id",                        (req, res) -> Views.collection(freemarker).handle(projects.redirectNoCollect(req, res), res));
+        get("/institution-dashboard/:id",             (req, res) -> Views.institutionDashboard(freemarker).handle(institutions.redirectNonInstAdmin(req, res), res));
+        get("/project-dashboard/:id",                 (req, res) -> Views.projectDashboard(freemarker).handle(projects.redirectNonProjAdmin(req, res), res));
+        get("/review-project/:id",                    (req, res) -> Views.reviewProject(freemarker).handle(projects.redirectNonProjAdmin(req, res), res));
 
         // Routing Table: HTML pages (with side effects)
         get("/logout",                                (req, res) -> Views.home(freemarker).handle(users.logout(req, res), res));

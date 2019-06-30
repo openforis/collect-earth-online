@@ -20,6 +20,7 @@ CREATE OR REPLACE FUNCTION can_user_collect(_user_rid integer, _project_uid inte
 
 $$ LANGUAGE SQL;
 
+-- A user can edit if editable = true.  This is the case if the user is an admin (see select_all_user_projects())
 CREATE OR REPLACE FUNCTION can_user_edit(_user_rid integer, _project_uid integer)
  RETURNS boolean AS $$
 

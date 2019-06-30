@@ -85,7 +85,7 @@ public class PostgresProjects implements Projects {
         return redirectCommon(req, res, "can_user_collect");
     }
 
-    public Request redirectNoEdit(Request req, Response res) {
+    public Request redirectNonProjAdmin(Request req, Response res) {
         return redirectCommon(req, res, "can_user_edit");
     }
 

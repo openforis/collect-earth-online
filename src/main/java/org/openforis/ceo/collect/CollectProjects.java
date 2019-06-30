@@ -828,7 +828,7 @@ public class CollectProjects implements Projects {
         return req;
     }
 
-    public Request redirectNoEdit(Request req, Response res) {
+    public Request redirectNonProjAdmin(Request req, Response res) {
         return req;
     }
 }

@@ -22,7 +22,7 @@ import spark.Response;
 
 public class JsonInstitutions implements Institutions {
 
-    public Request redirectNonAdmin(Request req, Response res) {
+    public Request redirectNonInstAdmin(Request req, Response res) {
         final var userId = req.session().attributes().contains("userid") ? req.session().attribute("userid").toString() : "0";
         final var pInstitutionId = req.params(":id");
         final var qInstitutionId = req.queryParams("institution");

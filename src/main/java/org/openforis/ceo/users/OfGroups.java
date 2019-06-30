@@ -309,7 +309,7 @@ public class OfGroups implements Institutions {
         return "";
     }
 
-    public Request redirectNonAdmin(Request req, Response res) {
+    public Request redirectNonInstAdmin(Request req, Response res) {
         return req;
     }
 
