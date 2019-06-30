@@ -171,7 +171,7 @@ public class PostgresProjects implements Projects {
     }
 
     public String getAllProjects(Request req, Response res) {
-        var userId =            req.queryParams("userId");
+        final var userId = req.session().attributes().contains("userid") ? req.session().attribute("userid").toString() : "0";
         var institutionId =     req.queryParams("institutionId");
 
         try (var conn = connect()) {

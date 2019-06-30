@@ -14,8 +14,7 @@ class InstitutionDashboard extends React.Component {
     }
 
     getProjectList = () => {
-        fetch(this.props.documentRoot + "/get-all-projects?userId="
-            + this.props.userId + "&institutionId=" + this.props.institutionId)
+        fetch(this.props.documentRoot + "/get-all-projects" + "?institutionId=" + this.props.institutionId)
             .then(response => response.ok ? response.json() : Promise.reject(response))
             .then(data => {
                 this.setDetails(data);

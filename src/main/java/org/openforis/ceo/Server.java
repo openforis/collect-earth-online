@@ -94,6 +94,7 @@ public class Server implements SparkApplication {
             // Check for logged in on API routes and block
             if (List.of("/get-institution-users",
                         "/update-project-user-stats",
+                        "/get-user-stats",
                         "/request-institution-membership",
                         "/get-institution-details",
                         "/create-institution")

@@ -280,7 +280,7 @@ class Project extends React.Component {
 
     getProjectList = () => {
         const { userId } = this.props;
-        fetch(this.props.documentRoot + "/get-all-projects?userId=" + userId)
+        fetch(this.props.documentRoot + "/get-all-projects")
             .then(response => response.ok ? response.json() : Promise.reject(response))
             .then(data => this.setState({ projectList: data }))
             .catch(response => {

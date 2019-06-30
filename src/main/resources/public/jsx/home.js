@@ -23,7 +23,7 @@ class Home extends React.Component {
             });
     }
 
-    getProjects = () => fetch(this.props.documentRoot + "/get-all-projects?userId=" + this.props.userId)
+    getProjects = () => fetch(this.props.documentRoot + "/get-all-projects")
         .then(response => response.ok ? response.json() : Promise.reject(response))
         .then(data => {
             if (data.length > 0) {

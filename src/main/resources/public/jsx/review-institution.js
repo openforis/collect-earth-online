@@ -22,8 +22,7 @@ class ReviewInstitution extends React.Component {
 
     getProjectList = () => {
         //get projects
-        fetch(this.props.documentRoot + "/get-all-projects?userId="
-                + this.props.userId + "&institutionId=" + this.props.institutionId
+        fetch(this.props.documentRoot + "/get-all-projects" + "?institutionId=" + this.props.institutionId
         )
             .then(response => response.ok ? response.json() : Promise.reject(response))
             .then(data => this.setState({ projectList: data }))

@@ -145,7 +145,7 @@ public class JsonProjects implements Projects {
     }
 
     public String getAllProjects(Request req, Response res) {
-        var userId = req.queryParamOrDefault("userId", "0");
+        final var userId = req.session().attributes().contains("userid") ? req.session().attribute("userid").toString() : "0";
         var intUserId = Integer.parseInt(userId.isEmpty() ? "0" : userId);
         var institutionId = req.queryParamOrDefault("institutionId", "");
         var projects = elementToArray(readJsonFile("project-list.json"));
