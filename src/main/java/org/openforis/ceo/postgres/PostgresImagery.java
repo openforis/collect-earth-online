@@ -16,8 +16,9 @@ import spark.Response;
 public class PostgresImagery implements Imagery {
 
     public String getAllImagery(Request req, Response res) {
-        var institutionId = req.queryParams("institutionId");
-        var hasInstitutionId = !(institutionId == null || institutionId.isEmpty());
+        final var institutionId = req.queryParams("institutionId");
+        final var userId = Integer.parseInt(req.session().attributes().contains("userid") ? req.session().attribute("userid").toString() : "0");
+        final var hasInstitutionId = !(institutionId == null || institutionId.isEmpty());
 
         try (var conn = connect();
              var pstmt = hasInstitutionId
@@ -37,11 +38,13 @@ public class PostgresImagery implements Imagery {
                     newImagery.addProperty("visibility", rs.getString("visibility"));
                     newImagery.addProperty("title", rs.getString("title"));
                     newImagery.addProperty("attribution", rs.getString("attribution"));
-                    newImagery.add("extent", rs.getString("extent") == null || rs.getString("extent").equals("null")
-                        ? null
-                        : parseJson(rs.getString("extent")).getAsJsonArray());
-                    newImagery.add("sourceConfig", parseJson(rs.getString("source_config")).getAsJsonObject());
-
+                    // FIXME check if user is member
+                    if (userId > 0) {
+                        newImagery.add("extent", rs.getString("extent") == null || rs.getString("extent").equals("null")
+                            ? null
+                            : parseJson(rs.getString("extent")).getAsJsonArray());
+                        newImagery.add("sourceConfig", parseJson(rs.getString("source_config")).getAsJsonObject());
+                    }
                     imageryArray.add(newImagery);
                 }
             }

@@ -4,8 +4,9 @@ import static org.openforis.ceo.utils.JsonUtils.filterJsonArray;
 import static org.openforis.ceo.utils.JsonUtils.filterJsonFile;
 import static org.openforis.ceo.utils.JsonUtils.findInJsonArray;
 import static org.openforis.ceo.utils.JsonUtils.getNextId;
-import static org.openforis.ceo.utils.JsonUtils.parseJson;
 import static org.openforis.ceo.utils.JsonUtils.elementToArray;
+import static org.openforis.ceo.utils.JsonUtils.mapJsonArray;
+import static org.openforis.ceo.utils.JsonUtils.parseJson;
 import static org.openforis.ceo.utils.JsonUtils.readJsonFile;
 import static org.openforis.ceo.utils.JsonUtils.writeJsonFile;
 
@@ -17,8 +18,19 @@ import spark.Response;
 public class JsonImagery implements Imagery {
 
     public String getAllImagery(Request req, Response res) {
-        var institutionId = req.queryParams("institutionId");
-        var imageryList = elementToArray(readJsonFile("imagery-list.json"));
+        final var institutionId = req.queryParams("institutionId");
+        final var userId = Integer.parseInt(req.session().attributes().contains("userid") ? req.session().attribute("userid").toString() : "0");
+        var imageryList = mapJsonArray(elementToArray(readJsonFile("imagery-list.json")),
+                                       imagery -> {
+                                           // FIXME check if user is member
+                                            if (userId == 0) {
+                                                imagery.remove("extent");
+                                                imagery.remove("sourceConfig");
+                                                return imagery;
+                                            } else {
+                                                return imagery;
+                                            }
+                                       });
         if (institutionId == null || institutionId.isEmpty()) {
             return filterJsonArray(imageryList,
                                    imagery -> imagery.get("visibility").getAsString().equals("public")).toString();

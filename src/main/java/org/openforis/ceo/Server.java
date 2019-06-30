@@ -97,7 +97,6 @@ public class Server implements SparkApplication {
                         "/update-project-user-stats",
                         "/get-user-stats",
                         "/request-institution-membership",
-                        "/get-institution-details",
                         "/create-institution")
                     .contains(baseUri) && request.session().attribute("userid") == null) {
                 halt(403, "Forbidden!");
@@ -113,8 +112,8 @@ public class Server implements SparkApplication {
                         "/add-user-samples",
                         "/flag-plot",
                         "/release-plot-locks",
-                        "/reset-plot-lock",
-                        "/get-all-imagery").contains(baseUri) && !projects.canCollect(request)) {
+                        "/reset-plot-lock")
+                    .contains(baseUri) && !projects.canCollect(request)) {
                 halt(403, "Forbidden!");
             };
             // Check for proj admin permission on API routes and block
@@ -124,7 +123,8 @@ public class Server implements SparkApplication {
                         "/close-project",
                         "/create-project",
                         "/publish-project",
-                        "/update-project").contains(baseUri) && !projects.isProjAdmin(request)) {
+                        "/update-project")
+                    .contains(baseUri) && !projects.isProjAdmin(request)) {
                 halt(403, "Forbidden!");
             };
             // Check for inst admin permission on API routes and block
@@ -132,7 +132,8 @@ public class Server implements SparkApplication {
                         "/update-user-institution-role",
                         "/archive-institution",
                         "/update-institution",
-                        "/add-institution-imagery").contains(baseUri) && !institutions.isInstAdmin(request)) {
+                        "/add-institution-imagery")
+                    .contains(baseUri) && !institutions.isInstAdmin(request)) {
                 halt(403, "Forbidden!");
             };
 

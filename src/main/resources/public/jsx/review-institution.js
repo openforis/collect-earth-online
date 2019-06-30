@@ -77,6 +77,7 @@ class ReviewInstitution extends React.Component {
                             isAdmin={this.state.isAdmin}
                             institutionId={this.props.institutionId}
                             projectList={this.state.projectList}
+                            isLoggedIn={this.props.userId > 0}
                         />
                     </div>
                     <div className="col-lg-4 col-xs-12">
@@ -623,7 +624,7 @@ function Imagery({ isAdmin, title, deleteImagery, isInstitutionImage }) {
     );
 }
 
-function ProjectList({ isAdmin, institutionId, projectList, documentRoot }) {
+function ProjectList({ isAdmin, isLoggedIn, institutionId, projectList, documentRoot }) {
     return <Fragment>
         {isAdmin &&
             <div className="row mb-1">
@@ -641,10 +642,11 @@ function ProjectList({ isAdmin, institutionId, projectList, documentRoot }) {
         }
         {projectList.map((project, uid) =>
             <Project
+                isAdmin={isAdmin}
+                isLoggedIn={isLoggedIn}
                 key={uid}
                 documentRoot={documentRoot}
                 project={project}
-                isAdmin={isAdmin}
             />)
         }
     </Fragment>;
@@ -659,7 +661,9 @@ class Project extends React.Component {
     }
 
     componentDidMount() {
-        this.projectHighlight();
+        if (this.props.isLoggedIn) {
+            this.projectHighlight();
+        }
     }
 
     projectHighlight = () => {
