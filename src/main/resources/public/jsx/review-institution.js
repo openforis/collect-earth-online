@@ -87,13 +87,15 @@ class ReviewInstitution extends React.Component {
                                 {this.state.usersCount}
                             </span>
                         </h2>
-                        <UserList
-                            documentRoot={this.props.documentRoot}
-                            institutionId={this.props.institutionId}
-                            isAdmin={this.state.isAdmin}
-                            setUsersCount={this.setUsersCount}
-                            userId={this.props.userId}
-                        />
+                        {this.props.userId > 0 &&
+                            <UserList
+                                documentRoot={this.props.documentRoot}
+                                institutionId={this.props.institutionId}
+                                isAdmin={this.state.isAdmin}
+                                setUsersCount={this.setUsersCount}
+                                userId={this.props.userId}
+                            />
+                        }
                     </div>
                 </div>
             </div>
@@ -330,7 +332,7 @@ class ImageryList extends React.Component {
     //    Remote Calls    //
 
     getImageryList = () => {
-        fetch(this.props.documentRoot + "/get-all-imagery?institutionId=" + this.props.institutionId)
+        fetch(this.props.documentRoot + "/get-institution-imagery?institutionId=" + this.props.institutionId)
             .then(response => response.ok ? response.json() : Promise.reject(response))
             .then(data => this.setState({ imageryList: data }))
             .catch(response => {
@@ -647,8 +649,8 @@ function ProjectList({ isAdmin, isLoggedIn, institutionId, projectList, document
                 key={uid}
                 documentRoot={documentRoot}
                 project={project}
-            />)
-        }
+            />
+        )}
     </Fragment>;
 }
 

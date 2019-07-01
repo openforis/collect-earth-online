@@ -17,28 +17,29 @@ import spark.Response;
 
 public class JsonImagery implements Imagery {
 
-    public String getAllImagery(Request req, Response res) {
-        final var institutionId = req.queryParams("institutionId");
+    public String getPublicImagery(Request req, Response res) {
+        var imageryList = elementToArray(readJsonFile("imagery-list.json"));
+        return filterJsonArray(imageryList,
+                               imagery -> imagery.get("visibility").getAsString().equals("public")).toString();
+    }
+
+    public String getInstitutionImagery(Request req, Response res) {
+        var institutionId = req.queryParams("institutionId");
         final var userId = Integer.parseInt(req.session().attributes().contains("userid") ? req.session().attribute("userid").toString() : "0");
         var imageryList = mapJsonArray(elementToArray(readJsonFile("imagery-list.json")),
                                        imagery -> {
                                            // FIXME check if user is member
-                                            if (userId == 0) {
+                                            if (userId > 0) {
+                                                return imagery;
+                                            } else {
                                                 imagery.remove("extent");
                                                 imagery.remove("sourceConfig");
                                                 return imagery;
-                                            } else {
-                                                return imagery;
                                             }
                                        });
-        if (institutionId == null || institutionId.isEmpty()) {
-            return filterJsonArray(imageryList,
-                                   imagery -> imagery.get("visibility").getAsString().equals("public")).toString();
-        } else {
-            return filterJsonArray(imageryList,
-                                   imagery -> imagery.get("visibility").getAsString().equals("public")
-                                           || imagery.get("institution").getAsString().equals(institutionId)).toString();
-        }
+        return filterJsonArray(imageryList,
+                               imagery -> imagery.get("visibility").getAsString().equals("public")
+                                          || imagery.get("institution").getAsString().equals(institutionId)).toString();
     }
 
     public static String getImageryTitle(String id) {

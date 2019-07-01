@@ -73,7 +73,7 @@ public class PostgresInstitutions implements Institutions {
         return req;
     }
 
-    private static JsonObject buildInstitutionJson( ResultSet rs) {
+    private static JsonObject buildInstitutionJson(ResultSet rs) {
         var newInstitution = new JsonObject();
         try {
             newInstitution.addProperty("id", rs.getInt("institution_id"));

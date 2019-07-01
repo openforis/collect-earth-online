@@ -24,7 +24,7 @@ public class CollectImagery implements Imagery {
 
     private static final String IMAGERY_RESOURCE_TYPE = "IMAGERY";
 
-    public String getAllImagery(Request req, Response res) throws IOException {
+    public String getPublicImagery(Request req, Response res) throws IOException {
         var institutionId = req.queryParams("institutionId");
 
         var imageryList = mapJsonArray(getFromCollect("imagery").getAsJsonArray(),
@@ -97,9 +97,14 @@ public class CollectImagery implements Imagery {
         var jsonInputs = parseJson(req.body()).getAsJsonObject();
         var institutionId = jsonInputs.get("institutionId").getAsInt();
         var imageryId = jsonInputs.get("imageryId").getAsString();
-        
+
         disassociateResource(institutionId, IMAGERY_RESOURCE_TYPE, imageryId);
         return "";
+    }
+
+    @Override
+    public String getInstitutionImagery(Request req, Response res) throws IOException {
+        return null;
     }
 
 }

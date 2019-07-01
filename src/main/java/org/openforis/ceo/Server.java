@@ -89,7 +89,7 @@ public class Server implements SparkApplication {
         before((request, response) -> {
             // All the variable URLs are numbers (ie project number) so filter them out to the base route.
             // This is still a stop-gap to make up for the non uniform ways (params vs queryParams) to make a api or html request.
-            // FIXME convert all get requests to use queryParams
+            // FIXME convert all get requests to use queryParams, post to use JSON body
             var baseUri = Arrays.stream(request.uri().split("/")).filter(a -> !a.matches("-?\\d+")).collect(Collectors.joining("/"));
 
             // Check for logged in on API routes and block
@@ -218,7 +218,8 @@ public class Server implements SparkApplication {
         post("/update-institution/:instId",           institutions::updateInstitution);
 
         // Routing Table: Imagery API
-        get("/get-all-imagery",                       imagery::getAllImagery);
+        get("/get-public-imagery",                    imagery::getPublicImagery);
+        get("/get-institution-imagery",               imagery::getInstitutionImagery);
         post("/add-geodash-imagery",                  imagery::addGeoDashImagery);
         post("/add-institution-imagery",              imagery::addInstitutionImagery);
         post("/delete-institution-imagery",           imagery::deleteInstitutionImagery);
