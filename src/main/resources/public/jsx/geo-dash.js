@@ -46,7 +46,7 @@ class Geodash extends React.Component {
     };
 
     componentDidMount() {
-        fetch(this.props.documentRoot + "/get-institution-imagery?institutionId=" + this.state.institutionId)
+        fetch(this.props.documentRoot + "/get-all-imagery?institutionId=" + this.state.institutionId)
             .then(response => response.ok ? response.json() : Promise.reject(response))
             .then(data => this.setState({ imageryList: data }))
             .then(() =>

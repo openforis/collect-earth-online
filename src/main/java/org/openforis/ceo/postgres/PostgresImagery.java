@@ -16,59 +16,37 @@ import spark.Response;
  */
 public class PostgresImagery implements Imagery {
 
-    private static JsonArray buildImageryJson(ResultSet rs, Boolean showConfig) {
-        var imageryArray = new JsonArray();
-        try {
-            while(rs.next()) {
-                //create imagery json to send back
-                var newImagery = new JsonObject();
-                newImagery.addProperty("id", rs.getInt("imagery_id"));
-                newImagery.addProperty("institution", rs.getInt("institution_id"));
-                newImagery.addProperty("visibility", rs.getString("visibility"));
-                newImagery.addProperty("title", rs.getString("title"));
-                newImagery.addProperty("attribution", rs.getString("attribution"));
-                if (showConfig) {
+    public String getAllImagery(Request req, Response res) {
+        var institutionId = req.queryParams("institutionId");
+        var hasInstitutionId = !(institutionId == null || institutionId.isEmpty());
+
+        try (var conn = connect();
+             var pstmt = hasInstitutionId
+                ? conn.prepareStatement("SELECT * FROM select_public_imagery_by_institution(?)")
+                : conn.prepareStatement("SELECT * FROM select_public_imagery()")) {
+
+            if (hasInstitutionId) {
+                pstmt.setInt(1, Integer.parseInt(institutionId));
+            }
+            var imageryArray = new JsonArray();
+            try (var rs = pstmt.executeQuery()) {
+                while(rs.next()) {
+                    //create imagery json to send back
+                    var newImagery = new JsonObject();
+                    newImagery.addProperty("id", rs.getInt("imagery_id"));
+                    newImagery.addProperty("institution", rs.getInt("institution_id"));
+                    newImagery.addProperty("visibility", rs.getString("visibility"));
+                    newImagery.addProperty("title", rs.getString("title"));
+                    newImagery.addProperty("attribution", rs.getString("attribution"));
                     newImagery.add("extent", rs.getString("extent") == null || rs.getString("extent").equals("null")
                         ? null
                         : parseJson(rs.getString("extent")).getAsJsonArray());
                     newImagery.add("sourceConfig", parseJson(rs.getString("source_config")).getAsJsonObject());
+
+                    imageryArray.add(newImagery);
                 }
-
-                imageryArray.add(newImagery);
             }
-        } catch (SQLException e) {
-            System.out.println(e.getMessage());
-        }
-        return imageryArray;
-    }
-
-    public String getPublicImagery(Request req, Response res) {
-        try (var conn = connect();
-             var pstmt = conn.prepareStatement("SELECT * FROM select_public_imagery()")) {
-
-            try (var rs = pstmt.executeQuery()) {
-                return buildImageryJson(rs, true).toString();
-            }
-
-        } catch (SQLException e) {
-            System.out.println(e.getMessage());
-            return "";
-        }
-    }
-
-    public String getInstitutionImagery(Request req, Response res) {
-        var institutionId = req.queryParams("institutionId");
-        final var userId = Integer.parseInt(req.session().attributes().contains("userid") ? req.session().attribute("userid").toString() : "0");
-
-        try (var conn = connect();
-             var pstmt = conn.prepareStatement("SELECT * FROM select_public_imagery_by_institution(?)")) {
-
-            pstmt.setInt(1, Integer.parseInt(institutionId));
-
-            try (var rs = pstmt.executeQuery()) {
-                // FIXME check if user is member
-                return buildImageryJson(rs, userId > 0).toString();
-            }
+            return imageryArray.toString();
 
         } catch (SQLException e) {
             System.out.println(e.getMessage());

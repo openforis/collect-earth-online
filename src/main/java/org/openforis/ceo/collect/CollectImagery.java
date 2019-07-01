@@ -24,7 +24,7 @@ public class CollectImagery implements Imagery {
 
     private static final String IMAGERY_RESOURCE_TYPE = "IMAGERY";
 
-    public String getPublicImagery(Request req, Response res) throws IOException {
+    public String getAllImagery(Request req, Response res) throws IOException {
         var institutionId = req.queryParams("institutionId");
 
         var imageryList = mapJsonArray(getFromCollect("imagery").getAsJsonArray(),
@@ -100,11 +100,6 @@ public class CollectImagery implements Imagery {
 
         disassociateResource(institutionId, IMAGERY_RESOURCE_TYPE, imageryId);
         return "";
-    }
-
-    @Override
-    public String getInstitutionImagery(Request req, Response res) throws IOException {
-        return null;
     }
 
 }
