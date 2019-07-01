@@ -26,8 +26,8 @@ import spark.Response;
 public class JsonPlots implements Plots {
 
     public String getProjectPlots(Request req, Response res) {
-        var projectId = req.params(":projId");
-        var maxPlots = Integer.parseInt(req.params(":max"));
+        var projectId = req.queryParams("projectId");
+        var maxPlots = Integer.parseInt(req.queryParams("max"));
         var plots = elementToArray(readJsonFile("plot-data-" + projectId + ".json"));
         var numPlots = plots.size();
         if (numPlots > maxPlots) {
@@ -43,8 +43,8 @@ public class JsonPlots implements Plots {
     }
 
     public String getProjectPlot(Request req, Response res) {
-        final var projectId = req.params(":projId");
-        final var plotId = req.params(":plotId");
+        final var projectId = req.queryParams("projectId");
+        final var plotId = req.queryParams("plotId");
         final var plots = elementToArray(readJsonFile("plot-data-" + projectId + ".json"));
         final var matchingPlot = findInJsonArray(plots, plot -> plot.get("id").getAsString().equals(plotId));
         if (matchingPlot.isPresent()) {
@@ -175,8 +175,8 @@ public class JsonPlots implements Plots {
     }
 
     public String releasePlotLocks(Request req, Response res) {
-        final var userId =                Integer.parseInt(req.params(":userId"));
-        final var projectId =             Integer.parseInt(req.params(":projId"));
+        final var userId =                Integer.parseInt(req.queryParams("userId"));
+        final var projectId =             Integer.parseInt(req.queryParams("projectId"));
 
         return unlockLockPlots(projectId, -1, userId);
     }

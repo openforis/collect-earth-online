@@ -50,9 +50,8 @@ class Collection extends React.Component {
             // release any locks in case of user hitting refresh
             fetch(
                 this.props.documentRoot
-                    + "/release-plot-locks/"
-                    + this.props.userId + "/"
-                    + this.state.currentProject.id,
+                    + "/release-plot-locks?userId=" + this.props.userId
+                    + "&projectId=" + this.state.currentProject.id,
                 { method: "POST" }
             );
             this.getImageryList();
@@ -138,7 +137,7 @@ class Collection extends React.Component {
             });
     };
 
-    getProjectById = () => fetch(this.props.documentRoot + "/get-project-by-id/" + this.props.projectId)
+    getProjectById = () => fetch(this.props.documentRoot + "/get-project-by-id?projectId=" + this.props.projectId)
         .then(response => response.ok ? response.json() : Promise.reject(response))
         .then(project => {
             if (project.id > 0 && project.availability !== "archived") {
@@ -152,7 +151,7 @@ class Collection extends React.Component {
             }
         });
 
-    checkForGeodash = () => fetch(this.props.documentRoot + "/geo-dash/id/" + this.props.projectId)
+    checkForGeodash = () => fetch(this.props.documentRoot + "/geo-dash/get-by-projid?projectId=" + this.props.projectId)
         .then(response => response.ok ? response.json() : Promise.reject(response))
         .then(data => {
             const widgets = Array.isArray(data.widgets)
@@ -164,7 +163,7 @@ class Collection extends React.Component {
             return Promise.resolve("resolved");
         });
 
-    getProjectPlots = () => fetch(this.props.documentRoot + "/get-project-plots/" + this.props.projectId + "/1000")
+    getProjectPlots = () => fetch(this.props.documentRoot + "/get-project-plots?projectId=" + this.props.projectId + "&max=1000")
         .then(response => response.ok ? response.json() : Promise.reject(response))
         .then(data => {
             if (data.length > 0) {
@@ -1479,7 +1478,7 @@ class ProjectStats extends React.Component {
     }
 
     getProjectStats() {
-        fetch(this.props.documentRoot + "/get-project-stats/" + this.props.projectId)
+        fetch(this.props.documentRoot + "/get-project-stats?projectId=" + this.props.projectId)
             .then(response => response.ok ? response.json() : Promise.reject(response))
             .then(data => this.setState({ stats: data }))
             .catch(response => {
@@ -1603,7 +1602,7 @@ function QuitMenu({ userId, projectId, documentRoot }) {
                             className="btn bg-lightgreen btn-sm"
                             id="quit-button"
                             onClick={() =>
-                                fetch(documentRoot + "/release-plot-locks/" + userId + "/" + projectId, { method: "POST" })
+                                fetch(documentRoot + "/release-plot-locks?userId=" + userId + "&projectId=" + projectId, { method: "POST" })
                                     .then(() => window.location = documentRoot + "/home")
                             }
                         >

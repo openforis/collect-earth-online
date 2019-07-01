@@ -271,7 +271,7 @@ public class JsonUsers implements Users {
     }
 
     public String getInstitutionUsers(Request req, Response res) {
-        var institutionId = req.params(":instId");
+        var institutionId = req.queryParams("institutionId");
 
         var users = elementToArray(readJsonFile("user-list.json"));
         var institutions = elementToArray(readJsonFile("institution-list.json"));
@@ -307,7 +307,7 @@ public class JsonUsers implements Users {
     }
 
     public String getUserStats(Request req, Response res) {
-        final var userName =        req.params(":userId");
+        final var userName =        req.queryParams("userId");
         final var projects =        elementToArray(readJsonFile("project-list.json"));
 
         // Pull out usefull data

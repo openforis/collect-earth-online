@@ -744,7 +744,7 @@ mercator.showProjectPopup = function (overlay, documentRoot, feature) {
     var html = "<div class=\"cTitle\"><h1>" + feature.get("name") + "</h1></div>";
     html += "<div class=\"cContent\"><p><span class=\"pField\">Description: </span>" + description + "</p>";
     html += "<p><span class=\"pField\">Number of plots: </span>" + feature.get("numPlots")  + "</p>";
-    html += "<a href=\"" + documentRoot + "/collection/" + feature.get("projectId") + "\" class=\"lnkStart\">Get Started</a></div>";
+    html += "<a href=\"" + documentRoot + "/collection?projectId" + feature.get("projectId") + "\" class=\"lnkStart\">Get Started</a></div>";
     overlay.getElement().innerHTML = html;
     overlay.setPosition(feature.getGeometry().getCoordinates());
 };
@@ -754,7 +754,7 @@ mercator1.buildProjectPopup = function (feature, documentRoot) {
     var html = "<div class=\"cTitle\"><h1>" + feature["name"] + "</h1></div>";
     html += "<div class=\"cContent\"><p><span class=\"pField\">Description: </span>" + description + "</p>";
     html += "<p><span class=\"pField\">Number of plots: </span>" + feature["numPlots"]  + "</p>";
-    html += "<a href=\"" + documentRoot + "/collection/" + feature["projectId"] + "\" class=\"lnkStart\">Get Started</a></div>";
+    html += "<a href=\"" + documentRoot + "/collection?projectId" + feature["projectId"] + "\" class=\"lnkStart\">Get Started</a></div>";
     return html;
 };
 

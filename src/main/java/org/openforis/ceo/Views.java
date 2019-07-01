@@ -118,7 +118,7 @@ public class Views {
     }
 
     public static Route account(FreeMarkerEngine freemarker) {
-        Function<Request, String> getAccountId = (req) -> req.params(":userId");
+        Function<Request, String> getAccountId = (req) -> req.queryParams("userId");
         return makeAuthenticatedRoute("Account",
                                       freemarker,
                                       Map.of("account_id", getAccountId));
@@ -129,7 +129,7 @@ public class Views {
     }
 
     public static Route reviewInstitution(FreeMarkerEngine freemarker, String storage) {
-        Function<Request, String> getInstitutionId = (req) -> req.params(":instId");
+        Function<Request, String> getInstitutionId = (req) -> req.queryParams("institutionId");
         return makeRoute("Review-Institution",
                          freemarker,
                          Map.of("of_users_api_url", CeoConfig.ofUsersApiUrl,
@@ -138,7 +138,7 @@ public class Views {
     }
 
     public static Route collection(FreeMarkerEngine freemarker) {
-        Function<Request, String> getProjectId = (req) -> req.params(":projId");
+        Function<Request, String> getProjectId = (req) -> req.queryParams("projectId");
         return makeRoute("Collection",
                          freemarker,
                          Map.of("project_id", getProjectId));
@@ -152,14 +152,14 @@ public class Views {
     }
 
     public static Route reviewProject(FreeMarkerEngine freemarker) {
-        Function<Request, String> getProjectId = (req) -> req.params(":projId");
+        Function<Request, String> getProjectId = (req) -> req.queryParams("projectId");
         return makeRoute("Review-Project",
                          freemarker,
                          Map.of("project_id", getProjectId));
     }
 
     public static Route projectDashboard(FreeMarkerEngine freemarker) {
-        Function<Request, String> getProjectId = (req) -> req.params(":instId");
+        Function<Request, String> getProjectId = (req) -> req.queryParams("institutionId");
         Function<Request, String> getInstitutionId = (req) -> req.queryParams("institutionId");
         return makeRoute("Project-Dashboard",
                          freemarker,
@@ -168,7 +168,7 @@ public class Views {
     }
 
     public static Route institutionDashboard(FreeMarkerEngine freemarker) {
-        Function<Request, String> getInstitutionId = (req) -> req.params(":instId");
+        Function<Request, String> getInstitutionId = (req) -> req.queryParams("institutionId");
         return makeRoute("Institution-Dashboard",
                          freemarker,
                          Map.of("institution_id", getInstitutionId));

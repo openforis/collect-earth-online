@@ -22,7 +22,7 @@ class ReviewInstitution extends React.Component {
 
     getProjectList = () => {
         //get projects
-        fetch(this.props.documentRoot + "/get-all-projects" + "?institutionId=" + this.props.institutionId
+        fetch(this.props.documentRoot + "/get-all-projects?institutionId=" + this.props.institutionId
         )
             .then(response => response.ok ? response.json() : Promise.reject(response))
             .then(data => this.setState({ projectList: data }))
@@ -132,7 +132,7 @@ class InstitutionDescription extends React.Component {
     }
 
     getInstitutionDetails = () => {
-        fetch(this.props.documentRoot + "/get-institution-details/" + this.props.institutionId)
+        fetch(this.props.documentRoot + "/get-institution-details?institutionId=" + this.props.institutionId)
             .then(response => response.ok ? response.json() : Promise.reject(response))
             .then(data => {
                 this.setState({
@@ -160,7 +160,7 @@ class InstitutionDescription extends React.Component {
     };
 
     updateInstitution = () => {
-        fetch(this.props.documentRoot + "/update-institution/" + this.props.institutionId,
+        fetch(this.props.documentRoot + "/update-institution?institutionId=" + this.props.institutionId,
               {
                   method: "POST",
                   body: JSON.stringify(this.state.newInstitutionDetails),
@@ -188,7 +188,7 @@ class InstitutionDescription extends React.Component {
 
     deleteInstitution = () => {
         if (confirm("Do you REALLY want to delete this institution?")) {
-            fetch(this.props.documentRoot + "/archive-institution/" + this.props.institutionId,
+            fetch(this.props.documentRoot + "/archive-institution?institutionId=" + this.props.institutionId,
                   {
                       method: "POST",
                   }
@@ -206,7 +206,7 @@ class InstitutionDescription extends React.Component {
     };
 
     gotoInstitutionDashboard = () => {
-        window.open(this.props.documentRoot + "/institution-dashboard/" + this.props.institutionId);
+        window.open(this.props.documentRoot + "/institution-dashboard?institutionId=" + this.props.institutionId);
     };
 
     renderEditButtonGroup = () => <div className="row">
@@ -669,7 +669,7 @@ class Project extends React.Component {
     }
 
     projectHighlight = () => {
-        fetch(this.props.documentRoot + "/get-project-stats/" + this.props.project.id)
+        fetch(this.props.documentRoot + "/get-project-stats?projectId=" + this.props.project.id)
             .then(response => response.ok ? response.json() : Promise.reject(response))
             .then(data => this.setState({
                 boxShadow: data.unanalyzedPlots === 0
@@ -694,7 +694,7 @@ class Project extends React.Component {
                     type="button"
                     className="btn btn-sm btn-outline-lightgreen btn-block text-truncate"
                     title={project.name}
-                    onClick={() => window.location = documentRoot + "/collection/" + project.id}
+                    onClick={() => window.location = documentRoot + "/collection?projectId=" + project.id}
                     style={{
                         boxShadow: this.state.boxShadow,
                     }}
@@ -741,7 +741,7 @@ class UserList extends React.Component {
     }
 
     getInstitutionUserList = () => {
-        fetch(this.props.documentRoot + "/get-institution-users/" + this.props.institutionId)
+        fetch(this.props.documentRoot + "/get-institution-users?institutionId=" + this.props.institutionId)
             .then(response => response.ok ? response.json() : Promise.reject(response))
             .then(data => this.setState({ institutionUserList: data }))
             .catch(response => {

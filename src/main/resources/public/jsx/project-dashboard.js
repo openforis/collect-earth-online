@@ -46,7 +46,7 @@ class ProjectDashboard extends React.Component {
     }
 
     getProjectById(projectId) {
-        fetch(this.props.documentRoot + "/get-project-by-id/" + projectId)
+        fetch(this.props.documentRoot + "/get-project-by-id?projectId=" + projectId)
             .then(response => {
                 if (response.ok) {
                     return response.json();
@@ -67,7 +67,7 @@ class ProjectDashboard extends React.Component {
     }
 
     getProjectStats(projectId) {
-        fetch(this.props.documentRoot + "/get-project-stats/" + projectId)
+        fetch(this.props.documentRoot + "/get-project-stats?projectId=" + projectId)
             .then(response => {
                 if (response.ok) {
                     return response.json();
@@ -97,7 +97,7 @@ class ProjectDashboard extends React.Component {
     }
 
     getPlotList(projectId, maxPlots) {
-        fetch(this.props.documentRoot + "/get-project-plots/" + projectId + "/" + maxPlots)
+        fetch(this.props.documentRoot + "/get-project-plots?projectId=" + projectId + "&max=" + maxPlots)
             .then(response => {
                 if (response.ok) {
                     return response.json();

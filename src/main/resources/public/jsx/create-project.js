@@ -279,7 +279,6 @@ class Project extends React.Component {
         this.setState({ projectDetails: { ...this.state.projectDetails, surveyRules: newSurveyRules }});
 
     getProjectList = () => {
-        const { userId } = this.props;
         fetch(this.props.documentRoot + "/get-all-projects")
             .then(response => response.ok ? response.json() : Promise.reject(response))
             .then(data => this.setState({ projectList: data }))
@@ -316,7 +315,7 @@ class Project extends React.Component {
 
     getProjectPlots = () => {
         const maxPlots = 300;
-        fetch(this.props.documentRoot + "/get-project-plots/" + this.state.projectDetails.id + "/" + maxPlots)
+        fetch(this.props.documentRoot + "/get-project-plots?projectId=" + this.state.projectDetails.id + "&max=" + maxPlots)
             .then(response => response.ok ? response.json() : Promise.reject(response))
             .then(data => this.setState({ plotList: data }))
             .catch(response => {

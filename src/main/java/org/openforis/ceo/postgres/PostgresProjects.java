@@ -57,17 +57,14 @@ public class PostgresProjects implements Projects {
 
     public Boolean checkAuthCommon(Request req, String queryFn) {
         final var userId = Integer.parseInt(req.session().attributes().contains("userid") ? req.session().attribute("userid").toString() : "0");
-        final var pProjectId = req.params(":projId");
         final var qProjectId = req.queryParams("projectId");
         final var jProjectId = getBodyParam(req.body(), "projectId", null);
-        System.out.println(req.params().toString());
-        System.out.println(pProjectId);
+
         final var projectId =
-            pProjectId != null ? Integer.parseInt(pProjectId)
-            : qProjectId != null ? Integer.parseInt(qProjectId)
+            qProjectId != null ? Integer.parseInt(qProjectId)
             : jProjectId != null ? Integer.parseInt(jProjectId)
             : 0;
-        System.out.println(projectId);
+
         try (var conn = connect();
              var pstmt = conn.prepareStatement("SELECT * FROM " + queryFn + "(?, ?)")) {
 
@@ -85,7 +82,6 @@ public class PostgresProjects implements Projects {
     }
 
     public Boolean canCollect(Request req) {
-        System.out.println(checkAuthCommon(req, "can_user_collect"));
         return checkAuthCommon(req, "can_user_collect");
     }
 
@@ -95,13 +91,11 @@ public class PostgresProjects implements Projects {
 
     private Request redirectCommon(Request req, Response res, String queryFn) {
         final var userId = Integer.parseInt(req.session().attributes().contains("userid") ? req.session().attribute("userid").toString() : "0");
-        final var pProjectId = req.params(":projId");
         final var qProjectId = req.queryParams("projectId");
         final var jProjectId = getBodyParam(req.body(), "projectId", null);
 
         final var projectId =
-            pProjectId != null ? Integer.parseInt(pProjectId)
-            : qProjectId != null ? Integer.parseInt(qProjectId)
+            qProjectId != null ? Integer.parseInt(qProjectId)
             : jProjectId != null ? Integer.parseInt(jProjectId)
             : 0;
 
@@ -176,8 +170,8 @@ public class PostgresProjects implements Projects {
     }
 
     public String getAllProjects(Request req, Response res) {
-        final var userId = req.session().attributes().contains("userid") ? req.session().attribute("userid").toString() : "0";
-        var institutionId =     req.queryParams("institutionId");
+        final var userId =  req.session().attributes().contains("userid") ? req.session().attribute("userid").toString() : "0";
+        var institutionId = req.queryParams("institutionId");
 
         try (var conn = connect()) {
 
@@ -231,14 +225,14 @@ public class PostgresProjects implements Projects {
     }
 
     public String getProjectById(Request req, Response res) {
-        var projectId = req.params(":projId");
+        var projectId = req.queryParams("projectId");
 
         return projectById(Integer.parseInt(projectId));
 
     }
 
     public String getProjectStats(Request req, Response res) {
-        var projectId = req.params(":projId");
+        var projectId = req.queryParams("projectId");
         var stats = new JsonObject();
         try (var conn = connect();
              var pstmt = conn.prepareStatement("SELECT * FROM select_project_statistics(?)")) {
@@ -304,7 +298,7 @@ public class PostgresProjects implements Projects {
     }
 
     public HttpServletResponse dumpProjectAggregateData(Request req, Response res) {
-        var projectId = Integer.parseInt(req.params(":projId"));
+        var projectId = Integer.parseInt(req.queryParams("projectId"));
 
         try (var conn = connect();
              var pstmt = conn.prepareStatement("SELECT * FROM select_project(?)")) {
@@ -367,7 +361,7 @@ public class PostgresProjects implements Projects {
     }
 
     public HttpServletResponse dumpProjectRawData(Request req, Response res) {
-        var projectId =Integer.parseInt( req.params(":projId"));
+        var projectId =Integer.parseInt( req.queryParams("projectId"));
 
         try (var conn = connect();
              var pstmt = conn.prepareStatement("SELECT * FROM select_project(?)")) {
@@ -461,7 +455,7 @@ public class PostgresProjects implements Projects {
     }
 
     public String publishProject(Request req, Response res) {
-        var projectId = req.params(":projId");
+        var projectId = req.queryParams("projectId");
         try (var conn = connect();
              var pstmt = conn.prepareStatement("SELECT * FROM publish_project(?)")) {
 
@@ -480,7 +474,7 @@ public class PostgresProjects implements Projects {
     }
 
     public String closeProject(Request req, Response res) {
-        var projectId = req.params(":projId");
+        var projectId = req.queryParams("projectId");
         try (var conn = connect();
              var pstmt = conn.prepareStatement("SELECT * FROM close_project(?)")) {
 
@@ -499,7 +493,7 @@ public class PostgresProjects implements Projects {
     }
 
     public String archiveProject(Request req, Response res) {
-        var projectId = req.params(":projId");
+        var projectId = req.queryParams("projectId");
         try (var conn = connect();
              var pstmt = conn.prepareStatement("SELECT * FROM archive_project(?)") ;) {
 
@@ -522,7 +516,7 @@ public class PostgresProjects implements Projects {
              var pstmt = conn.prepareStatement("SELECT * FROM update_project(?,?,?,?,?)")) {
 
             final var jsonInputs = parseJson(req.body()).getAsJsonObject();
-            pstmt.setInt(1,    Integer.parseInt(req.params(":projId")));
+            pstmt.setInt(1,    Integer.parseInt( getOrEmptyString(jsonInputs, "projectId").getAsString()));
             pstmt.setString(2, getOrEmptyString(jsonInputs, "name").getAsString());
             pstmt.setString(3, getOrEmptyString(jsonInputs, "description").getAsString());
             pstmt.setString(4, getOrEmptyString(jsonInputs, "privacyLevel").getAsString());

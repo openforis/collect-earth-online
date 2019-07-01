@@ -87,18 +87,13 @@ public class Server implements SparkApplication {
 
         // Take query param for flash message and add to session attributes
         before((request, response) -> {
-            // All the variable URLs are numbers (ie project number) so filter them out to the base route.
-            // This is still a stop-gap to make up for the non uniform ways (params vs queryParams) to make a api or html request.
-            // FIXME convert all get requests to use queryParams, post to use JSON body
-            var baseUri = Arrays.stream(request.uri().split("/")).filter(a -> !a.matches("-?\\d+")).collect(Collectors.joining("/"));
-
             // Check for logged in on API routes and block
             if (List.of("/get-institution-users",
                         "/update-project-user-stats",
                         "/get-user-stats",
                         "/request-institution-membership",
                         "/create-institution")
-                    .contains(baseUri) && request.session().attribute("userid") == null) {
+                    .contains(request.uri()) && request.session().attribute("userid") == null) {
                 halt(403, "Forbidden!");
             };
             // Check for collect permission on API routes and block
@@ -113,7 +108,7 @@ public class Server implements SparkApplication {
                         "/flag-plot",
                         "/release-plot-locks",
                         "/reset-plot-lock")
-                    .contains(baseUri) && !projects.canCollect(request)) {
+                    .contains(request.uri()) && !projects.canCollect(request)) {
                 halt(403, "Forbidden!");
             };
             // Check for proj admin permission on API routes and block
@@ -124,7 +119,7 @@ public class Server implements SparkApplication {
                         "/create-project",
                         "/publish-project",
                         "/update-project")
-                    .contains(baseUri) && !projects.isProjAdmin(request)) {
+                    .contains(request.uri()) && !projects.isProjAdmin(request)) {
                 halt(403, "Forbidden!");
             };
             // Check for inst admin permission on API routes and block
@@ -133,7 +128,7 @@ public class Server implements SparkApplication {
                         "/archive-institution",
                         "/update-institution",
                         "/add-institution-imagery")
-                    .contains(baseUri) && !institutions.isInstAdmin(request)) {
+                    .contains(request.uri()) && !institutions.isInstAdmin(request)) {
                 halt(403, "Forbidden!");
             };
 
@@ -155,7 +150,7 @@ public class Server implements SparkApplication {
         get("/password",                              Views.password(freemarker));
         get("/password-reset",                        Views.passwordReset(freemarker));
         get("/register",                              Views.register(freemarker));
-        get("/review-institution/:instId",            Views.reviewInstitution(freemarker, databaseType.equals("COLLECT") ? "remote" : "local"));
+        get("/review-institution",                    Views.reviewInstitution(freemarker, databaseType.equals("COLLECT") ? "remote" : "local"));
         get("/support",                               Views.support(freemarker));
         get("/widget-layout-editor",                  Views.editWidgetLayout(freemarker));
 
@@ -163,59 +158,59 @@ public class Server implements SparkApplication {
         // Inst Admin = admin by institution ID
         // Collect = user can see project by project ID
         // Project Admin = admin by project ID, not archived
-        get("/account/:userId",                       Views.account(freemarker));  // Logged in authentication in Views
+        get("/account",                               Views.account(freemarker));  // Logged in authentication in Views
         get("/create-institution",                    Views.createInstitution(freemarker)); // Logged in authentication in Views
         get("/create-project",                        (req, res) -> Views.createProject(freemarker).handle(institutions.redirectNonInstAdmin(req, res), res));
-        get("/collection/:projId",                    (req, res) -> Views.collection(freemarker).handle(projects.redirectNoCollect(req, res), res));
-        get("/institution-dashboard/:instId",         (req, res) -> Views.institutionDashboard(freemarker).handle(institutions.redirectNonInstAdmin(req, res), res));
-        get("/project-dashboard/:projId",             (req, res) -> Views.projectDashboard(freemarker).handle(projects.redirectNonProjAdmin(req, res), res));
-        get("/review-project/:projId",                (req, res) -> Views.reviewProject(freemarker).handle(projects.redirectNonProjAdmin(req, res), res));
+        get("/collection",                            (req, res) -> Views.collection(freemarker).handle(projects.redirectNoCollect(req, res), res));
+        get("/institution-dashboard",                 (req, res) -> Views.institutionDashboard(freemarker).handle(institutions.redirectNonInstAdmin(req, res), res));
+        get("/project-dashboard",                     (req, res) -> Views.projectDashboard(freemarker).handle(projects.redirectNonProjAdmin(req, res), res));
+        get("/review-project",                        (req, res) -> Views.reviewProject(freemarker).handle(projects.redirectNonProjAdmin(req, res), res));
 
         // Routing Table: HTML pages (with side effects)
         get("/logout",                                (req, res) -> Views.home(freemarker).handle(users.logout(req, res), res));
-        post("/account/:userId",                      (req, res) -> Views.account(freemarker).handle(users.updateAccount(req, res), res));
+        post("/account",                              (req, res) -> Views.account(freemarker).handle(users.updateAccount(req, res), res));
         post("/login",                                (req, res) -> Views.login(freemarker).handle(users.login(req, res), res));
         post("/register",                             (req, res) -> Views.register(freemarker).handle(users.register(req, res), res));
         post("/password",                             (req, res) -> Views.password(freemarker).handle(users.getPasswordResetKey(req, res), res));
         post("/password-reset",                       (req, res) -> Views.passwordReset(freemarker).handle(users.resetPassword(req, res), res));
 
         // Routing Table: Projects API
-        get("/dump-project-aggregate-data/:projId",   projects::dumpProjectAggregateData);
-        get("/dump-project-raw-data/:projId",         projects::dumpProjectRawData);
+        get("/dump-project-aggregate-data",           projects::dumpProjectAggregateData);
+        get("/dump-project-raw-data",                 projects::dumpProjectRawData);
         get("/get-all-projects",                      projects::getAllProjects);
-        get("/get-project-by-id/:projId",             projects::getProjectById);
-        get("/get-project-stats/:projId",             projects::getProjectStats);
-        post("/archive-project/:projId",              projects::archiveProject);
-        post("/close-project/:projId",                projects::closeProject);
+        get("/get-project-by-id",                     projects::getProjectById);
+        get("/get-project-stats",                     projects::getProjectStats);
+        post("/archive-project",                      projects::archiveProject);
+        post("/close-project",                        projects::closeProject);
         post("/create-project",                       projects::createProject);
-        post("/publish-project/:projId",              projects::publishProject);
-        post("/update-project/:projId",               projects::updateProject);
+        post("/publish-project",                      projects::publishProject);
+        post("/update-project",                       projects::updateProject);
 
         // Routing Table: Plots (projects)
         get("/get-next-plot",                         plots::getNextPlot);
         get("/get-plot-by-id",                        plots::getPlotById);
         get("/get-prev-plot",                         plots::getPrevPlot);
-        get("/get-project-plots/:projId/:max",        plots::getProjectPlots);
-        get("/get-proj-plot/:projId/:plotId",         plots::getProjectPlot);
+        get("/get-project-plots",                     plots::getProjectPlots);
+        get("/get-proj-plot",                         plots::getProjectPlot);
         post("/add-user-samples",                     plots::addUserSamples);
         post("/flag-plot",                            plots::flagPlot);
-        post("/release-plot-locks/:userId/:projId",   plots::releasePlotLocks);
+        post("/release-plot-locks",                   plots::releasePlotLocks);
         post("/reset-plot-lock",                      plots::resetPlotLock);
 
         // Routing Table: Users API
         get("/get-all-users",                         users::getAllUsers);
-        get("/get-institution-users/:instId",         users::getInstitutionUsers);
-        get("/get-user-stats/:userId",                users::getUserStats);
+        get("/get-institution-users",                 users::getInstitutionUsers);
+        get("/get-user-stats",                        users::getUserStats);
         get("/update-project-user-stats",             users::updateProjectUserStats);
         post("/update-user-institution-role",         users::updateInstitutionRole);
         post("/request-institution-membership",       users::requestInstitutionMembership);
 
         // Routing Table: Institutions API
         get("/get-all-institutions",                  institutions::getAllInstitutions);
-        get("/get-institution-details/:instId",       institutions::getInstitutionDetails);
-        post("/archive-institution/:instId",          institutions::archiveInstitution);
+        get("/get-institution-details",               institutions::getInstitutionDetails);
+        post("/archive-institution",                  institutions::archiveInstitution);
         post("/create-institution",                   institutions::createInstitution);
-        post("/update-institution/:instId",           institutions::updateInstitution);
+        post("/update-institution",                   institutions::updateInstitution);
 
         // Routing Table: Imagery API
         get("/get-public-imagery",                    imagery::getPublicImagery);
@@ -225,11 +220,11 @@ public class Server implements SparkApplication {
         post("/delete-institution-imagery",           imagery::deleteInstitutionImagery);
 
         // Routing Table: GeoDash API
-        get("/geo-dash/id/:projId",                   geoDash::geodashId);
-        post("/geo-dash/createwidget",                geoDash::createDashBoardWidgetById);
-        post("/geo-dash/deletewidget/:widgetId",      geoDash::deleteDashBoardWidgetById);
+        get("/geo-dash/get-by-projid",                geoDash::geodashId);
+        post("/geo-dash/create-widget",               geoDash::createDashBoardWidgetById);
+        post("/geo-dash/delete-widget",               geoDash::deleteDashBoardWidgetById);
         post("/geo-dash/gateway-request",             geoDash::gatewayRequest);
-        post("/geo-dash/updatewidget/:widgetId",      geoDash::updateDashBoardWidgetById);
+        post("/geo-dash/update-widget",               geoDash::updateDashBoardWidgetById);
 
         // Routing Table: Page Not Found
         notFound(Views.pageNotFound(freemarker));

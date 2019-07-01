@@ -61,11 +61,12 @@ class Project extends React.Component {
     updateProject = () => {
         if (this.validateProject() && confirm("Do you REALLY want to update this project?")) {
 
-            fetch(this.props.documentRoot + "/update-project/" + this.state.projectDetails.id,
+            fetch(this.props.documentRoot + "/update-project",
                   {
                       method: "POST",
                       contentType: "application/json; charset=utf-8",
                       body: JSON.stringify({
+                          projectId: this.state.projectDetails.id,
                           baseMapSource: this.state.projectDetails.baseMapSource,
                           description: this.state.projectDetails.description,
                           name: this.state.projectDetails.name,
@@ -95,7 +96,7 @@ class Project extends React.Component {
 
     publishProject = () => {
         if (confirm("Do you REALLY want to publish this project?")) {
-            fetch(this.props.documentRoot + "/publish-project/" + this.state.projectDetails.id,
+            fetch(this.props.documentRoot + "/publish-project?projectId=" + this.state.projectDetails.id,
                   {
                       method: "POST",
                   }
@@ -113,7 +114,7 @@ class Project extends React.Component {
 
     closeProject = () => {
         if (confirm("Do you REALLY want to close this project?")) {
-            fetch(this.props.documentRoot + "/close-project/" + this.state.projectDetails.id,
+            fetch(this.props.documentRoot + "/close-project?projectId=" + this.state.projectDetails.id,
                   {
                       method: "POST",
                   })
@@ -130,7 +131,7 @@ class Project extends React.Component {
 
     archiveProject = () => {
         if (confirm("Do you REALLY want to archive this project?!")) {
-            fetch(this.props.documentRoot + "/archive-project/" + this.state.projectDetails.id,
+            fetch(this.props.documentRoot + "/archive-project?projectId=" + this.state.projectDetails.id,
                   {
                       method: "POST",
                   })
@@ -169,16 +170,16 @@ class Project extends React.Component {
     };
 
     downloadPlotData = () => {
-        window.open(this.props.documentRoot + "/dump-project-aggregate-data/" + this.state.projectDetails.id, "_blank");
+        window.open(this.props.documentRoot + "/dump-project-aggregate-data?projectId=" + this.state.projectDetails.id, "_blank");
     };
 
     downloadSampleData = () => {
-        window.open(this.props.documentRoot + "/dump-project-raw-data/" + this.state.projectDetails.id, "_blank");
+        window.open(this.props.documentRoot + "/dump-project-raw-data?projectId=" + this.state.projectDetails.id, "_blank");
     };
 
     getProjectById = () => {
         const { projectId } = this.props;
-        fetch(this.props.documentRoot + "/get-project-by-id/" + projectId)
+        fetch(this.props.documentRoot + "/get-project-by-id?projectId=" + projectId)
             .then(response => response.ok ? response.json() : Promise.reject(response))
             .then(data => {
                 if (data === "") {
@@ -206,7 +207,7 @@ class Project extends React.Component {
     };
 
     getProjectPlots = () => {
-        fetch(this.props.documentRoot + "/get-project-plots/" + this.props.projectId + "/300")
+        fetch(this.props.documentRoot + "/get-project-plots?projectId=" + this.props.projectId + "&max=300")
             .then(response => response.ok ? response.json() : Promise.reject(response))
             .then(data => this.setState({ plotList: data }))
             .catch(response => {
@@ -246,7 +247,7 @@ class Project extends React.Component {
 
     gotoProjectDashboard = () => {
         if (this.state.plotList != null && this.state.projectDetails != null) {
-            window.open(this.props.documentRoot + "/project-dashboard/" + this.state.projectDetails.id);
+            window.open(this.props.documentRoot + "/project-dashboard?projectId=" + this.state.projectDetails.id);
         }
     };
 
@@ -339,7 +340,7 @@ class ProjectStats extends React.Component {
     }
 
     getProjectStats = () => {
-        fetch(this.props.documentRoot + "/get-project-stats/" + this.props.projectId)
+        fetch(this.props.documentRoot + "/get-project-stats?projectId=" + this.props.projectId)
             .then(response => response.ok ? response.json() : Promise.reject(response))
             .then(data => this.setState({ stats: data }))
             .catch(response => {

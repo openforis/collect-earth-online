@@ -36,8 +36,8 @@ public class PostgresPlots implements Plots {
     }
 
     public String getProjectPlots(Request req, Response res) {
-        var projectId =     Integer.parseInt(req.params(":projId"));
-        var maxPlots =      Integer.parseInt(req.params(":max"));
+        var projectId =     Integer.parseInt(req.queryParams("projectId"));
+        var maxPlots =      Integer.parseInt(req.queryParams("max"));
 
         try (var conn = connect();
              var pstmt = conn.prepareStatement("SELECT * FROM select_limited_project_plots(?,?)")) {
@@ -58,8 +58,8 @@ public class PostgresPlots implements Plots {
     }
 
     public String getProjectPlot(Request req, Response res) {
-        final var projectId =   Integer.parseInt(req.params(":projId"));
-        final var plotId =      Integer.parseInt(req.params(":plotId"));
+        final var projectId =   Integer.parseInt(req.queryParams("projectId"));
+        final var plotId =      Integer.parseInt(req.queryParams("plotId"));
 
         try (var conn = connect();
              var pstmt = conn.prepareStatement("SELECT * FROM select_plot_by_id(?,?)")) {
@@ -229,7 +229,7 @@ public class PostgresPlots implements Plots {
     }
 
     public String releasePlotLocks(Request req, Response res) {
-        final var userId = Integer.parseInt(req.params(":userId"));
+        final var userId = Integer.parseInt(req.queryParams("userId"));
         return unlockPlots(userId);
     }
 

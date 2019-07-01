@@ -50,7 +50,7 @@ class Geodash extends React.Component {
             .then(response => response.ok ? response.json() : Promise.reject(response))
             .then(data => this.setState({ imageryList: data }))
             .then(() =>
-                fetch(this.props.documentRoot + "/geo-dash/id/" + this.state.projectId)
+                fetch(this.props.documentRoot + "/geo-dash/get-by-projid?projectId=" + this.state.projectId)
                     .then(response => response.json())
                     .then(data => data.widgets.map(widget => {
                         widget.isFull = false;
@@ -990,7 +990,7 @@ class MapWidget extends React.Component {
                 });
                 whichMap.addLayer(layer);
             } else {
-                fetch(this.props.documentRoot + "/get-proj-plot/" + projectID + "/" + plotID)
+                fetch(this.props.documentRoot + "/get-proj-plot?projectId=" + projectID + "&plotId=" + plotID)
                     .then(res => res.json())
                     .then(data => {
                         const geoJsonObject = typeof(data) === "string" ? JSON.parse(data) : data;

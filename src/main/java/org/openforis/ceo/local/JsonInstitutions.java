@@ -25,13 +25,11 @@ public class JsonInstitutions implements Institutions {
 
     public Boolean isInstAdmin(Request req) {
         final var userId = req.session().attributes().contains("userid") ? req.session().attribute("userid").toString() : "0";
-        final var pInstitutionId = req.params(":instId");
         final var qInstitutionId = req.queryParams("institutionId");
         final var jInstitutionId = getBodyParam(req.body(), "institutionId", null);
 
         final var institutionId =
-            pInstitutionId != null ? Integer.parseInt(pInstitutionId)
-            : qInstitutionId != null ? Integer.parseInt(qInstitutionId)
+            qInstitutionId != null ? Integer.parseInt(qInstitutionId)
             : jInstitutionId != null ? Integer.parseInt(jInstitutionId)
             : 0;
 
@@ -46,13 +44,11 @@ public class JsonInstitutions implements Institutions {
 
     public Request redirectNonInstAdmin(Request req, Response res) {
         final var userId = req.session().attributes().contains("userid") ? req.session().attribute("userid").toString() : "0";
-        final var pInstitutionId = req.params(":instId");
         final var qInstitutionId = req.queryParams("institutionId");
         final var jInstitutionId = getBodyParam(req.body(), "institutionId", null);
 
         final var institutionId =
-            pInstitutionId != null ? Integer.parseInt(pInstitutionId)
-            : qInstitutionId != null ? Integer.parseInt(qInstitutionId)
+            qInstitutionId != null ? Integer.parseInt(qInstitutionId)
             : jInstitutionId != null ? Integer.parseInt(jInstitutionId)
             : 0;
 
@@ -76,7 +72,7 @@ public class JsonInstitutions implements Institutions {
     }
 
     public String getInstitutionDetails(Request req, Response res) {
-        var institutionId = Integer.parseInt(req.params(":instId"));
+        var institutionId = Integer.parseInt(req.queryParams("institutionId"));
         var matchingInstitution = getInstitutionById(institutionId);
         if (matchingInstitution.isPresent()) {
             var institutionObject = matchingInstitution.get();
@@ -158,7 +154,7 @@ public class JsonInstitutions implements Institutions {
 
     public String updateInstitution(Request req, Response res) {
         try {
-            final var institutionId = req.params(":instId");
+            final var institutionId = req.queryParams("institutionId");
 
             final var jsonInputs = parseJson(req.body()).getAsJsonObject();
             final var name = jsonInputs.get("name").getAsString();
@@ -199,7 +195,7 @@ public class JsonInstitutions implements Institutions {
     }
 
     public String archiveInstitution(Request req, Response res) {
-        var institutionId = req.params(":instId");
+        var institutionId = req.queryParams("institutionId");
 
         mapJsonFile("institution-list.json",
                     institution -> {
