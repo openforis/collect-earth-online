@@ -208,4 +208,12 @@ public class JsonUtils {
         }
     }
 
+    public static String getBodyParam(String body, String param, String defaultStr) {
+        try {
+            return  parseJson(body).getAsJsonObject().get("plotId").getAsString();
+        } catch(Exception e) {
+            return defaultStr;
+        }
+    }
+
 }

@@ -2,6 +2,7 @@ package org.openforis.ceo.local;
 
 import static org.openforis.ceo.utils.JsonUtils.elementToArray;
 import static org.openforis.ceo.utils.JsonUtils.expandResourcePath;
+import static org.openforis.ceo.utils.JsonUtils.getBodyParam;
 import static org.openforis.ceo.utils.JsonUtils.getNextId;
 import static org.openforis.ceo.utils.JsonUtils.filterJsonArray;
 import static org.openforis.ceo.utils.JsonUtils.findInJsonArray;
@@ -26,12 +27,13 @@ public class JsonInstitutions implements Institutions {
         final var userId = req.session().attributes().contains("userid") ? req.session().attribute("userid").toString() : "0";
         final var pInstitutionId = req.params(":instId");
         final var qInstitutionId = req.queryParams("institutionId");
+        final var jInstitutionId = getBodyParam(req.body(), "institutionId", null);
 
-        final var institutionId = pInstitutionId != null
-            ? Integer.parseInt(pInstitutionId)
-            : qInstitutionId != null
-                ? Integer.parseInt(qInstitutionId)
-                : 0;
+        final var institutionId =
+            pInstitutionId != null ? Integer.parseInt(pInstitutionId)
+            : qInstitutionId != null ? Integer.parseInt(qInstitutionId)
+            : jInstitutionId != null ? Integer.parseInt(jInstitutionId)
+            : 0;
 
         var matchingInstitution = getInstitutionById(institutionId);
         if (matchingInstitution.isPresent()) {
@@ -46,12 +48,13 @@ public class JsonInstitutions implements Institutions {
         final var userId = req.session().attributes().contains("userid") ? req.session().attribute("userid").toString() : "0";
         final var pInstitutionId = req.params(":instId");
         final var qInstitutionId = req.queryParams("institutionId");
+        final var jInstitutionId = getBodyParam(req.body(), "institutionId", null);
 
-        final var institutionId = pInstitutionId != null
-            ? Integer.parseInt(pInstitutionId)
-            : qInstitutionId != null
-                ? Integer.parseInt(qInstitutionId)
-                : 0;
+        final var institutionId =
+            pInstitutionId != null ? Integer.parseInt(pInstitutionId)
+            : qInstitutionId != null ? Integer.parseInt(qInstitutionId)
+            : jInstitutionId != null ? Integer.parseInt(jInstitutionId)
+            : 0;
 
         var matchingInstitution = getInstitutionById(institutionId);
         if (matchingInstitution.isPresent()) {

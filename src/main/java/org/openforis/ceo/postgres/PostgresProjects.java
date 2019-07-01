@@ -3,6 +3,7 @@ package org.openforis.ceo.postgres;
 import static javax.servlet.http.HttpServletResponse.SC_NO_CONTENT;
 import static org.openforis.ceo.utils.DatabaseUtils.connect;
 import static org.openforis.ceo.utils.JsonUtils.expandResourcePath;
+import static org.openforis.ceo.utils.JsonUtils.getBodyParam;
 import static org.openforis.ceo.utils.JsonUtils.parseJson;
 import static org.openforis.ceo.utils.PartUtils.writeFilePartBase64;
 import static org.openforis.ceo.utils.ProjectUtils.padBounds;
@@ -58,13 +59,15 @@ public class PostgresProjects implements Projects {
         final var userId = Integer.parseInt(req.session().attributes().contains("userid") ? req.session().attribute("userid").toString() : "0");
         final var pProjectId = req.params(":projId");
         final var qProjectId = req.queryParams("projectId");
-
-        final var projectId = pProjectId != null
-            ? Integer.parseInt(pProjectId)
-            : qProjectId != null
-                ? Integer.parseInt(qProjectId)
-                : 0;
-
+        final var jProjectId = getBodyParam(req.body(), "projectId", null);
+        System.out.println(req.params().toString());
+        System.out.println(pProjectId);
+        final var projectId =
+            pProjectId != null ? Integer.parseInt(pProjectId)
+            : qProjectId != null ? Integer.parseInt(qProjectId)
+            : jProjectId != null ? Integer.parseInt(jProjectId)
+            : 0;
+        System.out.println(projectId);
         try (var conn = connect();
              var pstmt = conn.prepareStatement("SELECT * FROM " + queryFn + "(?, ?)")) {
 
@@ -82,6 +85,7 @@ public class PostgresProjects implements Projects {
     }
 
     public Boolean canCollect(Request req) {
+        System.out.println(checkAuthCommon(req, "can_user_collect"));
         return checkAuthCommon(req, "can_user_collect");
     }
 
@@ -93,12 +97,13 @@ public class PostgresProjects implements Projects {
         final var userId = Integer.parseInt(req.session().attributes().contains("userid") ? req.session().attribute("userid").toString() : "0");
         final var pProjectId = req.params(":projId");
         final var qProjectId = req.queryParams("projectId");
+        final var jProjectId = getBodyParam(req.body(), "projectId", null);
 
-        final var projectId = pProjectId != null
-            ? Integer.parseInt(pProjectId)
-            : qProjectId != null
-                ? Integer.parseInt(qProjectId)
-                : 0;
+        final var projectId =
+            pProjectId != null ? Integer.parseInt(pProjectId)
+            : qProjectId != null ? Integer.parseInt(qProjectId)
+            : jProjectId != null ? Integer.parseInt(jProjectId)
+            : 0;
 
         try (var conn = connect();
              var pstmt = conn.prepareStatement("SELECT * FROM " + queryFn + "(?, ?)")) {

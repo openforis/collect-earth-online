@@ -8,6 +8,7 @@ import static org.openforis.ceo.utils.JsonUtils.expandResourcePath;
 import static org.openforis.ceo.utils.JsonUtils.filterJsonArray;
 import static org.openforis.ceo.utils.JsonUtils.findInJsonArray;
 import static org.openforis.ceo.utils.JsonUtils.flatMapJsonArray;
+import static org.openforis.ceo.utils.JsonUtils.getBodyParam;
 import static org.openforis.ceo.utils.JsonUtils.getNextId;
 import static org.openforis.ceo.utils.JsonUtils.intoJsonArray;
 import static org.openforis.ceo.utils.JsonUtils.mapJsonArray;
@@ -73,12 +74,13 @@ public class JsonProjects implements Projects {
         final var userId = Integer.parseInt(req.session().attributes().contains("userid") ? req.session().attribute("userid").toString() : "0");
         final var pProjectId = req.params(":projId");
         final var qProjectId = req.queryParams("projectId");
+        final var jProjectId = getBodyParam(req.body(), "projectId", null);
 
-        final var projectId = pProjectId != null
-            ? pProjectId
-            : qProjectId != null
-                ? qProjectId
-                : "0";
+        final var projectId =
+            pProjectId != null ? pProjectId
+            : qProjectId != null ? qProjectId
+            : jProjectId != null ? jProjectId
+            : "0";
 
         final var project = singleProjectJson(projectId);
         final var institutionRoles = (new JsonUsers()).getInstitutionRoles(userId);
@@ -101,12 +103,13 @@ public class JsonProjects implements Projects {
         final var userId = Integer.parseInt(req.session().attributes().contains("userid") ? req.session().attribute("userid").toString() : "0");
         final var pProjectId = req.params(":projId");
         final var qProjectId = req.queryParams("projectId");
+        final var jProjectId = getBodyParam(req.body(), "projectId", null);
 
-        final var projectId = pProjectId != null
-            ? pProjectId
-            : qProjectId != null
-                ? qProjectId
-                : "0";
+        final var projectId =
+            pProjectId != null ? pProjectId
+            : qProjectId != null ? qProjectId
+            : jProjectId != null ? jProjectId
+            : "0";
 
         final var project = singleProjectJson(projectId);
         final var institutionRoles = (new JsonUsers()).getInstitutionRoles(userId);

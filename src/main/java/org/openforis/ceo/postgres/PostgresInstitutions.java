@@ -2,6 +2,7 @@ package org.openforis.ceo.postgres;
 
 import static org.openforis.ceo.utils.DatabaseUtils.connect;
 import static org.openforis.ceo.utils.JsonUtils.expandResourcePath;
+import static org.openforis.ceo.utils.JsonUtils.getBodyParam;
 import static org.openforis.ceo.utils.JsonUtils.parseJson;
 import static org.openforis.ceo.utils.PartUtils.writeFilePartBase64;
 import static org.openforis.ceo.Views.redirectAuth;
@@ -24,12 +25,13 @@ public class PostgresInstitutions implements Institutions {
         final var userId = Integer.parseInt(req.session().attributes().contains("userid") ? req.session().attribute("userid").toString() : "0");
         final var pInstitutionId = req.params(":instId");
         final var qInstitutionId = req.queryParams("institutionId");
+        final var jInstitutionId = getBodyParam(req.body(), "institutionId", null);
 
-        final var institutionId = pInstitutionId != null
-            ? Integer.parseInt(pInstitutionId)
-            : qInstitutionId != null
-                ? Integer.parseInt(qInstitutionId)
-                : 0;
+        final var institutionId =
+            pInstitutionId != null ? Integer.parseInt(pInstitutionId)
+            : qInstitutionId != null ? Integer.parseInt(qInstitutionId)
+            : jInstitutionId != null ? Integer.parseInt(jInstitutionId)
+            : 0;
 
         try (var conn = connect();
              var pstmt = conn.prepareStatement("SELECT * FROM is_institution_user_admin(?, ?)")) {
@@ -50,12 +52,13 @@ public class PostgresInstitutions implements Institutions {
         final var userId = Integer.parseInt(req.session().attributes().contains("userid") ? req.session().attribute("userid").toString() : "0");
         final var pInstitutionId = req.params(":instId");
         final var qInstitutionId = req.queryParams("institutionId");
+        final var jInstitutionId = getBodyParam(req.body(), "institutionId", null);
 
-        final var institutionId = pInstitutionId != null
-            ? Integer.parseInt(pInstitutionId)
-            : qInstitutionId != null
-                ? Integer.parseInt(qInstitutionId)
-                : 0;
+        final var institutionId =
+            pInstitutionId != null ? Integer.parseInt(pInstitutionId)
+            : qInstitutionId != null ? Integer.parseInt(qInstitutionId)
+            : jInstitutionId != null ? Integer.parseInt(jInstitutionId)
+            : 0;
 
         try (var conn = connect();
              var pstmt = conn.prepareStatement("SELECT * FROM is_institution_user_admin(?, ?)")) {
