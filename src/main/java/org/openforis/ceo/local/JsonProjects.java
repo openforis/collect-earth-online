@@ -70,7 +70,7 @@ import spark.Response;
 public class JsonProjects implements Projects {
 
     private Boolean checkAuthCommon(Request req, Boolean collect) {
-        final var userId = Integer.parseInt(req.session().attributes().contains("userid") ? req.session().attribute("userid").toString() : "0");
+        final var userId = Integer.parseInt(req.session().attributes().contains("userid") ? req.session().attribute("userid").toString() : "-1");
         final var qProjectId = req.queryParams("projectId");
         final var jProjectId = getBodyParam(req.body(), "projectId", null);
 
@@ -114,7 +114,7 @@ public class JsonProjects implements Projects {
     }
 
     public String getAllProjects(Request req, Response res) {
-        final var userId = req.session().attributes().contains("userid") ? req.session().attribute("userid").toString() : "0";
+        final var userId = req.session().attributes().contains("userid") ? req.session().attribute("userid").toString() : "-1";
         var intUserId = Integer.parseInt(userId.isEmpty() ? "0" : userId);
         var institutionId = req.queryParamOrDefault("institutionId", "");
         var projects = elementToArray(readJsonFile("project-list.json"));

@@ -88,12 +88,11 @@ public class Server implements SparkApplication {
 
         // Take query param for flash message and add to session attributes
         before((request, response) -> {
-            final var userId = Integer.parseInt(request.session().attributes().contains("userid") ? request.session().attribute("userid").toString() : "0");
-
+            final var userId = Integer.parseInt(request.session().attributes().contains("userid") ? request.session().attribute("userid").toString() : "-1");
             /// Page Authentication ///
 
             // Check for logged in on pages and redirect
-            if (List.of("/account", "/create-institution").contains(request.uri()) && userId > 0) {
+            if (List.of("/account", "/create-institution").contains(request.uri()) && userId < 0) {
                 redirectAuth(request, response, userId);
             };
             // Check for collect permission pages and redirect
@@ -117,7 +116,7 @@ public class Server implements SparkApplication {
                         "/get-user-stats",
                         "/request-institution-membership",
                         "/create-institution")
-                    .contains(request.uri()) && userId > 0) {
+                    .contains(request.uri()) && userId < 0) {
                 halt(403, "Forbidden!");
             };
             // Check for collect permission on API routes and block

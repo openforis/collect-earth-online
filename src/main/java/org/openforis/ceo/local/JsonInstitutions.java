@@ -23,7 +23,7 @@ import spark.Response;
 public class JsonInstitutions implements Institutions {
 
     public Boolean isInstAdmin(Request req) {
-        final var userId = req.session().attributes().contains("userid") ? req.session().attribute("userid").toString() : "0";
+        final var userId = req.session().attributes().contains("userid") ? req.session().attribute("userid").toString() : "-1";
         final var qInstitutionId = req.queryParams("institutionId");
         final var jInstitutionId = getBodyParam(req.body(), "institutionId", null);
 

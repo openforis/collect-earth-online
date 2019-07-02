@@ -53,7 +53,7 @@ import spark.Response;
 public class PostgresProjects implements Projects {
 
     public Boolean checkAuthCommon(Request req, String queryFn) {
-        final var userId = Integer.parseInt(req.session().attributes().contains("userid") ? req.session().attribute("userid").toString() : "0");
+        final var userId = Integer.parseInt(req.session().attributes().contains("userid") ? req.session().attribute("userid").toString() : "-1");
         final var qProjectId = req.queryParams("projectId");
         final var jProjectId = getBodyParam(req.body(), "projectId", null);
 
@@ -133,7 +133,7 @@ public class PostgresProjects implements Projects {
     }
 
     public String getAllProjects(Request req, Response res) {
-        final var userId =  req.session().attributes().contains("userid") ? req.session().attribute("userid").toString() : "0";
+        final var userId =  req.session().attributes().contains("userid") ? req.session().attribute("userid").toString() : "-1";
         var institutionId = req.queryParams("institutionId");
 
         try (var conn = connect()) {
