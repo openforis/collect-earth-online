@@ -50,8 +50,6 @@ import org.openforis.ceo.db_api.Projects;
 import spark.Request;
 import spark.Response;
 
-
-
 public class PostgresProjects implements Projects {
 
     public Boolean checkAuthCommon(Request req, String queryFn) {

@@ -7,7 +7,6 @@ import java.util.stream.Collectors;
 import org.openforis.ceo.env.CeoConfig;
 import spark.ModelAndView;
 import spark.Request;
-import spark.Response;
 import spark.Route;
 import spark.template.freemarker.FreeMarkerEngine;
 

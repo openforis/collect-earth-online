@@ -16,10 +16,8 @@ import static org.openforis.ceo.utils.ProjectUtils.getOrZero;
 import static org.openforis.ceo.utils.ProjectUtils.getOrEmptyString;
 import static org.openforis.ceo.utils.ProjectUtils.collectTimeIgnoreString;
 
-
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
-import com.google.gson.JsonElement;
 import com.google.gson.JsonPrimitive;
 import java.nio.file.Paths;
 import java.util.Map;

@@ -13,9 +13,7 @@ import static org.openforis.ceo.utils.JsonUtils.toStream;
 import static org.openforis.ceo.utils.ProjectUtils.getOrEmptyString;
 
 import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import com.google.gson.JsonPrimitive;
 import java.util.Comparator;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
