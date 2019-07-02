@@ -89,6 +89,7 @@ public class Server implements SparkApplication {
         // Take query param for flash message and add to session attributes
         before((request, response) -> {
             final var userId = Integer.parseInt(request.session().attributes().contains("userid") ? request.session().attribute("userid").toString() : "-1");
+
             /// Page Authentication ///
 
             // Check for logged in on pages and redirect
@@ -111,7 +112,8 @@ public class Server implements SparkApplication {
             /// API Authentication ///
 
             // Check for logged in on API routes and block
-            if (List.of("/get-institution-users",
+            if (List.of("/get-all-users",
+                        "/get-institution-users",
                         "/update-project-user-stats",
                         "/get-user-stats",
                         "/request-institution-membership",
@@ -146,8 +148,7 @@ public class Server implements SparkApplication {
                 halt(403, "Forbidden!");
             };
             // Check for inst admin permission on API routes and block
-            if (List.of("/get-all-users",
-                        "/update-user-institution-role",
+            if (List.of("/update-user-institution-role",
                         "/archive-institution",
                         "/update-institution",
                         "/add-institution-imagery")
@@ -166,10 +167,10 @@ public class Server implements SparkApplication {
         // Routing Table: HTML pages (with no side effects)
         get("/",                                      Views.home(freemarker));
         get("/about",                                 Views.about(freemarker));
+        get("/account",                               Views.account(freemarker));
         get("/collection",                            Views.collection(freemarker));
         get("/create-institution",                    Views.createInstitution(freemarker));
         get("/create-project",                        Views.createProject(freemarker));
-        get("/account",                               Views.account(freemarker));
         get("/geo-dash",                              Views.geoDash(freemarker));
         get("/geo-dash/geo-dash-help",                Views.geoDashHelp(freemarker));
         get("/home",                                  Views.home(freemarker));

@@ -110,7 +110,7 @@
 ** Imagery.java
 *** TODO In deleteInstitutionImagery, delete imagery entries from imagery-list.json once they are no longer referenced by any institution
 ** CollectImagery.java
-*** TODO Implement getPublicImagery, addInstitutionImagery, and deleteInstitutionImagery
+*** TODO Implement getAllImagery, addInstitutionImagery, and deleteInstitutionImagery
 ** Users.java
 *** TODO Phase out role attributes
 *** TODO Stop adding new users to the "All Users" institution (delete this institution since it isn't used)
