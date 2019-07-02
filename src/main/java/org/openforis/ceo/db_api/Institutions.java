@@ -6,7 +6,6 @@ import spark.Response;
 public interface Institutions {
 
     Boolean isInstAdmin(Request req);
-    Request redirectNonInstAdmin(Request req, Response res);
     String getAllInstitutions(Request req, Response res);
     String getInstitutionDetails(Request req, Response res);
     String createInstitution(Request req, Response res);

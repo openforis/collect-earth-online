@@ -11,7 +11,6 @@ import static org.openforis.ceo.utils.JsonUtils.parseJson;
 import static org.openforis.ceo.utils.JsonUtils.readJsonFile;
 import static org.openforis.ceo.utils.JsonUtils.writeJsonFile;
 import static org.openforis.ceo.utils.PartUtils.writeFilePartBase64;
-import static org.openforis.ceo.Views.redirectAuth;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
@@ -40,24 +39,6 @@ public class JsonInstitutions implements Institutions {
         } else {
             return false;
         }
-    }
-
-    public Request redirectNonInstAdmin(Request req, Response res) {
-        final var userId = req.session().attributes().contains("userid") ? req.session().attribute("userid").toString() : "0";
-        final var qInstitutionId = req.queryParams("institutionId");
-        final var jInstitutionId = getBodyParam(req.body(), "institutionId", null);
-
-        final var institutionId =
-            qInstitutionId != null ? Integer.parseInt(qInstitutionId)
-            : jInstitutionId != null ? Integer.parseInt(jInstitutionId)
-            : 0;
-
-        var matchingInstitution = getInstitutionById(institutionId);
-        if (matchingInstitution.isPresent()) {
-            final var admins = matchingInstitution.get().has("admins") ? matchingInstitution.get().get("admins").getAsJsonArray() : new JsonArray();
-            redirectAuth(req, res, admins.contains(parseJson(userId)), Integer.parseInt(userId));
-        }
-        return req;
     }
 
     public String getAllInstitutions(Request req, Response res) {

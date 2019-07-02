@@ -5,7 +5,6 @@ import static org.openforis.ceo.utils.JsonUtils.expandResourcePath;
 import static org.openforis.ceo.utils.JsonUtils.getBodyParam;
 import static org.openforis.ceo.utils.JsonUtils.parseJson;
 import static org.openforis.ceo.utils.PartUtils.writeFilePartBase64;
-import static org.openforis.ceo.Views.redirectAuth;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
@@ -44,32 +43,6 @@ public class PostgresInstitutions implements Institutions {
             System.out.println(e.getMessage());
             return false;
         }
-    }
-
-    public Request redirectNonInstAdmin(Request req, Response res) {
-        final var userId = Integer.parseInt(req.session().attributes().contains("userid") ? req.session().attribute("userid").toString() : "0");
-        final var qInstitutionId = req.queryParams("institutionId");
-        final var jInstitutionId = getBodyParam(req.body(), "institutionId", null);
-
-        final var institutionId =
-            qInstitutionId != null ? Integer.parseInt(qInstitutionId)
-            : jInstitutionId != null ? Integer.parseInt(jInstitutionId)
-            : 0;
-
-        try (var conn = connect();
-             var pstmt = conn.prepareStatement("SELECT * FROM is_institution_user_admin(?, ?)")) {
-
-            pstmt.setInt(1, userId);
-            pstmt.setInt(2, institutionId);
-
-            try(var rs = pstmt.executeQuery()) {
-                redirectAuth(req, res, rs.next() && rs.getBoolean("is_institution_user_admin"), userId);
-            }
-
-        } catch (SQLException e) {
-            System.out.println(e.getMessage());
-        }
-        return req;
     }
 
     private static JsonObject buildInstitutionJson(ResultSet rs) {

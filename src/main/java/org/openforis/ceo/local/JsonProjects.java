@@ -39,7 +39,6 @@ import static org.openforis.ceo.utils.ProjectUtils.outputRawCsv;
 import static org.openforis.ceo.utils.ProjectUtils.padBounds;
 import static org.openforis.ceo.utils.ProjectUtils.reprojectBounds;
 import static org.openforis.ceo.utils.ProjectUtils.runBashScriptForProject;
-import static org.openforis.ceo.Views.redirectAuth;
 
 import com.google.gson.JsonObject;
 import com.google.gson.JsonArray;
@@ -95,35 +94,6 @@ public class JsonProjects implements Projects {
 
     public Boolean isProjAdmin(Request req) {
         return checkAuthCommon(req, false);
-    }
-
-    private Request redirectCommon(Request req, Response res, Boolean collect) {
-        final var userId = Integer.parseInt(req.session().attributes().contains("userid") ? req.session().attribute("userid").toString() : "0");
-        final var qProjectId = req.queryParams("projectId");
-        final var jProjectId = getBodyParam(req.body(), "projectId", null);
-
-        final var projectId =
-            qProjectId != null ? qProjectId
-            : jProjectId != null ? jProjectId
-            : "0";
-
-        final var project = singleProjectJson(projectId);
-        final var institutionRoles = (new JsonUsers()).getInstitutionRoles(userId);
-        final var role = institutionRoles.getOrDefault(project.get("institution").getAsInt(), "");
-        final var privacyLevel = project.get("privacyLevel").getAsString();
-        final var availability = project.get("availability").getAsString();
-
-        redirectAuth(req, res, canSeeProject(role, privacyLevel, availability, userId) && (collect || role.equals("admin")), userId);
-
-        return req;
-    }
-
-    public Request redirectNoCollect(Request req, Response res) {
-        return redirectCommon(req, res, true);
-    }
-
-    public Request redirectNonProjAdmin(Request req, Response res) {
-        return redirectCommon(req, res, false);
     }
 
     private Boolean canSeeProject(String role, String privacyLevel, String availability, Integer userId) {

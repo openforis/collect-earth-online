@@ -17,9 +17,7 @@ import static spark.Spark.halt;
 import freemarker.template.Configuration;
 import freemarker.template.TemplateExceptionHandler;
 import java.io.File;
-import java.util.Arrays;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import org.openforis.ceo.collect.CollectImagery;
 import org.openforis.ceo.collect.CollectPlots;
@@ -46,6 +44,9 @@ import org.openforis.ceo.postgres.PostgresUsers;
 import org.openforis.ceo.users.CeoAuthFilter;
 import org.openforis.ceo.users.OfGroups;
 import org.openforis.ceo.users.OfUsers;
+
+import spark.Request;
+import spark.Response;
 import spark.servlet.SparkApplication;
 import spark.template.freemarker.FreeMarkerEngine;
 
@@ -87,13 +88,36 @@ public class Server implements SparkApplication {
 
         // Take query param for flash message and add to session attributes
         before((request, response) -> {
+            final var userId = Integer.parseInt(request.session().attributes().contains("userid") ? request.session().attribute("userid").toString() : "0");
+
+            /// Page Authentication ///
+
+            // Check for logged in on pages and redirect
+            if (List.of("/account", "/create-institution").contains(request.uri()) && userId > 0) {
+                redirectAuth(request, response, userId);
+            };
+            // Check for collect permission pages and redirect
+            if (List.of("/collection").contains(request.uri()) && !projects.canCollect(request)) {
+                redirectAuth(request, response, userId);
+            };
+            // Check for proj admin permission pages and redirect
+            if (List.of("/project-dashboard", "/review-project").contains(request.uri()) && !projects.isProjAdmin(request)) {
+                redirectAuth(request, response, userId);
+            };
+            // Check for inst admin permission pages and redirect
+            if (List.of("/create-project", "/institution-dashboard").contains(request.uri()) && !institutions.isInstAdmin(request)) {
+                redirectAuth(request, response, userId);
+            };
+
+            /// API Authentication ///
+
             // Check for logged in on API routes and block
             if (List.of("/get-institution-users",
                         "/update-project-user-stats",
                         "/get-user-stats",
                         "/request-institution-membership",
                         "/create-institution")
-                    .contains(request.uri()) && request.session().attribute("userid") == null) {
+                    .contains(request.uri()) && userId > 0) {
                 halt(403, "Forbidden!");
             };
             // Check for collect permission on API routes and block
@@ -143,28 +167,23 @@ public class Server implements SparkApplication {
         // Routing Table: HTML pages (with no side effects)
         get("/",                                      Views.home(freemarker));
         get("/about",                                 Views.about(freemarker));
+        get("/collection",                            Views.collection(freemarker));
+        get("/create-institution",                    Views.createInstitution(freemarker));
+        get("/create-project",                        Views.createProject(freemarker));
+        get("/account",                               Views.account(freemarker));
         get("/geo-dash",                              Views.geoDash(freemarker));
         get("/geo-dash/geo-dash-help",                Views.geoDashHelp(freemarker));
         get("/home",                                  Views.home(freemarker));
+        get("/institution-dashboard",                 Views.institutionDashboard(freemarker));
         get("/login",                                 Views.login(freemarker));
         get("/password",                              Views.password(freemarker));
         get("/password-reset",                        Views.passwordReset(freemarker));
+        get("/project-dashboard",                     Views.projectDashboard(freemarker));
         get("/register",                              Views.register(freemarker));
         get("/review-institution",                    Views.reviewInstitution(freemarker, databaseType.equals("COLLECT") ? "remote" : "local"));
+        get("/review-project",                        Views.reviewProject(freemarker));
         get("/support",                               Views.support(freemarker));
         get("/widget-layout-editor",                  Views.editWidgetLayout(freemarker));
-
-        // Routing Table: HTML pages (with permissions, redirect on false permissions)
-        // Inst Admin = admin by institution ID
-        // Collect = user can see project by project ID
-        // Project Admin = admin by project ID, not archived
-        get("/account",                               Views.account(freemarker));  // Logged in authentication in Views
-        get("/create-institution",                    Views.createInstitution(freemarker)); // Logged in authentication in Views
-        get("/create-project",                        (req, res) -> Views.createProject(freemarker).handle(institutions.redirectNonInstAdmin(req, res), res));
-        get("/collection",                            (req, res) -> Views.collection(freemarker).handle(projects.redirectNoCollect(req, res), res));
-        get("/institution-dashboard",                 (req, res) -> Views.institutionDashboard(freemarker).handle(institutions.redirectNonInstAdmin(req, res), res));
-        get("/project-dashboard",                     (req, res) -> Views.projectDashboard(freemarker).handle(projects.redirectNonProjAdmin(req, res), res));
-        get("/review-project",                        (req, res) -> Views.reviewProject(freemarker).handle(projects.redirectNonProjAdmin(req, res), res));
 
         // Routing Table: HTML pages (with side effects)
         get("/logout",                                (req, res) -> Views.home(freemarker).handle(users.logout(req, res), res));
@@ -230,6 +249,22 @@ public class Server implements SparkApplication {
 
         // Handle Exceptions
         exception(Exception.class, (e, req, res) -> e.printStackTrace());
+    }
+
+    private static void redirectAuth(Request req, Response res, Integer userId) {
+        if (userId > 0) {
+            res.redirect(CeoConfig.documentRoot
+                            + "/home?flash_message=You do not have permission to access "
+                            + req.uri()
+                            + ".");
+        } else {
+            res.redirect(CeoConfig.documentRoot
+                            + "/login?returnurl="
+                            + req.uri()
+                            + "&flash_message=You must login to see "
+                            + req.uri()
+                            + ".");
+        }
     }
 
     // Setup a proxy server on port 4567 to redirect incoming http traffic to port 8080 as https

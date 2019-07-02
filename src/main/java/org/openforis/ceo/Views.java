@@ -18,24 +18,6 @@ public class Views {
         return (value == null) ? "" : value;
     }
 
-    public static void redirectAuth(Request req, Response res, Boolean authorized, Integer userId) {
-        if (!authorized) {
-            if (userId > 0) {
-                res.redirect(CeoConfig.documentRoot
-                             + "/home?flash_message=You do not have permission to access "
-                             + req.uri()
-                             + ".");
-            } else {
-                res.redirect(CeoConfig.documentRoot
-                             + "/login?returnurl="
-                             + req.uri()
-                             + "&flash_message=You must login to see "
-                             + req.uri()
-                             + ".");
-            }
-        }
-    }
-
     private static Map<String, String> getBaseModel(Request req, String navlink) {
         var model = Map.of("root",          CeoConfig.documentRoot,
                            "navlink",       navlink,
@@ -83,28 +65,6 @@ public class Views {
         };
     }
 
-    private static void authenticateOrRedirect(Request req, Response res) {
-        if (req.session().attribute("userid") == null) {
-            redirectAuth(req, res, false, 0);
-        }
-    }
-
-    private static Route makeAuthenticatedRoute(String navlink, FreeMarkerEngine freemarker) {
-        var baseRoute = makeRoute(navlink, freemarker);
-        return (req, res) -> {
-            authenticateOrRedirect(req, res);
-            return baseRoute.handle(req, res);
-        };
-    }
-
-    private static Route makeAuthenticatedRoute(String navlink, FreeMarkerEngine freemarker, Map<String, Object> extraParams) {
-        var baseRoute = makeRoute(navlink, freemarker, extraParams);
-        return (req, res) -> {
-            authenticateOrRedirect(req, res);
-            return baseRoute.handle(req, res);
-        };
-    }
-
     public static Route home(FreeMarkerEngine freemarker) {
         return makeRoute("Home", freemarker);
     }
@@ -119,13 +79,13 @@ public class Views {
 
     public static Route account(FreeMarkerEngine freemarker) {
         Function<Request, String> getAccountId = (req) -> req.queryParams("userId");
-        return makeAuthenticatedRoute("Account",
-                                      freemarker,
-                                      Map.of("account_id", getAccountId));
+        return makeRoute("Account",
+                         freemarker,
+                         Map.of("account_id", getAccountId));
     }
 
     public static Route createInstitution(FreeMarkerEngine freemarker) {
-        return makeAuthenticatedRoute("Create-Institution", freemarker);
+        return makeRoute("Create-Institution", freemarker);
     }
 
     public static Route reviewInstitution(FreeMarkerEngine freemarker, String storage) {
@@ -214,9 +174,9 @@ public class Views {
 
     public static Route editWidgetLayout(FreeMarkerEngine freemarker) {
         Function<Request, String> getPid = (req) -> req.queryParams("projectId");
-        return makeAuthenticatedRoute("Widget-Layout-Editor",
-                                      freemarker,
-                                      Map.of("project_id", getPid));
+        return makeRoute("Widget-Layout-Editor",
+                         freemarker,
+                         Map.of("project_id", getPid));
     }
 
     public static Route pageNotFound(FreeMarkerEngine freemarker) {

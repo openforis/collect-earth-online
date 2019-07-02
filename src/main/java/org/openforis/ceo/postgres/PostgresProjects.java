@@ -26,7 +26,6 @@ import static org.openforis.ceo.utils.ProjectUtils.makeGeoJsonPolygon;
 import static org.openforis.ceo.utils.ProjectUtils.getSampleValueTranslations;
 import static org.openforis.ceo.utils.ProjectUtils.deleteShapeFileDirectories;
 import static org.openforis.ceo.utils.ProjectUtils.runBashScriptForProject;
-import static org.openforis.ceo.Views.redirectAuth;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
@@ -87,40 +86,6 @@ public class PostgresProjects implements Projects {
 
     public Boolean isProjAdmin(Request req) {
         return checkAuthCommon(req, "can_user_edit");
-    }
-
-    private Request redirectCommon(Request req, Response res, String queryFn) {
-        final var userId = Integer.parseInt(req.session().attributes().contains("userid") ? req.session().attribute("userid").toString() : "0");
-        final var qProjectId = req.queryParams("projectId");
-        final var jProjectId = getBodyParam(req.body(), "projectId", null);
-
-        final var projectId =
-            qProjectId != null ? Integer.parseInt(qProjectId)
-            : jProjectId != null ? Integer.parseInt(jProjectId)
-            : 0;
-
-        try (var conn = connect();
-             var pstmt = conn.prepareStatement("SELECT * FROM " + queryFn + "(?, ?)")) {
-
-            pstmt.setInt(1, userId);
-            pstmt.setInt(2, projectId);
-
-            try(var rs = pstmt.executeQuery()) {
-                redirectAuth(req, res, rs.next() && rs.getBoolean(queryFn), userId);
-            }
-
-        } catch (SQLException e) {
-            System.out.println(e.getMessage());
-        }
-        return req;
-    }
-
-    public Request redirectNoCollect(Request req, Response res) {
-        return redirectCommon(req, res, "can_user_collect");
-    }
-
-    public Request redirectNonProjAdmin(Request req, Response res) {
-        return redirectCommon(req, res, "can_user_edit");
     }
 
     private static JsonObject buildProjectJson(ResultSet rs) {

@@ -8,8 +8,6 @@ public interface Projects {
 
     Boolean canCollect(Request req);
     Boolean isProjAdmin(Request req);
-    Request redirectNoCollect(Request req, Response res);
-    Request redirectNonProjAdmin(Request req, Response res);
     String getAllProjects(Request req, Response res);
     String getProjectById(Request req, Response res);
     String getProjectStats(Request req, Response res);
