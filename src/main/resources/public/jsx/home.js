@@ -446,7 +446,7 @@ class Institution extends React.Component {
                         <div className="col-lg-1">
                             <a
                                 className="institution_info btn btn-sm btn-outline-lightgreen"
-                                href={props.documentRoot + "/review-institution?institutionId?=" + props.id}
+                                href={props.documentRoot + "/review-institution?institutionId=" + props.id}
                             >
                                 <span style={{ color: "white", fontSize: "1rem" }}>
                                     <UnicodeIcon icon="info"/>

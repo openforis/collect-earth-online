@@ -159,7 +159,7 @@ public class Views {
     }
 
     public static Route projectDashboard(FreeMarkerEngine freemarker) {
-        Function<Request, String> getProjectId = (req) -> req.queryParams("institutionId");
+        Function<Request, String> getProjectId = (req) -> req.queryParams("projectId");
         Function<Request, String> getInstitutionId = (req) -> req.queryParams("institutionId");
         return makeRoute("Project-Dashboard",
                          freemarker,

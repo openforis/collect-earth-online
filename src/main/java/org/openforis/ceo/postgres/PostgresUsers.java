@@ -267,7 +267,7 @@ public class PostgresUsers implements Users {
     }
 
     public String getInstitutionUsers(Request req, Response res) {
-        final var institutionId = req.queryParams(":intsId");
+        final var institutionId = req.queryParams("institutionId");
 
         try (var conn = connect();
                 var pstmt = conn.prepareStatement("SELECT * FROM get_all_users_by_institution_id(?)")) {
