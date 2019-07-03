@@ -6,6 +6,7 @@ import static spark.Spark.after;
 import static spark.Spark.before;
 import static spark.Spark.exception;
 import static spark.Spark.get;
+import static spark.Spark.halt;
 import static spark.Spark.notFound;
 import static spark.Spark.port;
 import static spark.Spark.post;
@@ -85,6 +86,13 @@ public class Server implements SparkApplication {
         before((request, response) -> {
             var flashMessage = request.queryParams("flash_message");
             request.session().attribute("flash_message", flashMessage != null ? flashMessage : "");
+        });
+
+        // Block cross traffic for API
+        before("/get-tile", (request, response) -> {
+            if (request.headers("referer") == null || !request.headers("referer").contains(request.host())) {
+                halt(403, "Forbidden!");
+            }
         });
 
         // GZIP all responses to improve download speeds
