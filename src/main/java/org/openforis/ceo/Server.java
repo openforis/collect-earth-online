@@ -110,6 +110,7 @@ public class Server implements SparkApplication {
         get("/review-project/:id",                    (req, res) -> Views.reviewProject(freemarker).handle(projects.redirectNoEdit(req, res), res));
         get("/support",                               Views.support(freemarker));
         get("/widget-layout-editor",                  Views.editWidgetLayout(freemarker));
+        get("/get-tile",                              (req, res) -> Proxy.proxyImagery(req, res, imagery));
 
         // Routing Table: HTML pages (with side effects)
         get("/logout",                                (req, res) -> Views.home(freemarker).handle(users.logout(req, res), res));

@@ -79,22 +79,14 @@ mercator.getViewRadius = function (mapConfig) {
 // [Pure] Returns a new ol.source.* object or null if the sourceConfig
 // is invalid.
 mercator.createSource = function (sourceConfig) {
-    if (sourceConfig.type == "DigitalGlobe") {
+    if (["DigitalGlobe", "EarthWatch"].includes(sourceConfig.type)) {
         return new ol.source.XYZ({
-            url: "https://api.tiles.mapbox.com/v4/" + sourceConfig.imageryId
-                                  + "/{z}/{x}/{y}.png?access_token=" + sourceConfig.accessToken,
-            attribution: "© DigitalGlobe, Inc",
-        });
-    } else if (sourceConfig.type == "EarthWatch") {
-        return new ol.source.XYZ({
-            url: "https://earthwatch.digitalglobe.com/earthservice/tmsaccess/tms/1.0.0/DigitalGlobe:ImageryTileService@EPSG:3857@jpg/{z}/{x}/{-y}.jpg?connectId=" + sourceConfig.connectId,
+            url: "/get-tile?imageryId=" + sourceConfig.imageryId + "&z={z}&x={x}&y={-y}",
             attribution: "© DigitalGlobe, Inc",
         });
     } else if (sourceConfig.type == "Planet") {
         return new ol.source.XYZ({
-            url: "https://tiles{0-3}.planet.com/basemaps/v1/planet-tiles/global_monthly_"
-                                  + sourceConfig.year + "_" + sourceConfig.month + "_mosaic/gmap/{z}/{x}/{y}.png?api_key="
-                                  + sourceConfig.accessToken,
+            url: "/get-tile?imageryId=" + sourceConfig.imageryId + "&z={z}&x={x}&y={y}&tile={0-3}",
             attribution: "© Planet Labs, Inc",
         });
     } else if (sourceConfig.type == "BingMaps") {
