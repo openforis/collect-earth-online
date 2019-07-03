@@ -5,7 +5,7 @@
   "attribution": "DigitalGlobe Maps API: Recent Imagery | © DigitalGlobe, Inc",
   "extent": null,
   "sourceConfig": {"type": "EarthWatch",
-                   "connectId": "f371dd55-96c4-41b7-ac26-662b3fa3d7f8"}},
+                   "connectId": "f371dd55-96c4-41b7-aaaa-11111111111"}},
  {"id": 2,
   "institution": 1,
   "visibility": "public",
@@ -13,7 +13,7 @@
   "attribution": "DigitalGlobe Maps API: Recent Imagery+Streets | © DigitalGlobe, Inc",
   "extent": null,
   "sourceConfig": {"type": "EarthWatch",
-                   "connectId": "f371dd55-96c4-41b7-ac26-662b3fa3d7f8"}}, 
+                   "connectId": "f371dd55-96c4-41b7-aaaa-11111111111"}},
   {"id": 3,
   "institution": 1,
   "visibility": "public",
@@ -52,4 +52,4 @@
   "sourceConfig": {"type": "Planet",
                  "year": "2018",
                  "month": "01",
-                 "accessToken": "c195ebe4bf894f5e9d592122acf0f14f"}}]
+                 "accessToken": "c195ebe4bf894f5e9d5921ffffffff"}}]
