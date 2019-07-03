@@ -78,7 +78,6 @@ class Home extends React.Component {
                             projects={this.state.projects}
                             showSidePanel={this.state.showSidePanel}
                             toggleSidebar={this.toggleSidebar}
-                            userId={this.props.userId}
                         />
                     </div>
                 </div>
@@ -208,7 +207,7 @@ class SideBar extends React.Component {
             filterInstitution: true,
             useFirstLetter: false,
             sortByNumber: true,
-            containsProjects: false,
+            showEmptyInstitutions: false,
             showFilters: false,
         };
     }
@@ -217,7 +216,7 @@ class SideBar extends React.Component {
 
     toggleFilterInstitution = () => this.setState({ filterInstitution: !this.state.filterInstitution });
 
-    toggleContainsProjects = () => this.setState({ containsProjects: !this.state.containsProjects });
+    toggleShowEmptyInstitutions = () => this.setState({ showEmptyInstitutions: !this.state.showEmptyInstitutions });
 
     toggleSortByNumber = () => this.setState({ sortByNumber: !this.state.sortByNumber });
 
@@ -234,19 +233,25 @@ class SideBar extends React.Component {
                                         ? proj.name.toLocaleLowerCase().startsWith(filterTextLower)
                                         : proj.name.toLocaleLowerCase().includes(filterTextLower)));
 
-        const filteredInstitutions = this.props.institutions
-            .filter(inst => !this.state.filterInstitution
-                                    || (this.state.useFirstLetter
+        const filterString = (inst) => this.state.useFirstLetter
                                         ? inst.name.toLocaleLowerCase().startsWith(filterTextLower)
-                                        : inst.name.toLocaleLowerCase().includes(filterTextLower)))
-            .filter(inst => this.state.filterInstitution
-                                    || filteredProjects.some(proj => inst.id === proj.institution))
-            .filter(inst => !(this.state.filterInstitution && this.state.containsProjects)
-                                    || this.props.projects.some(proj => inst.id === proj.institution))
+                                        : inst.name.toLocaleLowerCase().includes(filterTextLower);
+
+        const filterHasProj = (inst) => filteredProjects.some(proj => inst.id === proj.institution)
+                                        || this.state.showEmptyInstitutions
+                                        || inst.admins.includes(this.props.userId)
+                                        || inst.members.includes(this.props.userId)
+                                        || inst.pending.includes(this.props.userId);
+
+        const filteredInstitutions = this.props.institutions
+            // Filtering by institution, contains search string and contains projects or user is member
+            .filter(inst => !this.state.filterInstitution || (filterString(inst) && filterHasProj(inst)))
+            // Filtering by projects, and has projects to show
+            .filter(inst => this.state.filterInstitution || filteredProjects.some(proj => inst.id === proj.institution))
             .sort((a, b) => this.state.sortByNumber
-                                    ? this.props.projects.filter(proj => b.id === proj.institution).length
-                                        - this.props.projects.filter(proj => a.id === proj.institution).length
-                                    : sortAlphabetically(a.name, b.name));
+                                ? this.props.projects.filter(proj => b.id === proj.institution).length
+                                    - this.props.projects.filter(proj => a.id === proj.institution).length
+                                : sortAlphabetically(a.name, b.name));
 
 
         return this.props.showSidePanel
@@ -268,8 +273,8 @@ class SideBar extends React.Component {
                     toggleFilterInstitution={this.toggleFilterInstitution}
                     sortByNumber={this.state.sortByNumber}
                     toggleSortByNumber={this.toggleSortByNumber}
-                    containsProjects={this.state.containsProjects}
-                    toggleContainsProjects={this.toggleContainsProjects}
+                    showEmptyInstitutions={this.state.showEmptyInstitutions}
+                    toggleShowEmptyInstitutions={this.toggleShowEmptyInstitutions}
                     showFilters={this.state.showFilters}
                     toggleShowFilters={this.toggleShowFilters}
                 />
@@ -389,10 +394,10 @@ function InstitutionFilter(props) {
                             <input
                                 className="form-check-input"
                                 type="checkbox"
-                                checked={props.containsProjects}
-                                onChange={props.toggleContainsProjects}
+                                checked={props.showEmptyInstitutions}
+                                onChange={props.toggleShowEmptyInstitutions}
                             />
-                            Contains projects
+                            Show Empty Inst
                         </div>
                     </div>
                 </Fragment>
@@ -592,7 +597,11 @@ class ProjectPopup extends React.Component {
 
 export function renderHomePage(args) {
     ReactDOM.render(
-        <Home documentRoot={args.documentRoot} userId={args.userId} userName={args.userName}/>,
+        <Home
+            documentRoot={args.documentRoot}
+            userId={args.userId === "" ? -1 : parseInt(args.userId)}
+            userName={args.userName}
+        />,
         document.getElementById("home")
     );
 }
