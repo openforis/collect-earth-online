@@ -36,9 +36,9 @@ public class Proxy {
             var tile   = req.queryParamOrDefault("tile", "");
 
             var baseUrl = "https://tiles" + tile
-                            + ".planet.com/basemaps/v1/planet-tiles/global_monthly_"
-                            + year + "_" + month
-                            + "_mosaic/gmap/{z}/{x}/{y}.png?api_key=";
+                          + ".planet.com/basemaps/v1/planet-tiles/global_monthly_"
+                          + year + "_" + month
+                          + "_mosaic/gmap/{z}/{x}/{y}.png?api_key=";
             return baseUrl.replace("{z}", z).replace("{x}", x).replace("{y}", y) + apiKey;
         } else {
             return "";
