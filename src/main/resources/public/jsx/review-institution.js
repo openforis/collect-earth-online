@@ -46,8 +46,6 @@ class ReviewInstitution extends React.Component {
                     documentRoot={this.props.documentRoot}
                     institutionId={this.props.institutionId}
                     isAdmin={this.state.isAdmin}
-                    ofUsersApiUrl={this.props.ofUsersApiUrl}
-                    storage={this.props.storage}
                     setIsAdmin={this.setIsAdmin}
                     userId={this.props.userId}
                 />
@@ -229,7 +227,7 @@ class InstitutionDescription extends React.Component {
     </div>;
 
     render() {
-        const { documentRoot, ofUsersApiUrl, storage } = this.props;
+        const { documentRoot } = this.props;
         return this.state.editMode
         ?
             <InstitutionEditor
@@ -248,9 +246,7 @@ class InstitutionDescription extends React.Component {
                             <a href={this.state.institutionDetails.url}>
                                 <img
                                     className="img-fluid"
-                                    src={storage !== null && storage === "local"
-                                    ? documentRoot + "/" + this.state.institutionDetails.logo
-                                    : ofUsersApiUrl + "/group/logo/" + this.state.institutionDetails.id}
+                                    src={documentRoot + "/" + this.state.institutionDetails.logo}
                                     alt="logo"
                                 />
                             </a>
@@ -958,8 +954,6 @@ export function renderReviewInstitutionPage(args) {
             documentRoot={args.documentRoot}
             userId={args.userId === "" ? -1 : parseInt(args.userId)}
             institutionId={args.institutionId === "" ? -1 : parseInt(args.institutionId)}
-            ofUsersApiUrl={args.of_users_api_url}
-            storage={args.storage}
         />,
         document.getElementById("institution")
     );

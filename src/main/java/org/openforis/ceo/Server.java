@@ -17,9 +17,6 @@ import freemarker.template.Configuration;
 import freemarker.template.TemplateExceptionHandler;
 import java.io.File;
 import java.util.List;
-import org.openforis.ceo.collect.CollectImagery;
-import org.openforis.ceo.collect.CollectPlots;
-import org.openforis.ceo.collect.CollectProjects;
 import org.openforis.ceo.db_api.GeoDash;
 import org.openforis.ceo.db_api.Imagery;
 import org.openforis.ceo.db_api.Institutions;
@@ -39,9 +36,6 @@ import org.openforis.ceo.postgres.PostgresInstitutions;
 import org.openforis.ceo.postgres.PostgresPlots;
 import org.openforis.ceo.postgres.PostgresProjects;
 import org.openforis.ceo.postgres.PostgresUsers;
-import org.openforis.ceo.users.CeoAuthFilter;
-import org.openforis.ceo.users.OfGroups;
-import org.openforis.ceo.users.OfUsers;
 import spark.servlet.SparkApplication;
 import spark.template.freemarker.FreeMarkerEngine;
 
@@ -76,11 +70,6 @@ public class Server implements SparkApplication {
         staticFileLocation("/public");
         staticFiles.expireTime(6000);
 
-        // Allow token-based authentication if users are not logged in and we are using the COLLECT database
-        if (databaseType.equals("COLLECT")) {
-            before("/*", new CeoAuthFilter());
-        }
-
         // Take query param for flash message and add to session attributes
         before((request, response) -> {
             var flashMessage = request.queryParams("flash_message");
@@ -106,7 +95,7 @@ public class Server implements SparkApplication {
         get("/project-dashboard/:id",                 (req, res) -> Views.projectDashboard(freemarker).handle(projects.redirectNoEdit(req, res), res));
         get("/institution-dashboard/:id",             (req, res) -> Views.institutionDashboard(freemarker).handle(institutions.redirectNonAdmin(req, res), res));
         get("/register",                              Views.register(freemarker));
-        get("/review-institution/:id",                Views.reviewInstitution(freemarker, databaseType.equals("COLLECT") ? "remote" : "local"));
+        get("/review-institution/:id",                Views.reviewInstitution(freemarker));
         get("/review-project/:id",                    (req, res) -> Views.reviewProject(freemarker).handle(projects.redirectNoEdit(req, res), res));
         get("/support",                               Views.support(freemarker));
         get("/widget-layout-editor",                  Views.editWidgetLayout(freemarker));
@@ -239,15 +228,5 @@ public class Server implements SparkApplication {
         // FIXME: I'm not entirely sure this will work with Tomcat. This should be tested.
         // Start the HTTP Jetty webserver on port 4567 to redirect traffic to the HTTPS Tomcat webserver
         redirectHttpToHttps();
-
-        // Set up the routing table
-        declareRoutes("COLLECT",
-                      new CollectProjects(),
-                      new CollectImagery(),
-                      new OfUsers(),
-                      new OfGroups(),
-                      new JsonGeoDash(),
-                      new CollectPlots());
     }
-
 }

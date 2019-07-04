@@ -4,23 +4,21 @@
 ** README.org
    1. Add a Description section to explain the website's purpose.
    2. Include git clone instructions in the Installation section.
-   3. Document how to set the instance parameters in web.xml and mail-config.json: documentRoot,{collect,ofUsers}ApiUrl,smtp{Server,Port,User,Pass}
+   3. Document how to set the instance parameters in web.xml and mail-config.json: documentRoot,smtp{Server,Port,User,Pass}
    4. Document how to add public imagery to imagery-list.json and the
       Collect H2 database (use OFC_IMAGERY table, VISIBILITY=N(private)
       or P(public) and test with
       http://127.0.0.1:8080/collect/api/imagery).
    5. Include the login credentials (user/pass) for the administrator account.
-   6. Re-write the instructions for Windows machines as well. (jdbc:h2:C:/Users/<username>/.openforis/{collect,of-users})
+   6. Re-write the instructions for Windows machines as well.
    7. Export as README.pdf for all the non-Emacs users out there.
    8. Move the XML file configurations and H2 JAR installation into a new section "Setting up the H2 Database".
-   9. Make it crystal clear which collect.war file to use.
    10. Explain private institutions (all projects in them are only visible to their logged-in user regardless of privacyLevel).
 ** notes/
    1. Remove outdated and unnecessary files.
 ** ServerTest.java
    1. Write a unit test suite.
 ** Views.java
-   1. Make sure institution() works when OF_USERS_API_URL="";
    2. Remove the "role" attribute from Freemarker data.
    4. Verify that all Freemarker data parameters are used:
       |--------------------+--------------------------------------------------------|
@@ -28,7 +26,7 @@
       | about.ftl          | defaults                                               |
       | support.ftl        | defaults                                               |
       | account.ftl        | defaults + account_id                                  |
-      | institution.ftl    | defaults + of_users_api_url + institution_id           |
+      | institution.ftl    | defaults + institution_id                              |
       | collection.ftl     | defaults + project_id                                  |
       | project.ftl        | defaults + project_id + institution_id (creation only) |
       | login.ftl          | defaults + returnurl + querystring                     |
@@ -46,11 +44,6 @@
 ** Users.java
    1. Remove all references to the role attribute.
    2. The login() function's returnurl and querystring arguments expand recursively. (see login.ftl)
-** OfUsers.java
-   1. Raise a red flag when an error occurs in communicating with the database in getAllUsers and getInstitutionRoles.
-** OfGroups.java
-   1. Replace for loops with stream constructs.
-   2. Raise a red flag when an error occurs in communicating with the database in getAllInstitutions, getInstitutionById, and archiveInstitution.
 ** CollectProjects.java
    1. Replace for loops with stream constructs.
 ** (*).java
@@ -147,10 +140,6 @@
    1. BUG: Allow Quyen to only fill in values for one of her sample values on https://collect.earth
    2. Add imagery to the ceo development server
    3. Email everyone a link to ceo's development server (http://216.218.220.138/)
-   4. Add Planet imagery to basemaps before 5/7:
-      - https://tiles{0-3}.planet.com/basemaps/v1/planet-tiles/global_monthly_YYYY_MM_mosaic/gmap/{z}/{x}/{y}.png?api_key=c195ebe4bf894f5e9d592122acf0f14f (2016_01 <= YYYY_MM <= 2018_03)
-      - list available mosaics with this URL: https://api.planet.com/basemaps/v1/mosaics?api_key=c195ebe4bf894f5e9d592122acf0f14f
-      - API docs: https://developers.planet.com/docs/api/tile-services/
    5. Get new About page text from Kel
    6. Update CEO Manual with Karis
    7. Add News page to navbar
@@ -158,18 +147,11 @@
    10. Merge card-test page into Collection page and add Configure Survey button to Project page
        - sampleIds: they have to be numbers but the array can be an array of strings or numbers
        - the constructor of Collect Forms was not supposed to be called multiple times... you should reload/change the content of the "container" and then call the constructor again
-   11. Ask Jerome to update survey card CSS
-   12. Record imagery timestamp when plot values are saved
-   13. Ask Stefano to fix the buggy project creation algorithm in Collect
-       - Plot Shape = Square + Sample Distribution = Gridded seems to return only 2 points and only 1 is shown on the Collection page
-   14. Work on migration to Collect database with Stefano
    15. Cleanup merged database on ceo2:
        - Remove plot-data files for non-existent projects
        - Remove dash files for non-existent geodash dashboards
    16. Add an option to show the same plot multiple times to the Project creation page
    17. Add client-side validation to the Project page (restrict numPlots<=10,000 and samplesPerPlot<=400)
-   18. Re-enable the spinner animation on the Project page
-   19. Make sure Stefano fixes timeout with Project creation
    20. Merge ceo and ceo2 database on machiavelli (resume in ~/geek/code/clojure/merge-ceo-projects/)
        - keep ceo2:Demo Institution CEO Webinar April
        - nuke ceo2:everything else
@@ -178,9 +160,6 @@
    21. Migrate ceo to machiavelli (increase the -Xmx value for its JVM and ensure that the app auto-starts at boot)
    22. Ask Jeff to redirect ceo.sig-gis.com to machiavelli
    23. Ask Alfonso to redirect collect.earth (etc) to machiavelli
-   24. CEO + Collect:
-       - Collection :: Go to Next Plot stays on same plot
-       - Project :: Gridded sample distribution does not create points correctly
 ** And onward
   - Project properties don't load on ceo/project/# until the project is published
   - Remove second call to get-unanalyzed-plot-byid in project.{ftl,js}
@@ -213,7 +192,6 @@
   - [ ] SamplingPointDataGeneratorTest.java (in Collect?) :: test Stefano's project creation code for an upper limit on plots and sample points
   - [ ] collection.js :: debug possible Billy error -> get-unanalyzed-plot-byid calls get-unanalyzed-plot again giving us the wrong plot
   - [ ] imagery-list.json :: move access token parameters out of these files (not secure on github) <- how else can we store them?
-  - [ ] project.ftl :: link to Collect's survey editor using a url like this: http://127.0.0.1:8080/collect/editSurvey.htm?id=710 where id is your projectId
   - [ ] check git log to see which files Stefano edited and make any cleanup changes necessary
   - [ ] institution.js :: uploading institution logos is not handled correctly
 
@@ -242,7 +220,6 @@
   - [ ] Case :: Change snake_case to camelCase in all JS files (i.e., map-utils.js, utils.js, and all JS files that reference their functions)
   - [ ] Code.gov :: Ask about listing CEO under NASA's code.gov entry https://code.gov/#/explore-code/agencies/NASA
   - [ ] Login/Register/Password(-Reset)/Account/Institution Pages :: Reprogram these pages to use the Users REST API (docs on #rfontanarosa)
-  - [ ] Project & Dashboard Pages :: Reprogram these pages to use the Collect REST API (docs and examples on #fefrain)
   - [ ] Project Page :: Add a Re-Open Project button
   - [ ] Project Page :: Implement Invitation-only privacy
   - [ ] Project Page :: Create projects for each of Kel's chipsets 2002-2008 (get sample values from Karis) [[mu4e:msgid:AA01E563-4781-42FE-9FDD-8E9FF4B1DB3C@nasa.gov][email]]
@@ -268,15 +245,6 @@
   - [ ] Project Page :: Enable loading larger CSV-based projects (e.g., 10,000+ plots) (by Friday)
   - [ ] Project Page :: Enable uploading the classification scheme in a CSV
   - [ ] Project Page :: Enable organizing categories hierarchically
-
-  Collect Integration:
-  - [ ] Replace Stefano's for loops in CollectProjects.java with recursions or stream operations
-  - [ ] Proofread CollectProjects.java
-  - [ ] Look at Stefano's Collect code:
-    - org.openforis.collect.metamodel.SimpleSurveyCreationParameters
-    - org.openforis.collect.metamodel.SurveyCreator
-    - org.openforis.collect.io.metadata.samplingpointdata.SamplingPointDataGenerator
-  - [ ] Respond to Alfonso's github tickets
 
   Institution Membership Github Requests:
   - [ ] A user should be able to request joining an organization as either a member OR an admin (currently they are not able to specify desired role)
@@ -313,8 +281,6 @@
   Database Improvements:
   - [ ] Move attribution field from project-list.json to imagery-list.json (set in Projects.java, used in collection.ftl and collection.js)
   - [ ] Eliminate projects with no data
-
-  - Of-Users API Docs from Roberto [[mu4e:msgid:HE1PR05MB145280B25ACA4912E4D9A0C2E95D0@HE1PR05MB1452.eurprd05.prod.outlook.com][email]]
 
   - DG Docs:
     - CQL :: https://dgcsportal.readme.io/docs/4-common-query-language-wms
@@ -387,13 +353,7 @@
   - Create Training System for plot QA/QC (include a button to erase all data from a particular user if their score is terrible).
   - Add "Import template" button for uploading a CSV with sample values to the project management page.
   - Include a link on the project management page for opening the GeoDash to configure its widgets for a project.
-  - Replace the User Id with the User Name in the Downloaded CSV data.
-  - Show colors (red, yellow, green) on the Project page's map when reviewing a project (colors correspond to number of plots completed per area).
-  - Add a Clone Project button to the Project Management Page.
   - Add a Reopen Project button to the Project Management Page.
-  - Change text on Flag Plot button to say "No Imagery"
-  - Add a "Go Back" button to the Data Collection page. (add timestamps to each save assignments or flag plot click and sort your previous plots by timestamp to get the history)
-  - Add a "Skip Plot" button to the Data Collection page.
   - Add a button for toggling imagery
   - Put a timer that counts up on the screen when you are analyzing a plot. Reset this to 0 for each plot.
   - Show the total number of plots that the user has completed on the Collection page (out of all the plots in the project) and their current accuracy score.
@@ -582,19 +542,12 @@
      - Merge Project Button -> Prompt for Second Project and Combine AOI, Records, Entities, Imagery, and Panels
 ** COLLECTION PAGE (was Dashboard)
    - Minimize logos and navbar to a small single line at the top of the screen
-   - Show Basemap Imagery w/ Attribution (including Date) and Standard Map Elements and Interactions
    - Show AOI Boundary, Plot Boundaries, and Sample Points
    - Sidebar: (float over a full screen map like in ecodash and surface-water tools)
-     - Assess Next Plot Button
-     - No-Data for Plot Button (replaces Flag Plot As Bad)
-     - Save Assignments
-     - Skip Button (SIG P1)
-     - Quit Button
      - Render Record Level Attributes as Form Fields (use tabs if too much info)
      - Render Sample Level Attributes as Form Fields (use tabs if too much info)
      - Enable (and Show) Shortcut Keys
      - Toggle Basemap Imagery (use radio buttons)
-     - Button to Push Current Plot and Sample Points to Google Earth KML Server
      - Show Selected EE Panels (use tabs if too much info)
      - Button to Open a New Window Containing Extra EE Panels
      - User Timer (count up)

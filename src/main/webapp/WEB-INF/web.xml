@@ -18,16 +18,6 @@
   </context-param>
 
   <context-param>
-    <param-name>collectApiUrl</param-name>
-    <param-value>http://127.0.0.1:8080/collect/api/</param-value>
-  </context-param>
-
-  <context-param>
-    <param-name>ofUsersApiUrl</param-name>
-    <param-value>http://127.0.0.1:8080/of-users/api/</param-value>
-  </context-param>
-
-  <context-param>
     <param-name>smtpUser</param-name>
     <param-value>collectearth.mail@gmail.com</param-value>
   </context-param>
