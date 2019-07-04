@@ -21,7 +21,7 @@ const blankProject = {
     plotShape: "circle",
     plotSize: "",
     plotSpacing: "",
-    privacyLevel: "users",
+    privacyLevel: "institution",
     sampleDistribution: "random",
     sampleResolution: "",
     samplesPerPlot: "",
@@ -256,7 +256,12 @@ class Project extends React.Component {
             const newSurveyQuestions = convertSampleValuesToSurveyQuestions(templateProject.sampleValues);
 
             this.setState({
-                projectDetails: { ...templateProject, surveyQuestions: newSurveyQuestions, surveyRules: templateProject.surveyRules || [] },
+                projectDetails: {
+                    ...templateProject,
+                    surveyQuestions: newSurveyQuestions,
+                    surveyRules: templateProject.surveyRules || [],
+                    privacyLevel: "institution",
+                },
                 plotList: [],
                 useTemplatePlots: true,
                 useTemplateWidgets: true,
