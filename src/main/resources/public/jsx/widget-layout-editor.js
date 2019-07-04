@@ -47,52 +47,6 @@ class BasicLayout extends React.PureComponent {
         };
     }
 
-    static defaultProps = {
-        isDraggable: true,
-        isResizable: true,
-        className: "layout",
-        items: 0,
-        rowHeight: 300,
-        cols: 12,
-        graphReducer: "Min",
-    };
-
-    getParameterByName = (name, url) => {
-        const regex = new RegExp("[?&]" + name.replace(/[\[\]]/g, "\\$&") + "(=([^&#]*)|&|#|$)");
-        const results = regex.exec(decodeURIComponent(url || window.location.href)); //regex.exec(url);
-        return results
-            ? results[2]
-                ? decodeURIComponent(results[2].replace(/\+/g, " "))
-                : ""
-            : null;
-    };
-
-    getGatewayPath = (widget, collectionName) => {
-        const fts = {
-            "LANDSAT5": "Landsat5Filtered",
-            "LANDSAT7": "Landsat7Filtered",
-            "LANDSAT8": "Landsat8Filtered",
-            "Sentinel2": "FilteredSentinel",
-        };
-        const resourcePath = (widget.filterType && widget.filterType.length > 0)
-            ? fts[widget.filterType]
-            : (widget.ImageAsset && widget.ImageAsset.length > 0)
-                ? "image"
-                : (widget.ImageCollectionAsset && widget.ImageCollectionAsset.length > 0)
-                    ? "ImageCollectionAsset"
-                    : (widget.properties && "ImageCollectionCustom" === widget.properties[0])
-                        ? "meanImageByMosaicCollections"
-                        : (collectionName.trim().length > 0)
-                            ? "cloudMaskImageByMosaicCollection"
-                            : "ImageCollectionbyIndex";
-        return resourcePath;
-    };
-
-    getImageByType = (which) => (which === "getStats")
-            ? "/img/statssample.gif"
-            : (which.toLowerCase().includes("image") || which === "")
-                ? "/img/mapsample.gif"
-                : "/img/graphsample.gif";
 
     componentDidMount() {
         fetch(this.state.theURI + "/id/" + this.state.pid)
@@ -140,6 +94,43 @@ class BasicLayout extends React.PureComponent {
                 alert("Error downloading the imagery list. See console for details.");
             });
     }
+
+    getParameterByName = (name, url) => {
+        const regex = new RegExp("[?&]" + name.replace(/[\[\]]/g, "\\$&") + "(=([^&#]*)|&|#|$)");
+        const results = regex.exec(decodeURIComponent(url || window.location.href)); //regex.exec(url);
+        return results
+            ? results[2]
+                ? decodeURIComponent(results[2].replace(/\+/g, " "))
+                : ""
+            : null;
+    };
+
+    getGatewayPath = (widget, collectionName) => {
+        const fts = {
+            "LANDSAT5": "Landsat5Filtered",
+            "LANDSAT7": "Landsat7Filtered",
+            "LANDSAT8": "Landsat8Filtered",
+            "Sentinel2": "FilteredSentinel",
+        };
+        const resourcePath = (widget.filterType && widget.filterType.length > 0)
+            ? fts[widget.filterType]
+            : (widget.ImageAsset && widget.ImageAsset.length > 0)
+                ? "image"
+                : (widget.ImageCollectionAsset && widget.ImageCollectionAsset.length > 0)
+                    ? "ImageCollectionAsset"
+                    : (widget.properties && "ImageCollectionCustom" === widget.properties[0])
+                        ? "meanImageByMosaicCollections"
+                        : (collectionName.trim().length > 0)
+                            ? "cloudMaskImageByMosaicCollection"
+                            : "ImageCollectionbyIndex";
+        return resourcePath;
+    };
+
+    getImageByType = (which) => (which === "getStats")
+            ? "/img/statssample.gif"
+            : (which.toLowerCase().includes("image") || which === "")
+                ? "/img/mapsample.gif"
+                : "/img/graphsample.gif";
 
     checkWidgetStructure = (updatedWidgets) => {
         let changed = false;
@@ -270,19 +261,19 @@ class BasicLayout extends React.PureComponent {
     };
 
     addCustomImagery = imagery => {
-        if(this.state.addCustomImagery === true) {
+        if (this.state.addCustomImagery === true) {
             fetch(this.props.documentRoot + "/add-geodash-imagery",
-                {
-                    method: "post",
-                    headers: {
-                        "Accept": "application/json",
-                        "Content-Type": "application/json",
-                    },
-                    body: JSON.stringify(imagery),
-                })
+                  {
+                      method: "post",
+                      headers: {
+                          "Accept": "application/json",
+                          "Content-Type": "application/json",
+                      },
+                      body: JSON.stringify(imagery),
+                  })
                 .then(response => {
                     if (!response.ok) {
-                        alert("Error adding custom imagery to institution. See console for details.")
+                        alert("Error adding custom imagery to institution. See console for details.");
                         console.log(response);
                     }
                 });
@@ -1075,17 +1066,17 @@ class BasicLayout extends React.PureComponent {
     </div>;
 
     getCustomImageryCheckbox = () => <div className="form-group">
-            <label htmlFor="addCustomImagery">Add Asset to institution basemaps</label>
-            <input
-                type="checkbox"
-                name="addCustomImagery"
-                id="addCustomImagery"
-                value={this.state.addCustomImagery}
-                className="form-control"
-                onChange={() => this.setState({ addCustomImagery: event.target.checked })}
-                style={{width:"auto", display: "inline-block", marginLeft: "8px"}}
-            />
-        </div>;
+        <label htmlFor="addCustomImagery">Add Asset to institution basemaps</label>
+        <input
+            type="checkbox"
+            name="addCustomImagery"
+            id="addCustomImagery"
+            value={this.state.addCustomImagery}
+            className="form-control"
+            onChange={() => this.setState({ addCustomImagery: event.target.checked })}
+            style={{ width:"auto", display: "inline-block", marginLeft: "8px" }}
+        />
+    </div>;
 
     getNextStepButton = () => this.state.selectedWidgetType === "DualImageCollection"
         ?
@@ -1132,7 +1123,8 @@ class BasicLayout extends React.PureComponent {
             onChange={this.onEndDateChanged}
             value={this.state.endDate}
             placeholder={"YYYY-MM-DD"}
-            id="eDate_new_cooked"/>
+            id="eDate_new_cooked"
+        />
     </div>;
 
     getDualLayerDateRangeControl = () => {
