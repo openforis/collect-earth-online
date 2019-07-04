@@ -397,7 +397,7 @@ function InstitutionFilter(props) {
                                 checked={props.showEmptyInstitutions}
                                 onChange={props.toggleShowEmptyInstitutions}
                             />
-                            Show Empty Inst
+                            Show Empty Institutions
                         </div>
                     </div>
                 </Fragment>
