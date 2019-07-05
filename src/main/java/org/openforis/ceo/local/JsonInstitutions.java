@@ -127,7 +127,7 @@ public class JsonInstitutions implements Institutions {
             institutions.add(newInstitution);
             writeJsonFile("institution-list.json", institutions);
 
-            return newInstitution.toString();
+            return newInstitutionId + "";
         } catch (Exception e) {
             throw new RuntimeException(e);
         }

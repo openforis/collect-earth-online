@@ -174,7 +174,7 @@ public class PostgresInstitutions implements Institutions {
                             adminPstmt.execute();
                         }
                     }
-                    return getInstitutionById(newInstitutionId);
+                    return newInstitutionId + "";
                 } else {
                     return "";
                 }
@@ -240,11 +240,10 @@ public class PostgresInstitutions implements Institutions {
 
             pstmt.setInt(1, institutionId);
             pstmt.execute();
-            return getInstitutionById(institutionId);
         } catch (SQLException e) {
             System.out.println(e.getMessage());
-            return "";
         }
+        return "";
     }
 
 }
