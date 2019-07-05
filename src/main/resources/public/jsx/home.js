@@ -294,7 +294,7 @@ class SideBar extends React.Component {
                                 />
                             )}
                         </ul>
-                        : <h3 className="p-3">No Institutions Found...</h3>
+                        : <h3 className="p-3">{this.state.filterInstitution ? "No Institutions Found..." : "No Projects Found..."}</h3>
                     : <h3 className="p-3">Loading data...</h3> }
             </div>
             ) : (
