@@ -112,25 +112,18 @@ class BasicLayout extends React.PureComponent {
             "LANDSAT8": "Landsat8Filtered",
             "Sentinel2": "FilteredSentinel",
         };
-        const resourcePath = (widget.filterType && widget.filterType.length > 0)
-            ? fts[widget.filterType]
-            : (widget.ImageAsset && widget.ImageAsset.length > 0)
-                ? "image"
-                : (widget.ImageCollectionAsset && widget.ImageCollectionAsset.length > 0)
-                    ? "ImageCollectionAsset"
-                    : (widget.properties && "ImageCollectionCustom" === widget.properties[0])
-                        ? "meanImageByMosaicCollections"
-                        : (collectionName.trim().length > 0)
-                            ? "cloudMaskImageByMosaicCollection"
-                            : "ImageCollectionbyIndex";
-        return resourcePath;
+        return (widget.filterType && widget.filterType.length > 0) ? fts[widget.filterType]
+            : (widget.ImageAsset && widget.ImageAsset.length > 0) ? "image"
+            : (widget.ImageCollectionAsset && widget.ImageCollectionAsset.length > 0) ? "ImageCollectionAsset"
+            : (widget.properties && "ImageCollectionCustom" === widget.properties[0]) ? "meanImageByMosaicCollections"
+            : (collectionName.trim().length > 0) ? "cloudMaskImageByMosaicCollection"
+            : "ImageCollectionbyIndex";
     };
 
-    getImageByType = (which) => (which === "getStats")
-            ? "/img/statssample.gif"
-            : (which.toLowerCase().includes("image") || which === "")
-                ? "/img/mapsample.gif"
-                : "/img/graphsample.gif";
+    getImageByType = (which) =>
+        (which === "getStats") ? "/img/statssample.gif"
+        : (which.toLowerCase().includes("image") || which === "") ? "/img/mapsample.gif"
+        : "/img/graphsample.gif";
 
     checkWidgetStructure = (updatedWidgets) => {
         let changed = false;
