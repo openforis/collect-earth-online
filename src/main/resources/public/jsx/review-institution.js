@@ -185,7 +185,9 @@ class InstitutionDescription extends React.Component {
     });
 
     deleteInstitution = () => {
-        if (confirm("This action will also delete all of the projects associated with this institutions.\nThis action is irreversible.\n\nDo you REALLY want to delete this institution?  ")) {
+        if (confirm("This action will also delete all of the projects associated with this institutions.\n\n"
+                    + "This action is irreversible.\n\n"
+                    + "Do you REALLY want to delete this institution?")) {
             fetch(this.props.documentRoot + "/archive-institution/" + this.props.institutionId,
                   {
                       method: "POST",
