@@ -88,8 +88,9 @@ public class Server implements SparkApplication {
             request.session().attribute("flash_message", flashMessage != null ? flashMessage : "");
         });
 
-        // Block cross traffic for API
+        // Block cross traffic for proxy route
         before("/get-tile", (request, response) -> {
+            // "referer" is spelled wrong, but is the correct name for this header.
             if (request.headers("referer") == null || !request.headers("referer").contains(request.host())) {
                 halt(403, "Forbidden!");
             }

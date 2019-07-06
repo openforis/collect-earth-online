@@ -23,18 +23,17 @@ public class Proxy {
         var z = req.queryParamOrDefault("z", "");
 
         var sourceConfig = imagery.getImagerySourceConfig(getQParamNoNull(req, "imageryId"));
-        var source = sourceConfig.get("type").getAsString();
+        var sourceType = sourceConfig.get("type").getAsString();
 
-        if (List.of("EarthWatch", "DigitalGlobe").contains(source)) {
+        if (List.of("EarthWatch", "DigitalGlobe").contains(sourceType)) {
             var connectId = sourceConfig.get("connectId").getAsString();
-            var baseUrl = "https://earthwatch.digitalglobe.com/earthservice/tmsaccess/tms/1.0.0/DigitalGlobe:ImageryTileService@EPSG:3857@jpg/{z}/{x}/{y}.jpg?connectId=";
+            var baseUrl   = "https://earthwatch.digitalglobe.com/earthservice/tmsaccess/tms/1.0.0/DigitalGlobe:ImageryTileService@EPSG:3857@jpg/{z}/{x}/{y}.jpg?connectId=";
             return baseUrl.replace("{z}", z).replace("{x}", x).replace("{y}", y) + connectId;
-        } else if (source.equals("Planet")){
-            var apiKey = sourceConfig.get("accessToken").getAsString();
-            var year   = sourceConfig.get("year").getAsString();
-            var month  = sourceConfig.get("month").getAsString();
-            var tile   = req.queryParamOrDefault("tile", "");
-
+        } else if (sourceType.equals("Planet")){
+            var apiKey  = sourceConfig.get("accessToken").getAsString();
+            var year    = sourceConfig.get("year").getAsString();
+            var month   = sourceConfig.get("month").getAsString();
+            var tile    = req.queryParamOrDefault("tile", "");
             var baseUrl = "https://tiles" + tile
                           + ".planet.com/basemaps/v1/planet-tiles/global_monthly_"
                           + year + "_" + month
@@ -47,17 +46,17 @@ public class Proxy {
 
     public static HttpServletResponse proxyImagery(Request req, Response res, Imagery imagery) {
         try {
-            var url = buildUrl(req, imagery);
-            var request = prepareGetRequest(url);
+            var url      = buildUrl(req, imagery);
+            var request  = prepareGetRequest(url);
             var response = request.execute();
             res.type("image/jpeg");
             res.status(response.getStatusCode());
             if (res.status() == 200){
-                HttpServletResponse raw = res.raw();
-                raw.getOutputStream().write(response.getContent().readAllBytes());
-                raw.getOutputStream().flush();
-                raw.getOutputStream().close();
-                return raw;
+                HttpServletResponse rawResponse = res.raw();
+                rawResponse.getOutputStream().write(response.getContent().readAllBytes());
+                rawResponse.getOutputStream().flush();
+                rawResponse.getOutputStream().close();
+                return rawResponse;
             } else {
                 res.body(response.getContent().toString());
                 return res.raw();

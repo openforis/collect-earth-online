@@ -66,7 +66,6 @@ public class PostgresImagery implements Imagery {
     public JsonObject getImagerySourceConfig(Integer imageryId) {
         try (var conn = connect();
              var pstmt = conn.prepareStatement("SELECT * FROM imagery WHERE imagery_uid=?")) {
-
                 pstmt.setInt(1, imageryId);
             try (var rs = pstmt.executeQuery()) {
                 if (rs.next()) {
