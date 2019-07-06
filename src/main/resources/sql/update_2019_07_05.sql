@@ -11,7 +11,6 @@ CREATE OR REPLACE FUNCTION delete_project(_project_uid integer, _archive boolean
             AND project_uid = _project_uid
     );
 
-
     IF _archive THEN
         PERFORM archive_project(_project_uid);
     ELSE
