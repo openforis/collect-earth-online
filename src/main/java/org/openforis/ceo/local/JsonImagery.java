@@ -23,9 +23,9 @@ public class JsonImagery implements Imagery {
         var imageryList = elementToArray(readJsonFile("imagery-list.json"));
         var filteredImagery = (institutionId == null || institutionId.isEmpty())
             ? filterJsonArray(imageryList,
-                                   imagery -> imagery.get("visibility").getAsString().equals("public"))
+                              imagery -> imagery.get("visibility").getAsString().equals("public"))
             : filterJsonArray(imageryList,
-                                   imagery -> imagery.get("visibility").getAsString().equals("public")
+                              imagery -> imagery.get("visibility").getAsString().equals("public")
                                            || imagery.get("institution").getAsString().equals(institutionId));
         return mapJsonArray(filteredImagery,
                             imagery -> {
