@@ -303,7 +303,6 @@ class NewQuestionDesigner extends React.Component {
                                 </select>
                             </td>
                         </tr>
-
                         <tr>
                             <td>
                                 <label htmlFor="value-answer">Parent Answer:</label>
