@@ -993,9 +993,8 @@ public class PostgresProjects implements Projects {
             deleteFiles(newProjectId);
             deleteShapeFileDirectories(newProjectId);
             try (var conn = connect()) {
-                try (var pstmt = conn.prepareStatement("SELECT delete_project(?,?)")) {
+                try (var pstmt = conn.prepareStatement("SELECT delete_project(?)")) {
                     pstmt.setInt(1, newProjectId);
-                    pstmt.setBoolean(2, true);
                     pstmt.execute();
                 }
             } catch (SQLException sql) {
