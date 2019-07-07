@@ -104,7 +104,7 @@ class MapPanel extends React.Component {
                     return imagery.title === "DigitalGlobeRecentImagery";
                 }
             );
-            const mapConfig = mercator.createMap("home-map-pane", [70, 15], 2.1, [homePageLayer]);
+            const mapConfig = mercator.createMap("home-map-pane", [70, 15], 2.1, [homePageLayer], this.props.documentRoot);
             mercator.setVisibleLayer(mapConfig, homePageLayer.title);
             this.setState({ mapConfig: mapConfig });
         }

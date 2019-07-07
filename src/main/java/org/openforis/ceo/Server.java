@@ -6,6 +6,7 @@ import static spark.Spark.after;
 import static spark.Spark.before;
 import static spark.Spark.exception;
 import static spark.Spark.get;
+import static spark.Spark.halt;
 import static spark.Spark.notFound;
 import static spark.Spark.port;
 import static spark.Spark.post;
@@ -87,6 +88,14 @@ public class Server implements SparkApplication {
             request.session().attribute("flash_message", flashMessage != null ? flashMessage : "");
         });
 
+        // Block cross traffic for proxy route
+        before("/get-tile", (request, response) -> {
+            // "referer" is spelled wrong, but is the correct name for this header.
+            if (request.headers("referer") == null || !request.headers("referer").contains(request.host())) {
+                halt(403, "Forbidden!");
+            }
+        });
+
         // GZIP all responses to improve download speeds
         after((request, response) -> { response.header("Content-Encoding", "gzip"); });
 
@@ -110,6 +119,7 @@ public class Server implements SparkApplication {
         get("/review-project/:id",                    (req, res) -> Views.reviewProject(freemarker).handle(projects.redirectNoEdit(req, res), res));
         get("/support",                               Views.support(freemarker));
         get("/widget-layout-editor",                  Views.editWidgetLayout(freemarker));
+        get("/get-tile",                              (req, res) -> Proxy.proxyImagery(req, res, imagery));
 
         // Routing Table: HTML pages (with side effects)
         get("/logout",                                (req, res) -> Views.home(freemarker).handle(users.logout(req, res), res));

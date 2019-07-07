@@ -309,7 +309,7 @@ class Project extends React.Component {
     };
 
     initProjectMap = () => {
-        const newMapConfig = mercator.createMap("project-map", [0.0, 0.0], 1, this.state.imageryList);
+        const newMapConfig = mercator.createMap("project-map", [0.0, 0.0], 1, this.state.imageryList, this.props.documentRoot);
         mercator.setVisibleLayer(newMapConfig, this.state.imageryList[0].title);
         this.setState({ mapConfig: newMapConfig });
     };

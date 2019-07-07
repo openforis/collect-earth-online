@@ -216,7 +216,7 @@ class Project extends React.Component {
     };
 
     initProjectMap = () => {
-        this.setState({ mapConfig: mercator.createMap("project-map", [0.0, 0.0], 1, this.state.imageryList) });
+        this.setState({ mapConfig: mercator.createMap("project-map", [0.0, 0.0], 1, this.state.imageryList, this.props.documentRoot) });
     };
 
     showProjectMap = () => {

@@ -187,7 +187,7 @@ class Collection extends React.Component {
     };
 
     initializeProjectMap = () => {
-        const mapConfig = mercator.createMap("image-analysis-pane", [0.0, 0.0], 1, this.state.imageryList);
+        const mapConfig = mercator.createMap("image-analysis-pane", [0.0, 0.0], 1, this.state.imageryList, this.props.documentRoot);
         mercator.addVectorLayer(mapConfig,
                                 "currentAOI",
                                 mercator.geometryToVectorSource(mercator.parseGeoJson(this.state.currentProject.boundary, true)),

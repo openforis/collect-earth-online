@@ -102,4 +102,9 @@ public class CollectImagery implements Imagery {
         return "";
     }
 
+    @Override
+    public JsonObject getImagerySourceConfig(Integer imageryId) {
+        return null;
+    }
+
 }
