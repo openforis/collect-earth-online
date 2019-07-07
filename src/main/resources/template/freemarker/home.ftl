@@ -12,8 +12,7 @@
  window.onload = function () {
      home.renderHomePage({
          documentRoot: "${root}",
-         userId:       "${userid}",
-         userName:     "${username}"
+         userId:       "${userid}"
      });
  };
 </script>

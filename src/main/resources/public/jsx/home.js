@@ -70,7 +70,6 @@ class Home extends React.Component {
                             projects={this.state.projects}
                             showSidePanel={this.state.showSidePanel}
                             userId={this.props.userId}
-                            userName={this.props.userName}
                         />
                         <MapPanel
                             documentRoot={this.props.documentRoot}
@@ -240,8 +239,7 @@ class SideBar extends React.Component {
         const filterHasProj = (inst) => filteredProjects.some(proj => inst.id === proj.institution)
                                         || this.state.showEmptyInstitutions
                                         || inst.admins.includes(this.props.userId)
-                                        || inst.members.includes(this.props.userId)
-                                        || inst.pending.includes(this.props.userId);
+                                        || inst.members.includes(this.props.userId);
 
         const filteredInstitutions = this.props.institutions
             // Filtering by institution, contains search string and contains projects or user is member
@@ -259,7 +257,7 @@ class SideBar extends React.Component {
                 <div className="bg-darkgreen">
                     <h1 className="tree_label" id="panelTitle">Institutions</h1>
                 </div>
-                {this.props.userName &&
+                {this.props.userId > 0 &&
                     <CreateInstitutionButton documentRoot={this.props.documentRoot}/>
                 }
                 <InstitutionFilter
@@ -600,7 +598,6 @@ export function renderHomePage(args) {
         <Home
             documentRoot={args.documentRoot}
             userId={args.userId === "" ? -1 : parseInt(args.userId)}
-            userName={args.userName}
         />,
         document.getElementById("home")
     );
