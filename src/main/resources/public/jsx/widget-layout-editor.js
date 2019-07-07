@@ -1693,8 +1693,8 @@ class BasicLayout extends React.PureComponent {
                 </button>
                 <ReactGridLayout
                     {...this.props} // FIXME, the only prop left is documentRoot, ill bet the ReactGridLayout does not need that.
-                    isDraggable
-                    isResizable
+                    isDraggable={true}
+                    isResizable={true}
                     className={"layout"}
                     items={0}
                     rowHeight={300}
