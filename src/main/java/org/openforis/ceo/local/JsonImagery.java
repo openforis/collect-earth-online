@@ -11,8 +11,8 @@ import static org.openforis.ceo.utils.JsonUtils.readJsonFile;
 import static org.openforis.ceo.utils.JsonUtils.writeJsonFile;
 
 import com.google.gson.JsonObject;
-import org.openforis.ceo.db_api.Imagery;
 import java.util.List;
+import org.openforis.ceo.db_api.Imagery;
 import spark.Request;
 import spark.Response;
 
@@ -33,7 +33,6 @@ public class JsonImagery implements Imagery {
                                 // Return only necessary fields for types we proxy
                                 if (List.of("DigitalGlobe", "EarthWatch", "Planet").contains(sourceConfig.get("type").getAsString())) {
                                     var cleanSource = new JsonObject();
-                                    cleanSource.addProperty("imageryId", imagery.get("id").getAsInt()); // FIXME, update mercator.openlayers to use imagery Id instead of title, then remove this
                                     cleanSource.add("type", sourceConfig.get("type"));
                                     imagery.add("sourceConfig", cleanSource);
                                     return imagery;

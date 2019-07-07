@@ -45,11 +45,10 @@ public class PostgresImagery implements Imagery {
                     // Return only necessary fields for types we proxy
                     if (List.of("DigitalGlobe", "EarthWatch", "Planet").contains(sourceConfig.get("type").getAsString())) {
                         var cleanSource = new JsonObject();
-                        cleanSource.addProperty("imageryId", rs.getInt("imagery_id")); // FIXME, update mercator.openlayers to use imagery Id instead of title, then remove this
                         cleanSource.add("type", sourceConfig.get("type"));
                         newImagery.add("sourceConfig", cleanSource);
                     } else {
-                        newImagery.add("sourceConfig", parseJson(rs.getString("source_config")).getAsJsonObject());
+                        newImagery.add("sourceConfig", sourceConfig);
                     };
 
                     imageryArray.add(newImagery);

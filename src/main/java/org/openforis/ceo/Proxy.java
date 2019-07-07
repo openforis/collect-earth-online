@@ -29,10 +29,10 @@ public class Proxy {
             var connectId = sourceConfig.get("connectId").getAsString();
             var baseUrl   = "https://earthwatch.digitalglobe.com/earthservice/tmsaccess/tms/1.0.0/DigitalGlobe:ImageryTileService@EPSG:3857@jpg/{z}/{x}/{y}.jpg?connectId=";
             return baseUrl.replace("{z}", z).replace("{x}", x).replace("{y}", y) + connectId;
-        } else if (sourceType.equals("Planet")){
+        } else if (sourceType.equals("Planet")) {
             var apiKey  = sourceConfig.get("accessToken").getAsString();
-            var year    = sourceConfig.get("year").getAsString();
-            var month   = sourceConfig.get("month").getAsString();
+            var year    = req.queryParamOrDefault("year", "");
+            var month   = req.queryParamOrDefault("month", "");
             var tile    = req.queryParamOrDefault("tile", "");
             var baseUrl = "https://tiles" + tile
                           + ".planet.com/basemaps/v1/planet-tiles/global_monthly_"
@@ -49,10 +49,10 @@ public class Proxy {
             var url      = buildUrl(req, imagery);
             var request  = prepareGetRequest(url);
             var response = request.execute();
-            res.type("image/jpeg");
+            res.type(response.getMediaType().toString());
             res.status(response.getStatusCode());
-            if (res.status() == 200){
-                HttpServletResponse rawResponse = res.raw();
+            if (res.status() == 200) {
+                var rawResponse = res.raw();
                 rawResponse.getOutputStream().write(response.getContent().readAllBytes());
                 rawResponse.getOutputStream().flush();
                 rawResponse.getOutputStream().close();
@@ -67,7 +67,7 @@ public class Proxy {
             return res.raw();
         } catch (IOException e) {
             System.out.println(e.getMessage());
-            throw new RuntimeException("Failed to write respose to output stream", e);
+            throw new RuntimeException("Failed to write response to output stream.", e);
         }
     }
 }
