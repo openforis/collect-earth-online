@@ -174,8 +174,8 @@ class Project extends React.Component {
             alert("A survey must include at least one question.");
             return false;
 
-        } else if (projectDetails.surveyQuestions.some(sq => sq.answers.length === 1)) {
-            alert("All survey questions must contain at least one answer.");
+        } else if (projectDetails.surveyQuestions.some(sq => sq.answers.length === 0)) {
+            alert("All survey questions must contain at least one answer");
             return false;
 
         } else {
