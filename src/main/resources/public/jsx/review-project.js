@@ -129,18 +129,18 @@ class Project extends React.Component {
     };
 
     archiveProject = () => {
-        if (confirm("Do you REALLY want to archive this project?!")) {
+        if (confirm("Do you REALLY want to delete this project? This operation cannot be undone.")) {
             fetch(this.props.documentRoot + "/archive-project/" + this.state.projectDetails.id,
                   {
                       method: "POST",
                   })
                 .then(response => {
                     if (response.ok) {
-                        alert("Project " + this.state.projectDetails.id + " has been archived.");
+                        alert("Project " + this.state.projectDetails.id + " has been deleted.");
                         window.location = this.props.documentRoot + "/home";
                     } else {
                         console.log(response);
-                        alert("Error archiving project. See console for details.");
+                        alert("Error deleting project. See console for details.");
                     }
                 });
         }
@@ -216,7 +216,7 @@ class Project extends React.Component {
     };
 
     initProjectMap = () => {
-        this.setState({ mapConfig: mercator.createMap("project-map", [0.0, 0.0], 1, this.state.imageryList) });
+        this.setState({ mapConfig: mercator.createMap("project-map", [0.0, 0.0], 1, this.state.imageryList, this.props.documentRoot) });
     };
 
     showProjectMap = () => {
@@ -352,7 +352,6 @@ class ProjectStats extends React.Component {
         const {
             stats : {
                 analyzedPlots,
-                archivedDate,
                 closedDate,
                 contributors,
                 createdDate,
@@ -393,14 +392,6 @@ class ProjectStats extends React.Component {
                                                         : "Open")}
                                 </span>
                             </div>
-                            {availability === "archived" &&
-                                <div>
-                                    Date Archived
-                                    <span className="badge badge-pill bg-lightgreen ml-3">
-                                        {archivedDate || "Unknown"}
-                                    </span>
-                                </div>
-                            }
                         </div>
                     </div>
 
@@ -553,8 +544,8 @@ function ProjectManagement(props) {
         nonexistent: "Create",
         unpublished: "Publish",
         published: "Close",
-        closed: "Archive",
-        archived: "Archive",
+        closed: "Delete",
+        archived: "Delete",
     };
     return (
         <div id="project-management">

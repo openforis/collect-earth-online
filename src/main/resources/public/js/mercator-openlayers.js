@@ -78,38 +78,33 @@ mercator.getViewRadius = function (mapConfig) {
 
 // [Pure] Returns a new ol.source.* object or null if the sourceConfig
 // is invalid.
-mercator.createSource = function (sourceConfig) {
-    if (sourceConfig.type == "DigitalGlobe") {
+mercator.createSource = function (sourceConfig, imageryId, documentRoot) {
+    if (["DigitalGlobe", "EarthWatch"].includes(sourceConfig.type)) {
         return new ol.source.XYZ({
-            url: "https://api.tiles.mapbox.com/v4/" + sourceConfig.imageryId
-                                  + "/{z}/{x}/{y}.png?access_token=" + sourceConfig.accessToken,
+            url: documentRoot + "/get-tile?imageryId=" + imageryId + "&z={z}&x={x}&y={-y}",
             attribution: "© DigitalGlobe, Inc",
         });
-    } else if (sourceConfig.type == "EarthWatch") {
+    } else if (sourceConfig.type === "Planet") {
         return new ol.source.XYZ({
-            url: "https://earthwatch.digitalglobe.com/earthservice/tmsaccess/tms/1.0.0/DigitalGlobe:ImageryTileService@EPSG:3857@jpg/{z}/{x}/{-y}.jpg?connectId=" + sourceConfig.connectId,
-            attribution: "© DigitalGlobe, Inc",
-        });
-    } else if (sourceConfig.type == "Planet") {
-        return new ol.source.XYZ({
-            url: "https://tiles{0-3}.planet.com/basemaps/v1/planet-tiles/global_monthly_"
-                                  + sourceConfig.year + "_" + sourceConfig.month + "_mosaic/gmap/{z}/{x}/{y}.png?api_key="
-                                  + sourceConfig.accessToken,
+            url: documentRoot
+                 + "/get-tile?imageryId=" + imageryId
+                 + "&z={z}&x={x}&y={y}&tile={0-3}&month=" + sourceConfig.month
+                 + "&year=" + sourceConfig.year,
             attribution: "© Planet Labs, Inc",
         });
-    } else if (sourceConfig.type == "BingMaps") {
+    } else if (sourceConfig.type === "BingMaps") {
         return new ol.source.BingMaps({
             imagerySet: sourceConfig.imageryId,
             key: sourceConfig.accessToken,
             maxZoom: 19,
         });
-    } else if (sourceConfig.type == "GeoServer") {
+    } else if (sourceConfig.type === "GeoServer") {
         return new ol.source.TileWMS({
             serverType: "geoserver",
             url: sourceConfig.geoserverUrl,
             params: sourceConfig.geoserverParams,
         });
-    } else if (sourceConfig.type == "GeeGateway") {
+    } else if (sourceConfig.type === "GeeGateway") {
         //get variables and make ajax call to get mapid and token
         //then add xyz layer
         //const fts = {'LANDSAT5': 'Landsat5Filtered', 'LANDSAT7': 'Landsat7Filtered', 'LANDSAT8':'Landsat8Filtered', 'Sentinel2': 'FilteredSentinel'};
@@ -188,9 +183,9 @@ mercator.createSource = function (sourceConfig) {
 
 // [Pure] Returns a new ol.layer.Tile object or null if the
 // layerConfig is invalid.
-mercator.createLayer = function (layerConfig) {
+mercator.createLayer = function (layerConfig, documentRoot) {
     layerConfig.sourceConfig.create = true;
-    const source = mercator.createSource(layerConfig.sourceConfig);
+    const source = mercator.createSource(layerConfig.sourceConfig, layerConfig.id, documentRoot);
     if (source == null) {
         return null;
     } else if (layerConfig.extent != null) {
@@ -238,7 +233,7 @@ mercator.verifyLayerConfig = function (layerConfig) {
     return layerKeys.includes("title")
         && layerKeys.includes("extent")
         && layerKeys.includes("sourceConfig")
-        && mercator.createSource(layerConfig.sourceConfig) != null;
+        && mercator.createSource(layerConfig.sourceConfig, layerConfig.id, "") != null;
 };
 
 // [Pure] Predicate
@@ -292,14 +287,14 @@ mercator.verifyMapInputs = function (divName, centerCoords, zoomLevel, layerConf
 //                                                     geoserverParams: {VERSION: "1.1.1",
 //                                                                       LAYERS: "DigitalGlobe:Imagery",
 //                                                                       CONNECTID: "your-digital-globe-connect-id-here"}}}]);
-mercator.createMap = function (divName, centerCoords, zoomLevel, layerConfigs) {
+mercator.createMap = function (divName, centerCoords, zoomLevel, layerConfigs, documentRoot) {
     const errorMsg = mercator.verifyMapInputs(divName, centerCoords, zoomLevel, layerConfigs);
     if (errorMsg) {
         console.error(errorMsg);
         return null;
     } else {
         // Create each of the layers that will be shown in the map from layerConfigs
-        const layers = layerConfigs.map(mercator.createLayer);
+        const layers = layerConfigs.map(l => mercator.createLayer(l, documentRoot));
 
         // Add a scale line to the default map controls
         const controls = ol.control.defaults().extend([new ol.control.ScaleLine()]);
@@ -328,10 +323,11 @@ mercator.createMap = function (divName, centerCoords, zoomLevel, layerConfigs) {
                 zoomLevel: zoomLevel,
                 layerConfigs: layerConfigs,
             },
-            layers: map.getLayers(),
             controls: controls,
-            view: view,
+            documentRoot: documentRoot,
+            layers: map.getLayers(),
             map: map,
+            view: view,
         };
     }
 };
@@ -367,7 +363,8 @@ mercator.resetMap = function (mapConfig) {
     return mercator.createMap(mapConfig.init.divName,
                               mapConfig.init.centerCoords,
                               mapConfig.init.zoomLevel,
-                              mapConfig.init.layerConfigs);
+                              mapConfig.init.layerConfigs,
+                              mapConfig.documentRoot);
 };
 
 /*****************************************************************************
@@ -419,7 +416,7 @@ mercator.updateLayerSource = function (mapConfig, layerTitle, transformer, calle
     const layer = mercator.getLayerByTitle(mapConfig, layerTitle);
     const layerConfig = mercator.getLayerConfigByTitle(mapConfig, layerTitle);
     if (layer && layerConfig) {
-        layer.setSource(mercator.createSource(transformer.call(caller, layerConfig.sourceConfig)));
+        layer.setSource(mercator.createSource(transformer.call(caller, layerConfig.sourceConfig), layerConfig.id, mapConfig.documentRoot));
     }
 };
 
