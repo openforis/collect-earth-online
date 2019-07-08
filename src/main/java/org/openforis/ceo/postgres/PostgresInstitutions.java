@@ -240,10 +240,11 @@ public class PostgresInstitutions implements Institutions {
 
             pstmt.setInt(1, institutionId);
             pstmt.execute();
+            return institutionId + "";
         } catch (SQLException e) {
             System.out.println(e.getMessage());
+            return "";
         }
-        return "";
     }
 
 }

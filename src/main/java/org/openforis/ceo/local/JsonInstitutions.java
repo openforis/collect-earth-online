@@ -14,7 +14,6 @@ import static org.openforis.ceo.Views.redirectAuth;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
-
 import java.time.LocalDate;
 import java.util.Date;
 import java.util.Optional;
