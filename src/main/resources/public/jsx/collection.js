@@ -820,7 +820,8 @@ class Collection extends React.Component {
     rulesViolated = (questionToSet, answerId, answerText) =>
         this.state.currentProject.surveyRules
         && this.state.currentProject.surveyRules
-            .map(surveyRule => this.ruleFunctions[surveyRule.ruleType](surveyRule, questionToSet, answerId, answerText));
+            .map(surveyRule => this.ruleFunctions[surveyRule.ruleType](surveyRule, questionToSet, answerId, answerText))
+            .find(msg => msg);
 
     checkSelection = (sampleIds, ruleError, questionToSet) => {
         if (!this.plotHasSamples(this.state.currentPlot)) {
