@@ -817,10 +817,11 @@ class Collection extends React.Component {
         "incompatible-answers": this.checkRuleIncompatibleAnswers,
     };
 
-    rulesViolated = (questionToSet, answerId, answerText) => this.state.currentProject.surveyRules &&
+    rulesViolated = (questionToSet, answerId, answerText) =>
         this.state.currentProject.surveyRules
+        && this.state.currentProject.surveyRules
             .map(surveyRule => this.ruleFunctions[surveyRule.ruleType](surveyRule, questionToSet, answerId, answerText))
-            .find(msg => msg !== null);
+            .find(msg => msg);
 
     checkSelection = (sampleIds, ruleError, questionToSet) => {
         if (!this.plotHasSamples(this.state.currentPlot)) {
@@ -880,7 +881,6 @@ class Collection extends React.Component {
                 userImages: { ...this.state.userImages, ...newUserImages },
                 selectedQuestion: questionToSet,
             });
-            return true;
         }
     };
 
