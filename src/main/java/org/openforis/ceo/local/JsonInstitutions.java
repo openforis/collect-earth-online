@@ -35,7 +35,8 @@ public class JsonInstitutions implements Institutions {
         var matchingInstitution = getInstitutionById(institutionId);
         if (matchingInstitution.isPresent()) {
             final var admins = matchingInstitution.get().has("admins") ? matchingInstitution.get().get("admins").getAsJsonArray() : new JsonArray();
-            return admins.contains(parseJson(userId));
+            final var archived = matchingInstitution.get().has("archived") ? matchingInstitution.get().get("archived").getAsBoolean() : true;
+            return admins.contains(parseJson(userId)) && !archived;
         } else {
             return false;
         }
