@@ -70,7 +70,6 @@ class Home extends React.Component {
                             projects={this.state.projects}
                             showSidePanel={this.state.showSidePanel}
                             userId={this.props.userId}
-                            userName={this.props.userName}
                         />
                         <MapPanel
                             documentRoot={this.props.documentRoot}
@@ -78,7 +77,6 @@ class Home extends React.Component {
                             projects={this.state.projects}
                             showSidePanel={this.state.showSidePanel}
                             toggleSidebar={this.toggleSidebar}
-                            userId={this.props.userId}
                         />
                     </div>
                 </div>
@@ -104,7 +102,7 @@ class MapPanel extends React.Component {
                     return imagery.title === "DigitalGlobeRecentImagery";
                 }
             );
-            const mapConfig = mercator.createMap("home-map-pane", [70, 15], 2.1, [homePageLayer]);
+            const mapConfig = mercator.createMap("home-map-pane", [70, 15], 2.1, [homePageLayer], this.props.documentRoot);
             mercator.setVisibleLayer(mapConfig, homePageLayer.title);
             this.setState({ mapConfig: mapConfig });
         }
@@ -208,7 +206,7 @@ class SideBar extends React.Component {
             filterInstitution: true,
             useFirstLetter: false,
             sortByNumber: true,
-            containsProjects: false,
+            showEmptyInstitutions: false,
             showFilters: false,
         };
     }
@@ -217,7 +215,7 @@ class SideBar extends React.Component {
 
     toggleFilterInstitution = () => this.setState({ filterInstitution: !this.state.filterInstitution });
 
-    toggleContainsProjects = () => this.setState({ containsProjects: !this.state.containsProjects });
+    toggleShowEmptyInstitutions = () => this.setState({ showEmptyInstitutions: !this.state.showEmptyInstitutions });
 
     toggleSortByNumber = () => this.setState({ sortByNumber: !this.state.sortByNumber });
 
@@ -234,19 +232,24 @@ class SideBar extends React.Component {
                                         ? proj.name.toLocaleLowerCase().startsWith(filterTextLower)
                                         : proj.name.toLocaleLowerCase().includes(filterTextLower)));
 
-        const filteredInstitutions = this.props.institutions
-            .filter(inst => !this.state.filterInstitution
-                                    || (this.state.useFirstLetter
+        const filterString = (inst) => this.state.useFirstLetter
                                         ? inst.name.toLocaleLowerCase().startsWith(filterTextLower)
-                                        : inst.name.toLocaleLowerCase().includes(filterTextLower)))
-            .filter(inst => this.state.filterInstitution
-                                    || filteredProjects.some(proj => inst.id === proj.institution))
-            .filter(inst => !(this.state.filterInstitution && this.state.containsProjects)
-                                    || this.props.projects.some(proj => inst.id === proj.institution))
+                                        : inst.name.toLocaleLowerCase().includes(filterTextLower);
+
+        const filterHasProj = (inst) => filteredProjects.some(proj => inst.id === proj.institution)
+                                        || this.state.showEmptyInstitutions
+                                        || inst.admins.includes(this.props.userId)
+                                        || inst.members.includes(this.props.userId);
+
+        const filteredInstitutions = this.props.institutions
+            // Filtering by institution, contains search string and contains projects or user is member
+            .filter(inst => !this.state.filterInstitution || (filterString(inst) && filterHasProj(inst)))
+            // Filtering by projects, and has projects to show
+            .filter(inst => this.state.filterInstitution || filteredProjects.some(proj => inst.id === proj.institution))
             .sort((a, b) => this.state.sortByNumber
-                                    ? this.props.projects.filter(proj => b.id === proj.institution).length
-                                        - this.props.projects.filter(proj => a.id === proj.institution).length
-                                    : sortAlphabetically(a.name, b.name));
+                                ? this.props.projects.filter(proj => b.id === proj.institution).length
+                                    - this.props.projects.filter(proj => a.id === proj.institution).length
+                                : sortAlphabetically(a.name, b.name));
 
 
         return this.props.showSidePanel
@@ -254,7 +257,7 @@ class SideBar extends React.Component {
                 <div className="bg-darkgreen">
                     <h1 className="tree_label" id="panelTitle">Institutions</h1>
                 </div>
-                {this.props.userName &&
+                {this.props.userId > 0 &&
                     <CreateInstitutionButton documentRoot={this.props.documentRoot}/>
                 }
                 <InstitutionFilter
@@ -268,8 +271,8 @@ class SideBar extends React.Component {
                     toggleFilterInstitution={this.toggleFilterInstitution}
                     sortByNumber={this.state.sortByNumber}
                     toggleSortByNumber={this.toggleSortByNumber}
-                    containsProjects={this.state.containsProjects}
-                    toggleContainsProjects={this.toggleContainsProjects}
+                    showEmptyInstitutions={this.state.showEmptyInstitutions}
+                    toggleShowEmptyInstitutions={this.toggleShowEmptyInstitutions}
                     showFilters={this.state.showFilters}
                     toggleShowFilters={this.toggleShowFilters}
                 />
@@ -289,7 +292,7 @@ class SideBar extends React.Component {
                                 />
                             )}
                         </ul>
-                        : <h3 className="p-3">No Institutions Found...</h3>
+                        : <h3 className="p-3">{this.state.filterInstitution ? "No Institutions Found..." : "No Projects Found..."}</h3>
                     : <h3 className="p-3">Loading data...</h3> }
             </div>
             ) : (
@@ -389,10 +392,10 @@ function InstitutionFilter(props) {
                             <input
                                 className="form-check-input"
                                 type="checkbox"
-                                checked={props.containsProjects}
-                                onChange={props.toggleContainsProjects}
+                                checked={props.showEmptyInstitutions}
+                                onChange={props.toggleShowEmptyInstitutions}
                             />
-                            Contains projects
+                            Show Empty Institutions
                         </div>
                     </div>
                 </Fragment>
@@ -592,7 +595,10 @@ class ProjectPopup extends React.Component {
 
 export function renderHomePage(args) {
     ReactDOM.render(
-        <Home documentRoot={args.documentRoot} userId={args.userId} userName={args.userName}/>,
+        <Home
+            documentRoot={args.documentRoot}
+            userId={args.userId === "" ? -1 : parseInt(args.userId)}
+        />,
         document.getElementById("home")
     );
 }

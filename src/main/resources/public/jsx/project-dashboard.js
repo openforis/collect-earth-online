@@ -113,7 +113,7 @@ class ProjectDashboard extends React.Component {
 
     showProjectMap() {
         // Initialize the basemap
-        const mapConfig = mercator.createMap("project-map", [0.0, 0.0], 1, this.state.imageryList);
+        const mapConfig = mercator.createMap("project-map", [0.0, 0.0], 1, this.state.imageryList, this.props.documentRoot);
         mercator.setVisibleLayer(mapConfig, this.state.projectDetails.baseMapSource);
         // Display a bounding box with the project's AOI on the map and zoom to it
         mercator.addVectorLayer(mapConfig,

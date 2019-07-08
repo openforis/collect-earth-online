@@ -21,7 +21,7 @@ const blankProject = {
     plotShape: "circle",
     plotSize: "",
     plotSpacing: "",
-    privacyLevel: "users",
+    privacyLevel: "institution",
     sampleDistribution: "random",
     sampleResolution: "",
     samplesPerPlot: "",
@@ -160,19 +160,21 @@ class Project extends React.Component {
 
     validateProject = () => {
         const { projectDetails } = this.state;
+        const minAnswers = (componentType) => (componentType || "").toLowerCase() === "input" ? 1 : 2;
+
         if (projectDetails.name === "" || projectDetails.description === "") {
-            alert("A project must contain a name and description");
+            alert("A project must contain a name and description.");
             return false;
 
         } else if (!this.state.useTemplatePlots && !this.validatePlotData()) {
             return false;
 
         } else if (projectDetails.surveyQuestions.length === 0) {
-            alert("A survey must include at least one question");
+            alert("A survey must include at least one question.");
             return false;
 
-        } else if (projectDetails.surveyQuestions.some(sq => sq.answers.length === 0)) {
-            alert("All survey questions must contain at least one answer");
+        } else if (projectDetails.surveyQuestions.some(sq => sq.answers.length < minAnswers(sq.componentType))) {
+            alert("All survey questions must contain the correct number of answers.");
             return false;
 
         } else {
@@ -188,47 +190,47 @@ class Project extends React.Component {
 
         } else if (projectDetails.plotDistribution === "random"
                     && (!projectDetails.numPlots || projectDetails.numPlots === 0)) {
-            alert("A number of plots is required for random plot distribution");
+            alert("A number of plots is required for random plot distribution.");
             return false;
 
         } else if (projectDetails.plotDistribution === "gridded"
                     && (!projectDetails.plotSpacing || projectDetails.plotSpacing === 0)) {
-            alert("A plot spacing is required for gridded plot distribution");
+            alert("A plot spacing is required for gridded plot distribution.");
             return false;
 
         } else if (projectDetails.plotDistribution !== "shp"
                     && (!projectDetails.plotSize || projectDetails.plotSize === 0)) {
-            alert("A plot size is required");
+            alert("A plot size is required.");
             return false;
 
         } else if (projectDetails.plotDistribution === "csv"
                     && !(projectDetails.plotFileName && projectDetails.plotFileName.includes(".csv"))) {
-            alert("A plot CSV (.csv) file is required");
+            alert("A plot CSV (.csv) file is required.");
             return false;
 
         } else if (projectDetails.plotDistribution === "shp"
                     && !(projectDetails.plotFileName && projectDetails.plotFileName.includes(".zip"))) {
-            alert("A plot SHP (.zip) file is required");
+            alert("A plot SHP (.zip) file is required.");
             return false;
 
         } else if (projectDetails.sampleDistribution === "random"
                     && (!projectDetails.samplesPerPlot || projectDetails.samplesPerPlot === 0)) {
-            alert("A number of samples per plot is required for random sample distribution");
+            alert("A number of samples per plot is required for random sample distribution.");
             return false;
 
         } else if (projectDetails.sampleDistribution === "gridded"
                     && (!projectDetails.sampleResolution || projectDetails.sampleResolution === 0)) {
-            alert("A sample resolution is required for gridded sample distribution");
+            alert("A sample resolution is required for gridded sample distribution.");
             return false;
 
         } else if (projectDetails.sampleDistribution === "csv"
                     && !(projectDetails.sampleFileName && projectDetails.sampleFileName.includes(".csv"))) {
-            alert("A sample CSV (.csv) file is required");
+            alert("A sample CSV (.csv) file is required.");
             return false;
 
         } else if (projectDetails.sampleDistribution === "shp"
                     && !(projectDetails.sampleFileName && projectDetails.sampleFileName.includes(".zip"))) {
-            alert("A sample SHP (.zip) file is required");
+            alert("A sample SHP (.zip) file is required.");
             return false;
 
         } else {
@@ -256,7 +258,12 @@ class Project extends React.Component {
             const newSurveyQuestions = convertSampleValuesToSurveyQuestions(templateProject.sampleValues);
 
             this.setState({
-                projectDetails: { ...templateProject, surveyQuestions: newSurveyQuestions, surveyRules: templateProject.surveyRules || [] },
+                projectDetails: {
+                    ...templateProject,
+                    surveyQuestions: newSurveyQuestions,
+                    surveyRules: templateProject.surveyRules || [],
+                    privacyLevel: "institution",
+                },
                 plotList: [],
                 useTemplatePlots: true,
                 useTemplateWidgets: true,
@@ -308,7 +315,7 @@ class Project extends React.Component {
     };
 
     initProjectMap = () => {
-        const newMapConfig = mercator.createMap("project-map", [0.0, 0.0], 1, this.state.imageryList);
+        const newMapConfig = mercator.createMap("project-map", [0.0, 0.0], 1, this.state.imageryList, this.props.documentRoot);
         mercator.setVisibleLayer(newMapConfig, this.state.imageryList[0].title);
         this.setState({ mapConfig: newMapConfig });
     };

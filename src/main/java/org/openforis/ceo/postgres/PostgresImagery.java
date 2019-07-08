@@ -7,6 +7,7 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.List;
 import org.openforis.ceo.db_api.Imagery;
 import spark.Request;
 import spark.Response;
@@ -41,7 +42,15 @@ public class PostgresImagery implements Imagery {
                     newImagery.add("extent", rs.getString("extent") == null || rs.getString("extent").equals("null")
                         ? null
                         : parseJson(rs.getString("extent")).getAsJsonArray());
-                    newImagery.add("sourceConfig", parseJson(rs.getString("source_config")).getAsJsonObject());
+                    var sourceConfig = parseJson(rs.getString("source_config")).getAsJsonObject();
+                    // Return only necessary fields for types we proxy
+                    if (List.of("DigitalGlobe", "EarthWatch", "Planet").contains(sourceConfig.get("type").getAsString())) {
+                        var cleanSource = new JsonObject();
+                        cleanSource.add("type", sourceConfig.get("type"));
+                        newImagery.add("sourceConfig", cleanSource);
+                    } else {
+                        newImagery.add("sourceConfig", sourceConfig);
+                    };
 
                     imageryArray.add(newImagery);
                 }
@@ -52,6 +61,21 @@ public class PostgresImagery implements Imagery {
             System.out.println(e.getMessage());
             return "";
         }
+    }
+
+    public JsonObject getImagerySourceConfig(Integer imageryId) {
+        try (var conn = connect();
+             var pstmt = conn.prepareStatement("SELECT * FROM imagery WHERE imagery_uid=?")) {
+                pstmt.setInt(1, imageryId);
+            try (var rs = pstmt.executeQuery()) {
+                if (rs.next()) {
+                    return parseJson(rs.getString("source_config")).getAsJsonObject();
+                }
+            }
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+        }
+        return new JsonObject();
     }
 
     public String addInstitutionImagery(Request req, Response res) {
