@@ -47,9 +47,18 @@ class CreateInstitution extends React.Component {
                           url: this.state.newInstitutionDetails.url,
                           description: this.state.newInstitutionDetails.description,
                       }),
-                  })
-                .then(response => response.ok ? response.json() : Promise.reject(response))
-                .then(data => window.location = this.props.documentRoot + "/review-institution/" + data.id)
+                  }
+            )
+                .then(response => response.ok ? response.text() : Promise.reject(response.text()))
+                .then(data => {
+                    const isInteger = n => !isNaN(parseInt(n)) && isFinite(n) && !n.includes(".");
+                    if (isInteger(data)) {
+                        window.location = this.props.documentRoot + "/review-institution/" + data;
+                        return Promise.resolve();
+                    } else {
+                        return Promise.reject(data);
+                    }
+                })
                 .catch(response => {
                     console.log(response);
                     alert("Error creating institution. See console for details.");

@@ -14,6 +14,7 @@ import static org.openforis.ceo.Views.redirectAuth;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
+import java.time.LocalDate;
 import java.util.Date;
 import java.util.Optional;
 import org.openforis.ceo.db_api.Institutions;
@@ -127,7 +128,7 @@ public class JsonInstitutions implements Institutions {
             institutions.add(newInstitution);
             writeJsonFile("institution-list.json", institutions);
 
-            return newInstitution.toString();
+            return newInstitutionId + "";
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -177,6 +178,18 @@ public class JsonInstitutions implements Institutions {
 
     public String archiveInstitution(Request req, Response res) {
         var institutionId = req.params(":id");
+
+        mapJsonFile("project-list.json",
+                    project -> {
+                        if (project.get("institution").getAsString().equals(institutionId)) {
+                            project.addProperty("availability", "archived");
+                            project.addProperty("archived_date", LocalDate.now().toString());
+                            project.addProperty("archived", true);
+                            return project;
+                        } else {
+                            return project;
+                        }
+                    });
 
         mapJsonFile("institution-list.json",
                     institution -> {
