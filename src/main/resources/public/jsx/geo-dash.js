@@ -679,7 +679,7 @@ class MapWidget extends React.Component {
         new ol.layer.Tile({
             source: (!basemap || basemap.id === "osm")
                 ? new ol.source.OSM()
-                : mercator.createSource(basemap.sourceConfig),
+                : mercator.createSource(basemap.sourceConfig, basemap.id, this.props.documentRoot),
         });
 
     getGatewayPath = (widget, collectionName) => {
