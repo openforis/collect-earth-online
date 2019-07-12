@@ -91,7 +91,7 @@ module.exports = {
 
                         const fileIn = fs.readFileSync(path.join("./src/main/resources/template/freemarker", f), "utf-8");
                         const jsScripts = "<!-- Auto Inserted Bundles -->\n" + bundleList + "\n<!-- End Auto Inserted Bundles -->";
-                        const fileOut = fileIn.replace(/<!-- Auto Inserted Bundles -->((.|\n)*)<!-- End Auto Inserted Bundles -->/, jsScripts);
+                        const fileOut = fileIn.replace(/<!-- Auto Inserted Bundles -->((.|\n|\r\n)*)<!-- End Auto Inserted Bundles -->/, jsScripts);
 
                         fs.writeFileSync(path.join("./target/classes/template/freemarker", f), fileOut, "utf-8");
                     });
