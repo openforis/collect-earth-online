@@ -531,20 +531,20 @@ class MapWidget extends React.Component {
         const currentDate = new Date();
         currentDate.setDate(currentDate.getDate() - 1);
         if (typeof(Storage) !== "undefined") {
-            if (localStorage.getItem(postObject.ImageAsset)) {
-                needFetch = this.createTileServerFromCache(postObject.ImageAsset, widget.id);
-            } else if (localStorage.getItem(postObject.ImageCollectionAsset)) {
-                needFetch = this.createTileServerFromCache(postObject.ImageCollectionAsset, widget.id);
+            if (localStorage.getItem(postObject.ImageAsset + JSON.stringify(postObject.visParams))) {
+                needFetch = this.createTileServerFromCache(postObject.ImageAsset + JSON.stringify(postObject.visParams), widget.id);
+            } else if (localStorage.getItem(postObject.ImageCollectionAsset + JSON.stringify(postObject.visParams))) {
+                needFetch = this.createTileServerFromCache(postObject.ImageCollectionAsset + JSON.stringify(postObject.visParams), widget.id);
             } else if (postObject.index && localStorage.getItem(postObject.index + postObject.dateFrom + postObject.dateTo)) {
                 needFetch = this.createTileServerFromCache(postObject.index + postObject.dateFrom + postObject.dateTo, widget.id);
             } else if (localStorage.getItem(JSON.stringify(postObject))) {
                 needFetch = this.createTileServerFromCache(JSON.stringify(postObject), widget.id);
             }
             if (widget.dualImageCollection) {
-                if (localStorage.getItem(dualImageObject.ImageAsset)) {
-                    needFetch = this.createTileServerFromCache(dualImageObject.ImageAsset, widget.id, true);
-                } else if (localStorage.getItem(dualImageObject.ImageCollectionAsset)) {
-                    needFetch = this.createTileServerFromCache(dualImageObject.ImageCollectionAsset, widget.id, true);
+                if (localStorage.getItem(dualImageObject.ImageAsset + dualImageObject.visParams)) {
+                    needFetch = this.createTileServerFromCache(dualImageObject.ImageAsset + dualImageObject.visParams, widget.id, true);
+                } else if (localStorage.getItem(dualImageObject.ImageCollectionAsset + JSON.stringify(dualImageObject.visParams))) {
+                    needFetch = this.createTileServerFromCache(dualImageObject.ImageCollectionAsset + JSON.stringify(dualImageObject.visParams), widget.id, true);
                 } else if (dualImageObject.index && localStorage.getItem(dualImageObject.index + dualImageObject.dateFrom + dualImageObject.dateTo)) {
                     needFetch = this.createTileServerFromCache(dualImageObject.index + dualImageObject.dateFrom + dualImageObject.dateTo, widget.id, true);
                 } else if (localStorage.getItem(JSON.stringify(dualImageObject))) {
@@ -573,10 +573,10 @@ class MapWidget extends React.Component {
                 .then(data => {
                     if (data.hasOwnProperty("mapid")) {
                         data.lastGatewayUpdate = new Date();
-                        if (postObject.ImageAsset) {
-                            localStorage.setItem(postObject.ImageAsset, JSON.stringify(data));
-                        } else if (postObject.ImageCollectionAsset) {
-                            localStorage.setItem(postObject.ImageCollectionAsset, JSON.stringify(data));
+                        if (postObject.ImageAsset + JSON.stringify(postObject.visParams)) {
+                            localStorage.setItem(postObject.ImageAsset + JSON.stringify(postObject.visParams), JSON.stringify(data));
+                        } else if (postObject.ImageCollectionAsset + JSON.stringify(postObject.visParams)) {
+                            localStorage.setItem(postObject.ImageCollectionAsset + JSON.stringify(postObject.visParams), JSON.stringify(data));
                         } else if (postObject.index && postObject.dateFrom + postObject.dateTo) {
                             localStorage.setItem(postObject.index + postObject.dateFrom + postObject.dateTo, JSON.stringify(data));
                         } else {
@@ -607,10 +607,10 @@ class MapWidget extends React.Component {
                                 .then(data => {
                                     if (data.hasOwnProperty("mapid")) {
                                         data.lastGatewayUpdate = new Date();
-                                        if (postObject.ImageAsset) {
-                                            localStorage.setItem(postObject.ImageAsset, JSON.stringify(data));
-                                        } else if (postObject.ImageCollectionAsset) {
-                                            localStorage.setItem(postObject.ImageCollectionAsset, JSON.stringify(data));
+                                        if (postObject.ImageAsset + JSON.stringify(postObject.visParams)) {
+                                            localStorage.setItem(postObject.ImageAsset + JSON.stringify(postObject.visParams), JSON.stringify(data));
+                                        } else if (postObject.ImageCollectionAsset + JSON.stringify(postObject.visParams)) {
+                                            localStorage.setItem(postObject.ImageCollectionAsset + JSON.stringify(postObject.visParams), JSON.stringify(data));
                                         } else if (postObject.index && postObject.dateFrom + postObject.dateTo) {
                                             localStorage.setItem(postObject.index + postObject.dateFrom + postObject.dateTo, JSON.stringify(data));
                                         } else {
@@ -639,10 +639,10 @@ class MapWidget extends React.Component {
                                     .then(data => {
                                         if (data.hasOwnProperty("mapid")) {
                                             data.lastGatewayUpdate = new Date();
-                                            if (dualImageObject.ImageAsset) {
-                                                localStorage.setItem(dualImageObject.ImageAsset, JSON.stringify(data));
-                                            } else if (dualImageObject.ImageCollectionAsset) {
-                                                localStorage.setItem(dualImageObject.ImageCollectionAsset, JSON.stringify(data));
+                                            if (dualImageObject.ImageAsset + JSON.stringify(dualImageObject.visParams)) {
+                                                localStorage.setItem(dualImageObject.ImageAsset + JSON.stringify(dualImageObject.visParams), JSON.stringify(data));
+                                            } else if (dualImageObject.ImageCollectionAsset + JSON.stringify(dualImageObject.visParams)) {
+                                                localStorage.setItem(dualImageObject.ImageCollectionAsset + JSON.stringify(dualImageObject.visParams), JSON.stringify(data));
                                             } else if (dualImageObject.index && dualImageObject.dateFrom + dualImageObject.dateTo) {
                                                 localStorage.setItem(dualImageObject.index + dualImageObject.dateFrom + dualImageObject.dateTo, JSON.stringify(data));
                                             } else {
