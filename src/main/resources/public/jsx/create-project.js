@@ -160,7 +160,8 @@ class Project extends React.Component {
 
     validateProject = () => {
         const { projectDetails } = this.state;
-        const minAnswers = (componentType) => (componentType || "").toLowerCase() === "input" ? 1 : 2;
+        // FIXME Disable for now until we can add a type specifically meant to have 1 or 0 answers
+        // const minAnswers = (componentType) => (componentType || "").toLowerCase() === "input" ? 1 : 2;
 
         if (projectDetails.name === "" || projectDetails.description === "") {
             alert("A project must contain a name and description.");
@@ -173,8 +174,8 @@ class Project extends React.Component {
             alert("A survey must include at least one question.");
             return false;
 
-        } else if (projectDetails.surveyQuestions.some(sq => sq.answers.length < minAnswers(sq.componentType))) {
-            alert("All survey questions must contain the correct number of answers.");
+        } else if (projectDetails.surveyQuestions.some(sq => sq.answers.length === 0)) {
+            alert("All survey questions must contain at least one answer.");
             return false;
 
         } else {

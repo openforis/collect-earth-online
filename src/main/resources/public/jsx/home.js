@@ -243,7 +243,8 @@ class SideBar extends React.Component {
 
         const filteredInstitutions = this.props.institutions
             // Filtering by institution, contains search string and contains projects or user is member
-            .filter(inst => !this.state.filterInstitution || (filterString(inst) && filterHasProj(inst)))
+            .filter(inst => !this.state.filterInstitution || filterString(inst))
+            .filter(inst => !this.state.filterInstitution || filterTextLower.length > 0 || filterHasProj(inst))
             // Filtering by projects, and has projects to show
             .filter(inst => this.state.filterInstitution || filteredProjects.some(proj => inst.id === proj.institution))
             .sort((a, b) => this.state.sortByNumber
