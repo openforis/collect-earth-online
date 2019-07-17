@@ -46,7 +46,6 @@ class Project extends React.Component {
                 latMax: "",
             },
             projectList: [],
-            hasNoRules: true,
             showModal: false,
         };
     }
@@ -143,18 +142,18 @@ class Project extends React.Component {
                   }),
               }
         )
-            .then(response => response.ok ? response.text() : Promise.reject(response.text()))
+            .then(response => Promise.all([response.ok, response.text()]))
             .then(data => {
                 const isInteger = n => !isNaN(parseInt(n)) && isFinite(n) && !n.includes(".");
-                if (isInteger(data)) {
-                    window.location = this.props.documentRoot + "/review-project/" + data;
+                if (data[0] && isInteger(data[1])) {
+                    window.location = this.props.documentRoot + "/review-project/" + data[1];
                     return Promise.resolve();
                 } else {
-                    return Promise.reject(data);
+                    return Promise.reject(data[1]);
                 }
             })
-            .catch(response => {
-                alert("Error creating project.\n\n" + response);
+            .catch(message => {
+                alert("Error creating project.\n\n" + message);
                 this.setState({ showModal: false });
             });
 
@@ -252,7 +251,6 @@ class Project extends React.Component {
                 },
                 useTemplatePlots: false,
                 useTemplateWidgets: false,
-                hasNoRules: true,
             });
         } else {
             const templateProject = this.state.projectList.find(p => p.id === newTemplateId);
@@ -268,12 +266,26 @@ class Project extends React.Component {
                 plotList: [],
                 useTemplatePlots: true,
                 useTemplateWidgets: true,
-                hasNoRules: !templateProject.surveyRules || templateProject.surveyRules.length === 0,
             });
         }
     };
 
-    toggleTemplatePlots = () => this.setState({ useTemplatePlots: !this.state.useTemplatePlots });
+    toggleTemplatePlots = () => {
+        if (!this.state.useTemplatePlots) {
+            const templateProject = this.state.projectList.find(p => p.id === this.state.projectDetails.id);
+            console.log(templateProject);
+            this.setState({
+                useTemplatePlots: true,
+                projectDetails: {
+                    ...templateProject,
+                    surveyQuestions: this.state.projectDetails.surveyQuestions,
+                    surveyRules: this.state.projectDetails.surveyRules,
+                },
+            });
+        } else {
+            this.setState({ useTemplatePlots: false });
+        }
+    };
 
     toggleTemplateWidgets = () => this.setState({ useTemplateWidgets: !this.state.useTemplateWidgets });
 
@@ -401,7 +413,6 @@ class Project extends React.Component {
                             toggleTemplateWidgets={this.toggleTemplateWidgets}
                             useTemplatePlots={this.state.useTemplatePlots}
                             useTemplateWidgets={this.state.useTemplateWidgets}
-                            hasNoRules={this.state.hasNoRules}
                         />
                         <ProjectManagement createProject={this.createProject} />
                     </Fragment>
@@ -451,11 +462,11 @@ function ProjectDesignForm(props) {
                 </Fragment>
             }
             <SurveyDesign
+                templateProject={props.projectDetails.id}
                 surveyQuestions={props.projectDetails.surveyQuestions}
                 surveyRules={props.projectDetails.surveyRules}
                 setSurveyQuestions={props.setSurveyQuestions}
                 setSurveyRules={props.setSurveyRules}
-                hasNoRules={props.hasNoRules}
             />
         </div>
     );
