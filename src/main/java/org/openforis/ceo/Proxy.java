@@ -49,8 +49,8 @@ public class Proxy {
                    + "?"
                    + Stream.concat(Arrays.stream(queryParams)
                                         .filter(q -> !q.split("[=]")[0].equals("imagerId")
-                                                        && !geoserverParams.keySet().contains(q.split("[=]")[0])),
-                                    geoserverParams.keySet().stream()
+                                                     && !geoserverParams.keySet().contains(q.split("[=]")[0])),
+                                   geoserverParams.keySet().stream()
                                         .map(key -> key + "=" + geoserverParams.get(key).getAsString()))
                             .collect(Collectors.joining("&"));
         } else {
