@@ -4,7 +4,9 @@ import static org.openforis.ceo.utils.RequestUtils.prepareGetRequest;
 
 import com.google.api.client.http.HttpResponseException;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 import javax.servlet.http.HttpServletResponse;
 import org.openforis.ceo.db_api.Imagery;
 import spark.Request;
@@ -39,6 +41,19 @@ public class Proxy {
                           + year + "_" + month
                           + "_mosaic/gmap/{z}/{x}/{y}.png?api_key=";
             return baseUrl.replace("{z}", z).replace("{x}", x).replace("{y}", y) + apiKey;
+        } else if (sourceType.equals("GeoServer")) {
+            var queryParams = req.queryString().split("[&]");
+            var geoserverParams = sourceConfig.get("geoserverParams").getAsJsonObject();
+            var geoUrl = sourceConfig.get("geoserverUrl").getAsString();
+            var queryParamsStr = Arrays.stream(queryParams)
+                                .filter(q -> !q.split("[=]")[0].equals("imagerId")
+                                             && !geoserverParams.keySet().contains(q.split("[=]")[0]))
+                                .collect(Collectors.joining("&"));
+            var geoserverParamsString = geoserverParams.keySet().stream()
+                                        .map(key -> key + "=" + geoserverParams.get(key).getAsString())
+                                        .collect(Collectors.joining("&"));
+
+            return geoUrl + "?" + queryParamsStr + "&" + geoserverParamsString;
         } else {
             return "";
         }
