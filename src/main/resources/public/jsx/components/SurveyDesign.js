@@ -39,7 +39,8 @@ export class SurveyDesign extends React.Component {
         }
     };
 
-    onlySimpleFeatures = () => this.props.surveyQuestions.every(q => q.componentType === "button") && this.props.surveyRules.length === 0;
+    onlySimpleFeatures = () => this.props.surveyQuestions.every(q => q.componentType === "button" && q.dataType === "text")
+                                && this.props.surveyRules.length === 0;
 
     convertToSimple = () => {
         const newSurveyQuestions = this.props.surveyQuestions
@@ -54,7 +55,7 @@ export class SurveyDesign extends React.Component {
             inSimpleMode: this.state.inSimpleMode
                             ? false
                             : this.onlySimpleFeatures()
-                                || confirm("This action will revert all questions to type button and erase rules.\n\nWould you like to proceed?"),
+                                || confirm("This action will revert all questions to type 'text - button' and erase rules.\n\nWould you like to proceed?"),
         });
     };
 

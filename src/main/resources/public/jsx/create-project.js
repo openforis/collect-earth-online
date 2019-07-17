@@ -273,13 +273,13 @@ class Project extends React.Component {
     toggleTemplatePlots = () => {
         if (!this.state.useTemplatePlots) {
             const templateProject = this.state.projectList.find(p => p.id === this.state.projectDetails.id);
-            console.log(templateProject);
             this.setState({
                 useTemplatePlots: true,
                 projectDetails: {
                     ...templateProject,
                     surveyQuestions: this.state.projectDetails.surveyQuestions,
                     surveyRules: this.state.projectDetails.surveyRules,
+                    privacyLevel: this.state.projectDetails.privacyLevel,
                 },
             });
         } else {
