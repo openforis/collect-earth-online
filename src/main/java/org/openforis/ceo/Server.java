@@ -13,13 +13,11 @@ import static spark.Spark.post;
 import static spark.Spark.secure;
 import static spark.Spark.staticFileLocation;
 import static spark.Spark.staticFiles;
-import static spark.Spark.halt;
 
 import freemarker.template.Configuration;
 import freemarker.template.TemplateExceptionHandler;
 import java.io.File;
 import java.util.List;
-
 import org.openforis.ceo.collect.CollectImagery;
 import org.openforis.ceo.collect.CollectPlots;
 import org.openforis.ceo.collect.CollectProjects;
@@ -45,7 +43,6 @@ import org.openforis.ceo.postgres.PostgresUsers;
 import org.openforis.ceo.users.CeoAuthFilter;
 import org.openforis.ceo.users.OfGroups;
 import org.openforis.ceo.users.OfUsers;
-
 import spark.Request;
 import spark.Response;
 import spark.servlet.SparkApplication;
