@@ -43,15 +43,17 @@ public class Proxy {
                           + "_mosaic/gmap/{z}/{x}/{y}.png?api_key=";
             return baseUrl.replace("{z}", z).replace("{x}", x).replace("{y}", y) + apiKey;
         } else if (sourceType.equals("GeoServer")) {
-            final var queryParams = req.queryString().split("[&]");
+            final var queryParams = req.queryString().split("&");
             final var geoserverParams = sourceConfig.get("geoserverParams").getAsJsonObject();
             return sourceConfig.get("geoserverUrl").getAsString()
                    + "?"
                    + Stream.concat(Arrays.stream(queryParams)
-                                        .filter(q -> !q.split("[=]")[0].equals("imagerId")
-                                                     && !geoserverParams.keySet().contains(q.split("[=]")[0])),
-                                   geoserverParams.keySet().stream()
-                                        .map(key -> key + "=" + geoserverParams.get(key).getAsString()))
+                                        .filter(q -> {
+                                            final var param = q.split("=")[0];
+                                            return !param.equals("imageryId") && !geoserverParams.keySet().contains(param);
+                                        }),
+                                   geoserverParams.entrySet().stream()
+                                        .map(ent -> ent.getKey() + "=" + ent.getValue().getAsString()))
                             .collect(Collectors.joining("&"));
         } else {
             return "";
@@ -80,8 +82,10 @@ public class Proxy {
             res.status(e.getStatusCode());
             return res.raw();
         } catch (IOException e) {
-            System.out.println(e.getMessage());
-            throw new RuntimeException("Failed to write response to output stream.", e);
+            System.out.println("Failed to write response to output stream.");
+            res.body(e.getMessage());
+            res.status(500);
+            return res.raw();
         }
     }
 }
