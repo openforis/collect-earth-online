@@ -4,7 +4,10 @@ import static org.openforis.ceo.utils.RequestUtils.prepareGetRequest;
 
 import com.google.api.client.http.HttpResponseException;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import javax.servlet.http.HttpServletResponse;
 import org.openforis.ceo.db_api.Imagery;
 import spark.Request;
@@ -39,6 +42,19 @@ public class Proxy {
                           + year + "_" + month
                           + "_mosaic/gmap/{z}/{x}/{y}.png?api_key=";
             return baseUrl.replace("{z}", z).replace("{x}", x).replace("{y}", y) + apiKey;
+        } else if (sourceType.equals("GeoServer")) {
+            final var queryParams = req.queryString().split("&");
+            final var geoserverParams = sourceConfig.get("geoserverParams").getAsJsonObject();
+            return sourceConfig.get("geoserverUrl").getAsString()
+                   + "?"
+                   + Stream.concat(Arrays.stream(queryParams)
+                                        .filter(q -> {
+                                            final var param = q.split("=")[0];
+                                            return !param.equals("imageryId") && !geoserverParams.keySet().contains(param);
+                                        }),
+                                   geoserverParams.entrySet().stream()
+                                        .map(ent -> ent.getKey() + "=" + ent.getValue().getAsString()))
+                            .collect(Collectors.joining("&"));
         } else {
             return "";
         }
@@ -66,8 +82,9 @@ public class Proxy {
             res.status(e.getStatusCode());
             return res.raw();
         } catch (IOException e) {
-            System.out.println(e.getMessage());
-            throw new RuntimeException("Failed to write response to output stream.", e);
+            res.body(e.getMessage());
+            res.status(500);
+            return res.raw();
         }
     }
 }

@@ -101,8 +101,8 @@ mercator.createSource = function (sourceConfig, imageryId, documentRoot) {
     } else if (sourceConfig.type === "GeoServer") {
         return new ol.source.TileWMS({
             serverType: "geoserver",
-            url: sourceConfig.geoserverUrl,
-            params: sourceConfig.geoserverParams,
+            url: documentRoot + "/get-tile",
+            params: { LAYERS: "none", imageryId: imageryId },
         });
     } else if (sourceConfig.type === "GeeGateway") {
         //get variables and make ajax call to get mapid and token
