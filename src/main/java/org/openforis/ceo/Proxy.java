@@ -82,7 +82,6 @@ public class Proxy {
             res.status(e.getStatusCode());
             return res.raw();
         } catch (IOException e) {
-            System.out.println("Failed to write response to output stream.");
             res.body(e.getMessage());
             res.status(500);
             return res.raw();
