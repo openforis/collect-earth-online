@@ -15,5 +15,7 @@ sudo -u postgres cp /home/openforis/github/collect-earth-online/src/main/resourc
 # Restart postgresql service to use new settings, wal archiving will be enabled
 sudo systemctl restart postgresql
 # Begin base backup as user postgres. Note: the directory for the base backup must not exist or be empty.
-sudo -u postgres pg_basebackup -D /var/lib/postgres/ceo-pg-bk/base-bk -Ft -Z 9 -h localhost -U postgres
+sudo -u postgres pg_basebackup -D /var/lib/postgres/ceo-pg-bk/base-bk -Ft -h localhost -U postgres
+sudo -u postgres xz -z9 /var/lib/postgres/ceo-pg-bk/base-bk/base.tar
+sudo -u postgres xz -z9 /var/lib/postgres/ceo-pg-bk/base-bk/pg_wal.tar
 sudo chmod -R o+r /var/lib/postgres/ceo-pg-bk/
