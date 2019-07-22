@@ -12,7 +12,7 @@ sudo -u postgres mv /var/lib/postgres/data /var/lib/postgres/data.tmp
 sudo -u postgres mkdir /var/lib/postgres/data
 sudo chmod go-wrx /var/lib/postgres/data
 # Restore the database files from base backup.
-sudo tar -xzf /var/lib/postgres/ceo-pg-bk/base-bk/base.tar.gz -C /var/lib/postgres/data/ --owner=postgres --group=postgres
+sudo tar -xJf /var/lib/postgres/ceo-pg-bk/base-bk/base.tar.xz -C /var/lib/postgres/data/ --owner=postgres --group=postgres
 # Remove any files present in pg_wal/; these came from the file system backup and are old
 sudo -u postgres rm /var/lib/postgres/data/pg_wal/*
 # Copy recovery.conf to initiate recovery mode
