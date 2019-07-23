@@ -85,60 +85,6 @@
 
             }
 </style>
-    <script type="text/javascript" language="JavaScript">
-
-    </script>
-    <div class="col-xl-8 offset-xl-2 col-lg-10 justify-content-center">
-
-        <script type="text/javascript" language="JavaScript">
-            function Translate() {
-                //initialization
-                this.init =  function(attribute, lng){
-                    this.attribute = attribute;
-                    this.lng = lng;
-                }
-                //translate
-                this.process = function(){
-                    _self = this;
-                    var xrhFile = new XMLHttpRequest();
-                    //load content data
-                    this.lng = this.lng == "es"? "es":"en";
-                    xrhFile.open("GET", "../locale/geodashhelp_"+this.lng+".json", false);
-                    xrhFile.onreadystatechange = function ()
-                    {
-                        if(xrhFile.readyState === 4)
-                        {
-                            if(xrhFile.status === 200 || xrhFile.status == 0)
-                            {
-                                var LngObject = JSON.parse(xrhFile.responseText);
-                                console.log(LngObject["name1"]);
-                                var allDom = document.getElementsByTagName("*");
-                                for(var i =0; i < allDom.length; i++){
-                                    var elem = allDom[i];
-                                    var key = elem.getAttribute(_self.attribute);
-
-                                    if(key != null) {
-                                        console.log(key);
-                                        elem.innerHTML = LngObject[key]  ;
-                                    }
-                                }
-
-                            }
-                        }
-                    }
-                    xrhFile.send();
-                }
-            }
-            var tLanguage = "${browserLanguage}" == "es"?"es":"en";
-            function runOnLoad() {
-                var translate = new Translate();
-                var currentLng = tLanguage;//'fr'
-                var attributeName = 'data-tag';
-                translate.init(attributeName, currentLng);
-                translate.process();
-            }
-        </script>
-
         <script type="text/javascript">
             window.onload = function () {
                 geo_dash_help.renderGeodashHelpPage({
@@ -147,19 +93,7 @@
                 });
             };
         </script>
-
-        <br style="clear:both">
-        <div class="container-fluid">
-            <div id="dashHolder"></div>
-        </div>
-
-
-        <p><span data-tag="pre_sepal_link"></span> <a href="http://www.openforis.org/tools/sepal.html"
-                                                                   target="_blank">OpenForis-SEPAL</a> <span
-                data-tag="post_sepal_link"></span></p>
-        <script type="text/javascript">
-            runOnLoad();
-        </script>
+        <div id="dashHolder"></div>
         <#include "logo-banner.ftl">
     </div>
 </section>
