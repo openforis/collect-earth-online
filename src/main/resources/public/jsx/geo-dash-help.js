@@ -169,7 +169,7 @@ class GeoDashHelp extends React.Component {
                                     <li>
                                         <span data-tag="custom_widget_info">{this.state.LngObject.custom_widget_info}</span>
                                         <ol style={{listStyleType: "lower-roman"}}>
-                                            {this.getLi("Offline Carbon Monoxide - COPERNICUS/S5P/OFFL/L3_CO {\"bands\":\"CO_column_number_density,H2O_column_number_density,cloud_height\",\"min\":\"0\",\"max\":\"0.5\"} <br /> 2018-01-01 to 2018-12-31")}
+                                            {this.getLi("Offline Carbon Monoxide - COPERNICUS/S5P/OFFL/L3_CO {\"bands\":\"CO_column_number_density,H2O_column_number_density,cloud_height\",\"min\":\"0\",\"max\":\"0.5\"} \n 2018-01-01 to 2018-12-31")}
                                             {this.getLi(this.state.LngObject.custom_widget_warning)}
                                         </ol>
                                     </li>
