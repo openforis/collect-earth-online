@@ -423,7 +423,7 @@ const imageryOptions = [
         params: [
             { key: "geoserverUrl", display: "GeoServer URL" },
             { key: "LAYERS", display: "GeoServer Layer Name", parent: "geoserverParams" },
-            { key: "geoserverParams", display: "GeoServer Params (as JSON string)", required: false },
+            { key: "geoserverParams", display: "GeoServer Params (as JSON object)", required: false },
         ],
         // FIXME, add url if help document is created.
     },
