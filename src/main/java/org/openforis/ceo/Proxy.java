@@ -43,10 +43,12 @@ public class Proxy {
                           + "_mosaic/gmap/{z}/{x}/{y}.png?api_key=";
             return baseUrl.replace("{z}", z).replace("{x}", x).replace("{y}", y) + apiKey;
         } else if (sourceType.equals("GeoServer")) {
-            final var queryParams = req.queryString().split("&");
+            final var queryParams     = req.queryString().split("&");
             final var geoserverParams = sourceConfig.get("geoserverParams").getAsJsonObject();
-            return sourceConfig.get("geoserverUrl").getAsString()
-                   + "?"
+            final var sourceUrl       = sourceConfig.get("geoserverUrl").getAsString();
+            final var sourceUrlBase   = sourceUrl.contains("?") ? sourceUrl : sourceUrl + "?";
+
+            return sourceUrlBase
                    + Stream.concat(Arrays.stream(queryParams)
                                         .filter(q -> {
                                             final var param = q.split("=")[0];
@@ -61,8 +63,8 @@ public class Proxy {
     }
 
     public static HttpServletResponse proxyImagery(Request req, Response res, Imagery imagery) {
+        var url = buildUrl(req, imagery);
         try {
-            var url      = buildUrl(req, imagery);
             var request  = prepareGetRequest(url);
             var response = request.execute();
             res.type(response.getMediaType().toString());
@@ -78,10 +80,12 @@ public class Proxy {
                 return res.raw();
             }
         } catch (HttpResponseException e) {
+            System.out.println("Failed to load " + url);
             res.body(e.getStatusMessage());
             res.status(e.getStatusCode());
             return res.raw();
-        } catch (IOException e) {
+        } catch (Exception e) {
+            System.out.println("Failed to load " + url);
             res.body(e.getMessage());
             res.status(500);
             return res.raw();

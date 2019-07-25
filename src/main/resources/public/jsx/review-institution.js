@@ -423,7 +423,7 @@ const imageryOptions = [
         params: [
             { key: "geoserverUrl", display: "GeoServer URL" },
             { key: "LAYERS", display: "GeoServer Layer Name", parent: "geoserverParams" },
-            { key: "geoserverParams", display: "GeoServer Params (as JSON string)" },
+            { key: "geoserverParams", display: "GeoServer Params (as JSON string)", required: false },
         ],
         // FIXME, add url if help document is created.
     },
@@ -510,7 +510,7 @@ class NewImagery extends React.Component {
                 .reduce((a, c) => {
                     const parentStr = imageryParams.find(p => p.key === c).parent;
                     if (parentStr) {
-                        const parentObj = JSON.parse(a[parentStr]);
+                        const parentObj = JSON.parse(a[parentStr] || "{}");
                         return { ...a, [parentStr]: { ...parentObj, [c]: this.state.newImageryParams[c] }};
                     } else {
                         return { ...a, [c]: this.state.newImageryParams[c] };
@@ -525,7 +525,8 @@ class NewImagery extends React.Component {
     checkAllParams = () => this.state.newImageryTitle.length > 0
         && this.state.newImageryAttribution.length > 0
         && imageryOptions[this.state.selectedType].params
-            .every(o => this.state.newImageryParams[o.key] && this.state.newImageryParams[o.key].length > 0);
+            .every(o => o.required === false
+                        || (this.state.newImageryParams[o.key] && this.state.newImageryParams[o.key].length > 0));
 
     //    Render Functions    //
 
