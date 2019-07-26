@@ -43,20 +43,37 @@ public class Proxy {
                           + "_mosaic/gmap/{z}/{x}/{y}.png?api_key=";
             return baseUrl.replace("{z}", z).replace("{x}", x).replace("{y}", y) + apiKey;
         } else if (sourceType.equals("GeoServer")) {
-            final var queryParams     = req.queryString().split("&");
-            final var geoserverParams = sourceConfig.get("geoserverParams").getAsJsonObject();
+            final var queryParams     = req.queryString().split("&"); // includes STYLES=
+            final var geoserverParams = sourceConfig.get("geoserverParams").getAsJsonObject(); // includes manually input STYLES
+            final var geoserverLayers = geoserverParams.get("LAYERS").getAsString();
             final var sourceUrl       = sourceConfig.get("geoserverUrl").getAsString();
             final var sourceUrlBase   = sourceUrl.contains("?") ? sourceUrl : sourceUrl + "?";
 
             return sourceUrlBase
-                   + Stream.concat(Arrays.stream(queryParams)
-                                        .filter(q -> {
-                                            final var param = q.split("=")[0];
-                                            return !param.equals("imageryId") && !geoserverParams.keySet().contains(param);
-                                        }),
-                                   geoserverParams.entrySet().stream()
-                                        .map(ent -> ent.getKey() + "=" + ent.getValue().getAsString()))
-                            .collect(Collectors.joining("&"));
+                + Stream.concat(Arrays.stream(queryParams)
+                                .filter(q -> {
+                                        // Remove imageryId, LAYERS, and any params from the GeoServer Params field
+                                        final var param = q.split("=")[0];
+                                        return !param.equals("imageryId") && !geoserverParams.keySet().contains(param);
+                                    })
+                                .map(q -> {
+                                        // If STYLES="", set STYLES="default". If LAYERS has multiple entries, match those in STYLES.
+                                        if (q.toUpperCase().equals("STYLES=")) {
+                                            if (geoserverLayers.contains(",")) {
+                                                return "STYLES=" +
+                                                    Arrays.stream(geoserverLayers.split(","))
+                                                    .map(layer -> "default")
+                                                    .collect(Collectors.joining(","));
+                                            } else {
+                                                return "STYLES=default";
+                                            }
+                                        } else {
+                                            return q;
+                                        }
+                                    }),
+                                geoserverParams.entrySet().stream()
+                                .map(ent -> ent.getKey() + "=" + ent.getValue().getAsString()))
+                .collect(Collectors.joining("&"));
         } else {
             return "";
         }
@@ -65,15 +82,20 @@ public class Proxy {
     public static HttpServletResponse proxyImagery(Request req, Response res, Imagery imagery) {
         var url = buildUrl(req, imagery);
         try {
-            var request  = prepareGetRequest(url);
-            var response = request.execute();
-            res.type(response.getMediaType().toString());
-            res.status(response.getStatusCode());
-            if (res.status() == 200) {
+            var request     = prepareGetRequest(url);
+            var response    = request.execute();
+            var status      = response.getStatusCode();
+            var contentType = response.getMediaType().toString();
+            res.status(status);
+            res.type(contentType);
+            if (status == 200) {
+                // Copy binary data between the two response bodies
                 var rawResponse = res.raw();
-                rawResponse.getOutputStream().write(response.getContent().readAllBytes());
-                rawResponse.getOutputStream().flush();
-                rawResponse.getOutputStream().close();
+                try (var inputStream  = response.getContent(); // transferTo -> close
+                     var outputStream = rawResponse.getOutputStream();) { // transferTo -> flush -> close
+                    inputStream.transferTo(outputStream);
+                    outputStream.flush();
+                }
                 return rawResponse;
             } else {
                 res.body(response.getContent().toString());
@@ -81,13 +103,13 @@ public class Proxy {
             }
         } catch (HttpResponseException e) {
             System.out.println("Failed to load " + url);
-            res.body(e.getStatusMessage());
             res.status(e.getStatusCode());
+            res.body(e.getStatusMessage());
             return res.raw();
         } catch (Exception e) {
             System.out.println("Failed to load " + url);
-            res.body(e.getMessage());
             res.status(500);
+            res.body(e.getMessage());
             return res.raw();
         }
     }
