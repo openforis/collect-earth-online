@@ -43,11 +43,13 @@ public class Proxy {
                           + "_mosaic/gmap/{z}/{x}/{y}.png?api_key=";
             return baseUrl.replace("{z}", z).replace("{x}", x).replace("{y}", y) + apiKey;
         } else if (sourceType.equals("GeoServer")) {
-            final var queryParams = req.queryString().split("&"); // includes STYLES=
+            final var queryParams     = req.queryString().split("&"); // includes STYLES=
             final var geoserverParams = sourceConfig.get("geoserverParams").getAsJsonObject(); // includes manually input STYLES
             final var geoserverLayers = geoserverParams.get("LAYERS").getAsString();
-            return sourceConfig.get("geoserverUrl").getAsString()
-                + "?"
+            final var sourceUrl       = sourceConfig.get("geoserverUrl").getAsString();
+            final var sourceUrlBase   = sourceUrl.contains("?") ? sourceUrl : sourceUrl + "?";
+
+            return sourceUrlBase
                 + Stream.concat(Arrays.stream(queryParams)
                                 .filter(q -> {
                                         // Remove imageryId, LAYERS, and any params from the GeoServer Params field
@@ -78,8 +80,8 @@ public class Proxy {
     }
 
     public static HttpServletResponse proxyImagery(Request req, Response res, Imagery imagery) {
+        var url = buildUrl(req, imagery);
         try {
-            var url         = buildUrl(req, imagery);
             var request     = prepareGetRequest(url);
             var response    = request.execute();
             var status      = response.getStatusCode();
@@ -100,10 +102,12 @@ public class Proxy {
                 return res.raw();
             }
         } catch (HttpResponseException e) {
+            System.out.println("Failed to load " + url);
             res.status(e.getStatusCode());
             res.body(e.getStatusMessage());
             return res.raw();
-        } catch (IOException e) {
+        } catch (Exception e) {
+            System.out.println("Failed to load " + url);
             res.status(500);
             res.body(e.getMessage());
             return res.raw();
