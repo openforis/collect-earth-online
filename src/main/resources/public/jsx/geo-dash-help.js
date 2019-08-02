@@ -8,10 +8,31 @@ class GeoDashHelp extends React.Component {
         this.state = {
             LngObject: {},
         };
+    }
+
+    componentDidMount = () => {
         fetch(this.props.documentRoot + "/locale/geodashhelp_" + this.props.browserLanguage + ".json")
             .then(res => res.json())
             .then(data => this.setState({ LngObject: data }));
     }
+
+
+    getLi = text => <li style={{overflowWrap: "break-word"}}> {text} </li>;
+
+    toggleHelpImage = event => {
+        const which = event.target;
+        if (document.body.style.overflow === "hidden") {
+            document.body.style.overflow = "auto";
+            which.className = which.className.replace(/\bfullpreview\b/g, "");
+        } else {
+            document.body.style.overflow = "hidden";
+            const arr = which.className.split(" ");
+            if (arr.indexOf("fullpreview") === -1) {
+                which.className += " " + "fullpreview";
+            }
+        }
+    };
+
     render() {
         return (
             <div className="container-fluid">
@@ -331,22 +352,6 @@ class GeoDashHelp extends React.Component {
             </div>
         );
     }
-
-    getLi = text => <li style={{overflowWrap: "break-word"}}> {text} </li>;
-
-    toggleHelpImage = event => {
-        const which = event.target;
-        if (document.body.style.overflow === "hidden") {
-            document.body.style.overflow = "auto";
-            which.className = which.className.replace(/\bfullpreview\b/g, "");
-        } else {
-            document.body.style.overflow = "hidden";
-            const arr = which.className.split(" ");
-            if (arr.indexOf("fullpreview") === -1) {
-                which.className += " " + "fullpreview";
-            }
-        }
-    };
 }
 
 export function renderGeodashHelpPage(args) {
