@@ -182,7 +182,7 @@ class GeoDashHelp extends React.Component {
                                     </li>
                                 </ol>
                             </li>
-                            <li>{LngObject.select_date_range + LngObject.for_data2}</li>
+                            <li>{LngObject.select_date_range}{LngObject.for_data2}</li>
                             <li>{LngObject.click_create}</li>
                             <li>{LngObject.reposition}</li>
                         </ol>
