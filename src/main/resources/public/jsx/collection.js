@@ -11,7 +11,7 @@ class Collection extends React.Component {
         this.state = {
             collectionStart: 0,
             currentProject: { surveyQuestions: [], institution: "" },
-            currentImagery: { id: "" },
+            currentImagery: { id: "", sourceConfig: {} },
             currentPlot: null,
             imageryAttribution: "",
             imageryList: [],
@@ -211,7 +211,7 @@ class Collection extends React.Component {
         const newImagery = this.getImageryById(newBaseMapSource);
         const newImageryAttribution = newImagery.title === "DigitalGlobeWMSImagery"
             ? newImagery.attribution + " | " + this.state.imageryYearDG + " (" + this.state.stackingProfileDG + ")"
-            : newImagery.title === "PlanetGlobalMosaic"
+            : newImagery.sourceConfig.type === "Planet"
                 ? newImagery.attribution + " | " + this.state.imageryYearPlanet + "-" + this.state.imageryMonthPlanet
                 : newImagery.attribution;
         this.setState({
@@ -279,7 +279,7 @@ class Collection extends React.Component {
 
         if (this.state.currentImagery.title === "DigitalGlobeWMSImagery") {
             this.updateDGWMSLayer();
-        } else if (this.state.currentImagery.title === "PlanetGlobalMosaic") {
+        } else if (this.state.currentImagery.sourceConfig.type === "Planet") {
             this.updatePlanetLayer();
         }
     };
@@ -300,9 +300,9 @@ class Collection extends React.Component {
     };
 
     updatePlanetLayer = () => {
-        const { imageryMonthPlanet, imageryYearPlanet } = this.state;
+        const { currentImagery, imageryMonthPlanet, imageryYearPlanet } = this.state;
         mercator.updateLayerSource(this.state.mapConfig,
-                                   "PlanetGlobalMosaic",
+                                   currentImagery.title,
                                    sourceConfig => {
                                        sourceConfig.month = imageryMonthPlanet < 10 ? "0" + imageryMonthPlanet : imageryMonthPlanet;
                                        sourceConfig.year = imageryYearPlanet;
@@ -617,19 +617,14 @@ class Collection extends React.Component {
         }
     };
 
-    getImageryAttributes = () => {
-        const attributes = {
-            DigitalGlobeWMSImagery: {
-                imageryYearDG:     this.state.imageryYearDG,
-                stackingProfileDG: this.state.stackingProfileDG,
-            },
-            PlanetGlobalMosaic: {
-                imageryMonthPlanet: this.state.imageryMonthPlanet,
-                imageryYearPlanet:  this.state.imageryYearPlanet,
-            },
-        };
-        return attributes[this.state.currentImagery.title] || {};
-    };
+    getImageryAttributes = () =>
+        (this.state.currentImagery.title === "DigitalGlobeWMSImagery") ? {
+            imageryYearDG:     this.state.imageryYearDG,
+            stackingProfileDG: this.state.stackingProfileDG,
+        } : (this.state.currentImagery.sourceConfig.type === "Planet") ? {
+            imageryMonthPlanet: this.state.imageryMonthPlanet,
+            imageryYearPlanet:  this.state.imageryYearPlanet,
+        } : {};
 
     getChildQuestions = (currentQuestionId) => {
         const { surveyQuestions } = this.state.currentProject;
@@ -1042,6 +1037,7 @@ class Collection extends React.Component {
                     <ImageryOptions
                         baseMapSource={this.state.currentImagery.id}
                         imageryTitle={this.state.currentImagery.title}
+                        imageryType={this.state.currentImagery.sourceConfig.type}
                         imageryList={this.state.imageryList}
                         imageryYearDG={this.state.imageryYearDG}
                         imageryYearPlanet={this.state.imageryYearPlanet}
@@ -1364,7 +1360,7 @@ class ImageryOptions extends React.Component {
                 <input
                     type="range"
                     min="2016"
-                    max="2018"
+                    max={new Date().getFullYear()}
                     value={this.props.imageryYearPlanet}
                     className="slider"
                     id="myRange"
@@ -1415,7 +1411,7 @@ class ImageryOptions extends React.Component {
                             }
                         </select>
                         {props.imageryTitle === "DigitalGlobeWMSImagery" && this.digitalGlobeMenus()}
-                        {props.imageryTitle === "PlanetGlobalMosaic" && this.planetMenus()}
+                        {props.imageryType === "Planet" && this.planetMenus()}
                     </Fragment>
                 }
             </div>

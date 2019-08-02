@@ -31,9 +31,16 @@ public class JsonImagery implements Imagery {
                             imagery -> {
                                 var sourceConfig = imagery.get("sourceConfig").getAsJsonObject();
                                 // Return only necessary fields for types we proxy
-                                if (List.of("DigitalGlobe", "EarthWatch", "Planet", "GeoServer").contains(sourceConfig.get("type").getAsString())) {
+                                if (List.of("DigitalGlobe", "EarthWatch", "GeoServer").contains(sourceConfig.get("type").getAsString())) {
                                     var cleanSource = new JsonObject();
                                     cleanSource.add("type", sourceConfig.get("type"));
+                                    imagery.add("sourceConfig", cleanSource);
+                                    return imagery;
+                                } else if (sourceConfig.get("type").getAsString().equals("Planet")) {
+                                    var cleanSource = new JsonObject();
+                                    cleanSource.add("type",  sourceConfig.get("type"));
+                                    cleanSource.add("month", sourceConfig.get("month"));
+                                    cleanSource.add("year",  sourceConfig.get("year"));
                                     imagery.add("sourceConfig", cleanSource);
                                     return imagery;
                                 } else {
