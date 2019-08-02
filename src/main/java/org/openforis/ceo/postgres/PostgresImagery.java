@@ -33,19 +33,25 @@ public class PostgresImagery implements Imagery {
                 while(rs.next()) {
                     //create imagery json to send back
                     var newImagery = new JsonObject();
-                    newImagery.addProperty("id", rs.getInt("imagery_id"));
+                    newImagery.addProperty("id",          rs.getInt("imagery_id"));
                     newImagery.addProperty("institution", rs.getInt("institution_id"));
-                    newImagery.addProperty("visibility", rs.getString("visibility"));
-                    newImagery.addProperty("title", rs.getString("title"));
+                    newImagery.addProperty("visibility",  rs.getString("visibility"));
+                    newImagery.addProperty("title",       rs.getString("title"));
                     newImagery.addProperty("attribution", rs.getString("attribution"));
                     newImagery.add("extent", rs.getString("extent") == null || rs.getString("extent").equals("null")
                         ? null
                         : parseJson(rs.getString("extent")).getAsJsonArray());
                     var sourceConfig = parseJson(rs.getString("source_config")).getAsJsonObject();
                     // Return only necessary fields for types we proxy
-                    if (List.of("DigitalGlobe", "EarthWatch", "Planet", "GeoServer").contains(sourceConfig.get("type").getAsString())) {
+                    if (List.of("DigitalGlobe", "EarthWatch", "GeoServer").contains(sourceConfig.get("type").getAsString())) {
                         var cleanSource = new JsonObject();
                         cleanSource.add("type", sourceConfig.get("type"));
+                        newImagery.add("sourceConfig", cleanSource);
+                    } else if (sourceConfig.get("type").getAsString().equals("Planet")) {
+                        var cleanSource = new JsonObject();
+                        cleanSource.add("type",  sourceConfig.get("type"));
+                        cleanSource.add("month", sourceConfig.get("month"));
+                        cleanSource.add("year",  sourceConfig.get("year"));
                         newImagery.add("sourceConfig", cleanSource);
                     } else {
                         newImagery.add("sourceConfig", sourceConfig);
