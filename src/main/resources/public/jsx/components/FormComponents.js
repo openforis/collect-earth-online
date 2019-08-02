@@ -30,11 +30,29 @@ export class CollapsibleSectionBlock extends React.Component {
         super(props);
         this.state = {
             showContent: false,
+            height: "0px",
             myRef: null,
         };
     }
 
+    componentDidUpdate = (prevProps, prevState) => {
+        if (prevState.height === "auto" && this.state.height !== "auto") {
+            setTimeout(() => this.setState({ height: "0px" }), 1);
+        }
+    }
+
     setInnerRef = (ref) => this.setState({ myRef: ref });
+
+    toggleOpenClose = () => this.setState({
+        showContent: !this.state.showContent,
+        height: this.state.myRef.scrollHeight,
+    });
+
+    updateAfterTransition = () => {
+        if (this.state.showContent) {
+            this.setState({ height: "auto" });
+        }
+    };
 
     render() {
         const { title, children } = this.props;
@@ -42,13 +60,13 @@ export class CollapsibleSectionBlock extends React.Component {
             <div>
                 <div className="col">
                     <div
-                        onClick={() => this.setState({ showContent: !this.state.showContent })}
+                        onClick={() => this.toggleOpenClose()}
                     >
                         <h2 className="header px-0" style={{ fontSize: "1.25rem", padding: ".75rem" }}>
                             {title}
                             <span
                                 style={{
-                                    transition: "transform 400ms linear 0s",
+                                    transition: "transform 250ms linear 0s",
                                     transform: this.state.showContent ? "rotateZ(180deg)" : "rotateZ(0deg)",
                                     float: "right",
                                     marginRight: "2rem",
@@ -60,8 +78,9 @@ export class CollapsibleSectionBlock extends React.Component {
                     </div>
                     <div
                         ref={this.setInnerRef}
+                        onTransitionEnd={() => this.updateAfterTransition()}
                         style={{
-                            height: this.state.showContent ? this.state.myRef.scrollHeight + "px" : "0px",
+                            height: this.state.height,
                             overflow: "hidden",
                             transition: "height 250ms linear 0s",
                         }}
