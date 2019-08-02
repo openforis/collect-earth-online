@@ -618,12 +618,10 @@ class Collection extends React.Component {
     };
 
     getImageryAttributes = () =>
-        (this.state.currentImagery.title === "DigitalGlobeWMSImagery")
-        ? {
+        (this.state.currentImagery.title === "DigitalGlobeWMSImagery") ? {
             imageryYearDG:     this.state.imageryYearDG,
             stackingProfileDG: this.state.stackingProfileDG,
-        } : (this.state.currentImagery.sourceConfig.type === "Planet")
-        ? {
+        } : (this.state.currentImagery.sourceConfig.type === "Planet") ? {
             imageryMonthPlanet: this.state.imageryMonthPlanet,
             imageryYearPlanet:  this.state.imageryYearPlanet,
         } : {};
@@ -1362,7 +1360,7 @@ class ImageryOptions extends React.Component {
                 <input
                     type="range"
                     min="2016"
-                    max="2019"
+                    max={new Date().getFullYear()}
                     value={this.props.imageryYearPlanet}
                     className="slider"
                     id="myRange"
