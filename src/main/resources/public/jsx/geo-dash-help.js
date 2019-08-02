@@ -17,7 +17,7 @@ class GeoDashHelp extends React.Component {
     }
 
 
-    getLi = text => <li style={{overflowWrap: "break-word"}}> {text} </li>;
+    getLi = text => <li style={{ overflowWrap: "break-word" }}> {text} </li>;
 
     toggleHelpImage = event => {
         const which = event.target;
@@ -144,7 +144,7 @@ class GeoDashHelp extends React.Component {
                             {this.getLi(this.state.LngObject.click_create)}
                             {this.getLi(this.state.LngObject.reposition)}
                         </ol>
-                        <br style={{clear:"both;"}}/>
+                        <br style={{ clear:"both;" }}/>
                     </Collapsible>
                     <Collapsible
                         trigger={this.state.LngObject.add_dual_image_collection}
@@ -162,11 +162,11 @@ class GeoDashHelp extends React.Component {
                             {this.getLi(this.state.LngObject.choose_basemap)}
                             <li>
                                 <span data-tag="select_data">{this.state.LngObject.select_data}</span>
-                                <ol style={{listStyleType: "lower-alpha"}}>
+                                <ol style={{ listStyleType: "lower-alpha" }}>
                                     {this.getLi(this.state.LngObject.ic_data_info_preset)}
                                     <li data-tag="ic_data_info_configure">
                                         {this.state.LngObject.ic_data_info_configure}
-                                        <ol style={{listStyleType: "lower-roman"}}>
+                                        <ol style={{ listStyleType: "lower-roman" }}>
                                             {this.getLi("Landsat 5 - B1, B2, B3, B4, B5, B6, B7")}
                                             {this.getLi("Landsat 7 - B1, B2, B3, B4, B5, B6_VCID_1, B6_VCID_2, B7, B8")}
                                             {this.getLi("Landsat 8 - B1, B2, B3, B4, B5, B6, B7, B8, B9, B10, B11")}
@@ -176,7 +176,7 @@ class GeoDashHelp extends React.Component {
                                     {this.getLi(this.state.LngObject.image_asset)}
                                     <li>
                                         <span data-tag="image_collection_asset">{this.state.LngObject.image_collection_asset}</span>
-                                        <ol style={{listStyleType: "lower-alpha"}}>
+                                        <ol style={{ listStyleType: "lower-alpha" }}>
                                             {this.getLi(this.state.LngObject.give_title)}
                                             <li>
                                                 <span>{this.state.LngObject.enter_image_asset}</span> users/ValeriaContessa/Indonesia_2000
@@ -189,7 +189,7 @@ class GeoDashHelp extends React.Component {
                                     </li>
                                     <li>
                                         <span data-tag="custom_widget_info">{this.state.LngObject.custom_widget_info}</span>
-                                        <ol style={{listStyleType: "lower-roman"}}>
+                                        <ol style={{ listStyleType: "lower-roman" }}>
                                             {this.getLi("Offline Carbon Monoxide - COPERNICUS/S5P/OFFL/L3_CO {\"bands\":\"CO_column_number_density,H2O_column_number_density,cloud_height\",\"min\":\"0\",\"max\":\"0.5\"} \n 2018-01-01 to 2018-12-31")}
                                             {this.getLi(this.state.LngObject.custom_widget_warning)}
                                         </ol>
@@ -200,11 +200,11 @@ class GeoDashHelp extends React.Component {
                             {this.getLi(this.state.LngObject.click_step2)}
                             <li>
                                 <span data-tag="select_data2">{this.state.LngObject.select_data2}</span>
-                                <ol style={{listStyleType: "lower-alpha"}}>
+                                <ol style={{ listStyleType: "lower-alpha" }}>
                                     {this.getLi(this.state.LngObject.ic_data_info_preset)}
-                                    <li style={{overflowWrap: "break-word"}}>
+                                    <li style={{ overflowWrap: "break-word" }}>
                                         {this.state.LngObject.ic_data_info_configure}
-                                        <ol style={{listStyleType: "lower-roman"}}>
+                                        <ol style={{ listStyleType: "lower-roman" }}>
                                             {this.getLi("Landsat 5 - B1, B2, B3, B4, B5, B6, B7")}
                                             {this.getLi("Landsat 7 - B1, B2, B3, B4, B5, B6_VCID_1, B6_VCID_2, B7, B8")}
                                             {this.getLi("Landsat 8 - B1, B2, B3, B4, B5, B6, B7, B8, B9, B10, B11")}
@@ -214,11 +214,11 @@ class GeoDashHelp extends React.Component {
                                     {this.getLi(this.state.LngObject.image_asset)}
                                     <li>
                                         <span>{this.state.LngObject.image_collection_asset}</span>
-                                        <ol style={{listStyleType: "lower-roman"}}>
-                                            <li style={{overflowWrap: "break-word"}}>
+                                        <ol style={{ listStyleType: "lower-roman" }}>
+                                            <li style={{ overflowWrap: "break-word" }}>
                                                 <span>{this.state.LngObject.enter_image_asset}</span> users/ValeriaContessa/Indonesia_2000
                                             </li>
-                                            <li style={{overflowWrap: "break-word"}}>
+                                            <li style={{ overflowWrap: "break-word" }}>
                                                 <span data-tag="enter_image_asset_params"> {this.state.LngObject.enter_image_asset_params}</span>
                                                 {"{\"bands\":\"B4,B5,B3\",\"min\":\"10,0,10\",\"max\":\"120,90,70\"}"}
                                             </li>
@@ -227,8 +227,8 @@ class GeoDashHelp extends React.Component {
                                     </li>
                                     <li>
                                         <span data-tag="image_collection_asset">{this.state.LngObject.image_collection_asset}</span>
-                                        <ol style={{listStyleType: "lower-roman"}}>
-                                            <li style={{overflowWrap: "break-word"}}>
+                                        <ol style={{ listStyleType: "lower-roman" }}>
+                                            <li style={{ overflowWrap: "break-word" }}>
                                                 {this.getLi("Offline Carbon Monoxide - COPERNICUS/S5P/OFFL/L3_CO {\"bands\":\"CO_column_number_density,H2O_column_number_density,cloud_height\",\"min\":\"0\",\"max\":\"0.5\"} \n   2018-01-01 to 2018-12-31")}
                                             </li>
                                             {this.getLi(this.state.LngObject.custom_widget_warning)}
@@ -242,7 +242,7 @@ class GeoDashHelp extends React.Component {
                             {this.getLi(this.state.LngObject.click_create)}
                             {this.getLi(this.state.LngObject.reposition)}
                         </ol>
-                        <br style={{clear:"both;"}}/>
+                        <br style={{ clear:"both;" }}/>
                     </Collapsible>
                     <Collapsible
                         trigger={this.state.LngObject.add_image_asset}
@@ -259,17 +259,17 @@ class GeoDashHelp extends React.Component {
                             {this.getLi(this.state.LngObject.select_image_asset)}
                             {this.getLi(this.state.LngObject.choose_basemap)}
                             {this.getLi(this.state.LngObject.give_title)}
-                            <li style={{overflowWrap: "break-word"}}>
+                            <li style={{ overflowWrap: "break-word" }}>
                                 <span data-tag="enter_image_asset">{this.state.LngObject.enter_image_asset}</span> {"users/billyz313/carbon_monoxide"}
                             </li>
-                            <li style={{overflowWrap: "break-word"}}>
+                            <li style={{ overflowWrap: "break-word" }}>
                                 <span data-tag="enter_image_asset_params">{this.state.LngObject.enter_image_asset_params}</span>
                                 {"{\"bands\":\"CO_column_number_density,H2O_column_number_density,cloud_height\",\"min\":\"0\",\"max\":\"0.5\"}"}
                             </li>
                             {this.getLi(this.state.LngObject.click_create)}
                             {this.getLi(this.state.LngObject.reposition)}
                         </ol>
-                        <br style={{clear:"both;"}}/>
+                        <br style={{ clear:"both;" }}/>
                     </Collapsible>
                     <Collapsible
                         trigger={this.state.LngObject.add_image_collection_widget}
@@ -295,7 +295,7 @@ class GeoDashHelp extends React.Component {
                             {this.getLi(this.state.LngObject.click_create)}
                             {this.getLi(this.state.LngObject.reposition)}
                         </ol>
-                        <br style={{clear:"both;"}}/>
+                        <br style={{ clear:"both;" }}/>
                     </Collapsible>
                     <Collapsible
                         trigger={this.state.LngObject.to_move_resize}
@@ -313,7 +313,7 @@ class GeoDashHelp extends React.Component {
                             {this.getLi(this.state.LngObject.widgets_realtime)}
                             {this.getLi(this.state.LngObject.view_rendered)}
                         </ol>
-                        <br style={{clear:"both;"}}/>
+                        <br style={{ clear:"both;" }}/>
                     </Collapsible>
                     <Collapsible
                         trigger={this.state.LngObject.gee_image_asset_creation}
@@ -321,12 +321,13 @@ class GeoDashHelp extends React.Component {
                     >
                         <br className="previewbreak"/>
                         <iframe
-                            style={{width: "100%", height: "570px"}}
+                            style={{ width: "100%", height: "570px" }}
                             src="https://www.youtube.com/embed/l57IhmduVBQ"
                             frameBorder="0"
                             allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture"
-                            allowFullScreen></iframe>
-                        <br style={{clear:"both;"}}/>
+                            allowFullScreen
+                        />
+                        <br style={{ clear:"both;" }}/>
                     </Collapsible>
                     <Collapsible
                         trigger={this.state.LngObject.gee_imageCollection_asset_creation}
@@ -334,20 +335,25 @@ class GeoDashHelp extends React.Component {
                     >
                         <br className="previewbreak"/>
                         <iframe
-                            style={{width: "100%", height: "570px"}}
+                            style={{ width: "100%", height: "570px" }}
                             src="https://www.youtube.com/embed/7eIvltgDbXw"
                             frameBorder="0"
                             allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture"
-                            allowFullScreen></iframe>
-                        <br style={{clear:"both;"}}/>
+                            allowFullScreen
+                        />
+                        <br style={{ clear:"both;" }}/>
                     </Collapsible>
                 </div>
                 <p>
-                    <span>{this.state.LngObject.pre_sepal_link}</span> <a
+                    <span>{this.state.LngObject.pre_sepal_link}</span>
+                    <a
                         href="http://www.openforis.org/tools/sepal.html"
                         target="_blank"
                         rel="noopener noreferrer"
-                    >OpenForis-SEPAL</a> <span>{this.state.LngObject.post_sepal_link}</span>
+                    >
+                        OpenForis-SEPAL
+                    </a>
+                    <span>{this.state.LngObject.post_sepal_link}</span>
                 </p>
             </div>
         );
