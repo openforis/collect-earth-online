@@ -1168,7 +1168,7 @@ function SideBar(props) {
     );
 }
 
-function CollapsableTitle({ title, showGroup, toggleShow }) {
+function CollapsibleTitle({ title, showGroup, toggleShow }) {
     const buttonDownStyle = { width: "1.5rem", height: "1.5rem", paddingTop: "1px", paddingLeft: "3px" };
     const buttonRightStyle = { width: "1.5rem", height: "1.5rem", paddingTop: "0px", paddingLeft: "6px", fontSize: ".8rem" };
     return (
@@ -1290,7 +1290,7 @@ class PlotNavigation extends React.Component {
         const { props } = this;
         return (
             <div className="text-center mt-2">
-                <CollapsableTitle
+                <CollapsibleTitle
                     title={`Plot Navigation ${this.props.plotId ? `- ID: ${this.props.plotId}` : ""}`}
                     showGroup={this.state.showNav}
                     toggleShow={() => this.setState({ showNav: !this.state.showNav })}
@@ -1391,7 +1391,7 @@ class ImageryOptions extends React.Component {
         const { props } = this;
         return (
             <div className="justify-content-center text-center">
-                <CollapsableTitle
+                <CollapsibleTitle
                     title="Imagery Options"
                     showGroup={this.state.showImg}
                     toggleShow={() => this.setState({ showImg: !this.state.showImg })}

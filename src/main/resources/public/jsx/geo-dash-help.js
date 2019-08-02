@@ -1,6 +1,6 @@
 import React from "react";
 import ReactDOM from "react-dom";
-import Collapsible from "react-collapsible";
+import { CollapsibleSectionBlock } from "./components/FormComponents";
 
 class GeoDashHelp extends React.Component {
     constructor(props) {
@@ -39,16 +39,12 @@ class GeoDashHelp extends React.Component {
                 <br style={{ clear: "both" }} />
                 <div className="col-xl-10 offset-xl-1 col-lg-10 offset-lg-1 justify-content-center">
                     <h1>{this.state.LngObject.title}</h1>
-                    <Collapsible
-                        trigger={this.state.LngObject.head_image_collection_widget}
-                        triggerTagName="h2"
-                    >
+                    <CollapsibleSectionBlock title={this.state.LngObject.head_image_collection_widget}>
                         <img
                             src={this.props.documentRoot + "/img/image_collection_widget.gif"}
                             className="previewImg"
                             onClick={(e) => this.toggleHelpImage(e)}
                         />
-                        <br className="previewbreak"/>
                         <ol>
                             {this.createListItem(this.state.LngObject.click_add_widget)}
                             {this.createListItem(this.state.LngObject.select_image_collection)}
@@ -81,14 +77,13 @@ class GeoDashHelp extends React.Component {
                             {this.createListItem(this.state.LngObject.click_create)}
                             {this.createListItem(this.state.LngObject.reposition)}
                         </ol>
-                    </Collapsible>
-                    <Collapsible trigger={this.state.LngObject.add_time_series_graph} triggerTagName="h2">
+                    </CollapsibleSectionBlock>
+                    <CollapsibleSectionBlock title={this.state.LngObject.add_time_series_graph} >
                         <img
                             src={this.props.documentRoot + "/img/time_series_graph_widget.gif"}
                             className="previewImg"
                             onClick={(e) => this.toggleHelpImage(e)}
                         />
-                        <br className="previewbreak"/>
                         <ol>
                             <li>
                                 {this.state.LngObject.click_add_widget}
@@ -126,17 +121,13 @@ class GeoDashHelp extends React.Component {
                             </li>
                             <li>{this.state.LngObject.reposition}</li>
                         </ol>
-                    </Collapsible>
-                    <Collapsible
-                        trigger={this.state.LngObject.add_stats_widget}
-                        triggerTagName="h2"
-                    >
+                    </CollapsibleSectionBlock>
+                    <CollapsibleSectionBlock title={this.state.LngObject.add_stats_widget}>
                         <img
                             src={this.props.documentRoot + "/img/statistics_widget.gif"}
                             className="previewImg"
                             onClick={(e) => this.toggleHelpImage(e)}
                         />
-                        <br className="previewbreak"/>
                         <ol>
                             {this.createListItem(this.state.LngObject.click_add_widget)}
                             {this.createListItem(this.state.LngObject.select_stats)}
@@ -144,18 +135,13 @@ class GeoDashHelp extends React.Component {
                             {this.createListItem(this.state.LngObject.click_create)}
                             {this.createListItem(this.state.LngObject.reposition)}
                         </ol>
-                        <br style={{ clear: "both" }}/>
-                    </Collapsible>
-                    <Collapsible
-                        trigger={this.state.LngObject.add_dual_image_collection}
-                        triggerTagName="h2"
-                    >
+                    </CollapsibleSectionBlock>
+                    <CollapsibleSectionBlock title={this.state.LngObject.add_dual_image_collection}>
                         <img
                             src={this.props.documentRoot + "/img/dual_image_collection_widget.gif"}
                             className="previewImg"
                             onClick={(e) => this.toggleHelpImage(e)}
                         />
-                        <br className="previewbreak"/>
                         <ol>
                             {this.createListItem(this.state.LngObject.click_add_widget)}
                             {this.createListItem(this.state.LngObject.select_dual_image_collection)}
@@ -240,18 +226,13 @@ class GeoDashHelp extends React.Component {
                             {this.createListItem(this.state.LngObject.click_create)}
                             {this.createListItem(this.state.LngObject.reposition)}
                         </ol>
-                        <br style={{ clear: "both" }}/>
-                    </Collapsible>
-                    <Collapsible
-                        trigger={this.state.LngObject.add_image_asset}
-                        triggerTagName="h2"
-                    >
+                    </CollapsibleSectionBlock>
+                    <CollapsibleSectionBlock title={this.state.LngObject.add_image_asset}>
                         <img
                             src={this.props.documentRoot + "/img/image_asset_widget.gif"}
                             className="previewImg"
                             onClick={(e) => this.toggleHelpImage(e)}
                         />
-                        <br className="previewbreak"/>
                         <ol>
                             {this.createListItem(this.state.LngObject.click_add_widget)}
                             {this.createListItem(this.state.LngObject.select_image_asset)}
@@ -267,18 +248,13 @@ class GeoDashHelp extends React.Component {
                             {this.createListItem(this.state.LngObject.click_create)}
                             {this.createListItem(this.state.LngObject.reposition)}
                         </ol>
-                        <br style={{ clear: "both" }}/>
-                    </Collapsible>
-                    <Collapsible
-                        trigger={this.state.LngObject.add_image_collection_widget}
-                        triggerTagName="h2"
-                    >
+                    </CollapsibleSectionBlock>
+                    <CollapsibleSectionBlock title={this.state.LngObject.add_image_collection_widget}>
                         <img
                             src={this.props.documentRoot + "/img/image_collection_asset_widget.gif"}
                             className="previewImg"
                             onClick={(e) => this.toggleHelpImage(e)}
                         />
-                        <br className="previewbreak"/>
                         <ol>
                             {this.createListItem(this.state.LngObject.click_add_widget)}
                             {this.createListItem(this.state.LngObject.select_image_collection)}
@@ -293,31 +269,21 @@ class GeoDashHelp extends React.Component {
                             {this.createListItem(this.state.LngObject.click_create)}
                             {this.createListItem(this.state.LngObject.reposition)}
                         </ol>
-                        <br style={{ clear: "both" }}/>
-                    </Collapsible>
-                    <Collapsible
-                        trigger={this.state.LngObject.to_move_resize}
-                        triggerTagName="h2"
-                    >
+                    </CollapsibleSectionBlock>
+                    <CollapsibleSectionBlock title={this.state.LngObject.to_move_resize}>
                         <img
                             src={this.props.documentRoot + "/img/change_widget_layout.gif"}
                             className="previewImg"
                             onClick={(e) => this.toggleHelpImage(e)}
                         />
-                        <br className="previewbreak"/>
                         <ol>
                             {this.createListItem(this.state.LngObject.drag_drop)}
                             {this.createListItem(this.state.LngObject.resize_by)}
                             {this.createListItem(this.state.LngObject.widgets_realtime)}
                             {this.createListItem(this.state.LngObject.view_rendered)}
                         </ol>
-                        <br style={{ clear: "both" }}/>
-                    </Collapsible>
-                    <Collapsible
-                        trigger={this.state.LngObject.gee_image_asset_creation}
-                        triggerTagName="h2"
-                    >
-                        <br className="previewbreak"/>
+                    </CollapsibleSectionBlock>
+                    <CollapsibleSectionBlock title={this.state.LngObject.gee_image_asset_creation}>
                         <iframe
                             style={{ width: "100%", height: "570px" }}
                             src="https://www.youtube.com/embed/l57IhmduVBQ"
@@ -325,13 +291,8 @@ class GeoDashHelp extends React.Component {
                             allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture"
                             allowFullScreen
                         />
-                        <br style={{ clear: "both" }}/>
-                    </Collapsible>
-                    <Collapsible
-                        trigger={this.state.LngObject.gee_imageCollection_asset_creation}
-                        triggerTagName="h2"
-                    >
-                        <br className="previewbreak"/>
+                    </CollapsibleSectionBlock>
+                    <CollapsibleSectionBlock title={this.state.LngObject.gee_imageCollection_asset_creation}>
                         <iframe
                             style={{ width: "100%", height: "570px" }}
                             src="https://www.youtube.com/embed/7eIvltgDbXw"
@@ -339,8 +300,7 @@ class GeoDashHelp extends React.Component {
                             allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture"
                             allowFullScreen
                         />
-                        <br style={{ clear: "both" }}/>
-                    </Collapsible>
+                    </CollapsibleSectionBlock>
                 </div>
                 <p>
                     <span>{this.state.LngObject.pre_sepal_link}</span>

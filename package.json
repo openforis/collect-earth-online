@@ -55,7 +55,6 @@
         "lodash": "^4.17.15",
         "ogr2ogr": "^1.4.0",
         "react": "^16.8.6",
-        "react-collapsible": "^2.6.0",
         "react-dom": "^16.8.6"
     },
     "devDependencies": {

@@ -15,6 +15,7 @@
             cursor: pointer;
             z-index: 100;
             border:1px solid #808080;
+            margin-bottom:1rem;
         }
         .previewImg.fullpreview{
             position: fixed;
@@ -34,39 +35,6 @@
             display:none;
         }
 
-        .Collapsible__trigger {
-            display: block;
-            font-weight: 400;
-            text-decoration: none;
-            color: #333333;
-            position: relative;
-            border: 1px solid white;
-            padding: 10px;
-            background: #00ac9d;
-            color: white;
-            cursor:pointer;
-        }
-        .Collapsible__trigger:after {
-            font-family: 'FontAwesome';
-            content: '\f107';
-            position: absolute;
-            right: 10px;
-            top: 10px;
-            display: block;
-            transition: transform 300ms; }
-        .Collapsible__trigger.is-open:after {
-            transform: rotateZ(180deg); }
-        .Collapsible__trigger.is-disabled {
-            opacity: 0.5;
-            background-color: grey; }
-
-        .CustomTriggerCSS {
-            background-color: lightcoral;
-            transition: background-color 200ms ease; }
-
-        .CustomTriggerCSS--open {
-            background-color: darkslateblue; }
-
         @media (max-width: 768px) {
             .previewImg{
                 width:100%;
@@ -78,22 +46,17 @@
                 width: 100vw;
                 height: auto;
             }
-                .previewbreak {
-                    display: block;
-                    clear: both;
-                }
-
-            }
-</style>
-        <script type="text/javascript">
-            window.onload = function () {
-                geo_dash_help.renderGeodashHelpPage({
-                    documentRoot:                "${root}",
-                    browserLanguage:             "${browserLanguage}"
-                });
-            };
-        </script>
-        <div id="dashHolder"></div>
+        }
+    </style>
+    <script type="text/javascript">
+        window.onload = function () {
+            geo_dash_help.renderGeodashHelpPage({
+                documentRoot:                "${root}",
+                browserLanguage:             "${browserLanguage}"
+            });
+        };
+    </script>
+    <div id="dashHolder"></div>
         <#include "logo-banner.ftl">
     </div>
 </section>
