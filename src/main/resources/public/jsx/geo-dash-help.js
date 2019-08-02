@@ -36,7 +36,7 @@ class GeoDashHelp extends React.Component {
     render() {
         return (
             <div className="container-fluid">
-                <br style={{ clear:"both" }} />
+                <br style={{ clear: "both" }} />
                 <div className="col-xl-10 offset-xl-1 col-lg-10 offset-lg-1 justify-content-center">
                     <h1>{this.state.LngObject.title}</h1>
                     <Collapsible
@@ -144,7 +144,7 @@ class GeoDashHelp extends React.Component {
                             {this.getLi(this.state.LngObject.click_create)}
                             {this.getLi(this.state.LngObject.reposition)}
                         </ol>
-                        <br style={{ clear:"both;" }}/>
+                        <br style={{ clear: "both" }}/>
                     </Collapsible>
                     <Collapsible
                         trigger={this.state.LngObject.add_dual_image_collection}
@@ -228,9 +228,7 @@ class GeoDashHelp extends React.Component {
                                     <li>
                                         <span data-tag="image_collection_asset">{this.state.LngObject.image_collection_asset}</span>
                                         <ol style={{ listStyleType: "lower-roman" }}>
-                                            <li style={{ overflowWrap: "break-word" }}>
-                                                {this.getLi("Offline Carbon Monoxide - COPERNICUS/S5P/OFFL/L3_CO {\"bands\":\"CO_column_number_density,H2O_column_number_density,cloud_height\",\"min\":\"0\",\"max\":\"0.5\"} \n   2018-01-01 to 2018-12-31")}
-                                            </li>
+                                            {this.getLi("Offline Carbon Monoxide - COPERNICUS/S5P/OFFL/L3_CO {\"bands\":\"CO_column_number_density,H2O_column_number_density,cloud_height\",\"min\":\"0\",\"max\":\"0.5\"} \n   2018-01-01 to 2018-12-31")}
                                             {this.getLi(this.state.LngObject.custom_widget_warning)}
                                         </ol>
                                     </li>
@@ -242,7 +240,7 @@ class GeoDashHelp extends React.Component {
                             {this.getLi(this.state.LngObject.click_create)}
                             {this.getLi(this.state.LngObject.reposition)}
                         </ol>
-                        <br style={{ clear:"both;" }}/>
+                        <br style={{ clear: "both" }}/>
                     </Collapsible>
                     <Collapsible
                         trigger={this.state.LngObject.add_image_asset}
@@ -269,7 +267,7 @@ class GeoDashHelp extends React.Component {
                             {this.getLi(this.state.LngObject.click_create)}
                             {this.getLi(this.state.LngObject.reposition)}
                         </ol>
-                        <br style={{ clear:"both;" }}/>
+                        <br style={{ clear: "both" }}/>
                     </Collapsible>
                     <Collapsible
                         trigger={this.state.LngObject.add_image_collection_widget}
@@ -295,7 +293,7 @@ class GeoDashHelp extends React.Component {
                             {this.getLi(this.state.LngObject.click_create)}
                             {this.getLi(this.state.LngObject.reposition)}
                         </ol>
-                        <br style={{ clear:"both;" }}/>
+                        <br style={{ clear: "both" }}/>
                     </Collapsible>
                     <Collapsible
                         trigger={this.state.LngObject.to_move_resize}
@@ -313,7 +311,7 @@ class GeoDashHelp extends React.Component {
                             {this.getLi(this.state.LngObject.widgets_realtime)}
                             {this.getLi(this.state.LngObject.view_rendered)}
                         </ol>
-                        <br style={{ clear:"both;" }}/>
+                        <br style={{ clear: "both" }}/>
                     </Collapsible>
                     <Collapsible
                         trigger={this.state.LngObject.gee_image_asset_creation}
@@ -327,7 +325,7 @@ class GeoDashHelp extends React.Component {
                             allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture"
                             allowFullScreen
                         />
-                        <br style={{ clear:"both;" }}/>
+                        <br style={{ clear: "both" }}/>
                     </Collapsible>
                     <Collapsible
                         trigger={this.state.LngObject.gee_imageCollection_asset_creation}
@@ -341,7 +339,7 @@ class GeoDashHelp extends React.Component {
                             allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture"
                             allowFullScreen
                         />
-                        <br style={{ clear:"both;" }}/>
+                        <br style={{ clear: "both" }}/>
                     </Collapsible>
                 </div>
                 <p>
