@@ -58,35 +58,33 @@ export class CollapsibleSectionBlock extends React.Component {
         const { title, children } = this.props;
         return (
             <div>
-                <div className="col">
-                    <div
-                        onClick={() => this.toggleOpenClose()}
-                    >
-                        <h2 className="header px-0" style={{ fontSize: "1.25rem", padding: ".75rem" }}>
-                            {title}
-                            <span
-                                style={{
-                                    transition: "transform 250ms linear 0s",
-                                    transform: this.state.showContent ? "rotateZ(180deg)" : "rotateZ(0deg)",
-                                    float: "right",
-                                    marginRight: "2rem",
-                                }}
-                            >
-                                <UnicodeIcon icon={"downCaret"}/>
-                            </span>
-                        </h2>
-                    </div>
-                    <div
-                        ref={this.setInnerRef}
-                        onTransitionEnd={() => this.updateAfterTransition()}
+                <h2
+                    className="header px-0"
+                    style={{ fontSize: "1.25rem", padding: ".75rem" }}
+                    onClick={() => this.toggleOpenClose()}
+                >
+                    {title}
+                    <span
                         style={{
-                            height: this.state.height,
-                            overflow: "hidden",
-                            transition: "height 250ms linear 0s",
+                            transition: "transform 250ms linear 0s",
+                            transform: this.state.showContent ? "rotateZ(180deg)" : "rotateZ(0deg)",
+                            float: "right",
+                            marginRight: "2rem",
                         }}
                     >
-                        <div>{children}</div>
-                    </div>
+                        <UnicodeIcon icon={"downCaret"}/>
+                    </span>
+                </h2>
+                <div
+                    ref={this.setInnerRef}
+                    onTransitionEnd={() => this.updateAfterTransition()}
+                    style={{
+                        height: this.state.height,
+                        overflow: "hidden",
+                        transition: "height 250ms linear 0s",
+                    }}
+                >
+                    {children}
                 </div>
             </div>
         );
