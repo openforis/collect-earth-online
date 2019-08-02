@@ -1,6 +1,6 @@
 import React from "react";
 import ReactDOM from "react-dom";
-import { CollapsibleSectionBlock } from "./components/FormComponents";
+import { CollapsibleSectionBlock, ExpandableImage } from "./components/FormComponents";
 
 class GeoDashHelp extends React.Component {
     constructor(props) {
@@ -16,35 +16,27 @@ class GeoDashHelp extends React.Component {
             .then(data => this.setState({ LngObject: data }));
     }
 
-
     createListItem = text => <li style={{ overflowWrap: "break-word" }}> {text} </li>;
 
-    toggleHelpImage = event => {
-        const which = event.target;
-        if (document.body.style.overflow === "hidden") {
-            document.body.style.overflow = "auto";
-            which.className = which.className.replace(/\bfullpreview\b/g, "");
-        } else {
-            document.body.style.overflow = "hidden";
-            const arr = which.className.split(" ");
-            if (arr.indexOf("fullpreview") === -1) {
-                which.className += " " + "fullpreview";
-            }
-        }
-    };
+    expandableImageWrapper = (src) => (
+        <ExpandableImage
+            src={this.props.documentRoot + src}
+            previewStyles={{
+                float:"right",
+                width:"284px",
+                marginBottom:"1rem",
+                marginLeft:"1rem",
+            }}
+        />
+    )
 
     render() {
         return (
             <div className="container-fluid">
-                <br style={{ clear: "both" }} />
                 <div className="col-xl-10 offset-xl-1 col-lg-10 offset-lg-1 justify-content-center">
                     <h1>{this.state.LngObject.title}</h1>
                     <CollapsibleSectionBlock title={this.state.LngObject.head_image_collection_widget}>
-                        <img
-                            src={this.props.documentRoot + "/img/image_collection_widget.gif"}
-                            className="previewImg"
-                            onClick={(e) => this.toggleHelpImage(e)}
-                        />
+                        {this.expandableImageWrapper("/img/image_collection_widget.gif")}
                         <ol>
                             {this.createListItem(this.state.LngObject.click_add_widget)}
                             {this.createListItem(this.state.LngObject.select_image_collection)}
@@ -78,12 +70,8 @@ class GeoDashHelp extends React.Component {
                             {this.createListItem(this.state.LngObject.reposition)}
                         </ol>
                     </CollapsibleSectionBlock>
-                    <CollapsibleSectionBlock title={this.state.LngObject.add_time_series_graph} >
-                        <img
-                            src={this.props.documentRoot + "/img/time_series_graph_widget.gif"}
-                            className="previewImg"
-                            onClick={(e) => this.toggleHelpImage(e)}
-                        />
+                    <CollapsibleSectionBlock title={this.state.LngObject.add_time_series_graph}>
+                        {this.expandableImageWrapper("/img/time_series_graph_widget.gif")}
                         <ol>
                             <li>
                                 {this.state.LngObject.click_add_widget}
@@ -123,11 +111,7 @@ class GeoDashHelp extends React.Component {
                         </ol>
                     </CollapsibleSectionBlock>
                     <CollapsibleSectionBlock title={this.state.LngObject.add_stats_widget}>
-                        <img
-                            src={this.props.documentRoot + "/img/statistics_widget.gif"}
-                            className="previewImg"
-                            onClick={(e) => this.toggleHelpImage(e)}
-                        />
+                        {this.expandableImageWrapper("/img/statistics_widget.gif")}
                         <ol>
                             {this.createListItem(this.state.LngObject.click_add_widget)}
                             {this.createListItem(this.state.LngObject.select_stats)}
@@ -137,11 +121,7 @@ class GeoDashHelp extends React.Component {
                         </ol>
                     </CollapsibleSectionBlock>
                     <CollapsibleSectionBlock title={this.state.LngObject.add_dual_image_collection}>
-                        <img
-                            src={this.props.documentRoot + "/img/dual_image_collection_widget.gif"}
-                            className="previewImg"
-                            onClick={(e) => this.toggleHelpImage(e)}
-                        />
+                        {this.expandableImageWrapper("/img/dual_image_collection_widget.gif")}
                         <ol>
                             {this.createListItem(this.state.LngObject.click_add_widget)}
                             {this.createListItem(this.state.LngObject.select_dual_image_collection)}
@@ -168,7 +148,8 @@ class GeoDashHelp extends React.Component {
                                                 <span>{this.state.LngObject.enter_image_asset}</span> users/ValeriaContessa/Indonesia_2000
                                             </li>
                                             <li>
-                                                <span>{this.state.LngObject.enter_image_asset_params} </span> {"{\"bands\":\"B4,B5,B3\",\"min\":\"10,0,10\",\"max\":\"120,90,70\"}"}
+                                                <span>{this.state.LngObject.enter_image_asset_params}</span>
+                                                {"{\"bands\":\"B4,B5,B3\",\"min\":\"10,0,10\",\"max\":\"120,90,70\"}"}
                                             </li>
                                             {this.createListItem(this.state.LngObject.skip_date)}
                                         </ol>
@@ -228,11 +209,7 @@ class GeoDashHelp extends React.Component {
                         </ol>
                     </CollapsibleSectionBlock>
                     <CollapsibleSectionBlock title={this.state.LngObject.add_image_asset}>
-                        <img
-                            src={this.props.documentRoot + "/img/image_asset_widget.gif"}
-                            className="previewImg"
-                            onClick={(e) => this.toggleHelpImage(e)}
-                        />
+                        {this.expandableImageWrapper("/img/image_asset_widget.gif")}
                         <ol>
                             {this.createListItem(this.state.LngObject.click_add_widget)}
                             {this.createListItem(this.state.LngObject.select_image_asset)}
@@ -250,11 +227,7 @@ class GeoDashHelp extends React.Component {
                         </ol>
                     </CollapsibleSectionBlock>
                     <CollapsibleSectionBlock title={this.state.LngObject.add_image_collection_widget}>
-                        <img
-                            src={this.props.documentRoot + "/img/image_collection_asset_widget.gif"}
-                            className="previewImg"
-                            onClick={(e) => this.toggleHelpImage(e)}
-                        />
+                        {this.expandableImageWrapper("/img/image_collection_asset_widget.gif")}
                         <ol>
                             {this.createListItem(this.state.LngObject.click_add_widget)}
                             {this.createListItem(this.state.LngObject.select_image_collection)}
@@ -271,11 +244,7 @@ class GeoDashHelp extends React.Component {
                         </ol>
                     </CollapsibleSectionBlock>
                     <CollapsibleSectionBlock title={this.state.LngObject.to_move_resize}>
-                        <img
-                            src={this.props.documentRoot + "/img/change_widget_layout.gif"}
-                            className="previewImg"
-                            onClick={(e) => this.toggleHelpImage(e)}
-                        />
+                        {this.expandableImageWrapper("/img/change_widget_layout.gif")}
                         <ol>
                             {this.createListItem(this.state.LngObject.drag_drop)}
                             {this.createListItem(this.state.LngObject.resize_by)}

@@ -99,9 +99,76 @@ export function StatsRow({ title, plots, analysisTime }) {
                     (
                         <span className="badge badge-pill bg-lightgreen">{analysisTime} sec/plot </span>
                     )
-                    : ("Untimed")
+                    : ("--")
                 }
             </div>
         </div>
     );
+}
+
+export class ExpandableImage extends React.Component {
+    constructor(props) {
+        super(props);
+        this.state = {
+            fullSize: false,
+        };
+    }
+
+    getImageStyle = () => {
+        const commonAttributes = { border: "1px solid #808080" };
+        if (!this.state.fullSize) {
+            return { ...commonAttributes, ...this.props.previewStyles };
+        } else {
+            return {
+                ...commonAttributes,
+                float: "none",
+                position: "fixed",
+                top: "60px",
+                bottom: "0",
+                left: "0",
+                right: "0",
+                margin: "auto",
+                overflow: "auto",
+                maxWidth: "99%",
+                maxHeight: "calc(98% - 60px)",
+                width: "auto",
+                height: "auto",
+            };
+        }
+    }
+
+    getMainDivStyle = () => {
+        const commonAttributes = { cursor: "pointer" };
+        if (this.state.fullSize) {
+            return {
+                ...commonAttributes,
+                position: "fixed",
+                zIndex: "100",
+                left: "0",
+                top: "0",
+                width: "100%",
+                height: "100%",
+                backgroundColor: "rgba(0,0,0,0.1)",
+            };
+        } else {
+            return commonAttributes;
+        }
+    }
+
+    render() {
+        const { src } = this.props;
+        return (
+            <div
+                className="ExpandableImage"
+                onClick={() => this.setState({ fullSize: !this.state.fullSize })}
+                style={this.getMainDivStyle()}
+            >
+                <img
+                    src={src}
+                    className={this.state.fullSize ? "ExpandableImage__previewImg fullSize" : "ExpandableImage__previewImg"}
+                    style={this.getImageStyle()}
+                />
+            </div>
+        );
+    }
 }
