@@ -35,7 +35,7 @@
   "add_image_asset":"To add a Image Asset Widget:",
   "select_image_asset":"Select Image Asset in the type drop down",
   "add_image_collection_widget":"To add a Image Collection Asset Widget:",
-  "select_image_collection":"Select Image Collection Asset in the type drop down",
+  "select_image_collection_asset":"Select Image Collection Asset in the type drop down",
   "enter_image_collection_asset":"Enter the GEE Image Collection Asset - Example: ",
   "to_move_resize":"To move and resize widgets",
   "drag_drop":"Drag and drop",

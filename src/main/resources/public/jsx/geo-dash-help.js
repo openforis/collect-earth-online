@@ -54,11 +54,11 @@ class GeoDashHelp extends React.Component {
                                         </ol>
                                     </li>
                                     <li>
-                                        <span data-tag="custom_widget_info"></span>
+                                        {LngObject.custom_widget_info}
                                         <ol style={{ listStyleType: "lower-roman" }}>
                                             <li>
                                                 {" Offline Carbon Monoxide - COPERNICUS/S5P/OFFL/L3_CO\n" +
-                                                 "                                                {\"{\"bands\":\"CO_column_number_density,H2O_column_number_density,cloud_height\",\"min\":\"0\",\"max\":\"0.5\"}\"}\n" +
+                                                 "                                                {\"bands\":\"CO_column_number_density,H2O_column_number_density,cloud_height\",\"min\":\"0\",\"max\":\"0.5\"}\n" +
                                                  "                                            2018-01-01 to 2018-12-31"}
                                             </li>
                                             <li>{LngObject.custom_widget_warning}</li>
@@ -112,10 +112,10 @@ class GeoDashHelp extends React.Component {
                             <li>{LngObject.select_dual_image_collection}</li>
                             <li>{LngObject.choose_basemap}</li>
                             <li>
-                                <span data-tag="select_data">{LngObject.select_data}</span>
+                                {LngObject.select_data}
                                 <ol style={{ listStyleType: "lower-alpha" }}>
                                     <li>{LngObject.ic_data_info_preset}</li>
-                                    <li data-tag="ic_data_info_configure">
+                                    <li>
                                         {LngObject.ic_data_info_configure}
                                         <ol style={{ listStyleType: "lower-roman" }}>
                                             <li>{"Landsat 5 - B1, B2, B3, B4, B5, B6, B7"}</li>
@@ -126,7 +126,7 @@ class GeoDashHelp extends React.Component {
                                     </li>
                                     <li>{LngObject.image_asset}</li>
                                     <li>
-                                        <span data-tag="image_collection_asset">{LngObject.image_collection_asset}</span>
+                                        {LngObject.image_collection_asset}
                                         <ol style={{ listStyleType: "lower-alpha" }}>
                                             <li>{LngObject.give_title}</li>
                                             <li>{LngObject.enter_image_asset + "users/ValeriaContessa/Indonesia_2000"}</li>
@@ -138,7 +138,7 @@ class GeoDashHelp extends React.Component {
                                         </ol>
                                     </li>
                                     <li>
-                                        <span data-tag="custom_widget_info">{LngObject.custom_widget_info}</span>
+                                        {LngObject.custom_widget_info}
                                         <ol style={{ listStyleType: "lower-roman" }}>
                                             <li>{"Offline Carbon Monoxide - COPERNICUS/S5P/OFFL/L3_CO {\"bands\":\"CO_column_number_density,H2O_column_number_density,cloud_height\",\"min\":\"0\",\"max\":\"0.5\"} \n 2018-01-01 to 2018-12-31"}</li>
                                             <li>{LngObject.custom_widget_warning}</li>
@@ -149,7 +149,7 @@ class GeoDashHelp extends React.Component {
                             <li>{LngObject.select_date_range}</li>
                             <li>{LngObject.click_step2}</li>
                             <li>
-                                <span data-tag="select_data2">{LngObject.select_data2}</span>
+                                {LngObject.select_data2}
                                 <ol style={{ listStyleType: "lower-alpha" }}>
                                     <li>{LngObject.ic_data_info_preset}</li>
                                     <li>
@@ -167,14 +167,14 @@ class GeoDashHelp extends React.Component {
                                         <ol style={{ listStyleType: "lower-roman" }}>
                                             <li>{LngObject.enter_image_asset + "users/ValeriaContessa/Indonesia_2000"}</li>
                                             <li>
-                                                <span data-tag="enter_image_asset_params"> {LngObject.enter_image_asset_params}</span>
+                                                {LngObject.enter_image_asset_params}
                                                 {"{\"bands\":\"B4,B5,B3\",\"min\":\"10,0,10\",\"max\":\"120,90,70\"}"}
                                             </li>
                                             <li>{LngObject.skip_date}</li>
                                         </ol>
                                     </li>
                                     <li>
-                                        <span data-tag="image_collection_asset">{LngObject.image_collection_asset}</span>
+                                        {LngObject.custom_widget_info}
                                         <ol style={{ listStyleType: "lower-roman" }}>
                                             <li>{"Offline Carbon Monoxide - COPERNICUS/S5P/OFFL/L3_CO {\"bands\":\"CO_column_number_density,H2O_column_number_density,cloud_height\",\"min\":\"0\",\"max\":\"0.5\"} \n   2018-01-01 to 2018-12-31"}</li>
                                             <li>{LngObject.custom_widget_warning}</li>
@@ -195,10 +195,10 @@ class GeoDashHelp extends React.Component {
                             <li>{LngObject.choose_basemap}</li>
                             <li>{LngObject.give_title}</li>
                             <li>
-                                <span data-tag="enter_image_asset">{LngObject.enter_image_asset}</span> {"users/billyz313/carbon_monoxide"}
+                                {LngObject.enter_image_asset} {"users/billyz313/carbon_monoxide"}
                             </li>
                             <li>
-                                <span data-tag="enter_image_asset_params">{LngObject.enter_image_asset_params}</span>
+                                {LngObject.enter_image_asset_params}
                                 {"{\"bands\":\"CO_column_number_density,H2O_column_number_density,cloud_height\",\"min\":\"0\",\"max\":\"0.5\"}"}
                             </li>
                             <li>{LngObject.click_create}</li>
@@ -209,7 +209,7 @@ class GeoDashHelp extends React.Component {
                         {this.expandableImageWrapper("/img/image_collection_asset_widget.gif")}
                         <ol>
                             <li>{LngObject.click_add_widget}</li>
-                            <li>{LngObject.select_image_collection}</li>
+                            <li>{LngObject.select_image_collection_asset}</li>
                             <li>{LngObject.choose_basemap}</li>
                             <li>{LngObject.give_title}</li>
                             <li>{LngObject.enter_image_collection_asset + "users/ValeriaContessa/Indonesia_2000"}</li>

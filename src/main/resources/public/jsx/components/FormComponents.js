@@ -60,7 +60,7 @@ export class CollapsibleSectionBlock extends React.Component {
             <div>
                 <h2
                     className="header px-0"
-                    style={{ fontSize: "1.25rem", padding: ".75rem" }}
+                    style={{ fontSize: "1.25rem", padding: ".75rem", cursor: "pointer" }}
                     onClick={() => this.toggleOpenClose()}
                 >
                     {title}

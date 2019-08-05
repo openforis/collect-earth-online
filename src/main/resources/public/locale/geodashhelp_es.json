@@ -35,7 +35,7 @@
   "add_image_asset":"Para agregar un widget de activo de imagen:",
   "select_image_asset":"Seleccione Image Asset en el menú desplegable",
   "add_image_collection_widget":"Para agregar un widget de activos de la colección de imágenes:",
-  "select_image_collection":"Seleccione el Activo de colección de imágenes en el tipo desplegable",
+  "select_image_collection_asset":"Seleccione el Activo de colección de imágenes en el tipo desplegable",
   "enter_image_collection_asset":"Ingrese el Activo de Colección de Imágenes GEE - Ejemplo: ",
   "to_move_resize":"Para mover y redimensionar widgets.",
   "drag_drop":"Arrastrar y soltar",
