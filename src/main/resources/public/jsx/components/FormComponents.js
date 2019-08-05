@@ -45,7 +45,7 @@ export class CollapsibleSectionBlock extends React.Component {
 
     toggleOpenClose = () => this.setState({
         showContent: !this.state.showContent,
-        height: this.state.myRef.scrollHeight,
+        height: this.state.height !== "auto" && this.state.showContent ? "0px" : this.state.myRef.scrollHeight,
     });
 
     updateAfterTransition = () => {
