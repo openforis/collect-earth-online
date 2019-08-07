@@ -1,13 +1,13 @@
 --TS related functions
 -- Add packet to a project.
 -- Not every project needs packet. If no packet is defined, there is no need to create packet for that project.
-CREATE OR REPLACE FUNCTION add_packet(project_id integer, packet_id integer, plots integer[]) RETURNS VOID AS $$
-    INSERT INTO packets (project_id, packet_id, plot_id)
-    SELECT project_id, packet_id, u.* FROM unnest(plots) u;
+CREATE OR REPLACE FUNCTION add_packet(_project_id integer, _packet_id integer, _plots integer[]) RETURNS VOID AS $$
+    INSERT INTO packets (project_rid, packet_id, plot_rid)
+    SELECT _project_id, _packet_id, u.* FROM unnest(_plots) u;
 $$ LANGUAGE SQL;
 
 -- Get all plots from a project for a user
-CREATE OR REPLACE FUNCTION get_project_plots_for_user(prj_id integer, interpreter_id integer) RETURNS TABLE
+CREATE OR REPLACE FUNCTION get_project_plots_for_user(_project_id integer, _user_id integer) RETURNS TABLE
 (
   project_id integer,
   plot_id integer,
@@ -21,14 +21,14 @@ CREATE OR REPLACE FUNCTION get_project_plots_for_user(prj_id integer, interprete
        ST_X(center) as lng, ST_Y(center) as lat,
        is_complete, is_example, -1 as packet_id
     FROM plots left outer join plot_comments
-    ON plots.plot_uid = plot_comments.plot_id
-        AND plots.project_rid = plot_comments.project_id
-        AND plot_comments.interpreter = interpreter_id
+    ON plots.plot_uid = plot_comments.plot_rid
+        AND plots.project_rid = plot_comments.project_rid
+        AND plot_comments.user_rid = _user_id
         AND plot_comments.packet_id = -1
-    WHERE plots.project_rid=prj_id
+    WHERE plots.project_rid=_project_id
 $$ LANGUAGE SQL;
 
-CREATE OR REPLACE FUNCTION get_project_plots_for_user(prj_id integer, interpreter_id integer, packet integer) RETURNS TABLE
+CREATE OR REPLACE FUNCTION get_project_plots_for_user(_project_id integer, _user_id integer, _packet_id integer) RETURNS TABLE
 (
     project_id integer,
     plot_id integer,
@@ -42,21 +42,21 @@ CREATE OR REPLACE FUNCTION get_project_plots_for_user(prj_id integer, interprete
            ST_X(center) as lng, ST_Y(center) as lat,
            is_complete, is_example, packets.packet_id
     FROM plots inner join packets
-    ON plots.project_rid = packets.project_id
-        AND plots.plot_uid = packets.plot_id
+    ON plots.project_rid = packets.project_rid
+        AND plots.plot_uid = packets.plot_rid
     LEFT OUTER JOIN plot_comments
-    ON plots.plot_uid = plot_comments.plot_id
-        AND plots.project_rid = plot_comments.project_id
-        AND plot_comments.interpreter = interpreter_id
-    WHERE plots.project_rid = prj_id
-        AND packets.packet_id = packet
+    ON plots.plot_uid = plot_comments.plot_rid
+        AND plots.project_rid = plot_comments.project_rid
+        AND plot_comments.user_rid = _user_id
+    WHERE plots.project_rid = _project_id
+        AND packets.packet_id = _packet_id
 $$ LANGUAGE SQL;
 
-CREATE OR REPLACE FUNCTION get_plot_comments(interpreter_id integer, prj_id integer, plotid integer, packet integer) RETURNS TABLE
+CREATE OR REPLACE FUNCTION get_plot_comments(_user_id integer, _project_id integer, _plot_id integer, _packet_id integer) RETURNS TABLE
 (
     project_id integer,
     plot_id integer,
-    interpreter integer,
+    user_id integer,
     comment text,
     is_complete integer,
     is_example integer,
@@ -64,34 +64,35 @@ CREATE OR REPLACE FUNCTION get_plot_comments(interpreter_id integer, prj_id inte
     uncertainty integer
 
 ) AS $$
-    SELECT project_id, plot_id, interpreter,
+    SELECT project_rid, plot_rid, user_rid,
            comment, is_complete, is_example,
            is_wetland, uncertainty
     FROM plot_comments
-    WHERE project_id = prj_id
-    AND plot_id = plotid
-    AND packet_id = packet
-    AND interpreter = interpreter_id
+    WHERE project_rid = _project_id
+    AND plot_rid = _plot_id
+    AND packet_id = _packet_id
+    AND user_rid = _user_id
 $$ LANGUAGE SQL;
 
-CREATE OR REPLACE FUNCTION create_plot_comments(interpreter integer, project_id integer, plot_id integer, packet_id integer,
-    comments text, complete integer default 0, example integer default 0, wetland integer default 0, certainty integer default 0)
+CREATE OR REPLACE FUNCTION create_plot_comments(_user_id integer, _project_id integer, _plot_id integer, _packet_id integer,
+    _comments text, _is_complete integer default 0, _is_example integer default 0, _is_wetland integer default 0, 
+    _uncertainty integer default 0)
     RETURNS BIGINT
 AS $$
     INSERT INTO plot_comments
-        (project_id, plot_id, interpreter, packet_id, comment, is_complete, is_example, is_wetland, uncertainty)
-        VALUES (project_id, plot_id, interpreter, packet_id, comments, complete, example, wetland, certainty)
-    ON CONFLICT (project_id, plot_id, interpreter, packet_id) DO UPDATE
-    SET comment = comments,
-        is_example=example,
-        is_complete=complete,
-        is_wetland=wetland,
-        uncertainty=certainty
+        (project_rid, plot_rid, user_rid, packet_id, comment, is_complete, is_example, is_wetland, uncertainty)
+        VALUES (_project_id, _plot_id, _user_id, _packet_id, _comments, _is_complete, _is_example, _is_wetland, _uncertainty)
+    ON CONFLICT (project_rid, plot_rid, user_rid, packet_id) DO UPDATE
+    SET comment = _comments,
+        is_example=_is_example,
+        is_complete=_is_complete,
+        is_wetland=_is_wetland,
+        uncertainty=_uncertainty
 
-    RETURNING id;
+    RETURNING plot_comments_uid;
 $$ LANGUAGE SQL;
 
-CREATE OR REPLACE FUNCTION get_plot_vertices_for_project(prj_id integer) RETURNS TABLE
+CREATE OR REPLACE FUNCTION get_plot_vertices_for_project(_project_id integer) RETURNS TABLE
 (
   project_id integer,
   plot_id integer,
@@ -103,11 +104,11 @@ CREATE OR REPLACE FUNCTION get_plot_vertices_for_project(prj_id integer) RETURNS
   dominant_landcover_notes text,
   change_process text,
   change_process_notes text,
-  interpreter integer,
+  user_id integer,
   packet_id integer
 ) AS $$
-  SELECT project_id,
-    plot_id,
+  SELECT project_rid,
+    plot_rid,
     image_year,
     image_julday,
     dominant_landuse,
@@ -116,13 +117,13 @@ CREATE OR REPLACE FUNCTION get_plot_vertices_for_project(prj_id integer) RETURNS
     coalesce(dominant_landcover_notes,'') as dominant_landcover_notes,
     change_process,
     coalesce(change_process_notes,'') as change_process_notes,
-    interpreter,
+    user_rid,
     packet_id
   FROM vertex
-  WHERE project_id = prj_id
+  WHERE project_rid = _project_id
 $$ LANGUAGE SQL;
 
-CREATE OR REPLACE FUNCTION get_plot_vertices(interpreter_id integer, prj_id integer, plotid integer, packet integer) RETURNS TABLE
+CREATE OR REPLACE FUNCTION get_plot_vertices(_user_id integer, _project_id integer, _plot_id integer, _packet_id integer) RETURNS TABLE
 (
   project_id integer,
   plot_id integer,
@@ -134,7 +135,7 @@ CREATE OR REPLACE FUNCTION get_plot_vertices(interpreter_id integer, prj_id inte
   dominant_landcover_notes text,
   change_process text,
   change_process_notes text,
-  interpreter integer,
+  user_id integer,
   packet_id integer
 ) AS $$
   SELECT project_id,
@@ -147,27 +148,27 @@ CREATE OR REPLACE FUNCTION get_plot_vertices(interpreter_id integer, prj_id inte
     dominant_landcover_notes,
     change_process,
     change_process_notes,
-    interpreter,
+    user_id,
     packet_id
-  FROM get_plot_vertices_for_project(prj_id)
-  WHERE plot_id = plotid
-    AND interpreter = interpreter_id
-    AND packet_id = packet
+  FROM get_plot_vertices_for_project(_project_id)
+  WHERE plot_id = _plot_id
+    AND user_id = _user_id
+    AND packet_id = _packet_id
 $$ LANGUAGE SQL;
 
-CREATE OR REPLACE FUNCTION create_vertices(project_id integer, plot_id integer, interpreter integer, packet integer, vertices jsonb) RETURNS VOID 
+CREATE OR REPLACE FUNCTION create_vertices(_project_id integer, _plot_id integer, _user_id integer, _packet_id integer, _vertices jsonb) RETURNS VOID 
 AS $$
   -- remove existing vertex
   DELETE FROM vertex
-  WHERE project_id = project_id
-    AND plot_id = plot_id
-    AND interpreter = interpreter
-    AND packet_id = packet;
+  WHERE project_rid = _project_id
+    AND plot_rid = _plot_id
+    AND user_rid = _user_id
+    AND packet_id = _packet_id;
 
   -- add new vertices
   INSERT INTO vertex (
-    project_id,
-    plot_id,
+    project_rid,
+    plot_rid,
     image_year,
     image_julday,
     image_id,
@@ -177,7 +178,7 @@ AS $$
     dominant_landcover_notes,
     change_process,
     change_process_notes,
-    interpreter,
+    user_rid,
     packet_id
   )
   SELECT  project_id,
@@ -191,9 +192,9 @@ AS $$
     dominant_landcover_notes,
     change_process,
     change_process_notes,
-    interpreter,
+    user_id,
     packet_id
-  FROM jsonb_to_recordset(vertices) as X(
+  FROM jsonb_to_recordset(_vertices) as X(
     project_id integer,
     plot_id integer,
     image_year integer,
@@ -205,12 +206,12 @@ AS $$
     dominant_landcover_notes text,
     change_process text,
     change_process_notes text,
-    interpreter integer,
+    user_id integer,
     packet_id integer
   );
 $$ LANGUAGE SQL;
 
-CREATE OR REPLACE function get_image_preference(interpreter integer, project_id integer, packet integer, plot_id integer) RETURNS TABLE
+CREATE OR REPLACE function get_image_preference(_user_id integer, _project_id integer, _packet_id integer, _plot_id integer) RETURNS TABLE
 (
   project_id integer, 
   plot_id integer, 
@@ -218,27 +219,27 @@ CREATE OR REPLACE function get_image_preference(interpreter integer, project_id 
   image_year integer, 
   image_julday integer, 
   priority integer, 
-  interpreter integer, 
+  user_id integer, 
   packet_id integer
 ) AS $$
-  SELECT project_id, plot_id, image_id, image_year, image_julday, priority, interpreter, packet_id
+  SELECT project_rid, plot_rid, image_id, image_year, image_julday, priority, user_rid, packet_id
   FROM image_preference
-  WHERE project_id = project_id
-    AND plot_id = plot_id
-    AND interpreter = interpreter
-    AND packet_id = packet
+  WHERE project_rid = _project_id
+    AND plot_rid = _plot_id
+    AND user_rid = _user_id
+    AND packet_id = _packet_id
 $$ LANGUAGE SQL;
 
-CREATE OR REPLACE FUNCTION update_image_preference(preference jsonb) RETURNS VOID
+CREATE OR REPLACE FUNCTION update_image_preference(_preference jsonb) RETURNS VOID
 AS $$
   INSERT INTO image_preference (
-    project_id, 
-    plot_id, 
+    project_rid, 
+    plot_rid, 
     image_id, 
     image_year, 
     image_julday, 
     priority, 
-    interpreter, 
+    user_rid, 
     packet_id)
   SELECT  project_id, 
     plot_id, 
@@ -246,44 +247,44 @@ AS $$
     image_year, 
     image_julday, 
     priority, 
-    interpreter, 
+    user_id, 
     packet_id
-  FROM jsonb_to_record(preference) as X(
+  FROM jsonb_to_record(_preference) as X(
     project_id integer,
     plot_id integer,
     image_id text,
     image_year integer,
     image_julday integer,
     priority integer,
-    interpreter integer,
+    user_id integer,
     packet_id integer
   )
-  ON CONFLICT (project_id, plot_id, image_year, interpreter, packet_id) DO UPDATE
+  ON CONFLICT (project_rid, plot_rid, image_year, user_rid, packet_id) DO UPDATE
     SET image_id = EXCLUDED.image_id,
       image_julday = EXCLUDED.image_julday,
       priority = EXCLUDED.priority;
 $$ LANGUAGE SQL;
 
-CREATE OR REPLACE FUNCTION get_response_design(project_id integer) RETURNS TABLE 
+CREATE OR REPLACE FUNCTION get_response_design(_project_id integer) RETURNS TABLE 
 (
   project_id integer,
   landuse text,
   landcover text,
   change_process text
 ) AS $$
-  SELECT project_id,
+  SELECT project_rid,
        landuse,
        landcover,
        change_process
   FROM response_design
-  WHERE project_id = project_id
+  WHERE project_rid = _project_id
 $$ LANGUAGE SQL;
 
 
-CREATE OR REPLACE FUNCTION create_response_design(design jsonb) RETURNS VOID
+CREATE OR REPLACE FUNCTION create_response_design(_design jsonb) RETURNS VOID
 AS $$
   INSERT INTO response_design (
-    project_id, 
+    project_rid, 
     landuse,
     landcover,
     change_process)
@@ -291,13 +292,13 @@ AS $$
     landuse,
     landcover,
     change_process
-  FROM jsonb_to_record(design) as X(
+  FROM jsonb_to_record(_design) as X(
     project_id integer,
     landuse text,
     landcover text,
     change_process text
   )
-  ON CONFLICT (project_id) DO UPDATE
+  ON CONFLICT (project_rid) DO UPDATE
     SET landuse = EXCLUDED.landuse,
       landcover = EXCLUDED.landcover,
       change_process = EXCLUDED.change_process;

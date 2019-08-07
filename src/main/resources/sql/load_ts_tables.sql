@@ -1,18 +1,19 @@
 -- TS related tables
 DROP TABLE IF EXISTS packets cascade;
 CREATE TABLE packets (
-  packet_id    serial primary key,
-  project_id   integer not null references projects(project_uid) on delete cascade on update cascade,
-  plot_id      integer not null references plots(plot_uid) on delete cascade on update cascade
+  packet_id     integer not null,
+  project_rid   integer not null references projects(project_uid) on delete cascade on update cascade,
+  plot_rid      integer not null references plots(plot_uid) on delete cascade on update cascade
 );
-CREATE INDEX packets_pp ON packets USING btree (project_id, packet_id);
+DROP INDEX IF EXISTS packets_pp;
+CREATE INDEX packets_pp ON packets USING btree (project_rid, packet_id);
 
 DROP TABLE IF EXISTS plot_comments cascade;
 CREATE TABLE plot_comments (
-  id                    bigserial primary key,
-  project_id            integer not null references projects(project_uid) on update cascade,
-  plot_id               integer not null references plots(plot_uid) on delete cascade on update cascade,
-  interpreter           integer not null references users(user_uid) on update cascade,
+  plot_comments_uid           bigserial primary key,
+  project_rid           integer not null references projects(project_uid) on update cascade,
+  plot_rid              integer not null references plots(plot_uid) on delete cascade on update cascade,
+  user_rid              integer not null references users(user_uid) on update cascade,
   comment               text,
   is_example            integer DEFAULT NULL,
   is_complete           integer DEFAULT NULL,
@@ -22,26 +23,26 @@ CREATE TABLE plot_comments (
   packet_id             integer default -1 --references packets(packet_id) on delete cascade on update cascade
 );
 DROP INDEX IF EXISTS comments_ppi;
-CREATE UNIQUE INDEX comments_ppi ON plot_comments USING btree (project_id, plot_id, interpreter, packet_id);
+CREATE UNIQUE INDEX comments_ppi ON plot_comments USING btree (project_rid, plot_rid, user_rid, packet_id);
 
 
 DROP TABLE IF EXISTS response_design cascade;
 CREATE TABLE response_design (
-    id       serial primary key,
-    project_id      integer not null references projects(project_uid) on delete cascade on update cascade,
-    landuse         text NOT NULL,
-    landcover       text NOT NULL,
-    change_process  text NOT NULL
+    response_design_uid serial primary key,
+    project_rid         integer not null references projects(project_uid) on delete cascade on update cascade,
+    landuse             text NOT NULL,
+    landcover           text NOT NULL,
+    change_process      text NOT NULL
 );
 DROP INDEX IF EXISTS prjid;
-CREATE UNIQUE INDEX prjid on response_design(project_id);
+CREATE UNIQUE INDEX prjid on response_design(project_rid);
 
 
 DROP TABLE IF EXISTS vertex cascade;
 CREATE TABLE vertex (
   vertex_id                 bigserial PRIMARY KEY,
-  project_id                integer not null references projects(project_uid) on update cascade,
-  plot_id                   integer not null references plots(plot_uid) on delete cascade on update cascade,
+  project_rid               integer not null references projects(project_uid) on update cascade,
+  plot_rid                  integer not null references plots(plot_uid) on delete cascade on update cascade,
   image_year                integer DEFAULT NULL,
   image_julday              integer DEFAULT NULL,
   image_id                  text,
@@ -57,27 +58,28 @@ CREATE TABLE vertex (
   change_process            varchar(30) DEFAULT NULL,
   change_process_notes      varchar(255) DEFAULT NULL,
   comments                  varchar(255) DEFAULT NULL,
-  interpreter               integer not null references users (user_uid) on update cascade,
+  user_rid               integer not null references users (user_uid) on update cascade,
   last_modified             timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   history_flag              integer DEFAULT 0,
-  packet_id                 integer DEFAULT -1 --references packets(packet_id) on delete cascade on update cascade
+  packet_id                integer DEFAULT -1 --references packets(packet_id) on delete cascade on update cascade
 );
 DROP INDEX IF EXISTS vertex_ptp;
-CREATE INDEX vertex_ptp ON vertex USING btree (project_id, plot_id, interpreter);
+CREATE INDEX vertex_ptp ON vertex USING btree (project_rid, plot_rid, user_rid);
 
 
 DROP TABLE IF EXISTS image_preference cascade;
 --TODO: with GEE as the backend, is it still necessary to keep image_year, image_julday, and priority
 CREATE TABLE image_preference (
-    id              serial primary key,
-    project_id      integer not null references projects(project_uid) on delete cascade on update cascade,
-    plot_id         integer not null,
-    image_id        text,
-    image_year      integer not null,
-    image_julday    integer not null,
-    interpreter     integer not null references users (user_uid) on update cascade,
-    "priority"      integer not null,
-    packet_id       integer default -1
+    image_preference_uid  serial primary key,
+    project_rid           integer not null references projects(project_uid) on delete cascade on update cascade,
+    plot_rid              integer not null,
+    image_id              text,
+    image_year            integer not null,
+    image_julday          integer not null,
+    user_rid              integer not null references users (user_uid) on update cascade,
+    "priority"            integer not null,
+    packet_id            integer default -1
 );
 DROP INDEX IF EXISTS image_uindex_pppiip;
-CREATE UNIQUE INDEX image_uindex_pppiip ON image_preference (project_id, plot_id, image_year, interpreter, packet_id);
+CREATE UNIQUE INDEX image_uindex_pppiip ON image_preference (project_rid, plot_rid, image_year, user_rid, packet_id);
+
