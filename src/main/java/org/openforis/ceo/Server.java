@@ -58,9 +58,8 @@ public class Server implements SparkApplication {
     }
 
     // Sets up Spark's routing table and exception handling rules
-    private static void declareRoutes(String databaseType, Projects projects, Imagery imagery,
-                                      Users users, Institutions institutions, GeoDash geoDash,
-                                      Plots plots) {
+    private static void declareRoutes(Projects projects, Imagery imagery, Users users,
+                                      Institutions institutions, GeoDash geoDash, Plots plots) {
         // Create a configured FreeMarker renderer
         var freemarker = new FreeMarkerEngine(getConfiguration());
 
@@ -214,8 +213,7 @@ public class Server implements SparkApplication {
 
         if (args[0].equals("JSON")) {
             // Set up the routing table to use the JSON backend
-            declareRoutes("JSON",
-                          new JsonProjects(),
+            declareRoutes(new JsonProjects(),
                           new JsonImagery(),
                           new JsonUsers(),
                           new JsonInstitutions(),
@@ -223,8 +221,7 @@ public class Server implements SparkApplication {
                           new JsonPlots());
         } else {
             // Set up the routing table to use the POSTGRES backend
-            declareRoutes("POSTGRES",
-                          new PostgresProjects(),
+            declareRoutes(new PostgresProjects(),
                           new PostgresImagery(),
                           new PostgresUsers(),
                           new PostgresInstitutions(),

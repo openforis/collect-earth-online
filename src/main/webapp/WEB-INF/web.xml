@@ -13,16 +13,6 @@
   </context-param>
 
   <context-param>
-    <param-name>baseUrl</param-name>
-    <param-value>http://collect.earth/</param-value>
-  </context-param>
-
-  <context-param>
-    <param-name>smtpUser</param-name>
-    <param-value>collectearth.mail@gmail.com</param-value>
-  </context-param>
-
-  <context-param>
     <param-name>smtpServer</param-name>
     <param-value>smtp.gmail.com</param-value>
   </context-param>

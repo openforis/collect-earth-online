@@ -4,7 +4,7 @@ The source code for CEO can be found on Github at this URL:
 
 Here is a high level description of CEO's system architecture:
 
-CEO,is a web applications written in
+CEO is a web applications written in
 Java+Javascript and deployed as WAR files, which are to be run together
 within a single application server, such as Tomcat. To install and
 configure all of these applications on your development machine, follow
