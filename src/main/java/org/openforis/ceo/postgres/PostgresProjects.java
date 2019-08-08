@@ -52,7 +52,7 @@ import spark.Response;
 
 public class PostgresProjects implements Projects {
 
-    public Boolean checkAuthCommon(Request req, String queryFn) {
+    private Boolean checkAuthCommon(Request req, String queryFn) {
         final var userId = Integer.parseInt(req.session().attributes().contains("userid") ? req.session().attribute("userid").toString() : "-1");
         final var qProjectId = req.queryParams("projectId");
         final var jProjectId = getBodyParam(req.body(), "projectId", null);
@@ -133,8 +133,8 @@ public class PostgresProjects implements Projects {
     }
 
     public String getAllProjects(Request req, Response res) {
-        final var userId =  req.session().attributes().contains("userid") ? req.session().attribute("userid").toString() : "-1";
-        var institutionId = req.queryParams("institutionId");
+        final var userId =        req.session().attributes().contains("userid") ? req.session().attribute("userid").toString() : "-1";
+        final var institutionId = req.queryParams("institutionId");
 
         try (var conn = connect()) {
 
@@ -479,7 +479,7 @@ public class PostgresProjects implements Projects {
              var pstmt = conn.prepareStatement("SELECT * FROM update_project(?,?,?,?,?)")) {
 
             final var jsonInputs = parseJson(req.body()).getAsJsonObject();
-            pstmt.setInt(1,    Integer.parseInt( getOrEmptyString(jsonInputs, "projectId").getAsString()));
+            pstmt.setInt(1,    Integer.parseInt(getOrEmptyString(jsonInputs, "projectId").getAsString()));
             pstmt.setString(2, getOrEmptyString(jsonInputs, "name").getAsString());
             pstmt.setString(3, getOrEmptyString(jsonInputs, "description").getAsString());
             pstmt.setString(4, getOrEmptyString(jsonInputs, "privacyLevel").getAsString());

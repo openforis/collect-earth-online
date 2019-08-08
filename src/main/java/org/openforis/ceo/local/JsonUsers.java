@@ -368,7 +368,6 @@ public class JsonUsers implements Users {
         userStats.addProperty("averageTime", Math.round(totalMilliseconds / 100.0 / totalTimedPlots) / 10.0);
         userStats.add("perProject", projectData);
         return userStats.toString();
-
     }
 
     public static JsonArray sumUserInfo(JsonArray sumArr, JsonObject newData) {
@@ -418,7 +417,6 @@ public class JsonUsers implements Users {
                             .collect(JsonArray::new,
                                 (responce, element) -> sumUserInfo(responce, element),
                                 (a, b) -> System.out.println(a)
-
                             );
 
                         project.add("userStats", dataByUsers);
