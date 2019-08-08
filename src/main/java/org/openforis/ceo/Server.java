@@ -91,21 +91,25 @@ public class Server implements SparkApplication {
             /// Page Authentication ///
 
             // Check for logged in on pages and redirect
-            if (List.of("/account", "/create-institution").contains(request.uri()) && userId < 0) {
+            if (((request.uri().equals("/create-institution") && request.requestMethod().equals("GET")) // create-institution can be a get (page) or post (api)
+                  || request.uri().equals("/account"))
+                && userId < 0) {
                 redirectAuth(request, response, userId);
-            };
+            }
             // Check for collect permission pages and redirect
             if (List.of("/collection").contains(request.uri()) && !projects.canCollect(request)) {
                 redirectAuth(request, response, userId);
-            };
+            }
             // Check for proj admin permission pages and redirect
             if (List.of("/project-dashboard", "/review-project").contains(request.uri()) && !projects.isProjAdmin(request)) {
                 redirectAuth(request, response, userId);
-            };
+            }
             // Check for inst admin permission pages and redirect
-            if (List.of("/create-project", "/institution-dashboard").contains(request.uri()) && !institutions.isInstAdmin(request)) {
+            if (((request.uri().equals("/create-project") && request.requestMethod().equals("GET")) // create-project can be a get (page) or post (api)
+                  || request.uri().equals("/institution-dashboard"))
+                && !institutions.isInstAdmin(request)) {
                 redirectAuth(request, response, userId);
-            };
+            }
 
             /// API Authentication ///
 
@@ -118,7 +122,7 @@ public class Server implements SparkApplication {
                         "/create-institution")
                     .contains(request.uri()) && userId < 0) {
                 halt(403, "Forbidden!");
-            };
+            }
             // Check for collect permission on API routes and block
             if (List.of("/get-project-by-id",
                         "/get-project-stats",
@@ -133,26 +137,27 @@ public class Server implements SparkApplication {
                         "/reset-plot-lock")
                     .contains(request.uri()) && !projects.canCollect(request)) {
                 halt(403, "Forbidden!");
-            };
+            }
             // Check for proj admin permission on API routes and block
             if (List.of("/dump-project-aggregate-data",
                         "/dump-project-raw-data",
                         "/archive-project",
                         "/close-project",
-                        "/create-project",
                         "/publish-project",
                         "/update-project")
                     .contains(request.uri()) && !projects.isProjAdmin(request)) {
                 halt(403, "Forbidden!");
-            };
+            }
             // Check for inst admin permission on API routes and block
             if (List.of("/update-user-institution-role",
                         "/archive-institution",
+                        "/create-project",
                         "/update-institution",
-                        "/add-institution-imagery")
+                        "/add-institution-imagery",
+                        "/delete-institution-imagery")
                     .contains(request.uri()) && !institutions.isInstAdmin(request)) {
                 halt(403, "Forbidden!");
-            };
+            }
 
             // Add flash message from queryParams (needed on redirects)
             var flashMessage = request.queryParams("flash_message");
@@ -189,7 +194,7 @@ public class Server implements SparkApplication {
         get("/review-institution",                    Views.reviewInstitution(freemarker, databaseType.equals("COLLECT") ? "remote" : "local"));
         get("/review-project",                        Views.reviewProject(freemarker));
         get("/support",                               Views.support(freemarker));
-        get("/widget-layout-editor",                  Views.editWidgetLayout(freemarker));
+        get("/widget-layout-editor",                  Views.widgetLayoutEditor(freemarker));
         get("/get-tile",                              (req, res) -> Proxy.proxyImagery(req, res, imagery));
 
         // Routing Table: HTML pages (with side effects)
