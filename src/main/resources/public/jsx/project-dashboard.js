@@ -24,11 +24,15 @@ class ProjectDashboard extends React.Component {
     componentDidMount() {
         this.getProjectById(this.props.projectId);
         this.getProjectStats(this.props.projectId);
-        this.getImageryList(this.props.institutionId);
         this.getPlotList(this.props.projectId, 100);//100 is the number of plots you want to see on the map
     }
 
-    componentDidUpdate() {
+    componentDidUpdate(prevProps, prevState) {
+        // Load imagery after getting project details to find institution.
+        if (prevState.projectDetails === {} && this.state.projectDetails.institution) {
+            this.getImageryList(this.state.projectDetails.institution);
+        }
+        // Show the project map
         if (this.state.imageryList.length > 0 && this.state.projectDetails.id && !this.state.isMapShown) {
             this.setState({
                 projectDetails: {
@@ -215,7 +219,6 @@ export function renderProjectDashboardPage(args) {
             documentRoot={args.documentRoot}
             userId={args.userId}
             projectId={args.projectId}
-            institutionId={args.institutionId}
             project_stats_visibility={args.project_stats_visibility}
             project_template_visibility={args.project_template_visibility}
         />,

@@ -119,11 +119,9 @@ public class Views {
 
     public static Route projectDashboard(FreeMarkerEngine freemarker) {
         Function<Request, String> getProjectId = (req) -> req.queryParams("projectId");
-        Function<Request, String> getInstitutionId = (req) -> req.queryParams("institutionId");
         return makeRoute("Project-Dashboard",
                          freemarker,
-                         Map.of("project_id", getProjectId,
-                                "institution_id", getInstitutionId));
+                         Map.of("project_id", getProjectId));
     }
 
     public static Route institutionDashboard(FreeMarkerEngine freemarker) {
@@ -171,7 +169,7 @@ public class Views {
                          Map.of("browserLanguage", getBrowserLanguage));
     }
 
-    public static Route editWidgetLayout(FreeMarkerEngine freemarker) {
+    public static Route widgetLayoutEditor(FreeMarkerEngine freemarker) {
         Function<Request, String> getPid = (req) -> req.queryParams("projectId");
         return makeRoute("Widget-Layout-Editor",
                          freemarker,
