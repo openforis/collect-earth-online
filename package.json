@@ -66,6 +66,7 @@
         "babel-eslint": "^10.0.1",
         "babel-loader": "^8.0.5",
         "babel-plugin-lodash": "^3.3.4",
+        "cross-env": "^5.2.0",
         "css-loader": "^1.0.1",
         "eslint": "^5.14.1",
         "eslint-plugin-react": "^7.12.4",
@@ -78,6 +79,9 @@
         "webpack-merge": "^4.2.1"
     },
     "scripts": {
+        "build-db-tables": "cross-env PGPASSWORD=ceo psql -h localhost -U ceo -d ceo -a -f ./src/main/resources/sql/load_ceo_tables.sql --echo-errors",
+        "build-db-functions": "cross-env PGPASSWORD=ceo psql -h localhost -U ceo -d ceo -a -f ./src/main/resources/sql/load_ceo_functions.sql --echo-errors",
+        "build-db-all": "psql -h localhost -U postgres -a -f ./src/main/resources/sql/create_ceo_db.sql --echo-errors && npm run build-tables && npm run build-functions",
         "webpack-dev": "webpack --config webpack.dev.js",
         "webpack-prod": "webpack --config webpack.prod.js",
         "server-json": "mvn compile exec:java -Dexec.args=JSON",
