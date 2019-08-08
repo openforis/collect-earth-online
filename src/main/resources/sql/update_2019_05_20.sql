@@ -9,7 +9,7 @@ CREATE OR REPLACE FUNCTION is_institution_user_admin(_user_rid integer, _institu
         WHERE iu.user_rid = _user_rid
             AND institution_rid = _institution_rid
             AND title = 'admin'
-            AND archived = TRUE
+            AND archived = FALSE
     )
 
 $$ LANGUAGE SQL;
