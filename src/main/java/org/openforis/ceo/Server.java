@@ -264,17 +264,18 @@ public class Server implements SparkApplication {
     }
 
     private static void redirectAuth(Request req, Response res, Integer userId) {
+        final var fullUrl = req.uri() + "?" + req.queryString();
         if (userId > 0) {
             res.redirect(CeoConfig.documentRoot
                             + "/home?flash_message=You do not have permission to access "
-                            + req.uri()
+                            + fullUrl
                             + ".");
         } else {
             res.redirect(CeoConfig.documentRoot
                             + "/login?returnurl="
-                            + req.uri()
+                            + fullUrl
                             + "&flash_message=You must login to see "
-                            + req.uri()
+                            + fullUrl
                             + ".");
         }
     }

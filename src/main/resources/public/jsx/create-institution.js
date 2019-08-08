@@ -34,7 +34,7 @@ class CreateInstitution extends React.Component {
         if (duplicateInst) {
             alert("An institution with this name already exists. "
                 + "Either select a different name or change the name of the duplicate institution here: "
-                + window.location.origin + "/review-institution/" + duplicateInst.id);
+                + window.location.origin + "/review-institution?institutionId=" + duplicateInst.id);
         } else {
             fetch(this.props.documentRoot + "/create-institution",
                   {
@@ -53,7 +53,7 @@ class CreateInstitution extends React.Component {
                 .then(data => {
                     const isInteger = n => !isNaN(parseInt(n)) && isFinite(n) && !n.includes(".");
                     if (isInteger(data)) {
-                        window.location = this.props.documentRoot + "/review-institution/" + data;
+                        window.location = this.props.documentRoot + "/review-institution?intitutionId=s" + data;
                         return Promise.resolve();
                     } else {
                         return Promise.reject(data);

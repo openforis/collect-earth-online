@@ -863,7 +863,7 @@ function User({ user, documentRoot, isAdmin, updateUserInstitutionRole }) {
                     type="button"
                     className="btn btn-sm btn-outline-lightgreen btn-block text-truncate"
                     title={user.email}
-                    onClick={() => window.location = documentRoot + "/account/" + user.id}
+                    onClick={() => window.location = documentRoot + "/account?userId=" + user.id}
                 >
                     {user.email}
                 </button>
