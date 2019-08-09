@@ -53,7 +53,7 @@ class CreateInstitution extends React.Component {
                 .then(data => {
                     const isInteger = n => !isNaN(parseInt(n)) && isFinite(n) && !n.includes(".");
                     if (isInteger(data)) {
-                        window.location = this.props.documentRoot + "/review-institution?intitutionId" + data;
+                        window.location = this.props.documentRoot + "/review-institution?institutionId=" + data;
                         return Promise.resolve();
                     } else {
                         return Promise.reject(data);
