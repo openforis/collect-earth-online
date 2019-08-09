@@ -126,16 +126,6 @@ CREATE OR REPLACE FUNCTION add_user(_email text, _password text)
 
 $$ LANGUAGE SQL;
 
--- Adds a new user to the database (3 params for migration).
-CREATE OR REPLACE FUNCTION add_user_migration(_user_uid integer, _email text, _password text)
- RETURNS integer AS $$
-
-    INSERT INTO users (user_uid, email, password)
-    VALUES (_user_uid, _email, crypt(_password, gen_salt('bf')))
-    RETURNING user_uid
-
-$$ LANGUAGE SQL;
-
 -- Returns all of the user fields associated with the provided email.
 CREATE OR REPLACE FUNCTION get_all_users()
  RETURNS TABLE(
@@ -270,16 +260,6 @@ CREATE OR REPLACE FUNCTION insert_role(_title text)
 
 $$ LANGUAGE SQL;
 
--- Set user 1 as admin for migration
-CREATE OR REPLACE FUNCTION set_admin()
- RETURNS void AS $$
-
-    UPDATE users
-    SET administrator = true
-    WHERE user_uid = 1
-
-$$ LANGUAGE SQL;
-
 -- Resets the email for the given user.
 CREATE OR REPLACE FUNCTION set_user_email(_email text, _new_email text)
  RETURNS text AS $$
@@ -343,26 +323,18 @@ CREATE OR REPLACE FUNCTION add_institution(_name text, _logo text, _description 
 
 $$ LANGUAGE SQL;
 
--- Adds a new institution to the database(extra param for migration)
-CREATE OR REPLACE FUNCTION add_institution_migration(_institution_uid integer, _name text, _logo text, _description text, _url text, _archived boolean)
- RETURNS integer AS $$
-
-    INSERT INTO institutions
-        (institution_uid, name, logo, description, url, archived)
-    VALUES
-        (_institution_uid, _name, _logo, _description, _url, _archived)
-    RETURNING institution_uid
-
-$$ LANGUAGE SQL;
-
--- Archive institution
+-- Archive institution and all projects under
 CREATE OR REPLACE FUNCTION archive_institution(_institution_uid integer)
  RETURNS integer AS $$
+
+    SELECT (archive_project(project_uid))
+    FROM projects
+    WHERE institution_rid = _institution_uid;
 
     UPDATE institutions
     SET archived = true
     WHERE institution_uid = _institution_uid
-    RETURNING institution_uid
+    RETURNING institution_uid;
 
 $$ LANGUAGE SQL;
 
@@ -450,7 +422,7 @@ CREATE OR REPLACE FUNCTION update_institution_logo(_institution_uid integer, _lo
 $$ LANGUAGE SQL;
 
 --
---     INSTITUTION USER FUNCTIONS
+--  INSTITUTION USER FUNCTIONS
 --
 
 -- Adds a new institution_user to the database.
@@ -547,18 +519,6 @@ CREATE OR REPLACE FUNCTION add_institution_imagery(_institution_rid integer, _vi
         (institution_rid, visibility, title, attribution, extent, source_config)
     VALUES
         (_institution_rid, _visibility, _title, _attribution, _extent, _source_config)
-    RETURNING imagery_uid
-
-$$ LANGUAGE SQL;
-
--- Adds institution imagery(for migration script)
-CREATE OR REPLACE FUNCTION add_institution_imagery_migration(_imagery_uid integer, _institution_rid integer, _visibility text, _title text, _attribution text, _extent jsonb, _source_config jsonb)
- RETURNS integer AS $$
-
-    INSERT INTO imagery
-        (imagery_uid, institution_rid, visibility, title, attribution, extent, source_config)
-    VALUES
-        (_imagery_uid, _institution_rid, _visibility, _title, _attribution, _extent, _source_config)
     RETURNING imagery_uid
 
 $$ LANGUAGE SQL;
@@ -675,66 +635,10 @@ CREATE OR REPLACE FUNCTION update_project_widget_by_widget_id(_widget_uid intege
 $$ LANGUAGE SQL;
 
 --
--- CREATING PROJECTS FUNCTIONS
+--  MODIFY PROJECT FUNCTIONS
 --
 
 -- Create a project
-CREATE OR REPLACE FUNCTION create_project_migration(
-    _project_uid             integer,
-    _institution_rid         integer,
-    _availability            text,
-    _name                    text,
-    _description             text,
-    _privacy_level           text,
-    _boundary                geometry,
-    _base_map_source         text,
-    _plot_distribution       text,
-    _num_plots               integer,
-    _plot_spacing            float,
-    _plot_shape              text,
-    _plot_size               float,
-    _sample_distribution     text,
-    _samples_per_plot        integer,
-    _sample_resolution       float,
-    _survey_questions        jsonb,
-    _survey_rules            jsonb,
-    _classification_times    jsonb,
-    _created_date            date,
-    _published_date          date,
-    _closed_date             date,
-    _archived_date           date
- ) RETURNS integer AS $$
-
-    INSERT INTO projects (
-        project_uid,             institution_rid,
-        availability,            name,
-        description,             privacy_level,
-        boundary,                base_map_source,
-        plot_distribution,       num_plots,
-        plot_spacing,            plot_shape,
-        plot_size,               sample_distribution,
-        samples_per_plot,        sample_resolution,
-        survey_questions,        survey_rules,
-        classification_times,    created_date,
-        published_date,          closed_date,
-        archived_date
-    ) VALUES (
-        _project_uid,             _institution_rid,
-        _availability,            _name,
-        _description,             _privacy_level,
-        _boundary,                _base_map_source,
-        _plot_distribution,       _num_plots,
-        _plot_spacing,            _plot_shape,
-        _plot_size,               _sample_distribution,
-        _samples_per_plot,        _sample_resolution,
-        _survey_questions,        _survey_rules,
-        _classification_times,    _created_date,
-        _published_date,          _closed_date,
-        _archived_date
-    ) RETURNING project_uid
-
-$$ LANGUAGE SQL;
-
 CREATE OR REPLACE FUNCTION create_project(
     _institution_rid         integer,
     _availability            text,
@@ -780,6 +684,48 @@ CREATE OR REPLACE FUNCTION create_project(
         _survey_rules,           _created_date,
         _classification_times
     ) RETURNING project_uid
+
+$$ LANGUAGE SQL;
+
+-- Delete project plots and external files but keep project entry as archived
+CREATE OR REPLACE FUNCTION delete_project(_project_uid integer)
+ RETURNS void AS $$
+
+ BEGIN
+    DELETE FROM plots
+    WHERE plot_uid IN (
+        SELECT plot_uid
+        FROM projects
+        INNER JOIN plots
+            ON project_uid = project_rid
+            AND project_uid = _project_uid);
+
+    UPDATE projects SET availability='archived' WHERE project_uid = _project_uid;
+
+    EXECUTE
+    'DROP TABLE IF EXISTS ext_tables.project_' || _project_uid || '_plots_csv;'
+    'DROP TABLE IF EXISTS ext_tables.project_' || _project_uid || '_plots_shp;'
+    'DROP TABLE IF EXISTS ext_tables.project_' || _project_uid || '_samples_csv;'
+    'DROP TABLE IF EXISTS ext_tables.project_' || _project_uid || '_samples_shp;';
+ END
+
+$$ LANGUAGE PLPGSQL;
+
+-- Update select set of project fields
+CREATE OR REPLACE FUNCTION update_project(
+    _project_uid             integer,
+    _name                    text,
+    _description             text,
+    _privacy_level           text,
+    _base_map_source         text
+ ) RETURNS void AS $$
+
+    UPDATE projects
+    SET name = _name,
+        description = _description,
+        privacy_level = _privacy_level,
+        base_map_source = _base_map_source
+    WHERE project_uid = _project_uid
 
 $$ LANGUAGE SQL;
 
@@ -1091,6 +1037,62 @@ CREATE OR REPLACE FUNCTION copy_template_plots(_old_project_uid integer, _new_pr
 
 $$ LANGUAGE SQL;
 
+-- VALIDATIONS
+
+-- Check if a project was created where plots have no samples
+CREATE OR REPLACE FUNCTION plots_missing_samples(_project_uid integer)
+ RETURNS TABLE (plot_id integer) AS $$
+
+    WITH plot_tbl AS (
+        SELECT * FROM select_partial_table_by_name((
+            SELECT plots_ext_table
+            FROM projects
+            WHERE project_uid = _project_uid
+    )))
+
+    SELECT plotid
+    FROM projects p
+    INNER JOIN plots pl
+        ON pl.project_rid = project_uid
+    INNER JOIN plot_tbl
+        ON pl.ext_id = plot_tbl.ext_id
+    LEFT JOIN samples s
+        ON plot_uid = s.plot_rid
+    WHERE project_uid = _project_uid
+        AND sample_uid IS NULL
+
+$$ LANGUAGE SQL;
+
+-- Return table sizes for shp and csv to check against limits.
+CREATE OR REPLACE FUNCTION ext_table_count(_project_uid integer)
+ RETURNS TABLE(plot_count integer, sample_count integer) AS $$
+
+    DECLARE
+        _plots_ext_table text;
+        _samples_ext_table text;
+        _plots_count integer;
+        _samples_count integer;
+    BEGIN
+        SELECT plots_ext_table INTO _plots_ext_table FROM projects WHERE project_uid = _project_uid;
+        SELECT samples_ext_table INTO _samples_ext_table FROM projects WHERE project_uid = _project_uid;
+
+        IF _plots_ext_table = '' OR _plots_ext_table IS NULL THEN
+            _plots_count = 0;
+        ELSE
+            EXECUTE 'SELECT COUNT(1)::int FROM ext_tables.' || _plots_ext_table INTO _plots_count;
+        END IF;
+
+        IF _samples_ext_table = '' OR _samples_ext_table IS NULL THEN
+            _samples_count = 0;
+        ELSE
+            EXECUTE 'SELECT COUNT(1)::int FROM ext_tables.' || _samples_ext_table INTO _samples_count;
+        END IF;
+
+        RETURN QUERY SELECT _plots_count, _samples_count;
+    END
+
+$$ LANGUAGE PLPGSQL;
+
 --
 -- USING PROJECT FUNCTIONS
 --
@@ -1200,7 +1202,10 @@ CREATE OR REPLACE FUNCTION select_all_user_projects(_user_rid integer)
         USING (institution_rid)
     WHERE (role = 'admin' AND p.availability <> 'archived')
         OR (role = 'member'
-            AND p.privacy_level IN ('public', 'institution')
+            AND p.privacy_level IN ('public', 'institution', 'users')
+            AND p.availability = 'published')
+        OR (_user_rid > 0
+            AND p.privacy_level IN ('public', 'users')
             AND p.availability = 'published')
         OR (p.privacy_level IN ('public')
             AND p.availability = 'published')
@@ -1794,40 +1799,6 @@ CREATE OR REPLACE FUNCTION update_user_samples(
 
 $$ LANGUAGE SQL;
 
--- Add user samples for migration (with add_user_plots)
-CREATE OR REPLACE FUNCTION add_sample_values_migration(_user_plot_rid integer, _sample_rid integer, _value jsonb, _imagery_rid integer, _imagery_attributes jsonb)
- RETURNS integer AS $$
-
-    INSERT INTO sample_values
-        (user_plot_rid, sample_rid, value, imagery_rid, imagery_attributes)
-    VALUES
-        ( _user_plot_rid, _sample_rid, _value, _imagery_rid, _imagery_attributes)
-    RETURNING sample_value_uid
-
-$$ LANGUAGE SQL;
-
--- Add user plots for migration (with add_sample_values)
-CREATE OR REPLACE FUNCTION add_user_plots_migration(_plot_rid integer, _username text, _flagged boolean, _collection_start timestamp, _collection_time timestamp)
- RETURNS integer AS $$
-
-    WITH user_id AS (
-        SELECT user_uid FROM users WHERE email = _username
-    ), guest_id AS (
-        SELECT user_uid FROM users WHERE email = 'guest'
-    )
-
-    INSERT INTO user_plots
-        (plot_rid, flagged, collection_start, collection_time, user_rid)
-    (SELECT _plot_rid,
-        _flagged,
-        _collection_start,
-        _collection_time,
-        (CASE WHEN user_id.user_uid IS NULL THEN guest_id.user_uid ELSE user_id.user_uid END)
-     FROM user_id, guest_id)
-    RETURNING user_plot_uid
-
-$$ LANGUAGE SQL;
-
 --
 --  AGGREGATE FUNCTIONS
 --
@@ -1966,7 +1937,49 @@ CREATE OR REPLACE FUNCTION dump_project_sample_data(_project_uid integer)
 $$ LANGUAGE SQL;
 
 --
---  MAINT FUNCTIONS
+-- ROUTE AUTHENTICATION FUNCTIONS
+--
+
+-- Check if user is admin of institution
+CREATE OR REPLACE FUNCTION is_institution_user_admin(_user_rid integer, _institution_rid integer)
+ RETURNS boolean AS $$
+
+    SELECT EXISTS(
+        SELECT title
+        FROM institution_users as iu
+        INNER JOIN roles as r
+            ON iu.role_rid = role_uid
+        WHERE iu.user_rid = _user_rid
+            AND institution_rid = _institution_rid
+            AND title = 'admin'
+            AND archived = FALSE
+    )
+
+$$ LANGUAGE SQL;
+
+-- Check if user has collection rights (read rights) for the project
+CREATE OR REPLACE FUNCTION can_user_collect(_user_rid integer, _project_uid integer)
+ RETURNS boolean AS $$
+
+    SELECT EXISTS(SELECT * FROM select_all_user_projects(_user_rid) WHERE project_id = _project_uid)
+
+$$ LANGUAGE SQL;
+
+-- Check if user has modify rights for the project
+CREATE OR REPLACE FUNCTION can_user_edit(_user_rid integer, _project_uid integer)
+ RETURNS boolean AS $$
+
+    SELECT EXISTS(
+        SELECT *
+        FROM select_all_user_projects(_user_rid)
+        WHERE project_id = _project_uid
+            AND editable = true
+    )
+
+$$ LANGUAGE SQL;
+
+--
+-- MIGRATION ONLY FUNCTIONS
 --
 
 -- Manually adding rows while specifying id will not update the sequence
@@ -1987,10 +2000,6 @@ CREATE OR REPLACE FUNCTION update_sequence(_table text, _id_name text)
  END
 
 $$ LANGUAGE PLPGSQL;
-
---
--- MIGRATION ONLY FUNCTIONS
---
 
 -- Add then entire json plots file directly
 CREATE OR REPLACE FUNCTION add_plots_by_json(_project_rid integer, _json_data text)
@@ -2149,3 +2158,137 @@ CREATE OR REPLACE FUNCTION add_plotId_col(_table_name text)
  END
 
 $$ LANGUAGE PLPGSQL;
+
+CREATE OR REPLACE FUNCTION create_project_migration(
+    _project_uid             integer,
+    _institution_rid         integer,
+    _availability            text,
+    _name                    text,
+    _description             text,
+    _privacy_level           text,
+    _boundary                geometry,
+    _base_map_source         text,
+    _plot_distribution       text,
+    _num_plots               integer,
+    _plot_spacing            float,
+    _plot_shape              text,
+    _plot_size               float,
+    _sample_distribution     text,
+    _samples_per_plot        integer,
+    _sample_resolution       float,
+    _survey_questions        jsonb,
+    _survey_rules            jsonb,
+    _classification_times    jsonb,
+    _created_date            date,
+    _published_date          date,
+    _closed_date             date,
+    _archived_date           date
+ ) RETURNS integer AS $$
+
+    INSERT INTO projects (
+        project_uid,             institution_rid,
+        availability,            name,
+        description,             privacy_level,
+        boundary,                base_map_source,
+        plot_distribution,       num_plots,
+        plot_spacing,            plot_shape,
+        plot_size,               sample_distribution,
+        samples_per_plot,        sample_resolution,
+        survey_questions,        survey_rules,
+        classification_times,    created_date,
+        published_date,          closed_date,
+        archived_date
+    ) VALUES (
+        _project_uid,             _institution_rid,
+        _availability,            _name,
+        _description,             _privacy_level,
+        _boundary,                _base_map_source,
+        _plot_distribution,       _num_plots,
+        _plot_spacing,            _plot_shape,
+        _plot_size,               _sample_distribution,
+        _samples_per_plot,        _sample_resolution,
+        _survey_questions,        _survey_rules,
+        _classification_times,    _created_date,
+        _published_date,          _closed_date,
+        _archived_date
+    ) RETURNING project_uid
+
+$$ LANGUAGE SQL;
+
+-- Adds a new user to the database (3 params for migration).
+CREATE OR REPLACE FUNCTION add_user_migration(_user_uid integer, _email text, _password text)
+ RETURNS integer AS $$
+
+    INSERT INTO users (user_uid, email, password)
+    VALUES (_user_uid, _email, crypt(_password, gen_salt('bf')))
+    RETURNING user_uid
+
+$$ LANGUAGE SQL;
+
+-- Set user 1 as admin for migration
+CREATE OR REPLACE FUNCTION set_admin()
+ RETURNS void AS $$
+
+    UPDATE users
+    SET administrator = true
+    WHERE user_uid = 1
+
+$$ LANGUAGE SQL;
+
+-- Adds a new institution to the database(extra param for migration)
+CREATE OR REPLACE FUNCTION add_institution_migration(_institution_uid integer, _name text, _logo text, _description text, _url text, _archived boolean)
+ RETURNS integer AS $$
+
+    INSERT INTO institutions
+        (institution_uid, name, logo, description, url, archived)
+    VALUES
+        (_institution_uid, _name, _logo, _description, _url, _archived)
+    RETURNING institution_uid
+
+$$ LANGUAGE SQL;
+
+-- Adds institution imagery(for migration script)
+CREATE OR REPLACE FUNCTION add_institution_imagery_migration(_imagery_uid integer, _institution_rid integer, _visibility text, _title text, _attribution text, _extent jsonb, _source_config jsonb)
+ RETURNS integer AS $$
+
+    INSERT INTO imagery
+        (imagery_uid, institution_rid, visibility, title, attribution, extent, source_config)
+    VALUES
+        (_imagery_uid, _institution_rid, _visibility, _title, _attribution, _extent, _source_config)
+    RETURNING imagery_uid
+
+$$ LANGUAGE SQL;
+
+-- Add user samples for migration (with add_user_plots)
+CREATE OR REPLACE FUNCTION add_sample_values_migration(_user_plot_rid integer, _sample_rid integer, _value jsonb, _imagery_rid integer, _imagery_attributes jsonb)
+ RETURNS integer AS $$
+
+    INSERT INTO sample_values
+        (user_plot_rid, sample_rid, value, imagery_rid, imagery_attributes)
+    VALUES
+        ( _user_plot_rid, _sample_rid, _value, _imagery_rid, _imagery_attributes)
+    RETURNING sample_value_uid
+
+$$ LANGUAGE SQL;
+
+-- Add user plots for migration (with add_sample_values)
+CREATE OR REPLACE FUNCTION add_user_plots_migration(_plot_rid integer, _username text, _flagged boolean, _collection_start timestamp, _collection_time timestamp)
+ RETURNS integer AS $$
+
+    WITH user_id AS (
+        SELECT user_uid FROM users WHERE email = _username
+    ), guest_id AS (
+        SELECT user_uid FROM users WHERE email = 'guest'
+    )
+
+    INSERT INTO user_plots
+        (plot_rid, flagged, collection_start, collection_time, user_rid)
+    (SELECT _plot_rid,
+        _flagged,
+        _collection_start,
+        _collection_time,
+        (CASE WHEN user_id.user_uid IS NULL THEN guest_id.user_uid ELSE user_id.user_uid END)
+     FROM user_id, guest_id)
+    RETURNING user_plot_uid
+
+$$ LANGUAGE SQL;
