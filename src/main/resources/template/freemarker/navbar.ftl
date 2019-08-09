@@ -21,11 +21,11 @@
             <#if userid != "">
                 <#if navlink == "Account">
                     <li class="nav-item active">
-                        <a class="nav-link" href="${root}/account/${userid}">Account</a>
+                        <a class="nav-link" href="${root}/account?userId=${userid}">Account</a>
                     </li>
                 <#else>
                     <li class="nav-item">
-                        <a class="nav-link" href="${root}/account/${userid}">Account</a>
+                        <a class="nav-link" href="${root}/account?userId=${userid}">Account</a>
                     </li>
                 </#if>
             </#if>

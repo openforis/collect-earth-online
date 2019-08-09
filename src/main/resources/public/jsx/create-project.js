@@ -114,7 +114,7 @@ class Project extends React.Component {
                   method: "POST",
                   contentType: "application/json; charset=utf-8",
                   body: JSON.stringify({
-                      institution: this.props.institutionId,
+                      institutionId: this.props.institutionId,
                       lonMin: this.state.coordinates.lonMin,
                       lonMax: this.state.coordinates.lonMax,
                       latMin: this.state.coordinates.latMin,
@@ -147,7 +147,7 @@ class Project extends React.Component {
             .then(data => {
                 const isInteger = n => !isNaN(parseInt(n)) && isFinite(n) && !n.includes(".");
                 if (isInteger(data)) {
-                    window.location = this.props.documentRoot + "/review-project/" + data;
+                    window.location = this.props.documentRoot + "/review-project?projectId=" + data;
                     return Promise.resolve();
                 } else {
                     return Promise.reject(data);
@@ -160,7 +160,8 @@ class Project extends React.Component {
 
     validateProject = () => {
         const { projectDetails } = this.state;
-        const minAnswers = (componentType) => (componentType || "").toLowerCase() === "input" ? 1 : 2;
+        // FIXME Disable for now until we can add a type specifically meant to have 1 or 0 answers
+        // const minAnswers = (componentType) => (componentType || "").toLowerCase() === "input" ? 1 : 2;
 
         if (projectDetails.name === "" || projectDetails.description === "") {
             alert("A project must contain a name and description.");
@@ -173,8 +174,8 @@ class Project extends React.Component {
             alert("A survey must include at least one question.");
             return false;
 
-        } else if (projectDetails.surveyQuestions.some(sq => sq.answers.length < minAnswers(sq.componentType))) {
-            alert("All survey questions must contain the correct number of answers.");
+        } else if (projectDetails.surveyQuestions.some(sq => sq.answers.length === 0)) {
+            alert("All survey questions must contain at least one answer.");
             return false;
 
         } else {
@@ -286,8 +287,7 @@ class Project extends React.Component {
         this.setState({ projectDetails: { ...this.state.projectDetails, surveyRules: newSurveyRules }});
 
     getProjectList = () => {
-        const { userId } = this.props;
-        fetch(this.props.documentRoot + "/get-all-projects?userId=" + userId)
+        fetch(this.props.documentRoot + "/get-all-projects")
             .then(response => response.ok ? response.json() : Promise.reject(response))
             .then(data => this.setState({ projectList: data }))
             .catch(response => {
@@ -323,7 +323,7 @@ class Project extends React.Component {
 
     getProjectPlots = () => {
         const maxPlots = 300;
-        fetch(this.props.documentRoot + "/get-project-plots/" + this.state.projectDetails.id + "/" + maxPlots)
+        fetch(this.props.documentRoot + "/get-project-plots?projectId=" + this.state.projectDetails.id + "&max=" + maxPlots)
             .then(response => response.ok ? response.json() : Promise.reject(response))
             .then(data => this.setState({ plotList: data }))
             .catch(response => {

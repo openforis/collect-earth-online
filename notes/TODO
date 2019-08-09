@@ -168,7 +168,6 @@
   - Add the new features (e.g., pro-active sampling) to our embedded database.
   - Change style of imagery on institution page based on public:true/false attribute
   - Prevent imagery deletion if any created or published projects use it as their basemap (but not closed or archived projects)
-  - Make sure Billy adds get("/widget-layout-editor" ...) to Server.declareRemoteStorageRoutes() and passes :pid to Views.editWidgetLayout()
   - Remove deploy/clientkeystore file from version control and add config settings to mail-config.json and web.xml to include your own HTTPS certificate
   - Give CEO's Tomcat process more memory
   - Ask Stefano about the C:\Users\<username>\OpenForis\Collect\data directory

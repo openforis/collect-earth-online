@@ -7,7 +7,7 @@
 </div>
 <script type="text/javascript">
  let theURL="${root}" + "/geo-dash";
- var pid = this.getParameterByName("pid");
+ var projectId = this.getParameterByName("projectId");
  function getParameterByName (name, url) {
      "use strict";
      if (!url) {

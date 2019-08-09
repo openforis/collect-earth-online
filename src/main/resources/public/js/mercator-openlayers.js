@@ -101,8 +101,8 @@ mercator.createSource = function (sourceConfig, imageryId, documentRoot) {
     } else if (sourceConfig.type === "GeoServer") {
         return new ol.source.TileWMS({
             serverType: "geoserver",
-            url: sourceConfig.geoserverUrl,
-            params: sourceConfig.geoserverParams,
+            url: documentRoot + "/get-tile",
+            params: { LAYERS: "none", imageryId: imageryId },
         });
     } else if (sourceConfig.type === "GeeGateway") {
         //get variables and make ajax call to get mapid and token
@@ -1068,7 +1068,6 @@ mercator.getKMLFromFeatures = function (features) {
 // FIXME: change calls from highlight_sample to mercator.highlightSampleGeometry
 // FIXME: change calls from enable_dragbox_draw to enableDragBoxDraw(mapConfig, displayDragBoxBounds)
 // FIXME: change calls from disable_dragbox_draw to disableDragBoxDraw
-// FIXME: change references to pID in home.js to projectId
 // FIXME: change calls from draw_project_points to:
 //        mercator.removeLayerByTitle(mapConfig, "currentPlots");
 //        mercator.addPlotLayer(mapConfig, plots);
