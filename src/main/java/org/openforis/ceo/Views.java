@@ -88,7 +88,7 @@ public class Views {
     }
 
     public static Route reviewInstitution(FreeMarkerEngine freemarker) {
-        Function<Request, String> getInstitutionId = (req) -> req.params("institutionId");
+        Function<Request, String> getInstitutionId = (req) -> req.queryParams("institutionId");
         return makeRoute("Review-Institution",
                          freemarker,
                          Map.of("institution_id", getInstitutionId));

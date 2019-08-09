@@ -37,7 +37,6 @@ import org.openforis.ceo.postgres.PostgresInstitutions;
 import org.openforis.ceo.postgres.PostgresPlots;
 import org.openforis.ceo.postgres.PostgresProjects;
 import org.openforis.ceo.postgres.PostgresUsers;
-
 import spark.Request;
 import spark.Response;
 import spark.servlet.SparkApplication;
@@ -181,7 +180,7 @@ public class Server implements SparkApplication {
         get("/project-dashboard",                     Views.projectDashboard(freemarker));
         get("/register",                              Views.register(freemarker));
         get("/review-institution",                    Views.reviewInstitution(freemarker));
-        get("/review-project",                        (req, res) -> Views.reviewProject(freemarker).handle(projects.redirectNoEdit(req, res), res));
+        get("/review-project",                        Views.reviewProject(freemarker));
         get("/support",                               Views.support(freemarker));
         get("/widget-layout-editor",                  Views.widgetLayoutEditor(freemarker));
         get("/get-tile",                              (req, res) -> Proxy.proxyImagery(req, res, imagery));
