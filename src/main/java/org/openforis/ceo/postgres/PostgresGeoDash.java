@@ -31,8 +31,8 @@ public class PostgresGeoDash implements GeoDash {
 
     // Returns either the dashboard for a project or an empty dashboard if it has not been configured
     public String geodashId(Request req, Response res) {
-        var projectId = req.params(":id");
-        var projectTitle =  req.queryParams("title");
+        var projectId =    req.queryParams("projectId");
+        var projectTitle = req.queryParams("title");
 
         try (var conn = connect();
              var pstmt = conn.prepareStatement("SELECT * FROM get_project_widgets_by_project_id(?)")) {
@@ -72,16 +72,10 @@ public class PostgresGeoDash implements GeoDash {
         }
     }
 
-    // Will be removed once confirmed it is abandoned and not needed
-    public String updateDashBoardById(Request req, Response res) {
-        /* Code will go here to update dashboard*/
-        return "";
-    }
-
     // Creates a dashboard widget for a specific project
     public String createDashBoardWidgetById(Request req, Response res) {
         var jsonInputs = parseJson(req.body()).getAsJsonObject();
-        var projectId =jsonInputs.get("pID").getAsString();
+        var projectId = jsonInputs.get("projectId").getAsString();
         var dashboardId = jsonInputs.get("dashID").getAsString();
         var widgetJsonString = jsonInputs.get("widgetJSON").getAsString();
 
@@ -104,7 +98,7 @@ public class PostgresGeoDash implements GeoDash {
 
     // Updates a dashboard widget by widget_id
     public String updateDashBoardWidgetById(Request req, Response res) {
-        var widgetId = req.params(":id");
+        var widgetId = req.queryParams("widgetId");
         var jsonInputs = parseJson(req.body()).getAsJsonObject();
         var dashboardId = getOrEmptyString(jsonInputs, "dashID").getAsString();
         var widgetJsonString = jsonInputs.get("widgetJSON").getAsString();
@@ -127,7 +121,7 @@ public class PostgresGeoDash implements GeoDash {
 
     // Deletes a dashboard widget by widget_id
     public String deleteDashBoardWidgetById(Request req, Response res) {
-        var widgetId = req.params(":id");
+        var widgetId = req.queryParams("widgetId");
         var jsonInputs = elementToObject(parseJson(req.body()));
         var dashboardId = jsonInputs.get("dashID").getAsString();
 
@@ -168,7 +162,7 @@ public class PostgresGeoDash implements GeoDash {
             builder.loadTrustMaterial(null, new TrustSelfSignedStrategy());
             var sslsf = new SSLConnectionSocketFactory(builder.build());
             var httpclient = HttpClients.custom().setSSLSocketFactory(sslsf).build();
-            
+
             var endurl = req.host();
             if (endurl.lastIndexOf(":") > 0) {
                 endurl = endurl.substring(0, endurl.lastIndexOf(":"));

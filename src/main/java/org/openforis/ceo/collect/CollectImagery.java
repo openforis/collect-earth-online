@@ -97,7 +97,7 @@ public class CollectImagery implements Imagery {
         var jsonInputs = parseJson(req.body()).getAsJsonObject();
         var institutionId = jsonInputs.get("institutionId").getAsInt();
         var imageryId = jsonInputs.get("imageryId").getAsString();
-        
+
         disassociateResource(institutionId, IMAGERY_RESOURCE_TYPE, imageryId);
         return "";
     }
