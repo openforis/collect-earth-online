@@ -55,7 +55,7 @@ export class SurveyDesign extends React.Component {
             inSimpleMode: this.state.inSimpleMode
                             ? false
                             : this.onlySimpleFeatures()
-                                || confirm("This action will revert all questions to type 'text - button' and erase rules.\n\nWould you like to proceed?"),
+                                || confirm("This action will revert all questions to type 'button - text' and erase rules.\n\nWould you like to proceed?"),
         });
     };
 

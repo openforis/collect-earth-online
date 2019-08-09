@@ -275,6 +275,7 @@ class Project extends React.Component {
             const templateProject = this.state.projectList.find(p => p.id === this.state.projectDetails.id);
             this.setState({
                 useTemplatePlots: true,
+                // When user re-selects use template plots, revert project plot design values back to template but keep other data.
                 projectDetails: {
                     ...templateProject,
                     surveyQuestions: this.state.projectDetails.surveyQuestions,
