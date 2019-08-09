@@ -63,7 +63,7 @@ public class JsonPlots implements Plots {
 
     private static Boolean plotInProject(Integer projectId, Integer plotId) {
         final var plots = readJsonFile("plot-data-" + projectId + ".json").getAsJsonArray();
-        final var plotInProject = toStream(plots).filter(pl -> getBestPlotId(pl) == plotId).findFirst();
+        final var plotInProject = toStream(plots).filter(pl -> getBestPlotId(pl).equals(plotId)).findFirst();
         return plotInProject.isPresent();
     }
 
