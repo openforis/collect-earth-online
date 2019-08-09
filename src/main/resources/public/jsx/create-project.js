@@ -277,10 +277,16 @@ class Project extends React.Component {
                 useTemplatePlots: true,
                 // When user re-selects use template plots, revert project plot design values back to template but keep other data.
                 projectDetails: {
-                    ...templateProject,
-                    surveyQuestions: this.state.projectDetails.surveyQuestions,
-                    surveyRules: this.state.projectDetails.surveyRules,
-                    privacyLevel: this.state.projectDetails.privacyLevel,
+                    ...this.state.projectDetails,
+                    boundary: templateProject.boundary,
+                    numPlots: templateProject.numPlots,
+                    plotDistribution: templateProject.plotDistribution,
+                    plotShape: templateProject.plotShape,
+                    plotSize: templateProject.plotSize,
+                    plotSpacing: templateProject.plotSpacing,
+                    sampleDistribution: templateProject.sampleDistribution,
+                    sampleResolution: templateProject.sampleResolution,
+                    samplesPerPlot: templateProject.samplesPerPlot,
                 },
             });
         } else {
