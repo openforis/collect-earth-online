@@ -13,6 +13,11 @@
   </context-param>
 
   <context-param>
+    <param-name>databaseType</param-name>
+    <param-value></param-value>
+  </context-param>
+
+  <context-param>
     <param-name>smtpServer</param-name>
     <param-value>smtp.gmail.com</param-value>
   </context-param>

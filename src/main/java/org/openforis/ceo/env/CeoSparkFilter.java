@@ -10,6 +10,7 @@ public class CeoSparkFilter extends SparkFilter {
     public void init(FilterConfig filterConfig) throws ServletException {
         var context             = filterConfig.getServletContext();
         CeoConfig.documentRoot  = context.getInitParameter("documentRoot");
+        CeoConfig.databaseType  = context.getInitParameter("databaseType");
         CeoConfig.baseUrl       = context.getInitParameter("baseUrl");
         CeoConfig.smtpUser      = context.getInitParameter("smtpUser");
         CeoConfig.smtpServer    = context.getInitParameter("smtpServer");

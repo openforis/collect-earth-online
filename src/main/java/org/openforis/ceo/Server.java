@@ -195,6 +195,8 @@ public class Server implements SparkApplication {
         if (args.length != 1 || !List.of("JSON", "POSTGRES").contains(args[0])) {
             System.out.println(usageMessage);
             System.exit(0);
+        } else {
+            CeoConfig.databaseType = args[0];
         }
 
         // Load the SMTP settings for sending reset password emails
@@ -211,7 +213,7 @@ public class Server implements SparkApplication {
         // Start the HTTP Jetty webserver on port 4567 to redirect traffic to the HTTPS Jetty webserver
         redirectHttpToHttps();
 
-        if (args[0].equals("JSON")) {
+        if (CeoConfig.databaseType.equals("JSON")) {
             // Set up the routing table to use the JSON backend
             declareRoutes(new JsonProjects(),
                           new JsonImagery(),
@@ -235,5 +237,23 @@ public class Server implements SparkApplication {
         // FIXME: I'm not entirely sure this will work with Tomcat. This should be tested.
         // Start the HTTP Jetty webserver on port 4567 to redirect traffic to the HTTPS Tomcat webserver
         redirectHttpToHttps();
+
+        if (CeoConfig.databaseType.equals("JSON")) {
+            // Set up the routing table to use the JSON backend
+            declareRoutes(new JsonProjects(),
+                          new JsonImagery(),
+                          new JsonUsers(),
+                          new JsonInstitutions(),
+                          new JsonGeoDash(),
+                          new JsonPlots());
+        } else {
+            // Set up the routing table to use the POSTGRES backend
+            declareRoutes(new PostgresProjects(),
+                          new PostgresImagery(),
+                          new PostgresUsers(),
+                          new PostgresInstitutions(),
+                          new PostgresGeoDash(),
+                          new PostgresPlots());
+        }
     }
 }
