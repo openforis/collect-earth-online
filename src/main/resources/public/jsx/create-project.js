@@ -113,7 +113,7 @@ class Project extends React.Component {
                   method: "POST",
                   contentType: "application/json; charset=utf-8",
                   body: JSON.stringify({
-                      institution: this.props.institutionId,
+                      institutionId: this.props.institutionId,
                       lonMin: this.state.coordinates.lonMin,
                       lonMax: this.state.coordinates.lonMax,
                       latMin: this.state.coordinates.latMin,
@@ -146,7 +146,7 @@ class Project extends React.Component {
             .then(data => {
                 const isInteger = n => !isNaN(parseInt(n)) && isFinite(n) && !n.includes(".");
                 if (data[0] && isInteger(data[1])) {
-                    window.location = this.props.documentRoot + "/review-project/" + data[1];
+                    window.location = this.props.documentRoot + "/review-project?projectId=" + data[1];
                     return Promise.resolve();
                 } else {
                     return Promise.reject(data[1]);
@@ -306,8 +306,7 @@ class Project extends React.Component {
         this.setState({ projectDetails: { ...this.state.projectDetails, surveyRules: newSurveyRules }});
 
     getProjectList = () => {
-        const { userId } = this.props;
-        fetch(this.props.documentRoot + "/get-all-projects?userId=" + userId)
+        fetch(this.props.documentRoot + "/get-all-projects")
             .then(response => response.ok ? response.json() : Promise.reject(response))
             .then(data => this.setState({ projectList: data }))
             .catch(response => {
@@ -343,7 +342,7 @@ class Project extends React.Component {
 
     getProjectPlots = () => {
         const maxPlots = 300;
-        fetch(this.props.documentRoot + "/get-project-plots/" + this.state.projectDetails.id + "/" + maxPlots)
+        fetch(this.props.documentRoot + "/get-project-plots?projectId=" + this.state.projectDetails.id + "&max=" + maxPlots)
             .then(response => response.ok ? response.json() : Promise.reject(response))
             .then(data => this.setState({ plotList: data }))
             .catch(response => {

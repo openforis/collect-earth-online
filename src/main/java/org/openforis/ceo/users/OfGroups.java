@@ -44,8 +44,8 @@ public class OfGroups implements Institutions {
                 var hiddenInstitutions = Arrays.asList("default_public_group", "admin_private_group");
                 var visibleGroups = filterJsonArray(groups, group ->
                                                     group.get("enabled").getAsBoolean() == true
-                                                    && (!group.get("name").getAsString().endsWith("_private_group") || 
-                                                        privateInstitutionName != null && group.get("name").getAsString().equals(privateInstitutionName)) 
+                                                    && (!group.get("name").getAsString().endsWith("_private_group") ||
+                                                        privateInstitutionName != null && group.get("name").getAsString().equals(privateInstitutionName))
                                                     && !hiddenInstitutions.contains(group.get("name").getAsString()));
                 var institutions = mapJsonArray(visibleGroups, group -> {
                         var institution = new JsonObject();
@@ -120,7 +120,7 @@ public class OfGroups implements Institutions {
     }
 
     public String getInstitutionDetails(Request req, Response res) {
-        var institutionId = Integer.parseInt(req.params(":id"));
+        var institutionId = Integer.parseInt(req.params(":instId"));
         var matchingInstitution = getInstitutionById(institutionId);
         if (matchingInstitution.isPresent()) {
             return matchingInstitution.get().toString();
@@ -221,7 +221,7 @@ public class OfGroups implements Institutions {
     }
     public String updateInstitution(Request req, Response res) {
         try {
-            var institutionId = req.params(":id");
+            var institutionId = req.params(":instId");
 
             // Create a new multipart config for the servlet
             // NOTE: This is for Jetty. Under Tomcat, this is handled in the webapp/META-INF/context.xml file.
@@ -277,7 +277,7 @@ public class OfGroups implements Institutions {
     }
 
     public String archiveInstitution(Request req, Response res) {
-        var institutionId = req.params(":id");
+        var institutionId = req.params(":instId");
         var url = String.format(OF_USERS_API_URL + "group/%s", institutionId);
         var data = new GenericData();
         data.put("enabled", false);
@@ -290,13 +290,13 @@ public class OfGroups implements Institutions {
             return "";
         }
     }
-    
+
     public static JsonArray getResourceIds(int institutionId, String resourceType) throws IOException {
         var url = String.format(OF_USERS_API_URL + "group/%d/resources/%s", institutionId, resourceType);
         var response = prepareGetRequest(url).execute();
         return getResponseAsJson(response).getAsJsonArray();
     }
-    
+
     public static String associateResource(int institutionId, String resourceType, String resourceId) throws IOException {
         preparePostRequest(String.format(OF_USERS_API_URL + "group/%d/resources/%s/%s", institutionId, resourceType, resourceId))
             .execute();
@@ -309,8 +309,13 @@ public class OfGroups implements Institutions {
         return "";
     }
 
-    public Request redirectNonAdmin(Request req, Response res) {
+    public Request redirectNonInstAdmin(Request req, Response res) {
         return req;
+    }
+
+    @Override
+    public Boolean isInstAdmin(Request req) {
+        return null;
     }
 
 }

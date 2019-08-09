@@ -13,9 +13,7 @@ import static org.openforis.ceo.utils.JsonUtils.toStream;
 import static org.openforis.ceo.utils.ProjectUtils.getOrEmptyString;
 
 import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import com.google.gson.JsonPrimitive;
 import java.util.Comparator;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
@@ -26,8 +24,8 @@ import spark.Response;
 public class JsonPlots implements Plots {
 
     public String getProjectPlots(Request req, Response res) {
-        var projectId = req.params(":id");
-        var maxPlots = Integer.parseInt(req.params(":max"));
+        var projectId = req.queryParams("projectId");
+        var maxPlots = Integer.parseInt(req.queryParams("max"));
         var plots = elementToArray(readJsonFile("plot-data-" + projectId + ".json"));
         var numPlots = plots.size();
         if (numPlots > maxPlots) {
@@ -43,8 +41,8 @@ public class JsonPlots implements Plots {
     }
 
     public String getProjectPlot(Request req, Response res) {
-        final var projectId = req.params(":projid");
-        final var plotId = req.params(":plotid");
+        final var projectId = req.queryParams("projectId");
+        final var plotId = req.queryParams("plotId");
         final var plots = elementToArray(readJsonFile("plot-data-" + projectId + ".json"));
         final var matchingPlot = findInJsonArray(plots, plot -> plot.get("id").getAsString().equals(plotId));
         if (matchingPlot.isPresent()) {
@@ -64,21 +62,21 @@ public class JsonPlots implements Plots {
     }
 
     private static String singlePlotReturn(
-                            Comparator<JsonObject> sortComparator, 
-                            Predicate<JsonObject> filterPredicate, 
-                            Integer projectId, 
-                            Boolean getUserPlots, 
-                            String userName, 
+                            Comparator<JsonObject> sortComparator,
+                            Predicate<JsonObject> filterPredicate,
+                            Integer projectId,
+                            Boolean getUserPlots,
+                            String userName,
                             Integer userId
     ) {
 
         final var plots = readJsonFile("plot-data-" + projectId + ".json").getAsJsonArray();
 
         final var matchingPlot = toStream(plots)
-                                    .filter(pl -> getUserPlots 
+                                    .filter(pl -> getUserPlots
                                         ?  getOrEmptyString(pl, "user").getAsString().equals(userName)
-                                        :  pl.get("analyses").getAsInt() == 0 
-                                            && pl.get("flagged").getAsBoolean() == false 
+                                        :  pl.get("analyses").getAsInt() == 0
+                                            && pl.get("flagged").getAsBoolean() == false
                                             && !isLocked(pl)
                                     )
                                     .filter(filterPredicate)
@@ -119,7 +117,7 @@ public class JsonPlots implements Plots {
 
         return singlePlotReturn(
                 (a, b) -> getBestPlotId(a) - getBestPlotId(b),
-                pl -> getBestPlotId(pl) > plotId, 
+                pl -> getBestPlotId(pl) > plotId,
                 projectId,
                 getUserPlots,
                 userName,
@@ -175,8 +173,8 @@ public class JsonPlots implements Plots {
     }
 
     public String releasePlotLocks(Request req, Response res) {
-        final var userId =                Integer.parseInt(req.params(":userId"));
-        final var projectId =             Integer.parseInt(req.params(":projid"));
+        final var userId =                Integer.parseInt(req.queryParams("userId"));
+        final var projectId =             Integer.parseInt(req.queryParams("projectId"));
 
         return unlockLockPlots(projectId, -1, userId);
     }
@@ -251,7 +249,7 @@ public class JsonPlots implements Plots {
                             return unlockPlot(plot, userId);
                         } else if (lastUser.equals(userName)) {
                             plot.add("samples", updatedSamples);
-                            return unlockPlot(plot, userId); 
+                            return unlockPlot(plot, userId);
                         } else {
                             return unlockPlot(plot, userId);
                         }
@@ -273,8 +271,8 @@ public class JsonPlots implements Plots {
                     newUserStats.addProperty("timedPlots", 1);
                     newUserStats.addProperty("user", userName);
 
-                    project.add("userStats", 
-                                sumUserInfo(project.has("userStats") 
+                    project.add("userStats",
+                                sumUserInfo(project.has("userStats")
                                                 ? project.get("userStats").getAsJsonArray()
                                                 : new JsonArray()
                                             , newUserStats)
@@ -300,7 +298,7 @@ public class JsonPlots implements Plots {
                         plot.addProperty("flagged", true);
                         plot.addProperty("user", userName);
                         plot.addProperty("collectionTime", System.currentTimeMillis());
-                        
+
                         return unlockPlot(plot, userId);
                     } else {
                         return plot;

@@ -132,7 +132,7 @@ public class CollectProjects implements Projects {
      * @return the JSON object for project with matching id or an empty
      */
     public String getProjectById(Request req, Response res) {
-        var projectId = req.params(":id");
+        var projectId = req.params(":projId");
         if ("0".equals(projectId)) {
             var el = JsonUtils.readJsonFile("default-project.json");
             return el.toString();
@@ -380,7 +380,7 @@ public class CollectProjects implements Projects {
     //
     // ==> ""
     public String publishProject(Request req, Response res) {
-        var projectId = req.params(":id");
+        var projectId = req.params(":projId");
         postToCollect("survey/publish/" + projectId);
         return "";
     }
@@ -392,7 +392,7 @@ public class CollectProjects implements Projects {
     //
     // ==> ""
     public String closeProject(Request req, Response res) {
-        var projectId = req.params(":id");
+        var projectId = req.params(":projId");
         postToCollect("survey/close/" + projectId);
         return "";
     }
@@ -405,7 +405,7 @@ public class CollectProjects implements Projects {
     //
     // ==> ""
     public String archiveProject(Request req, Response res) {
-        var projectId = req.params(":id");
+        var projectId = req.params(":projId");
         postToCollect("survey/archive/" + projectId);
         return "";
     }
@@ -429,7 +429,7 @@ public class CollectProjects implements Projects {
 
             // Read the input fields into a new JsonObject (NOTE: fields will be camelCased)
             var newProject = partsToJsonObject(req,
-                    new String[]{"institution", "privacy-level", "lon-min", "lon-max", "lat-min",
+                    new String[]{"institutionId", "privacy-level", "lon-min", "lon-max", "lat-min",
                             "lat-max", "base-map-source", "plot-distribution", "num-plots",
                             "plot-spacing", "plot-shape", "plot-size", "sample-distribution",
                             "samples-per-plot", "sample-resolution", "sample-values"});
@@ -828,7 +828,15 @@ public class CollectProjects implements Projects {
         return req;
     }
 
-    public Request redirectNoEdit(Request req, Response res) {
+    public Request redirectNonProjAdmin(Request req, Response res) {
         return req;
+    }
+
+    public Boolean canCollect(Request req) {
+        return true;
+    }
+
+    public Boolean isProjAdmin(Request req) {
+        return true;
     }
 }

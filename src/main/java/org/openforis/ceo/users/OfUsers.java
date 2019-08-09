@@ -272,7 +272,7 @@ public class OfUsers implements Users {
     public String updateProjectUserStats(Request req, Response res) { return "";}
 
     public String getInstitutionUsers(Request req, Response res) {
-        var institutionId = req.params(":id");
+        var institutionId = req.params(":instId");
         try {
         	return getInstitutionUsers(institutionId).toString();
         } catch (Exception e) {
@@ -280,7 +280,7 @@ public class OfUsers implements Users {
         	return new JsonArray().toString();
         }
     }
-    
+
     private static JsonArray getInstitutionUsers(String institutionId) {
         try {
             var url = String.format(OF_USERS_API_URL + "group/%s/users", institutionId);
@@ -322,7 +322,7 @@ public class OfUsers implements Users {
         	return new JsonArray().toString();
         }
     }
-    
+
     public static JsonArray getAllUsers() {
         try {
             var response = prepareGetRequest(OF_USERS_API_URL + "user").execute(); // get all the users
@@ -355,7 +355,7 @@ public class OfUsers implements Users {
                     .collect(Collectors.toMap(userGroup -> userGroup.get("groupId").getAsInt(),
                                               userGroup -> {
                                             	  var roleCode = userGroup.get("roleCode").getAsString();
-                                            	  return roleCode.equals("ADM") || roleCode.equals("OWN") ? "admin" 
+                                            	  return roleCode.equals("ADM") || roleCode.equals("OWN") ? "admin"
                                             		  : roleCode.equals("OPR") || roleCode.equals("VWR") ? "member"
                                         			  : "not-member";},
                                               (a, b) -> b));
