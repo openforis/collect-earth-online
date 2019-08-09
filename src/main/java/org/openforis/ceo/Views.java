@@ -87,13 +87,11 @@ public class Views {
         return makeRoute("Create-Institution", freemarker);
     }
 
-    public static Route reviewInstitution(FreeMarkerEngine freemarker, String storage) {
+    public static Route reviewInstitution(FreeMarkerEngine freemarker) {
         Function<Request, String> getInstitutionId = (req) -> req.queryParams("institutionId");
         return makeRoute("Review-Institution",
                          freemarker,
-                         Map.of("of_users_api_url", CeoConfig.ofUsersApiUrl,
-                                "institution_id", getInstitutionId,
-                                "storage", storage));
+                         Map.of("institution_id", getInstitutionId));
     }
 
     public static Route collection(FreeMarkerEngine freemarker) {

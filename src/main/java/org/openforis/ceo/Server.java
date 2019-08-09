@@ -18,9 +18,6 @@ import freemarker.template.Configuration;
 import freemarker.template.TemplateExceptionHandler;
 import java.io.File;
 import java.util.List;
-import org.openforis.ceo.collect.CollectImagery;
-import org.openforis.ceo.collect.CollectPlots;
-import org.openforis.ceo.collect.CollectProjects;
 import org.openforis.ceo.db_api.GeoDash;
 import org.openforis.ceo.db_api.Imagery;
 import org.openforis.ceo.db_api.Institutions;
@@ -40,9 +37,6 @@ import org.openforis.ceo.postgres.PostgresInstitutions;
 import org.openforis.ceo.postgres.PostgresPlots;
 import org.openforis.ceo.postgres.PostgresProjects;
 import org.openforis.ceo.postgres.PostgresUsers;
-import org.openforis.ceo.users.CeoAuthFilter;
-import org.openforis.ceo.users.OfGroups;
-import org.openforis.ceo.users.OfUsers;
 import spark.Request;
 import spark.Response;
 import spark.servlet.SparkApplication;
@@ -66,9 +60,8 @@ public class Server implements SparkApplication {
     }
 
     // Sets up Spark's routing table and exception handling rules
-    private static void declareRoutes(String databaseType, Projects projects, Imagery imagery,
-                                      Users users, Institutions institutions, GeoDash geoDash,
-                                      Plots plots) {
+    private static void declareRoutes(Projects projects, Imagery imagery, Users users,
+                                      Institutions institutions, GeoDash geoDash, Plots plots) {
         // Create a configured FreeMarker renderer
         var freemarker = new FreeMarkerEngine(getConfiguration());
 
@@ -78,11 +71,6 @@ public class Server implements SparkApplication {
         // Serve static files from src/main/resources/public/
         staticFileLocation("/public");
         staticFiles.expireTime(6000);
-
-        // Allow token-based authentication if users are not logged in and we are using the COLLECT database
-        if (databaseType.equals("COLLECT")) {
-            before("/*", new CeoAuthFilter());
-        }
 
         // Take query param for flash message and add to session attributes
         before((request, response) -> {
@@ -191,7 +179,7 @@ public class Server implements SparkApplication {
         get("/password-reset",                        Views.passwordReset(freemarker));
         get("/project-dashboard",                     Views.projectDashboard(freemarker));
         get("/register",                              Views.register(freemarker));
-        get("/review-institution",                    Views.reviewInstitution(freemarker, databaseType.equals("COLLECT") ? "remote" : "local"));
+        get("/review-institution",                    Views.reviewInstitution(freemarker));
         get("/review-project",                        Views.reviewProject(freemarker));
         get("/support",                               Views.support(freemarker));
         get("/widget-layout-editor",                  Views.widgetLayoutEditor(freemarker));
@@ -299,6 +287,8 @@ public class Server implements SparkApplication {
         if (args.length != 1 || !List.of("JSON", "POSTGRES").contains(args[0])) {
             System.out.println(usageMessage);
             System.exit(0);
+        } else {
+            CeoConfig.databaseType = args[0];
         }
 
         // Load the SMTP settings for sending reset password emails
@@ -315,10 +305,9 @@ public class Server implements SparkApplication {
         // Start the HTTP Jetty webserver on port 4567 to redirect traffic to the HTTPS Jetty webserver
         redirectHttpToHttps();
 
-        if (args[0].equals("JSON")) {
+        if (CeoConfig.databaseType.equals("JSON")) {
             // Set up the routing table to use the JSON backend
-            declareRoutes("JSON",
-                          new JsonProjects(),
+            declareRoutes(new JsonProjects(),
                           new JsonImagery(),
                           new JsonUsers(),
                           new JsonInstitutions(),
@@ -326,8 +315,7 @@ public class Server implements SparkApplication {
                           new JsonPlots());
         } else {
             // Set up the routing table to use the POSTGRES backend
-            declareRoutes("POSTGRES",
-                          new PostgresProjects(),
+            declareRoutes(new PostgresProjects(),
                           new PostgresImagery(),
                           new PostgresUsers(),
                           new PostgresInstitutions(),
@@ -342,14 +330,22 @@ public class Server implements SparkApplication {
         // Start the HTTP Jetty webserver on port 4567 to redirect traffic to the HTTPS Tomcat webserver
         redirectHttpToHttps();
 
-        // Set up the routing table
-        declareRoutes("COLLECT",
-                      new CollectProjects(),
-                      new CollectImagery(),
-                      new OfUsers(),
-                      new OfGroups(),
-                      new JsonGeoDash(),
-                      new CollectPlots());
+        if (CeoConfig.databaseType.equals("JSON")) {
+            // Set up the routing table to use the JSON backend
+            declareRoutes(new JsonProjects(),
+                          new JsonImagery(),
+                          new JsonUsers(),
+                          new JsonInstitutions(),
+                          new JsonGeoDash(),
+                          new JsonPlots());
+        } else {
+            // Set up the routing table to use the POSTGRES backend
+            declareRoutes(new PostgresProjects(),
+                          new PostgresImagery(),
+                          new PostgresUsers(),
+                          new PostgresInstitutions(),
+                          new PostgresGeoDash(),
+                          new PostgresPlots());
+        }
     }
-
 }

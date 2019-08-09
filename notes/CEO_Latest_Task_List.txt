@@ -50,15 +50,6 @@
  - The option to export/download data in various formats (e.g., xml, csv, Fusion table)
  - Integration with SAIKU
 
- Collect Integration:
- - Replace Stefano's for loops in CollectProjects.java with recursions or stream operations
- - Proofread CollectProjects.java
- - Look at Stefano's Collect code:
-   - org.openforis.collect.metamodel.SimpleSurveyCreationParameters
-   - org.openforis.collect.metamodel.SurveyCreator
-   - org.openforis.collect.io.metadata.samplingpointdata.SamplingPointDataGenerator
- - Respond to Alfonso's github tickets
-
  Database Improvements:
  - Move attribution field from project-list.json to imagery-list.json (set in Projects.java, used in collection.ftl and collection.js)
  - Eliminate projects with no data
@@ -115,15 +106,7 @@
 *** TODO Phase out role attributes
 *** TODO Stop adding new users to the "All Users" institution (delete this institution since it isn't used)
 *** TODO Implement updateAccount, getPasswordResetKey, and resetPassword
-** OfUsers.java
-*** TODO Implement updateAccount, getPasswordResetKey, resetPassword, and updateInstitutionRole
-*** TODO CamelCase all references to reset_key and ip_addr fields in the of-users database
-*** TODO Exclude the superuser account (admin@sig-gis.com) from the list of users returned by getAllUsers
-*** TODO Raise a red flag when an error occurs in communicating with the database in getAllUsers, getInstitutionRoles, and requestInstitutionMembership
-*** TODO Reimplement requestInstitutionMembership to add the user to the selected userGroup's pending queue
 ** Institutions.java
-** OfGroups.java
-*** TODO Replace for loops
 ** Projects.java
 ** CollectProjects.java
 *** TODO Implement dumpProjectRawData
