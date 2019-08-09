@@ -336,7 +336,7 @@ class Collection extends React.Component {
             .then(data => {
                 if (data === "done") {
                     alert(this.state.reviewPlots
-                          ? "This plot was analyzed by someone else."
+                          ? "This plot was analyzed by someone else. You are logged in as " + this.props.userName
                           : "This plot has already been analyzed.");
                 } else if (data === "not found") {
                     alert("Plot " + plotId + " not found.");
@@ -371,7 +371,7 @@ class Collection extends React.Component {
                 if (data === "done") {
                     if (plotId === -1) {
                         alert(this.state.reviewPlots
-                              ? "You have not reviewed any plots"
+                              ? "You have not reviewed any plots. You are logged in as " + this.props.userName
                               : "All plots have been analyzed for this project.");
                     } else {
                         this.setState({ nextPlotButtonDisabled: true });
@@ -407,7 +407,7 @@ class Collection extends React.Component {
                 if (data === "done") {
                     this.setState({ prevPlotButtonDisabled: true });
                     alert(this.state.reviewPlots
-                          ? "No previous plots were analyzed by you."
+                          ? "No previous plots were analyzed by you. You are logged in as " + this.props.userName
                           : "All previous plots have been analyzed.");
                 } else {
                     const newPlot = JSON.parse(data);
