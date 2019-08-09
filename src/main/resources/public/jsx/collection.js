@@ -338,6 +338,8 @@ class Collection extends React.Component {
                     alert(this.state.reviewPlots
                           ? "This plot was analyzed by someone else."
                           : "This plot has already been analyzed.");
+                } else if (data === "not found") {
+                    alert("Plot " + plotId + " not found.");
                 } else {
                     const newPlot = JSON.parse(data);
                     this.setState({

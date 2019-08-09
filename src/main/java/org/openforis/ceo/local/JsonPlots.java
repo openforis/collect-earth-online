@@ -61,6 +61,12 @@ public class JsonPlots implements Plots {
         return plot.has("plotId") ? plot.get("plotId").getAsInt() : plot.get("id").getAsInt();
     }
 
+    private static Boolean plotInProject(Integer projectId, Integer plotId) {
+        final var plots = readJsonFile("plot-data-" + projectId + ".json").getAsJsonArray();
+        final var plotInProject = toStream(plots).filter(pl -> getBestPlotId(pl) == plotId).findFirst();
+        return plotInProject.isPresent();
+    }
+
     private static String singlePlotReturn(
                             Comparator<JsonObject> sortComparator,
                             Predicate<JsonObject> filterPredicate,
@@ -98,14 +104,18 @@ public class JsonPlots implements Plots {
         final var userId =             Integer.parseInt(req.queryParams("userId"));
         final var userName =           req.queryParams("userName");;
 
-        return singlePlotReturn(
-                (a,b) -> 0,
-                pl -> getBestPlotId(pl) == plotId,
-                projectId,
-                getUserPlots,
-                userName,
-                userId
-        );
+        if (plotInProject(projectId, plotId)){
+            return singlePlotReturn(
+                    (a,b) -> 0,
+                    pl -> getBestPlotId(pl) == plotId,
+                    projectId,
+                    getUserPlots,
+                    userName,
+                    userId
+            );
+        } else {
+            return "not found";
+        }
     }
 
     public synchronized String getNextPlot(Request req, Response res) {
