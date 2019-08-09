@@ -183,7 +183,8 @@ public class PostgresGeoDash implements GeoDash {
             var response = httpclient.execute(request);
             return EntityUtils.toString(response.getEntity(), "UTF-8");
         } catch (Exception e) {
-            e.printStackTrace();
+            // e.printStackTrace();
+            System.out.println("Error with gateway requests.");
             return "";
         }
     }
