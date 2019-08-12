@@ -1949,6 +1949,8 @@ CREATE OR REPLACE FUNCTION is_institution_user_admin(_user_rid integer, _institu
         FROM institution_users as iu
         INNER JOIN roles as r
             ON iu.role_rid = role_uid
+        INNER JOIN institutions as i
+			ON institution_rid = institution_uid
         WHERE iu.user_rid = _user_rid
             AND institution_rid = _institution_rid
             AND title = 'admin'
