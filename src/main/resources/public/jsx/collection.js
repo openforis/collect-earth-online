@@ -11,7 +11,7 @@ class Collection extends React.Component {
         this.state = {
             collectionStart: 0,
             currentProject: { surveyQuestions: [], institution: "" },
-            currentImagery: { id: "" },
+            currentImagery: { id: "", sourceConfig: {} },
             currentPlot: null,
             imageryAttribution: "",
             imageryList: [],
@@ -50,9 +50,8 @@ class Collection extends React.Component {
             // release any locks in case of user hitting refresh
             fetch(
                 this.props.documentRoot
-                    + "/release-plot-locks/"
-                    + this.props.userId + "/"
-                    + this.state.currentProject.id,
+                    + "/release-plot-locks?userId=" + this.props.userId
+                    + "&projectId=" + this.state.currentProject.id,
                 { method: "POST" }
             );
             this.getImageryList();
@@ -138,7 +137,7 @@ class Collection extends React.Component {
             });
     };
 
-    getProjectById = () => fetch(this.props.documentRoot + "/get-project-by-id/" + this.props.projectId)
+    getProjectById = () => fetch(this.props.documentRoot + "/get-project-by-id?projectId=" + this.props.projectId)
         .then(response => response.ok ? response.json() : Promise.reject(response))
         .then(project => {
             if (project.id > 0 && project.availability !== "archived") {
@@ -152,7 +151,7 @@ class Collection extends React.Component {
             }
         });
 
-    checkForGeodash = () => fetch(this.props.documentRoot + "/geo-dash/id/" + this.props.projectId)
+    checkForGeodash = () => fetch(this.props.documentRoot + "/geo-dash/get-by-projid?projectId=" + this.props.projectId)
         .then(response => response.ok ? response.json() : Promise.reject(response))
         .then(data => {
             const widgets = Array.isArray(data.widgets)
@@ -164,7 +163,7 @@ class Collection extends React.Component {
             return Promise.resolve("resolved");
         });
 
-    getProjectPlots = () => fetch(this.props.documentRoot + "/get-project-plots/" + this.props.projectId + "/1000")
+    getProjectPlots = () => fetch(this.props.documentRoot + "/get-project-plots?projectId=" + this.props.projectId + "&max=1000")
         .then(response => response.ok ? response.json() : Promise.reject(response))
         .then(data => {
             if (data.length > 0) {
@@ -211,7 +210,7 @@ class Collection extends React.Component {
         const newImagery = this.getImageryById(newBaseMapSource);
         const newImageryAttribution = newImagery.title === "DigitalGlobeWMSImagery"
             ? newImagery.attribution + " | " + this.state.imageryYearDG + " (" + this.state.stackingProfileDG + ")"
-            : newImagery.title === "PlanetGlobalMosaic"
+            : newImagery.sourceConfig.type === "Planet"
                 ? newImagery.attribution + " | " + this.state.imageryYearPlanet + "-" + this.state.imageryMonthPlanet
                 : newImagery.attribution;
         this.setState({
@@ -279,7 +278,7 @@ class Collection extends React.Component {
 
         if (this.state.currentImagery.title === "DigitalGlobeWMSImagery") {
             this.updateDGWMSLayer();
-        } else if (this.state.currentImagery.title === "PlanetGlobalMosaic") {
+        } else if (this.state.currentImagery.sourceConfig.type === "Planet") {
             this.updatePlanetLayer();
         }
     };
@@ -300,9 +299,9 @@ class Collection extends React.Component {
     };
 
     updatePlanetLayer = () => {
-        const { imageryMonthPlanet, imageryYearPlanet } = this.state;
+        const { currentImagery, imageryMonthPlanet, imageryYearPlanet } = this.state;
         mercator.updateLayerSource(this.state.mapConfig,
-                                   "PlanetGlobalMosaic",
+                                   currentImagery.title,
                                    sourceConfig => {
                                        sourceConfig.month = imageryMonthPlanet < 10 ? "0" + imageryMonthPlanet : imageryMonthPlanet;
                                        sourceConfig.year = imageryYearPlanet;
@@ -516,10 +515,10 @@ class Collection extends React.Component {
               ? currentProject.plotSize / 2.0
               : mercator.getViewRadius(mapConfig);
         window.open(this.props.documentRoot + "/geo-dash?"
-                    + "institution=" + this.state.currentProject.institution
-                    + "&pid=" + this.props.projectId
-                    + "&plotid=" + currentPlot.id
-                    + "&plotshape=" + encodeURIComponent((currentPlot.geom ? "polygon" : currentProject.plotShape))
+                    + "institutionId=" + this.state.currentProject.institution
+                    + "&projectId=" + this.props.projectId
+                    + "&plotId=" + currentPlot.id
+                    + "&plotShape=" + encodeURIComponent((currentPlot.geom ? "polygon" : currentProject.plotShape))
                     + "&aoi=" + encodeURIComponent("[" + mercator.getViewExtent(mapConfig) + "]")
                     + "&daterange=&bcenter=" + currentPlot.center
                     + "&bradius=" + plotRadius,
@@ -617,19 +616,14 @@ class Collection extends React.Component {
         }
     };
 
-    getImageryAttributes = () => {
-        const attributes = {
-            DigitalGlobeWMSImagery: {
-                imageryYearDG:     this.state.imageryYearDG,
-                stackingProfileDG: this.state.stackingProfileDG,
-            },
-            PlanetGlobalMosaic: {
-                imageryMonthPlanet: this.state.imageryMonthPlanet,
-                imageryYearPlanet:  this.state.imageryYearPlanet,
-            },
-        };
-        return attributes[this.state.currentImagery.title] || {};
-    };
+    getImageryAttributes = () =>
+        (this.state.currentImagery.title === "DigitalGlobeWMSImagery") ? {
+            imageryYearDG:     this.state.imageryYearDG,
+            stackingProfileDG: this.state.stackingProfileDG,
+        } : (this.state.currentImagery.sourceConfig.type === "Planet") ? {
+            imageryMonthPlanet: this.state.imageryMonthPlanet,
+            imageryYearPlanet:  this.state.imageryYearPlanet,
+        } : {};
 
     getChildQuestions = (currentQuestionId) => {
         const { surveyQuestions } = this.state.currentProject;
@@ -1042,6 +1036,7 @@ class Collection extends React.Component {
                     <ImageryOptions
                         baseMapSource={this.state.currentImagery.id}
                         imageryTitle={this.state.currentImagery.title}
+                        imageryType={this.state.currentImagery.sourceConfig.type}
                         imageryList={this.state.imageryList}
                         imageryYearDG={this.state.imageryYearDG}
                         imageryYearPlanet={this.state.imageryYearPlanet}
@@ -1364,7 +1359,7 @@ class ImageryOptions extends React.Component {
                 <input
                     type="range"
                     min="2016"
-                    max="2018"
+                    max={new Date().getFullYear()}
                     value={this.props.imageryYearPlanet}
                     className="slider"
                     id="myRange"
@@ -1415,7 +1410,7 @@ class ImageryOptions extends React.Component {
                             }
                         </select>
                         {props.imageryTitle === "DigitalGlobeWMSImagery" && this.digitalGlobeMenus()}
-                        {props.imageryTitle === "PlanetGlobalMosaic" && this.planetMenus()}
+                        {props.imageryType === "Planet" && this.planetMenus()}
                     </Fragment>
                 }
             </div>
@@ -1479,7 +1474,7 @@ class ProjectStats extends React.Component {
     }
 
     getProjectStats() {
-        fetch(this.props.documentRoot + "/get-project-stats/" + this.props.projectId)
+        fetch(this.props.documentRoot + "/get-project-stats?projectId=" + this.props.projectId)
             .then(response => response.ok ? response.json() : Promise.reject(response))
             .then(data => this.setState({ stats: data }))
             .catch(response => {
@@ -1603,7 +1598,7 @@ function QuitMenu({ userId, projectId, documentRoot }) {
                             className="btn bg-lightgreen btn-sm"
                             id="quit-button"
                             onClick={() =>
-                                fetch(documentRoot + "/release-plot-locks/" + userId + "/" + projectId, { method: "POST" })
+                                fetch(documentRoot + "/release-plot-locks?userId=" + userId + "&projectId=" + projectId, { method: "POST" })
                                     .then(() => window.location = documentRoot + "/home")
                             }
                         >

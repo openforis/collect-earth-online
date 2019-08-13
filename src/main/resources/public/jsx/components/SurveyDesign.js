@@ -24,31 +24,38 @@ export class SurveyDesign extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
-            inSimpleMode: props.hasNoRules,
+            inSimpleMode: true,
         };
     }
 
     componentDidUpdate = (prevProps, prevState) => {
-        if (this.state.inSimpleMode
-            && !prevState.inSimpleMode) {
-
+        if (this.state.inSimpleMode && !prevState.inSimpleMode) {
             this.convertToSimple();
         }
+
+        // Change to advanced/simple mode when changing project templates
+        if (prevProps.templateProject !== this.props.templateProject) {
+            this.setState({ inSimpleMode: this.onlySimpleFeatures() });
+        }
     };
+
+    onlySimpleFeatures = () => this.props.surveyQuestions.every(q => q.componentType === "button" && q.dataType === "text")
+                                && this.props.surveyRules.length === 0;
 
     convertToSimple = () => {
         const newSurveyQuestions = this.props.surveyQuestions
             .map(question => ({ ...question, componentType: "button", dataType: "text" }));
 
         this.props.setSurveyQuestions(newSurveyQuestions);
+        this.props.setSurveyRules([]);
     };
 
     toggleSimpleMode = () => {
         this.setState({
             inSimpleMode: this.state.inSimpleMode
                             ? false
-                            : this.props.surveyQuestions.every(q => q.componentType === "button")
-                                    || confirm("This action will revert all questions to type button.  Would you like to proceed?"),
+                            : this.onlySimpleFeatures()
+                                || confirm("This action will revert all questions to type 'button - text' and erase rules.\n\nWould you like to proceed?"),
         });
     };
 
