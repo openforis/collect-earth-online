@@ -6,18 +6,17 @@ class GeoDashHelp extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
-            LngObject: {},
+            lngObject: {},
         };
     }
 
-    componentDidMount = () => {
+    componentDidMount() {
         fetch(this.props.documentRoot + "/locale/geodashhelp_" + this.props.browserLanguage + ".json")
             .then(res => res.json())
-            .then(data => this.setState({ LngObject: data }));
+            .then(data => this.setState({ lngObject: data }));
     }
 
-    expandableImageWrapper = (src) => (
-        <ExpandableImage
+    expandableImageWrapper = (src) => <ExpandableImage
             src={this.props.documentRoot + src}
             previewStyles={{
                 float:"right",
@@ -25,27 +24,26 @@ class GeoDashHelp extends React.Component {
                 marginBottom:"1rem",
                 marginLeft:"1rem",
             }}
-        />
-    )
+        />;
 
     render() {
-        const { LngObject } = this.state;
+        const { lngObject } = this.state;
         return (
             <div className="container-fluid" style={{ overflowWrap: "break-word" }}>
                 <div className="col-xl-10 offset-xl-1 col-lg-10 offset-lg-1 justify-content-center">
-                    <h1>{LngObject.title}</h1>
-                    <CollapsibleSectionBlock title={LngObject.head_image_collection_widget}>
+                    <h1>{lngObject.title}</h1>
+                    <CollapsibleSectionBlock title={lngObject.head_image_collection_widget}>
                         {this.expandableImageWrapper("/img/image_collection_widget.gif")}
                         <ol>
-                            <li>{LngObject.click_add_widget}</li>
-                            <li>{LngObject.select_image_collection}</li>
-                            <li>{LngObject.choose_basemap}</li>
+                            <li>{lngObject.click_add_widget}</li>
+                            <li>{lngObject.select_image_collection}</li>
+                            <li>{lngObject.choose_basemap}</li>
                             <li>
-                                {LngObject.select_data}
+                                {lngObject.select_data}
                                 <ol style={{ listStyleType: "lower-alpha" }}>
-                                    <li>{LngObject.ic_data_info_preset}</li>
+                                    <li>{lngObject.ic_data_info_preset}</li>
                                     <li>
-                                        {LngObject.ic_data_info_configure}
+                                        {lngObject.ic_data_info_configure}
                                         <ol style={{ listStyleType: "lower-roman" }}>
                                             <li>{"Landsat 5 - B1, B2, B3, B4, B5, B6, B7"}</li>
                                             <li>{"Landsat 7 - B1, B2, B3, B4, B5, B6_VCID_1, B6_VCID_2, B7, B8"}</li>
@@ -54,69 +52,69 @@ class GeoDashHelp extends React.Component {
                                         </ol>
                                     </li>
                                     <li>
-                                        {LngObject.custom_widget_info}
+                                        {lngObject.custom_widget_info}
                                         <ol style={{ listStyleType: "lower-roman" }}>
                                             <li>
                                                 {" Offline Carbon Monoxide - COPERNICUS/S5P/OFFL/L3_CO\n" +
-                                                 "                                                {\"bands\":\"CO_column_number_density,H2O_column_number_density,cloud_height\",\"min\":\"0\",\"max\":\"0.5\"}\n" +
-                                                 "                                            2018-01-01 to 2018-12-31"}
+                                                 "{\"bands\":\"CO_column_number_density,H2O_column_number_density,cloud_height\",\"min\":\"0\",\"max\":\"0.5\"}\n" +
+                                                 "2018-01-01 to 2018-12-31"}
                                             </li>
-                                            <li>{LngObject.custom_widget_warning}</li>
+                                            <li>{lngObject.custom_widget_warning}</li>
                                         </ol>
                                     </li>
                                 </ol>
                             </li>
-                            <li>{LngObject.select_date_range}</li>
-                            <li>{LngObject.click_create}</li>
-                            <li>{LngObject.reposition}</li>
+                            <li>{lngObject.select_date_range}</li>
+                            <li>{lngObject.click_create}</li>
+                            <li>{lngObject.reposition}</li>
                         </ol>
                     </CollapsibleSectionBlock>
-                    <CollapsibleSectionBlock title={LngObject.add_time_series_graph}>
+                    <CollapsibleSectionBlock title={lngObject.add_time_series_graph}>
                         {this.expandableImageWrapper("/img/time_series_graph_widget.gif")}
                         <ol>
-                            <li>{LngObject.click_add_widget}</li>
-                            <li>{LngObject.select_time_series}</li>
+                            <li>{lngObject.click_add_widget}</li>
+                            <li>{lngObject.select_time_series}</li>
                             <li>
-                                {LngObject.select_data}
+                                {lngObject.select_data}
                                 <ol style={{ listStyleType: "lower-alpha" }}>
-                                    <li>{LngObject.configured_graph}</li>
+                                    <li>{lngObject.configured_graph}</li>
                                     <li>
-                                        {LngObject.custom_graph}
+                                        {lngObject.custom_graph}
                                         <ol style={{ listStyleType: "lower-roman" }}>
-                                            <li>{LngObject.image_collection_graph}</li>
-                                            <li>{LngObject.band_to_graph}</li>
-                                            <li>{LngObject.graph_reducer}</li>
+                                            <li>{lngObject.image_collection_graph}</li>
+                                            <li>{lngObject.band_to_graph}</li>
+                                            <li>{lngObject.graph_reducer}</li>
                                         </ol>
                                     </li>
                                 </ol>
                             </li>
-                            <li>{LngObject.select_date_range}</li>
-                            <li>{LngObject.click_create}</li>
-                            <li>{LngObject.reposition}</li>
+                            <li>{lngObject.select_date_range}</li>
+                            <li>{lngObject.click_create}</li>
+                            <li>{lngObject.reposition}</li>
                         </ol>
                     </CollapsibleSectionBlock>
-                    <CollapsibleSectionBlock title={LngObject.add_stats_widget}>
+                    <CollapsibleSectionBlock title={lngObject.add_stats_widget}>
                         {this.expandableImageWrapper("/img/statistics_widget.gif")}
                         <ol>
-                            <li>{LngObject.click_add_widget}</li>
-                            <li>{LngObject.select_stats}</li>
-                            <li>{LngObject.give_title}</li>
-                            <li>{LngObject.click_create}</li>
-                            <li>{LngObject.reposition}</li>
+                            <li>{lngObject.click_add_widget}</li>
+                            <li>{lngObject.select_stats}</li>
+                            <li>{lngObject.give_title}</li>
+                            <li>{lngObject.click_create}</li>
+                            <li>{lngObject.reposition}</li>
                         </ol>
                     </CollapsibleSectionBlock>
-                    <CollapsibleSectionBlock title={LngObject.add_dual_image_collection}>
+                    <CollapsibleSectionBlock title={lngObject.add_dual_image_collection}>
                         {this.expandableImageWrapper("/img/dual_image_collection_widget.gif")}
                         <ol>
-                            <li>{LngObject.click_add_widget}</li>
-                            <li>{LngObject.select_dual_image_collection}</li>
-                            <li>{LngObject.choose_basemap}</li>
+                            <li>{lngObject.click_add_widget}</li>
+                            <li>{lngObject.select_dual_image_collection}</li>
+                            <li>{lngObject.choose_basemap}</li>
                             <li>
-                                {LngObject.select_data}
+                                {lngObject.select_data}
                                 <ol style={{ listStyleType: "lower-alpha" }}>
-                                    <li>{LngObject.ic_data_info_preset}</li>
+                                    <li>{lngObject.ic_data_info_preset}</li>
                                     <li>
-                                        {LngObject.ic_data_info_configure}
+                                        {lngObject.ic_data_info_configure}
                                         <ol style={{ listStyleType: "lower-roman" }}>
                                             <li>{"Landsat 5 - B1, B2, B3, B4, B5, B6, B7"}</li>
                                             <li>{"Landsat 7 - B1, B2, B3, B4, B5, B6_VCID_1, B6_VCID_2, B7, B8"}</li>
@@ -124,36 +122,36 @@ class GeoDashHelp extends React.Component {
                                             <li>{"Sentinel 2 - B1, B2, B3, B4, B5, B6, B7, B8, B8a, B9, B10, B11, B12"}</li>
                                         </ol>
                                     </li>
-                                    <li>{LngObject.image_asset}</li>
+                                    <li>{lngObject.image_asset}</li>
                                     <li>
-                                        {LngObject.image_collection_asset}
+                                        {lngObject.image_collection_asset}
                                         <ol style={{ listStyleType: "lower-alpha" }}>
-                                            <li>{LngObject.give_title}</li>
-                                            <li>{LngObject.enter_image_asset + "users/ValeriaContessa/Indonesia_2000"}</li>
+                                            <li>{lngObject.give_title}</li>
+                                            <li>{lngObject.enter_image_asset + "users/ValeriaContessa/Indonesia_2000"}</li>
                                             <li>
-                                                {LngObject.enter_image_asset_params}
+                                                {lngObject.enter_image_asset_params}
                                                 {"{\"bands\":\"B4,B5,B3\",\"min\":\"10,0,10\",\"max\":\"120,90,70\"}"}
                                             </li>
-                                            <li>{LngObject.skip_date}</li>
+                                            <li>{lngObject.skip_date}</li>
                                         </ol>
                                     </li>
                                     <li>
-                                        {LngObject.custom_widget_info}
+                                        {lngObject.custom_widget_info}
                                         <ol style={{ listStyleType: "lower-roman" }}>
                                             <li>{"Offline Carbon Monoxide - COPERNICUS/S5P/OFFL/L3_CO {\"bands\":\"CO_column_number_density,H2O_column_number_density,cloud_height\",\"min\":\"0\",\"max\":\"0.5\"} \n 2018-01-01 to 2018-12-31"}</li>
-                                            <li>{LngObject.custom_widget_warning}</li>
+                                            <li>{lngObject.custom_widget_warning}</li>
                                         </ol>
                                     </li>
                                 </ol>
                             </li>
-                            <li>{LngObject.select_date_range}</li>
-                            <li>{LngObject.click_step2}</li>
+                            <li>{lngObject.select_date_range}</li>
+                            <li>{lngObject.click_step2}</li>
                             <li>
-                                {LngObject.select_data2}
+                                {lngObject.select_data2}
                                 <ol style={{ listStyleType: "lower-alpha" }}>
-                                    <li>{LngObject.ic_data_info_preset}</li>
+                                    <li>{lngObject.ic_data_info_preset}</li>
                                     <li>
-                                        {LngObject.ic_data_info_configure}
+                                        {lngObject.ic_data_info_configure}
                                         <ol style={{ listStyleType: "lower-roman" }}>
                                             <li>{"Landsat 5 - B1, B2, B3, B4, B5, B6, B7"}</li>
                                             <li>{"Landsat 7 - B1, B2, B3, B4, B5, B6_VCID_1, B6_VCID_2, B7, B8"}</li>
@@ -161,73 +159,73 @@ class GeoDashHelp extends React.Component {
                                             <li>{"Sentinel 2 - B1, B2, B3, B4, B5, B6, B7, B8, B8a, B9, B10, B11, B12"}</li>
                                         </ol>
                                     </li>
-                                    <li>{LngObject.image_asset}</li>
+                                    <li>{lngObject.image_asset}</li>
                                     <li>
-                                        {LngObject.image_collection_asset}
+                                        {lngObject.image_collection_asset}
                                         <ol style={{ listStyleType: "lower-roman" }}>
-                                            <li>{LngObject.enter_image_asset + "users/ValeriaContessa/Indonesia_2000"}</li>
+                                            <li>{lngObject.enter_image_asset + "users/ValeriaContessa/Indonesia_2000"}</li>
                                             <li>
-                                                {LngObject.enter_image_asset_params}
+                                                {lngObject.enter_image_asset_params}
                                                 {"{\"bands\":\"B4,B5,B3\",\"min\":\"10,0,10\",\"max\":\"120,90,70\"}"}
                                             </li>
-                                            <li>{LngObject.skip_date}</li>
+                                            <li>{lngObject.skip_date}</li>
                                         </ol>
                                     </li>
                                     <li>
-                                        {LngObject.custom_widget_info}
+                                        {lngObject.custom_widget_info}
                                         <ol style={{ listStyleType: "lower-roman" }}>
                                             <li>{"Offline Carbon Monoxide - COPERNICUS/S5P/OFFL/L3_CO {\"bands\":\"CO_column_number_density,H2O_column_number_density,cloud_height\",\"min\":\"0\",\"max\":\"0.5\"} \n   2018-01-01 to 2018-12-31"}</li>
-                                            <li>{LngObject.custom_widget_warning}</li>
+                                            <li>{lngObject.custom_widget_warning}</li>
                                         </ol>
                                     </li>
                                 </ol>
                             </li>
-                            <li>{LngObject.select_date_range}{LngObject.for_data2}</li>
-                            <li>{LngObject.click_create}</li>
-                            <li>{LngObject.reposition}</li>
+                            <li>{lngObject.select_date_range}{lngObject.for_data2}</li>
+                            <li>{lngObject.click_create}</li>
+                            <li>{lngObject.reposition}</li>
                         </ol>
                     </CollapsibleSectionBlock>
-                    <CollapsibleSectionBlock title={LngObject.add_image_asset}>
+                    <CollapsibleSectionBlock title={lngObject.add_image_asset}>
                         {this.expandableImageWrapper("/img/image_asset_widget.gif")}
                         <ol>
-                            <li>{LngObject.click_add_widget}</li>
-                            <li>{LngObject.select_image_asset}</li>
-                            <li>{LngObject.choose_basemap}</li>
-                            <li>{LngObject.give_title}</li>
+                            <li>{lngObject.click_add_widget}</li>
+                            <li>{lngObject.select_image_asset}</li>
+                            <li>{lngObject.choose_basemap}</li>
+                            <li>{lngObject.give_title}</li>
                             <li>
-                                {LngObject.enter_image_asset} {"users/billyz313/carbon_monoxide"}
+                                {lngObject.enter_image_asset + " users/billyz313/carbon_monoxide"}
                             </li>
                             <li>
-                                {LngObject.enter_image_asset_params}
+                                {lngObject.enter_image_asset_params}
                                 {"{\"bands\":\"CO_column_number_density,H2O_column_number_density,cloud_height\",\"min\":\"0\",\"max\":\"0.5\"}"}
                             </li>
-                            <li>{LngObject.click_create}</li>
-                            <li>{LngObject.reposition}</li>
+                            <li>{lngObject.click_create}</li>
+                            <li>{lngObject.reposition}</li>
                         </ol>
                     </CollapsibleSectionBlock>
-                    <CollapsibleSectionBlock title={LngObject.add_image_collection_widget}>
+                    <CollapsibleSectionBlock title={lngObject.add_image_collection_widget}>
                         {this.expandableImageWrapper("/img/image_collection_asset_widget.gif")}
                         <ol>
-                            <li>{LngObject.click_add_widget}</li>
-                            <li>{LngObject.select_image_collection_asset}</li>
-                            <li>{LngObject.choose_basemap}</li>
-                            <li>{LngObject.give_title}</li>
-                            <li>{LngObject.enter_image_collection_asset + "users/ValeriaContessa/Indonesia_2000"}</li>
-                            <li>{LngObject.enter_image_asset_params + "{\"bands\":\"B4,B5,B3\",\"min\":\"10,0,10\",\"max\":\"120,90,70\"}"}</li>
-                            <li>{LngObject.click_create}</li>
-                            <li>{LngObject.reposition}</li>
+                            <li>{lngObject.click_add_widget}</li>
+                            <li>{lngObject.select_image_collection_asset}</li>
+                            <li>{lngObject.choose_basemap}</li>
+                            <li>{lngObject.give_title}</li>
+                            <li>{lngObject.enter_image_collection_asset + "users/ValeriaContessa/Indonesia_2000"}</li>
+                            <li>{lngObject.enter_image_asset_params + "{\"bands\":\"B4,B5,B3\",\"min\":\"10,0,10\",\"max\":\"120,90,70\"}"}</li>
+                            <li>{lngObject.click_create}</li>
+                            <li>{lngObject.reposition}</li>
                         </ol>
                     </CollapsibleSectionBlock>
-                    <CollapsibleSectionBlock title={LngObject.to_move_resize}>
+                    <CollapsibleSectionBlock title={lngObject.to_move_resize}>
                         {this.expandableImageWrapper("/img/change_widget_layout.gif")}
                         <ol>
-                            <li>{LngObject.drag_drop}</li>
-                            <li>{LngObject.resize_by}</li>
-                            <li>{LngObject.widgets_realtime}</li>
-                            <li>{LngObject.view_rendered}</li>
+                            <li>{lngObject.drag_drop}</li>
+                            <li>{lngObject.resize_by}</li>
+                            <li>{lngObject.widgets_realtime}</li>
+                            <li>{lngObject.view_rendered}</li>
                         </ol>
                     </CollapsibleSectionBlock>
-                    <CollapsibleSectionBlock title={LngObject.gee_image_asset_creation}>
+                    <CollapsibleSectionBlock title={lngObject.gee_image_asset_creation}>
                         <iframe
                             style={{ width: "100%", height: "570px" }}
                             src="https://www.youtube.com/embed/l57IhmduVBQ"
@@ -236,7 +234,7 @@ class GeoDashHelp extends React.Component {
                             allowFullScreen
                         />
                     </CollapsibleSectionBlock>
-                    <CollapsibleSectionBlock title={LngObject.gee_imageCollection_asset_creation}>
+                    <CollapsibleSectionBlock title={lngObject.gee_imageCollection_asset_creation}>
                         <iframe
                             style={{ width: "100%", height: "570px" }}
                             src="https://www.youtube.com/embed/7eIvltgDbXw"
@@ -247,7 +245,7 @@ class GeoDashHelp extends React.Component {
                     </CollapsibleSectionBlock>
                 </div>
                 <p>
-                    {LngObject.pre_sepal_link}
+                    {lngObject.pre_sepal_link}
                     <a
                         href="http://www.openforis.org/tools/sepal.html"
                         target="_blank"
@@ -255,7 +253,7 @@ class GeoDashHelp extends React.Component {
                     >
                         OpenForis-SEPAL
                     </a>
-                    {LngObject.post_sepal_link}
+                    {lngObject.post_sepal_link}
                 </p>
             </div>
         );

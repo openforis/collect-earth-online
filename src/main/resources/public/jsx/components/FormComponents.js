@@ -35,7 +35,7 @@ export class CollapsibleSectionBlock extends React.Component {
         };
     }
 
-    componentDidUpdate = (prevProps, prevState) => {
+    componentDidUpdate(prevProps, prevState) {
         if (prevState.height === "auto" && this.state.height !== "auto") {
             setTimeout(() => this.setState({ height: "0px" }), 1);
         }
@@ -131,46 +131,36 @@ export class ExpandableImage extends React.Component {
         };
     }
 
-    getImageStyle = () => {
-        const commonAttributes = { border: "1px solid #808080" };
-        if (!this.state.fullSize) {
-            return { ...commonAttributes, ...this.props.previewStyles };
-        } else {
-            return {
-                ...commonAttributes,
-                float: "none",
-                position: "fixed",
-                top: "60px",
-                bottom: "0",
-                left: "0",
-                right: "0",
-                margin: "auto",
-                overflow: "auto",
-                maxWidth: "99%",
-                maxHeight: "calc(98% - 60px)",
-                width: "auto",
-                height: "auto",
-            };
-        }
+    getImageStyle = () =>
+        this.state.fullSize ? {
+        ...{ border: "1px solid #808080" },
+        float: "none",
+        position: "fixed",
+        top: "60px",
+        bottom: "0",
+        left: "0",
+        right: "0",
+        margin: "auto",
+        overflow: "auto",
+        maxWidth: "99%",
+        maxHeight: "calc(98% - 60px)",
+        width: "auto",
+        height: "auto",
     }
+    : { ...{ border: "1px solid #808080" }, ...this.props.previewStyles };
 
-    getMainDivStyle = () => {
-        const commonAttributes = { cursor: "pointer" };
-        if (this.state.fullSize) {
-            return {
-                ...commonAttributes,
-                position: "fixed",
-                zIndex: "100",
-                left: "0",
-                top: "0",
-                width: "100%",
-                height: "100%",
-                backgroundColor: "rgba(0,0,0,0.1)",
-            };
-        } else {
-            return commonAttributes;
-        }
+    getMainDivStyle = () =>
+        this.state.fullSize ? {
+        cursor: "pointer",
+        position: "fixed",
+        zIndex: "100",
+        left: "0",
+        top: "0",
+        width: "100%",
+        height: "100%",
+        backgroundColor: "rgba(0,0,0,0.1)",
     }
+    : { cursor: "pointer" };
 
     render() {
         const { src } = this.props;

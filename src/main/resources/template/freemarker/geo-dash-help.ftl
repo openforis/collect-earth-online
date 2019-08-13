@@ -6,18 +6,17 @@
 
 <!-- End Auto Inserted Bundles -->
 
-<section id="about" class="container">
+<section id="geo-dash-help" class="container">
+    <div id="dashHolder"></div>
     <script type="text/javascript">
         window.onload = function () {
             geo_dash_help.renderGeodashHelpPage({
-                documentRoot:                "${root}",
-                browserLanguage:             "${browserLanguage}"
+                documentRoot: "${root}",
+                browserLanguage: "${browserLanguage}"
             });
         };
     </script>
-    <div id="dashHolder"></div>
-        <#include "logo-banner.ftl">
-    </div>
 </section>
+<#include "logo-banner.ftl">
 <#include "end-content.ftl">
 <#include "footer.ftl">
