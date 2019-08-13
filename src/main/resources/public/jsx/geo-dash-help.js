@@ -16,7 +16,8 @@ class GeoDashHelp extends React.Component {
             .then(data => this.setState({ lngObject: data }));
     }
 
-    expandableImageWrapper = (src) => <ExpandableImage
+    expandableImageWrapper = (src) =>
+        <ExpandableImage
             src={this.props.documentRoot + src}
             previewStyles={{
                 float:"right",
