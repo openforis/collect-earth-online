@@ -133,34 +133,37 @@ export class ExpandableImage extends React.Component {
 
     getImageStyle = () =>
         this.state.fullSize ? {
-        ...{ border: "1px solid #808080" },
-        float: "none",
-        position: "fixed",
-        top: "60px",
-        bottom: "0",
-        left: "0",
-        right: "0",
-        margin: "auto",
-        overflow: "auto",
-        maxWidth: "99%",
-        maxHeight: "calc(98% - 60px)",
-        width: "auto",
-        height: "auto",
-    }
-    : { ...{ border: "1px solid #808080" }, ...this.props.previewStyles };
+            border: "1px solid #808080",
+            float: "none",
+            position: "fixed",
+            top: "60px",
+            bottom: "0",
+            left: "0",
+            right: "0",
+            margin: "auto",
+            overflow: "auto",
+            maxWidth: "99%",
+            maxHeight: "calc(98% - 60px)",
+            width: "auto",
+            height: "auto",
+        } : {
+            border: "1px solid #808080",
+            ...this.props.previewStyles,
+        };
 
     getMainDivStyle = () =>
         this.state.fullSize ? {
-        cursor: "pointer",
-        position: "fixed",
-        zIndex: "100",
-        left: "0",
-        top: "0",
-        width: "100%",
-        height: "100%",
-        backgroundColor: "rgba(0,0,0,0.1)",
-    }
-    : { cursor: "pointer" };
+            cursor: "pointer",
+            position: "fixed",
+            zIndex: "100",
+            left: "0",
+            top: "0",
+            width: "100%",
+            height: "100%",
+            backgroundColor: "rgba(0,0,0,0.1)",
+        } : {
+            cursor: "pointer",
+        };
 
     render() {
         const { src } = this.props;
