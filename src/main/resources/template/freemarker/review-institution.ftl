@@ -13,8 +13,6 @@
             documentRoot:     "${root}",
             userId:           "${userid}",
             institutionId:    "${institution_id}",
-            of_users_api_url: "${of_users_api_url}",
-            storage:          "${storage}",
         });
     };
 </script>

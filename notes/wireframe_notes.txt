@@ -24,7 +24,6 @@ Institution:
 Admin:
 - [X] Include Public/Institution/Invite-Only radio button
 - [ ] If Invite-Only is selected, provide a list of users who are members of this project with delete buttons next to them
-- [ ] Pop out to Collect for the Entity Design stage
 - [ ] Pop out to the GeoDash page for GEE Integration (Add/Remove widgets)
 - [ ] Include a time selector for the WMS imagery
 - [ ] Enable users to include their own WMS feeds as well as DigitalGlobe Maps, Bing Maps, or Google Maps authentication info

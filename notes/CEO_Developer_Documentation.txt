@@ -4,7 +4,7 @@ The source code for CEO can be found on Github at this URL:
 
 Here is a high level description of CEO's system architecture:
 
-CEO, Collect, and OfUsers are three separate web applications written in
+CEO is a web applications written in
 Java+Javascript and deployed as WAR files, which are to be run together
 within a single application server, such as Tomcat. To install and
 configure all of these applications on your development machine, follow
@@ -14,8 +14,6 @@ HTTP requests are received by Tomcat and passed to the appropriate
 application based on the url path.
 
 http://server.domain/ceo      -> CEO
-http://server.domain/collect  -> Collect
-http://server.domain/of-users -> OfUsers
 
 On the back end, CEO uses the Spark framework for request routing and
 the Freemarker Template Language (FTL) for rendering dynamic HTML from
@@ -42,7 +40,6 @@ future reference:
 |---------+------------+-------------------------------------------------------------------------------------------------------------------------------------------|
 | Package | Maintainer | Description                                                                                                                               |
 |---------+------------+-------------------------------------------------------------------------------------------------------------------------------------------|
-| collect | Stefano    | Files used for communicating with OpenForis Collect                                                                                       |
 | env     | Gary       | Sitewide environment variables and their Tomcat initialization routines                                                                   |
 | ext     | Billy      | Extensions to CEO (e.g., GeoDash and TimeSync)                                                                                            |
 | local   | Gary       | Files used for managing local file-based storage of users, groups, projects, and imagery, allowing CEO to run as a standalone application |

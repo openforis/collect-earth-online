@@ -23,7 +23,7 @@ class Home extends React.Component {
             });
     }
 
-    getProjects = () => fetch(this.props.documentRoot + "/get-all-projects?userId=" + this.props.userId)
+    getProjects = () => fetch(this.props.documentRoot + "/get-all-projects")
         .then(response => response.ok ? response.json() : Promise.reject(response))
         .then(data => {
             if (data.length > 0) {
@@ -450,7 +450,7 @@ class Institution extends React.Component {
                         <div className="col-lg-1">
                             <a
                                 className="institution_info btn btn-sm btn-outline-lightgreen"
-                                href={props.documentRoot + "/review-institution/" + props.id}
+                                href={props.documentRoot + "/review-institution?institutionId=" + props.id}
                             >
                                 <span style={{ color: "white", fontSize: "1rem" }}>
                                     <UnicodeIcon icon="info"/>
@@ -499,7 +499,7 @@ function Project(props) {
                             overflow: "hidden",
                             textOverflow: "ellipsis",
                         }}
-                        href={props.documentRoot + "/collection/" + props.id}
+                        href={props.documentRoot + "/collection?projectId=" + props.id}
                     >
                         {props.name || "*un-named*"}
                     </a>
@@ -507,7 +507,7 @@ function Project(props) {
                 <div className="col-lg-2 pl-lg-0">
                     <a
                         className="edit-project btn btn-sm btn-outline-yellow btn-block"
-                        href={props.documentRoot + "/review-project/" + props.id}
+                        href={props.documentRoot + "/review-project?projectId=" + props.id}
                     >
                         <UnicodeIcon icon="edit"/>
                     </a>
@@ -518,7 +518,7 @@ function Project(props) {
                 <div className="col mb-1 mx-0">
                     <a
                         className="btn btn-sm btn-outline-lightgreen btn-block"
-                        href={props.documentRoot + "/collection/" + props.id}
+                        href={props.documentRoot + "/collection?projectId=" + props.id}
                     >
                         {props.name}
                     </a>
@@ -551,7 +551,7 @@ class ProjectPopup extends React.Component {
                                             <td className="small col-6 px-0 my-auto">Name</td>
                                             <td className="small col-6 pr-0">
                                                 <a
-                                                    href={this.props.documentRoot + "/collection/" + feature.get("projectId")}
+                                                    href={this.props.documentRoot + "/collection?projectId=" + feature.get("projectId")}
                                                     className="btn btn-sm btn-block btn-outline-lightgreen"
                                                     style={{
                                                         whiteSpace: "nowrap",
