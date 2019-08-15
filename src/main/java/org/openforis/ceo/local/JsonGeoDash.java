@@ -164,7 +164,7 @@ public class JsonGeoDash implements GeoDash {
             builder.loadTrustMaterial(null, new TrustSelfSignedStrategy());
             var sslsf = new SSLConnectionSocketFactory(builder.build());
             var httpclient = HttpClients.custom().setSSLSocketFactory(sslsf).build();
-            
+
             var endurl = req.host();
             if (endurl.lastIndexOf(":") > 0) {
                 endurl = endurl.substring(0, endurl.lastIndexOf(":"));
@@ -185,7 +185,8 @@ public class JsonGeoDash implements GeoDash {
             var response = httpclient.execute(request);
             return EntityUtils.toString(response.getEntity(), "UTF-8");
         } catch (Exception e) {
-            e.printStackTrace();
+            // e.printStackTrace();
+            System.out.println("Error with gateway request: " + e.getMessage());
             return "";
         }
     }

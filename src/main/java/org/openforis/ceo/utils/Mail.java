@@ -65,7 +65,8 @@ public class Mail {
             // Send message
             Transport.send(message);
         } catch (MessagingException e) {
-            e.printStackTrace();
+            // e.printStackTrace();
+            System.out.println("Error sending mail: " + e.getMessage());
         }
     }
 

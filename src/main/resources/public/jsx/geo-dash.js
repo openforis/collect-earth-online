@@ -657,7 +657,7 @@ class MapWidget extends React.Component {
                         }
                     }
                 })
-                .catch((error) => {
+                .catch(error => {
                     console.log(error);
                 });
         }
@@ -1084,7 +1084,8 @@ class GraphWidget extends React.Component {
                         console.warn("Wrong Data Returned");
                     }
                 }
-            });
+            })
+            .catch(error => console.log(error));
         window.addEventListener("resize", () => this.handleResize());
     }
 
@@ -1222,7 +1223,8 @@ class StatsWidget extends React.Component {
                 } else {
                     this.setState({ totalPop: this.numberWithCommas(data.pop), area: this.calculateArea(JSON.parse(projPairAOI)) + " ha", elevation: this.numberWithCommas(data.minElev) + " - " + this.numberWithCommas(data.maxElev) + " m" });
                 }
-            });
+            })
+            .catch(error => console.log(error));
     }
 
     render() {

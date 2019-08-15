@@ -996,9 +996,10 @@ public class PostgresProjects implements Projects {
                 }
             } catch (SQLException sql) {
             }
-            StringWriter outError = new StringWriter();
-            e.printStackTrace(new PrintWriter(outError));
-            System.out.println(outError.toString());
+            // StringWriter outError = new StringWriter();
+            // e.printStackTrace(new PrintWriter(outError));
+            // System.out.println(outError.toString());
+            System.out.println("Error creating project: " + e.getMessage());
             return e.getMessage();
         }
     }
