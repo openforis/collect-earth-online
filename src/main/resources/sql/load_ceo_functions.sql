@@ -113,10 +113,10 @@ CREATE OR REPLACE FUNCTION get_sample_headers(_project_uid integer)
 $$ LANGUAGE PLPGSQL;
 
 --
---  USER FUCNTIONS
+--  USER FUNCTIONS
 --
 
--- Adds a new user to the database.
+-- Adds a new user to the database
 CREATE OR REPLACE FUNCTION add_user(_email text, _password text)
  RETURNS integer AS $$
 
@@ -126,7 +126,7 @@ CREATE OR REPLACE FUNCTION add_user(_email text, _password text)
 
 $$ LANGUAGE SQL;
 
--- Returns all of the user fields associated with the provided email.
+-- Returns all of the user fields associated with the provided email
 CREATE OR REPLACE FUNCTION get_all_users()
  RETURNS TABLE(
     user_id          integer,
@@ -176,7 +176,7 @@ CREATE OR REPLACE FUNCTION get_all_users_by_institution_id(_institution_rid inte
 
 $$ LANGUAGE SQL;
 
--- Returns all of the user fields associated with the provided email.
+-- Returns all of the user fields associated with the provided email
 CREATE OR REPLACE FUNCTION check_login(_email text, _password text)
  RETURNS TABLE (
     user_id          integer,
@@ -190,7 +190,7 @@ CREATE OR REPLACE FUNCTION check_login(_email text, _password text)
 
 $$ LANGUAGE SQL;
 
--- Returns all of the user fields associated with the provided email.
+-- Returns all of the user fields associated with the provided email
 CREATE OR REPLACE FUNCTION email_taken(_email text, _user_uid integer)
  RETURNS boolean AS $$
 
@@ -250,7 +250,7 @@ CREATE OR REPLACE FUNCTION get_user_stats(_user_rid integer)
 
 $$ LANGUAGE SQL;
 
--- Adds a new role to the database.
+-- Adds a new role to the database
 CREATE OR REPLACE FUNCTION insert_role(_title text)
  RETURNS integer AS $$
 
@@ -260,7 +260,7 @@ CREATE OR REPLACE FUNCTION insert_role(_title text)
 
 $$ LANGUAGE SQL;
 
--- Resets the email for the given user.
+-- Resets the email for the given user
 CREATE OR REPLACE FUNCTION set_user_email(_email text, _new_email text)
  RETURNS text AS $$
 
@@ -311,7 +311,7 @@ CREATE TYPE institution_return AS (
     pending           jsonb
 );
 
--- Adds a new institution to the database.
+-- Adds a new institution to the database
 CREATE OR REPLACE FUNCTION add_institution(_name text, _logo text, _description text, _url text, _archived boolean)
  RETURNS integer AS $$
 
@@ -323,7 +323,7 @@ CREATE OR REPLACE FUNCTION add_institution(_name text, _logo text, _description 
 
 $$ LANGUAGE SQL;
 
--- Archive institution and all projects under
+-- Archive institution and all projects under it
 CREATE OR REPLACE FUNCTION archive_institution(_institution_uid integer)
  RETURNS integer AS $$
 
@@ -425,7 +425,7 @@ $$ LANGUAGE SQL;
 --  INSTITUTION USER FUNCTIONS
 --
 
--- Adds a new institution_user to the database.
+-- Adds a new institution_user to the database
 CREATE OR REPLACE FUNCTION add_institution_user(_institution_rid integer, _user_rid integer, _role_rid integer)
  RETURNS integer AS $$
 
@@ -449,7 +449,7 @@ CREATE OR REPLACE FUNCTION add_institution_user(_institution_rid integer, _user_
 
 $$ LANGUAGE SQL;
 
--- Adds a returns institution user roles from the database.
+-- Adds a returns institution user roles from the database
 CREATE OR REPLACE FUNCTION get_institution_user_roles(_user_rid integer)
  RETURNS TABLE (
     institution_rid    integer,
@@ -533,7 +533,7 @@ CREATE OR REPLACE FUNCTION delete_imagery(_imagery_uid integer)
 
 $$ LANGUAGE SQL;
 
--- Returns all rows in imagery for which visibility = "public".
+-- Returns all rows in imagery for which visibility = "public"
 CREATE OR REPLACE FUNCTION select_public_imagery()
  RETURNS setOf imagery_return AS $$
 
@@ -543,7 +543,7 @@ CREATE OR REPLACE FUNCTION select_public_imagery()
 
 $$ LANGUAGE SQL;
 
--- Returns all rows in imagery for with an institution_rid or public
+-- Returns all rows in imagery associated with institution_rid or having visibility = "public"
 CREATE OR REPLACE FUNCTION select_public_imagery_by_institution(_institution_rid integer)
  RETURNS setOf imagery_return AS $$
 
@@ -561,7 +561,7 @@ CREATE OR REPLACE FUNCTION select_public_imagery_by_institution(_institution_rid
 
 $$ LANGUAGE SQL;
 
--- Updates imagery to the database.
+-- Updates imagery attributes
 CREATE OR REPLACE FUNCTION update_imagery(_imagery_uid integer, _institution_rid integer, _visibility text, _title text, _attribution text, _extent jsonb, _source_config jsonb )
  RETURNS integer AS $$
 
@@ -581,7 +581,7 @@ $$ LANGUAGE SQL;
 --  WIDGET FUNCTIONS
 --
 
--- Adds a project_widget to the database.
+-- Adds a project_widget to the database
 CREATE OR REPLACE FUNCTION add_project_widget(_project_rid integer, _dashboard_id uuid, _widget jsonb)
  RETURNS integer AS $$
 
@@ -593,7 +593,7 @@ CREATE OR REPLACE FUNCTION add_project_widget(_project_rid integer, _dashboard_i
 
 $$ LANGUAGE SQL;
 
--- Deletes a delete_project_widget_by_widget_id from the database.
+-- Deletes a delete_project_widget_by_widget_id from the database
 CREATE OR REPLACE FUNCTION delete_project_widget_by_widget_id(_widget_uid integer, _dashboard_id uuid)
  RETURNS integer AS $$
 
@@ -604,7 +604,7 @@ CREATE OR REPLACE FUNCTION delete_project_widget_by_widget_id(_widget_uid intege
 
 $$ LANGUAGE SQL;
 
--- Gets project widgets by project id from the database.
+-- Gets project widgets by project id from the database
 CREATE OR REPLACE FUNCTION get_project_widgets_by_project_id(_project_rid integer)
  RETURNS TABLE(
     widget_id        integer,
@@ -622,7 +622,7 @@ CREATE OR REPLACE FUNCTION get_project_widgets_by_project_id(_project_rid intege
 
 $$ LANGUAGE SQL;
 
--- Updates a update_project_widget_by_widget_id from the database.
+-- Updates a update_project_widget_by_widget_id from the database
 CREATE OR REPLACE FUNCTION update_project_widget_by_widget_id(_widget_uid integer, _dash_id uuid, _widget jsonb)
  RETURNS integer AS $$
 
@@ -825,7 +825,7 @@ CREATE OR REPLACE FUNCTION csv_boundary(_project_uid integer, _m_buffer float)
 
 $$ LANGUAGE SQL;
 
--- Calculates boundary from shp file using geometry. Padding not needed
+-- Calculates boundary from shp file using geometry. Padding not needed.
 CREATE OR REPLACE FUNCTION shp_boundary(_project_uid integer)
  RETURNS void AS $$
 
@@ -918,7 +918,7 @@ CREATE OR REPLACE FUNCTION samples_from_plots_with_files(_project_uid integer)
 
 $$ LANGUAGE SQL;
 
--- Upade tables for external data after project is created
+-- Update tables for external data after project is created
 CREATE OR REPLACE FUNCTION update_project_tables(
     _project_uid          integer,
     _plots_ext_table      text,
@@ -1027,7 +1027,7 @@ CREATE OR REPLACE FUNCTION copy_project_plots_stats(_old_project_uid integer, _n
 
 $$ LANGUAGE SQL;
 
--- Combines individual funtions needed to copy all plot and sample information.
+-- Combines individual funtions needed to copy all plot and sample information
 CREATE OR REPLACE FUNCTION copy_template_plots(_old_project_uid integer, _new_project_uid integer)
  RETURNS VOID AS $$
 
@@ -1063,7 +1063,7 @@ CREATE OR REPLACE FUNCTION plots_missing_samples(_project_uid integer)
 
 $$ LANGUAGE SQL;
 
--- Return table sizes for shp and csv to check against limits.
+-- Return table sizes for shp and csv to check against limits
 CREATE OR REPLACE FUNCTION ext_table_count(_project_uid integer)
  RETURNS TABLE(plot_count integer, sample_count integer) AS $$
 
@@ -1159,7 +1159,7 @@ CREATE VIEW project_boundary AS
         valid_boundary(boundary)
     FROM projects;
 
--- Returns a row in projects by id.
+-- Returns a row in projects by id
 CREATE OR REPLACE FUNCTION select_project(_project_uid integer)
  RETURNS setOf project_return AS $$
 
@@ -1169,7 +1169,7 @@ CREATE OR REPLACE FUNCTION select_project(_project_uid integer)
 
 $$ LANGUAGE SQL;
 
--- Returns all public projects.
+-- Returns all public projects
 CREATE OR REPLACE FUNCTION select_all_projects()
  RETURNS setOf project_return AS $$
 
@@ -1181,7 +1181,7 @@ CREATE OR REPLACE FUNCTION select_all_projects()
 
 $$ LANGUAGE SQL;
 
--- Returns projects for institution_rid.
+-- Returns projects for institution_rid
 CREATE OR REPLACE FUNCTION select_all_institution_projects(_institution_rid integer)
  RETURNS setOf project_return AS $$
 
@@ -1192,7 +1192,7 @@ CREATE OR REPLACE FUNCTION select_all_institution_projects(_institution_rid inte
 
 $$ LANGUAGE SQL;
 
--- Returns all rows in projects for a user_id with roles.
+-- Returns all rows in projects for a user_id with roles
 CREATE OR REPLACE FUNCTION select_all_user_projects(_user_rid integer)
  RETURNS setOf project_return AS $$
 
@@ -1213,7 +1213,7 @@ CREATE OR REPLACE FUNCTION select_all_user_projects(_user_rid integer)
 
 $$ LANGUAGE SQL;
 
--- Returns all rows in projects for a user_id and institution_rid with roles.
+-- Returns all rows in projects for a user_id and institution_rid with roles
 CREATE OR REPLACE FUNCTION select_institution_projects_with_roles( _user_rid integer, _institution_rid integer)
  RETURNS setOf project_return AS $$
 
@@ -1272,7 +1272,7 @@ CREATE OR REPLACE FUNCTION select_project_users(_project_uid integer)
 $$ LANGUAGE SQL;
 
 -- Returns project statistics
--- Overlapping queries, consider condensing. query time is not an issue
+-- Overlapping queries, consider condensing. Query time is not an issue.
 CREATE OR REPLACE FUNCTION select_project_statistics(_project_uid integer)
  RETURNS TABLE(
     flagged_plots       integer,
@@ -1655,7 +1655,7 @@ CREATE OR REPLACE FUNCTION create_project_plot_sample(_plot_rid integer, _sample
 
 $$ LANGUAGE SQL;
 
--- Select samples. GEOM comes from shp file table
+-- Select samples. GEOM comes from shp file table.
 CREATE OR REPLACE FUNCTION select_plot_samples(_plot_rid integer, _project_uid integer)
  RETURNS TABLE (
     sample_id             integer,
@@ -2055,7 +2055,7 @@ CREATE OR REPLACE FUNCTION add_plots_by_json(_project_rid integer, _json_data te
 
 $$ LANGUAGE SQL;
 
--- Merge tables to plots. For migration
+-- Merge tables to plots. For migration.
 CREATE OR REPLACE FUNCTION merge_plot_and_file(_project_uid integer)
  RETURNS integer AS $$
 
@@ -2108,7 +2108,7 @@ CREATE OR REPLACE FUNCTION merge_plot_and_file(_project_uid integer)
 
 $$ LANGUAGE SQL;
 
--- merge csv files for older data where there is only plot data
+-- Merge csv files for older data where there is only plot data
 CREATE OR REPLACE FUNCTION merge_plots_only(_project_uid integer)
  RETURNS void AS $$
 
@@ -2217,7 +2217,7 @@ CREATE OR REPLACE FUNCTION create_project_migration(
 
 $$ LANGUAGE SQL;
 
--- Adds a new user to the database (3 params for migration).
+-- Adds a new user to the database (3 params for migration)
 CREATE OR REPLACE FUNCTION add_user_migration(_user_uid integer, _email text, _password text)
  RETURNS integer AS $$
 
@@ -2237,7 +2237,7 @@ CREATE OR REPLACE FUNCTION set_admin()
 
 $$ LANGUAGE SQL;
 
--- Adds a new institution to the database(extra param for migration)
+-- Adds a new institution to the database (extra param for migration)
 CREATE OR REPLACE FUNCTION add_institution_migration(_institution_uid integer, _name text, _logo text, _description text, _url text, _archived boolean)
  RETURNS integer AS $$
 
@@ -2249,7 +2249,7 @@ CREATE OR REPLACE FUNCTION add_institution_migration(_institution_uid integer, _
 
 $$ LANGUAGE SQL;
 
--- Adds institution imagery(for migration script)
+-- Adds institution imagery (for migration script)
 CREATE OR REPLACE FUNCTION add_institution_imagery_migration(_imagery_uid integer, _institution_rid integer, _visibility text, _title text, _attribution text, _extent jsonb, _source_config jsonb)
  RETURNS integer AS $$
 

@@ -29,7 +29,7 @@ CREATE TABLE roles (
 );
 
 -- Creates a relationship between users and institutions
--- instituions -> many institution_users <- users
+-- institutions -> many institution_users <- users
 CREATE TABLE institution_users (
     inst_user_uid      SERIAL PRIMARY KEY,
     institution_rid    integer NOT NULL REFERENCES institutions (institution_uid) ON DELETE CASCADE ON UPDATE CASCADE,
@@ -50,7 +50,7 @@ CREATE TABLE imagery (
     source_config      jsonb
 );
 
--- Stores information about projects.
+-- Stores information about projects
 -- Each project must be associated with an institution
 CREATE TABLE projects (
     project_uid             SERIAL PRIMARY KEY,
@@ -90,7 +90,7 @@ CREATE TABLE projects (
 --                                       ^- users|
 
 
--- Stores plot information, including a reference to external plot data if it exists.
+-- Stores plot information, including a reference to external plot data if it exists
 -- 1 PROJECT -> MANY |PLOTS ->                                     many samples|
 --                   |plots -> many user_plots -> many sample_values <- samples|
 --                                       ^- users|
@@ -101,7 +101,7 @@ CREATE TABLE plots (
     ext_id         integer
 );
 
--- Stores sample information, including a reference to external sample data if it exists.
+-- Stores sample information, including a reference to external sample data if it exists
 -- 1 project -> many |PLOTS ->                                     MANY SAMPLES|
 --                   |plots -> many user_plots -> many sample_values <- samples|
 --                                       ^- users|
@@ -112,7 +112,7 @@ CREATE TABLE samples (
     ext_id        integer
 );
 
--- Stores information about a plot as data is collected, including the user who collected
+-- Stores information about a plot as data is collected, including the user who collected it
 -- By other means we restrict it to 1 user_plot per plot
 -- 1 project -> many |plots ->                                     many samples|
 --                   |PLOTS -> MANY USER_PLOTS -> many sample_values <- samples|
@@ -161,10 +161,10 @@ CREATE TABLE project_widgets (
     widget          jsonb
 );
 
--- Indecies
+-- Indices
 CREATE INDEX project_widgets_dashboard_id      ON project_widgets (dashboard_id);
 
--- Indecies on FK
+-- Indices on FK
 CREATE INDEX plots_projects_rid                ON plots (project_rid);
 CREATE INDEX samples_plot_rid                  ON samples (plot_rid);
 CREATE INDEX imagery_institution_rid           ON imagery (institution_rid);
