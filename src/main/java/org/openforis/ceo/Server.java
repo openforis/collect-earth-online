@@ -248,7 +248,10 @@ public class Server implements SparkApplication {
         notFound(Views.pageNotFound(freemarker));
 
         // Handle Exceptions
-        exception(Exception.class, (e, req, res) -> e.printStackTrace());
+        exception(Exception.class, (e, req, res) -> {
+                // e.printStackTrace();
+                System.out.println("Routing error: " + e.getMessage());
+            });
     }
 
     private static void redirectAuth(Request req, Response res, Integer userId) {

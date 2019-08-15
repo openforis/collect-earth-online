@@ -1353,10 +1353,11 @@ public class JsonProjects implements Projects {
             return newProjectId + "";
         } catch (Exception e) {
             // Still output stack trace for debugging
-            StringWriter outError = new StringWriter();
-            e.printStackTrace(new PrintWriter(outError));
-            System.out.println(outError.toString());
+            // StringWriter outError = new StringWriter();
+            // e.printStackTrace(new PrintWriter(outError));
+            // System.out.println(outError.toString());
             // Indicate that an error occurred with project creation
+            System.out.println("Error creating project: " + e.getMessage());
             return e.getMessage();
         }
     }
