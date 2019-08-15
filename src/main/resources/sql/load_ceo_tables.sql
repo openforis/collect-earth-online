@@ -1,4 +1,8 @@
+--
 -- Create tables
+--
+
+-- Stores information about users
 CREATE TABLE users (
     user_uid         SERIAL PRIMARY KEY,
     email            text NOT NULL UNIQUE,
@@ -7,6 +11,7 @@ CREATE TABLE users (
     reset_key        text DEFAULT NULL
 );
 
+-- Stores information about institutions
 CREATE TABLE institutions (
     institution_uid    SERIAL PRIMARY KEY,
     name               text NOT NULL,
@@ -17,6 +22,36 @@ CREATE TABLE institutions (
     archived           boolean DEFAULT FALSE
 );
 
+-- Stores text values for roles
+CREATE TABLE roles (
+    role_uid    SERIAL PRIMARY KEY,
+    title       text NOT NULL
+);
+
+-- Creates a relationship between users and institutions
+-- institutions -> many institution_users <- users
+CREATE TABLE institution_users (
+    inst_user_uid      SERIAL PRIMARY KEY,
+    institution_rid    integer NOT NULL REFERENCES institutions (institution_uid) ON DELETE CASCADE ON UPDATE CASCADE,
+    user_rid           integer NOT NULL REFERENCES users (user_uid) ON DELETE CASCADE ON UPDATE CASCADE,
+    role_rid           integer NOT NULL REFERENCES roles (role_uid),
+    CONSTRAINT per_institution_per_plot UNIQUE(institution_rid, user_rid)
+);
+
+-- Stores imagery data
+-- 1 institution -> many imagery
+CREATE TABLE imagery (
+    imagery_uid        SERIAL PRIMARY KEY,
+    institution_rid    integer REFERENCES institutions (institution_uid) ON DELETE CASCADE ON UPDATE CASCADE,
+    visibility         text NOT NULL,
+    title              text NOT NULL,
+    attribution        text NOT NULL,
+    extent             jsonb,
+    source_config      jsonb
+);
+
+-- Stores information about projects
+-- Each project must be associated with an institution
 CREATE TABLE projects (
     project_uid             SERIAL PRIMARY KEY,
     institution_rid         integer NOT NULL REFERENCES institutions (institution_uid) ON DELETE CASCADE ON UPDATE CASCADE,
@@ -49,6 +84,16 @@ CREATE TABLE projects (
     ts_plot_size            integer DEFAULT 1
 );
 
+
+-- 1 project -> many |plots ->                                     many samples|
+--                   |plots -> many user_plots -> many sample_values <- samples|
+--                                       ^- users|
+
+
+-- Stores plot information, including a reference to external plot data if it exists
+-- 1 PROJECT -> MANY |PLOTS ->                                     many samples|
+--                   |plots -> many user_plots -> many sample_values <- samples|
+--                                       ^- users|
 CREATE TABLE plots (
     plot_uid       SERIAL PRIMARY KEY,
     project_rid    integer NOT NULL REFERENCES projects (project_uid) ON DELETE CASCADE ON UPDATE CASCADE,
@@ -56,6 +101,10 @@ CREATE TABLE plots (
     ext_id         integer
 );
 
+-- Stores sample information, including a reference to external sample data if it exists
+-- 1 project -> many |PLOTS ->                                     MANY SAMPLES|
+--                   |plots -> many user_plots -> many sample_values <- samples|
+--                                       ^- users|
 CREATE TABLE samples (
     sample_uid    SERIAL PRIMARY KEY,
     plot_rid      integer NOT NULL REFERENCES plots (plot_uid) ON DELETE CASCADE ON UPDATE CASCADE,
@@ -63,29 +112,11 @@ CREATE TABLE samples (
     ext_id        integer
 );
 
-CREATE TABLE imagery (
-    imagery_uid        SERIAL PRIMARY KEY,
-    institution_rid    integer REFERENCES institutions (institution_uid) ON DELETE CASCADE ON UPDATE CASCADE,
-    visibility         text NOT NULL,
-    title              text NOT NULL,
-    attribution        text NOT NULL,
-    extent             jsonb,
-    source_config      jsonb
-);
-
-CREATE TABLE roles (
-    role_uid    SERIAL PRIMARY KEY,
-    title       text NOT NULL
-);
-
-CREATE TABLE institution_users (
-    inst_user_uid      SERIAL PRIMARY KEY,
-    institution_rid    integer NOT NULL REFERENCES institutions (institution_uid) ON DELETE CASCADE ON UPDATE CASCADE,
-    user_rid           integer NOT NULL REFERENCES users (user_uid) ON DELETE CASCADE ON UPDATE CASCADE,
-    role_rid           integer NOT NULL REFERENCES roles (role_uid),
-    CONSTRAINT per_institution_per_plot UNIQUE(institution_rid, user_rid)
-);
-
+-- Stores information about a plot as data is collected, including the user who collected it
+-- By other means we restrict it to 1 user_plot per plot
+-- 1 project -> many |plots ->                                     many samples|
+--                   |PLOTS -> MANY USER_PLOTS -> many sample_values <- samples|
+--                                       ^- USERS|
 CREATE TABLE user_plots (
     user_plot_uid       SERIAL PRIMARY KEY,
     user_rid            integer NOT NULL REFERENCES users (user_uid) ON DELETE CASCADE ON UPDATE CASCADE,
@@ -97,6 +128,11 @@ CREATE TABLE user_plots (
     CONSTRAINT per_user_per_plot UNIQUE(user_rid, plot_rid)
 );
 
+-- Stores collected data for a single sample
+-- By other means we restrict to 1 sample_value per sample
+-- 1 project -> many |plots ->                                     many samples|
+--                   |plots -> many USER_PLOTS -> MANY SAMPLE_VALUES <- SAMPLES|
+--                                       ^- users|
 CREATE TABLE sample_values (
     sample_value_uid      SERIAL PRIMARY KEY,
     user_plot_rid         integer NOT NULL REFERENCES user_plots (user_plot_uid) ON DELETE CASCADE ON UPDATE CASCADE,
@@ -107,6 +143,8 @@ CREATE TABLE sample_values (
     CONSTRAINT per_sample_per_user UNIQUE(sample_rid, user_plot_rid)
 );
 
+-- Stores active user information for a plot
+-- many plots <-> many users, although by other means we restrict it to 1 user to 1 plot
 CREATE TABLE plot_locks (
     user_rid    integer NOT NULL REFERENCES users(user_uid),
     plot_rid    integer NOT NULL REFERENCES plots(plot_uid),
@@ -114,6 +152,8 @@ CREATE TABLE plot_locks (
     PRIMARY KEY(user_rid, plot_rid)
 );
 
+-- Stores widget information for a project
+-- 1 project -> many widgets
 CREATE TABLE project_widgets (
     widget_uid      SERIAL PRIMARY KEY,
     project_rid     integer NOT NULL REFERENCES projects (project_uid) ON DELETE CASCADE ON UPDATE CASCADE,
@@ -121,20 +161,21 @@ CREATE TABLE project_widgets (
     widget          jsonb
 );
 
-CREATE INDEX project_widgets_project_rid ON project_widgets (project_rid);
-CREATE INDEX project_widgets_dashboard_id ON project_widgets (dashboard_id);
+-- Indices
+CREATE INDEX project_widgets_dashboard_id      ON project_widgets (dashboard_id);
 
--- Indecies on FK
-CREATE INDEX plots_projects_rid ON plots (project_rid);
-CREATE INDEX samples_plot_rid ON samples (plot_rid);
-CREATE INDEX imagery_institution_rid ON imagery (institution_rid);
+-- Indices on FK
+CREATE INDEX plots_projects_rid                ON plots (project_rid);
+CREATE INDEX samples_plot_rid                  ON samples (plot_rid);
+CREATE INDEX imagery_institution_rid           ON imagery (institution_rid);
 CREATE INDEX institution_users_institution_rid ON institution_users (institution_rid);
-CREATE INDEX institution_users_user_rid ON institution_users (user_rid);
-CREATE INDEX user_plots_plot_rid ON user_plots (plot_rid);
-CREATE INDEX user_plots_user_rid ON user_plots (user_rid);
-CREATE INDEX sample_values_user_plot_rid ON sample_values (user_plot_rid);
-CREATE INDEX sample_values_sample_rid ON sample_values (sample_rid);
-CREATE INDEX sample_values_imagery_rid ON sample_values (imagery_rid);
+CREATE INDEX institution_users_user_rid        ON institution_users (user_rid);
+CREATE INDEX user_plots_plot_rid               ON user_plots (plot_rid);
+CREATE INDEX user_plots_user_rid               ON user_plots (user_rid);
+CREATE INDEX sample_values_user_plot_rid       ON sample_values (user_plot_rid);
+CREATE INDEX sample_values_sample_rid          ON sample_values (sample_rid);
+CREATE INDEX sample_values_imagery_rid         ON sample_values (imagery_rid);
+CREATE INDEX project_widgets_project_rid       ON project_widgets (project_rid);
 
 -- Schema for external tables
 CREATE SCHEMA ext_tables;
