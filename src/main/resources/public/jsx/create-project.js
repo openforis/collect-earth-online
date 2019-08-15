@@ -46,7 +46,6 @@ class Project extends React.Component {
                 latMax: "",
             },
             projectList: [],
-            hasNoRules: true,
             showModal: false,
         };
     }
@@ -114,7 +113,7 @@ class Project extends React.Component {
                   method: "POST",
                   contentType: "application/json; charset=utf-8",
                   body: JSON.stringify({
-                      institution: this.props.institutionId,
+                      institutionId: this.props.institutionId,
                       lonMin: this.state.coordinates.lonMin,
                       lonMax: this.state.coordinates.lonMax,
                       latMin: this.state.coordinates.latMin,
@@ -143,18 +142,18 @@ class Project extends React.Component {
                   }),
               }
         )
-            .then(response => response.ok ? response.text() : Promise.reject(response.text()))
+            .then(response => Promise.all([response.ok, response.text()]))
             .then(data => {
                 const isInteger = n => !isNaN(parseInt(n)) && isFinite(n) && !n.includes(".");
-                if (isInteger(data)) {
-                    window.location = this.props.documentRoot + "/review-project/" + data;
+                if (data[0] && isInteger(data[1])) {
+                    window.location = this.props.documentRoot + "/review-project?projectId=" + data[1];
                     return Promise.resolve();
                 } else {
-                    return Promise.reject(data);
+                    return Promise.reject(data[1]);
                 }
             })
-            .catch(response => {
-                alert("Error creating project.\n\n" + response);
+            .catch(message => {
+                alert("Error creating project.\n\n" + message);
                 this.setState({ showModal: false });
             });
 
@@ -252,7 +251,6 @@ class Project extends React.Component {
                 },
                 useTemplatePlots: false,
                 useTemplateWidgets: false,
-                hasNoRules: true,
             });
         } else {
             const templateProject = this.state.projectList.find(p => p.id === newTemplateId);
@@ -268,12 +266,33 @@ class Project extends React.Component {
                 plotList: [],
                 useTemplatePlots: true,
                 useTemplateWidgets: true,
-                hasNoRules: !templateProject.surveyRules || templateProject.surveyRules.length === 0,
             });
         }
     };
 
-    toggleTemplatePlots = () => this.setState({ useTemplatePlots: !this.state.useTemplatePlots });
+    toggleTemplatePlots = () => {
+        if (!this.state.useTemplatePlots) {
+            const templateProject = this.state.projectList.find(p => p.id === this.state.projectDetails.id);
+            this.setState({
+                useTemplatePlots: true,
+                // When user re-selects use template plots, revert project plot design values back to template but keep other data.
+                projectDetails: {
+                    ...this.state.projectDetails,
+                    boundary: templateProject.boundary,
+                    numPlots: templateProject.numPlots,
+                    plotDistribution: templateProject.plotDistribution,
+                    plotShape: templateProject.plotShape,
+                    plotSize: templateProject.plotSize,
+                    plotSpacing: templateProject.plotSpacing,
+                    sampleDistribution: templateProject.sampleDistribution,
+                    sampleResolution: templateProject.sampleResolution,
+                    samplesPerPlot: templateProject.samplesPerPlot,
+                },
+            });
+        } else {
+            this.setState({ useTemplatePlots: false });
+        }
+    };
 
     toggleTemplateWidgets = () => this.setState({ useTemplateWidgets: !this.state.useTemplateWidgets });
 
@@ -287,8 +306,7 @@ class Project extends React.Component {
         this.setState({ projectDetails: { ...this.state.projectDetails, surveyRules: newSurveyRules }});
 
     getProjectList = () => {
-        const { userId } = this.props;
-        fetch(this.props.documentRoot + "/get-all-projects?userId=" + userId)
+        fetch(this.props.documentRoot + "/get-all-projects")
             .then(response => response.ok ? response.json() : Promise.reject(response))
             .then(data => this.setState({ projectList: data }))
             .catch(response => {
@@ -324,7 +342,7 @@ class Project extends React.Component {
 
     getProjectPlots = () => {
         const maxPlots = 300;
-        fetch(this.props.documentRoot + "/get-project-plots/" + this.state.projectDetails.id + "/" + maxPlots)
+        fetch(this.props.documentRoot + "/get-project-plots?projectId=" + this.state.projectDetails.id + "&max=" + maxPlots)
             .then(response => response.ok ? response.json() : Promise.reject(response))
             .then(data => this.setState({ plotList: data }))
             .catch(response => {
@@ -401,7 +419,6 @@ class Project extends React.Component {
                             toggleTemplateWidgets={this.toggleTemplateWidgets}
                             useTemplatePlots={this.state.useTemplatePlots}
                             useTemplateWidgets={this.state.useTemplateWidgets}
-                            hasNoRules={this.state.hasNoRules}
                         />
                         <ProjectManagement createProject={this.createProject} />
                     </Fragment>
@@ -451,11 +468,11 @@ function ProjectDesignForm(props) {
                 </Fragment>
             }
             <SurveyDesign
+                templateProject={props.projectDetails.id}
                 surveyQuestions={props.projectDetails.surveyQuestions}
                 surveyRules={props.projectDetails.surveyRules}
                 setSurveyQuestions={props.setSurveyQuestions}
                 setSurveyRules={props.setSurveyRules}
-                hasNoRules={props.hasNoRules}
             />
         </div>
     );

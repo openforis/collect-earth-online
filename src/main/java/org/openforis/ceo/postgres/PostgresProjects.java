@@ -3,6 +3,7 @@ package org.openforis.ceo.postgres;
 import static javax.servlet.http.HttpServletResponse.SC_NO_CONTENT;
 import static org.openforis.ceo.utils.DatabaseUtils.connect;
 import static org.openforis.ceo.utils.JsonUtils.expandResourcePath;
+import static org.openforis.ceo.utils.JsonUtils.getBodyParam;
 import static org.openforis.ceo.utils.JsonUtils.parseJson;
 import static org.openforis.ceo.utils.PartUtils.writeFilePartBase64;
 import static org.openforis.ceo.utils.ProjectUtils.padBounds;
@@ -25,7 +26,6 @@ import static org.openforis.ceo.utils.ProjectUtils.makeGeoJsonPolygon;
 import static org.openforis.ceo.utils.ProjectUtils.getSampleValueTranslations;
 import static org.openforis.ceo.utils.ProjectUtils.deleteShapeFileDirectories;
 import static org.openforis.ceo.utils.ProjectUtils.runBashScriptForProject;
-import static org.openforis.ceo.Views.redirectAuth;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
@@ -50,20 +50,17 @@ import org.openforis.ceo.db_api.Projects;
 import spark.Request;
 import spark.Response;
 
-
-
 public class PostgresProjects implements Projects {
 
-    private Request redirectCommon(Request req, Response res, String queryFn) {
-        final var userId = Integer.parseInt(req.session().attributes().contains("userid") ? req.session().attribute("userid").toString() : "0");
-        final var pProjectId = req.params(":id");
-        final var qProjectId = req.queryParams("pid");
+    private Boolean checkAuthCommon(Request req, String queryFn) {
+        final var userId = Integer.parseInt(req.session().attributes().contains("userid") ? req.session().attribute("userid").toString() : "-1");
+        final var qProjectId = req.queryParams("projectId");
+        final var jProjectId = getBodyParam(req.body(), "projectId", null);
 
-        final var projectId = pProjectId != null
-            ? Integer.parseInt(pProjectId)
-            : qProjectId != null
-                ? Integer.parseInt(qProjectId)
-                : 0;
+        final var projectId =
+            qProjectId != null ? Integer.parseInt(qProjectId)
+            : jProjectId != null ? Integer.parseInt(jProjectId)
+            : 0;
 
         try (var conn = connect();
              var pstmt = conn.prepareStatement("SELECT * FROM " + queryFn + "(?, ?)")) {
@@ -72,21 +69,21 @@ public class PostgresProjects implements Projects {
             pstmt.setInt(2, projectId);
 
             try(var rs = pstmt.executeQuery()) {
-                redirectAuth(req, res, rs.next() && rs.getBoolean(queryFn), userId);
+                return rs.next() && rs.getBoolean(queryFn);
             }
 
         } catch (SQLException e) {
             System.out.println(e.getMessage());
+            return false;
         }
-        return req;
     }
 
-    public Request redirectNoCollect(Request req, Response res) {
-        return redirectCommon(req, res, "can_user_collect");
+    public Boolean canCollect(Request req) {
+        return checkAuthCommon(req, "can_user_collect");
     }
 
-    public Request redirectNoEdit(Request req, Response res) {
-        return redirectCommon(req, res, "can_user_edit");
+    public Boolean isProjAdmin(Request req) {
+        return checkAuthCommon(req, "can_user_edit");
     }
 
     private static JsonObject buildProjectJson(ResultSet rs) {
@@ -136,8 +133,8 @@ public class PostgresProjects implements Projects {
     }
 
     public String getAllProjects(Request req, Response res) {
-        var userId =            req.queryParams("userId");
-        var institutionId =     req.queryParams("institutionId");
+        final var userId =        req.session().attributes().contains("userid") ? req.session().attribute("userid").toString() : "-1";
+        final var institutionId = req.queryParams("institutionId");
 
         try (var conn = connect()) {
 
@@ -191,14 +188,14 @@ public class PostgresProjects implements Projects {
     }
 
     public String getProjectById(Request req, Response res) {
-        var projectId = req.params(":id");
+        var projectId = req.queryParams("projectId");
 
         return projectById(Integer.parseInt(projectId));
 
     }
 
     public String getProjectStats(Request req, Response res) {
-        var projectId = req.params(":id");
+        var projectId = req.queryParams("projectId");
         var stats = new JsonObject();
         try (var conn = connect();
              var pstmt = conn.prepareStatement("SELECT * FROM select_project_statistics(?)")) {
@@ -264,7 +261,7 @@ public class PostgresProjects implements Projects {
     }
 
     public HttpServletResponse dumpProjectAggregateData(Request req, Response res) {
-        var projectId = Integer.parseInt(req.params(":id"));
+        var projectId = Integer.parseInt(req.queryParams("projectId"));
 
         try (var conn = connect();
              var pstmt = conn.prepareStatement("SELECT * FROM select_project(?)")) {
@@ -327,7 +324,7 @@ public class PostgresProjects implements Projects {
     }
 
     public HttpServletResponse dumpProjectRawData(Request req, Response res) {
-        var projectId =Integer.parseInt( req.params(":id"));
+        var projectId =Integer.parseInt( req.queryParams("projectId"));
 
         try (var conn = connect();
              var pstmt = conn.prepareStatement("SELECT * FROM select_project(?)")) {
@@ -421,7 +418,7 @@ public class PostgresProjects implements Projects {
     }
 
     public String publishProject(Request req, Response res) {
-        var projectId = req.params(":id");
+        var projectId = req.queryParams("projectId");
         try (var conn = connect();
              var pstmt = conn.prepareStatement("SELECT * FROM publish_project(?)")) {
 
@@ -440,7 +437,7 @@ public class PostgresProjects implements Projects {
     }
 
     public String closeProject(Request req, Response res) {
-        var projectId = req.params(":id");
+        var projectId = req.queryParams("projectId");
         try (var conn = connect();
              var pstmt = conn.prepareStatement("SELECT * FROM close_project(?)")) {
 
@@ -459,7 +456,7 @@ public class PostgresProjects implements Projects {
     }
 
     public String archiveProject(Request req, Response res) {
-        var projectId = req.params(":id");
+        var projectId = req.queryParams("projectId");
         try (var conn = connect();
              var pstmt = conn.prepareStatement("SELECT * FROM archive_project(?)") ;) {
 
@@ -482,7 +479,7 @@ public class PostgresProjects implements Projects {
              var pstmt = conn.prepareStatement("SELECT * FROM update_project(?,?,?,?,?)")) {
 
             final var jsonInputs = parseJson(req.body()).getAsJsonObject();
-            pstmt.setInt(1,    Integer.parseInt(req.params(":id")));
+            pstmt.setInt(1,    Integer.parseInt(getOrEmptyString(jsonInputs, "projectId").getAsString()));
             pstmt.setString(2, getOrEmptyString(jsonInputs, "name").getAsString());
             pstmt.setString(3, getOrEmptyString(jsonInputs, "description").getAsString());
             pstmt.setString(4, getOrEmptyString(jsonInputs, "privacyLevel").getAsString());
@@ -860,7 +857,7 @@ public class PostgresProjects implements Projects {
 
             newProject.addProperty("baseMapSource",      getOrEmptyString(jsonInputs, "baseMapSource").getAsString());
             newProject.addProperty("description",        getOrEmptyString(jsonInputs, "description").getAsString());
-            newProject.addProperty("institution",        getOrZero(jsonInputs, "institution").getAsInt());
+            newProject.addProperty("institution",        getOrZero(jsonInputs, "institutionId").getAsInt());
             newProject.addProperty("lonMin",             getOrZero(jsonInputs, "lonMin").getAsDouble());
             newProject.addProperty("latMin",             getOrZero(jsonInputs, "latMin").getAsDouble());
             newProject.addProperty("lonMax",             getOrZero(jsonInputs, "lonMax").getAsDouble());
@@ -999,9 +996,10 @@ public class PostgresProjects implements Projects {
                 }
             } catch (SQLException sql) {
             }
-            StringWriter outError = new StringWriter();
-            e.printStackTrace(new PrintWriter(outError));
-            System.out.println(outError.toString());
+            // StringWriter outError = new StringWriter();
+            // e.printStackTrace(new PrintWriter(outError));
+            // System.out.println(outError.toString());
+            System.out.println("Error creating project: " + e.getMessage());
             return e.getMessage();
         }
     }

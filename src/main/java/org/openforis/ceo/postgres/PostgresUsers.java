@@ -111,7 +111,7 @@ public class PostgresUsers implements Users {
     }
 
     public Request updateAccount(Request req, Response res) {
-        final var userId =                        Integer.parseInt(req.params("id"));
+        final var userId =                        Integer.parseInt(req.queryParams("userId"));
         final var storedEmail =                   (String) req.session().attribute("username");
         final var inputEmail =                    req.queryParams("email");
         final var inputPassword =                 req.queryParams("password");
@@ -267,7 +267,7 @@ public class PostgresUsers implements Users {
     }
 
     public String getInstitutionUsers(Request req, Response res) {
-        final var institutionId = req.params(":id");
+        final var institutionId = req.queryParams("institutionId");
 
         try (var conn = connect();
                 var pstmt = conn.prepareStatement("SELECT * FROM get_all_users_by_institution_id(?)")) {
@@ -293,7 +293,7 @@ public class PostgresUsers implements Users {
     }
 
     public String getUserStats(Request req, Response res) {
-        var userName =     Integer.parseInt(req.params(":userid"));
+        final var userName = Integer.parseInt(req.queryParams("userId"));
         try (var conn = connect();
              var pstmt = conn.prepareStatement("SELECT * FROM get_user_stats(?)");) {
 

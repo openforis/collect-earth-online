@@ -26,7 +26,6 @@
             documentRoot:                "${root}",
             userId:                      "${userid}",
             projectId:                   "${project_id}",
-            institutionId:               "${institution_id}",
             project_stats_visibility:    "${project_stats_visibility}",
             project_template_visibility: "${project_template_visibility}"
         });

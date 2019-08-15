@@ -2,9 +2,9 @@ package org.openforis.ceo.postgres;
 
 import static org.openforis.ceo.utils.DatabaseUtils.connect;
 import static org.openforis.ceo.utils.JsonUtils.expandResourcePath;
+import static org.openforis.ceo.utils.JsonUtils.getBodyParam;
 import static org.openforis.ceo.utils.JsonUtils.parseJson;
 import static org.openforis.ceo.utils.PartUtils.writeFilePartBase64;
-import static org.openforis.ceo.Views.redirectAuth;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
@@ -20,16 +20,15 @@ import spark.Response;
  */
 public class PostgresInstitutions implements Institutions {
 
-    public Request redirectNonAdmin(Request req, Response res) {
-        final var userId = Integer.parseInt(req.session().attributes().contains("userid") ? req.session().attribute("userid").toString() : "0");
-        final var pInstitutionId = req.params(":id");
-        final var qInstitutionId = req.queryParams("institution");
+    public Boolean isInstAdmin(Request req) {
+        final var userId = Integer.parseInt(req.session().attributes().contains("userid") ? req.session().attribute("userid").toString() : "-1");
+        final var qInstitutionId = req.queryParams("institutionId");
+        final var jInstitutionId = getBodyParam(req.body(), "institutionId", null);
 
-        final var institutionId = pInstitutionId != null
-            ? Integer.parseInt(pInstitutionId)
-            : qInstitutionId != null
-                ? Integer.parseInt(qInstitutionId)
-                : 0;
+        final var institutionId =
+            qInstitutionId != null ? Integer.parseInt(qInstitutionId)
+            : jInstitutionId != null ? Integer.parseInt(jInstitutionId)
+            : 0;
 
         try (var conn = connect();
              var pstmt = conn.prepareStatement("SELECT * FROM is_institution_user_admin(?, ?)")) {
@@ -38,16 +37,15 @@ public class PostgresInstitutions implements Institutions {
             pstmt.setInt(2, institutionId);
 
             try(var rs = pstmt.executeQuery()) {
-                redirectAuth(req, res, rs.next() && rs.getBoolean("is_institution_user_admin"), userId);
+                return rs.next() && rs.getBoolean("is_institution_user_admin");
             }
-
         } catch (SQLException e) {
             System.out.println(e.getMessage());
+            return false;
         }
-        return req;
     }
 
-    private static JsonObject buildInstitutionJson( ResultSet rs) {
+    private static JsonObject buildInstitutionJson(ResultSet rs) {
         var newInstitution = new JsonObject();
         try {
             newInstitution.addProperty("id", rs.getInt("institution_id"));
@@ -117,7 +115,7 @@ public class PostgresInstitutions implements Institutions {
     }
 
     public String getInstitutionDetails(Request req, Response res) {
-        var institutionId = Integer.parseInt(req.params(":id"));
+        var institutionId = Integer.parseInt(req.queryParams("institutionId"));
         return getInstitutionById(institutionId);
     }
 
@@ -186,7 +184,7 @@ public class PostgresInstitutions implements Institutions {
     }
 
     public String updateInstitution(Request req, Response res) {
-        final var institutionId = req.params(":id");
+        final var institutionId = req.queryParams("institutionId");
 
         final var jsonInputs = parseJson(req.body()).getAsJsonObject();
         final var name = jsonInputs.get("name").getAsString();
@@ -234,7 +232,7 @@ public class PostgresInstitutions implements Institutions {
     }
 
     public String archiveInstitution(Request req, Response res) {
-        var institutionId = Integer.parseInt(req.params(":id"));
+        var institutionId = Integer.parseInt(req.queryParams("institutionId"));
         try (var conn = connect();
             var pstmt = conn.prepareStatement("SELECT * FROM archive_institution(?)")) {
 

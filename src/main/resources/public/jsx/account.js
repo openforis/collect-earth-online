@@ -36,7 +36,7 @@ class UserStats extends React.Component {
     }
 
     getUserStats() {
-        fetch(this.props.documentRoot + "/get-user-stats/" + this.props.userId)
+        fetch(this.props.documentRoot + "/get-user-stats?userId=" + this.props.userId)
             .then(response => response.ok ? response.json() : Promise.reject(response))
             .then(stats => this.setState({ stats: stats }))
             .catch(response => {

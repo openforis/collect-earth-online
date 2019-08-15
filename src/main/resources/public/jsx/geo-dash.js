@@ -11,10 +11,10 @@ class Geodash extends React.Component {
             callbackComplete: false,
             left: 0,
             ptop: 0,
-            institution: this.getParameterByName("institution") ? this.getParameterByName("institution") : "3",
+            institutionId: this.getParameterByName("institutionId") ? this.getParameterByName("institutionId") : "3",
             projAOI: this.getParameterByName("aoi"),
             projPairAOI: "",
-            pid: this.getParameterByName("pid"),
+            projectId: this.getParameterByName("projectId"),
             mapCenter:null,
             mapZoom:null,
             imageryList:[],
@@ -36,11 +36,11 @@ class Geodash extends React.Component {
     }
 
     componentDidMount() {
-        fetch(this.props.documentRoot + "/get-all-imagery?institutionId=" + this.state.institution)
+        fetch(this.props.documentRoot + "/get-all-imagery?institutionId=" + this.state.institutionId)
             .then(response => response.ok ? response.json() : Promise.reject(response))
             .then(data => this.setState({ imageryList: data }))
             .then(() =>
-                fetch(this.props.documentRoot + "/geo-dash/id/" + this.state.pid)
+                fetch(this.props.documentRoot + "/geo-dash/get-by-projid?projectId=" + this.state.projectId)
                     .then(response => response.json())
                     .then(data => data.widgets.map(widget => {
                         widget.isFull = false;
@@ -657,7 +657,7 @@ class MapWidget extends React.Component {
                         }
                     }
                 })
-                .catch((error) => {
+                .catch(error => {
                     console.log(error);
                 });
         }
@@ -931,9 +931,9 @@ class MapWidget extends React.Component {
         try {
             const bradius = this.props.getParameterByName("bradius");
             const bcenter = this.props.getParameterByName("bcenter");
-            const plotshape = this.props.getParameterByName("plotshape");
-            const projectID = this.props.getParameterByName("pid");
-            const plotID = this.props.getParameterByName("plotid");
+            const plotshape = this.props.getParameterByName("plotShape");
+            const projectID = this.props.getParameterByName("projectId");
+            const plotID = this.props.getParameterByName("plotId");
             if (plotshape && plotshape === "square") {
                 const centerPoint = new ol.geom.Point(ol.proj.transform(JSON.parse(bcenter).coordinates, "EPSG:4326", "EPSG:3857"));
                 const pointFeature = new ol.Feature(centerPoint);
@@ -983,7 +983,7 @@ class MapWidget extends React.Component {
                 });
                 whichMap.addLayer(layer);
             } else {
-                fetch(this.props.documentRoot + "/get-proj-plot/" + projectID + "/" + plotID)
+                fetch(this.props.documentRoot + "/get-proj-plot?projectId=" + projectID + "&plotId=" + plotID)
                     .then(res => res.json())
                     .then(data => {
                         const geoJsonObject = typeof(data) === "string" ? JSON.parse(data) : data;
@@ -1084,7 +1084,8 @@ class GraphWidget extends React.Component {
                         console.warn("Wrong Data Returned");
                     }
                 }
-            });
+            })
+            .catch(error => console.log(error));
         window.addEventListener("resize", () => this.handleResize());
     }
 
@@ -1222,7 +1223,8 @@ class StatsWidget extends React.Component {
                 } else {
                     this.setState({ totalPop: this.numberWithCommas(data.pop), area: this.calculateArea(JSON.parse(projPairAOI)) + " ha", elevation: this.numberWithCommas(data.minElev) + " - " + this.numberWithCommas(data.maxElev) + " m" });
                 }
-            });
+            })
+            .catch(error => console.log(error));
     }
 
     render() {
