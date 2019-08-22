@@ -12,7 +12,7 @@ CREATE OR REPLACE FUNCTION add_packet(_project_id integer, _title text)
 $$ LANGUAGE SQL;
 
 -- Add multiple packets to a single user
-CREATE OR REPLACE FUNCTION add_packet_user(_packet_ids integer[], _user_id integer)
+CREATE OR REPLACE FUNCTION add_packets_to_user(_packet_ids integer[], _user_id integer)
  RETURNS void AS $$
 
     INSERT INTO packet_users (user_rid, packet_rid)
@@ -21,7 +21,7 @@ CREATE OR REPLACE FUNCTION add_packet_user(_packet_ids integer[], _user_id integ
 $$ LANGUAGE SQL;
 
 -- Add a single packet to multiple users
-CREATE OR REPLACE FUNCTION add_packet_user(_packet_id integer, _user_ids integer[])
+CREATE OR REPLACE FUNCTION add_users_to_packet(_packet_id integer, _user_ids integer[])
  RETURNS void AS $$
 
     INSERT INTO packet_users (packet_rid, user_rid)
@@ -30,7 +30,7 @@ CREATE OR REPLACE FUNCTION add_packet_user(_packet_id integer, _user_ids integer
 $$ LANGUAGE SQL;
 
 -- Add plots to a packet
-CREATE OR REPLACE FUNCTION add_packet_plot(_packet_id integer, _plot_ids integer[])
+CREATE OR REPLACE FUNCTION add_plots_to_packet(_plot_ids integer[], _packet_id integer)
  RETURNS void AS $$
 
     INSERT INTO packet_plots (packet_rid, plot_rid)
