@@ -4,9 +4,6 @@
 <#if project_id == "">
     <#assign project_id = "0">
 </#if>
-<#if institution_id == "">
-    <#assign institution_id = "0">
-</#if>
 <#if project_id == "0">
     <#assign project_stats_visibility = "d-none">
     <#assign project_template_visibility = "visible">

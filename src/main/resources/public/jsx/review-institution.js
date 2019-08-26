@@ -705,7 +705,7 @@ class Project extends React.Component {
             <div className="mr-3">
                 <a
                     className="edit-project btn btn-sm btn-outline-yellow btn-block px-3"
-                    href={documentRoot + "/review-project/" + project.id}
+                    href={documentRoot + "/review-project?projectId=" + project.id}
                 >
                     <UnicodeIcon icon="edit"/>
                 </a>
