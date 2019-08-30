@@ -1531,7 +1531,7 @@ CREATE OR REPLACE FUNCTION select_plot_by_id(_project_rid integer, _plot_uid int
  RETURNS setOf plots_return AS $$
 
     SELECT * FROM select_all_project_plots(_project_rid) as spp
-    WHERE spp.plot_id = _plot_uid
+    WHERE spp.plotId = _plot_uid
 
 $$ LANGUAGE SQL;
 
