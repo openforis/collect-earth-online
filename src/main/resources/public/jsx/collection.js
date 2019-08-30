@@ -519,7 +519,7 @@ class Collection extends React.Component {
         window.open(this.props.documentRoot + "/geo-dash?"
                     + "institutionId=" + this.state.currentProject.institution
                     + "&projectId=" + this.props.projectId
-                    + "&plotId=" + currentPlot.id
+                    + "&plotId=" + (currentPlot.plotId ? currentPlot.plotId : currentPlot.id)
                     + "&plotShape=" + encodeURIComponent((currentPlot.geom ? "polygon" : currentProject.plotShape))
                     + "&aoi=" + encodeURIComponent("[" + mercator.getViewExtent(mapConfig) + "]")
                     + "&daterange=&bcenter=" + currentPlot.center
