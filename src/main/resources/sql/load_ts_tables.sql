@@ -10,11 +10,6 @@ CREATE TABLE packets (
 DROP INDEX IF EXISTS packets_project_rid_title;
 CREATE UNIQUE INDEX packets_project_rid_title ON packets USING btree(project_rid, title);
 
---add packet_rid to user_plots
-alter table user_plots
-  add packet_rid int NOT NULL REFERENCES plots (plot_uid) ON DELETE CASCADE ON UPDATE CASCADE;
-
-
 DROP TABLE IF EXISTS packet_users;
 CREATE TABLE packet_users (
   packet_user_uid serial PRIMARY KEY,

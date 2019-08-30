@@ -28,7 +28,7 @@ CREATE TABLE roles (
     title       text NOT NULL
 );
 
--- Creates a relationship between users and institutions
+-- s a relationship between users and institutions
 -- institutions -> many institution_users <- users
 CREATE TABLE institution_users (
     inst_user_uid      SERIAL PRIMARY KEY,
@@ -121,7 +121,6 @@ CREATE TABLE user_plots (
     user_plot_uid       SERIAL PRIMARY KEY,
     user_rid            integer NOT NULL REFERENCES users (user_uid) ON DELETE CASCADE ON UPDATE CASCADE,
     plot_rid            integer NOT NULL REFERENCES plots (plot_uid) ON DELETE CASCADE ON UPDATE CASCADE,
-    #packet_rid          integer DEFAULT NULL REFERENCES packets (packet_uid) ON DELETE CASCADE ON UPDATE CASCADE,
     flagged             boolean DEFAULT FALSE,
     confidence          integer CHECK (confidence >= 0 AND confidence <= 100),
     collection_start    timestamp,
