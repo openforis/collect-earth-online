@@ -28,7 +28,7 @@ CREATE TABLE roles (
     title       text NOT NULL
 );
 
--- s a relationship between users and institutions
+-- Creates a relationship between users and institutions
 -- institutions -> many institution_users <- users
 CREATE TABLE institution_users (
     inst_user_uid      SERIAL PRIMARY KEY,
