@@ -15,6 +15,19 @@
 *** Toplevel namespace object
 ***
 *****************************************************************************/
+import "ol/ol.css";
+import { Feature, Map, Overlay, View } from "ol";
+import { defaults as ControlDefaults, ScaleLine } from "ol/control";
+import { platformModifierKeyOnly } from "ol/events/condition";
+import { Circle, LineString, Point } from "ol/geom";
+import { DragBox, Select } from "ol/interaction";
+import { GeoJSON, KML } from "ol/format";
+import { Tile as TileLayer, Vector as VectorLayer } from "ol/layer";
+import { BingMaps, Cluster, TileWMS, Vector as VectorSource, XYZ } from "ol/source";
+import { Circle as CircleStyle, Icon, Fill, Stroke, Style, Text as StyleText, RegularShape } from "ol/style";
+import { fromLonLat, transform, transformExtent } from "ol/proj";
+import { fromExtent, fromCircle } from "ol/geom/Polygon";
+
 
 const mercator = {};
 
@@ -31,17 +44,17 @@ const mercator = {};
 // [Pure] Returns the passed in [longitude, latitude] values
 // reprojected to Web Mercator as [x, y].
 mercator.reprojectToMap = function (longitude, latitude) {
-    return ol.proj.transform([Number(longitude), Number(latitude)],
-                             "EPSG:4326",
-                             "EPSG:3857");
+    return transform([Number(longitude), Number(latitude)],
+                     "EPSG:4326",
+                     "EPSG:3857");
 };
 
 // [Pure] Returns the passed in [x, y] values reprojected to WGS84 as
 // [longitude, latitude].
 mercator.reprojectFromMap = function (x, y) {
-    return ol.proj.transform([Number(x), Number(y)],
-                             "EPSG:3857",
-                             "EPSG:4326");
+    return transform([Number(x), Number(y)],
+                     "EPSG:3857",
+                     "EPSG:4326");
 };
 
 // [Pure] Returns a bounding box for the globe in Web Mercator as
@@ -57,7 +70,7 @@ mercator.getFullExtent = function () {
 mercator.getViewExtent = function (mapConfig) {
     const size = mapConfig.map.getSize();
     const extent = mapConfig.view.calculateExtent(size);
-    return ol.proj.transformExtent(extent, "EPSG:3857", "EPSG:4326");
+    return transformExtent(extent, "EPSG:3857", "EPSG:4326");
 };
 
 // [Pure] Returns the minimum distance in meters from the view center
@@ -80,12 +93,12 @@ mercator.getViewRadius = function (mapConfig) {
 // is invalid.
 mercator.createSource = function (sourceConfig, imageryId, documentRoot) {
     if (["DigitalGlobe", "EarthWatch"].includes(sourceConfig.type)) {
-        return new ol.source.XYZ({
+        return new XYZ({
             url: documentRoot + "/get-tile?imageryId=" + imageryId + "&z={z}&x={x}&y={-y}",
             attribution: "© DigitalGlobe, Inc",
         });
     } else if (sourceConfig.type === "Planet") {
-        return new ol.source.XYZ({
+        return new XYZ({
             url: documentRoot
                  + "/get-tile?imageryId=" + imageryId
                  + "&z={z}&x={x}&y={y}&tile={0-3}&month=" + sourceConfig.month
@@ -93,13 +106,13 @@ mercator.createSource = function (sourceConfig, imageryId, documentRoot) {
             attribution: "© Planet Labs, Inc",
         });
     } else if (sourceConfig.type === "BingMaps") {
-        return new ol.source.BingMaps({
+        return new BingMaps({
             imagerySet: sourceConfig.imageryId,
             key: sourceConfig.accessToken,
             maxZoom: 19,
         });
     } else if (sourceConfig.type === "GeoServer") {
-        return new ol.source.TileWMS({
+        return new TileWMS({
             serverType: "geoserver",
             url: documentRoot + "/get-tile",
             params: { LAYERS: "none", imageryId: imageryId },
@@ -133,7 +146,7 @@ mercator.createSource = function (sourceConfig, imageryId, documentRoot) {
             theJson.imageName = sourceConfig.geeParams.ImageCollectionAsset;
         }
         const theID = Math.random().toString(36).substr(2, 16) + "_" + Math.random().toString(36).substr(2, 9);
-        const geeLayer = new ol.source.XYZ({
+        const geeLayer = new XYZ({
             url: "https://earthengine.googleapis.com/map/temp/{z}/{x}/{y}?token=",
             id: theID,
         });
@@ -158,11 +171,11 @@ mercator.createSource = function (sourceConfig, imageryId, documentRoot) {
                 })
                 .then(data => {
                     if (data.hasOwnProperty("mapid")) {
-                        const geeLayer = new ol.source.XYZ({
+                        const geeLayer = new XYZ({
                             url: "https://earthengine.googleapis.com/map/" + data.mapid + "/{z}/{x}/{y}?token=" + data.token,
                         });
                         mercator.currentMap.getLayers().forEach(function (lyr) {
-                            if (theID && theID == lyr.getSource().get("id")) {
+                            if (theID && theID === lyr.getSource().get("id")) {
                                 lyr.setSource(geeLayer);
                             }
                         });
@@ -170,7 +183,7 @@ mercator.createSource = function (sourceConfig, imageryId, documentRoot) {
                         console.warn("Wrong Data Returned");
                     }
                 }).catch(response => {
-                    console.log("Error loading EE imagery: ")
+                    console.log("Error loading EE imagery: ");
                     console.log(response);
                 });
         }
@@ -181,22 +194,22 @@ mercator.createSource = function (sourceConfig, imageryId, documentRoot) {
     }
 };
 
-// [Pure] Returns a new ol.layer.Tile object or null if the
+// [Pure] Returns a new TileLayer object or null if the
 // layerConfig is invalid.
 mercator.createLayer = function (layerConfig, documentRoot) {
     layerConfig.sourceConfig.create = true;
     const source = mercator.createSource(layerConfig.sourceConfig, layerConfig.id, documentRoot);
-    if (source == null) {
+    if (!source) {
         return null;
     } else if (layerConfig.extent != null) {
-        return new ol.layer.Tile({
+        return new TileLayer({
             title: layerConfig.title,
             visible: false,
             extent: layerConfig.extent,
             source: source,
         });
     } else {
-        return new ol.layer.Tile({
+        return new TileLayer({
             title: layerConfig.title,
             visible: false,
             source: source,
@@ -297,18 +310,18 @@ mercator.createMap = function (divName, centerCoords, zoomLevel, layerConfigs, d
         const layers = layerConfigs.map(l => mercator.createLayer(l, documentRoot));
 
         // Add a scale line to the default map controls
-        const controls = ol.control.defaults().extend([new ol.control.ScaleLine()]);
+        const controls = ControlDefaults().extend([new ScaleLine()]);
 
         // Create the map view using the passed in centerCoords and zoomLevel
-        const view = new ol.View({
+        const view = new View({
             projection: "EPSG:3857",
-            center: ol.proj.fromLonLat(centerCoords),
+            center: fromLonLat(centerCoords),
             extent: mercator.getFullExtent(),
             zoom: zoomLevel,
         });
 
         // Create the new map object
-        const map = new ol.Map({
+        const map = new Map({
             target: divName,
             layers: layers,
             controls: controls,
@@ -374,14 +387,14 @@ mercator.resetMap = function (mapConfig) {
 *****************************************************************************/
 
 // [Side Effects] Hides all raster layers in mapConfig except those
-// with title == layerTitle.
+// with title === layerTitle.
 mercator.setVisibleLayer = function (mapConfig, layerTitle) {
     mapConfig.layers.forEach(
         function (layer) {
-            if (layer.getVisible() == true && layer instanceof ol.layer.Tile) {
+            if (layer.getVisible() === true && layer instanceof TileLayer) {
                 layer.setVisible(false);
             }
-            if (layer.get("title") == layerTitle) {
+            if (layer.get("title") === layerTitle) {
                 layer.setVisible(true);
             }
         }
@@ -389,27 +402,27 @@ mercator.setVisibleLayer = function (mapConfig, layerTitle) {
     return mapConfig;
 };
 
-// [Pure] Returns the map layer with title == layerTitle or null if no
+// [Pure] Returns the map layer with title === layerTitle or null if no
 // such layer exists.
 mercator.getLayerByTitle = function (mapConfig, layerTitle) {
     return mapConfig.layers.getArray().find(
         function (layer) {
-            return layer.get("title") == layerTitle;
+            return layer.get("title") === layerTitle;
         }
     );
 };
 
 // [Pure] Returns the initial layerConfig for the map layer with title
-// == layerTitle or null if no such layer exists.
+// === layerTitle or null if no such layer exists.
 mercator.getLayerConfigByTitle = function (mapConfig, layerTitle) {
     return mapConfig.init.layerConfigs.find(
         function (layerConfig) {
-            return layerConfig.title == layerTitle;
+            return layerConfig.title === layerTitle;
         }
     );
 };
 
-// [Side Effects] Finds the map layer with title == layerTitle and
+// [Side Effects] Finds the map layer with title === layerTitle and
 // applies transformer to its initial sourceConfig to create a new
 // source for the layer.
 mercator.updateLayerSource = function (mapConfig, layerTitle, transformer, caller) {
@@ -420,7 +433,7 @@ mercator.updateLayerSource = function (mapConfig, layerTitle, transformer, calle
     }
 };
 
-// [Side Effects] Finds the map layer with title == layerTitle and
+// [Side Effects] Finds the map layer with title === layerTitle and
 // appends newParams to its source's WMS params object.
 //
 // Example call:
@@ -452,7 +465,7 @@ mercator.zoomMapToExtent = function (mapConfig, extent, maxZoom) {
 };
 
 // [Side Effects] Zooms the map view to contain the layer with
-// title == layerTitle.
+// title === layerTitle.
 mercator.zoomMapToLayer = function (mapConfig, layerTitle, maxZoom) {
     const layer = mercator.getLayerByTitle(mapConfig, layerTitle);
     if (layer) {
@@ -469,7 +482,7 @@ mercator.zoomMapToLayer = function (mapConfig, layerTitle, maxZoom) {
 
 // [Pure] Returns a style object that displays the image at imageSrc.
 mercator.getIconStyle = function (imageSrc) {
-    return new ol.style.Style({ image: new ol.style.Icon({ src: imageSrc }) });
+    return new Style({ image: new Icon({ src: imageSrc }) });
 };
 
 // [Pure] Returns a style object that displays a circle with the
@@ -477,30 +490,30 @@ mercator.getIconStyle = function (imageSrc) {
 // and textFillColor are also passed, they will be used to overlay
 // text on the circle.
 mercator.getCircleStyle = function (radius, fillColor, borderColor, borderWidth, text, textFillColor) {
-    if (text == null || textFillColor == null) {
-        return new ol.style.Style({
-            image: new ol.style.Circle({
+    if (!text || !textFillColor) {
+        return new Style({
+            image: new CircleStyle({
                 radius: radius,
-                fill: fillColor ? new ol.style.Fill({ color: fillColor }) : null,
-                stroke: new ol.style.Stroke({
+                fill: fillColor ? new Fill({ color: fillColor }) : null,
+                stroke: new Stroke({
                     color: borderColor,
                     width: borderWidth,
                 }),
             }),
         });
     } else {
-        return new ol.style.Style({
-            image: new ol.style.Circle({
+        return new Style({
+            image: new CircleStyle({
                 radius: radius,
-                fill: fillColor ? new ol.style.Fill({ color: fillColor }) : null,
-                stroke: new ol.style.Stroke({
+                fill: fillColor ? new Fill({ color: fillColor }) : null,
+                stroke: new Stroke({
                     color: borderColor,
                     width: borderWidth,
                 }),
             }),
-            text: new ol.style.Text({
+            text: new StyleText({
                 text: text.toString(),
-                fill: new ol.style.Fill({ color: textFillColor }),
+                fill: new Fill({ color: textFillColor }),
             }),
         });
     }
@@ -511,13 +524,13 @@ mercator.getCircleStyle = function (radius, fillColor, borderColor, borderWidth,
 // borderColor, and borderWidth. A triangle has 3 points. A square has
 // 4 points with rotation pi/4. A star has 5 points.
 mercator.getRegularShapeStyle = function (radius, points, rotation, fillColor, borderColor, borderWidth) {
-    return new ol.style.Style({
-        image: new ol.style.RegularShape({
+    return new Style({
+        image: new RegularShape({
             radius: radius,
             points: points,
             rotation: rotation || 0,
-            fill: fillColor ? new ol.style.Fill({ color: fillColor }) : null,
-            stroke: new ol.style.Stroke({
+            fill: fillColor ? new Fill({ color: fillColor }) : null,
+            stroke: new Stroke({
                 color: borderColor,
                 width: borderWidth,
             }),
@@ -529,9 +542,9 @@ mercator.getRegularShapeStyle = function (radius, points, rotation, fillColor, b
 // is applied wth the specified fillColor, borderColor, and
 // borderWidth.
 mercator.getPolygonStyle = function (fillColor, borderColor, borderWidth) {
-    return new ol.style.Style({
-        fill: fillColor ? new ol.style.Fill({ color: fillColor }) : null,
-        stroke: new ol.style.Stroke({
+    return new Style({
+        fill: fillColor ? new Fill({ color: fillColor }) : null,
+        stroke: new Stroke({
             color: borderColor,
             width: borderWidth,
         }),
@@ -566,7 +579,7 @@ const ceoMapStyles = {
 
 // [Side Effects] Adds a new vector layer to the mapConfig's map object.
 mercator.addVectorLayer = function (mapConfig, layerTitle, vectorSource, style) {
-    const vectorLayer = new ol.layer.Vector({
+    const vectorLayer = new VectorLayer({
         title: layerTitle,
         source: vectorSource,
         style: style,
@@ -575,7 +588,7 @@ mercator.addVectorLayer = function (mapConfig, layerTitle, vectorSource, style) 
     return mapConfig;
 };
 
-// [Side Effects] Removes the layer with title == layerTitle from
+// [Side Effects] Removes the layer with title === layerTitle from
 // mapConfig's map object.
 mercator.removeLayerByTitle = function (mapConfig, layerTitle) {
     const layer = mercator.getLayerByTitle(mapConfig, layerTitle);
@@ -590,7 +603,7 @@ mercator.removeLayerByTitle = function (mapConfig, layerTitle) {
 // reproject the created geometry from WGS84 to Web Mercator before
 // returning.
 mercator.parseGeoJson = function (geoJson, reprojectToMap) {
-    const format = new ol.format.GeoJSON();
+    const format = new GeoJSON();
     const geometry = format.readGeometry(geoJson);
     if (reprojectToMap) {
         return geometry.transform("EPSG:4326", "EPSG:3857");
@@ -601,9 +614,9 @@ mercator.parseGeoJson = function (geoJson, reprojectToMap) {
 
 // [Pure] Returns a new vector source containing the passed in geometry.
 mercator.geometryToVectorSource = function (geometry) {
-    return new ol.source.Vector({
+    return new VectorSource({
         features: [
-            new ol.Feature({ geometry: geometry }),
+            new Feature({ geometry: geometry }),
         ],
     });
 };
@@ -615,13 +628,14 @@ mercator.getPlotPolygon = function (center, size, shape) {
     const centerX = coords[0];
     const centerY = coords[1];
     const radius = size / 2;
-    if (shape == "circle") {
-        return new ol.geom.Circle([centerX, centerY], radius);
+    if (shape === "circle") {
+        console.log("e circ")
+        return new Circle([centerX, centerY], radius);
     } else {
-        return ol.geom.Polygon.fromExtent([centerX - radius,
-                                           centerY - radius,
-                                           centerX + radius,
-                                           centerY + radius]);
+        return fromExtent([centerX - radius,
+                                   centerY - radius,
+                                   centerX + radius,
+                                   centerY + radius]);
     }
 };
 
@@ -629,7 +643,7 @@ mercator.getPlotPolygon = function (center, size, shape) {
 // lly, urx, ury].
 mercator.getPlotExtent = function (center, size, shape) {
     const geometry = mercator.getPlotPolygon(center, size, shape);
-    return ol.proj.transformExtent(geometry.getExtent(), "EPSG:3857", "EPSG:4326");
+    return transformExtent(geometry.getExtent(), "EPSG:3857", "EPSG:4326");
 };
 
 // [Pure] Returns a new vector source containing the passed in plots.
@@ -639,10 +653,10 @@ mercator.plotsToVectorSource = function (plots) {
     const features = plots.map(
         function (plot) {
             const geometry = mercator.parseGeoJson(plot.center, true);
-            return new ol.Feature({ plotId: plot.id, geometry: geometry });
+            return new Feature({ plotId: plot.id, geometry: geometry });
         }
     );
-    return new ol.source.Vector({ features: features });
+    return new VectorSource({ features: features });
 };
 
 // [Side Effects] Adds three vector layers to the mapConfig's map
@@ -652,21 +666,21 @@ mercator.addPlotOverviewLayers = function (mapConfig, plots, shape) {
     mercator.addVectorLayer(mapConfig,
                             "flaggedPlots",
                             mercator.plotsToVectorSource(plots.filter(function (plot) {
-                                return plot.flagged == true;
+                                return plot.flagged === true;
                             })),
-                            shape == "circle" ? ceoMapStyles.redCircle : ceoMapStyles.redSquare);
+                            shape === "circle" ? ceoMapStyles.redCircle : ceoMapStyles.redSquare);
     mercator.addVectorLayer(mapConfig,
                             "analyzedPlots",
                             mercator.plotsToVectorSource(plots.filter(function (plot) {
-                                return plot.analyses > 0 && plot.flagged == false;
+                                return plot.analyses > 0 && plot.flagged === false;
                             })),
-                            shape == "circle" ? ceoMapStyles.greenCircle : ceoMapStyles.greenSquare);
+                            shape === "circle" ? ceoMapStyles.greenCircle : ceoMapStyles.greenSquare);
     mercator.addVectorLayer(mapConfig,
                             "unanalyzedPlots",
                             mercator.plotsToVectorSource(plots.filter(function (plot) {
-                                return plot.analyses == 0 && plot.flagged == false;
+                                return plot.analyses === 0 && plot.flagged === false;
                             })),
-                            shape == "circle" ? ceoMapStyles.yellowCircle : ceoMapStyles.yellowSquare);
+                            shape === "circle" ? ceoMapStyles.yellowCircle : ceoMapStyles.yellowSquare);
     return mapConfig;
 };
 
@@ -676,7 +690,7 @@ mercator.addPlotOverviewLayers = function (mapConfig, plots, shape) {
 ***
 *****************************************************************************/
 
-// [Pure] Returns the map interaction with title == interactionTitle
+// [Pure] Returns the map interaction with title === interactionTitle
 // or null if no such interaction exists.
 mercator.getInteractionByTitle = function (mapConfig, interactionTitle) {
     return mapConfig.map.getInteractions().getArray().find(
@@ -686,7 +700,7 @@ mercator.getInteractionByTitle = function (mapConfig, interactionTitle) {
     );
 };
 
-// [Side Effects] Removes the interaction with title == interactionTitle from
+// [Side Effects] Removes the interaction with title === interactionTitle from
 // mapConfig's map object.
 mercator.removeInteractionByTitle = function (mapConfig, interactionTitle) {
     const interaction = mercator.getInteractionByTitle(mapConfig, interactionTitle);
@@ -702,7 +716,7 @@ mercator.removeInteractionByTitle = function (mapConfig, interactionTitle) {
 // then cleared on the map. When a feature is deselected, its saved
 // style is restored on the map.
 mercator.makeClickSelect = function (interactionTitle, layer, featureStyles, setSampleId) {
-    const select = new ol.interaction.Select({ layers: [layer] });
+    const select = new Select({ layers: [layer] });
     select.set("title", interactionTitle);
     const action = function (event) {
         setSampleId(event.selected.length === 1 ? event.selected[0].get("sampleId") : -1);
@@ -724,7 +738,7 @@ mercator.makeClickSelect = function (interactionTitle, layer, featureStyles, set
 // then cleared on the map. When a feature is deselected, its saved
 // style is restored on the map.
 mercator.makeDragBoxSelect = function (interactionTitle, layer, featureStyles, selectedFeatures, setSampleId) {
-    const dragBox = new ol.interaction.DragBox({ condition: ol.events.condition.platformModifierKeyOnly });
+    const dragBox = new DragBox({ condition: platformModifierKeyOnly });
     dragBox.set("title", interactionTitle);
     const boxstartAction = function () {
         selectedFeatures.forEach(function (feature) {
@@ -751,7 +765,7 @@ mercator.makeDragBoxSelect = function (interactionTitle, layer, featureStyles, s
 };
 // [Side Effects] Adds a click select interaction and a dragBox select
 // interaction to mapConfig's map object associated with the layer
-// with title == layerTitle.
+// with title === layerTitle.
 mercator.enableSelection = function (mapConfig, layerTitle, setSampleId) {
     const layer = mercator.getLayerByTitle(mapConfig, layerTitle);
     const featureStyles = {}; // holds saved styles for features selected by either interaction
@@ -783,7 +797,7 @@ mercator.disableSelection = function (mapConfig) {
 mercator.addPointLayer = function (mapConfig, longitude, latitude) {
     mercator.addVectorLayer(mapConfig,
                             "point:" + longitude + ":" + latitude,
-                            mercator.geometryToVectorSource(new ol.geom.Point(mercator.reprojectToMap(longitude, latitude))),
+                            mercator.geometryToVectorSource(new Point(mercator.reprojectToMap(longitude, latitude))),
                             ceoMapStyles.redPoint);
     return mapConfig;
 };
@@ -794,14 +808,14 @@ mercator.addPointLayer = function (mapConfig, longitude, latitude) {
 mercator.samplesToVectorSource = function (samples) {
     const features = samples.map(
         function (sample) {
-            return new ol.Feature({
+            return new Feature({
                 sampleId: sample.id,
                 geometry: mercator.parseGeoJson(sample.geom || sample.point, true),
                 shape: sample.geom ? "polygon" : "point",
             });
         }
     );
-    return new ol.source.Vector({ features: features });
+    return new VectorSource({ features: features });
 };
 
 // [Pure] Returns an ol.Collection containing the features selected by
@@ -828,7 +842,7 @@ mercator.getAllFeatures = function (mapConfig, layerTitle) {
 // border and filled with the passed in color. If color is null, the
 // circle will be filled with gray.
 mercator.highlightSampleGeometry = function (sample, color) {
-    if (sample.get("shape") == "point") {
+    if (sample.get("shape") === "point") {
         sample.setStyle(mercator.getCircleStyle(6, color, color, 2));
     } else {
         sample.setStyle(mercator.getPolygonStyle(null, color, 6));
@@ -849,13 +863,13 @@ mercator.highlightSampleGeometry = function (sample, color) {
 // feature. If a callBack function is provided, it will be called
 // after the new box is added to the map layer.
 mercator.makeDragBoxDraw = function (interactionTitle, layer, callBack) {
-    const dragBox = new ol.interaction.DragBox({
+    const dragBox = new DragBox({
         title: interactionTitle,
-        condition: ol.events.condition.platformModifierKeyOnly,
+        condition: platformModifierKeyOnly,
     });
     const boxendAction = function () {
         layer.getSource().clear();
-        layer.getSource().addFeature(new ol.Feature({ geometry: dragBox.getGeometry() }));
+        layer.getSource().addFeature(new Feature({ geometry: dragBox.getGeometry() }));
         if (callBack != null) {
             callBack.call(null, dragBox);
         }
@@ -869,9 +883,9 @@ mercator.makeDragBoxDraw = function (interactionTitle, layer, callBack) {
 // object associated with a newly created empty vector layer called
 // "dragBoxLayer".
 mercator.enableDragBoxDraw = function (mapConfig, callBack) {
-    const drawLayer = new ol.layer.Vector({
+    const drawLayer = new VectorLayer({
         title: "dragBoxLayer",
-        source: new ol.source.Vector({ features: [] }),
+        source: new VectorSource({ features: [] }),
         style: ceoMapStyles.yellowPolygon,
     });
     const dragBox = mercator.makeDragBoxDraw("dragBoxDraw", drawLayer, callBack);
@@ -903,7 +917,7 @@ mercator.getDragBoxExtent = function (dragBox) {
 // [Side Effects] Adds a new empty overlay to mapConfig's map object
 // with id set to overlayTitle.
 mercator.addOverlay = function (mapConfig, overlayTitle, element) {
-    const overlay = new ol.Overlay({
+    const overlay = new Overlay({
         id: overlayTitle,
         element: element,
     });//?element:document.createElement("div")});
@@ -911,7 +925,7 @@ mercator.addOverlay = function (mapConfig, overlayTitle, element) {
     return mapConfig;
 };
 
-// [Pure] Returns the map overlay with id == overlayTitle or null if
+// [Pure] Returns the map overlay with id === overlayTitle or null if
 // no such overlay exists.
 mercator.getOverlayByTitle = function (mapConfig, overlayTitle) {
     return mapConfig.map.getOverlayById(overlayTitle);
@@ -919,7 +933,7 @@ mercator.getOverlayByTitle = function (mapConfig, overlayTitle) {
 
 // [Pure] Returns a new ol.source.Cluster given the unclusteredSource and clusterDistance.
 mercator.makeClusterSource = function (unclusteredSource, clusterDistance) {
-    return new ol.source.Cluster({
+    return new Cluster({
         source: unclusteredSource,
         distance: clusterDistance,
     });
@@ -938,7 +952,7 @@ mercator.getClusterExtent = function (clusterFeature) {
             return subFeature.getGeometry().getCoordinates();
         }
     );
-    return (new ol.geom.LineString(clusterPoints)).getExtent();
+    return (new LineString(clusterPoints)).getExtent();
 };
 
 // [Pure] Returns a new vector source containing points for each of
@@ -955,8 +969,8 @@ mercator.projectsToVectorSource = function (projects) {
             const maxY = bounds[3];
             const centerX = (minX + maxX) / 2;
             const centerY = (minY + maxY) / 2;
-            const geometry = new ol.geom.Point([centerX, centerY]).transform("EPSG:4326", "EPSG:3857");
-            return new ol.Feature({
+            const geometry = new Point([centerX, centerY]).transform("EPSG:4326", "EPSG:3857");
+            return new Feature({
                 geometry:    geometry,
                 projectId:   project.id,
                 name:        project.name,
@@ -965,7 +979,7 @@ mercator.projectsToVectorSource = function (projects) {
             });
         }
     );
-    return new ol.source.Vector({ features: features });
+    return new VectorSource({ features: features });
 };
 
 // [Side Effects] Adds a new vector layer called "currentPlots" to
@@ -975,7 +989,7 @@ mercator.projectsToVectorSource = function (projects) {
 // the callBack function will be called on the cluster feature.
 mercator.addPlotLayer = function (mapConfig, plots, callBack) {
     const plotSource = mercator.plotsToVectorSource(plots);
-    const clusterSource = new ol.source.Cluster({
+    const clusterSource = new Cluster({
         source:   plotSource,
         distance: 40,
     });
@@ -1016,12 +1030,12 @@ mercator.addPlotLayer = function (mapConfig, plots, callBack) {
 
 mercator.asPolygonFeature = function (feature) {
     return feature.getGeometry().getType() === "Circle"
-        ? new ol.Feature({ geometry: ol.geom.Polygon.fromCircle(feature.getGeometry()) })
+        ? new Feature({ geometry: fromCircle(feature.getGeometry()) })
         : feature;
 };
 
 mercator.getKMLFromFeatures = function (features) {
-    return (new ol.format.KML()).writeFeatures(features, { featureProjection: "EPSG:3857" });
+    return (new KML()).writeFeatures(features, { featureProjection: "EPSG:3857" });
 };
 
 /*****************************************************************************
@@ -1072,7 +1086,7 @@ mercator.getKMLFromFeatures = function (features) {
 //        mercator.removeLayerByTitle(mapConfig, "currentPlots");
 //        mercator.addPlotLayer(mapConfig, plots);
 
-module.exports = {
-    mercator: mercator,
-    ceoMapStyles: ceoMapStyles,
+export {
+    mercator,
+    ceoMapStyles,
 };
