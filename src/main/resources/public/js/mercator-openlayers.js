@@ -629,13 +629,13 @@ mercator.getPlotPolygon = function (center, size, shape) {
     const centerY = coords[1];
     const radius = size / 2;
     if (shape === "circle") {
-        console.log("e circ")
+        console.log("e circ");
         return new Circle([centerX, centerY], radius);
     } else {
         return fromExtent([centerX - radius,
-                                   centerY - radius,
-                                   centerX + radius,
-                                   centerY + radius]);
+                           centerY - radius,
+                           centerX + radius,
+                           centerY + radius]);
     }
 };
 
