@@ -240,7 +240,7 @@ class BasicLayout extends React.PureComponent {
                     <span
                         className="remove"
                         onClick={e => {
-                            e.stopPropagation(); this.onRemoveItem(i);
+                            e.stopPropagation(); this.onRemoveItem(widget.layout.i);
                         }}
                         onMouseDown={function(e) {
                             e.stopPropagation();
