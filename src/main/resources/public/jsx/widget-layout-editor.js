@@ -231,7 +231,7 @@ class BasicLayout extends React.PureComponent {
             <div
                 onDragStart={this.onDragStart}
                 onDragEnd={this.onDragEnd}
-                key={i}
+                key={widget.layout.i}
                 data-grid={widget.layout}
                 className="front widgetEditor-widgetBackground"
                 style={{ backgroundImage: "url(" + this.getImageByType(widget.properties[0]) + ")" }}
