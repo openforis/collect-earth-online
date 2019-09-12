@@ -8,13 +8,14 @@
 ***
 *** Description: This library provides a set of functions for
 *** interacting with embedded web maps in an API agnostic manner. This
-*** file contains the OpenLayers 3 implementation.
+*** file contains the OpenLayers 5 implementation.
 ***
 ******************************************************************************
 ***
-*** Toplevel namespace object
+*** OpenLayers imports
 ***
 *****************************************************************************/
+
 import "ol/ol.css";
 import { Feature, Map, Overlay, View } from "ol";
 import { defaults as ControlDefaults, ScaleLine } from "ol/control";
@@ -28,6 +29,11 @@ import { Circle as CircleStyle, Icon, Fill, Stroke, Style, Text as StyleText, Re
 import { fromLonLat, transform, transformExtent } from "ol/proj";
 import { fromExtent, fromCircle } from "ol/geom/Polygon";
 
+/******************************************************************************
+***
+*** Toplevel namespace object
+***
+*****************************************************************************/
 
 const mercator = {};
 
@@ -629,7 +635,6 @@ mercator.getPlotPolygon = function (center, size, shape) {
     const centerY = coords[1];
     const radius = size / 2;
     if (shape === "circle") {
-        console.log("e circ");
         return new Circle([centerX, centerY], radius);
     } else {
         return fromExtent([centerX - radius,
