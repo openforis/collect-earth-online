@@ -2295,7 +2295,6 @@ CREATE OR REPLACE FUNCTION add_user_plots_migration(_plot_rid integer, _username
 
 $$ LANGUAGE SQL;
 
-
 -- Add packet to a project
 -- Not every project needs a packet. If no packet is defined, there is no need to create a packet for that project.
 CREATE OR REPLACE FUNCTION add_packet(_project_id integer, _title text)
