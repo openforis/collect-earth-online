@@ -1,6 +1,3 @@
---add packet_rid to user_plots
-ALTER TABLE user_plots ADD packet_rid integer NULL REFERENCES packets (packet_uid) ON DELETE CASCADE ON UPDATE CASCADE;
-
 -- Stores information about plot packet
 CREATE TABLE packets (
     packet_uid    serial PRIMARY KEY,
@@ -74,6 +71,9 @@ CREATE TABLE image_preference (
     image_julday          integer NOT NULL,
     priority              integer NOT NULL
 );
+
+--add packet_rid to user_plots
+ALTER TABLE user_plots ADD packet_rid integer NULL REFERENCES packets (packet_uid) ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- Indices for TimeSync related tables
 CREATE UNIQUE INDEX packets_project_rid_title ON packets USING btree(project_rid, title);
