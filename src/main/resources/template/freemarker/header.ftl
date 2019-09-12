@@ -32,10 +32,6 @@
         <!-- Highcharts -->
         <script type="text/javascript" src="${root}/js/highcharts.js"></script>
 
-        <!-- OpenLayers3.20.1 -->
-        <link rel="stylesheet" type="text/css" href="${root}/css/openlayers-3.20.1.css">
-        <script type="text/javascript" src="${root}/js/openlayers-3.20.1.js"></script>
-
         <!-- Jerome's custom styles and scripts -->
         <link rel="stylesheet" type="text/css" href="${root}/css/custom.css">
 
