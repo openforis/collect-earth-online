@@ -274,9 +274,8 @@ class BasicLayout extends React.PureComponent {
     };
 
     buildImageryObject = img => {
-        console.log(img);
         const gatewayUrl = this.props.documentRoot + "/geo-dash/gateway-request";
-        let title = img.filterType.replace(/\w\S*/g, function (word) {
+        let title = this.state.widgetTitle !== "" ? this.state.widgetTitle : img.filterType.replace(/\w\S*/g, function (word) {
             return word.charAt(0) + word.slice(1).toLowerCase();
         }) + ": " + img.startDate + " to " + img.endDate;
         const ImageAsset = img.ImageAsset ? img.ImageAsset : "";
@@ -298,12 +297,12 @@ class BasicLayout extends React.PureComponent {
             },
         };
         if (img.ImageAsset && img.ImageAsset.length > 0) {
-            title = img.ImageAsset.substr(img.ImageAsset.lastIndexOf("/") + 1).replace(new RegExp("_", "g"), " ");
+            title = this.state.widgetTitle !== "" ? this.state.widgetTitle : img.ImageAsset.substr(img.ImageAsset.lastIndexOf("/") + 1).replace(new RegExp("_", "g"), " ");
             iObject.imageryTitle = title;
             iObject.ImageAsset = img.ImageAsset;
         }
         if (img.ImageCollectionAsset && img.ImageCollectionAsset.length > 0) {
-            title = img.ImageCollectionAsset.substr(img.ImageCollectionAsset.lastIndexOf("/") + 1).replace(new RegExp("_", "g"), " ");
+            title = this.state.widgetTitle !== "" ? this.state.widgetTitle : img.ImageCollectionAsset.substr(img.ImageCollectionAsset.lastIndexOf("/") + 1).replace(new RegExp("_", "g"), " ");
             iObject.imageryTitle = title;
             iObject.ImageCollectionAsset = img.ImageCollectionAsset;
         }
