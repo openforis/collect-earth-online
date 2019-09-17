@@ -231,7 +231,7 @@ class BasicLayout extends React.PureComponent {
             <div
                 onDragStart={this.onDragStart}
                 onDragEnd={this.onDragEnd}
-                key={i}
+                key={widget.layout.i}
                 data-grid={widget.layout}
                 className="front widgetEditor-widgetBackground"
                 style={{ backgroundImage: "url(" + this.getImageByType(widget.properties[0]) + ")" }}
@@ -240,7 +240,7 @@ class BasicLayout extends React.PureComponent {
                     <span
                         className="remove"
                         onClick={e => {
-                            e.stopPropagation(); this.onRemoveItem(i);
+                            e.stopPropagation(); this.onRemoveItem(widget.layout.i);
                         }}
                         onMouseDown={function(e) {
                             e.stopPropagation();
