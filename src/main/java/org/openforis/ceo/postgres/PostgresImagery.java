@@ -128,7 +128,7 @@ public class PostgresImagery implements Imagery {
                     "SELECT * FROM check_institution_imagery(?,?)")) {
 
                 pstmt_check.setInt(1, institutionId);
-                pstmt_check.setString(1, imageryTitle);
+                pstmt_check.setString(2, imageryTitle);
                 try (var rs_check = pstmt_check.executeQuery()) {
                     if (rs_check.next() && !rs_check.getBoolean("check_institution_imagery")){
                         try (var pstmt = conn.prepareStatement(

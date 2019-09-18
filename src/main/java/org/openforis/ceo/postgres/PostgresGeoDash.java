@@ -32,7 +32,6 @@ public class PostgresGeoDash implements GeoDash {
     // Returns either the dashboard for a project or an empty dashboard if it has not been configured
     public String geodashId(Request req, Response res) {
         var projectId =    req.queryParams("projectId");
-        var projectTitle = req.queryParams("title");
 
         try (var conn = connect();
              var pstmt = conn.prepareStatement("SELECT * FROM get_project_widgets_by_project_id(?)")) {
@@ -42,7 +41,6 @@ public class PostgresGeoDash implements GeoDash {
                 if (rs.next()) {
                     var dashboard = new JsonObject();
                     dashboard.addProperty("projectID", projectId);
-                    dashboard.addProperty("projectTitle", rs.getString("project_title"));
                     dashboard.addProperty("dashboardID", rs.getString("dashboard_id"));
                     var widgetsJson = new JsonArray();
 
@@ -58,7 +56,6 @@ public class PostgresGeoDash implements GeoDash {
                     var newDashboardId = UUID.randomUUID().toString();
                     var newDashboard = new JsonObject();
                     newDashboard.addProperty("projectID", projectId);
-                    newDashboard.addProperty("projectTitle", projectTitle);
                     newDashboard.addProperty("dashboardID", newDashboardId);
                     newDashboard.add("widgets", new JsonArray());
 
