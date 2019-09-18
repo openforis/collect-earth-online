@@ -34,7 +34,6 @@ public class JsonGeoDash implements GeoDash {
 
     public synchronized String geodashId(Request req, Response res) {
         var projectId = req.queryParams("projectId");
-        var projectTitle = req.queryParams("title");
 
         var projects = elementToArray(readJsonFile("proj.json"));
         var matchingProject = findInJsonArray(projects,
@@ -49,7 +48,6 @@ public class JsonGeoDash implements GeoDash {
                 // The dash-<dashboardId>.json file doesn't exist, so we need to create a blank one.
                 var newDashboard = new JsonObject();
                 newDashboard.addProperty("projectID", projectId);
-                newDashboard.addProperty("projectTitle", projectTitle);
                 newDashboard.add("widgets", new JsonArray());
                 newDashboard.addProperty("dashboardID", dashboardId);
 
@@ -68,7 +66,6 @@ public class JsonGeoDash implements GeoDash {
 
             var newDashboard = new JsonObject();
             newDashboard.addProperty("projectID", projectId);
-            newDashboard.addProperty("projectTitle", projectTitle);
             newDashboard.add("widgets", new JsonArray());
             newDashboard.addProperty("dashboardID", newDashboardId);
 
