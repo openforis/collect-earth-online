@@ -22,7 +22,7 @@ The JSON database will initialize automatically when running Maven or Gradle.
 
 Initialize the database using
 #+begin_src sh
-sh src/main/resources/sql/build_db.sh
+npm run build-db-all
 #+end_src
 
 ** Running with an Embedded Jetty Webserver
