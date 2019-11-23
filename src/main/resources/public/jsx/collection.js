@@ -208,7 +208,7 @@ class Collection extends React.Component {
 
     setBaseMapSource = (newBaseMapSource) => {
         const newImagery = this.getImageryById(newBaseMapSource);
-        const newImageryAttribution = newImagery.title === "DigitalGlobeWMSImagery"
+        const newImageryAttribution = (newImagery.title && newImagery.title.includes("DigitalGlobeWMSImagery"))
             ? newImagery.attribution + " | " + this.state.imageryYearDG + " (" + this.state.stackingProfileDG + ")"
             : newImagery.sourceConfig.type === "Planet"
                 ? newImagery.attribution + " | " + this.state.imageryYearPlanet + "-" + this.state.imageryMonthPlanet
@@ -276,7 +276,7 @@ class Collection extends React.Component {
         // FIXME, update mercator to take ID instead of name in cases of duplicate names
         mercator.setVisibleLayer(this.state.mapConfig, this.state.currentImagery.title);
 
-        if (this.state.currentImagery.title === "DigitalGlobeWMSImagery") {
+        if (this.state.currentImagery.title && this.state.currentImagery.title.includes("DigitalGlobeWMSImagery")) {
             this.updateDGWMSLayer();
         } else if (this.state.currentImagery.sourceConfig.type === "Planet") {
             this.updatePlanetLayer();
@@ -288,9 +288,9 @@ class Collection extends React.Component {
     getImageryById = (imageryId) => this.state.imageryList.find(imagery => imagery.id === imageryId);
 
     updateDGWMSLayer = () => {
-        const { imageryYearDG, stackingProfileDG } = this.state;
+        const { currentImagery, imageryYearDG, stackingProfileDG } = this.state;
         mercator.updateLayerWmsParams(this.state.mapConfig,
-                                      "DigitalGlobeWMSImagery",
+                                      currentImagery.title,
                                       {
                                           COVERAGE_CQL_FILTER: "(acquisitionDate>='" + imageryYearDG + "-01-01')"
                                               + "AND(acquisitionDate<='" + imageryYearDG + "-12-31')",
@@ -619,7 +619,7 @@ class Collection extends React.Component {
     };
 
     getImageryAttributes = () =>
-        (this.state.currentImagery.title === "DigitalGlobeWMSImagery") ? {
+        (this.state.currentImagery.title && this.state.currentImagery.title.includes("DigitalGlobeWMSImagery")) ? {
             imageryYearDG:     this.state.imageryYearDG,
             stackingProfileDG: this.state.stackingProfileDG,
         } : (this.state.currentImagery.sourceConfig.type === "Planet") ? {
@@ -1411,7 +1411,7 @@ class ImageryOptions extends React.Component {
                                 )
                             }
                         </select>
-                        {props.imageryTitle === "DigitalGlobeWMSImagery" && this.digitalGlobeMenus()}
+                        {props.imageryTitle && props.imageryTitle.includes("DigitalGlobeWMSImagery") && this.digitalGlobeMenus()}
                         {props.imageryType === "Planet" && this.planetMenus()}
                     </Fragment>
                 }
