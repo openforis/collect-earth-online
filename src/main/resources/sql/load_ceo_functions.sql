@@ -2,6 +2,52 @@
 --  READ EXTERNAL FILE FUNCTIONS
 --
 
+-- Archive project
+CREATE OR REPLACE FUNCTION archive_project(_project_uid integer)
+ RETURNS integer AS $$
+
+    UPDATE projects
+    SET availability = 'archived',
+        archived_date = Now()
+    WHERE project_uid = _project_uid
+    RETURNING _project_uid
+
+$$ LANGUAGE SQL;
+
+-- Add user plots for migration (with add_sample_values)
+CREATE OR REPLACE FUNCTION add_user_plots_migration(_plot_rid integer, _username text, _flagged boolean, _collection_start timestamp, _collection_time timestamp)
+ RETURNS integer AS $$
+
+    WITH user_id AS (
+        SELECT user_uid FROM users WHERE email = _username
+    ), guest_id AS (
+        SELECT user_uid FROM users WHERE email = 'guest'
+    )
+
+    INSERT INTO user_plots
+        (plot_rid, flagged, collection_start, collection_time, user_rid)
+    (SELECT _plot_rid,
+        _flagged,
+        _collection_start,
+        _collection_time,
+        (CASE WHEN user_id.user_uid IS NULL THEN guest_id.user_uid ELSE user_id.user_uid END)
+     FROM user_id, guest_id)
+    RETURNING user_plot_uid
+
+$$ LANGUAGE SQL;
+
+-- Add user samples for migration (with add_user_plots)
+CREATE OR REPLACE FUNCTION add_sample_values_migration(_user_plot_rid integer, _sample_rid integer, _value jsonb, _imagery_rid integer, _imagery_attributes jsonb)
+ RETURNS integer AS $$
+
+    INSERT INTO sample_values
+        (user_plot_rid, sample_rid, value, imagery_rid, imagery_attributes)
+    VALUES
+        ( _user_plot_rid, _sample_rid, _value, _imagery_rid, _imagery_attributes)
+    RETURNING sample_value_uid
+
+$$ LANGUAGE SQL;
+
 -- Select known columns from a shp or csv file
 CREATE OR REPLACE FUNCTION select_partial_table_by_name(_table_name text)
  RETURNS TABLE (
@@ -1385,18 +1431,6 @@ CREATE OR REPLACE FUNCTION close_project(_project_uid integer)
 
 $$ LANGUAGE SQL;
 
--- Archive project
-CREATE OR REPLACE FUNCTION archive_project(_project_uid integer)
- RETURNS integer AS $$
-
-    UPDATE projects
-    SET availability = 'archived',
-        archived_date = Now()
-    WHERE project_uid = _project_uid
-    RETURNING _project_uid
-
-$$ LANGUAGE SQL;
-
 --
 --  PLOT FUNCTIONS
 --
@@ -2258,40 +2292,6 @@ CREATE OR REPLACE FUNCTION add_institution_imagery_migration(_imagery_uid intege
     VALUES
         (_imagery_uid, _institution_rid, _visibility, _title, _attribution, _extent, _source_config)
     RETURNING imagery_uid
-
-$$ LANGUAGE SQL;
-
--- Add user samples for migration (with add_user_plots)
-CREATE OR REPLACE FUNCTION add_sample_values_migration(_user_plot_rid integer, _sample_rid integer, _value jsonb, _imagery_rid integer, _imagery_attributes jsonb)
- RETURNS integer AS $$
-
-    INSERT INTO sample_values
-        (user_plot_rid, sample_rid, value, imagery_rid, imagery_attributes)
-    VALUES
-        ( _user_plot_rid, _sample_rid, _value, _imagery_rid, _imagery_attributes)
-    RETURNING sample_value_uid
-
-$$ LANGUAGE SQL;
-
--- Add user plots for migration (with add_sample_values)
-CREATE OR REPLACE FUNCTION add_user_plots_migration(_plot_rid integer, _username text, _flagged boolean, _collection_start timestamp, _collection_time timestamp)
- RETURNS integer AS $$
-
-    WITH user_id AS (
-        SELECT user_uid FROM users WHERE email = _username
-    ), guest_id AS (
-        SELECT user_uid FROM users WHERE email = 'guest'
-    )
-
-    INSERT INTO user_plots
-        (plot_rid, flagged, collection_start, collection_time, user_rid)
-    (SELECT _plot_rid,
-        _flagged,
-        _collection_start,
-        _collection_time,
-        (CASE WHEN user_id.user_uid IS NULL THEN guest_id.user_uid ELSE user_id.user_uid END)
-     FROM user_id, guest_id)
-    RETURNING user_plot_uid
 
 $$ LANGUAGE SQL;
 

@@ -22,6 +22,7 @@ shppath = r"../../../../target/classes/shp"
 shpScriptPath = r"../shp"
 
 def truncate_all_tables():
+    conn = None
     try:
         conn = psycopg2.connect(**params)
         cur = conn.cursor()
