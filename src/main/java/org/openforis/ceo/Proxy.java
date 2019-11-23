@@ -30,7 +30,7 @@ public class Proxy {
 
         if (List.of("EarthWatch", "DigitalGlobe").contains(sourceType)) {
             var connectId = sourceConfig.get("connectId").getAsString();
-            var baseUrl   = "https://earthwatch.digitalglobe.com/earthservice/tmsaccess/tms/1.0.0/DigitalGlobe:ImageryTileService@EPSG:3857@jpg/{z}/{x}/{y}.jpg?connectId=";
+            var baseUrl   = "https://access.maxar.com/earthservice/tmsaccess/tms/1.0.0/DigitalGlobe:ImageryTileService@EPSG:3857@jpg/{z}/{x}/{y}.jpg?connectId=";
             return baseUrl.replace("{z}", z).replace("{x}", x).replace("{y}", y) + connectId;
         } else if (sourceType.equals("Planet")) {
             var apiKey  = sourceConfig.get("accessToken").getAsString();
