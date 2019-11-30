@@ -15,10 +15,21 @@ from config import config
 
 params = config()
 
-jsonpath = r"../../../../target/classes/json"
-csvpath = r"../../../../target/classes/csv"
+# gets the right path depending upon whether developer uses gradle or maven
+# compile dir for maven is target and for gradle its build
+isdir = os.path.isdir
+jsonpath = r"../../../../target/resources/main/json"
+if not isdir(jsonpath):
+    jsonpath = r"../../../../build/resources/main/json"
+
+csvpath = r"../../../../target/resources/main/csv"
+if not isdir(csvpath):
+    csvpath = r"../../../../build/resources/main/csv"
 csvScriptPath = r"../csv"
-shppath = r"../../../../target/classes/shp"
+
+shppath = r"../../../../target/resources/main/shp"
+if not isdir(shppath):
+    shppath = r"../../../../build/resources/main/shp"
 shpScriptPath = r"../shp"
 
 def truncate_all_tables():

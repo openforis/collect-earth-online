@@ -2,11 +2,14 @@
 .meghanada/
 .tern-port
 .gradle/
+gradle/
 .classpath
 .project
 .settings/
 .idea/
 collect-earth-online.iml
+gradlew
+gradlew.bat
 
 # Build Directories and Files
 /bin/
