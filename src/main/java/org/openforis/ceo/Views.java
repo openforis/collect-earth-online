@@ -18,9 +18,10 @@ public class Views {
     }
 
     private static Map<String, String> getBaseModel(Request req, String navlink) {
+        var queryString = req.queryString();
         var model = Map.of("root",          CeoConfig.documentRoot,
                            "navlink",       navlink,
-                           "uri",           req.uri(),
+                           "uri",           req.uri() + ((queryString == null) ? "" : "?" + queryString),
                            "userid",        fromSession(req, "userid"),
                            "username",      fromSession(req, "username"),
                            "role",          fromSession(req, "role"),
