@@ -4,13 +4,8 @@ const fs = require("fs");
 // get the output directory according to build tool (maven or gradle)
 // maven -> target
 // gradle -> build
-// Note: make sure not both directory exist, otherwise the script might not work as expected
-let outdir = "";
-if (fs.existsSync (path.resolve(__dirname, "target"))) {
-    outdir = "target/classes";
-} else if (fs.existsSync (path.resolve(__dirname, "build"))) {
-    outdir = "build/resources/main";
-}
+// Note: make sure both directories don't exist; otherwise the script might not work as expected.
+const outdir = fs.existsSync(path.resolve(__dirname, "target")) ? "target/classes" :  "build/resources/main";
 
 module.exports = {
     entry: {

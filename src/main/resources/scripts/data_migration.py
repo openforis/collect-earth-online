@@ -16,18 +16,18 @@ from config import config
 params = config()
 
 # gets the right path depending upon whether developer uses gradle or maven
-# compile dir for maven is target and for gradle its build
+# compile dir for maven is target and for gradle it's build
 isdir = os.path.isdir
-jsonpath = r"../../../../target/resources/main/json"
+jsonpath = r"../../../../target/classes/json"
 if not isdir(jsonpath):
     jsonpath = r"../../../../build/resources/main/json"
 
-csvpath = r"../../../../target/resources/main/csv"
+csvpath = r"../../../../target/classes/csv"
 if not isdir(csvpath):
     csvpath = r"../../../../build/resources/main/csv"
 csvScriptPath = r"../csv"
 
-shppath = r"../../../../target/resources/main/shp"
+shppath = r"../../../../target/classes/shp"
 if not isdir(shppath):
     shppath = r"../../../../build/resources/main/shp"
 shpScriptPath = r"../shp"
