@@ -5,7 +5,7 @@ const fs = require("fs");
 // maven -> target
 // gradle -> build
 // Note: make sure both directories don't exist; otherwise the script might not work as expected.
-const outdir = fs.existsSync(path.resolve(__dirname, "target")) ? "target/classes" :  "build/resources/main";
+const outdir = fs.existsSync(path.resolve(__dirname, "target")) ? "target/classes" : "build/resources/main";
 
 module.exports = {
     entry: {
