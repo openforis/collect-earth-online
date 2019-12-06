@@ -2441,19 +2441,18 @@ CREATE OR REPLACE FUNCTION get_plot_vertices(_user_id integer, _project_id integ
     FROM get_plot_vertices_for_project(_project_id)
     WHERE plot_id   = _plot_id
       AND user_id   = _user_id
-      AND packet_id = _packet_id
+      AND COALESCE(packet_id, -1) = coalesce(_packet_id, -1);
 
 $$ LANGUAGE SQL;
 
 CREATE OR REPLACE FUNCTION create_vertices(_project_id integer, _plot_id integer, _user_id integer, _packet_id integer, _vertices jsonb)
  RETURNS void AS $$
-
     -- Remove existing vertex
     DELETE FROM vertex
     WHERE project_rid = _project_id
-      AND plot_rid    = _plot_id
-      AND user_rid    = _user_id
-      AND packet_rid  = _packet_id;
+    AND plot_rid    = _plot_id
+    AND user_rid    = _user_id
+    AND coalesce(packet_rid, -1)  = coalesce(_packet_id, -1);
 
     -- Add new vertices
     INSERT INTO vertex (

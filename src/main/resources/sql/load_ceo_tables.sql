@@ -235,6 +235,15 @@ CREATE TABLE image_preference (
     priority              integer NOT NULL
 );
 
+-- Store spectral data used for the interpretation
+CREATE TABLE spectral (
+    project_rid           integer NOT NULL REFERENCES projects(project_uid) ON DELETE CASCADE ON UPDATE CASCADE,
+    plot_rid              integer NOT NULL REFERENCES plots(plot_uid) ON DELETE CASCADE ON UPDATE CASCADE,
+    user_rid              integer NOT NULL REFERENCES users(user_uid) ON UPDATE CASCADE,
+    packet_rid            integer DEFAULT NULL REFERENCES packets(packet_uid) ON DELETE CASCADE ON UPDATE CASCADE,
+    reflectance           jsonb
+);
+
 -- Indices
 CREATE INDEX project_widgets_dashboard_id      ON project_widgets (dashboard_id);
 
@@ -259,6 +268,7 @@ CREATE UNIQUE INDEX packet_plots_packet_rid_plot_rid ON packet_plots USING btree
 CREATE UNIQUE INDEX plot_comments_project_plot_user_packet ON plot_comments USING btree(project_rid, plot_rid, user_rid, packet_rid);
 CREATE INDEX vertex_project_plot_user_packet ON vertex USING btree(project_rid, plot_rid, user_rid, packet_rid);
 CREATE UNIQUE INDEX image_preference_project_plot_user_packet_year ON image_preference (project_rid, plot_rid, user_rid, packet_rid, image_year);
+CREATE UNIQUE INDEX spectral_project_plot_user_packet ON spectral (project_rid, plot_rid, user_rid, packet_rid);
 
 -- Schema for external tables
 CREATE SCHEMA ext_tables;
