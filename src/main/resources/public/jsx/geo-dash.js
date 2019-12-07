@@ -63,7 +63,7 @@ class Geodash extends React.Component {
     }
 
     getParameterByName = (name, url) => {
-        const regex = new RegExp("[?&]" + name.replace(/[\[\]]/g, "\\$&") + "(=([^&#]*)|&|#|$)");
+        const regex = new RegExp("[?&]" + name.replace(/[[\]]/g, "\\$&") + "(=([^&#]*)|&|#|$)");
         const results = regex.exec(decodeURIComponent(url || window.location.href));
         return results
             ? results[2]
@@ -147,6 +147,7 @@ class Geodash extends React.Component {
                 setCenterAndZoom={this.setCenterAndZoom}
                 imageryList={this.state.imageryList}
                 resetCenterAndZoom={this.resetCenterAndZoom}
+                initCenter={this.mapCenter}
             />
         );
     }
@@ -174,6 +175,7 @@ class Widgets extends React.Component {
                             setCenterAndZoom={this.props.setCenterAndZoom}
                             imageryList={this.props.imageryList}
                             resetCenterAndZoom={this.props.resetCenterAndZoom}
+                            initCenter={this.props.initCenter}
                         />
                     ))}
                 </div>
@@ -216,7 +218,8 @@ class Widget extends React.Component {
                                  "ndwiTimeSeries",
                                  "eviTimeSeries",
                                  "evi2TimeSeries",
-                                 "ndmiTimeSeries"];
+                                 "ndmiTimeSeries",
+                                 "mekong_tc_l_c"];
     }
 
     generateGridColumn = (x, w) => (x + 1) + " / span " + w;
@@ -322,7 +325,7 @@ class Widget extends React.Component {
                 />
             </div>;
         } else if (this.graphControlList.includes(widget.properties[0])) {
-            return <div className="front"><GraphWidget widget={widget} projPairAOI={this.props.projPairAOI} documentRoot={this.props.documentRoot}/></div>;
+            return <div className="front"><GraphWidget widget={widget} projPairAOI={this.props.projPairAOI} getParameterByName={this.props.getParameterByName} documentRoot={this.props.documentRoot} initCenter={this.props.initCenter}/></div>;
         } else if (widget.properties[0] === "getStats") {
             return <div className="front"><StatsWidget widget={widget} projPairAOI={this.props.projPairAOI} documentRoot={this.props.documentRoot}/></div>;
         } else {
@@ -1050,13 +1053,18 @@ class GraphWidget extends React.Component {
         };
     }
 
-    sortData = (a, b) => (a[0] < b[0]) ? -1 : (a[0] > b[0]) ? 1 : 0;
-
     componentDidMount() {
+        const bcenter = this.props.getParameterByName("bcenter");
+        const centerPoint = JSON.parse(bcenter).coordinates;
         const widget = this.props.widget;
         const collectionName = widget.properties[1];
         const indexName = widget.properties[4];
         const date = new Date();
+        const path = collectionName.trim() === "timeSeriesAssetForPoint"
+            ? "timeSeriesAssetForPoint"
+            : collectionName.trim().length > 0
+                ? "timeSeriesIndex"
+                : "timeSeriesIndex2";
         fetch(this.props.documentRoot + "/geo-dash/gateway-request", {
             method: "POST",
             headers: {
@@ -1071,7 +1079,8 @@ class GraphWidget extends React.Component {
                 dateToTimeSeries: widget.properties[3].trim().length === 10 ? widget.properties[3].trim() : date.yyyymmdd(),
                 reducer: widget.graphReducer != null ? widget.graphReducer.toLowerCase() : "",
                 scale: 200,
-                path: collectionName.trim().length > 0 ? "timeSeriesIndex" : "timeSeriesIndex2",
+                path: path,
+                point: centerPoint,
             }),
         })
             .then(res => res.json())
@@ -1080,15 +1089,49 @@ class GraphWidget extends React.Component {
                     console.warn(res.errMsg);
                 } else {
                     if (res.hasOwnProperty("timeseries")) {
-
+                        const pData = [];
                         let timeseriesData = [];
-                        res.timeseries.forEach( value => {
-                            if (value[0] !== null) {
-                                timeseriesData.push([value[0], value[1]]);
-                            }
-                        });
-                        timeseriesData = timeseriesData.sort(this.sortData);
-                        this.setState({ graphRef: this.createChart(widget.id, indexName, timeseriesData, indexName) });
+                        if (Object.keys(res.timeseries[0][1]).length === 1) {
+                            res.timeseries.forEach(value => {
+                                if (value[0] !== null) {
+                                    timeseriesData.push([value[0], value[1]]);
+                                }
+                            });
+                            timeseriesData = timeseriesData.sort(this.sortData);
+                            pData.push({
+                                type: "area",
+                                name: Object.keys(res.timeseries[0][1])[0],
+                                data: timeseriesData,
+                                color: "#31bab0",
+                            });
+                        } else {
+                            const theKeys = Object.keys(res.timeseries[0][1]);
+                            const compiledData = [];
+                            res.timeseries.forEach( d => {
+                                for (let i = 0; i < theKeys.length; i++) {
+                                    const tempData = [];
+                                    const anObject = {};
+                                    anObject[theKeys[i]] = d[1][theKeys[i]];
+                                    tempData.push(d[0]);
+                                    tempData.push(anObject);
+                                    if (compiledData.length - 1 < i) {
+                                        compiledData[i] = [];
+                                    }
+                                    compiledData[i].push(tempData);
+                                }
+                            });
+                            compiledData.forEach( (d, index) => {
+                                const cdata = this.convertData(d);
+                                pData.push({
+                                    type: "area",
+                                    name: theKeys[index],
+                                    data: this.sortMultiData(cdata),
+                                    valueDecimals: 20,
+                                    connectNulls: true,
+                                });
+                            });
+                        }
+                        this.setState({ graphRef: this.createChart(widget.id, indexName, pData, indexName) });
                     } else {
                         console.warn("Wrong Data Returned");
                     }
@@ -1102,6 +1145,17 @@ class GraphWidget extends React.Component {
         this.handleResize();
     }
 
+    sortData = (a, b) => (a[0] < b[0]) ? -1 : (a[0] > b[0]) ? 1 : 0;
+
+    multiComparator = (a, b) =>
+        (a[0] < b[0]) ? -1 :
+        (a[0] > b[0]) ? 1 :
+        0;
+
+    sortMultiData = data => data.sort(this.multiComparator);
+
+    convertData = data => data.map(d => [d[0], d[1][Object.keys(d[1])[0]]]);
+
     handleResize = () => {
         try {
             if (this.state.graphRef) {
@@ -1113,7 +1167,7 @@ class GraphWidget extends React.Component {
         }
     };
 
-    createChart = (wIndex, wText, wTimeseriesData, indexName) => {
+    createChart = (wIndex, wText, series, indexName) => {
         "use strict";
         return Highcharts.chart("graphcontainer_" + wIndex, {
             chart: {
@@ -1136,7 +1190,7 @@ class GraphWidget extends React.Component {
                 },
             },
             legend: {
-                enabled: false,
+                enabled: true,
             },
             plotOptions: {
                 area: {
@@ -1149,8 +1203,8 @@ class GraphWidget extends React.Component {
                             y2: 1,
                         },
                         stops: [
-                            [0, "#31bab0"],
-                            [1, Highcharts.Color("#31bab0").setOpacity(0).get("rgba")],
+                            [0, Highcharts.Color(Highcharts.getOptions().colors[0]).setOpacity(0).get("rgba")],
+                            [1, Highcharts.Color(Highcharts.getOptions().colors[0]).setOpacity(0).get("rgba")],
                         ],
                     },
                     marker: {
@@ -1166,14 +1220,12 @@ class GraphWidget extends React.Component {
                 },
             },
             tooltip: {
-                pointFormat: "Value: {point.y}",
+                pointFormat: "<span style=\"color:{series.color}\">{series.name}</span>: <b>{point.y:.6f}</b><br/>",
+                valueDecimals: 20,
+                split: false,
+                xDateFormat: "%Y-%m-%d",
             },
-            series: [{
-                type: "area",
-                name: wText,
-                data: wTimeseriesData,
-                color: "#31bab0",
-            }],
+            series: series,
         }, () => {
             document.getElementById("widgettitle_" + wIndex).innerHTML = wText;
             document.getElementsByClassName("highcharts-yaxis")[0].firstChild.innerHTML = wText;
@@ -1195,22 +1247,6 @@ class StatsWidget extends React.Component {
         super(props);
         this.state = { totalPop:"", area:"", elevation:"" };
     }
-
-    numberWithCommas = x => {
-        if (typeof x === "number") {
-            try {
-                const [quot, rem] = x.toString().split(".");
-                return [quot.replace(/\B(?=(\d{3})+(?!\d))/g, ","), rem].join(".");
-            } catch (e) {
-                console.warn(e.message);
-                return "N/A";
-            }
-        } else {
-            return "N/A";
-        }
-    };
-
-    calculateArea = poly => this.numberWithCommas(Math.round(Math.abs(sphereGetArea(poly))) / 10000);
 
     componentDidMount() {
         const projPairAOI = this.props.projPairAOI;
@@ -1235,6 +1271,22 @@ class StatsWidget extends React.Component {
             })
             .catch(error => console.log(error));
     }
+
+    numberWithCommas = x => {
+        if (typeof x === "number") {
+            try {
+                const [quot, rem] = x.toString().split(".");
+                return [quot.replace(/\B(?=(\d{3})+(?!\d))/g, ","), rem].join(".");
+            } catch (e) {
+                console.warn(e.message);
+                return "N/A";
+            }
+        } else {
+            return "N/A";
+        }
+    };
+
+    calculateArea = poly => this.numberWithCommas(Math.round(Math.abs(sphereGetArea(poly))) / 10000);
 
     render() {
         const widget = this.props.widget;
