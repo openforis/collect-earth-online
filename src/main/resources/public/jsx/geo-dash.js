@@ -1053,8 +1053,6 @@ class GraphWidget extends React.Component {
         };
     }
 
-    sortData = (a, b) => (a[0] < b[0]) ? -1 : (a[0] > b[0]) ? 1 : 0;
-
     componentDidMount() {
         const bcenter = this.props.getParameterByName("bcenter");
         const centerPoint = JSON.parse(bcenter).coordinates;
@@ -1102,7 +1100,7 @@ class GraphWidget extends React.Component {
                             timeseriesData = timeseriesData.sort(this.sortData);
                             pData.push({
                                 type: "area",
-                                name: wText,
+                                name: Object.keys(res.timeseries[0][1])[0],
                                 data: timeseriesData,
                                 color: "#31bab0",
                             });
@@ -1146,6 +1144,8 @@ class GraphWidget extends React.Component {
     componentDidUpdate() {
         this.handleResize();
     }
+
+    sortData = (a, b) => (a[0] < b[0]) ? -1 : (a[0] > b[0]) ? 1 : 0;
 
     multiComparator = (a, b) =>
         (a[0] < b[0]) ? -1 :
@@ -1248,22 +1248,6 @@ class StatsWidget extends React.Component {
         this.state = { totalPop:"", area:"", elevation:"" };
     }
 
-    numberWithCommas = x => {
-        if (typeof x === "number") {
-            try {
-                const [quot, rem] = x.toString().split(".");
-                return [quot.replace(/\B(?=(\d{3})+(?!\d))/g, ","), rem].join(".");
-            } catch (e) {
-                console.warn(e.message);
-                return "N/A";
-            }
-        } else {
-            return "N/A";
-        }
-    };
-
-    calculateArea = poly => this.numberWithCommas(Math.round(Math.abs(sphereGetArea(poly))) / 10000);
-
     componentDidMount() {
         const projPairAOI = this.props.projPairAOI;
         fetch(this.props.documentRoot + "/geo-dash/gateway-request", {
@@ -1287,6 +1271,22 @@ class StatsWidget extends React.Component {
             })
             .catch(error => console.log(error));
     }
+
+    numberWithCommas = x => {
+        if (typeof x === "number") {
+            try {
+                const [quot, rem] = x.toString().split(".");
+                return [quot.replace(/\B(?=(\d{3})+(?!\d))/g, ","), rem].join(".");
+            } catch (e) {
+                console.warn(e.message);
+                return "N/A";
+            }
+        } else {
+            return "N/A";
+        }
+    };
+
+    calculateArea = poly => this.numberWithCommas(Math.round(Math.abs(sphereGetArea(poly))) / 10000);
 
     render() {
         const widget = this.props.widget;
