@@ -63,7 +63,7 @@ class Geodash extends React.Component {
     }
 
     getParameterByName = (name, url) => {
-        const regex = new RegExp("[?&]" + name.replace(/[\[\]]/g, "\\$&") + "(=([^&#]*)|&|#|$)");
+        const regex = new RegExp("[?&]" + name.replace(/[[\]]/g, "\\$&") + "(=([^&#]*)|&|#|$)");
         const results = regex.exec(decodeURIComponent(url || window.location.href));
         return results
             ? results[2]
@@ -1062,7 +1062,7 @@ class GraphWidget extends React.Component {
         const collectionName = widget.properties[1];
         const indexName = widget.properties[4];
         const date = new Date();
-        const path = collectionName.trim() == "timeSeriesAssetForPoint"
+        const path = collectionName.trim() === "timeSeriesAssetForPoint"
             ? "timeSeriesAssetForPoint"
             : collectionName.trim().length > 0
                 ? "timeSeriesIndex"
@@ -1082,7 +1082,7 @@ class GraphWidget extends React.Component {
                 reducer: widget.graphReducer != null ? widget.graphReducer.toLowerCase() : "",
                 scale: 200,
                 path: path,
-                point: centerPoint
+                point: centerPoint,
             }),
         })
             .then(res => res.json())
@@ -1091,7 +1091,7 @@ class GraphWidget extends React.Component {
                     console.warn(res.errMsg);
                 } else {
                     if (res.hasOwnProperty("timeseries")) {
-                        let pData = [];
+                        const pData = [];
                         let timeseriesData = [];
                         if (Object.keys(res.timeseries[0][1]).length === 1) {
                             res.timeseries.forEach(value => {
@@ -1108,11 +1108,11 @@ class GraphWidget extends React.Component {
                             });
                         } else {
                             const theKeys = Object.keys(res.timeseries[0][1]);
-                            let compiledData = [];
+                            const compiledData = [];
                             res.timeseries.forEach( d => {
                                 for (let i = 0; i < theKeys.length; i++) {
-                                    let tempData = [];
-                                    let anObject = {}
+                                    const tempData = [];
+                                    const anObject = {};
                                     anObject[theKeys[i]] = d[1][theKeys[i]];
                                     tempData.push(d[0]);
                                     tempData.push(anObject);
@@ -1123,13 +1123,13 @@ class GraphWidget extends React.Component {
                                 }
                             });
                             compiledData.forEach( (d, index) => {
-                                let cdata = this.convertData(d);
+                                const cdata = this.convertData(d);
                                 pData.push({
-                                    type: 'area',
+                                    type: "area",
                                     name: theKeys[index],
                                     data: this.sortMultiData(cdata),
                                     valueDecimals: 20,
-                                    connectNulls: true
+                                    connectNulls: true,
                                 });
                             });
                         }
@@ -1147,21 +1147,14 @@ class GraphWidget extends React.Component {
         this.handleResize();
     }
 
-    Comparator = (a, b) => {
-        if (a[0] < b[0]) return -1;
-        if (a[0] > b[0]) return 1;
-        return 0;
-    }
+    multiComparator = (a, b) =>
+        (a[0] < b[0]) ? -1 :
+        (a[0] > b[0]) ? 1 :
+        0;
 
-    sortMultiData = data => {
-        return data.sort(this.Comparator);
-    }
+    sortMultiData = data => data.sort(this.multiComparator);
 
-    convertData = data => {
-        return data.map(function (d) {
-            return [d[0], d[1][Object.keys(d[1])[0]]];
-        });
-    };
+    convertData = data => data.map(d => [d[0], d[1][Object.keys(d[1])[0]]]);
 
     handleResize = () => {
         try {
@@ -1210,8 +1203,8 @@ class GraphWidget extends React.Component {
                             y2: 1,
                         },
                         stops: [
-                            [0, Highcharts.Color(Highcharts.getOptions().colors[0]).setOpacity(0).get('rgba')],
-                            [1, Highcharts.Color(Highcharts.getOptions().colors[0]).setOpacity(0).get('rgba')]
+                            [0, Highcharts.Color(Highcharts.getOptions().colors[0]).setOpacity(0).get("rgba")],
+                            [1, Highcharts.Color(Highcharts.getOptions().colors[0]).setOpacity(0).get("rgba")],
                         ],
                     },
                     marker: {
@@ -1227,10 +1220,10 @@ class GraphWidget extends React.Component {
                 },
             },
             tooltip: {
-                pointFormat: '<span style="color:{series.color}">{series.name}</span>: <b>{point.y:.6f}</b><br/>',
+                pointFormat: "<span style=\"color:{series.color}\">{series.name}</span>: <b>{point.y:.6f}</b><br/>",
                 valueDecimals: 20,
                 split: false,
-                xDateFormat: '%Y-%m-%d'
+                xDateFormat: "%Y-%m-%d",
             },
             series: series,
         }, () => {
