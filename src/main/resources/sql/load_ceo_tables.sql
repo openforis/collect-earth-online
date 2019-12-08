@@ -198,28 +198,22 @@ CREATE TABLE plot_comments (
 
 -- Stores vertex information 
 CREATE TABLE vertex (
-    vertex_uid                bigserial PRIMARY KEY,
-    project_rid               integer NOT NULL REFERENCES projects(project_uid) ON UPDATE CASCADE,
-    plot_rid                  integer NOT NULL REFERENCES plots(plot_uid) ON DELETE CASCADE ON UPDATE CASCADE,
-    user_rid                  integer NOT NULL REFERENCES users (user_uid) ON UPDATE CASCADE,
-    packet_rid                integer DEFAULT NULL references packets(packet_uid) ON DELETE CASCADE ON UPDATE CASCADE,
-    image_year                integer DEFAULT NULL,
-    image_julday              integer DEFAULT NULL,
-    image_id                  text,
-    dominant_landuse          varchar(50) DEFAULT NULL,
-    secondary_landuse         varchar(50) DEFAULT NULL,
-    dominant_landuse_notes    text,
-    secondary_landuse_notes   text,
-    dominant_landcover        varchar(50) DEFAULT NULL,
-    secondary_landcover       varchar(50) DEFAULT NULL,
-    dominant_landcover_notes  text,
-    secondary_landcover_notes text,
-    landcover_ephemeral       smallint DEFAULT NULL,
-    change_process            varchar(30) DEFAULT NULL,
-    change_process_notes      varchar(255) DEFAULT NULL,
-    comments                  varchar(255) DEFAULT NULL,
-    last_modified             timestamp NOT NULL DEFAULT current_timestamp,
-    history_flag              integer DEFAULT 0
+    vertex_uid bigserial PRIMARY KEY,
+    project_rid integer NOT NULL REFERENCES projects(project_uid) ON UPDATE CASCADE,
+    plot_rid integer NOT NULL REFERENCES plots(plot_uid) ON DELETE CASCADE ON UPDATE CASCADE,
+    user_rid integer NOT NULL REFERENCES users (user_uid) ON UPDATE CASCADE,
+    packet_rid integer DEFAULT NULL references packets(packet_uid) ON DELETE CASCADE ON UPDATE CASCADE,
+    image_year integer DEFAULT NULL,
+    image_julday integer DEFAULT NULL,
+    image_id text,
+    landuse jsonb,
+    landcover jsonb,
+    change_process jsonb,
+    reflectance jsonb,
+    is_vertex boolean,
+    comments varchar(255) DEFAULT NULL,
+    last_modified timestamp NOT NULL DEFAULT current_timestamp,
+    history_flag integer DEFAULT 0
 );
 
 -- Stores user preference for selected image for interpretation
@@ -233,15 +227,6 @@ CREATE TABLE image_preference (
     image_year            integer NOT NULL,
     image_julday          integer NOT NULL,
     priority              integer NOT NULL
-);
-
--- Store spectral data used for the interpretation
-CREATE TABLE spectral (
-    project_rid           integer NOT NULL REFERENCES projects(project_uid) ON DELETE CASCADE ON UPDATE CASCADE,
-    plot_rid              integer NOT NULL REFERENCES plots(plot_uid) ON DELETE CASCADE ON UPDATE CASCADE,
-    user_rid              integer NOT NULL REFERENCES users(user_uid) ON UPDATE CASCADE,
-    packet_rid            integer DEFAULT NULL REFERENCES packets(packet_uid) ON DELETE CASCADE ON UPDATE CASCADE,
-    reflectance           jsonb
 );
 
 -- Indices
@@ -260,7 +245,6 @@ CREATE INDEX sample_values_sample_rid          ON sample_values (sample_rid);
 CREATE INDEX sample_values_imagery_rid         ON sample_values (imagery_rid);
 CREATE INDEX project_widgets_project_rid       ON project_widgets (project_rid);
 
-
 -- Indices for TimeSync related tables
 CREATE UNIQUE INDEX packets_project_rid_title ON packets USING btree(project_rid, title);
 CREATE UNIQUE INDEX packet_users_packet_rid_user_rid ON packet_users USING btree(packet_rid, user_rid);
@@ -268,7 +252,6 @@ CREATE UNIQUE INDEX packet_plots_packet_rid_plot_rid ON packet_plots USING btree
 CREATE UNIQUE INDEX plot_comments_project_plot_user_packet ON plot_comments USING btree(project_rid, plot_rid, user_rid, packet_rid);
 CREATE INDEX vertex_project_plot_user_packet ON vertex USING btree(project_rid, plot_rid, user_rid, packet_rid);
 CREATE UNIQUE INDEX image_preference_project_plot_user_packet_year ON image_preference (project_rid, plot_rid, user_rid, packet_rid, image_year);
-CREATE UNIQUE INDEX spectral_project_plot_user_packet ON spectral (project_rid, plot_rid, user_rid, packet_rid);
 
 -- Schema for external tables
 CREATE SCHEMA ext_tables;
