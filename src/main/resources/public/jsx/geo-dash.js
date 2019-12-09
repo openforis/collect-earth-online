@@ -1093,7 +1093,7 @@ class GraphWidget extends React.Component {
                     if (res.hasOwnProperty("timeseries")) {
                         let pData = [];
                         let timeseriesData = [];
-                        if (Object.keys(res.timeseries[0][1]).length === 1) {
+                        if (Object.keys(res.timeseries[0][1]).length === 0) {
                             res.timeseries.forEach(value => {
                                 if (value[0] !== null) {
                                     timeseriesData.push([value[0], value[1]]);
@@ -1235,7 +1235,7 @@ class GraphWidget extends React.Component {
             series: series,
         }, () => {
             document.getElementById("widgettitle_" + wIndex).innerHTML = wText;
-            document.getElementsByClassName("highcharts-yaxis")[0].firstChild.innerHTML = wText;
+            //document.getElementsByClassName("highcharts-yaxis")[0].firstChild.innerHTML = wText;
         });
     };
 
