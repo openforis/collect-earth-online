@@ -81,7 +81,8 @@ CREATE TABLE projects (
     ts_start_year           integer DEFAULT 1985,
     ts_end_year             integer,
     ts_target_day           integer DEFAULT 215,
-    ts_plot_size            integer DEFAULT 1
+    ts_plot_size            integer DEFAULT 1,
+    token_key               text DEFAULT NULL
 );
 
 -- Stores information about plot packet

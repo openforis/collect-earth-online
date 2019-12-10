@@ -704,7 +704,8 @@ CREATE OR REPLACE FUNCTION create_project(
     _survey_questions        jsonb,
     _survey_rules            jsonb,
     _created_date            date,
-    _classification_times    jsonb
+    _classification_times    jsonb,
+    _token_key               text
  ) RETURNS integer AS $$
 
     INSERT INTO projects (
@@ -717,7 +718,7 @@ CREATE OR REPLACE FUNCTION create_project(
         sample_distribution,    samples_per_plot,
         sample_resolution,      survey_questions,
         survey_rules,           created_date,
-        classification_times
+        classification_times,   token_key
     ) VALUES (
         _institution_rid,        _availability,
         _name,                   _description,
@@ -728,7 +729,7 @@ CREATE OR REPLACE FUNCTION create_project(
         _sample_distribution,    _samples_per_plot,
         _sample_resolution,      _survey_questions,
         _survey_rules,           _created_date,
-        _classification_times
+        _classification_times,   _token_key
     ) RETURNING project_uid
 
 $$ LANGUAGE SQL;
@@ -1164,7 +1165,8 @@ CREATE TYPE project_return AS (
     survey_rules            jsonb,
     classification_times    jsonb,
     valid_boundary          boolean,
-    editable                boolean
+    editable                boolean,
+    token_key               text
 );
 
 CREATE OR REPLACE FUNCTION valid_boundary(_boundary geometry)
@@ -1202,7 +1204,8 @@ CREATE VIEW project_boundary AS
         survey_questions,
         survey_rules,
         classification_times,
-        valid_boundary(boundary)
+        valid_boundary(boundary),
+        token_key
     FROM projects;
 
 -- Returns a row in projects by id

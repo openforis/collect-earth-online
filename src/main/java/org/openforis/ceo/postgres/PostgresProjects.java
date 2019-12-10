@@ -56,25 +56,51 @@ public class PostgresProjects implements Projects {
         final var userId = Integer.parseInt(req.session().attributes().contains("userid") ? req.session().attribute("userid").toString() : "-1");
         final var qProjectId = req.queryParams("projectId");
         final var jProjectId = getBodyParam(req.body(), "projectId", null);
+        final var qTokenKey = req.queryParams("tokenKey");
+        final var sTokenKey = req.session().attributes().contains("tokenkey") ? req.session().attribute("tokenkey").toString() : null;
 
         final var projectId =
             qProjectId != null ? Integer.parseInt(qProjectId)
             : jProjectId != null ? Integer.parseInt(jProjectId)
             : 0;
 
-        try (var conn = connect();
-             var pstmt = conn.prepareStatement("SELECT * FROM " + queryFn + "(?, ?)")) {
+        final var tokenKey = (qTokenKey != null) ? qTokenKey : sTokenKey;
 
-            pstmt.setInt(1, userId);
-            pstmt.setInt(2, projectId);
-
-            try(var rs = pstmt.executeQuery()) {
-                return rs.next() && rs.getBoolean(queryFn);
+        if (userId == -1 && projectId != 0 && tokenKey != null) {
+            try (var conn = connect();
+                var pstmt = conn.prepareStatement("SELECT * FROM select_project(?)")) {
+                pstmt.setInt(1, projectId);
+                try (var rs = pstmt.executeQuery()) {
+                    if (rs.next()) {
+                        if (tokenKey.equals(rs.getString("token_key"))) {
+                            req.session().attribute("tokenkey", tokenKey);
+                            return true;
+                        } else {
+                            return false;
+                        }
+                    } else {
+                        return false;
+                    }
+                }
+            } catch (SQLException e) {
+                System.out.println(e.getMessage());
+                return false;
             }
-
-        } catch (SQLException e) {
-            System.out.println(e.getMessage());
-            return false;
+        } else {
+	        try (var conn = connect();
+	    		var pstmt = conn.prepareStatement("SELECT * FROM " + queryFn + "(?, ?)")) {
+	
+	           	pstmt.setInt(1, userId);
+	            pstmt.setInt(2, projectId);
+	
+	            try(var rs = pstmt.executeQuery()) {
+	            	return rs.next() && rs.getBoolean(queryFn);
+	            }
+	        
+	        } catch (SQLException e) {
+	            System.out.println(e.getMessage());
+	            return false;
+	        }
         }
     }
 
@@ -596,7 +622,7 @@ public class PostgresProjects implements Projects {
                 runBashScriptForProject(projectId, plotsOrSamples, "shp2postgres.sh", "/shp");
                 return "project_" +  projectId + "_" + plotsOrSamples + "_shp";
             } else {
-                return "";
+                return ""; 
             }
         } catch (SQLException s) {
             System.out.println(s.getMessage());
@@ -894,7 +920,9 @@ public class PostgresProjects implements Projects {
             final var latMax = getOrZero(newProject, "latMax").getAsDouble();
             newProject.addProperty("boundary", makeGeoJsonPolygon(lonMin, latMin, lonMax, latMax).toString());
 
-            var SQL = "SELECT * FROM create_project(?,?,?,?,?,ST_SetSRID(ST_GeomFromGeoJSON(?), 4326),?,?,?,?,?,?,?,?,?,?::JSONB,?::JSONB,?::date,?::JSONB)";
+            final var tokenKey = UUID.randomUUID().toString();
+
+            var SQL = "SELECT * FROM create_project(?,?,?,?,?,ST_SetSRID(ST_GeomFromGeoJSON(?), 4326),?,?,?,?,?,?,?,?,?,?::JSONB,?::JSONB,?::date,?::JSONB,?)";
             try (var conn = connect();
                  var pstmt = conn.prepareStatement(SQL)) {
 
@@ -917,6 +945,7 @@ public class PostgresProjects implements Projects {
                 pstmt.setString(17, newProject.get("surveyRules").getAsJsonArray().toString());
                 pstmt.setString(18, newProject.get("createdDate").getAsString());
                 pstmt.setString(19, null);  //classification times
+                pstmt.setString(20, tokenKey);  //token key
 
                 try (var rs = pstmt.executeQuery()) {
                     if (rs.next()) {
@@ -977,7 +1006,10 @@ public class PostgresProjects implements Projects {
                         }
                     }
                     // Indicate that the project was created successfully
-                    return Integer.toString(newProjectId);
+                    var jo = new JsonObject();
+                    jo.addProperty("projectId", Integer.toString(newProjectId));
+                    jo.addProperty("tokenKey", tokenKey);
+                    return jo.toString();
                 }
             } catch (SQLException e) {
                 System.out.println(e.getMessage());
@@ -1000,7 +1032,9 @@ public class PostgresProjects implements Projects {
             // e.printStackTrace(new PrintWriter(outError));
             // System.out.println(outError.toString());
             System.out.println("Error creating project: " + e.getMessage());
-            return e.getMessage();
+            var jo = new JsonObject();
+            jo.addProperty("errorMessage", e.getMessage());
+            return jo.toString();
         }
     }
 

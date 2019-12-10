@@ -142,14 +142,14 @@ class Project extends React.Component {
                   }),
               }
         )
-            .then(response => Promise.all([response.ok, response.text()]))
+            .then(response => Promise.all([response.ok, response.json()]))
             .then(data => {
                 const isInteger = n => !isNaN(parseInt(n)) && isFinite(n) && !n.includes(".");
-                if (data[0] && isInteger(data[1])) {
-                    window.location = this.props.documentRoot + "/review-project?projectId=" + data[1];
+                if (data.projectId && isInteger(data.projectId)) {
+                    window.location = this.props.documentRoot + "/review-project?projectId=" + data.projectId;
                     return Promise.resolve();
                 } else {
-                    return Promise.reject(data[1]);
+                    return Promise.reject(data.errorMessage);
                 }
             })
             .catch(message => {
