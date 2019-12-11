@@ -1,11 +1,25 @@
--- Store spectral data used for the interpretation
-CREATE TABLE spectral (
-    project_rid           integer NOT NULL REFERENCES projects(project_uid) ON DELETE CASCADE ON UPDATE CASCADE,
-    plot_rid              integer NOT NULL REFERENCES plots(plot_uid) ON DELETE CASCADE ON UPDATE CASCADE,
-    user_rid              integer NOT NULL REFERENCES users(user_uid) ON UPDATE CASCADE,
-    packet_rid            integer DEFAULT NULL REFERENCES packets(packet_uid) ON DELETE CASCADE ON UPDATE CASCADE,
-    reflectance           jsonb
-);
+DROP FUNCTION IF EXISTS get_plot_vertices_for_project(integer);
 
-CREATE UNIQUE INDEX spectral_project_plot_user_packet ON spectral (project_rid, plot_rid, user_rid, packet_rid);
+DROP FUNCTION IF EXISTS create_vertices(integer, integer, integer, integer, jsonb);
 
+DROP FUNCTION IF EXISTS get_plot_vertices(integer,integer,integer,integer);
+
+ALTER TABLE IF EXISTS vertex
+	DROP COLUMN dominant_landuse,
+	DROP COLUMN secondary_landuse,
+	DROP COLUMN dominant_landuse_notes,
+	DROP COLUMN secondary_landuse_notes,
+	DROP COLUMN dominant_landcover,
+	DROP COLUMN secondary_landcover,
+	DROP COLUMN dominant_landcover_notes,
+	DROP COLUMN secondary_landcover_notes,
+	DROP COLUMN landcover_ephemeral,
+	DROP COLUMN change_process,
+	DROP COLUMN change_process_notes;
+
+ALTER TABLE IF EXISTS vertex
+	ADD landuse 		jsonb,
+	ADD landcover 		jsonb,
+	ADD change_process 	jsonb,
+	ADD reflectance 	jsonb,
+	ADD is_vertex 		boolean;
