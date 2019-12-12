@@ -2437,7 +2437,7 @@ CREATE OR REPLACE FUNCTION get_plot_vertices(_user_id integer, _project_id integ
     FROM get_plot_vertices_for_project(_project_id)
     WHERE plot_id = _plot_id
         AND user_id = _user_id
-        AND COALESCE(packet_id, -1) = coalesce(_packet_id, -1)
+        AND coalesce(packet_id, -1) = coalesce(_packet_id, -1)
     ORDER BY image_year
 
 $$ LANGUAGE SQL;
