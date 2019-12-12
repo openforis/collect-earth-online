@@ -428,7 +428,7 @@ const imageryOptions = [
     {
         type: "BingMaps",
         params: [
-            { key: "imageryId", display: "Imagery Id", type: "select", options: [ "Aerial", "AerialWithLabels"] },
+            { key: "imageryId", display: "Imagery Id", type: "select", options: ["Aerial", "AerialWithLabels"] },
             { key: "accessToken", display: "Access Token" },
         ],
         url: "https://docs.microsoft.com/en-us/bingmaps/getting-started/bing-maps-dev-center-help/getting-a-bing-maps-key",
@@ -458,12 +458,12 @@ class NewImagery extends React.Component {
     //    Lifecycle Methods    //
 
     componentDidUpdate(prevProps, prevState) {
-        // Clear params different to each type.
         if (prevState.selectedType !== this.state.selectedType) {
-            this.setState({ newImageryParams: {}});
+            // Clear params different to each type.
             if (imageryOptions[this.state.selectedType].type === "BingMaps") {
-                // Since newImageryParams is updated every time as type changes by componentDidUpdate, so direct making a json params
-                this.setState({newImageryParams: { "imageryId": imageryOptions[this.state.selectedType]["params"][0]["options"][0]}});
+                this.setState({ newImageryParams: { "imageryId": imageryOptions[this.state.selectedType]["params"][0]["options"][0] } });
+            } else {
+                this.setState({ newImageryParams: {} });
             }
         }
     }
