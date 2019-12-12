@@ -198,28 +198,22 @@ CREATE TABLE plot_comments (
 
 -- Stores vertex information 
 CREATE TABLE vertex (
-    vertex_uid                bigserial PRIMARY KEY,
-    project_rid               integer NOT NULL REFERENCES projects(project_uid) ON UPDATE CASCADE,
-    plot_rid                  integer NOT NULL REFERENCES plots(plot_uid) ON DELETE CASCADE ON UPDATE CASCADE,
-    user_rid                  integer NOT NULL REFERENCES users (user_uid) ON UPDATE CASCADE,
-    packet_rid                integer DEFAULT NULL references packets(packet_uid) ON DELETE CASCADE ON UPDATE CASCADE,
-    image_year                integer DEFAULT NULL,
-    image_julday              integer DEFAULT NULL,
-    image_id                  text,
-    dominant_landuse          varchar(50) DEFAULT NULL,
-    secondary_landuse         varchar(50) DEFAULT NULL,
-    dominant_landuse_notes    text,
-    secondary_landuse_notes   text,
-    dominant_landcover        varchar(50) DEFAULT NULL,
-    secondary_landcover       varchar(50) DEFAULT NULL,
-    dominant_landcover_notes  text,
-    secondary_landcover_notes text,
-    landcover_ephemeral       smallint DEFAULT NULL,
-    change_process            varchar(30) DEFAULT NULL,
-    change_process_notes      varchar(255) DEFAULT NULL,
-    comments                  varchar(255) DEFAULT NULL,
-    last_modified             timestamp NOT NULL DEFAULT current_timestamp,
-    history_flag              integer DEFAULT 0
+    vertex_uid            bigserial PRIMARY KEY,
+    project_rid           integer NOT NULL REFERENCES projects(project_uid) ON UPDATE CASCADE,
+    plot_rid              integer NOT NULL REFERENCES plots(plot_uid) ON DELETE CASCADE ON UPDATE CASCADE,
+    user_rid              integer NOT NULL REFERENCES users(user_uid) ON UPDATE CASCADE,
+    packet_rid            integer DEFAULT NULL REFERENCES packets(packet_uid) ON DELETE CASCADE ON UPDATE CASCADE,
+    image_year            integer DEFAULT NULL,
+    image_julday          integer DEFAULT NULL,
+    image_id              text,
+    landuse               jsonb,
+    landcover             jsonb,
+    change_process        jsonb,
+    reflectance           jsonb,
+    is_vertex             boolean,
+    comments              varchar(255) DEFAULT NULL,
+    last_modified         timestamp NOT NULL DEFAULT current_timestamp,
+    history_flag          integer DEFAULT 0
 );
 
 -- Stores user preference for selected image for interpretation
@@ -250,7 +244,6 @@ CREATE INDEX sample_values_user_plot_rid       ON sample_values (user_plot_rid);
 CREATE INDEX sample_values_sample_rid          ON sample_values (sample_rid);
 CREATE INDEX sample_values_imagery_rid         ON sample_values (imagery_rid);
 CREATE INDEX project_widgets_project_rid       ON project_widgets (project_rid);
-
 
 -- Indices for TimeSync related tables
 CREATE UNIQUE INDEX packets_project_rid_title ON packets USING btree(project_rid, title);
