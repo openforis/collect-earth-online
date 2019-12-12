@@ -551,16 +551,16 @@ class NewImagery extends React.Component {
         const val = e.target.value;
         this.setState({ selectedType: val });
         if (imageryOptions[val].type === "BingMaps") {
-            this.setState({newImageryAttribution: "Bing Maps API: " + imageryOptions[val]["params"][0]["options"][0] + " | © Microsoft Corporation"});
+            this.setState({ newImageryAttribution: "Bing Maps API: " + imageryOptions[val]["params"][0]["options"][0] + " | © Microsoft Corporation" });
         } else if (imageryOptions[val].type === "Planet") {
-            this.setState({newImageryAttribution: "Planet Labs Global Mosaic | © Planet Labs, Inc"});
+            this.setState({ newImageryAttribution: "Planet Labs Global Mosaic | © Planet Labs, Inc" });
         }
     }
 
     // Set Attributes and imagery id for Bing //
 
     setImageryIdForBing = (e, key) => {
-        this.setState({newImageryAttribution: "Bing Maps API: " + e.target.value + " | © Microsoft Corporation"});
+        this.setState({ newImageryAttribution: "Bing Maps API: " + e.target.value + " | © Microsoft Corporation" });
         this.setState({ newImageryParams: { ...this.state.newImageryParams, [key]: e.target.value }, imageID:e.target.value });
     }
 
