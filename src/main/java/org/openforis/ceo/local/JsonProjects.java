@@ -1005,6 +1005,9 @@ public class JsonProjects implements Projects {
                         "project-" + newProjectId + "-samples/project-" + newProjectId + "-samples.json");
             }
 
+            // create TimeSync file for the project timesync-data-<id>.json file
+            writeJsonFile("timesync-data-" + newProjectId + ".json", new JsonArray());
+
             return newProjectData;
         } else {
             // Upload the plot-distribution-csv-file if one was provided

@@ -142,6 +142,14 @@ public class JsonUtils {
         writeJsonFile(filename, updatedArray);
     }
 
+    // Note: The JSON file must contain an array of objects.
+    public static void addElementToJsonFile(String filename, JsonElement element, Predicate<JsonObject> predicate) {
+        var array = readJsonFile(filename).getAsJsonArray();
+        var updatedArray = filterJsonArray(array, predicate);
+        updatedArray.add(element);
+        writeJsonFile(filename, updatedArray);
+    }
+
     private static JsonElement walkJsonPath(JsonElement currentEl, String path, LinkedList<String> pathParts) {
         if (pathParts.peekFirst() == null) {
             return currentEl;
