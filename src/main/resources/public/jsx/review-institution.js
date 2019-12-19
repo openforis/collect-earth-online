@@ -545,6 +545,45 @@ class NewImagery extends React.Component {
         </div>
     );
 
+    formSelect = (title, value, callback, options, link=null) => (
+        <div className="mb-3" key={title}>
+            <label>{title}</label> {link}
+            <select
+                className="form-control"
+                onChange={e => callback(e)}
+                value={value}
+            >
+                {options}
+            </select>
+
+        </div>
+    );
+
+    formTemplate = (o, i) => (
+        (o.type && o.type === "select" && (
+            (this.formSelect(o.display,
+                this.state.newImageryParams.imageryId,
+                e => this.setState({ newImageryAttribution: "Bing Maps API: " + e.target.value + " | © Microsoft Corporation" ,  newImageryParams: { ...this.state.newImageryParams, [o.key]: e.target.value }, imageryId: e.target.value }),
+                o.options.map(el => <option value={el} key={el}>{el}</option>),
+                imageryOptions[this.state.selectedType].url && (o.key === "accessToken")
+                    ? <a href={imageryOptions[this.state.selectedType].url} target="_blank" rel="noreferrer noopener">
+                        Click here for help.
+                    </a>
+                    : null
+            ))
+        )) ||
+        (this.formInput(o.display,
+            o.type || "text",
+            this.state.newImageryParams[o.key],
+            e => this.setState({ newImageryParams: { ...this.state.newImageryParams, [o.key]: e.target.value }}),
+            imageryOptions[this.state.selectedType].url && (o.key === "accessToken")
+                ? <a href={imageryOptions[this.state.selectedType].url} target="_blank" rel="noreferrer noopener">
+                    Click here for help.
+                </a>
+                : null
+        ))
+    );
+
     // Imagery Type Change Handler //
 
     imageryTypeChangeHandler = (e) => {
@@ -555,14 +594,7 @@ class NewImagery extends React.Component {
         } else if (imageryOptions[val].type === "Planet") {
             this.setState({ newImageryAttribution: "Planet Labs Global Mosaic | © Planet Labs, Inc" });
         }
-    }
-
-    // Set Attributes and imagery id for Bing //
-
-    setImageryIdForBing = (e, key) => {
-        this.setState({ newImageryAttribution: "Bing Maps API: " + e.target.value + " | © Microsoft Corporation" });
-        this.setState({ newImageryParams: { ...this.state.newImageryParams, [key]: e.target.value }, imageID:e.target.value });
-    }
+    };
 
     render() {
         return (
@@ -583,37 +615,7 @@ class NewImagery extends React.Component {
                 {/* Add fields. Include same for all and unique to selected type. */}
                 {this.formInput("Title", "text", this.state.newImageryTitle, e => this.setState({ newImageryTitle: e.target.value }))}
                 {imageryOptions[this.state.selectedType].type === "GeoServer" && this.formInput("Attribution", "text", this.state.newImageryAttribution, e => this.setState({ newImageryAttribution: e.target.value }))}
-                {imageryOptions[this.state.selectedType].params.map((o, i) =>
-                    (o.type && o.type === "select" && (
-                        <div className="mb-3" key={i}>
-                            <label>{o.display}</label>
-                            <select
-                                className="form-control"
-                                onChange={(e)=>this.setImageryIdForBing(e, o.key)}
-                                value={this.state.newImageryParams.imageryId}
-                            >
-                                {o.options.map(el =>
-                                    <option value={el} key={el}>{el}</option>
-                                )}
-                            </select>
-                        </div>
-                    )) ||
-                    ((o.key === "accessToken") && (imageryOptions[this.state.selectedType].url)
-                            ?   this.formInput(o.display,
-                                    o.type || "text",
-                                    this.state.newImageryParams[o.key],
-                                    e => this.setState({ newImageryParams: { ...this.state.newImageryParams, [o.key]: e.target.value }}),
-                                    <a href={imageryOptions[this.state.selectedType].url} target="_blank" rel="noreferrer noopener">
-                                        Click here for help.
-                                    </a>
-                                )
-                            : this.formInput(o.display,
-                                   o.type || "text",
-                                   this.state.newImageryParams[o.key],
-                                   e => this.setState({ newImageryParams: { ...this.state.newImageryParams, [o.key]: e.target.value }}))
-                    )
-
-                )}
+                {imageryOptions[this.state.selectedType].params.map((o, i) => this.formTemplate(o, i))}
                 {/* Action buttons for save and quit */}
                 <div className="btn-group-vertical btn-block">
                     <button
