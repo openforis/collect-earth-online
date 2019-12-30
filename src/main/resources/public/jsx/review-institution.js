@@ -442,6 +442,12 @@ const imageryOptions = [
         ],
         url: "https://developers.planet.com/docs/quickstart/getting-started/",
     },
+    {
+        type: "EarthWatch",
+        params: [
+            { key: "accessToken", display: "Access Token" },
+        ],
+    },
 ];
 
 class NewImagery extends React.Component {
@@ -593,6 +599,8 @@ class NewImagery extends React.Component {
             this.setState({ newImageryAttribution: "Bing Maps API: " + imageryOptions[val]["params"][0]["options"][0] + " | © Microsoft Corporation" });
         } else if (imageryOptions[val].type === "Planet") {
             this.setState({ newImageryAttribution: "Planet Labs Global Mosaic | © Planet Labs, Inc" });
+        } else if (imageryOptions[val].type === "EarthWatch") {
+            this.setState({newImageryAttribution: "EarthWatch Maps API: Recent Imagery | © Maxar, Inc" });
         }
     };
 
