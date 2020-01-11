@@ -29,7 +29,7 @@ class ProjectDashboard extends React.Component {
 
     componentDidUpdate(prevProps, prevState) {
         // Load imagery after getting project details to find institution.
-        if (prevState.projectDetails === {} && this.state.projectDetails.institution) {
+        if (Object.entries(prevState.projectDetails).length === 0 && prevState.projectDetails.constructor === Object && this.state.projectDetails.institution) {
             this.getImageryList(this.state.projectDetails.institution);
         }
         // Show the project map
