@@ -9,6 +9,8 @@ import static org.openforis.ceo.utils.Mail.sendMail;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import java.sql.SQLException;
+import java.time.format.DateTimeFormatter;
+import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -86,6 +88,20 @@ public class PostgresUsers implements Users {
                                 req.session().attribute("userid", rs.getString("add_user"));
                                 req.session().attribute("username", inputEmail);
                                 req.session().attribute("role", "user");
+
+                                // Send confirmation email to the user
+                                DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss");
+                                LocalDateTime now = LocalDateTime.now();
+                                var body = "Dear "
+                                        + inputEmail
+                                        + ",\n\n"
+                                        + "  Thank you for signing up for CEO! \n\n"
+                                        + "  Your Account Summary Details:\n\n"
+                                        + "  Email:" + inputEmail + "\n"
+                                        + "  Created on: " + dtf.format(now)
+                                        + "  Kind Regards,\n"
+                                        + "  The CEO Team";
+                                sendMail(SMTP_USER, inputEmail, SMTP_SERVER, SMTP_PORT, SMTP_PASSWORD, "Welcome to CEO!", body);
 
                                 // Redirect to the Home page
                                 res.redirect(CeoConfig.documentRoot + "/home");
