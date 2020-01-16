@@ -10,7 +10,7 @@ repositories {
 }
 
 dependencies {
-    compile "com.sparkjava:spark-core:2.7.1"
+    compile "com.sparkjava:spark-core:2.7.2"
     compile "com.sparkjava:spark-template-freemarker:2.7.1"
     compile "org.freemarker:freemarker:2.3.23"
     compile "org.slf4j:slf4j-simple:1.7.21"
@@ -20,7 +20,7 @@ dependencies {
     compile "com.fasterxml.jackson.core:jackson-core:2.5.2"
     compile "org.geotools:gt-shapefile:19.2"
     compile "org.geotools:gt-epsg-hsql:19.2"
-    compile "net.bull.javamelody:javamelody-core:1.68.1"
+    compile "net.bull.javamelody:javamelody-core:1.74.0"
     compile "com.lowagie:itext:2.1.7"
     compile "javax.mail:mail:1.4"
     compile "org.postgresql:postgresql:42.2.2"
