@@ -538,7 +538,7 @@ class NewImagery extends React.Component {
 
     //    Render Functions    //
 
-    formInput = (title, type, value, callback, link=null) => (
+    formInput = (title, type, value, callback, link = null) => (
         <div className="mb-3" key={title}>
             <label>{title}</label> {link}
             <input
@@ -551,7 +551,7 @@ class NewImagery extends React.Component {
         </div>
     );
 
-    formSelect = (title, value, callback, options, link=null) => (
+    formSelect = (title, value, callback, options, link = null) => (
         <div className="mb-3" key={title}>
             <label>{title}</label> {link}
             <select
@@ -561,33 +561,46 @@ class NewImagery extends React.Component {
             >
                 {options}
             </select>
-
         </div>
     );
 
-    formTemplate = (o, i) => (
-        (o.type && o.type === "select" && (
-            (this.formSelect(o.display,
+    formTemplate = (o) => (
+        (o.type && o.type === "select")
+            ? this.formSelect(
+                o.display,
                 this.state.newImageryParams.imageryId,
-                e => this.setState({ newImageryAttribution: "Bing Maps API: " + e.target.value + " | © Microsoft Corporation" ,  newImageryParams: { ...this.state.newImageryParams, [o.key]: e.target.value }, imageryId: e.target.value }),
+                e => this.setState({
+                    newImageryParams: {
+                        ...this.state.newImageryParams,
+                        [o.key]: e.target.value,
+                        imageryId: e.target.value,
+                    },
+                    newImageryAttribution: "Bing Maps API: " + e.target.value + " | © Microsoft Corporation",
+                }),
                 o.options.map(el => <option value={el} key={el}>{el}</option>),
-                imageryOptions[this.state.selectedType].url && (o.key === "accessToken")
-                    ? <a href={imageryOptions[this.state.selectedType].url} target="_blank" rel="noreferrer noopener">
-                        Click here for help.
-                    </a>
+                (imageryOptions[this.state.selectedType].url && o.key === "accessToken")
+                    ? (
+                        <a href={imageryOptions[this.state.selectedType].url} target="_blank" rel="noreferrer noopener">
+                            Click here for help.
+                        </a>
+                    )
                     : null
-            ))
-        )) ||
-        (this.formInput(o.display,
-            o.type || "text",
-            this.state.newImageryParams[o.key],
-            e => this.setState({ newImageryParams: { ...this.state.newImageryParams, [o.key]: e.target.value }}),
-            imageryOptions[this.state.selectedType].url && (o.key === "accessToken")
-                ? <a href={imageryOptions[this.state.selectedType].url} target="_blank" rel="noreferrer noopener">
-                    Click here for help.
-                </a>
-                : null
-        ))
+            )
+            : this.formInput(
+                o.display,
+                o.type || "text",
+                this.state.newImageryParams[o.key],
+                e => this.setState({
+                    newImageryParams: { ...this.state.newImageryParams, [o.key]: e.target.value },
+                }),
+                (imageryOptions[this.state.selectedType].url && o.key === "accessToken")
+                    ? (
+                        <a href={imageryOptions[this.state.selectedType].url} target="_blank" rel="noreferrer noopener">
+                            Click here for help.
+                        </a>
+                    )
+                    : null
+            )
     );
 
     // Imagery Type Change Handler //
@@ -600,7 +613,7 @@ class NewImagery extends React.Component {
         } else if (imageryOptions[val].type === "Planet") {
             this.setState({ newImageryAttribution: "Planet Labs Global Mosaic | © Planet Labs, Inc" });
         } else if (imageryOptions[val].type === "EarthWatch") {
-            this.setState({newImageryAttribution: "EarthWatch Maps API: Recent Imagery | © Maxar, Inc" });
+            this.setState({ newImageryAttribution: "EarthWatch Maps API: Recent Imagery | © Maxar, Inc" });
         }
     };
 
@@ -623,7 +636,7 @@ class NewImagery extends React.Component {
                 {/* Add fields. Include same for all and unique to selected type. */}
                 {this.formInput("Title", "text", this.state.newImageryTitle, e => this.setState({ newImageryTitle: e.target.value }))}
                 {imageryOptions[this.state.selectedType].type === "GeoServer" && this.formInput("Attribution", "text", this.state.newImageryAttribution, e => this.setState({ newImageryAttribution: e.target.value }))}
-                {imageryOptions[this.state.selectedType].params.map((o, i) => this.formTemplate(o, i))}
+                {imageryOptions[this.state.selectedType].params.map(o => this.formTemplate(o))}
                 {/* Action buttons for save and quit */}
                 <div className="btn-group-vertical btn-block">
                     <button
