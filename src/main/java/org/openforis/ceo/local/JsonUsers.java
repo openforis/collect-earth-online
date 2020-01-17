@@ -20,6 +20,8 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
 import java.nio.file.Paths;
+import java.time.format.DateTimeFormatter;
+import java.time.LocalDateTime;
 import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -111,6 +113,17 @@ public class JsonUsers implements Users {
                 req.session().attribute("userid", newUserId + "");
                 req.session().attribute("username", inputEmail);
                 req.session().attribute("role", newUserRole);
+
+                // Send confirmation email to the user
+                var timestamp = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss").format(LocalDateTime.now());
+                var body = "Dear " + inputEmail + ",\n\n"
+                    + "Thank you for signing up for CEO!\n\n"
+                    + "Your Account Summary Details:\n\n"
+                    + "  Email: " + inputEmail + "\n"
+                    + "  Created on: " + timestamp + "\n\n"
+                    + "Kind Regards,\n"
+                    + "  The CEO Team";
+                sendMail(SMTP_USER, inputEmail, SMTP_SERVER, SMTP_PORT, SMTP_PASSWORD, "Welcome to CEO!", body);
 
                 // Redirect to the Home page
                 res.redirect(CeoConfig.documentRoot + "/home");
