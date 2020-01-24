@@ -97,7 +97,8 @@ mercator.getViewRadius = function (mapConfig) {
 
 // [Pure] Returns a new ol.source.* object or null if the sourceConfig
 // is invalid.
-mercator.createSource = function (sourceConfig, imageryId, documentRoot) {
+mercator.createSource = function (sourceConfig, imageryId, documentRoot,
+                                  extent = [[-180, -90], [180, -90], [180, 90], [-180, 90], [-180, -90]]) {
     if (["DigitalGlobe", "EarthWatch"].includes(sourceConfig.type)) {
         return new XYZ({
             url: documentRoot + "/get-tile?imageryId=" + imageryId + "&z={z}&x={x}&y={-y}",
@@ -111,6 +112,61 @@ mercator.createSource = function (sourceConfig, imageryId, documentRoot) {
                  + "&year=" + sourceConfig.year,
             attribution: "© Planet Labs, Inc",
         });
+    } else if (sourceConfig.type === "PlanetDaily") {
+        // make ajax call to get layerid then add xyz layer
+        const theJson = {
+            path: "getPlanetTile",
+            apiKey: sourceConfig.accessToken,
+            dateFrom: [
+                sourceConfig.year,
+                (sourceConfig.month > 9 ? "" : "0") + sourceConfig.month,
+                (sourceConfig.day > 9 ? "" : "0") + sourceConfig.day,
+            ].join("-"),
+            /*geometry: [
+                [100.37796020507812, 13.572576506543767], [100.66360473632812, 13.572576506543767], [100.66360473632812, 13.876746246499003], [100.37796020507812, 13.876746246499003], [100.37796020507812, 13.572576506543767],
+            ],*/ // example coordinates that works with "2020-01-19
+            geometry: extent,
+        };
+        const theID = Math.random().toString(36).substr(2, 16) + "_" + Math.random().toString(36).substr(2, 9);
+        const planetLayer = new XYZ({
+            // some random tiles to be replaced later
+            url: "https://tiles0.planet.com/data/v1/layers/DkTnYnMW_G7i-E6Nj6lb9s7PaG8PG-Hy23Iyug/{z}/{x}/{y}.png",
+            id: theID,
+        });
+        planetLayer.setProperties({ id: theID });
+        fetch(documentRoot + "/geo-dash/gateway-request", {
+            method: "POST",
+            headers: {
+                "Accept": "application/json",
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify(theJson),
+        })
+            .then(res => {
+                if (res.ok) {
+                    return res.json();
+                } else {
+                    Promise.reject();
+                }
+            })
+            .then(data => {
+                if (data[0].hasOwnProperty("layerID") && data[0]["layerID"] !== "null") {
+                    const planetLayer = new XYZ({
+                        url: "https://tiles0.planet.com/data/v1/layers/" + data[0]["layerID"] + "/{z}/{x}/{y}.png",
+                    });
+                    mercator.currentMap.getLayers().forEach(function (lyr) {
+                        if (theID && theID === lyr.getSource().get("id")) {
+                            lyr.setSource(planetLayer);
+                        }
+                    });
+                } else {
+                    console.warn("Wrong Data Returned");
+                }
+            }).catch(response => {
+                console.log("Error loading Planet Daily imagery: ");
+                console.log(response);
+            });
+        return planetLayer;
     } else if (sourceConfig.type === "BingMaps") {
         return new BingMaps({
             imagerySet: sourceConfig.imageryId,
@@ -204,7 +260,11 @@ mercator.createSource = function (sourceConfig, imageryId, documentRoot) {
 // layerConfig is invalid.
 mercator.createLayer = function (layerConfig, documentRoot) {
     layerConfig.sourceConfig.create = true;
-    const source = mercator.createSource(layerConfig.sourceConfig, layerConfig.id, documentRoot);
+    const source = mercator.createSource(layerConfig.sourceConfig, layerConfig.id, documentRoot, layerConfig.extent);
+    // now remove the extent so the TileLayer works as expected
+    if (layerConfig.sourceConfig.type === "PlanetDaily") {
+        layerConfig.extent = null;
+    }
     if (!source) {
         return null;
     } else if (layerConfig.extent != null) {
@@ -306,12 +366,21 @@ mercator.verifyMapInputs = function (divName, centerCoords, zoomLevel, layerConf
 //                                                     geoserverParams: {VERSION: "1.1.1",
 //                                                                       LAYERS: "DigitalGlobe:Imagery",
 //                                                                       CONNECTID: "your-digital-globe-connect-id-here"}}}]);
-mercator.createMap = function (divName, centerCoords, zoomLevel, layerConfigs, documentRoot) {
+mercator.createMap = function (divName, centerCoords, zoomLevel, layerConfigs, documentRoot, projectAOI = null) {
+    // This just verifies map inputs
+    // if everything goes right, the layer are added later
     const errorMsg = mercator.verifyMapInputs(divName, centerCoords, zoomLevel, layerConfigs);
     if (errorMsg) {
         console.error(errorMsg);
         return null;
     } else {
+        if (projectAOI) {
+            layerConfigs.forEach(function (layerConfig) {
+                if (layerConfig.sourceConfig.type === "PlanetDaily") {
+                    layerConfig.extent = JSON.parse(projectAOI).coordinates[0];
+                }
+            });
+        }
         // Create each of the layers that will be shown in the map from layerConfigs
         const layers = layerConfigs.map(l => mercator.createLayer(l, documentRoot));
 

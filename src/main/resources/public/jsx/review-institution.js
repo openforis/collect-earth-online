@@ -443,6 +443,16 @@ const imageryOptions = [
         url: "https://developers.planet.com/docs/quickstart/getting-started/",
     },
     {
+        type: "PlanetDaily",
+        params: [
+            { key: "accessToken", display: "Access Token" },
+            { key: "year", display: "Default Year", type: "number" },
+            { key: "month", display: "Default Month", type: "number" },
+            { key: "day", display: "Default Day", type: "number" },
+        ],
+        url: "https://developers.planet.com/docs/quickstart/getting-started/",
+    },
+    {
         type: "EarthWatch",
         params: [
             { key: "accessToken", display: "Access Token" },
@@ -610,7 +620,7 @@ class NewImagery extends React.Component {
         this.setState({ selectedType: val });
         if (imageryOptions[val].type === "BingMaps") {
             this.setState({ newImageryAttribution: "Bing Maps API: " + imageryOptions[val]["params"][0]["options"][0] + " | © Microsoft Corporation" });
-        } else if (imageryOptions[val].type === "Planet") {
+        } else if (imageryOptions[val].type === "Planet" || imageryOptions[val].type === "PlanetDaily") {
             this.setState({ newImageryAttribution: "Planet Labs Global Mosaic | © Planet Labs, Inc" });
         } else if (imageryOptions[val].type === "EarthWatch") {
             this.setState({ newImageryAttribution: "EarthWatch Maps API: Recent Imagery | © Maxar, Inc" });
