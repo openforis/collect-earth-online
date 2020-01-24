@@ -488,8 +488,11 @@ class NewImagery extends React.Component {
 
     addCustomImagery = () => {
         const sourceConfig = this.stackParams();
+        const message = this.checkDateField(sourceConfig);
         if (!this.checkAllParams()) {
             alert("You must fill out all fields.");
+        } else if (message) {
+            alert(message);
         } else if (this.props.titleIsTaken(this.state.newImageryTitle)) {
             alert("The title '" + this.state.newImageryTitle + "' is already taken.");
         } else if (Object.keys(sourceConfig).length === 0) {
@@ -545,6 +548,20 @@ class NewImagery extends React.Component {
         && imageryOptions[this.state.selectedType].params
             .every(o => o.required === false
                         || (this.state.newImageryParams[o.key] && this.state.newImageryParams[o.key].length > 0));
+
+    checkDateField = (sourceConfig) => {
+        if (sourceConfig.type === "Planet" || sourceConfig.type === "PlanetDaily") {
+            if (!(parseInt(sourceConfig.month) > 0 && parseInt(sourceConfig.month) < 13)) {
+                return "Month should be between 1 and 12!";
+            } else if (sourceConfig.type === "PlanetDaily") {
+                const date = new Date(parseInt(sourceConfig.year), parseInt(sourceConfig.month) - 1, parseInt(sourceConfig.day))
+                if (!((Boolean(date) && date.getDate() === parseInt(sourceConfig.day)))) {
+                    return "The date is not valid!";
+                }
+            }
+        }
+        return null;
+    };
 
     //    Render Functions    //
 
