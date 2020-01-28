@@ -302,6 +302,7 @@ class Collection extends React.Component {
         const { currentImagery, imageryMonthPlanet, imageryYearPlanet } = this.state;
         mercator.updateLayerSource(this.state.mapConfig,
                                    currentImagery.title,
+                                   this.state.currentProject.boundary,
                                    sourceConfig => {
                                        sourceConfig.month = imageryMonthPlanet < 10 ? "0" + imageryMonthPlanet : imageryMonthPlanet;
                                        sourceConfig.year = imageryYearPlanet;

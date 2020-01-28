@@ -134,6 +134,7 @@ mercator.createSource = function (sourceConfig, imageryId, documentRoot,
             id: theID,
         });
         planetLayer.setProperties({ id: theID });
+        // console.log("Calling out to /geo-dash/gateway-request with this JSON:\n\n" + JSON.stringify(theJson));
         fetch(documentRoot + "/geo-dash/gateway-request", {
             method: "POST",
             headers: {
@@ -150,6 +151,7 @@ mercator.createSource = function (sourceConfig, imageryId, documentRoot,
                 }
             })
             .then(data => {
+                // console.log("Here's the response data:\n\n" + JSON.stringify(data));
                 if (data[0].hasOwnProperty("layerID") && data[0]["layerID"] !== "null") {
                     const planetLayer = new XYZ({
                         url: "https://tiles0.planet.com/data/v1/layers/" + data[0]["layerID"] + "/{z}/{x}/{y}.png",
@@ -258,13 +260,9 @@ mercator.createSource = function (sourceConfig, imageryId, documentRoot,
 
 // [Pure] Returns a new TileLayer object or null if the
 // layerConfig is invalid.
-mercator.createLayer = function (layerConfig, documentRoot) {
+mercator.createLayer = function (layerConfig, documentRoot, projectAOI) {
     layerConfig.sourceConfig.create = true;
-    const source = mercator.createSource(layerConfig.sourceConfig, layerConfig.id, documentRoot, layerConfig.extent);
-    // now remove the extent so the TileLayer works as expected
-    if (layerConfig.sourceConfig.type === "PlanetDaily") {
-        layerConfig.extent = null;
-    }
+    const source = mercator.createSource(layerConfig.sourceConfig, layerConfig.id, documentRoot, projectAOI);
     if (!source) {
         return null;
     } else if (layerConfig.extent != null) {
@@ -307,30 +305,30 @@ mercator.verifyZoomLevel = function (zoomLevel) {
 };
 
 // [Pure] Predicate
-mercator.verifyLayerConfig = function (layerConfig) {
+mercator.verifyLayerConfig = function (layerConfig, documentRoot, projectAOI) {
     const layerKeys = Object.keys(layerConfig);
     return layerKeys.includes("title")
         && layerKeys.includes("extent")
         && layerKeys.includes("sourceConfig")
-        && mercator.createSource(layerConfig.sourceConfig, layerConfig.id, "") != null;
+        && mercator.createSource(layerConfig.sourceConfig, layerConfig.id, documentRoot, projectAOI) != null;
 };
 
 // [Pure] Predicate
-mercator.verifyLayerConfigs = function (layerConfigs) {
-    return layerConfigs.every(mercator.verifyLayerConfig);
+mercator.verifyLayerConfigs = function (layerConfigs, documentRoot, projectAOI) {
+    return layerConfigs.every(layerConfig => mercator.verifyLayerConfig(layerConfig, documentRoot, projectAOI));
 };
 
 mercator.currentMap = null;
 // [Pure] Returns the first error message generated while testing the
 // input arguments or null if all tests pass.
-mercator.verifyMapInputs = function (divName, centerCoords, zoomLevel, layerConfigs) {
+mercator.verifyMapInputs = function (divName, centerCoords, zoomLevel, documentRoot, projectAOI, layerConfigs) {
     if (!mercator.verifyDivName(divName)) {
         return "Invalid divName -> " + divName;
     } else if (!mercator.verifyCenterCoords(centerCoords)) {
         return "Invalid centerCoords -> " + centerCoords;
     } else if (!mercator.verifyZoomLevel(zoomLevel)) {
         return "Invalid zoomLevel -> " + zoomLevel;
-    } else if (!mercator.verifyLayerConfigs(layerConfigs)) {
+    } else if (!mercator.verifyLayerConfigs(layerConfigs, documentRoot, projectAOI)) {
         return "Invalid layerConfigs -> " + layerConfigs;
     } else {
         return null;
@@ -366,23 +364,17 @@ mercator.verifyMapInputs = function (divName, centerCoords, zoomLevel, layerConf
 //                                                     geoserverParams: {VERSION: "1.1.1",
 //                                                                       LAYERS: "DigitalGlobe:Imagery",
 //                                                                       CONNECTID: "your-digital-globe-connect-id-here"}}}]);
-mercator.createMap = function (divName, centerCoords, zoomLevel, layerConfigs, documentRoot, projectAOI = null) {
+mercator.createMap = function (divName, centerCoords, zoomLevel, layerConfigs, documentRoot, projectBoundary = null) {
     // This just verifies map inputs
     // if everything goes right, the layer are added later
-    const errorMsg = mercator.verifyMapInputs(divName, centerCoords, zoomLevel, layerConfigs);
+    const projectAOI = JSON.parse(projectBoundary).coordinates[0];
+    const errorMsg = mercator.verifyMapInputs(divName, centerCoords, zoomLevel, documentRoot, projectAOI, layerConfigs);
     if (errorMsg) {
         console.error(errorMsg);
         return null;
     } else {
-        if (projectAOI) {
-            layerConfigs.forEach(function (layerConfig) {
-                if (layerConfig.sourceConfig.type === "PlanetDaily") {
-                    layerConfig.extent = JSON.parse(projectAOI).coordinates[0];
-                }
-            });
-        }
         // Create each of the layers that will be shown in the map from layerConfigs
-        const layers = layerConfigs.map(l => mercator.createLayer(l, documentRoot));
+        const layers = layerConfigs.map(layerConfig => mercator.createLayer(layerConfig, documentRoot, projectAOI));
 
         // Add a scale line to the default map controls
         const controls = ControlDefaults().extend([new ScaleLine()]);
@@ -500,11 +492,12 @@ mercator.getLayerConfigByTitle = function (mapConfig, layerTitle) {
 // [Side Effects] Finds the map layer with title === layerTitle and
 // applies transformer to its initial sourceConfig to create a new
 // source for the layer.
-mercator.updateLayerSource = function (mapConfig, layerTitle, transformer, caller) {
+mercator.updateLayerSource = function (mapConfig, layerTitle, projectBoundary, transformer, caller) {
     const layer = mercator.getLayerByTitle(mapConfig, layerTitle);
     const layerConfig = mercator.getLayerConfigByTitle(mapConfig, layerTitle);
     if (layer && layerConfig) {
-        layer.setSource(mercator.createSource(transformer.call(caller, layerConfig.sourceConfig), layerConfig.id, mapConfig.documentRoot));
+        const projectAOI = JSON.parse(projectBoundary).coordinates[0];
+        layer.setSource(mercator.createSource(transformer.call(caller, layerConfig.sourceConfig), layerConfig.id, mapConfig.documentRoot, projectAOI));
     }
 };
 
