@@ -23,7 +23,7 @@ import { platformModifierKeyOnly } from "ol/events/condition";
 import { Circle, LineString, Point } from "ol/geom";
 import { DragBox, Select } from "ol/interaction";
 import { GeoJSON, KML } from "ol/format";
-import { Tile as TileLayer, Vector as VectorLayer } from "ol/layer";
+import { Tile as TileLayer, Vector as VectorLayer, Group as LayerGroup } from "ol/layer";
 import { BingMaps, Cluster, TileWMS, Vector as VectorSource, XYZ } from "ol/source";
 import { Circle as CircleStyle, Icon, Fill, Stroke, Style, Text as StyleText, RegularShape } from "ol/style";
 import { fromLonLat, transform, transformExtent } from "ol/proj";
@@ -122,16 +122,13 @@ mercator.createSource = function (sourceConfig, imageryId, documentRoot,
                 (sourceConfig.month > 9 ? "" : "0") + sourceConfig.month,
                 (sourceConfig.day > 9 ? "" : "0") + sourceConfig.day,
             ].join("-"),
-            /*geometry: [
-                [100.37796020507812, 13.572576506543767], [100.66360473632812, 13.572576506543767], [100.66360473632812, 13.876746246499003], [100.37796020507812, 13.876746246499003], [100.37796020507812, 13.572576506543767],
-            ],*/ // example coordinates that works with "2020-01-19
+            layerCount: 20, // FIXME: what should this optimally be?
             geometry: extent,
         };
         const theID = Math.random().toString(36).substr(2, 16) + "_" + Math.random().toString(36).substr(2, 9);
         const planetLayer = new XYZ({
             // some random tiles to be replaced later
             url: "https://tiles0.planet.com/data/v1/layers/DkTnYnMW_G7i-E6Nj6lb9s7PaG8PG-Hy23Iyug/{z}/{x}/{y}.png",
-            id: theID,
         });
         planetLayer.setProperties({ id: theID });
         console.log("Calling out to /geo-dash/gateway-request with this JSON:\n\n" + JSON.stringify(theJson));
@@ -147,23 +144,28 @@ mercator.createSource = function (sourceConfig, imageryId, documentRoot,
                 if (res.ok) {
                     return res.json();
                 } else {
-                    Promise.reject();
+                    return Promise.reject();
                 }
             })
             .then(data => {
                 console.log("Here's the response data:\n\n" + JSON.stringify(data));
-                if (data[0].hasOwnProperty("layerID") && data[0]["layerID"] !== "null") {
-                    const planetLayer = new XYZ({
-                        url: "https://tiles0.planet.com/data/v1/layers/" + data[0]["layerID"] + "/{z}/{x}/{y}.png",
-                    });
-                    mercator.currentMap.getLayers().forEach(function (lyr) {
-                        if (theID && theID === lyr.getSource().get("id")) {
-                            lyr.setSource(planetLayer);
-                        }
-                    });
-                } else {
-                    console.warn("Wrong Data Returned");
+                const planetLayers = data
+                      .filter(d => d.hasOwnProperty("layerID") && d["layerID"] !== "null")
+                      .map(d => new TileLayer({
+                          source: new XYZ({
+                              url: "https://tiles0.planet.com/data/v1/layers/" + d["layerID"] + "/{z}/{x}/{y}.png",
+                          }),
+                      }));
+                if (planetLayers.length === 0) {
+                    console.warn("No usable results found for Planet Daily imagery.");
                 }
+                const dummyPlanetLayer = mercator.currentMap.getLayers().getArray().find(lyr => theID === lyr.getSource().get("id"));
+                mercator.currentMap.removeLayer(dummyPlanetLayer);
+                mercator.currentMap.addLayer(new LayerGroup({
+                    title: dummyPlanetLayer.get("title"),
+                    visible: false,
+                    layers: planetLayers,
+                }));
             }).catch(response => {
                 console.log("Error loading Planet Daily imagery: ");
                 console.log(response);
