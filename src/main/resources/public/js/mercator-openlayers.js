@@ -305,30 +305,36 @@ mercator.verifyZoomLevel = function (zoomLevel) {
 };
 
 // [Pure] Predicate
-mercator.verifyLayerConfig = function (layerConfig, documentRoot, projectAOI) {
+// FIXME: Build out this function stub to check for all the relevant keys for each valid imagery type
+mercator.verifySourceConfig = function (sourceConfig) {
+    return true;
+};
+
+// [Pure] Predicate
+mercator.verifyLayerConfig = function (layerConfig) {
     const layerKeys = Object.keys(layerConfig);
     return layerKeys.includes("title")
         && layerKeys.includes("extent")
         && layerKeys.includes("sourceConfig")
-        && mercator.createSource(layerConfig.sourceConfig, layerConfig.id, documentRoot, projectAOI) != null;
+        && mercator.verifySourceConfig(layerConfig.sourceConfig);
 };
 
 // [Pure] Predicate
-mercator.verifyLayerConfigs = function (layerConfigs, documentRoot, projectAOI) {
-    return layerConfigs.every(layerConfig => mercator.verifyLayerConfig(layerConfig, documentRoot, projectAOI));
+mercator.verifyLayerConfigs = function (layerConfigs) {
+    return layerConfigs.every(layerConfig => mercator.verifyLayerConfig(layerConfig));
 };
 
 mercator.currentMap = null;
 // [Pure] Returns the first error message generated while testing the
 // input arguments or null if all tests pass.
-mercator.verifyMapInputs = function (divName, centerCoords, zoomLevel, documentRoot, projectAOI, layerConfigs) {
+mercator.verifyMapInputs = function (divName, centerCoords, zoomLevel, layerConfigs) {
     if (!mercator.verifyDivName(divName)) {
         return "Invalid divName -> " + divName;
     } else if (!mercator.verifyCenterCoords(centerCoords)) {
         return "Invalid centerCoords -> " + centerCoords;
     } else if (!mercator.verifyZoomLevel(zoomLevel)) {
         return "Invalid zoomLevel -> " + zoomLevel;
-    } else if (!mercator.verifyLayerConfigs(layerConfigs, documentRoot, projectAOI)) {
+    } else if (!mercator.verifyLayerConfigs(layerConfigs)) {
         return "Invalid layerConfigs -> " + layerConfigs;
     } else {
         return null;
@@ -368,7 +374,7 @@ mercator.createMap = function (divName, centerCoords, zoomLevel, layerConfigs, d
     // This just verifies map inputs
     // if everything goes right, the layer are added later
     const projectAOI = projectBoundary ? JSON.parse(projectBoundary).coordinates[0] : null;
-    const errorMsg = mercator.verifyMapInputs(divName, centerCoords, zoomLevel, documentRoot, projectAOI, layerConfigs);
+    const errorMsg = mercator.verifyMapInputs(divName, centerCoords, zoomLevel, layerConfigs);
     if (errorMsg) {
         console.error(errorMsg);
         return null;
