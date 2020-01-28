@@ -367,7 +367,7 @@ mercator.verifyMapInputs = function (divName, centerCoords, zoomLevel, documentR
 mercator.createMap = function (divName, centerCoords, zoomLevel, layerConfigs, documentRoot, projectBoundary = null) {
     // This just verifies map inputs
     // if everything goes right, the layer are added later
-    const projectAOI = JSON.parse(projectBoundary).coordinates[0];
+    const projectAOI = projectBoundary ? JSON.parse(projectBoundary).coordinates[0] : null;
     const errorMsg = mercator.verifyMapInputs(divName, centerCoords, zoomLevel, documentRoot, projectAOI, layerConfigs);
     if (errorMsg) {
         console.error(errorMsg);
@@ -496,7 +496,7 @@ mercator.updateLayerSource = function (mapConfig, layerTitle, projectBoundary, t
     const layer = mercator.getLayerByTitle(mapConfig, layerTitle);
     const layerConfig = mercator.getLayerConfigByTitle(mapConfig, layerTitle);
     if (layer && layerConfig) {
-        const projectAOI = JSON.parse(projectBoundary).coordinates[0];
+        const projectAOI = projectBoundary ? JSON.parse(projectBoundary).coordinates[0] : null;
         layer.setSource(mercator.createSource(transformer.call(caller, layerConfig.sourceConfig), layerConfig.id, mapConfig.documentRoot, projectAOI));
     }
 };
