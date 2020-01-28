@@ -134,7 +134,7 @@ mercator.createSource = function (sourceConfig, imageryId, documentRoot,
             id: theID,
         });
         planetLayer.setProperties({ id: theID });
-        // console.log("Calling out to /geo-dash/gateway-request with this JSON:\n\n" + JSON.stringify(theJson));
+        console.log("Calling out to /geo-dash/gateway-request with this JSON:\n\n" + JSON.stringify(theJson));
         fetch(documentRoot + "/geo-dash/gateway-request", {
             method: "POST",
             headers: {
@@ -151,7 +151,7 @@ mercator.createSource = function (sourceConfig, imageryId, documentRoot,
                 }
             })
             .then(data => {
-                // console.log("Here's the response data:\n\n" + JSON.stringify(data));
+                console.log("Here's the response data:\n\n" + JSON.stringify(data));
                 if (data[0].hasOwnProperty("layerID") && data[0]["layerID"] !== "null") {
                     const planetLayer = new XYZ({
                         url: "https://tiles0.planet.com/data/v1/layers/" + data[0]["layerID"] + "/{z}/{x}/{y}.png",
