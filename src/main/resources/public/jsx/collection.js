@@ -19,6 +19,7 @@ class Collection extends React.Component {
             imageryMonthNamePlanet: "March",
             imageryYearDG: 2009,
             imageryYearPlanet: 2018,
+            imageryDatePlanetDaily: "2020-01-19",
             mapConfig: null,
             nextPlotButtonDisabled: false,
             plotList: [],
@@ -127,6 +128,10 @@ class Collection extends React.Component {
             || this.state.imageryYearPlanet !== prevState.imageryYearPlanet) {
             this.updatePlanetLayer();
         }
+
+        if (this.state.imageryDatePlanetDaily !== prevState.imageryDatePlanetDaily) {
+            this.updatePlanetDailyLayer();
+        }
     }
 
     getProjectData = () => {
@@ -212,7 +217,9 @@ class Collection extends React.Component {
             ? newImagery.attribution + " | " + this.state.imageryYearDG + " (" + this.state.stackingProfileDG + ")"
             : newImagery.sourceConfig.type === "Planet"
                 ? newImagery.attribution + " | " + this.state.imageryYearPlanet + "-" + this.state.imageryMonthPlanet
-                : newImagery.attribution;
+                : newImagery.sourceConfig.type === "PlanetDaily"
+                    ? newImagery.attribution + " | " + this.state.imageryDatePlanetDaily
+                    : newImagery.attribution;
         this.setState({
             currentImagery: newImagery,
             imageryAttribution: newImageryAttribution,
@@ -242,6 +249,15 @@ class Collection extends React.Component {
         const newImageryAttribution = imageryInfo.attribution + " | " + newImageryYearPlanet + "-" + this.state.imageryMonthNamePlanet;
         this.setState({
             imageryYearPlanet: newImageryYearPlanet,
+            imageryAttribution: newImageryAttribution,
+        });
+    };
+
+    setImageryDatePlanetDaily = (newImageryDatePlanetDaily) => {
+        const imageryInfo = this.getImageryByTitle(this.state.currentImagery.title);
+        const newImageryAttribution = imageryInfo.attribution + " | " + newImageryDatePlanetDaily;
+        this.setState({
+            imageryDatePlanetDaily: newImageryDatePlanetDaily,
             imageryAttribution: newImageryAttribution,
         });
     };
@@ -280,6 +296,8 @@ class Collection extends React.Component {
             this.updateDGWMSLayer();
         } else if (this.state.currentImagery.sourceConfig.type === "Planet") {
             this.updatePlanetLayer();
+        } else if (this.state.currentImagery.sourceConfig.type === "PlanetDaily") {
+            this.updatePlanetDailyLayer();
         }
     };
 
@@ -306,6 +324,20 @@ class Collection extends React.Component {
                                    sourceConfig => {
                                        sourceConfig.month = imageryMonthPlanet < 10 ? "0" + imageryMonthPlanet : imageryMonthPlanet;
                                        sourceConfig.year = imageryYearPlanet;
+                                       return sourceConfig;
+                                   },
+                                   this);
+    };
+
+    updatePlanetDailyLayer = () => {
+        const { currentImagery, imageryDatePlanetDaily } = this.state;
+        mercator.updateLayerSource(this.state.mapConfig,
+                                   currentImagery.title,
+                                   this.state.currentProject.boundary,
+                                   sourceConfig => {
+                                       sourceConfig.year = parseInt(imageryDatePlanetDaily.split("-")[0]);
+                                       sourceConfig.month = parseInt(imageryDatePlanetDaily.split("-")[1]);
+                                       sourceConfig.day = parseInt(imageryDatePlanetDaily.split("-")[2]);
                                        return sourceConfig;
                                    },
                                    this);
@@ -626,6 +658,8 @@ class Collection extends React.Component {
         } : (this.state.currentImagery.sourceConfig.type === "Planet") ? {
             imageryMonthPlanet: this.state.imageryMonthPlanet,
             imageryYearPlanet:  this.state.imageryYearPlanet,
+        } : (this.state.currentImagery.sourceConfig.type === "PlanetDaily") ? {
+            imageryDatePlanetDaily: this.state.imageryDatePlanetDaily,
         } : {};
 
     getChildQuestions = (currentQuestionId) => {
@@ -1045,11 +1079,13 @@ class Collection extends React.Component {
                         imageryYearPlanet={this.state.imageryYearPlanet}
                         imageryMonthPlanet={this.state.imageryMonthPlanet}
                         imageryMonthNamePlanet={this.state.imageryMonthNamePlanet}
+                        imageryDatePlanetDaily={this.state.imageryDatePlanetDaily}
                         stackingProfileDG={this.state.stackingProfileDG}
                         setBaseMapSource={this.setBaseMapSource}
                         setImageryYearDG={this.setImageryYearDG}
                         setImageryYearPlanet={this.setImageryYearPlanet}
                         setImageryMonthPlanet={this.setImageryMonthPlanet}
+                        setImageryDatePlanetDaily={this.setImageryDatePlanetDaily}
                         setStackingProfileDG={this.setStackingProfileDG}
                         loadingImages={this.state.imageryList.length === 0}
                     />
@@ -1385,6 +1421,22 @@ class ImageryOptions extends React.Component {
         </div>
     );
 
+    planetDailyMenus = () => (
+        <div className="PlanetsDailyMenu my-2">
+            <div className="slidecontainer form-control form-control-sm">
+                <input
+                    type="date"
+                    id="planetDailyYear"
+                    value={this.props.imageryDatePlanetDaily}
+                    max={new Date().toJSON().slice(0, 10)}
+                    min="2016-01-01"
+                    style={{ width: "100%" }}
+                    onChange={e => this.props.setImageryDatePlanetDaily(e.target.value)}
+                />
+            </div>
+        </div>
+    );
+
     render() {
         const { props } = this;
         return (
@@ -1414,6 +1466,7 @@ class ImageryOptions extends React.Component {
                         </select>
                         {props.imageryTitle && props.imageryTitle.includes("DigitalGlobeWMSImagery") && this.digitalGlobeMenus()}
                         {props.imageryType === "Planet" && this.planetMenus()}
+                        {props.imageryType === "PlanetDaily" && this.planetDailyMenus()}
                     </Fragment>
                 }
             </div>
