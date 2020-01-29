@@ -3,7 +3,7 @@
 *** Mercator-OpenLayers.js
 ***
 *** Author: Gary W. Johnson
-*** Copyright: 2017-2019 Spatial Informatics Group, LLC
+*** Copyright: 2017-2020 Spatial Informatics Group, LLC
 *** License: LGPLv3
 ***
 *** Description: This library provides a set of functions for
@@ -119,8 +119,8 @@ mercator.createSource = function (sourceConfig, imageryId, documentRoot,
             apiKey: sourceConfig.accessToken,
             dateFrom: [
                 sourceConfig.year,
-                (sourceConfig.month > 9 ? "" : "0") + sourceConfig.month,
-                (sourceConfig.day > 9 ? "" : "0") + sourceConfig.day,
+                (parseInt(sourceConfig.month) > 9 ? "" : "0") + parseInt(sourceConfig.month),
+                (parseInt(sourceConfig.day) > 9 ? "" : "0") + parseInt(sourceConfig.day),
             ].join("-"),
             layerCount: 20, // FIXME: what should this optimally be?
             geometry: extent,
@@ -150,12 +150,12 @@ mercator.createSource = function (sourceConfig, imageryId, documentRoot,
             .then(data => {
                 console.log("Here's the response data:\n\n" + JSON.stringify(data));
                 const planetLayers = data
-                      .filter(d => d.hasOwnProperty("layerID") && d["layerID"] !== "null")
-                      .map(d => new TileLayer({
-                          source: new XYZ({
-                              url: "https://tiles0.planet.com/data/v1/layers/" + d["layerID"] + "/{z}/{x}/{y}.png",
-                          }),
-                      }));
+                    .filter(d => d.hasOwnProperty("layerID") && d["layerID"] !== "null")
+                    .map(d => new TileLayer({
+                        source: new XYZ({
+                            url: "https://tiles0.planet.com/data/v1/layers/" + d["layerID"] + "/{z}/{x}/{y}.png",
+                        }),
+                    }));
                 if (planetLayers.length === 0) {
                     console.warn("No usable results found for Planet Daily imagery.");
                 }
