@@ -497,6 +497,8 @@ mercator.getLayerConfigByTitle = function (mapConfig, layerTitle) {
     );
 };
 
+// FIXME: This function exposes several leaky abstractions. I need to rethink the createLayer->createSource workflow.
+//
 // [Side Effects] Finds the map layer with title === layerTitle and
 // applies transformer to its initial sourceConfig to create a new
 // source for the layer.
@@ -504,8 +506,20 @@ mercator.updateLayerSource = function (mapConfig, layerTitle, projectBoundary, t
     const layer = mercator.getLayerByTitle(mapConfig, layerTitle);
     const layerConfig = mercator.getLayerConfigByTitle(mapConfig, layerTitle);
     if (layer && layerConfig) {
+        const newSourceConfig = transformer.call(caller, layerConfig.sourceConfig);
         const projectAOI = projectBoundary ? JSON.parse(projectBoundary).coordinates[0] : null;
-        layer.setSource(mercator.createSource(transformer.call(caller, layerConfig.sourceConfig), layerConfig.id, mapConfig.documentRoot, projectAOI));
+        if (layer.get("layers")) {
+            // This is a LayerGroup
+            console.log("LayerGroup detected.");
+            mapConfig.map.removeLayer(layer);
+            mapConfig.map.addLayer(mercator.createLayer({ ...layerConfig, sourceConfig: newSourceConfig },
+                                                       mapConfig.documentRoot,
+                                                       projectAOI));
+        } else {
+            // This is a Layer
+            console.log("Layer detected.");
+            layer.setSource(mercator.createSource(newSourceConfig, layerConfig.id, mapConfig.documentRoot, projectAOI));
+        }
     }
 };
 
