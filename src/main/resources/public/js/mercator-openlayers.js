@@ -3,7 +3,7 @@
 *** Mercator-OpenLayers.js
 ***
 *** Author: Gary W. Johnson
-*** Copyright: 2017-2019 Spatial Informatics Group, LLC
+*** Copyright: 2017-2020 Spatial Informatics Group, LLC
 *** License: LGPLv3
 ***
 *** Description: This library provides a set of functions for
@@ -119,8 +119,8 @@ mercator.createSource = function (sourceConfig, imageryId, documentRoot,
             apiKey: sourceConfig.accessToken,
             dateFrom: [
                 sourceConfig.year,
-                (sourceConfig.month > 9 ? "" : "0") + sourceConfig.month,
-                (sourceConfig.day > 9 ? "" : "0") + sourceConfig.day,
+                (parseInt(sourceConfig.month) > 9 ? "" : "0") + parseInt(sourceConfig.month),
+                (parseInt(sourceConfig.day) > 9 ? "" : "0") + parseInt(sourceConfig.day),
             ].join("-"),
             layerCount: 20, // FIXME: what should this optimally be?
             geometry: extent,
@@ -150,12 +150,12 @@ mercator.createSource = function (sourceConfig, imageryId, documentRoot,
             .then(data => {
                 console.log("Here's the response data:\n\n" + JSON.stringify(data));
                 const planetLayers = data
-                      .filter(d => d.hasOwnProperty("layerID") && d["layerID"] !== "null")
-                      .map(d => new TileLayer({
-                          source: new XYZ({
-                              url: "https://tiles0.planet.com/data/v1/layers/" + d["layerID"] + "/{z}/{x}/{y}.png",
-                          }),
-                      }));
+                    .filter(d => d.hasOwnProperty("layerID") && d["layerID"] !== "null")
+                    .map(d => new TileLayer({
+                        source: new XYZ({
+                            url: "https://tiles0.planet.com/data/v1/layers/" + d["layerID"] + "/{z}/{x}/{y}.png",
+                        }),
+                    }));
                 if (planetLayers.length === 0) {
                     console.warn("No usable results found for Planet Daily imagery.");
                 }
@@ -497,6 +497,8 @@ mercator.getLayerConfigByTitle = function (mapConfig, layerTitle) {
     );
 };
 
+// FIXME: This function exposes several leaky abstractions. I need to rethink the createLayer->createSource workflow.
+//
 // [Side Effects] Finds the map layer with title === layerTitle and
 // applies transformer to its initial sourceConfig to create a new
 // source for the layer.
@@ -504,8 +506,20 @@ mercator.updateLayerSource = function (mapConfig, layerTitle, projectBoundary, t
     const layer = mercator.getLayerByTitle(mapConfig, layerTitle);
     const layerConfig = mercator.getLayerConfigByTitle(mapConfig, layerTitle);
     if (layer && layerConfig) {
+        const newSourceConfig = transformer.call(caller, layerConfig.sourceConfig);
         const projectAOI = projectBoundary ? JSON.parse(projectBoundary).coordinates[0] : null;
-        layer.setSource(mercator.createSource(transformer.call(caller, layerConfig.sourceConfig), layerConfig.id, mapConfig.documentRoot, projectAOI));
+        if (layer.get("layers")) {
+            // This is a LayerGroup
+            console.log("LayerGroup detected.");
+            mapConfig.map.removeLayer(layer);
+            mapConfig.map.addLayer(mercator.createLayer({ ...layerConfig, sourceConfig: newSourceConfig },
+                                                       mapConfig.documentRoot,
+                                                       projectAOI));
+        } else {
+            // This is a Layer
+            console.log("Layer detected.");
+            layer.setSource(mercator.createSource(newSourceConfig, layerConfig.id, mapConfig.documentRoot, projectAOI));
+        }
     }
 };
 
