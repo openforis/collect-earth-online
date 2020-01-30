@@ -550,17 +550,16 @@ class NewImagery extends React.Component {
                         || (this.state.newImageryParams[o.key] && this.state.newImageryParams[o.key].length > 0));
 
     checkDateField = (sourceConfig) => {
-        if (sourceConfig.type === "Planet" || sourceConfig.type === "PlanetDaily") {
-            if (!(parseInt(sourceConfig.month) > 0 && parseInt(sourceConfig.month) < 13)) {
-                return "Month should be between 1 and 12!";
-            } else if (sourceConfig.type === "PlanetDaily") {
-                const date = new Date(parseInt(sourceConfig.year), parseInt(sourceConfig.month) - 1, parseInt(sourceConfig.day))
-                if (!((Boolean(date) && date.getDate() === parseInt(sourceConfig.day)))) {
-                    return "The date is not valid!";
-                }
-            }
-        }
-        return null;
+        const year  = parseInt(sourceConfig.year);
+        const month = parseInt(sourceConfig.month);
+        const day   = parseInt(sourceConfig.day);
+        const date  = day ? new Date(year, month - 1, day) : new Date(year, month - 1);
+
+        return isNaN(year)                              ? "Please enter the year as a 4 digit number."
+            : (isNaN(month) || month < 1 || month > 12) ? "Month should be between 1 and 12!"
+            : (isNaN(day) || day < 1 || day > 31)       ? "Day should be between 1 and 31!"
+            : isNaN(date)                               ? "The date is not valid!"
+            : null;
     };
 
     //    Render Functions    //
