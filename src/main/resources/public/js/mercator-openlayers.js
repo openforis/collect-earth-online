@@ -98,7 +98,8 @@ mercator.getViewRadius = function (mapConfig) {
 // [Pure] Returns a new ol.source.* object or null if the sourceConfig
 // is invalid.
 mercator.createSource = function (sourceConfig, imageryId, documentRoot,
-                                  extent = [[-180, -90], [180, -90], [180, 90], [-180, 90], [-180, -90]]) {
+                                  extent = [[-180, -90], [180, -90], [180, 90], [-180, 90], [-180, -90]],
+                                  show = false) {
     if (["DigitalGlobe", "EarthWatch"].includes(sourceConfig.type)) {
         return new XYZ({
             url: documentRoot + "/get-tile?imageryId=" + imageryId + "&z={z}&x={x}&y={-y}",
@@ -163,7 +164,7 @@ mercator.createSource = function (sourceConfig, imageryId, documentRoot,
                 mercator.currentMap.removeLayer(dummyPlanetLayer);
                 mercator.currentMap.addLayer(new LayerGroup({
                     title: dummyPlanetLayer.get("title"),
-                    visible: false,
+                    visible: show,
                     layers: planetLayers,
                 }));
             }).catch(response => {
@@ -262,9 +263,9 @@ mercator.createSource = function (sourceConfig, imageryId, documentRoot,
 
 // [Pure] Returns a new TileLayer object or null if the
 // layerConfig is invalid.
-mercator.createLayer = function (layerConfig, documentRoot, projectAOI) {
+mercator.createLayer = function (layerConfig, documentRoot, projectAOI, show) {
     layerConfig.sourceConfig.create = true;
-    const source = mercator.createSource(layerConfig.sourceConfig, layerConfig.id, documentRoot, projectAOI);
+    const source = mercator.createSource(layerConfig.sourceConfig, layerConfig.id, documentRoot, projectAOI, show);
     if (!source) {
         return null;
     } else if (layerConfig.extent != null) {
@@ -466,7 +467,7 @@ mercator.resetMap = function (mapConfig) {
 mercator.setVisibleLayer = function (mapConfig, layerTitle) {
     mapConfig.layers.forEach(
         function (layer) {
-            if (layer.getVisible() === true && layer instanceof TileLayer) {
+            if (layer.getVisible() === true && (layer instanceof TileLayer || layer instanceof LayerGroup)) {
                 layer.setVisible(false);
             }
             if (layer.get("title") === layerTitle) {
@@ -513,8 +514,9 @@ mercator.updateLayerSource = function (mapConfig, layerTitle, projectBoundary, t
             console.log("LayerGroup detected.");
             mapConfig.map.removeLayer(layer);
             mapConfig.map.addLayer(mercator.createLayer({ ...layerConfig, sourceConfig: newSourceConfig },
-                                                       mapConfig.documentRoot,
-                                                       projectAOI));
+                                                        mapConfig.documentRoot,
+                                                        projectAOI,
+                                                        true));
         } else {
             // This is a Layer
             console.log("Layer detected.");
