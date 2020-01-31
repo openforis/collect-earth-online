@@ -145,11 +145,11 @@ class Project extends React.Component {
             .then(response => Promise.all([response.ok, response.json()]))
             .then(data => {
                 const isInteger = n => !isNaN(parseInt(n)) && isFinite(n) && !n.includes(".");
-                if (data.projectId && isInteger(data.projectId)) {
-                    window.location = this.props.documentRoot + "/review-project?projectId=" + data.projectId;
+                if (data[0] && isInteger(data[1].projectId)) {
+                    window.location = this.props.documentRoot + "/review-project?projectId=" + data[1].projectId;
                     return Promise.resolve();
                 } else {
-                    return Promise.reject(data.errorMessage);
+                    return Promise.reject(data[1].errorMessage);
                 }
             })
             .catch(message => {
