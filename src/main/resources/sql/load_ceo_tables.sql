@@ -255,3 +255,89 @@ CREATE UNIQUE INDEX image_preference_project_plot_user_packet_year ON image_pref
 
 -- Schema for external tables
 CREATE SCHEMA ext_tables;
+
+-- Types and views, to be defined once
+CREATE TYPE institution_return AS (
+    institution_id    integer,
+    name              text,
+    logo              text,
+    description       text,
+    url               text,
+    archived          boolean,
+    members           jsonb,
+    admins            jsonb,
+    pending           jsonb
+);
+
+CREATE TYPE imagery_return AS (
+    imagery_id         integer,
+    institution_id     integer,
+    visibility         text,
+    title              text,
+    attribution        text,
+    extent             jsonb,
+    source_config      jsonb
+);
+
+CREATE TYPE project_return AS (
+    project_id              integer,
+    institution_id          integer,
+    availability            text,
+    name                    text,
+    description             text,
+    privacy_level           text,
+    boundary                text,
+    base_map_source         text,
+    plot_distribution       text,
+    num_plots               integer,
+    plot_spacing            float,
+    plot_shape              text,
+    plot_size               float,
+    sample_distribution     text,
+    samples_per_plot        integer,
+    sample_resolution       float,
+    survey_questions        jsonb,
+    survey_rules            jsonb,
+    classification_times    jsonb,
+    valid_boundary          boolean,
+    editable                boolean
+);
+
+CREATE VIEW project_boundary AS
+    SELECT
+        project_uid,
+        institution_rid,
+        availability,
+        name,
+        description,
+        privacy_level,
+        ST_AsGeoJSON(boundary),
+        base_map_source,
+        plot_distribution,
+        num_plots,
+        plot_spacing,
+        plot_shape,
+        plot_size,
+        sample_distribution,
+        samples_per_plot,
+        sample_resolution,
+        survey_questions,
+        survey_rules,
+        classification_times,
+        valid_boundary(boundary)
+    FROM projects;
+
+CREATE TYPE plots_return AS (
+    plot_id              integer,
+    project_id           integer,
+    center               text,
+    flagged              integer,
+    assigned             integer,
+    username             text,
+    confidence           integer,
+    collection_time      timestamp,
+    ext_id               integer,
+    plotId               integer,
+    geom                 text,
+    analysis_duration    numeric
+ );
