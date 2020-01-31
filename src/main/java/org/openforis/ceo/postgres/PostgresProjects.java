@@ -57,7 +57,7 @@ public class PostgresProjects implements Projects {
         final var qProjectId = req.queryParams("projectId");
         final var jProjectId = getBodyParam(req.body(), "projectId", null);
         final var qTokenKey = req.queryParams("tokenKey");
-        final var sTokenKey = req.session().attributes().contains("tokenkey") ? req.session().attribute("tokenkey").toString() : null;
+        final var sTokenKey = req.session().attributes().contains("tokenKey") ? req.session().attribute("tokenKey").toString() : null;
 
         final var projectId =
             qProjectId != null ? Integer.parseInt(qProjectId)
@@ -73,7 +73,7 @@ public class PostgresProjects implements Projects {
                 try (var rs = pstmt.executeQuery()) {
                     if (rs.next()) {
                         if (tokenKey.equals(rs.getString("token_key"))) {
-                            req.session().attribute("tokenkey", tokenKey);
+                            req.session().attribute("tokenKey", tokenKey);
                             return true;
                         } else {
                             return false;
@@ -87,20 +87,20 @@ public class PostgresProjects implements Projects {
                 return false;
             }
         } else {
-	        try (var conn = connect();
-	    		var pstmt = conn.prepareStatement("SELECT * FROM " + queryFn + "(?, ?)")) {
-	
-	           	pstmt.setInt(1, userId);
-	            pstmt.setInt(2, projectId);
-	
-	            try(var rs = pstmt.executeQuery()) {
-	            	return rs.next() && rs.getBoolean(queryFn);
-	            }
-	        
-	        } catch (SQLException e) {
-	            System.out.println(e.getMessage());
-	            return false;
-	        }
+            try (var conn = connect();
+                var pstmt = conn.prepareStatement("SELECT * FROM " + queryFn + "(?, ?)")) {
+
+                pstmt.setInt(1, userId);
+                pstmt.setInt(2, projectId);
+
+                try(var rs = pstmt.executeQuery()) {
+                    return rs.next() && rs.getBoolean(queryFn);
+                }
+
+            } catch (SQLException e) {
+                System.out.println(e.getMessage());
+                return false;
+            }
         }
     }
 
@@ -622,7 +622,7 @@ public class PostgresProjects implements Projects {
                 runBashScriptForProject(projectId, plotsOrSamples, "shp2postgres.sh", "/shp");
                 return "project_" +  projectId + "_" + plotsOrSamples + "_shp";
             } else {
-                return ""; 
+                return "";
             }
         } catch (SQLException s) {
             System.out.println(s.getMessage());
@@ -924,7 +924,7 @@ public class PostgresProjects implements Projects {
 
             var SQL = "SELECT * FROM create_project(?,?,?,?,?,ST_SetSRID(ST_GeomFromGeoJSON(?), 4326),?,?,?,?,?,?,?,?,?,?::JSONB,?::JSONB,?::date,?::JSONB,?)";
             try (var conn = connect();
-                 var pstmt = conn.prepareStatement(SQL)) {
+                var pstmt = conn.prepareStatement(SQL)) {
 
                 pstmt.setInt(1,     newProject.get("institution").getAsInt());
                 pstmt.setString(2,  newProject.get("availability").getAsString());

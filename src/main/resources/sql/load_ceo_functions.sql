@@ -1165,8 +1165,8 @@ CREATE TYPE project_return AS (
     survey_rules            jsonb,
     classification_times    jsonb,
     valid_boundary          boolean,
-    editable                boolean,
-    token_key               text
+    token_key               text,
+    editable                boolean
 );
 
 CREATE OR REPLACE FUNCTION valid_boundary(_boundary geometry)

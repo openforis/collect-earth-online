@@ -1,8 +1,31 @@
 -- add token_key to projects
 ALTER TABLE projects ADD COLUMN token_key text DEFAULT NULL;
 
--- Create a project
-CREATE OR REPLACE FUNCTION create_project(
+-- Remove and recreate a project
+
+DROP FUNCTION create_project(
+    _institution_rid         integer,
+    _availability            text,
+    _name                    text,
+    _description             text,
+    _privacy_level           text,
+    _boundary                geometry,
+    _base_map_source         text,
+    _plot_distribution       text,
+    _num_plots               integer,
+    _plot_spacing            float,
+    _plot_shape              text,
+    _plot_size               float,
+    _sample_distribution     text,
+    _samples_per_plot        integer,
+    _sample_resolution       float,
+    _survey_questions        jsonb,
+    _survey_rules            jsonb,
+    _created_date            date,
+    _classification_times    jsonb
+ );
+
+CREATE FUNCTION create_project(
     _institution_rid         integer,
     _availability            text,
     _name                    text,
