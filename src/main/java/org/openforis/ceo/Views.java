@@ -175,22 +175,11 @@ public class Views {
                          Map.of("project_id", getPid));
     }
 
+    public static Route timesync(FreeMarkerEngine freemarker) {
+        return makeRoute("TimeSync", freemarker);
+    }
+
     public static Route pageNotFound(FreeMarkerEngine freemarker) {
         return makeRoute("Page-Not-Found", freemarker);
     }
-    
-    public static Route timesync(FreeMarkerEngine freemarker) {
-        return makeRoute("TimeSync", freemarker);
-        // Function<Request, String> getAccountId = (req) -> req.queryParams("userId");
-        // return makeRoute("TimeSync", freemarker,
-        //         Map.of("interpreter", getAccountId));
-    }
-
-    // public static Route timeSyncDash(FreeMarkerEngine freemarker) {
-    //     Function<Request, String> getAccountId = (req) -> ""; //req.params(":id");
-    //     return makeAuthenticatedRoute("TimeSync", freemarker,
-    //             Map.of("interpreter", getAccountId));
-    // }
-
-
 }

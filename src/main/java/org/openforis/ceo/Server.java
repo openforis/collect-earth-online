@@ -69,8 +69,8 @@ public class Server implements SparkApplication {
         var freemarker = new FreeMarkerEngine(getConfiguration());
 
         // Enable HTTPS site-wide
-        // secure("deploy/keystore.jks", "collect", null, null);
-        secure("deploy/tsceo.jks", "timesync", null, null);
+        secure("deploy/keystore.jks", "collect", null, null);
+        // secure("deploy/tsceo.jks", "timesync", null, null);
 
         // Serve static files from src/main/resources/public/
         staticFileLocation("/public");
@@ -249,17 +249,17 @@ public class Server implements SparkApplication {
         post("/geo-dash/gateway-request",             geoDash::gatewayRequest);
         post("/geo-dash/update-widget",               geoDash::updateDashBoardWidgetById);
 
-        // Routing Table: TimeSync
-        get("/timesync/version",                      timeSync::getVersion);
-        get("/timesync/project/:interpreter",         timeSync::getAssignedProjects);
-        get("/timesync/plot/:interpreter/:project_id/:packet", timeSync::getPlots);
-        get("/timesync/vertex/:interpreter/:project_id/:plotid/:packet", timeSync::getVerticesForPlot);
-        get("/timesync/vertex/:project_id",           timeSync::getVerticesForProject);
-        post("/timesync/vertex/save",                 timeSync::saveVertex);
-        post("/timesync/comment/save",                timeSync::saveComment);
-        get("/timesync/comment/:interpreter/:project_id/:plotid/:packet", timeSync::getComment);
+        // Routing Table: TimeSync API
+        get("/timesync/version",                                                   timeSync::getVersion);
+        get("/timesync/project/:interpreter",                                      timeSync::getAssignedProjects);
+        get("/timesync/plot/:interpreter/:project_id/:packet",                     timeSync::getPlots);
+        get("/timesync/vertex/:interpreter/:project_id/:plotid/:packet",           timeSync::getVerticesForPlot);
+        get("/timesync/vertex/:project_id",                                        timeSync::getVerticesForProject);
+        post("/timesync/vertex/save",                                              timeSync::saveVertex);
+        post("/timesync/comment/save",                                             timeSync::saveComment);
+        get("/timesync/comment/:interpreter/:project_id/:plotid/:packet",          timeSync::getComment);
         get("/timesync/image-preference/:interpreter/:project_id/:plotid/:packet", timeSync::getImagePreference);
-        post("timesync/image-preference/save",        timeSync::updateImagePreference);
+        post("timesync/image-preference/save",                                     timeSync::updateImagePreference);
 
         // Routing Table: Page Not Found
         notFound(Views.pageNotFound(freemarker));
