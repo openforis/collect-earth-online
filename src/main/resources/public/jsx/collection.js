@@ -545,20 +545,15 @@ class Collection extends React.Component {
     };
 
     showTimeSync = () => {
-        const { currentPlot, mapConfig, currentProject } = this.state;
+        const { currentPlot } = this.state;
         const message = {
-            "projectID": this.props.projectId,
-            "plotID": currentPlot.plotId,
-            "currentLocation": currentPlot.center
-        }
-
-        window.open(this.props.documentRoot + `/timesync?`
+            projectID: this.props.projectId,
+            plotID: currentPlot.plotId,
+            currentLocation: currentPlot.center
+        };
+        window.open(this.props.documentRoot + "/timesync?"
                     + encodeURIComponent(JSON.stringify(message)),
-                    "_timesync-dash");        
-
-        // window.open(this.props.documentRoot + `/timesync/${this.props.userId}?`
-        //             + encodeURIComponent(JSON.stringify(message)),
-        //             "_timesync-dash");
+                    "_timesync-dash");
     }
 
     createPlotKML = () => {
