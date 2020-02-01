@@ -6,11 +6,11 @@
     <div class="col-xl-6 offset-xl-3 col-lg-8 offset-lg-2">
         <h1>Collect Earth Online User Manual</h1>
         <div class="btn-group-vertical btn-block mb-4">
-            <a class="btn btn-outline-lightgreen btn-block" href="${root}/downloads/CEO_Manual.pdf" role="button">
-                &#x1F4BE; PDF Version
+            <a class="btn btn-outline-lightgreen btn-block" href="${root}/downloads/CEO_Manualv2.pdf" role="button">
+                &#x1F4BE; CEO Manual (v2)
             </a>
-            <a class="btn btn-outline-lightgreen btn-block" href="${root}/downloads/CEO_Manual.docx" role="button">
-                &#x1F4BE; DOCX Version
+            <a class="btn btn-outline-lightgreen btn-block" href="${root}/downloads/CEO_Theoretical_Manual.pdf" role="button">
+                &#x1F4BE; CEO Project Development Manual
             </a>
         </div>
         <h1>Code and Bug Support</h1>
