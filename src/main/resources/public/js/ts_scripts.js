@@ -144,7 +144,6 @@ var windowW = $(window).width();
 
 var tsServer = 'https://localhost:8080';
 var geeServer = 'https://localhost:8888';
-var osuServer = 'https://timesync.forestry.oregonstate.edu/_ts3';
 
 /**
  * FIXME: disect this funtion into fuction for each url.
@@ -160,13 +159,6 @@ function getUrls(sessionInfo, year) {
         "plotList": `${tsServer}/get-project-plots/${sessionInfo.projectID}/${sessionInfo.numPlots}`,
         "vertInfoSave": `${tsServer}/timesync/vertex/save`,
         "vertices": `${tsServer}/timesync/vertex/${sessionInfo.userID}/${sessionInfo.projectID}/${sessionInfo.plotID}/${sessionInfo.packet}`,
-
-        "plotInterp": osuServer + '/index.php/vertex/' + sessionInfo.userID + '/' + sessionInfo.projectID + '/' + sessionInfo.tsa + '/' + sessionInfo.plotID,
-        "plotComment": osuServer + '/comment/' + sessionInfo.userID + '/' + sessionInfo.projectID + '/' + sessionInfo.tsa + '/' + sessionInfo.plotID,
-        "respDesign": osuServer + '/config/response/' + sessionInfo.projectID,
-        "chipOverRide": osuServer + '/image/override',
-        // "vertInfoSave": osuServer + '/vertex/save',
-        "commentSave": osuServer + '/comment/save'
     }
     return urls;
 }
