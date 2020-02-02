@@ -102,7 +102,7 @@ public class PostgresTimeSync implements TimeSync {
         var vertInfos     = jsonInputs.get("timeSync").getAsJsonArray();
         var json          = mapJsonArray(vertInfos, element -> {
             var imageYear   = element.get("image_year").getAsInt();
-            var imageJulday = element.get("image_julday").getAsInt();
+            var imageJulDay = element.get("image_julday").getAsInt();
             var iId         = element.get("iid");
             var imageId     = iId == null ? "" : iId.getAsString();
 
@@ -125,7 +125,7 @@ public class PostgresTimeSync implements TimeSync {
             var sqlPacket = packet == -1 ? null : packet;
             packetJson.addProperty("packet_id", sqlPacket);
             packetJson.addProperty("image_year", imageYear);
-            packetJson.addProperty("image_julday", imageJulday);
+            packetJson.addProperty("image_julday", imageJulDay);
             packetJson.addProperty("image_id", imageId);
 
             if (element.has("landuse")) {
