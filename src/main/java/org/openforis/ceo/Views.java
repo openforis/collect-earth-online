@@ -182,4 +182,5 @@ public class Views {
     public static Route pageNotFound(FreeMarkerEngine freemarker) {
         return makeRoute("Page-Not-Found", freemarker);
     }
+
 }

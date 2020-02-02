@@ -20,7 +20,7 @@ public class DatabaseUtils {
         return DriverManager.getConnection(url, user, password);
     }
 
-    // TODO: make a similar generic function to excute query
+    // TODO: make a similar generic function to execute query
     public static String convertResultSetToJsonString(ResultSet rs) throws IOException {
         if (rs == null) {
             return "";
@@ -47,4 +47,5 @@ public class DatabaseUtils {
             }
         }
     }
+
 }

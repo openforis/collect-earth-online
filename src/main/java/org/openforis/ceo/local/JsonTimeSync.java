@@ -81,4 +81,5 @@ public class JsonTimeSync implements TimeSync {
     public String updateImagePreference(Request req, Response res) {
         return "";
     }
+
 }

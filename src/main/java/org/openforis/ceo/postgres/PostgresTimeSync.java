@@ -1,14 +1,14 @@
 package org.openforis.ceo.postgres;
 
+import static org.openforis.ceo.utils.DatabaseUtils.connect;
+import static org.openforis.ceo.utils.DatabaseUtils.convertResultSetToJsonString;
+import static org.openforis.ceo.utils.JsonUtils.mapJsonArray;
+import static org.openforis.ceo.utils.JsonUtils.parseJson;
+
 import com.google.gson.JsonObject;
 import org.openforis.ceo.db_api.TimeSync;
-import org.openforis.ceo.utils.DatabaseUtils;
-import org.openforis.ceo.utils.JsonUtils;
 import spark.Request;
 import spark.Response;
-
-import static org.openforis.ceo.utils.DatabaseUtils.connect;
-import static org.openforis.ceo.utils.JsonUtils.parseJson;
 
 public class PostgresTimeSync implements TimeSync {
 
@@ -24,7 +24,7 @@ public class PostgresTimeSync implements TimeSync {
             var pstmt = conn.prepareStatement(sql);
             pstmt.setInt(1, Integer.parseInt(interpreter));
             var rs = pstmt.executeQuery();
-            return DatabaseUtils.convertResultSetToJsonString(rs);
+            return convertResultSetToJsonString(rs);
         } catch (Exception e) {
             return "";
         }
@@ -32,8 +32,8 @@ public class PostgresTimeSync implements TimeSync {
 
     public String getPlots(Request req, Response res) {
         // timesync/plot/:interpreter/:project_id/:packet
-        var interpreter = req.params(":interpreter");
-        var projectId   = req.params(":project_id");
+        var interpreter = Integer.parseInt(req.params(":interpreter"));
+        var projectId   = Integer.parseInt(req.params(":project_id"));
         var packet      = Integer.parseInt(req.params("packet"));
 
         var sql = packet < 0
@@ -42,13 +42,13 @@ public class PostgresTimeSync implements TimeSync {
         try {
             var conn = connect();
             var pstmt = conn.prepareStatement(sql);
-            pstmt.setInt(1, Integer.parseInt(interpreter));
-            pstmt.setInt(2, Integer.parseInt(projectId));
+            pstmt.setInt(1, interpreter);
+            pstmt.setInt(2, projectId);
             if (packet >= 0) {
                 pstmt.setInt(3, packet);
             }
             var rs = pstmt.executeQuery();
-            return DatabaseUtils.convertResultSetToJsonString(rs);
+            return convertResultSetToJsonString(rs);
         } catch (Exception e) {
             return "";
         }
@@ -70,7 +70,7 @@ public class PostgresTimeSync implements TimeSync {
             pstmt.setInt(3, Integer.parseInt(plotId));
             pstmt.setInt(4, Integer.parseInt(packet));
             var rs = pstmt.executeQuery();
-            return DatabaseUtils.convertResultSetToJsonString(rs);
+            return convertResultSetToJsonString(rs);
         } catch (Exception e) {
             return "";
         }
@@ -86,7 +86,7 @@ public class PostgresTimeSync implements TimeSync {
             var pstmt = conn.prepareStatement(sql);
             pstmt.setInt(1, Integer.parseInt(projectId));
             var rs = pstmt.executeQuery();
-            return DatabaseUtils.convertResultSetToJsonString(rs);
+            return convertResultSetToJsonString(rs);
         } catch (Exception e) {
             return "";
         }
@@ -100,7 +100,7 @@ public class PostgresTimeSync implements TimeSync {
         var packetElement = jsonInputs.get("packet");
         var packet        = packetElement == null ? -1 : packetElement.getAsInt();
         var vertInfos     = jsonInputs.get("timeSync").getAsJsonArray();
-        var json          = JsonUtils.mapJsonArray(vertInfos, element -> {
+        var json          = mapJsonArray(vertInfos, element -> {
             var imageYear   = element.get("image_year").getAsInt();
             var imageJulday = element.get("image_julday").getAsInt();
             var iId         = element.get("iid");
@@ -129,13 +129,10 @@ public class PostgresTimeSync implements TimeSync {
             packetJson.addProperty("image_id", imageId);
 
             if (element.has("landuse")) {
-                var landUse           = element.get("landuse").getAsJsonObject();
-                var dominantLandCover = element.get("landcover").getAsJsonObject();
-                var changeProcess     = element.get("change_process").getAsJsonObject();
                 packetJson.addProperty("is_vertex", true);
-                packetJson.add("landuse", landUse);
-                packetJson.add("landcover", dominantLandCover);
-                packetJson.add("change_process", changeProcess);
+                packetJson.add("landuse", element.get("landuse").getAsJsonObject());
+                packetJson.add("landcover", element.get("landcover").getAsJsonObject());
+                packetJson.add("change_process", element.get("change_process").getAsJsonObject());
             } else {
                 packetJson.addProperty("is_vertex", false);
                 packetJson.add("landuse", null);
@@ -221,7 +218,7 @@ public class PostgresTimeSync implements TimeSync {
     }
 
     public String getComment(Request req, Response res) {
-        /// timesync//comment/:interpreter/:project_id/:plotid/:packet
+        // timesync//comment/:interpreter/:project_id/:plotid/:packet
         var interpreter = req.params(":interpreter");
         var projectId   = req.params(":project_id");
         var plotId      = req.params(":plotid");
@@ -236,7 +233,7 @@ public class PostgresTimeSync implements TimeSync {
             pstmt.setInt(3, Integer.parseInt(plotId));
             pstmt.setInt(4, Integer.parseInt(packet));
             var rs = pstmt.executeQuery();
-            return DatabaseUtils.convertResultSetToJsonString(rs);
+            return convertResultSetToJsonString(rs);
         } catch (Exception e) {
             return "";
         }
@@ -249,4 +246,5 @@ public class PostgresTimeSync implements TimeSync {
     public String updateImagePreference(Request req, Response res) {
         return "";
     }
+
 }
