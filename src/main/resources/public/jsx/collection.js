@@ -11,7 +11,7 @@ class Collection extends React.Component {
         this.state = {
             collectionStart: 0,
             currentProject: { surveyQuestions: [], institution: "" },
-            currentImagery: { id: "", sourceConfig: {} },
+            currentImagery: { id: "", sourceConfig: {}},
             currentPlot: null,
             imageryAttribution: "",
             imageryList: [],
@@ -33,7 +33,6 @@ class Collection extends React.Component {
             storedInterval: null,
             KMLFeatures: null,
             hasGeoDash: false,
-            hasTimeSync: false,
         };
     }
 
@@ -84,8 +83,6 @@ class Collection extends React.Component {
             this.showProjectPlot();
             if (this.state.hasGeoDash) {
                 this.showGeoDash();
-            }
-            if (this.state.hasTimeSync) {
                 this.showTimeSync();
             }
             clearInterval(this.state.storedInterval);
@@ -134,7 +131,7 @@ class Collection extends React.Component {
     }
 
     getProjectData = () => {
-        Promise.all([this.getProjectById(), this.getProjectPlots(), this.checkForGeodash(), this.checkForTimeSync()])
+        Promise.all([this.getProjectById(), this.getProjectPlots(), this.checkForGeodash()])
             .catch(response => {
                 console.log(response);
                 alert("Error retrieving the project info. See console for details.");
@@ -164,19 +161,6 @@ class Collection extends React.Component {
                     ? eval(data.widgets)
                     : [];
             this.setState({ hasGeoDash: widgets.length > 0 });
-            return Promise.resolve("resolved");
-        });
-
-    checkForTimeSync = () => fetch(this.props.documentRoot + "/geo-dash/get-by-projid?projectId=" + this.props.projectId)
-        .then(response => response.ok ? response.json() : Promise.reject(response))
-        .then(data => {
-            const widgets = Array.isArray(data.widgets)
-                ? data.widgets
-                : Array.isArray(eval(data.widgets))
-                    ? eval(data.widgets)
-                    : [];
-            console.log(widgets);
-            this.setState({ hasTimeSync: widgets.length > 0 });
             return Promise.resolve("resolved");
         });
 
@@ -549,7 +533,7 @@ class Collection extends React.Component {
         const message = {
             projectID: this.props.projectId,
             plotID: currentPlot.plotId,
-            currentLocation: currentPlot.center
+            currentLocation: currentPlot.center,
         };
         window.open(this.props.documentRoot + "/timesync?"
                     + encodeURIComponent(JSON.stringify(message)),

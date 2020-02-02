@@ -1,5 +1,5 @@
-import React from 'react';
-import ReactDOM from 'react-dom';
+import React from "react";
+import ReactDOM from "react-dom";
 
 class TimeSync extends React.Component {
     constructor(props) {
@@ -8,14 +8,14 @@ class TimeSync extends React.Component {
             documentRoot: props.documentRoot,
             userId: props.userId,
             userName: props.userName,
-            version: ""
+            version: "",
         };
     }
 
     componentDidMount() {
         fetch(this.state.documentRoot + "/timesync/version")
             .then(response => {
-                let d = response.text();
+                const d = response.text();
                 console.log(d);
                 if (response.ok) {
                     return d;
@@ -23,7 +23,7 @@ class TimeSync extends React.Component {
                     alert("Error retrieving the TimeSync info. See console for details.");
                 }
             })
-            .then(data => this.setState({version: data}));
+            .then(data => this.setState({ version: data }));
     }
 
     render() {
