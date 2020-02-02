@@ -304,7 +304,6 @@ class Collection extends React.Component {
                     (parseInt(this.state.currentImagery.sourceConfig.day) > 9 ? "" : "0") + parseInt(this.state.currentImagery.sourceConfig.day),
                 ].join("-"),
             });
-            this.updatePlanetDailyLayer();
         }
     };
 
