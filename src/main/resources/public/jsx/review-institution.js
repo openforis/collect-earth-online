@@ -491,7 +491,7 @@ class NewImagery extends React.Component {
         const message = this.checkDateField(sourceConfig);
         if (!this.checkAllParams()) {
             alert("You must fill out all fields.");
-        } else if (message) {
+        } else if (["Planet", "PlanetDaily"].includes(sourceConfig.type) && message) {
             alert(message);
         } else if (this.props.titleIsTaken(this.state.newImageryTitle)) {
             alert("The title '" + this.state.newImageryTitle + "' is already taken.");
