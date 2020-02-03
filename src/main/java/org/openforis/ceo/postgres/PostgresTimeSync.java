@@ -107,23 +107,22 @@ public class PostgresTimeSync implements TimeSync {
             var imageId     = iId == null ? "" : iId.getAsString();
 
             var reflectance = new JsonObject();
-            reflectance.addProperty("B1", element.get("B1").getAsFloat());
-            reflectance.addProperty("B2", element.get("B2").getAsFloat());
-            reflectance.addProperty("B3", element.get("B3").getAsFloat());
-            reflectance.addProperty("B4", element.get("B4").getAsFloat());
-            reflectance.addProperty("B5", element.get("B5").getAsFloat());
-            reflectance.addProperty("B7", element.get("B7").getAsFloat());
-            reflectance.addProperty("cfmask", element.get("cfmask").getAsInt());
-            reflectance.addProperty("iid", element.get("iid").getAsString());
-            reflectance.addProperty("image_julday", element.get("image_julday").getAsInt());
-            reflectance.addProperty("image_year", element.get("image_year").getAsInt());
+            reflectance.addProperty("B1",           element.get("B1").getAsFloat());
+            reflectance.addProperty("B2",           element.get("B2").getAsFloat());
+            reflectance.addProperty("B3",           element.get("B3").getAsFloat());
+            reflectance.addProperty("B4",           element.get("B4").getAsFloat());
+            reflectance.addProperty("B5",           element.get("B5").getAsFloat());
+            reflectance.addProperty("B7",           element.get("B7").getAsFloat());
+            reflectance.addProperty("cfmask",       element.get("cfmask").getAsInt());
+            reflectance.addProperty("iid",          imageId);
+            reflectance.addProperty("image_julday", imageJulDay);
+            reflectance.addProperty("image_year",   imageYear);
 
             var packetJson = new JsonObject();
             packetJson.addProperty("project_id", projectId);
             packetJson.addProperty("plot_id", plotId);
             packetJson.addProperty("user_id", interpreter);
-            var sqlPacket = packet == -1 ? null : packet;
-            packetJson.addProperty("packet_id", sqlPacket);
+            packetJson.addProperty("packet_id", packet == -1 ? null : packet);
             packetJson.addProperty("image_year", imageYear);
             packetJson.addProperty("image_julday", imageJulDay);
             packetJson.addProperty("image_id", imageId);

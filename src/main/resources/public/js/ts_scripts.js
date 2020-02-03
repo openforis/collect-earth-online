@@ -277,7 +277,7 @@ function extractInterpretation(tsdata, comment, isExample) {
     })
 
     //check to see if vert info has been filled in for this plot
-    if (vertInfo.length != 0) {
+    if (vertInfo.length !== 0) {
         for (var i = 0; i < vertInfo.length; i++) {
             selectThese.push(vertInfo[i].index); //reset global
         }
@@ -310,7 +310,7 @@ function updateUI() {
     //update UI
     fillInForm() //fill out the form inputs
     $("#commentInput").val(comment);
-    $("#isExampleCheckbox").prop("checked", isExample == 1);
+    $("#isExampleCheckbox").prop("checked", isExample === 1);
     plotInt(false); //draw the points
     makeChipInfo("json", origData)
     appendSrcImg(); //append the src imgs
@@ -360,7 +360,7 @@ function getData(sessionInfo, specIndex, activeRedSpecIndex, activeGreenSpecInde
             console.log(tsdata);
 
             //TODO: is it possible that there is no timeSync property in the data?
-            if (tsdata.length==0) {
+            if (tsdata.length===0) {
                 throw("No interpretation found, fetching from GEE");
             }
 
@@ -494,7 +494,7 @@ $('#commentInput').keypress(function () {
 $('#exportBtn').click(function (event) {
     return;
     // var target = 'exportts.php?t=' + authHeader + '&pid=' + sessionInfo.projectID + '&uid=' + sessionInfo.userID;
-    // if (sessionInfo.projectID == '') {
+    // if (sessionInfo.projectID === '') {
     //     return;
     // }
     // window.location.href=target;
@@ -509,13 +509,13 @@ $('#syncWithCEO').click(function (event) {
 $('#isExampleCheckbox').change(function () {
     sessionInfo.isDirty = true;
     var thisPlotLi = $("#plotList li.selected");
-    if (this.checked == true) {
+    if (this.checked === true) {
         thisPlotLi.addClass("example");
     } else {
         thisPlotLi.removeClass("example");
     }
     //update the list
-    if ($("#examplePlots").prop("checked") == true) {
+    if ($("#examplePlots").prop("checked") === true) {
         showHideExamples();
     }
 });
@@ -567,12 +567,12 @@ $("body").on("click", "#packetList li", function () {
 //function to check if plots are done and add a class to them that changes their background color if they are
 function checkPlot(sessionInfo, vertInfo) {
     var nVerts = vertInfo.length
-    if (nVerts == 0 | sessionInfo.plotID == "") { return } //if it has never been clicked on before then leave, else check if it is a complete interpretation
+    if (nVerts === 0 | sessionInfo.plotID === "") { return } //if it has never been clicked on before then leave, else check if it is a complete interpretation
     var total = 0;
     vertInfo.forEach(function (v) {
-        total = total + (v.change_process.changeProcess != "" ? 1 : 0);
-        total = total + (v.landuse.primary.landUse != "" ? 1 : 0);
-        total = total + (v.landcover.landCover != "" ? 1 : 0);
+        total = total + (v.change_process.changeProcess !== "" ? 1 : 0);
+        total = total + (v.landuse.primary.landUse !== "" ? 1 : 0);
+        total = total + (v.landcover.landCover !== "" ? 1 : 0);
     });
 
     //find the li that we're working with if is hasn't be supplied (after clicking to a new )
@@ -580,14 +580,14 @@ function checkPlot(sessionInfo, vertInfo) {
 
     //if(typeof thisPlotLi === "undefined"){
     //	$("#plotList li").each(function(){
-    //		if($(this).text() == sessionInfo.plotID){
+    //		if($(this).text() === sessionInfo.plotID){
     //			thisPlotLi = $(this)
     //			return
     //		}
     //	});
     //}
     var done = false;
-    if (total + 1 == nVerts * 3) {
+    if (total + 1 === nVerts * 3) {
         //thisPlotLi.addClass("done")
         thisPlotLi.find("span").removeClass().addClass("glyphicon glyphicon-ok")
         done = true;
@@ -612,7 +612,7 @@ function clearThePlotDisplay(sessionInfo, vertInfo) {
     $(".segment, .vertex").remove(); //empty the current vertex and segment forms
     $("#commentInput").val("")
     $("#isExampleCheckbox").prop("checked", false)
-    if ((chipstripwindow != null) && chipstripwindow.closed == false) {
+    if ((chipstripwindow !== null) && chipstripwindow.closed === false) {
         var message = { "action": "clearChips" }
         chipstripwindow.postMessage(JSON.stringify(message), "*");
     }
@@ -643,9 +643,9 @@ function appendPlots(sessionInfo) {
 
             let center = object[i].center;
 
-            if (object[i].is_complete == 1) {
+            if (object[i].is_complete === 1) {
                 //$("#plotList").append('<li class="done">'+object[i].plotid+'</li>');
-                if (object[i].is_example != 1) {
+                if (object[i].is_example !== 1) {
                     let pLi = `<li style="display:none" data-center='${center}'>
                                     <small>
                                         <span class="glyphicon glyphicon-ok" style="margin-right:3px"></span>
@@ -660,7 +660,7 @@ function appendPlots(sessionInfo) {
                 }
             } else {
                 //$("#plotList").append('<li>'+object[i].plotid+'</li>');
-                if (object[i].is_example != 1) {
+                if (object[i].is_example !== 1) {
                     let pLi = `<li style="display:none" data-center='${center}'>
                                     <small>
                                         <span class="glyphicon glyphicon-none" style="margin-right:3px"></span>
@@ -701,7 +701,7 @@ $("#examplePlots").change(function () {
 function showHideExamples() {
     clearThePlotDisplay(sessionInfo, vertInfo); //remove all plot elements in prep for new plot
     $("#plotList li").removeClass("selected");
-    if ($("#examplePlots").prop("checked") == true) {
+    if ($("#examplePlots").prop("checked") === true) {
         $("#plotList li").not(".example").hide();
     } else {
         $("#plotList li").show();
@@ -761,7 +761,7 @@ $("body").on("click", "#plotList li", function (e) {
 });
 
 function saveSetting(projectID, plotID, domain) {
-    if (domain.dirty == 1) { localStorage.setItem(projectID + '.' + plotID, JSON.stringify(domain)); }
+    if (domain.dirty === 1) { localStorage.setItem(projectID + '.' + plotID, JSON.stringify(domain)); }
 }
 
 function getSetting(projectID, plotID, defaultDomain) {
@@ -782,13 +782,13 @@ function parseNote(note, category) {
     var processNote = { natural: false, prescribed: false, sitePrepFire: false, airphotoOnly: false, clearcut: false, thinning: false, flooding: false, reserviorLakeFlux: false, wetlandDrainage: false };
 
     var result = landuseNote;
-    if (category == 'landcover') {
+    if (category === 'landcover') {
         result = landcoverNote;
     }
-    else if (category == 'process') {
+    else if (category === 'process') {
         result = processNote;
     }
-    if (note.trim() == '') {
+    if (note.trim() === '') {
         return result;
     }
 
@@ -1391,7 +1391,7 @@ $(document).on("dblclick", "circle.data, .chipHolder.annual", function (e) { //n
         } else {
             var seriesIndex = $(".chipHolder").index(this);
         }
-        //if(seriesIndex != 0 &&  seriesIndex != lastIndex){changeSelectedClass(seriesIndex);}
+        //if(seriesIndex !== 0 &&  seriesIndex !== lastIndex){changeSelectedClass(seriesIndex);}
         changeSelectedClass(seriesIndex);
     }
 });
@@ -1579,7 +1579,7 @@ $(document).ready(function () {
                 "thisChipSet": 'chipSetBGW' //YANG $("#chipSetList .active").attr("id")
             };
 
-            if ((chipstripwindow != null) || (chipstripwindow.closed === false)) {      //if the window is open then send message to change the chip set
+            if ((chipstripwindow !== null) || (chipstripwindow.closed === false)) {      //if the window is open then send message to change the chip set
                 chipstripwindow.postMessage(JSON.stringify(message), "*");
             }
         }
@@ -2636,10 +2636,10 @@ $("#plotSize").change(function () { //REACT IGNORED FUNCTION
     drawAllChips("annual");
     var message = { "action": "plotSize", "chipDisplayProps": chipDisplayProps } //prepare zoom message
 
-    if ((chipstripwindow != null) && chipstripwindow.closed === false) {
+    if ((chipstripwindow !== null) && chipstripwindow.closed === false) {
         chipstripwindow.postMessage(JSON.stringify(message), "*");
     }
-    /* 				if ((expandedChipWindow != null) && expandedChipWindow.closed == false){
+    /* 				if ((expandedChipWindow !== null) && expandedChipWindow.closed === false){
                         expandedChipWindow.postMessage(JSON.stringify(message),"*");
                     } */
 });
@@ -2666,10 +2666,10 @@ $("#chipSize").change(function () {
     var message = { "action": "chipSize", "chipDisplayProps": chipDisplayProps } //prepare zoom message
 
     //send the zoom message
-    if ((chipstripwindow != null) && chipstripwindow.closed === false) {
+    if ((chipstripwindow !== null) && chipstripwindow.closed === false) {
         chipstripwindow.postMessage(JSON.stringify(message), "*");
     }
-    /* 				if ((expandedChipWindow != null) && expandedChipWindow.closed == false){
+    /* 				if ((expandedChipWindow !== null) && expandedChipWindow.closed === false){
                         expandedChipWindow.postMessage(JSON.stringify(message),"*");
                     } */
 
@@ -2688,10 +2688,10 @@ $("#zoomSize").change(function () {
     var message = { "action": "zoom", "chipDisplayProps": chipDisplayProps }
 
     //send the zoom array to the external window
-    if ((chipstripwindow != null) && chipstripwindow.closed === false) {
+    if ((chipstripwindow !== null) && chipstripwindow.closed === false) {
         chipstripwindow.postMessage(JSON.stringify(message), "*");
     }
-    /* 					if ((expandedChipWindow != null) && expandedChipWindow.closed == false){
+    /* 					if ((expandedChipWindow !== null) && expandedChipWindow.closed === false){
                             expandedChipWindow.postMessage(JSON.stringify(zoomInfo),"*");
                         } */
 });
@@ -2977,7 +2977,7 @@ $(document).on("mousewheel", ".chipImg", function (e) { //canvas.annual
             if ((chipstripwindow !== null) && chipstripwindow.closed === false) {
                 chipstripwindow.postMessage(JSON.stringify(message), "*");
             }
-            /* 						if((expandedChipWindow != null) && expandedChipWindow.closed == false){
+            /* 						if((expandedChipWindow !== null) && expandedChipWindow.closed === false){
                                         expandedChipWindow.postMessage(JSON.stringify(zoomInfo),"*");
                                     } */
         } else if ($(this).hasClass("intraAnnual")) {
@@ -3074,7 +3074,7 @@ $("body").on("click", ".previousChip, .nextChip", function (e) { //need to use b
 //var originURL = null;
 $("body").on("click", ".expandChipYear, .data", function (e) { //need to use body because the canvases have probably not loaded yet
     var nodeType = $(this).prop('nodeName');
-    if (nodeType == "circle") {
+    if (nodeType === "circle") {
         if (e.shiftKey) {
             var thisImg = $("circle.data").index(this);
         } else {

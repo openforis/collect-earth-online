@@ -11,7 +11,7 @@ class Collection extends React.Component {
         this.state = {
             collectionStart: 0,
             currentProject: { surveyQuestions: [], institution: "" },
-            currentImagery: { id: "", sourceConfig: {}},
+            currentImagery: { id: "", sourceConfig: {} },
             currentPlot: null,
             imageryAttribution: "",
             imageryList: [],
@@ -143,7 +143,7 @@ class Collection extends React.Component {
         .then(project => {
             if (project.id > 0 && project.availability !== "archived") {
                 const surveyQuestions = convertSampleValuesToSurveyQuestions(project.sampleValues);
-                this.setState({ currentProject: { ...project, surveyQuestions: surveyQuestions }});
+                this.setState({ currentProject: { ...project, surveyQuestions: surveyQuestions } });
                 return Promise.resolve("resolved");
             } else {
                 return Promise.reject(project.availability === "archived"
@@ -494,7 +494,7 @@ class Collection extends React.Component {
     };
 
     showPlotSamples = () => {
-        const { mapConfig, selectedQuestion: { visible }} = this.state;
+        const { mapConfig, selectedQuestion: { visible } } = this.state;
         mercator.disableSelection(mapConfig);
         mercator.removeLayerByTitle(mapConfig, "currentSamples");
         mercator.addVectorLayer(mapConfig,
