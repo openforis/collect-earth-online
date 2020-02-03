@@ -84,6 +84,7 @@ class Collection extends React.Component {
             this.showProjectPlot();
             if (this.state.hasGeoDash) {
                 this.showGeoDash();
+                this.showTimeSync();
             }
             clearInterval(this.state.storedInterval);
             this.setState({ storedInterval: setInterval(() => this.resetPlotLock, 2.3 * 60 * 1000) });
@@ -147,7 +148,7 @@ class Collection extends React.Component {
         .then(project => {
             if (project.id > 0 && project.availability !== "archived") {
                 const surveyQuestions = convertSampleValuesToSurveyQuestions(project.sampleValues);
-                this.setState({ currentProject: { ...project, surveyQuestions: surveyQuestions }});
+                this.setState({ currentProject: { ...project, surveyQuestions: surveyQuestions } });
                 return Promise.resolve("resolved");
             } else {
                 return Promise.reject(project.availability === "archived"
@@ -526,7 +527,7 @@ class Collection extends React.Component {
     };
 
     showPlotSamples = () => {
-        const { mapConfig, selectedQuestion: { visible }} = this.state;
+        const { mapConfig, selectedQuestion: { visible } } = this.state;
         mercator.disableSelection(mapConfig);
         mercator.removeLayerByTitle(mapConfig, "currentSamples");
         mercator.addVectorLayer(mapConfig,
@@ -559,6 +560,18 @@ class Collection extends React.Component {
                     + "&bradius=" + plotRadius,
                     "_geo-dash");
     };
+
+    showTimeSync = () => {
+        const { currentPlot } = this.state;
+        const message = {
+            projectID: this.props.projectId,
+            plotID: currentPlot.plotId,
+            currentLocation: currentPlot.center,
+        };
+        window.open(this.props.documentRoot + "/timesync?"
+                    + encodeURIComponent(JSON.stringify(message)),
+                    "_timesync-dash");
+    }
 
     createPlotKML = () => {
         const plotFeatures = mercator.getAllFeatures(this.state.mapConfig, "currentPlot");

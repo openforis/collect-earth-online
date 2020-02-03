@@ -23,6 +23,7 @@ import org.openforis.ceo.db_api.Imagery;
 import org.openforis.ceo.db_api.Institutions;
 import org.openforis.ceo.db_api.Plots;
 import org.openforis.ceo.db_api.Projects;
+import org.openforis.ceo.db_api.TimeSync;
 import org.openforis.ceo.db_api.Users;
 import org.openforis.ceo.env.CeoConfig;
 import org.openforis.ceo.local.JsonGeoDash;
@@ -30,12 +31,14 @@ import org.openforis.ceo.local.JsonImagery;
 import org.openforis.ceo.local.JsonInstitutions;
 import org.openforis.ceo.local.JsonPlots;
 import org.openforis.ceo.local.JsonProjects;
+import org.openforis.ceo.local.JsonTimeSync;
 import org.openforis.ceo.local.JsonUsers;
 import org.openforis.ceo.postgres.PostgresGeoDash;
 import org.openforis.ceo.postgres.PostgresImagery;
 import org.openforis.ceo.postgres.PostgresInstitutions;
 import org.openforis.ceo.postgres.PostgresPlots;
 import org.openforis.ceo.postgres.PostgresProjects;
+import org.openforis.ceo.postgres.PostgresTimeSync;
 import org.openforis.ceo.postgres.PostgresUsers;
 import spark.Request;
 import spark.Response;
@@ -61,12 +64,13 @@ public class Server implements SparkApplication {
 
     // Sets up Spark's routing table and exception handling rules
     private static void declareRoutes(Projects projects, Imagery imagery, Users users,
-                                      Institutions institutions, GeoDash geoDash, Plots plots) {
+                                      Institutions institutions, GeoDash geoDash, Plots plots, TimeSync timeSync) {
         // Create a configured FreeMarker renderer
         var freemarker = new FreeMarkerEngine(getConfiguration());
 
         // Enable HTTPS site-wide
         secure("deploy/keystore.jks", "collect", null, null);
+        // secure("deploy/tsceo.jks", "timesync", null, null);
 
         // Serve static files from src/main/resources/public/
         staticFileLocation("/public");
@@ -184,6 +188,7 @@ public class Server implements SparkApplication {
         get("/support",                               Views.support(freemarker));
         get("/widget-layout-editor",                  Views.widgetLayoutEditor(freemarker));
         get("/get-tile",                              (req, res) -> Proxy.proxyImagery(req, res, imagery));
+        get("/timesync",                              Views.timesync(freemarker));
 
         // Routing Table: HTML pages (with side effects)
         get("/logout",                                (req, res) -> Views.home(freemarker).handle(users.logout(req, res), res));
@@ -243,6 +248,18 @@ public class Server implements SparkApplication {
         post("/geo-dash/delete-widget",               geoDash::deleteDashBoardWidgetById);
         post("/geo-dash/gateway-request",             geoDash::gatewayRequest);
         post("/geo-dash/update-widget",               geoDash::updateDashBoardWidgetById);
+
+        // Routing Table: TimeSync API
+        get("/timesync/version",                                                   timeSync::getVersion);
+        get("/timesync/project/:interpreter",                                      timeSync::getAssignedProjects);
+        get("/timesync/plot/:interpreter/:project_id/:packet",                     timeSync::getPlots);
+        get("/timesync/vertex/:interpreter/:project_id/:plotid/:packet",           timeSync::getVerticesForPlot);
+        get("/timesync/vertex/:project_id",                                        timeSync::getVerticesForProject);
+        post("/timesync/vertex/save",                                              timeSync::saveVertex);
+        post("/timesync/comment/save",                                             timeSync::saveComment);
+        get("/timesync/comment/:interpreter/:project_id/:plotid/:packet",          timeSync::getComment);
+        get("/timesync/image-preference/:interpreter/:project_id/:plotid/:packet", timeSync::getImagePreference);
+        post("timesync/image-preference/save",                                     timeSync::updateImagePreference);
 
         // Routing Table: Page Not Found
         notFound(Views.pageNotFound(freemarker));
@@ -315,7 +332,8 @@ public class Server implements SparkApplication {
                           new JsonUsers(),
                           new JsonInstitutions(),
                           new JsonGeoDash(),
-                          new JsonPlots());
+                          new JsonPlots(),
+                          new JsonTimeSync());
         } else {
             // Set up the routing table to use the POSTGRES backend
             declareRoutes(new PostgresProjects(),
@@ -323,7 +341,8 @@ public class Server implements SparkApplication {
                           new PostgresUsers(),
                           new PostgresInstitutions(),
                           new PostgresGeoDash(),
-                          new PostgresPlots());
+                          new PostgresPlots(),
+                          new PostgresTimeSync());
         }
     }
 
@@ -340,7 +359,8 @@ public class Server implements SparkApplication {
                           new JsonUsers(),
                           new JsonInstitutions(),
                           new JsonGeoDash(),
-                          new JsonPlots());
+                          new JsonPlots(),
+                          new JsonTimeSync());
         } else {
             // Set up the routing table to use the POSTGRES backend
             declareRoutes(new PostgresProjects(),
@@ -348,7 +368,9 @@ public class Server implements SparkApplication {
                           new PostgresUsers(),
                           new PostgresInstitutions(),
                           new PostgresGeoDash(),
-                          new PostgresPlots());
+                          new PostgresPlots(),
+                          new PostgresTimeSync());
         }
     }
+
 }

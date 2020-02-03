@@ -1004,7 +1004,6 @@ public class JsonProjects implements Projects {
                         "project-" + templateID + "-samples/project-" + templateID + "-samples.json",
                         "project-" + newProjectId + "-samples/project-" + newProjectId + "-samples.json");
             }
-
             return newProjectData;
         } else {
             // Upload the plot-distribution-csv-file if one was provided
@@ -1348,6 +1347,9 @@ public class JsonProjects implements Projects {
             // Write the new entry to project-list.json
             projects.add(newProjectObject(newProject, fileData, req));
             writeJsonFile("project-list.json", projects);
+
+            // create empty TimeSync file for new project timesync-data-<id>.json file
+            writeJsonFile("timesync-data-" + newProjectId + ".json", new JsonArray());
 
             // Indicate that the project was created successfully
             return newProjectId + "";

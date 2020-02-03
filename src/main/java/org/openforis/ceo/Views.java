@@ -175,6 +175,10 @@ public class Views {
                          Map.of("project_id", getPid));
     }
 
+    public static Route timesync(FreeMarkerEngine freemarker) {
+        return makeRoute("TimeSync", freemarker);
+    }
+
     public static Route pageNotFound(FreeMarkerEngine freemarker) {
         return makeRoute("Page-Not-Found", freemarker);
     }
