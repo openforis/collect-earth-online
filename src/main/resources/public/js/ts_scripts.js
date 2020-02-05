@@ -142,9 +142,9 @@ var windowW = $(window).width();
 /************************************************************************************************/
 /*********************** BeginSetion 1. Retrieving TimeSync Interpretation **********************/
 
-var tsServer = 'https://local.ceo.com:8080';
+// var tsServer = 'https://local.ceo.com:8080';
 // var geeServer = 'https://localhost:8888';
-// var tsServer = 'https://ceodev.servirglobal.net';
+var tsServer = 'https://ceodev.servirglobal.net';
 var geeServer = 'https://ceodev.servirglobal.net:8888';
 
 /**
