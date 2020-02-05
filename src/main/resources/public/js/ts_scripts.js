@@ -318,7 +318,6 @@ function updateUI() {
     appendSrcImg(); //append the src imgs
     appendChips("annual", selectThese); //append the chip div/canvas/img set
     makeChipInfo("json", origData, "annual").then(() => {
-        //once the imgs have loaded make the chip info and draw the img to the canvas and display the time-lapse feature
         toggleSpinner(false);
     });
 }
