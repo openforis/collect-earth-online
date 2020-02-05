@@ -24,7 +24,7 @@ function configTimeSyncDash() {
 $(document).ready(function () {
     configTimeSyncDash();
     setChipGalleryLength();
-    toggleSpinner(false);
+    toggleSpinner(true);
 });
 
 function setChipGalleryLength() {
@@ -310,21 +310,14 @@ function toggleSpinner(show) {
 
 function updateUI() {
     //update UI
-    fillInForm() //fill out the form inputs
+    toggleSpinner(true);
+    fillInForm(); //fill out the form inputs
     $("#commentInput").val(comment);
     $("#isExampleCheckbox").prop("checked", isExample === 1);
     plotInt(false); //draw the points
-    makeChipInfo("json", origData)
     appendSrcImg(); //append the src imgs
     appendChips("annual", selectThese); //append the chip div/canvas/img set
-    //once the imgs have loaded make the chip info and draw the img to the canvas and display the time-lapse feature
-    $("#img-gallery").imagesLoaded(function () {
-        //makeChipInfo("json", origData);
-        //chip info array gets set in "appendChips"
-        //gets filled out here because we have to wait
-        //until the imgs have loaded to get their height
-        //(used when chip strip is the src - not needed when chips are singles)
-        drawAllChips("annual");	//draw the imgs to the canvas
+    makeChipInfo("json", origData, "annual").then(() => {
         toggleSpinner(false);
     });
 }
@@ -2699,17 +2692,13 @@ $("#zoomSize").change(function () {
 });
 
 
-
-
-
 ///////////DEFINE THE FUNCTION TO ADD THE CANVAS AND IMAGE FOR EACH CHIP ON-THE-FLY////////////
 function appendSrcImg() {
     for (var i = 0; i < n_chips; i++) {
         //chipInfo.imgIDs[i] = ("img"+i);
         //var appendThisImg = '<img class="chipImgSrc" id="'+chipInfo.imgIDs[i]+'"src="'+origData[i].url+'">';
         //YANG var thisChipSet = $("#chipSetList .active").attr("id");
-        var thisChipSet = 'chipSetBGW';
-        var appendThisImg = '<img class="chipImgSrc" id="' + chipInfo.imgIDs[i] + '"src="' + chipInfo.src[i][thisChipSet] + '">';
+        var appendThisImg = '<img class="chipImgSrc" id="' + chipInfo.imgIDs[i] + '"src="">';
         $("#img-gallery").append(appendThisImg);
     }
 }
@@ -2739,9 +2728,6 @@ function appendChips(window, selected, color) { //this function is handling the 
     }
 }
 
-
-
-
 ////////////////DEFINE FUNCTION TO INITIALLY POPULATE CHIPINFO OBJECT/////////////////////////////////////
 function fetchUrlFromStore(chip_url) {
     const currentDate = new Date();
@@ -2753,31 +2739,21 @@ function fetchUrlFromStore(chip_url) {
     return '';
 }
 
+// To support function for $(body, nextChip, previousChip)
+// Likely, for the dash page, and this function can be reduced to just checking the local storage
 function getImageChip(iid) {
     //Either use https://localhost:8888/ts/chip/:lng/:lat/:year/:day/:vis
     // or https://localhost:8888/ts/image_chip/:lng/:lat/:iid/:vis/:size
     //TODO: note the hard coded tc and 255
 
-    // return `${geeServer}/ts/image_chip/${sessionInfo.currentLocation.coordinates[0]}/${sessionInfo.currentLocation.coordinates[1]}/${iid}/tc/255`;
-
-    //on initial run, defaultUrl is always used and subsequent calls will use cached urls.
-    // let defaultUrl = `${geeServer}/ts/image_chip/${sessionInfo.currentLocation.coordinates[0]}/${sessionInfo.currentLocation.coordinates[1]}/${iid}/tc/255`;
-    // let chipUrl = `${geeServer}/ts/image_chip_url/${sessionInfo.currentLocation.coordinates[0]}/${sessionInfo.currentLocation.coordinates[1]}/${iid}/tc/255`;
     let defaultUrl = `${geeServer}/ts/image_chip/${sessionInfo.currentLocation.coordinates[0]}/${sessionInfo.currentLocation.coordinates[1]}/${iid}/b543/255`;
     let chipUrl = `${geeServer}/ts/image_chip_url/${sessionInfo.currentLocation.coordinates[0]}/${sessionInfo.currentLocation.coordinates[1]}/${iid}/b543/255`;
 
-    let needFetch = true;
-
-    // let resultUrl = chipUrl;
-    //have storage support
-    if (typeof (Storage) !== 'undefined') {
-        const chipinfo = fetchUrlFromStore(chipUrl);
-        if (chipinfo !== '') {
-            return chipinfo.chip_url;
-        }
-    }
-
-    if (needFetch) {
+    // Check for cached url, if none found, fetch new url, but return default otherwise.
+    const chipinfo = typeof (Storage) === "undefined" ? "" : fetchUrlFromStore(chipUrl);
+    if (chipinfo !== '') {
+        return chipinfo.chip_url;
+    } else {
         fetch(chipUrl).then(res => {
             if (res.ok) {
                 return res.json();
@@ -2786,43 +2762,100 @@ function getImageChip(iid) {
                 Promise.reject();
             }
         }).then(data => {
-            // console.log(JSON.stringify(data));
             data.lastGatewayUpdate = new Date();
             localStorage.setItem(chipUrl, JSON.stringify(data));
         })
+        return defaultUrl;
     }
-    return defaultUrl;
 }
 
-function makeChipInfo(selection, origData) {
-    for (var i = 0; i < n_chips; i++) {
-        if (selection === "random") {
-            //randomly select a chip from a strip to display - not needed once we have json file to tell us
-            var useThisChip = Math.floor((Math.random() * thisManyChips));
-        } else if (selection === "ordered") {
-            var useThisChip = i;
-        } else if (selection === "json") { //YANG: only support this for now.
-            var useThisChip = 0;
-            var year = origData[i].image_year
-            var julday = origData[i].image_julday
-            var src = { chipSetBGW: getImageChip(origData[i].iid) }
-            // chipSet743:origData[i].url_743,
-            // chipSet432:origData[i].url_432}
-            var sensor = origData[i].iid.substring(8, 12);
-        }
+function getImageChipPromise(iid) {
+    //Either use https://localhost:8888/ts/chip/:lng/:lat/:year/:day/:vis
+    // or https://localhost:8888/ts/image_chip/:lng/:lat/:iid/:vis/:size
+    //TODO: note the hard coded tc and 255
 
-        chipInfo.chipsInStrip[i] = 1 //thisManyChips;
-        chipInfo.useThisChip[i] = useThisChip;
-        chipInfo.year[i] = year;
-        chipInfo.julday[i] = julday;
-        chipInfo.src[i] = src;
-        chipInfo.sensor[i] = sensor;
-        chipInfo.imgIDs[i] = ("img" + i);
+    let defaultUrl = `${geeServer}/ts/image_chip/${sessionInfo.currentLocation.coordinates[0]}/${sessionInfo.currentLocation.coordinates[1]}/${iid}/b543/255`;
+    let chipUrl = `${geeServer}/ts/image_chip_url/${sessionInfo.currentLocation.coordinates[0]}/${sessionInfo.currentLocation.coordinates[1]}/${iid}/b543/255`;
+
+    const chipinfo = typeof (Storage) === "undefined" ? "" : fetchUrlFromStore(chipUrl);
+    if (chipinfo !== "") {
+        return Promise.resolve(chipinfo.chip_url);
+    } else {
+        return fetch(chipUrl).then(res => {
+            if (res.ok) {
+                return res.json();
+            }
+            else {
+                Promise.reject();
+            }
+        }).then(data => {
+            data.lastGatewayUpdate = new Date();
+            localStorage.setItem(chipUrl, JSON.stringify(data));
+            return data.chip_url;
+        }).catch(() => defaultUrl);
     }
-    updateChipInfo();
+}
+
+async function oneChipInfo(selection, origData, window, id) {
+    if (selection === "random") {
+        //randomly select a chip from a strip to display - not needed once we have json file to tell us
+        var useThisChip = Math.floor((Math.random() * thisManyChips));
+    } else if (selection === "ordered") {
+        var useThisChip = id;
+    } else if (selection === "json") { //YANG: only support this for now.
+        var useThisChip = 0;
+        var year = origData[id].image_year;
+        var julday = origData[id].image_julday;
+        const imgSrc = await getImageChipPromise(origData[id].iid);
+        var src = { chipSetBGW: imgSrc };
+        // chipSet743:origData[id].url_743,
+        // chipSet432:origData[id].url_432}
+        var sensor = origData[id].iid.substring(8, 12);
+    }
+    chipInfo.chipsInStrip[id] = 1; //thisManyChips;
+    chipInfo.useThisChip[id] = useThisChip;
+    chipInfo.year[id] = year;
+    chipInfo.julday[id] = julday;
+    chipInfo.src[id] = src;
+    chipInfo.sensor[id] = sensor;
+    chipInfo.imgIDs[id] = ("img" + id);
+    chipInfo.sxOrig[id] = chipDisplayProps.offset;	//0 chipInfo.offset set/push the original source x offset to the sxOrig array
+    chipInfo.syOrig[id] = (255 * chipInfo.useThisChip[id]) + chipDisplayProps.offset; // +chipInfo.offset   set/push the original source y offset to the syOrig array
+    chipInfo.sWidthOrig[id] = chipDisplayProps.chipSize; //255  set/push the original source x width to the sWidthOrig array
+    chipInfo.sxZoom[id] = chipInfo.sxOrig[id];
+    chipInfo.syZoom[id] = chipInfo.syOrig[id];
+    chipInfo.sWidthZoom[id] = chipInfo.sWidthOrig[id];
+
+    drawOneChip(id, window);
+
+}
+
+async function makeChipInfo(selection, origData, window) {
+    let promises = [];
+
+    for (var i = 0; i < n_chips; i++) {
+        promises.push(oneChipInfo(selection, origData, window, i));
+    }
+
+    await Promise.all(promises).then(() => {
+        updateZooms();
+    });
 }
 
 ////////////////DEFINE FUNCTION TO UPDATE THE CHIPINFO OBJECT WHEN A NEW CHIP SIZE IS SELECTED////////////
+function updateZooms() {
+    let starter = chipDisplayProps.halfChipSize;
+    let lwstarter = chipDisplayProps.box;
+
+    //console.log(sAdj);
+    for (var i = 1; i < maxZoom + 1; i++) {
+        starter *= 0.9;
+        sAdj[i] = (chipDisplayProps.halfChipSize - starter);
+        lwstarter /= 0.9;
+        lwAdj[i] = lwstarter;
+    }
+}
+
 function updateChipInfo() {
     for (var i = 0; i < n_chips; i++) {
         //define/store some other info needed for zooming
@@ -2834,16 +2867,7 @@ function updateChipInfo() {
         chipInfo.sWidthZoom[i] = chipInfo.sWidthOrig[i];
     }
 
-    var starter = chipDisplayProps.halfChipSize,
-        lwstarter = chipDisplayProps.box;
-
-    //console.log(sAdj);
-    for (var i = 1; i < maxZoom + 1; i++) {
-        starter *= 0.9
-        sAdj[i] = (chipDisplayProps.halfChipSize - starter);
-        lwstarter /= 0.9;
-        lwAdj[i] = lwstarter;
-    }
+    updateZooms();
 }
 
 
@@ -2863,7 +2887,6 @@ function drawAllChips(window) {
 
 ////////////DEFINE FUNCTION TO DRAW A NEW IMAGE SECTION TO A CANVAS////////////////////////////
 function drawOneChip(thisChip, window) {
-    var timgID = $('.chipImgSrc.' + window).eq(thisChip)[0];
     var canvasID = $('.chipImg.' + window).eq(thisChip)[0];
     var ctx = canvasID.getContext("2d");
 
@@ -2891,7 +2914,7 @@ function drawOneChip(thisChip, window) {
         catch (e) { }
     }
 
-    img.src = timgID.src;
+    img.src = (chipInfo.src[thisChip] && chipInfo.src[thisChip].chipSetBGW) || "";
 
     if (window === "annual") {
         $(".chipDate").eq(thisChip).empty().append(
