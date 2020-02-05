@@ -316,10 +316,9 @@ function updateUI() {
     $("#isExampleCheckbox").prop("checked", isExample === 1);
     plotInt(false); //draw the points
     appendSrcImg(); //append the src imgs
-    makeChipInfo("json", origData).then(() => {
-        appendChips("annual", selectThese); //append the chip div/canvas/img set
+    appendChips("annual", selectThese); //append the chip div/canvas/img set
+    makeChipInfo("json", origData, "annual").then(() => {
         //once the imgs have loaded make the chip info and draw the img to the canvas and display the time-lapse feature
-        drawAllChips("annual");	//draw the imgs to the canvas
         toggleSpinner(false);
     });
 }
@@ -2798,7 +2797,7 @@ function getImageChipPromise(iid) {
     }
 }
 
-async function oneChipInfo(selection, origData, id) {
+async function oneChipInfo(selection, origData, window, id) {
     if (selection === "random") {
         //randomly select a chip from a strip to display - not needed once we have json file to tell us
         var useThisChip = Math.floor((Math.random() * thisManyChips));
@@ -2821,21 +2820,43 @@ async function oneChipInfo(selection, origData, id) {
     chipInfo.src[id] = src;
     chipInfo.sensor[id] = sensor;
     chipInfo.imgIDs[id] = ("img" + id);
+    chipInfo.sxOrig[id] = chipDisplayProps.offset;	//0 chipInfo.offset set/push the original source x offset to the sxOrig array
+    chipInfo.syOrig[id] = (255 * chipInfo.useThisChip[id]) + chipDisplayProps.offset; // +chipInfo.offset   set/push the original source y offset to the syOrig array
+    chipInfo.sWidthOrig[id] = chipDisplayProps.chipSize; //255  set/push the original source x width to the sWidthOrig array
+    chipInfo.sxZoom[id] = chipInfo.sxOrig[id];
+    chipInfo.syZoom[id] = chipInfo.syOrig[id];
+    chipInfo.sWidthZoom[id] = chipInfo.sWidthOrig[id];
+
+    drawOneChip(id, window);
+
 }
 
-async function makeChipInfo(selection, origData) {
+async function makeChipInfo(selection, origData, window) {
     let promises = [];
 
     for (var i = 0; i < n_chips; i++) {
-        promises.push(oneChipInfo(selection, origData, i));
+        promises.push(oneChipInfo(selection, origData, window, i));
     }
 
     await Promise.all(promises).then(() => {
-        updateChipInfo();
+        updateZooms();
     });
 }
 
 ////////////////DEFINE FUNCTION TO UPDATE THE CHIPINFO OBJECT WHEN A NEW CHIP SIZE IS SELECTED////////////
+function updateZooms() {
+    let starter = chipDisplayProps.halfChipSize;
+    let lwstarter = chipDisplayProps.box;
+
+    //console.log(sAdj);
+    for (var i = 1; i < maxZoom + 1; i++) {
+        starter *= 0.9;
+        sAdj[i] = (chipDisplayProps.halfChipSize - starter);
+        lwstarter /= 0.9;
+        lwAdj[i] = lwstarter;
+    }
+}
+
 function updateChipInfo() {
     for (var i = 0; i < n_chips; i++) {
         //define/store some other info needed for zooming
@@ -2847,16 +2868,7 @@ function updateChipInfo() {
         chipInfo.sWidthZoom[i] = chipInfo.sWidthOrig[i];
     }
 
-    var starter = chipDisplayProps.halfChipSize,
-        lwstarter = chipDisplayProps.box;
-
-    //console.log(sAdj);
-    for (var i = 1; i < maxZoom + 1; i++) {
-        starter *= 0.9
-        sAdj[i] = (chipDisplayProps.halfChipSize - starter);
-        lwstarter /= 0.9;
-        lwAdj[i] = lwstarter;
-    }
+    updateZooms();
 }
 
 
