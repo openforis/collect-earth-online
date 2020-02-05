@@ -19,7 +19,7 @@
                 </#if>
             </#list>
             <#if userid != "">
-                <#list ["Account", "Timesync"] as url>
+                <#list ["Account"] as url>
                     <#if navlink == "url">
                         <li class="nav-item active">
                             <a class="nav-link" href="${root}/${url?lower_case}?userId=${userid}">${url}</a>
