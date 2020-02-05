@@ -14,7 +14,7 @@ function configTimeSyncDash() {
         ceoPlot.currentLocation = JSON.parse(ceoPlot.currentLocation);
         sessionInfo = { ...sessionInfo, ...ceoPlot };
 
-        console.log('[configTimeSyncDash]', ceoPlot, sessionInfo);
+        // console.log('[configTimeSyncDash]', ceoPlot, sessionInfo);
         getData(sessionInfo, specIndex, activeRedSpecIndex, activeGreenSpecIndex, activeBlueSpecIndex, ylabel);
     }
 }
@@ -142,8 +142,10 @@ var windowW = $(window).width();
 /************************************************************************************************/
 /*********************** BeginSetion 1. Retrieving TimeSync Interpretation **********************/
 
-var tsServer = 'https://localhost:8080';
-var geeServer = 'https://localhost:8888';
+// var tsServer = 'https://localhost:8080';
+// var geeServer = 'https://localhost:8888';
+var tsServer = 'https://ceodev.servirglobal.net:8080';
+var geeServer = 'https://ceodev.servirglobal.net:8888';
 
 /**
  * FIXME: disect this funtion into fuction for each url.
@@ -295,7 +297,7 @@ function extractInterpretation(tsdata, comment, isExample) {
 }
 
 function toggleSpinner(show) {
-    console.log('[toggleSpinner]', show)
+    // console.log('[toggleSpinner]', show)
     if (show) {
         $('#spinner').removeClass('stop');
         $('#spinner').show();
@@ -357,7 +359,7 @@ function getData(sessionInfo, specIndex, activeRedSpecIndex, activeGreenSpecInde
     fetch(urls.vertices)
         .then(res => res.json())
         .then(tsdata => {
-            console.log(tsdata);
+            // console.log(tsdata);
 
             //TODO: is it possible that there is no timeSync property in the data?
             if (tsdata.length===0) {
@@ -416,7 +418,7 @@ function addProjectData(sessionInfo) {
         return;
     }
     $.getJSON(getUrls(sessionInfo).projectList).done(function (object) {
-        console.log(object);
+        // console.log(object);
         packetInfo = {};
         for (var i = 0; i < object.length; i++) {
             /*TSCEO
@@ -630,7 +632,7 @@ function appendPlots(sessionInfo) {
     $("#plotList").empty();
 
     $.getJSON(getUrls(sessionInfo).plotList).done(function (object) {
-        console.log(object);
+        // console.log(object);
         //TSCEO keep a copy of the plots list
         sessionInfo.plots = object;
 
@@ -2743,13 +2745,11 @@ function appendChips(window, selected, color) { //this function is handling the 
 ////////////////DEFINE FUNCTION TO INITIALLY POPULATE CHIPINFO OBJECT/////////////////////////////////////
 function fetchUrlFromStore(chip_url) {
     const currentDate = new Date();
-    currentDate.setDate(currentDate.getDate() - 1);
-    const chipInfo = JSON.parse(localStorage.getItem(chip_url));
-    //TODO: restore these
-    //YANG: temporarily disable caching
-    // if (chipInfo && new Date(chipInfo.lastGatewayUpdate) > currentDate) {
-    //     return chipInfo.chip_url;
-    // }
+    currentDate.setTime(currentDate.getTime() - 10 * 60 * 1000);
+    const info = JSON.parse(localStorage.getItem(chip_url));
+    if (info && new Date(info.lastGatewayUpdate) > currentDate) {
+        return info;
+    }
     return '';
 }
 
@@ -2773,7 +2773,7 @@ function getImageChip(iid) {
     if (typeof (Storage) !== 'undefined') {
         const chipinfo = fetchUrlFromStore(chipUrl);
         if (chipinfo !== '') {
-            return chipinfo;
+            return chipinfo.chip_url;
         }
     }
 
@@ -2786,7 +2786,7 @@ function getImageChip(iid) {
                 Promise.reject();
             }
         }).then(data => {
-            console.log(JSON.stringify(data));
+            // console.log(JSON.stringify(data));
             data.lastGatewayUpdate = new Date();
             localStorage.setItem(chipUrl, JSON.stringify(data));
         })
