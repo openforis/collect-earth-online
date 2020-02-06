@@ -81,7 +81,8 @@ CREATE TABLE projects (
     ts_start_year           integer DEFAULT 1985,
     ts_end_year             integer,
     ts_target_day           integer DEFAULT 215,
-    ts_plot_size            integer DEFAULT 1
+    ts_plot_size            integer DEFAULT 1,
+    token_key               text DEFAULT NULL
 );
 
 -- Stores information about plot packet
@@ -300,6 +301,7 @@ CREATE TYPE project_return AS (
     survey_rules            jsonb,
     classification_times    jsonb,
     valid_boundary          boolean,
+    token_key               text,
     editable                boolean
 );
 
@@ -324,7 +326,8 @@ CREATE VIEW project_boundary AS
         survey_questions,
         survey_rules,
         classification_times,
-        valid_boundary(boundary)
+        valid_boundary(boundary),
+        token_key
     FROM projects;
 
 CREATE TYPE plots_return AS (

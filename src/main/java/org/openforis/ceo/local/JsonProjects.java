@@ -73,13 +73,27 @@ public class JsonProjects implements Projects {
         final var userId = Integer.parseInt(req.session().attributes().contains("userid") ? req.session().attribute("userid").toString() : "-1");
         final var qProjectId = req.queryParams("projectId");
         final var jProjectId = getBodyParam(req.body(), "projectId", null);
+        final var qTokenKey = req.queryParams("tokenKey");
+        final var sTokenKey = req.session().attributes().contains("tokenKey") ? req.session().attribute("tokenKey").toString() : null;
 
         final var projectId =
             qProjectId != null ? qProjectId
             : jProjectId != null ? jProjectId
             : "0";
 
+        final var tokenKey = (qTokenKey != null) ? qTokenKey : sTokenKey;
+
         final var project = singleProjectJson(projectId);
+
+        if (userId == -1 && !projectId.equals("0") && tokenKey != null) {
+            if (project.has("tokenKey") && tokenKey.equals(project.get("tokenKey").getAsString())) {
+                req.session().attribute("tokenKey", tokenKey);
+                return true;
+            } else {
+                return false;
+            }
+        }
+
         final var institutionRoles = (new JsonUsers()).getInstitutionRoles(userId);
         final var role = institutionRoles.getOrDefault(project.get("institution").getAsInt(), "");
         final var privacyLevel = project.get("privacyLevel").getAsString();
@@ -1313,6 +1327,9 @@ public class JsonProjects implements Projects {
             fileData.addProperty("sampleFileName", getOrEmptyString(jsonInputs, "sampleFileName").getAsString());
             fileData.addProperty("sampleFileBase64", getOrEmptyString(jsonInputs, "sampleFileBase64").getAsString());
 
+            final var tokenKey = UUID.randomUUID().toString();
+            newProject.addProperty("tokenKey", tokenKey);
+
             // Read in the existing project list
             var projects = elementToArray(readJsonFile("project-list.json"));
 
@@ -1352,7 +1369,10 @@ public class JsonProjects implements Projects {
             writeJsonFile("timesync-data-" + newProjectId + ".json", new JsonArray());
 
             // Indicate that the project was created successfully
-            return newProjectId + "";
+            var jo = new JsonObject();
+            jo.addProperty("projectId", Integer.toString(newProjectId));
+            jo.addProperty("tokenKey", tokenKey);
+            return jo.toString();
         } catch (Exception e) {
             // Still output stack trace for debugging
             // StringWriter outError = new StringWriter();
@@ -1360,7 +1380,9 @@ public class JsonProjects implements Projects {
             // System.out.println(outError.toString());
             // Indicate that an error occurred with project creation
             System.out.println("Error creating project: " + e.getMessage());
-            return e.getMessage();
+            var jo = new JsonObject();
+            jo.addProperty("errorMessage", e.getMessage());
+            return jo.toString();
         }
     }
 

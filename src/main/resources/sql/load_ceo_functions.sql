@@ -681,7 +681,8 @@ CREATE OR REPLACE FUNCTION create_project(
     _survey_questions        jsonb,
     _survey_rules            jsonb,
     _created_date            date,
-    _classification_times    jsonb
+    _classification_times    jsonb,
+    _token_key               text
  ) RETURNS integer AS $$
 
     INSERT INTO projects (
@@ -694,7 +695,7 @@ CREATE OR REPLACE FUNCTION create_project(
         sample_distribution,    samples_per_plot,
         sample_resolution,      survey_questions,
         survey_rules,           created_date,
-        classification_times
+        classification_times,   token_key
     ) VALUES (
         _institution_rid,        _availability,
         _name,                   _description,
@@ -705,7 +706,7 @@ CREATE OR REPLACE FUNCTION create_project(
         _sample_distribution,    _samples_per_plot,
         _sample_resolution,      _survey_questions,
         _survey_rules,           _created_date,
-        _classification_times
+        _classification_times,   _token_key
     ) RETURNING project_uid
 
 $$ LANGUAGE SQL;
