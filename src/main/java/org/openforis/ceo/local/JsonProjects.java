@@ -2,7 +2,6 @@ package org.openforis.ceo.local;
 
 import static javax.servlet.http.HttpServletResponse.SC_NO_CONTENT;
 import static org.openforis.ceo.local.JsonImagery.getImageryTitle;
-import static org.openforis.ceo.utils.DatabaseUtils.connect;
 import static org.openforis.ceo.utils.JsonUtils.elementToArray;
 import static org.openforis.ceo.utils.JsonUtils.elementToObject;
 import static org.openforis.ceo.utils.JsonUtils.expandResourcePath;
@@ -51,7 +50,6 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
-import java.sql.SQLException;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -94,7 +92,7 @@ public class JsonProjects implements Projects {
             } else {
                 return false;
             }
-        } 
+        }
 
         final var institutionRoles = (new JsonUsers()).getInstitutionRoles(userId);
         final var role = institutionRoles.getOrDefault(project.get("institution").getAsInt(), "");
@@ -1332,7 +1330,7 @@ public class JsonProjects implements Projects {
 
             final var tokenKey = UUID.randomUUID().toString();
             newProject.addProperty("tokenKey", tokenKey);
-            
+
             // Read in the existing project list
             var projects = elementToArray(readJsonFile("project-list.json"));
 

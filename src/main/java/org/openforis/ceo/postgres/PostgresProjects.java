@@ -88,7 +88,7 @@ public class PostgresProjects implements Projects {
             }
         } else {
             try (var conn = connect();
-                var pstmt = conn.prepareStatement("SELECT * FROM " + queryFn + "(?, ?)")) {
+                 var pstmt = conn.prepareStatement("SELECT * FROM " + queryFn + "(?, ?)")) {
 
                 pstmt.setInt(1, userId);
                 pstmt.setInt(2, projectId);
@@ -924,7 +924,7 @@ public class PostgresProjects implements Projects {
 
             var SQL = "SELECT * FROM create_project(?,?,?,?,?,ST_SetSRID(ST_GeomFromGeoJSON(?), 4326),?,?,?,?,?,?,?,?,?,?::JSONB,?::JSONB,?::date,?::JSONB,?)";
             try (var conn = connect();
-                var pstmt = conn.prepareStatement(SQL)) {
+                 var pstmt = conn.prepareStatement(SQL)) {
 
                 pstmt.setInt(1,     newProject.get("institution").getAsInt());
                 pstmt.setString(2,  newProject.get("availability").getAsString());
