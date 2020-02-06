@@ -158,7 +158,7 @@ mercator.createSource = function (sourceConfig, imageryId, documentRoot,
                         }),
                     }));
                 if (planetLayers.length === 0) {
-                    console.warn("No usable results found for Planet Daily imagery.");
+                    alert("No usable results found for Planet Daily imagery. Check your access token and/or change the date.");
                 }
                 const dummyPlanetLayer = mercator.currentMap.getLayers().getArray().find(lyr => theID === lyr.getSource().get("id"));
                 mercator.currentMap.removeLayer(dummyPlanetLayer);

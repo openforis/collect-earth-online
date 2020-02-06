@@ -19,7 +19,7 @@ class Collection extends React.Component {
             imageryMonthNamePlanet: "March",
             imageryYearDG: 2009,
             imageryYearPlanet: 2018,
-            imageryDatePlanetDaily: "2020-01-19",
+            imageryDatePlanetDaily: "",
             mapConfig: null,
             nextPlotButtonDisabled: false,
             plotList: [],
@@ -297,7 +297,13 @@ class Collection extends React.Component {
         } else if (this.state.currentImagery.sourceConfig.type === "Planet") {
             this.updatePlanetLayer();
         } else if (this.state.currentImagery.sourceConfig.type === "PlanetDaily") {
-            this.updatePlanetDailyLayer();
+            this.setState({
+                imageryDatePlanetDaily: [
+                    this.state.currentImagery.sourceConfig.year,
+                    (parseInt(this.state.currentImagery.sourceConfig.month) > 9 ? "" : "0") + parseInt(this.state.currentImagery.sourceConfig.month),
+                    (parseInt(this.state.currentImagery.sourceConfig.day) > 9 ? "" : "0") + parseInt(this.state.currentImagery.sourceConfig.day),
+                ].join("-"),
+            });
         }
     };
 
@@ -331,16 +337,19 @@ class Collection extends React.Component {
 
     updatePlanetDailyLayer = () => {
         const { currentImagery, imageryDatePlanetDaily } = this.state;
-        mercator.updateLayerSource(this.state.mapConfig,
-                                   currentImagery.title,
-                                   this.state.currentProject.boundary,
-                                   sourceConfig => {
-                                       sourceConfig.year = parseInt(imageryDatePlanetDaily.split("-")[0]);
-                                       sourceConfig.month = parseInt(imageryDatePlanetDaily.split("-")[1]);
-                                       sourceConfig.day = parseInt(imageryDatePlanetDaily.split("-")[2]);
-                                       return sourceConfig;
-                                   },
-                                   this);
+        // check so that the function is not called before the state is propagated
+        if (imageryDatePlanetDaily) {
+            mercator.updateLayerSource(this.state.mapConfig,
+                                       currentImagery.title,
+                                       this.state.currentProject.boundary,
+                                       sourceConfig => {
+                                           sourceConfig.year = parseInt(imageryDatePlanetDaily.split("-")[0]);
+                                           sourceConfig.month = parseInt(imageryDatePlanetDaily.split("-")[1]);
+                                           sourceConfig.day = parseInt(imageryDatePlanetDaily.split("-")[2]);
+                                           return sourceConfig;
+                                       },
+                                       this);
+        }
     };
 
     getQueryString = (params) => "?" + Object.keys(params)
