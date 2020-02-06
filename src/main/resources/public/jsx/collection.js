@@ -571,7 +571,7 @@ class Collection extends React.Component {
         window.open(this.props.documentRoot + "/timesync?"
                     + encodeURIComponent(JSON.stringify(message)),
                     "_timesync-dash");
-    }
+    };
 
     createPlotKML = () => {
         const plotFeatures = mercator.getAllFeatures(this.state.mapConfig, "currentPlot");
