@@ -99,7 +99,8 @@ mercator.getViewRadius = function (mapConfig) {
 // is invalid.
 mercator.createSource = function (sourceConfig, imageryId, documentRoot,
                                   extent = [[-180, -90], [180, -90], [180, 90], [-180, 90], [-180, -90]],
-                                  show = false) {
+                                  show = false,
+                                  callback = null) {
     if (["DigitalGlobe", "EarthWatch"].includes(sourceConfig.type)) {
         return new XYZ({
             url: documentRoot + "/get-tile?imageryId=" + imageryId + "&z={z}&x={x}&y={-y}",
@@ -167,6 +168,8 @@ mercator.createSource = function (sourceConfig, imageryId, documentRoot,
                     visible: show,
                     layers: planetLayers,
                 }));
+                if (callback) callback();
+
             }).catch(response => {
                 console.log("Error loading Planet Daily imagery: ");
                 console.log(response);
@@ -263,9 +266,9 @@ mercator.createSource = function (sourceConfig, imageryId, documentRoot,
 
 // [Pure] Returns a new TileLayer object or null if the
 // layerConfig is invalid.
-mercator.createLayer = function (layerConfig, documentRoot, projectAOI, show) {
+mercator.createLayer = function (layerConfig, documentRoot, projectAOI, show, callback) {
     layerConfig.sourceConfig.create = true;
-    const source = mercator.createSource(layerConfig.sourceConfig, layerConfig.id, documentRoot, projectAOI, show);
+    const source = mercator.createSource(layerConfig.sourceConfig, layerConfig.id, documentRoot, projectAOI, show, callback);
     if (!source) {
         return null;
     } else if (layerConfig.extent != null) {
@@ -383,7 +386,9 @@ mercator.createMap = function (divName, centerCoords, zoomLevel, layerConfigs, d
         return null;
     } else {
         // Create each of the layers that will be shown in the map from layerConfigs
-        const layers = layerConfigs.map(layerConfig => mercator.createLayer(layerConfig, documentRoot, projectAOI));
+        // Don't create PlanetDaily layer while loading collection page
+        const layers = layerConfigs.filter(e => e.sourceConfig.type !== "PlanetDaily")
+            .map(layerConfig => mercator.createLayer(layerConfig, documentRoot, projectAOI));
 
         // Add a scale line to the default map controls
         const controls = ControlDefaults().extend([new ScaleLine()]);
@@ -503,12 +508,12 @@ mercator.getLayerConfigByTitle = function (mapConfig, layerTitle) {
 // [Side Effects] Finds the map layer with title === layerTitle and
 // applies transformer to its initial sourceConfig to create a new
 // source for the layer.
-mercator.updateLayerSource = function (mapConfig, layerTitle, projectBoundary, transformer, caller) {
+mercator.updateLayerSource = function (mapConfig, layerTitle, projectBoundary, transformer, caller, callback = null) {
     const layer = mercator.getLayerByTitle(mapConfig, layerTitle);
     const layerConfig = mercator.getLayerConfigByTitle(mapConfig, layerTitle);
+    const projectAOI = projectBoundary ? JSON.parse(projectBoundary).coordinates[0] : null;
+    const newSourceConfig = transformer.call(caller, layerConfig.sourceConfig);
     if (layer && layerConfig) {
-        const newSourceConfig = transformer.call(caller, layerConfig.sourceConfig);
-        const projectAOI = projectBoundary ? JSON.parse(projectBoundary).coordinates[0] : null;
         if (layer.get("layers")) {
             // This is a LayerGroup
             console.log("LayerGroup detected.");
@@ -516,12 +521,20 @@ mercator.updateLayerSource = function (mapConfig, layerTitle, projectBoundary, t
             mapConfig.map.addLayer(mercator.createLayer({ ...layerConfig, sourceConfig: newSourceConfig },
                                                         mapConfig.documentRoot,
                                                         projectAOI,
-                                                        true));
+                                                        true,
+                                                        callback));
         } else {
             // This is a Layer
             console.log("Layer detected.");
             layer.setSource(mercator.createSource(newSourceConfig, layerConfig.id, mapConfig.documentRoot, projectAOI));
         }
+    } else if (!(layer) && layerConfig.sourceConfig.type === "PlanetDaily") {
+        // since PlanetDaily layer is not created when collection page is loaded
+        mapConfig.map.addLayer(mercator.createLayer({ ...layerConfig, sourceConfig: newSourceConfig },
+                                                    mapConfig.documentRoot,
+                                                    projectAOI,
+                                                    true,
+                                                    callback));
     }
 };
 
