@@ -336,7 +336,7 @@ class Collection extends React.Component {
 
     removeAndAddVector = () => {
         const { mapConfig, currentPlot, currentProject, selectedQuestion: { visible }} = this.state;
-        mercator.removeLayerByTitle(mapConfig, "currentPlot");
+        mercator.removeLayerByTitle(mapConfig, "currentAOI");
         mercator.addVectorLayer(mapConfig,
                                 "currentAOI",
                                 mercator.geometryToVectorSource(mercator.parseGeoJson(currentProject.boundary, true)),
@@ -367,13 +367,13 @@ class Collection extends React.Component {
 
     updatePlanetDailyLayer = () => {
         const { imageryDatePlanetDaily, currentPlot } = this.state;
-        const geometry = currentPlot.geom
-            ? mercator.parseGeoJson(currentPlot.geom, true)
-            : mercator.getPlotPolygon(currentPlot.center,
-                                      this.state.currentProject.plotSize + 200, // add 200 meters
-                                      "square");
         // check so that the function is not called before the state is propagated
         if (imageryDatePlanetDaily && currentPlot) {
+            const geometry = currentPlot.geom
+                  ? mercator.parseGeoJson(currentPlot.geom, true)
+                  : mercator.getPlotPolygon(currentPlot.center,
+                                            this.state.currentProject.plotSize + 200, // add 200 meters
+                                            "square");
             mercator.updateLayerSource(this.state.mapConfig,
                                        this.state.currentImagery.title,
                                        "{\"type\": \"Polygon\", \"coordinates\":" + JSON.stringify(geometry.transform("EPSG:3857", "EPSG:4326").getCoordinates()) + "}",
@@ -1509,7 +1509,7 @@ class ImageryOptions extends React.Component {
                                         (imagery, uid) =>
                                             <option key={uid} value={imagery.id}>{imagery.title}</option>
                                     )
-                                    : props.imageryList.filter(e => e.sourceConfig.type !== "PlanetDaily")
+                                    : props.imageryList.filter(layerConfig => layerConfig.sourceConfig.type !== "PlanetDaily")
                                         .map(
                                             (imagery, uid) =>
                                                 <option key={uid} value={imagery.id}>{imagery.title}</option>

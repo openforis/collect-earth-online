@@ -169,7 +169,6 @@ mercator.createSource = function (sourceConfig, imageryId, documentRoot,
                     layers: planetLayers,
                 }));
                 if (callback) callback();
-
             }).catch(response => {
                 console.log("Error loading Planet Daily imagery: ");
                 console.log(response);
@@ -266,7 +265,7 @@ mercator.createSource = function (sourceConfig, imageryId, documentRoot,
 
 // [Pure] Returns a new TileLayer object or null if the
 // layerConfig is invalid.
-mercator.createLayer = function (layerConfig, documentRoot, projectAOI, show, callback) {
+mercator.createLayer = function (layerConfig, documentRoot, projectAOI, show = false, callback = null) {
     layerConfig.sourceConfig.create = true;
     const source = mercator.createSource(layerConfig.sourceConfig, layerConfig.id, documentRoot, projectAOI, show, callback);
     if (!source) {
@@ -387,7 +386,7 @@ mercator.createMap = function (divName, centerCoords, zoomLevel, layerConfigs, d
     } else {
         // Create each of the layers that will be shown in the map from layerConfigs
         // Don't create PlanetDaily layer while loading collection page
-        const layers = layerConfigs.filter(e => e.sourceConfig.type !== "PlanetDaily")
+        const layers = layerConfigs.filter(layerConfig => layerConfig.sourceConfig.type !== "PlanetDaily")
             .map(layerConfig => mercator.createLayer(layerConfig, documentRoot, projectAOI));
 
         // Add a scale line to the default map controls
@@ -528,7 +527,7 @@ mercator.updateLayerSource = function (mapConfig, layerTitle, projectBoundary, t
             console.log("Layer detected.");
             layer.setSource(mercator.createSource(newSourceConfig, layerConfig.id, mapConfig.documentRoot, projectAOI));
         }
-    } else if (!(layer) && layerConfig.sourceConfig.type === "PlanetDaily") {
+    } else if (layerConfig.sourceConfig.type === "PlanetDaily") {
         // since PlanetDaily layer is not created when collection page is loaded
         mapConfig.map.addLayer(mercator.createLayer({ ...layerConfig, sourceConfig: newSourceConfig },
                                                     mapConfig.documentRoot,
