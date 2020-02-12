@@ -258,7 +258,6 @@ class SideBar extends React.Component {
                         filterInstitution={this.state.filterInstitution}
                         sortByNumber={this.state.sortByNumber}
                         showEmptyInstitutions={this.state.showEmptyInstitutions}
-                        showFilters={this.state.showFilters}
                       />
                     : <h3 className="p-3">Loading data...</h3>
                 }
