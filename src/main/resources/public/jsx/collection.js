@@ -82,11 +82,10 @@ class Collection extends React.Component {
         // Initialize when new plot
         if (this.state.currentPlot && this.state.currentPlot !== prevState.currentPlot) {
             this.showProjectPlot();
-            if (this.state.hasGeoDash) {
-                this.showGeoDash();
-            }
+            if (this.state.hasGeoDash) this.showGeoDash();
             clearInterval(this.state.storedInterval);
             this.setState({ storedInterval: setInterval(() => this.resetPlotLock, 2.3 * 60 * 1000) });
+            if (this.state.currentImagery.sourceConfig.type === "PlanetDaily") this.updatePlanetDailyLayer();
         }
 
         // Conditions required for samples to be shown
@@ -335,20 +334,57 @@ class Collection extends React.Component {
                                    this);
     };
 
+    removeAndAddVector = () => {
+        const { mapConfig, currentPlot, currentProject, selectedQuestion: { visible }} = this.state;
+        mercator.removeLayerByTitle(mapConfig, "currentAOI");
+        mercator.addVectorLayer(mapConfig,
+                                "currentAOI",
+                                mercator.geometryToVectorSource(mercator.parseGeoJson(currentProject.boundary, true)),
+                                ceoMapStyles.yellowPolygon);
+        mercator.removeLayerByTitle(mapConfig, "currentPlot");
+        mercator.addVectorLayer(mapConfig,
+                                "currentPlot",
+                                mercator.geometryToVectorSource(
+                                    currentPlot.geom
+                                        ? mercator.parseGeoJson(currentPlot.geom, true)
+                                        : mercator.getPlotPolygon(currentPlot.center,
+                                                                  currentProject.plotSize,
+                                                                  currentProject.plotShape)
+                                ),
+                                ceoMapStyles.yellowPolygon);
+        mercator.removeLayerByTitle(mapConfig, "currentSamples");
+        mercator.addVectorLayer(mapConfig,
+                                "currentSamples",
+                                mercator.samplesToVectorSource(visible),
+                                this.state.sampleOutlineBlack
+                                ? visible[0].geom
+                                    ? ceoMapStyles.blackPolygon
+                                    : ceoMapStyles.blackCircle
+                                : visible[0].geom
+                                    ? ceoMapStyles.whitePolygon
+                                    : ceoMapStyles.whiteCircle);
+    };
+
     updatePlanetDailyLayer = () => {
-        const { currentImagery, imageryDatePlanetDaily } = this.state;
+        const { imageryDatePlanetDaily, currentPlot } = this.state;
         // check so that the function is not called before the state is propagated
-        if (imageryDatePlanetDaily) {
+        if (imageryDatePlanetDaily && currentPlot) {
+            const geometry = currentPlot.geom
+                  ? mercator.parseGeoJson(currentPlot.geom, true)
+                  : mercator.getPlotPolygon(currentPlot.center,
+                                            this.state.currentProject.plotSize + 200, // add 200 meters
+                                            "square");
             mercator.updateLayerSource(this.state.mapConfig,
-                                       currentImagery.title,
-                                       this.state.currentProject.boundary,
+                                       this.state.currentImagery.title,
+                                       "{\"type\": \"Polygon\", \"coordinates\":" + JSON.stringify(geometry.transform("EPSG:3857", "EPSG:4326").getCoordinates()) + "}",
                                        sourceConfig => {
                                            sourceConfig.year = parseInt(imageryDatePlanetDaily.split("-")[0]);
                                            sourceConfig.month = parseInt(imageryDatePlanetDaily.split("-")[1]);
                                            sourceConfig.day = parseInt(imageryDatePlanetDaily.split("-")[2]);
                                            return sourceConfig;
                                        },
-                                       this);
+                                       this,
+                                       this.removeAndAddVector);
         }
     };
 
@@ -1089,6 +1125,7 @@ class Collection extends React.Component {
                         imageryMonthPlanet={this.state.imageryMonthPlanet}
                         imageryMonthNamePlanet={this.state.imageryMonthNamePlanet}
                         imageryDatePlanetDaily={this.state.imageryDatePlanetDaily}
+                        showPlanetDaily={this.state.currentPlot != null}
                         stackingProfileDG={this.state.stackingProfileDG}
                         setBaseMapSource={this.setBaseMapSource}
                         setImageryYearDG={this.setImageryYearDG}
@@ -1467,10 +1504,16 @@ class ImageryOptions extends React.Component {
                             onChange={e => props.setBaseMapSource(parseInt(e.target.value))}
                         >
                             {
-                                props.imageryList.map(
-                                    (imagery, uid) =>
-                                        <option key={uid} value={imagery.id}>{imagery.title}</option>
-                                )
+                                props.showPlanetDaily
+                                    ? props.imageryList.map(
+                                        (imagery, uid) =>
+                                            <option key={uid} value={imagery.id}>{imagery.title}</option>
+                                    )
+                                    : props.imageryList.filter(layerConfig => layerConfig.sourceConfig.type !== "PlanetDaily")
+                                        .map(
+                                            (imagery, uid) =>
+                                                <option key={uid} value={imagery.id}>{imagery.title}</option>
+                                        )
                             }
                         </select>
                         {props.imageryTitle && props.imageryTitle.includes("DigitalGlobeWMSImagery") && this.digitalGlobeMenus()}
