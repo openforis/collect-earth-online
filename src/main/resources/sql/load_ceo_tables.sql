@@ -197,7 +197,7 @@ CREATE TABLE plot_comments (
     last_modified_date    timestamp NOT NULL DEFAULT current_timestamp
 );
 
--- Stores vertex information 
+-- Stores vertex information
 CREATE TABLE vertex (
     vertex_uid            bigserial PRIMARY KEY,
     project_rid           integer NOT NULL REFERENCES projects(project_uid) ON UPDATE CASCADE,
@@ -304,31 +304,6 @@ CREATE TYPE project_return AS (
     token_key               text,
     editable                boolean
 );
-
-CREATE VIEW project_boundary AS
-    SELECT
-        project_uid,
-        institution_rid,
-        availability,
-        name,
-        description,
-        privacy_level,
-        ST_AsGeoJSON(boundary),
-        base_map_source,
-        plot_distribution,
-        num_plots,
-        plot_spacing,
-        plot_shape,
-        plot_size,
-        sample_distribution,
-        samples_per_plot,
-        sample_resolution,
-        survey_questions,
-        survey_rules,
-        classification_times,
-        valid_boundary(boundary),
-        token_key
-    FROM projects;
 
 CREATE TYPE plots_return AS (
     plot_id              integer,

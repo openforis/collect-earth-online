@@ -1135,6 +1135,31 @@ CREATE OR REPLACE FUNCTION valid_boundary(_boundary geometry)
 
 $$ LANGUAGE SQL;
 
+CREATE VIEW project_boundary AS
+SELECT
+    project_uid,
+    institution_rid,
+    availability,
+    name,
+    description,
+    privacy_level,
+    ST_AsGeoJSON(boundary),
+    base_map_source,
+    plot_distribution,
+    num_plots,
+    plot_spacing,
+    plot_shape,
+    plot_size,
+    sample_distribution,
+    samples_per_plot,
+    sample_resolution,
+    survey_questions,
+    survey_rules,
+    classification_times,
+    valid_boundary(boundary),
+    token_key
+FROM projects;
+
 -- Returns a row in projects by id
 CREATE OR REPLACE FUNCTION select_project(_project_uid integer)
  RETURNS setOf project_return AS $$
