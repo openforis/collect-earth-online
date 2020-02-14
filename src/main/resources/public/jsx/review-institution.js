@@ -446,9 +446,9 @@ const imageryOptions = [
         type: "PlanetDaily",
         params: [
             { key: "accessToken", display: "Access Token" },
-            { key: "year", display: "Default Year", type: "number" },
-            { key: "month", display: "Default Month", type: "number" },
-            { key: "day", display: "Default Day", type: "number" },
+            { key: "startYear", display: "Start Year", type: "number" },
+            { key: "startMonth", display: "Start Month", type: "number" },
+            { key: "startDay", display: "Start Day", type: "number" },
         ],
         url: "https://developers.planet.com/docs/quickstart/getting-started/",
     },
@@ -550,15 +550,15 @@ class NewImagery extends React.Component {
                         || (this.state.newImageryParams[o.key] && this.state.newImageryParams[o.key].length > 0));
 
     checkDateField = (sourceConfig) => {
-        const year  = parseInt(sourceConfig.year);
-        const month = parseInt(sourceConfig.month);
-        const day   = parseInt(sourceConfig.day);
-        const date  = day ? new Date(year, month - 1, day) : new Date(year, month - 1);
+        const year = parseInt(sourceConfig.year || sourceConfig.startYear);
+        const month = parseInt(sourceConfig.month || sourceConfig.startMonth);
+        const day = parseInt(sourceConfig.day || sourceConfig.startDay);
+        const date = day ? new Date(year, month - 1, day) : new Date(year, month - 1);
 
-        return isNaN(year)                              ? "Please enter the year as a 4 digit number."
+        return isNaN(year) ? "Please enter the year as a 4 digit number."
             : (isNaN(month) || month < 1 || month > 12) ? "Month should be between 1 and 12!"
-            : (isNaN(day) || day < 1 || day > 31)       ? "Day should be between 1 and 31!"
-            : isNaN(date)                               ? "The date is not valid!"
+            : (isNaN(day) || day < 1 || day > 31) ? "Day should be between 1 and 31!"
+            : isNaN(date) ? "The date is not valid!"
             : null;
     };
 

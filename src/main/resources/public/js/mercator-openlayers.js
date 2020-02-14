@@ -120,9 +120,14 @@ mercator.createSource = function (sourceConfig, imageryId, documentRoot,
             path: "getPlanetTile",
             apiKey: sourceConfig.accessToken,
             dateFrom: [
-                sourceConfig.year,
-                (parseInt(sourceConfig.month) > 9 ? "" : "0") + parseInt(sourceConfig.month),
-                (parseInt(sourceConfig.day) > 9 ? "" : "0") + parseInt(sourceConfig.day),
+                sourceConfig.startYear,
+                (parseInt(sourceConfig.startMonth) > 9 ? "" : "0") + parseInt(sourceConfig.startMonth),
+                (parseInt(sourceConfig.startDay) > 9 ? "" : "0") + parseInt(sourceConfig.startDay),
+            ].join("-"),
+            dateTo: [
+                sourceConfig.endYear,
+                (parseInt(sourceConfig.endMonth) > 9 ? "" : "0") + parseInt(sourceConfig.endMonth),
+                (parseInt(sourceConfig.endDay) > 9 ? "" : "0") + parseInt(sourceConfig.endDay),
             ].join("-"),
             layerCount: 20, // FIXME: what should this optimally be?
             geometry: extent,
@@ -172,6 +177,7 @@ mercator.createSource = function (sourceConfig, imageryId, documentRoot,
             }).catch(response => {
                 console.log("Error loading Planet Daily imagery: ");
                 console.log(response);
+                alert("Some error occurred while processing the request. Please try again later.");
             });
         return planetLayer;
     } else if (sourceConfig.type === "BingMaps") {
