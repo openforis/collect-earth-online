@@ -255,17 +255,17 @@ class Collection extends React.Component {
     };
 
     setImageryDatePlanetDaily = (eventTarget) => {
-        const imageryStartDatePlanetDaily = (eventTarget.id === "planetDailyStartDate") ? eventTarget.value : this.state.imageryStartDatePlanetDaily;
-        const imageryEndDatePlanetDaily = (eventTarget.id === "planetDailyEndDate") ? eventTarget.value : this.state.imageryEndDatePlanetDaily;
-        if (new Date(imageryStartDatePlanetDaily) > new Date(imageryEndDatePlanetDaily)) {
+        const { imageryStartDatePlanetDaily, imageryEndDatePlanetDaily, currentImagery } = this.state;
+        const startDate = (eventTarget.id === "planetDailyStartDate") ? eventTarget.value : imageryStartDatePlanetDaily;
+        const endDate = (eventTarget.id === "planetDailyEndDate") ? eventTarget.value : imageryEndDatePlanetDaily;
+        if (new Date(startDate) > new Date(endDate)) {
             alert("Start date must be smaller than the end date.");
         } else {
-            const imageryInfo = this.getImageryByTitle(this.state.currentImagery.title);
-            const newImageryAttribution = imageryInfo.attribution + " | " + imageryStartDatePlanetDaily + " to " + imageryEndDatePlanetDaily;
+            const imageryAttribution = this.getImageryByTitle(currentImagery.title).attribution + " | " + startDate + " to " + endDate;
             this.setState({
-                imageryStartDatePlanetDaily: imageryStartDatePlanetDaily,
-                imageryEndDatePlanetDaily: imageryEndDatePlanetDaily,
-                imageryAttribution: newImageryAttribution,
+                imageryStartDatePlanetDaily: startDate,
+                imageryEndDatePlanetDaily: endDate,
+                imageryAttribution: imageryAttribution,
             });
         }
     };
