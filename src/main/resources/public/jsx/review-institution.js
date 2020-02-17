@@ -571,13 +571,13 @@ class NewImagery extends React.Component {
 
             return (isNaN(startYear) || isNaN(endYear))
                 ? "Please enter the year as a 4 digit number."
-                : (isNaN(startMonth) || startMonth < 1 || startMonth > 12) || (isNaN(startMonth) || startMonth < 1 || startMonth > 12)
+                : (isNaN(startMonth) || startMonth < 1 || startMonth > 12) || (isNaN(endMonth) || endMonth < 1 || endMonth > 12)
                     ? "Month should be between 1 and 12!"
                     : (isNaN(startDay) || startDay < 1 || startDay > 31) || (isNaN(endDay) || endDay < 1 || endDay > 31)
                         ? "Day should be between 1 and 31!"
-                        : (!((Boolean(startDate) && startDate.getDate() === parseInt(sourceConfig.startDay))))
+                        : (!(Boolean(startDate) && startDate.getDate() === parseInt(sourceConfig.startDay)))
                             ? "The start date is not valid."
-                            : (!((Boolean(endDate) && endDate.getDate() === parseInt(sourceConfig.endDay))))
+                            : (!(Boolean(endDate) && endDate.getDate() === parseInt(sourceConfig.endDay)))
                                 ? "The end date is not valid!"
                                 : (startDate > endDate)
                                     ? "Start date must be smaller than the end date."

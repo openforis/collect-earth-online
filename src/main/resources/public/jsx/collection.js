@@ -255,25 +255,19 @@ class Collection extends React.Component {
     };
 
     setImageryDatePlanetDaily = (eventTarget) => {
-        let imageryStartDatePlanetDaily, imageryEndDatePlanetDaily;
-        if (eventTarget.id === "planetDailyStartDate") {
-            imageryStartDatePlanetDaily = eventTarget.value;
-            imageryEndDatePlanetDaily = this.state.imageryEndDatePlanetDaily;
-            if (new Date(imageryStartDatePlanetDaily) > new Date(imageryEndDatePlanetDaily)) {
-                alert("Start date must be smaller than the end date.");
-                return;
-            }
+        const imageryStartDatePlanetDaily = (eventTarget.id === "planetDailyStartDate") ? eventTarget.value : this.state.imageryStartDatePlanetDaily;
+        const imageryEndDatePlanetDaily = (eventTarget.id === "planetDailyEndDate") ? eventTarget.value : this.state.imageryEndDatePlanetDaily;
+        if (new Date(imageryStartDatePlanetDaily) > new Date(imageryEndDatePlanetDaily)) {
+            alert("Start date must be smaller than the end date.");
         } else {
-            imageryStartDatePlanetDaily = this.state.imageryStartDatePlanetDaily;
-            imageryEndDatePlanetDaily = eventTarget.value;
+            const imageryInfo = this.getImageryByTitle(this.state.currentImagery.title);
+            const newImageryAttribution = imageryInfo.attribution + " | " + imageryStartDatePlanetDaily + " to " + imageryEndDatePlanetDaily;
+            this.setState({
+                imageryStartDatePlanetDaily: imageryStartDatePlanetDaily,
+                imageryEndDatePlanetDaily: imageryEndDatePlanetDaily,
+                imageryAttribution: newImageryAttribution,
+            });
         }
-        const imageryInfo = this.getImageryByTitle(this.state.currentImagery.title);
-        const newImageryAttribution = imageryInfo.attribution + " | " + imageryStartDatePlanetDaily + " to " + imageryEndDatePlanetDaily;
-        this.setState({
-            imageryStartDatePlanetDaily: imageryStartDatePlanetDaily,
-            imageryEndDatePlanetDaily: imageryEndDatePlanetDaily,
-            imageryAttribution: newImageryAttribution,
-        });
     };
 
     setImageryMonthPlanet = (newImageryMonthPlanet) => {
