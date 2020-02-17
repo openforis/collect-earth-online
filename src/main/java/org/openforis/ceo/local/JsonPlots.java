@@ -239,6 +239,7 @@ public class JsonPlots implements Plots {
                 plot -> {
                     if (plot.get("id").getAsString().equals(plotId)) {
                         var lastUser = getOrEmptyString(plot, "user").getAsString();
+                        var lastFlagged = getOrEmptyString(plot, "flagged").getAsBoolean();
                         var samples = plot.get("samples").getAsJsonArray();
                         var updatedSamples = mapJsonArray(samples,
                                 sample -> {
@@ -247,7 +248,8 @@ public class JsonPlots implements Plots {
                                     sample.add("userImage", userImages.get(sampleId));
                                     return sample;
                                 });
-                        if (lastUser.equals("")) {
+                        plot.addProperty("flagged", false);
+                        if (lastUser.equals("") || lastFlagged) {
                             var currentAnalyses = plot.get("analyses").getAsInt();
                             plot.addProperty("analyses", currentAnalyses + 1);
                             plot.addProperty("user", userName);
@@ -308,6 +310,16 @@ public class JsonPlots implements Plots {
                         plot.addProperty("flagged", true);
                         plot.addProperty("user", userName);
                         plot.addProperty("collectionTime", System.currentTimeMillis());
+                        plot.remove("confidence");
+
+                        var samples = plot.get("samples").getAsJsonArray();
+                        var updatedSamples = mapJsonArray(samples,
+                                sample -> {
+                                    sample.remove("value");
+                                    sample.remove("userImage");
+                                    return sample;
+                                });
+                        plot.add("samples", updatedSamples);
 
                         return unlockPlot(plot, userId);
                     } else {
