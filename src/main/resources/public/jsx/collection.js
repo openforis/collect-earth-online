@@ -19,7 +19,8 @@ class Collection extends React.Component {
             imageryMonthNamePlanet: "March",
             imageryYearDG: 2009,
             imageryYearPlanet: 2018,
-            imageryDatePlanetDaily: "",
+            imageryStartDatePlanetDaily: "",
+            imageryEndDatePlanetDaily: "",
             mapConfig: null,
             nextPlotButtonDisabled: false,
             plotList: [],
@@ -131,7 +132,8 @@ class Collection extends React.Component {
             this.updatePlanetLayer();
         }
 
-        if (this.state.imageryDatePlanetDaily !== prevState.imageryDatePlanetDaily) {
+        if (this.state.imageryStartDatePlanetDaily !== prevState.imageryStartDatePlanetDaily
+            || this.state.imageryEndDatePlanetDaily !== prevState.imageryEndDatePlanetDaily) {
             this.updatePlanetDailyLayer();
         }
     }
@@ -220,7 +222,7 @@ class Collection extends React.Component {
             : newImagery.sourceConfig.type === "Planet"
                 ? newImagery.attribution + " | " + this.state.imageryYearPlanet + "-" + this.state.imageryMonthPlanet
                 : newImagery.sourceConfig.type === "PlanetDaily"
-                    ? newImagery.attribution + " | " + this.state.imageryDatePlanetDaily
+                    ? newImagery.attribution + " | " + this.state.imageryStartDatePlanetDaily + " to " + this.state.imageryEndDatePlanetDaily
                     : newImagery.attribution;
         this.setState({
             currentImagery: newImagery,
@@ -255,13 +257,20 @@ class Collection extends React.Component {
         });
     };
 
-    setImageryDatePlanetDaily = (newImageryDatePlanetDaily) => {
-        const imageryInfo = this.getImageryByTitle(this.state.currentImagery.title);
-        const newImageryAttribution = imageryInfo.attribution + " | " + newImageryDatePlanetDaily;
-        this.setState({
-            imageryDatePlanetDaily: newImageryDatePlanetDaily,
-            imageryAttribution: newImageryAttribution,
-        });
+    setImageryDatePlanetDaily = (eventTarget) => {
+        const { imageryStartDatePlanetDaily, imageryEndDatePlanetDaily, currentImagery } = this.state;
+        const startDate = (eventTarget.id === "planetDailyStartDate") ? eventTarget.value : imageryStartDatePlanetDaily;
+        const endDate = (eventTarget.id === "planetDailyEndDate") ? eventTarget.value : imageryEndDatePlanetDaily;
+        if (new Date(startDate) > new Date(endDate)) {
+            alert("Start date must be smaller than the end date.");
+        } else {
+            const imageryAttribution = this.getImageryByTitle(currentImagery.title).attribution + " | " + startDate + " to " + endDate;
+            this.setState({
+                imageryStartDatePlanetDaily: startDate,
+                imageryEndDatePlanetDaily: endDate,
+                imageryAttribution: imageryAttribution,
+            });
+        }
     };
 
     setImageryMonthPlanet = (newImageryMonthPlanet) => {
@@ -300,10 +309,15 @@ class Collection extends React.Component {
             this.updatePlanetLayer();
         } else if (this.state.currentImagery.sourceConfig.type === "PlanetDaily") {
             this.setState({
-                imageryDatePlanetDaily: [
-                    this.state.currentImagery.sourceConfig.year,
-                    (parseInt(this.state.currentImagery.sourceConfig.month) > 9 ? "" : "0") + parseInt(this.state.currentImagery.sourceConfig.month),
-                    (parseInt(this.state.currentImagery.sourceConfig.day) > 9 ? "" : "0") + parseInt(this.state.currentImagery.sourceConfig.day),
+                imageryStartDatePlanetDaily: [
+                    this.state.currentImagery.sourceConfig.startYear,
+                    (parseInt(this.state.currentImagery.sourceConfig.startMonth) > 9 ? "" : "0") + parseInt(this.state.currentImagery.sourceConfig.startMonth),
+                    (parseInt(this.state.currentImagery.sourceConfig.startDay) > 9 ? "" : "0") + parseInt(this.state.currentImagery.sourceConfig.startDay),
+                ].join("-"),
+                imageryEndDatePlanetDaily: [
+                    this.state.currentImagery.sourceConfig.endYear,
+                    (parseInt(this.state.currentImagery.sourceConfig.endMonth) > 9 ? "" : "0") + parseInt(this.state.currentImagery.sourceConfig.endMonth),
+                    (parseInt(this.state.currentImagery.sourceConfig.endDay) > 9 ? "" : "0") + parseInt(this.state.currentImagery.sourceConfig.endDay),
                 ].join("-"),
             });
         }
@@ -369,9 +383,9 @@ class Collection extends React.Component {
     };
 
     updatePlanetDailyLayer = () => {
-        const { imageryDatePlanetDaily, currentPlot } = this.state;
+        const { imageryStartDatePlanetDaily, imageryEndDatePlanetDaily, currentPlot } = this.state;
         // check so that the function is not called before the state is propagated
-        if (imageryDatePlanetDaily && currentPlot) {
+        if (imageryStartDatePlanetDaily && imageryEndDatePlanetDaily && currentPlot) {
             const geometry = currentPlot.geom
                   ? mercator.parseGeoJson(currentPlot.geom, true)
                   : mercator.getPlotPolygon(currentPlot.center,
@@ -381,9 +395,12 @@ class Collection extends React.Component {
                                        this.state.currentImagery.title,
                                        "{\"type\": \"Polygon\", \"coordinates\":" + JSON.stringify(geometry.transform("EPSG:3857", "EPSG:4326").getCoordinates()) + "}",
                                        sourceConfig => {
-                                           sourceConfig.year = parseInt(imageryDatePlanetDaily.split("-")[0]);
-                                           sourceConfig.month = parseInt(imageryDatePlanetDaily.split("-")[1]);
-                                           sourceConfig.day = parseInt(imageryDatePlanetDaily.split("-")[2]);
+                                           sourceConfig.startYear = parseInt(imageryStartDatePlanetDaily.split("-")[0]);
+                                           sourceConfig.startMonth = parseInt(imageryStartDatePlanetDaily.split("-")[1]);
+                                           sourceConfig.startDay = parseInt(imageryStartDatePlanetDaily.split("-")[2]);
+                                           sourceConfig.endYear = parseInt(imageryEndDatePlanetDaily.split("-")[0]);
+                                           sourceConfig.endMonth = parseInt(imageryEndDatePlanetDaily.split("-")[1]);
+                                           sourceConfig.endDay = parseInt(imageryEndDatePlanetDaily.split("-")[2]);
                                            return sourceConfig;
                                        },
                                        this,
@@ -719,7 +736,8 @@ class Collection extends React.Component {
             imageryMonthPlanet: this.state.imageryMonthPlanet,
             imageryYearPlanet:  this.state.imageryYearPlanet,
         } : (this.state.currentImagery.sourceConfig.type === "PlanetDaily") ? {
-            imageryDatePlanetDaily: this.state.imageryDatePlanetDaily,
+            imageryStartDatePlanetDaily: this.state.imageryStartDatePlanetDaily,
+            imageryEndDatePlanetDaily: this.state.imageryEndDatePlanetDaily,
         } : {};
 
     getChildQuestions = (currentQuestionId) => {
@@ -1139,7 +1157,8 @@ class Collection extends React.Component {
                         imageryYearPlanet={this.state.imageryYearPlanet}
                         imageryMonthPlanet={this.state.imageryMonthPlanet}
                         imageryMonthNamePlanet={this.state.imageryMonthNamePlanet}
-                        imageryDatePlanetDaily={this.state.imageryDatePlanetDaily}
+                        imageryStartDatePlanetDaily={this.state.imageryStartDatePlanetDaily}
+                        imageryEndDatePlanetDaily={this.state.imageryEndDatePlanetDaily}
                         showPlanetDaily={this.state.currentPlot != null}
                         stackingProfileDG={this.state.stackingProfileDG}
                         setBaseMapSource={this.setBaseMapSource}
@@ -1484,15 +1503,28 @@ class ImageryOptions extends React.Component {
 
     planetDailyMenus = () => (
         <div className="PlanetsDailyMenu my-2">
+            <label>Start Date</label>
             <div className="slidecontainer form-control form-control-sm">
                 <input
                     type="date"
-                    id="planetDailyYear"
-                    value={this.props.imageryDatePlanetDaily}
+                    id="planetDailyStartDate"
+                    value={this.props.imageryStartDatePlanetDaily}
                     max={new Date().toJSON().slice(0, 10)}
-                    min="2016-01-01"
+                    min="2010-01-01"
                     style={{ width: "100%" }}
-                    onChange={e => this.props.setImageryDatePlanetDaily(e.target.value)}
+                    onChange={e => this.props.setImageryDatePlanetDaily(e.target)}
+                />
+            </div>
+            <label>End Date</label>
+            <div className="slidecontainer form-control form-control-sm">
+                <input
+                    type="date"
+                    id="planetDailyEndDate"
+                    value={this.props.imageryEndDatePlanetDaily}
+                    max={new Date().toJSON().slice(0, 10)}
+                    min="2010-01-01"
+                    style={{ width: "100%" }}
+                    onChange={e => this.props.setImageryDatePlanetDaily(e.target)}
                 />
             </div>
         </div>
