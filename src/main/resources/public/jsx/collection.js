@@ -1084,6 +1084,7 @@ class Collection extends React.Component {
     render() {
         const plotId = this.state.currentPlot
               && (this.state.currentPlot.plotId ? this.state.currentPlot.plotId : this.state.currentPlot.id);
+        const isFlagged = this.state.currentPlot && this.state.currentPlot.flagged;
         return (
             <Fragment>
                 <ImageAnalysisPane imageryAttribution={this.state.imageryAttribution}/>
@@ -1097,6 +1098,7 @@ class Collection extends React.Component {
                     clearAnswers={() => this.resetPlotValues(this.state.currentPlot)}
                     surveyQuestions={this.state.currentProject.surveyQuestions}
                     userName={this.props.userName}
+                    isFlagged={isFlagged}
                 >
                     <PlotNavigation
                         plotId={plotId}
@@ -1205,6 +1207,7 @@ function SideBar(props) {
                     name="save-values"
                     value="Flag Plot"
                     onClick={props.flagPlotInDB}
+                    disabled={props.isFlagged}
                 />
                 <input
                     id="save-values-button"
