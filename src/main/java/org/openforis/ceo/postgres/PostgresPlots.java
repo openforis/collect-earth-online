@@ -327,7 +327,6 @@ public class PostgresPlots implements Plots {
         var jsonInputs =        parseJson(req.body()).getAsJsonObject();
         var plotId =            jsonInputs.get("plotId").getAsString();
         var userId =            jsonInputs.get("userId").getAsInt();
-        var userName =          jsonInputs.get("userName").getAsString();
 
         try (var conn = connect();
             var pstmt = conn.prepareStatement("SELECT * FROM flag_plot(?,?,?::int)")) {

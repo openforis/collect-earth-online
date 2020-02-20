@@ -247,6 +247,7 @@ public class JsonPlots implements Plots {
                                     sample.add("userImage", userImages.get(sampleId));
                                     return sample;
                                 });
+                        plot.addProperty("flagged", false);
                         if (lastUser.equals("")) {
                             var currentAnalyses = plot.get("analyses").getAsInt();
                             plot.addProperty("analyses", currentAnalyses + 1);
@@ -308,6 +309,16 @@ public class JsonPlots implements Plots {
                         plot.addProperty("flagged", true);
                         plot.addProperty("user", userName);
                         plot.addProperty("collectionTime", System.currentTimeMillis());
+                        plot.remove("confidence");
+
+                        var samples = plot.get("samples").getAsJsonArray();
+                        var updatedSamples = mapJsonArray(samples,
+                                sample -> {
+                                    sample.remove("value");
+                                    sample.remove("userImage");
+                                    return sample;
+                                });
+                        plot.add("samples", updatedSamples);
 
                         return unlockPlot(plot, userId);
                     } else {
