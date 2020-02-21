@@ -446,12 +446,8 @@ const imageryOptions = [
         type: "PlanetDaily",
         params: [
             { key: "accessToken", display: "Access Token" },
-            { key: "startYear", display: "Start Year", type: "number" },
-            { key: "startMonth", display: "Start Month", type: "number" },
-            { key: "startDay", display: "Start Day", type: "number" },
-            { key: "endYear", display: "End Year", type: "number" },
-            { key: "endMonth", display: "End Month", type: "number" },
-            { key: "endDay", display: "End Day", type: "number" },
+            { key: "startDate", display: "Start Date", type: "date"},
+            { key: "endDate", display: "End Date", type: "date"},
         ],
         url: "https://developers.planet.com/docs/quickstart/getting-started/",
     },
@@ -560,28 +556,9 @@ class NewImagery extends React.Component {
                 : (isNaN(month) || month < 1 || month > 12) ? "Month should be between 1 and 12!"
                 : null;
         } else if (sourceConfig.type === "PlanetDaily") {
-            const startYear = parseInt(sourceConfig.startYear);
-            const startMonth = parseInt(sourceConfig.startMonth);
-            const startDay = parseInt(sourceConfig.startDay);
-            const endYear = parseInt(sourceConfig.endYear);
-            const endMonth = parseInt(sourceConfig.endMonth);
-            const endDay = parseInt(sourceConfig.endDay);
-            const startDate = new Date(startYear, startMonth - 1, startDay);
-            const endDate = new Date(endYear, endMonth - 1, endDay);
-
-            return (isNaN(startYear) || isNaN(endYear))
-                ? "Please enter the year as a 4 digit number."
-                : (isNaN(startMonth) || startMonth < 1 || startMonth > 12) || (isNaN(endMonth) || endMonth < 1 || endMonth > 12)
-                    ? "Month should be between 1 and 12!"
-                    : (isNaN(startDay) || startDay < 1 || startDay > 31) || (isNaN(endDay) || endDay < 1 || endDay > 31)
-                        ? "Day should be between 1 and 31!"
-                        : (!(Boolean(startDate) && startDate.getDate() === parseInt(sourceConfig.startDay)))
-                            ? "The start date is not valid."
-                            : (!(Boolean(endDate) && endDate.getDate() === parseInt(sourceConfig.endDay)))
-                                ? "The end date is not valid!"
-                                : (startDate > endDate)
-                                    ? "Start date must be smaller than the end date."
-                                    : null;
+            const startDate = sourceConfig.startDate;
+            const endDate = sourceConfig.endDate;
+            return (startDate > endDate) ? "Start date must be smaller than the end date." : null;
         }
     };
 

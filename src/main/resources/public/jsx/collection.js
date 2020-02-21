@@ -4,6 +4,7 @@ import { mercator, ceoMapStyles } from "../js/mercator-openlayers.js";
 import { SurveyCollection } from "./components/SurveyCollection";
 import { convertSampleValuesToSurveyQuestions } from "./utils/surveyUtils";
 import { UnicodeIcon } from "./utils/textUtils";
+import { fromExtent } from "ol/geom/Polygon";
 
 class Collection extends React.Component {
     constructor(props) {
@@ -306,16 +307,8 @@ class Collection extends React.Component {
             this.updatePlanetLayer();
         } else if (this.state.currentImagery.sourceConfig.type === "PlanetDaily") {
             this.setState({
-                imageryStartDatePlanetDaily: [
-                    this.state.currentImagery.sourceConfig.startYear,
-                    (parseInt(this.state.currentImagery.sourceConfig.startMonth) > 9 ? "" : "0") + parseInt(this.state.currentImagery.sourceConfig.startMonth),
-                    (parseInt(this.state.currentImagery.sourceConfig.startDay) > 9 ? "" : "0") + parseInt(this.state.currentImagery.sourceConfig.startDay),
-                ].join("-"),
-                imageryEndDatePlanetDaily: [
-                    this.state.currentImagery.sourceConfig.endYear,
-                    (parseInt(this.state.currentImagery.sourceConfig.endMonth) > 9 ? "" : "0") + parseInt(this.state.currentImagery.sourceConfig.endMonth),
-                    (parseInt(this.state.currentImagery.sourceConfig.endDay) > 9 ? "" : "0") + parseInt(this.state.currentImagery.sourceConfig.endDay),
-                ].join("-"),
+                imageryStartDatePlanetDaily: this.state.currentImagery.sourceConfig.startDate || "2019-01-01",
+                imageryEndDatePlanetDaily: this.state.currentImagery.sourceConfig.endDate || "2019-02-01",
             });
         }
     };
@@ -383,21 +376,13 @@ class Collection extends React.Component {
         const { imageryStartDatePlanetDaily, imageryEndDatePlanetDaily, currentPlot } = this.state;
         // check so that the function is not called before the state is propagated
         if (imageryStartDatePlanetDaily && imageryEndDatePlanetDaily && currentPlot) {
-            const geometry = currentPlot.geom
-                  ? mercator.parseGeoJson(currentPlot.geom, true)
-                  : mercator.getPlotPolygon(currentPlot.center,
-                                            this.state.currentProject.plotSize + 200, // add 200 meters
-                                            "square");
+            const geometry = fromExtent(mercator.getViewExtent(this.state.mapConfig));
             mercator.updateLayerSource(this.state.mapConfig,
                                        this.state.currentImagery.title,
-                                       "{\"type\": \"Polygon\", \"coordinates\":" + JSON.stringify(geometry.transform("EPSG:3857", "EPSG:4326").getCoordinates()) + "}",
+                                       "{\"type\": \"Polygon\", \"coordinates\":" + JSON.stringify(geometry.getCoordinates()) + "}",
                                        sourceConfig => {
-                                           sourceConfig.startYear = parseInt(imageryStartDatePlanetDaily.split("-")[0]);
-                                           sourceConfig.startMonth = parseInt(imageryStartDatePlanetDaily.split("-")[1]);
-                                           sourceConfig.startDay = parseInt(imageryStartDatePlanetDaily.split("-")[2]);
-                                           sourceConfig.endYear = parseInt(imageryEndDatePlanetDaily.split("-")[0]);
-                                           sourceConfig.endMonth = parseInt(imageryEndDatePlanetDaily.split("-")[1]);
-                                           sourceConfig.endDay = parseInt(imageryEndDatePlanetDaily.split("-")[2]);
+                                           sourceConfig.startDate = imageryStartDatePlanetDaily;
+                                           sourceConfig.endDate = imageryEndDatePlanetDaily;
                                            return sourceConfig;
                                        },
                                        this,

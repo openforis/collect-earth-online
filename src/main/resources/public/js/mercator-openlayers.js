@@ -119,16 +119,8 @@ mercator.createSource = function (sourceConfig, imageryId, documentRoot,
         const theJson = {
             path: "getPlanetTile",
             apiKey: sourceConfig.accessToken,
-            dateFrom: [
-                sourceConfig.startYear,
-                (parseInt(sourceConfig.startMonth) > 9 ? "" : "0") + parseInt(sourceConfig.startMonth),
-                (parseInt(sourceConfig.startDay) > 9 ? "" : "0") + parseInt(sourceConfig.startDay),
-            ].join("-"),
-            dateTo: [
-                sourceConfig.endYear,
-                (parseInt(sourceConfig.endMonth) > 9 ? "" : "0") + parseInt(sourceConfig.endMonth),
-                (parseInt(sourceConfig.endDay) > 9 ? "" : "0") + parseInt(sourceConfig.endDay),
-            ].join("-"),
+            dateFrom: sourceConfig.startDate,
+            dateTo: sourceConfig.endDate,
             layerCount: 20, // FIXME: what should this optimally be?
             geometry: extent,
         };
@@ -166,6 +158,7 @@ mercator.createSource = function (sourceConfig, imageryId, documentRoot,
                 if (planetLayers.length === 0) {
                     alert("No usable results found for Planet Daily imagery. Check your access token and/or change the date.");
                 }
+                console.log(planetLayers);
                 const dummyPlanetLayer = mercator.currentMap.getLayers().getArray().find(lyr => theID === lyr.getSource().get("id"));
                 mercator.currentMap.removeLayer(dummyPlanetLayer);
                 mercator.currentMap.addLayer(new LayerGroup({
