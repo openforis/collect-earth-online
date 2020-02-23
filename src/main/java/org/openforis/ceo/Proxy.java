@@ -42,7 +42,7 @@ public class Proxy {
                           + year + "_" + month
                           + "_mosaic/gmap/{z}/{x}/{y}.png?api_key=";
             return baseUrl.replace("{z}", z).replace("{x}", x).replace("{y}", y) + apiKey;
-        } else if (sourceType.equals("GeoServer")) {
+        } else if (List.of("GeoServer", "SecureWatch").contains(sourceType)) {
             final var queryParams     = req.queryString().split("&"); // includes STYLES=
             final var geoserverParams = sourceConfig.get("geoserverParams").getAsJsonObject(); // includes manually input STYLES
             final var geoserverLayers = geoserverParams.get("LAYERS").getAsString();

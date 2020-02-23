@@ -192,6 +192,12 @@ mercator.createSource = function (sourceConfig, imageryId, documentRoot,
             url: documentRoot + "/get-tile",
             params: { LAYERS: "none", imageryId: imageryId },
         });
+    } else if (sourceConfig.type === "SecureWatch") {
+        return new TileWMS({
+            serverType: "geoserver",
+            url: documentRoot + "/get-tile",
+            params: { imageryId: imageryId },
+        });
     } else if (sourceConfig.type === "GeeGateway") {
         //get variables and make ajax call to get mapid and token
         //then add xyz layer
