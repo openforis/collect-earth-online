@@ -4,6 +4,7 @@ import static org.openforis.ceo.utils.JsonUtils.filterJsonArray;
 import static org.openforis.ceo.utils.JsonUtils.filterJsonFile;
 import static org.openforis.ceo.utils.JsonUtils.findInJsonArray;
 import static org.openforis.ceo.utils.JsonUtils.mapJsonArray;
+import static org.openforis.ceo.utils.JsonUtils.mapJsonFile;
 import static org.openforis.ceo.utils.JsonUtils.getNextId;
 import static org.openforis.ceo.utils.JsonUtils.elementToArray;
 import static org.openforis.ceo.utils.JsonUtils.parseJson;
@@ -103,6 +104,32 @@ public class JsonImagery implements Imagery {
             return "";
         } catch (Exception e) {
             // Indicate that an error occurred with imagery creation
+            throw new RuntimeException(e);
+        }
+    }
+
+    public synchronized String updateInstitutionImagery(Request req, Response res) {
+        try {
+            var jsonInputs            = parseJson(req.body()).getAsJsonObject();
+            var imageryId             = jsonInputs.get("imageryId").getAsInt();
+            var imageryTitle          = jsonInputs.get("imageryTitle").getAsString();
+            var imageryAttribution    = jsonInputs.get("imageryAttribution").getAsString();
+            var sourceConfig          = jsonInputs.get("sourceConfig").getAsJsonObject();
+
+            mapJsonFile("imagery-list.json", imagery -> {
+                if (imagery.get("id").getAsInt() == imageryId) {
+                    imagery.addProperty("title", imageryTitle);
+                    imagery.addProperty("attribution", imageryAttribution);
+                    imagery.add("sourceConfig", sourceConfig);
+                    return imagery;
+                } else {
+                    return imagery;
+                }
+            });
+
+            return "";
+        } catch (Exception e) {
+            // Indicate that an error occurred with imagery update
             throw new RuntimeException(e);
         }
     }

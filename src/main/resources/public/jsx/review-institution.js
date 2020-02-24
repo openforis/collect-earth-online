@@ -311,7 +311,8 @@ class ImageryList extends React.Component {
         super(props);
         this.state = {
             editMode: false,
-            imageryList:[],
+            imageryToEdit: -1,
+            imageryList: [],
         };
     }
 
@@ -338,6 +339,17 @@ class ImageryList extends React.Component {
                 console.log(response);
                 alert("Error retrieving the imagery list. See console for details.");
             });
+    };
+
+    addImagery = () => {
+        this.setState({ imageryToEdit: -1 });
+        this.toggleEditMode();
+    }
+
+    editImagery = (imageryId) => {
+        const imagery = this.state.imageryList.find((e) => e.id === imageryId);
+        this.setState({ imageryToEdit: imagery });
+        this.toggleEditMode();
     };
 
     deleteImagery = (imageryId) => {
@@ -367,10 +379,6 @@ class ImageryList extends React.Component {
 
     toggleEditMode = () => this.setState({ editMode: !this.state.editMode });
 
-    //    Helper Functions    //
-
-    titleIsTaken = (newTitle) => this.state.imageryList.some(i => i.title === newTitle);
-
     render() {
         return this.state.imageryList.length === 0
             ? <h3>Loading imagery...</h3>
@@ -380,8 +388,9 @@ class ImageryList extends React.Component {
                         documentRoot={this.props.documentRoot}
                         getImageryList={this.getImageryList}
                         institutionId={this.props.institutionId}
-                        titleIsTaken={this.titleIsTaken}
                         toggleEditMode={this.toggleEditMode}
+                        imageryToEdit={this.state.imageryToEdit}
+                        imageryList={this.state.imageryList}
                     />
                 :
                     <Fragment>
@@ -392,7 +401,7 @@ class ImageryList extends React.Component {
                                     type="button"
                                     id="add-imagery-button"
                                     className="btn btn-sm btn-block btn-outline-yellow py-2 font-weight-bold"
-                                    onClick={this.toggleEditMode}
+                                    onClick={this.addImagery}
                                 >
                                     <UnicodeIcon icon="add" backgroundColor="#f1c00f"/>Add New Imagery
                                 </button>
@@ -406,6 +415,7 @@ class ImageryList extends React.Component {
                                 title={imageryItem.title}
                                 isAdmin={this.props.isAdmin}
                                 isInstitutionImage={this.props.institutionId === imageryItem.institution}
+                                editImagery={() => this.editImagery(imageryItem.id)}
                                 deleteImagery={() => this.deleteImagery(imageryItem.id)}
                             />
                         )}
@@ -466,12 +476,25 @@ const imageryOptions = [
 class NewImagery extends React.Component {
     constructor(props) {
         super(props);
-        this.state = {
-            newImageryTitle: "",
-            newImageryAttribution: "",
-            selectedType: 0,
-            newImageryParams: {},
-        };
+        const { imageryToEdit } = props;
+        if (imageryToEdit !== -1) {
+            const { sourceConfig } = imageryToEdit;
+            const { type, ...imageryParams } = sourceConfig;
+            const selectedType = imageryOptions.findIndex((e) => e.type === type);
+            this.state = {
+                newImageryTitle: imageryToEdit.title,
+                newImageryAttribution: imageryToEdit.attribution,
+                selectedType: selectedType,
+                newImageryParams: imageryParams,
+            };
+        } else {
+            this.state = {
+                newImageryTitle: "",
+                newImageryAttribution: "",
+                selectedType: 0,
+                newImageryParams: {},
+            };
+        }
     }
 
     //    Lifecycle Methods    //
@@ -489,6 +512,42 @@ class NewImagery extends React.Component {
 
     //    Remote Calls    //
 
+    editCustomImagery = () => {
+        const sourceConfig = this.stackParams();
+        const message = this.checkDateField(sourceConfig);
+        if (!this.checkAllParams()) {
+            alert("You must fill out all fields.");
+        } else if (["Planet", "PlanetDaily"].includes(sourceConfig.type) && message) {
+            alert(message);
+        } else if (this.titleIsTaken(this.state.newImageryTitle, this.props.imageryToEdit.id)) {
+            alert("The title '" + this.state.newImageryTitle + "' is already taken.");
+        } else if (Object.keys(sourceConfig).length === 0) {
+            // stackParams() will fail if parent is not entered as a JSON string.
+            alert("Invalid JSON in JSON field(s).");
+        } else {
+            fetch(this.props.documentRoot + "/update-institution-imagery",
+                  {
+                      method: "POST",
+                      body: JSON.stringify({
+                          institutionId: this.props.institutionId,
+                          imageryId: this.props.imageryToEdit.id,
+                          imageryTitle: this.state.newImageryTitle,
+                          imageryAttribution: this.state.newImageryAttribution,
+                          sourceConfig: sourceConfig,
+                      }),
+                  }
+            ).then(response => {
+                if (response.ok) {
+                    this.props.getImageryList();
+                    this.props.toggleEditMode();
+                } else {
+                    console.log(response);
+                    alert("Error updating imagery. See console for details.");
+                }
+            });
+        }
+    };
+
     addCustomImagery = () => {
         const sourceConfig = this.stackParams();
         const message = this.checkDateField(sourceConfig);
@@ -496,7 +555,7 @@ class NewImagery extends React.Component {
             alert("You must fill out all fields.");
         } else if (["Planet", "PlanetDaily"].includes(sourceConfig.type) && message) {
             alert(message);
-        } else if (this.props.titleIsTaken(this.state.newImageryTitle)) {
+        } else if (this.titleIsTaken(this.state.newImageryTitle, this.props.imageryToEdit.id)) {
             alert("The title '" + this.state.newImageryTitle + "' is already taken.");
         } else if (Object.keys(sourceConfig).length === 0) {
             // stackParams() will fail if parent is not entered as a JSON string.
@@ -525,6 +584,8 @@ class NewImagery extends React.Component {
     };
 
     //    Helper Functions    //
+
+    titleIsTaken = (newTitle, idToExclude) => this.props.imageryList.some(i => i.title === newTitle && i.id !== idToExclude);
 
     stackParams = () => {
         try {
@@ -688,14 +749,26 @@ class NewImagery extends React.Component {
                 {imageryOptions[this.state.selectedType].params.map(o => this.formTemplate(o))}
                 {/* Action buttons for save and quit */}
                 <div className="btn-group-vertical btn-block">
-                    <button
-                        type="button"
-                        id="add-imagery-button"
-                        className="btn btn-sm btn-block btn-outline-yellow btn-group py-2 font-weight-bold"
-                        onClick={this.addCustomImagery}
-                    >
-                        <UnicodeIcon icon="add" backgroundColor="#f1c00f"/>Add New Imagery
-                    </button>
+                    {this.props.imageryToEdit !== -1
+                    ?
+                        <button
+                            type="button"
+                            id="add-imagery-button"
+                            className="btn btn-sm btn-block btn-outline-yellow btn-group py-2 font-weight-bold"
+                            onClick={this.editCustomImagery}
+                        >
+                            <UnicodeIcon icon="edit" backgroundColor="#f1c00f"/>Edit Imagery
+                        </button>
+                    :
+                        <button
+                            type="button"
+                            id="add-imagery-button"
+                            className="btn btn-sm btn-block btn-outline-yellow btn-group py-2 font-weight-bold"
+                            onClick={this.addCustomImagery}
+                        >
+                            <UnicodeIcon icon="add" backgroundColor="#f1c00f"/>Add New Imagery
+                        </button>
+                    }
                     <button
                         type="button"
                         className="btn btn-sm btn-block btn-outline-danger btn-group py-2 font-weight-bold"
@@ -709,7 +782,7 @@ class NewImagery extends React.Component {
     }
 }
 
-function Imagery({ isAdmin, title, deleteImagery, isInstitutionImage }) {
+function Imagery({ isAdmin, title, editImagery, deleteImagery, isInstitutionImage }) {
     return (
         <div className="row mb-1">
             <div className="col overflow-hidden">
@@ -722,16 +795,28 @@ function Imagery({ isAdmin, title, deleteImagery, isInstitutionImage }) {
                 </button>
             </div>
             {(isAdmin && isInstitutionImage) &&
-            <div className="pr-3">
-                <button
-                    className="btn btn-outline-danger btn-sm btn-block px-3"
-                    id="delete-imagery"
-                    type="button"
-                    onClick={deleteImagery}
-                >
-                    <UnicodeIcon icon="trash"/>
-                </button>
-            </div>
+            <>
+                <div className="pr-3">
+                    <button
+                        className="btn btn-outline-yellow btn-sm btn-block px-3"
+                        id="edit-imagery"
+                        type="button"
+                        onClick={editImagery}
+                    >
+                        <UnicodeIcon icon="edit"/>
+                    </button>
+                </div>
+                <div className="pr-3">
+                    <button
+                        className="btn btn-outline-danger btn-sm btn-block px-3"
+                        id="delete-imagery"
+                        type="button"
+                        onClick={deleteImagery}
+                    >
+                        <UnicodeIcon icon="trash"/>
+                    </button>
+                </div>
+            </>
             }
         </div>
     );
