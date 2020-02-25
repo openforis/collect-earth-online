@@ -33,7 +33,7 @@
         <script type="text/javascript" src="${root}/js/highcharts.js"></script>
 
         <!-- CKEditor -->
-        <script src="https://cdn.ckeditor.com/ckeditor5/17.0.0/classic/ckeditor.js"></script>
+        <script type="text/javascript" src="${root}/js/ckeditor.js"></script>
 
         <!-- Jerome's custom styles and scripts -->
         <link rel="stylesheet" type="text/css" href="${root}/css/custom.css">

@@ -404,6 +404,8 @@ public class PostgresUsers implements Users {
     }
 
     public Request sendMailingList(Request req, Response res) {
+        var inputSubject =        req.queryParams("subject");
+        var inputBody =           req.queryParams("body");
         try (var conn = connect();
              var pstmt = conn.prepareStatement("SELECT * FROM get_all_users()")) {
 

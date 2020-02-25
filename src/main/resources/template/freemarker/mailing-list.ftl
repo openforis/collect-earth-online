@@ -12,12 +12,12 @@
                 <div class="col">
                     <form action="${root}/mailing-list" method="post">
                         <div class="form-group">
-                            <label for="email">Subject</label>
+                            <label for="subject">Subject</label>
                             <input autocomplete="off" id="subject" name="subject" placeholder="Subject" type="text" class="form-control" value="">
                         </div>
                         <div class="form-group">
-                            <label for="email">Body</label>
-                            <div id="editor"></div>
+                            <label for="body">Body</label>
+                            <textarea name="body" id="editor"></textarea>
                         </div>
                         <input class="btn btn-outline-lightgreen btn-block" type="submit">
                     </form>
