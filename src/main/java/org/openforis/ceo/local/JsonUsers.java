@@ -537,4 +537,8 @@ public class JsonUsers implements Users {
         return "";
     }
 
+    public Request sendMailingList(Request req, Response res) {
+        return req;
+    }
+
 }

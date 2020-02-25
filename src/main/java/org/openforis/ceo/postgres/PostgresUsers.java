@@ -403,4 +403,22 @@ public class PostgresUsers implements Users {
         }
     }
 
+    public Request sendMailingList(Request req, Response res) {
+        try (var conn = connect();
+             var pstmt = conn.prepareStatement("SELECT * FROM get_all_users()")) {
+
+            var allEmails = new JsonArray();
+            try (var rs = pstmt.executeQuery()) {
+                while (rs.next()) {
+                    allEmails.add(rs.getString("email"));
+                }
+                System.out.println(allEmails.toString());
+            }
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+            req.session().attribute("flash_message", "There was an issue resetting your password.  Please check the console.");
+        }
+        return req;
+    }
+
 }

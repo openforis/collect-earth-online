@@ -98,6 +98,11 @@ public class Server implements SparkApplication {
                 && !institutions.isInstAdmin(request)) {
                 redirectAuth(request, response, userId);
             }
+            // Check for mailing list permission pages and redirect
+            if (request.uri().equals("/mailing-list") && request.requestMethod().equals("GET") // mailing-list can be a get (page) or post (api)
+                && userId != 1) {
+                redirectAuth(request, response, userId);
+            }
 
             /// API Authentication ///
 
@@ -184,6 +189,7 @@ public class Server implements SparkApplication {
         get("/support",                               Views.support(freemarker));
         get("/widget-layout-editor",                  Views.widgetLayoutEditor(freemarker));
         get("/get-tile",                              (req, res) -> Proxy.proxyImagery(req, res, imagery));
+        get("/mailing-list",                          Views.mailingList(freemarker));
 
         // Routing Table: HTML pages (with side effects)
         get("/logout",                                (req, res) -> Views.home(freemarker).handle(users.logout(req, res), res));
@@ -192,6 +198,7 @@ public class Server implements SparkApplication {
         post("/register",                             (req, res) -> Views.register(freemarker).handle(users.register(req, res), res));
         post("/password",                             (req, res) -> Views.password(freemarker).handle(users.getPasswordResetKey(req, res), res));
         post("/password-reset",                       (req, res) -> Views.passwordReset(freemarker).handle(users.resetPassword(req, res), res));
+        post("/mailing-list",                         (req, res) -> Views.mailingList(freemarker).handle(users.sendMailingList(req, res), res));
 
         // Routing Table: Projects API
         get("/dump-project-aggregate-data",           projects::dumpProjectAggregateData);
