@@ -22,6 +22,7 @@ import com.google.gson.JsonPrimitive;
 import java.nio.file.Paths;
 import java.time.format.DateTimeFormatter;
 import java.time.LocalDateTime;
+import java.util.Arrays;
 import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -123,7 +124,7 @@ public class JsonUsers implements Users {
                     + "  Created on: " + timestamp + "\n\n"
                     + "Kind Regards,\n"
                     + "  The CEO Team";
-                sendMail(SMTP_USER, inputEmail, SMTP_SERVER, SMTP_PORT, SMTP_PASSWORD, "Welcome to CEO!", body);
+                sendMail(SMTP_USER, Arrays.asList(inputEmail), null, null, SMTP_SERVER, SMTP_PORT, SMTP_PASSWORD, "Welcome to CEO!", body, null);
 
                 // Redirect to the Home page
                 res.redirect(CeoConfig.documentRoot + "/home");
@@ -216,7 +217,7 @@ public class JsonUsers implements Users {
                     + inputEmail
                     + "&password-reset-key="
                     + resetKey;
-                sendMail(SMTP_USER, inputEmail, SMTP_SERVER, SMTP_PORT, SMTP_PASSWORD, "Password reset on CEO", body);
+                sendMail(SMTP_USER, Arrays.asList(inputEmail), null, null, SMTP_SERVER, SMTP_PORT, SMTP_PASSWORD, "Password reset on CEO", body, null);
                 req.session().attribute("flash_message", "The reset key has been sent to your email.");
                 return req;
             } catch (Exception e) {

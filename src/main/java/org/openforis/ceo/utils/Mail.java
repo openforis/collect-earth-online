@@ -1,16 +1,25 @@
 package org.openforis.ceo.utils;
 
+import java.util.List;
 import java.util.Properties;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
+
+import javax.mail.Address;
 import javax.mail.Message;
 import javax.mail.MessagingException;
 import javax.mail.PasswordAuthentication;
 import javax.mail.Session;
 import javax.mail.Transport;
+import javax.mail.internet.AddressException;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
 
 public class Mail {
+
+    public static final String CONTENT_TYPE_TEXT = "text/plain";
+
+    public static final String CONTENT_TYPE_HTML = "text/html";
 
     public static boolean isEmail(String email) {
         var emailPattern = "(?i)[a-z0-9!#$%&'*+/=?^_`{|}~-]+" +
@@ -20,8 +29,21 @@ public class Mail {
         return Pattern.matches(emailPattern, email);
     }
 
-    public static void sendMail(String from, String to, String smtpServer, String smtpPort,
-                                String smtpPassword, String subject, String body) {
+    private static Address[] fromStringListToAddressArray(List<String> listString) {
+        List<Address> toList = listString.stream().map(email -> {
+            Address address = null;
+            try {
+                address = new InternetAddress(email);
+            } catch (AddressException e) {
+                //e.printStackTrace();
+            }
+            return address;
+        }).collect(Collectors.toList());
+        return toList.toArray(new Address[0]);
+    }
+
+    public static void sendMail(String from, List<String> to, List<String> cc, List<String> bcc, String smtpServer, String smtpPort,
+                                String smtpPassword, String subject, String body, String contentType) {
         try {
             // Get system properties
             var properties = new Properties();
@@ -54,13 +76,30 @@ public class Mail {
             message.setFrom(new InternetAddress(from));
 
             // Set To: header field of the header.
-            message.addRecipient(Message.RecipientType.TO, new InternetAddress(to));
+            if (to != null && to.size() > 0) {
+                message.addRecipients(Message.RecipientType.TO, fromStringListToAddressArray(to));
+            }
+
+            // Set Cc: header field of the header.
+            if (cc != null && cc.size() > 0) {
+                message.addRecipients(Message.RecipientType.CC, fromStringListToAddressArray(cc));
+            }
+
+            // Set Bcc: header field of the header.
+            if (bcc != null && bcc.size() > 0) {
+                message.addRecipients(Message.RecipientType.BCC, fromStringListToAddressArray(bcc));
+            }
 
             // Set Subject: header field
             message.setSubject(subject);
 
-            // Now set the actual message
-            message.setText(body);
+            if (contentType == null || contentType.equals(Mail.CONTENT_TYPE_TEXT)) {
+                // Now set the actual message
+                message.setText(body);
+            } else if (contentType.equals(Mail.CONTENT_TYPE_HTML)) {
+                // Send the actual HTML message, as big as you like
+                message.setContent(body, "text/html");
+            }
 
             // Send message
             Transport.send(message);

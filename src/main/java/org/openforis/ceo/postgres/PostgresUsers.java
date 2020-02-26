@@ -11,11 +11,15 @@ import com.google.gson.JsonObject;
 import java.sql.SQLException;
 import java.time.format.DateTimeFormatter;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import org.openforis.ceo.db_api.Users;
 import org.openforis.ceo.env.CeoConfig;
+import org.openforis.ceo.utils.Mail;
 import spark.Request;
 import spark.Response;
 
@@ -98,7 +102,7 @@ public class PostgresUsers implements Users {
                                     + "  Created on: " + timestamp + "\n\n"
                                     + "Kind Regards,\n"
                                     + "  The CEO Team";
-                                sendMail(SMTP_USER, inputEmail, SMTP_SERVER, SMTP_PORT, SMTP_PASSWORD, "Welcome to CEO!", body);
+                                sendMail(SMTP_USER, Arrays.asList(inputEmail), null, null, SMTP_SERVER, SMTP_PORT, SMTP_PASSWORD, "Welcome to CEO!", body, null);
 
                                 // Redirect to the Home page
                                 res.redirect(CeoConfig.documentRoot + "/home");
@@ -199,7 +203,7 @@ public class PostgresUsers implements Users {
                                 + inputEmail
                                 + "&password-reset-key="
                                 + resetKey;
-                            sendMail(SMTP_USER, inputEmail, SMTP_SERVER, SMTP_PORT, SMTP_PASSWORD, "Password reset on CEO", body);
+                            sendMail(SMTP_USER, Arrays.asList(inputEmail), null, null, SMTP_SERVER, SMTP_PORT, SMTP_PASSWORD, "Password reset on CEO", body, null);
                             req.session().attribute("flash_message", "The reset key has been sent to your email.");
                         } else {
                             req.session().attribute("flash_message", "Failed to create a reset key.  Please try again later");
@@ -406,19 +410,24 @@ public class PostgresUsers implements Users {
     public Request sendMailingList(Request req, Response res) {
         var inputSubject =        req.queryParams("subject");
         var inputBody =           req.queryParams("body");
-        try (var conn = connect();
-             var pstmt = conn.prepareStatement("SELECT * FROM get_all_users()")) {
 
-            var allEmails = new JsonArray();
-            try (var rs = pstmt.executeQuery()) {
-                while (rs.next()) {
-                    allEmails.add(rs.getString("email"));
-                }
-                System.out.println(allEmails.toString());
-            }
-        } catch (SQLException e) {
-            System.out.println(e.getMessage());
-            req.session().attribute("flash_message", "There was an issue resetting your password.  Please check the console.");
+        if (inputSubject == null || inputBody == null) {
+            req.session().attribute("flash_message", "Subject or Body are mandatory fields.");
+        } else {
+            try (var conn = connect();
+                    var pstmt = conn.prepareStatement("SELECT * FROM get_all_users()")) {
+
+                   List<String> emails = new ArrayList<String>();
+                   try (var rs = pstmt.executeQuery()) {
+                       while (rs.next()) {
+                           emails.add(rs.getString("email"));
+                       }
+                       sendMail(SMTP_USER, emails, null, null, SMTP_SERVER, SMTP_PORT, SMTP_PASSWORD, inputSubject, inputBody, Mail.CONTENT_TYPE_HTML);
+                   }
+               } catch (SQLException e) {
+                   System.out.println(e.getMessage());
+                   req.session().attribute("flash_message", "There was an issue sending the mailing list.  Please check the console.");
+               }
         }
         return req;
     }
