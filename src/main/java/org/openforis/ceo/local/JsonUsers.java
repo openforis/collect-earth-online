@@ -23,11 +23,13 @@ import java.nio.file.Paths;
 import java.time.format.DateTimeFormatter;
 import java.time.LocalDateTime;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import org.openforis.ceo.db_api.Users;
 import org.openforis.ceo.env.CeoConfig;
+import org.openforis.ceo.utils.Mail;
 import spark.Request;
 import spark.Response;
 
@@ -539,6 +541,22 @@ public class JsonUsers implements Users {
     }
 
     public Request sendMailingList(Request req, Response res) {
+        var inputSubject =        req.queryParams("subject");
+        var inputBody =           req.queryParams("body");
+
+        if (inputSubject == null || inputSubject.isEmpty() || inputBody == null || inputSubject.isEmpty()) {
+            req.session().attribute("flash_message", "Subject and Body are mandatory fields.");
+        } else {
+            try {
+                var users = elementToArray(readJsonFile("user-list.json"));
+                List<String> emails = toStream(users).map(user -> user.get("email").getAsString()).collect(Collectors.toList());
+                sendMail(SMTP_USER, null, null, emails, SMTP_SERVER, SMTP_PORT, SMTP_PASSWORD, inputSubject, inputBody, Mail.CONTENT_TYPE_HTML);
+                req.session().attribute("flash_message", "The mailing list has been sent.");
+            } catch (Exception e) {
+                System.out.println(e.getMessage());
+                req.session().attribute("flash_message", "There was an issue sending the mailing list.  Please check the console.");
+            }
+        }
         return req;
     }
 
