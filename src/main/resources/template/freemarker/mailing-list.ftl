@@ -13,13 +13,13 @@
                     <form action="${root}/mailing-list" method="post">
                         <div class="form-group">
                             <label for="subject">Subject</label>
-                            <input autocomplete="off" id="subject" name="subject" placeholder="Subject" type="text" class="form-control" value="">
+                            <input autocomplete="off" id="subject" name="subject" placeholder="Subject" type="text" class="form-control">
                         </div>
                         <div class="form-group">
                             <label for="body">Body</label>
                             <textarea name="body" id="editor"></textarea>
                         </div>
-                        <input class="btn btn-outline-lightgreen btn-block" type="submit" id="submit-mailing-list">
+                        <input class="btn btn-outline-lightgreen btn-block" type="submit" value="Send to All CEO Users" id="submit-mailing-list">
                     </form>
                 </div>
             </div>
