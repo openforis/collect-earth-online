@@ -301,15 +301,26 @@ class Collection extends React.Component {
         // FIXME, update mercator to take ID instead of name in cases of duplicate names
         mercator.setVisibleLayer(this.state.mapConfig, this.state.currentImagery.title);
 
-        if (this.state.currentImagery.title && this.state.currentImagery.title.includes("DigitalGlobeWMSImagery")) {
-            this.updateDGWMSLayer();
-        } else if (this.state.currentImagery.sourceConfig.type === "Planet") {
-            this.updatePlanetLayer();
-        } else if (this.state.currentImagery.sourceConfig.type === "PlanetDaily") {
+        if (this.state.currentImagery.sourceConfig.type === "PlanetDaily") {
+            const startDate = this.state.currentImagery.sourceConfig.startDate || "2019-01-01";
+            const endDate = this.state.currentImagery.sourceConfig.endDate || "2019-02-01";
             this.setState({
-                imageryStartDatePlanetDaily: this.state.currentImagery.sourceConfig.startDate || "2019-01-01",
-                imageryEndDatePlanetDaily: this.state.currentImagery.sourceConfig.endDate || "2019-02-01",
+                imageryStartDatePlanetDaily: startDate,
+                imageryEndDatePlanetDaily: endDate,
+                imageryAttribution: this.state.currentImagery.attribution + " | " + startDate + " to " + endDate
             });
+        } else {
+            mercator.currentMap.getControls().getArray().filter(control => control.element.classList.contains("planet-layer-switcher"))
+                .map(control => mercator.currentMap.removeControl(control));
+            this.setState({
+                imageryStartDatePlanetDaily: "",
+                imageryEndDatePlanetDaily: "",
+            });
+            if (this.state.currentImagery.title && this.state.currentImagery.title.includes("DigitalGlobeWMSImagery")) {
+                this.updateDGWMSLayer();
+            } else if (this.state.currentImagery.sourceConfig.type === "Planet") {
+                this.updatePlanetLayer();
+            }
         }
     };
 
@@ -373,6 +384,8 @@ class Collection extends React.Component {
     };
 
     updatePlanetDailyLayer = () => {
+        mercator.currentMap.getControls().getArray().filter(control => control.element.classList.contains("planet-layer-switcher"))
+            .map(control => mercator.currentMap.removeControl(control));
         const { imageryStartDatePlanetDaily, imageryEndDatePlanetDaily, currentPlot } = this.state;
         // check so that the function is not called before the state is propagated
         if (imageryStartDatePlanetDaily && imageryEndDatePlanetDaily && currentPlot) {
