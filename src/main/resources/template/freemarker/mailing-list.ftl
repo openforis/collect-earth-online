@@ -19,7 +19,7 @@
                             <label for="body">Body</label>
                             <textarea name="body" id="editor"></textarea>
                         </div>
-                        <input class="btn btn-outline-lightgreen btn-block" type="submit">
+                        <input class="btn btn-outline-lightgreen btn-block" type="submit" id="submit-mailing-list">
                     </form>
                 </div>
             </div>
@@ -28,9 +28,19 @@
 </section>
 
 <script type="text/javascript">
+
     ClassicEditor.create(document.querySelector('#editor')).catch(error => {
         console.error(error);
     });
+
+    $(function() {
+       $("#submit-mailing-list").click(function(event){
+          if (!confirm("Are you sure you want to send this mailing list?")) {
+             event.preventDefault();
+          }
+       });
+    });
+
 </script>
 
 <#include "end-content.ftl">

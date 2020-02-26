@@ -411,8 +411,8 @@ public class PostgresUsers implements Users {
         var inputSubject =        req.queryParams("subject");
         var inputBody =           req.queryParams("body");
 
-        if (inputSubject == null || inputBody == null) {
-            req.session().attribute("flash_message", "Subject or Body are mandatory fields.");
+        if (inputSubject == null || inputSubject.isEmpty() || inputBody == null || inputSubject.isEmpty()) {
+            req.session().attribute("flash_message", "Subject and Body are mandatory fields.");
         } else {
             try (var conn = connect();
                     var pstmt = conn.prepareStatement("SELECT * FROM get_all_users()")) {
@@ -422,7 +422,8 @@ public class PostgresUsers implements Users {
                        while (rs.next()) {
                            emails.add(rs.getString("email"));
                        }
-                       sendMail(SMTP_USER, emails, null, null, SMTP_SERVER, SMTP_PORT, SMTP_PASSWORD, inputSubject, inputBody, Mail.CONTENT_TYPE_HTML);
+                       sendMail(SMTP_USER, null, null, emails, SMTP_SERVER, SMTP_PORT, SMTP_PASSWORD, inputSubject, inputBody, Mail.CONTENT_TYPE_HTML);
+                       req.session().attribute("flash_message", "The mailing list has been sent.");
                    }
                } catch (SQLException e) {
                    System.out.println(e.getMessage());
