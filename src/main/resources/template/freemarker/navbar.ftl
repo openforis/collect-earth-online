@@ -18,6 +18,17 @@
                     </li>
                 </#if>
             </#list>
+            <#if userid == "1">
+                <#if navlink == "Mailing-List">
+                    <li class="nav-item active">
+                        <a class="nav-link" href="${root}/mailing-list">Mailing List</a>
+                    </li>
+                <#else>
+                    <li class="nav-item">
+                        <a class="nav-link" href="${root}/mailing-list">Mailing List</a>
+                    </li>
+                </#if>
+            </#if>
             <#if userid != "">
                 <#if navlink == "Account">
                     <li class="nav-item active">
