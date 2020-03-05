@@ -543,6 +543,17 @@ ul.samplevalue{
     color: #31BAB0;
     background-color: #f8f9fa;
 }
+.accordion__button {
+    line-height: 1.2;
+    text-align: center;
+    margin: 1rem 0;
+    color: white;
+    background: #31BAB0;
+    padding: 1rem;
+    font-family: -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif,"Apple Color Emoji","Segoe UI Emoji","Segoe UI Symbol";
+    font-size: 1.1rem;
+    font-weight: 500;
+}
 /*********************************************************************/
 /* GEO DASH PAGE */
 /*********************************************************************/
