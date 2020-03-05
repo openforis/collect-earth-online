@@ -520,12 +520,28 @@ class NewImagery extends React.Component {
             const { sourceConfig } = imageryToEdit;
             const { type, ...imageryParams } = sourceConfig;
             const selectedType = imageryOptions.findIndex((e) => e.type === type);
-            this.state = {
-                newImageryTitle: imageryToEdit.title,
-                newImageryAttribution: imageryToEdit.attribution,
-                selectedType: selectedType,
-                newImageryParams: imageryParams,
-            };
+            if (type === 'GeoServer') {
+                const { geoserverUrl, geoserverParams } = imageryParams;
+                const { LAYERS, ...cleanGeoserverParams } = geoserverParams;
+                const geoserverImageryParams = {
+                    geoserverUrl,
+                    LAYERS,
+                    geoserverParams: JSON.stringify(cleanGeoserverParams),
+                };
+                this.state = {
+                    newImageryTitle: imageryToEdit.title,
+                    newImageryAttribution: imageryToEdit.attribution,
+                    selectedType: selectedType,
+                    newImageryParams: geoserverImageryParams,
+                };
+            } else {
+                this.state = {
+                    newImageryTitle: imageryToEdit.title,
+                    newImageryAttribution: imageryToEdit.attribution,
+                    selectedType: selectedType,
+                    newImageryParams: imageryParams,
+                };
+            }
         } else {
             this.state = {
                 newImageryTitle: "",

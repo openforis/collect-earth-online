@@ -43,20 +43,21 @@ public class PostgresImagery implements Imagery {
                         : parseJson(rs.getString("extent")).getAsJsonArray());
                     var sourceConfig = parseJson(rs.getString("source_config")).getAsJsonObject();
                     // Return only necessary fields for types we proxy
-                    if (List.of("DigitalGlobe", "EarthWatch", "GeoServer").contains(sourceConfig.get("type").getAsString())) {
-                        var cleanSource = new JsonObject();
-                        cleanSource.add("type", sourceConfig.get("type"));
-                        newImagery.add("sourceConfig", cleanSource);
-                    } else if (sourceConfig.get("type").getAsString().equals("Planet")) {
-                        var cleanSource = new JsonObject();
-                        cleanSource.add("type",  sourceConfig.get("type"));
-                        cleanSource.add("month", sourceConfig.get("month"));
-                        cleanSource.add("year",  sourceConfig.get("year"));
-                        newImagery.add("sourceConfig", cleanSource);
-                    } else {
-                        newImagery.add("sourceConfig", sourceConfig);
-                    };
+//                    if (List.of("DigitalGlobe", "EarthWatch", "GeoServer").contains(sourceConfig.get("type").getAsString())) {
+//                        var cleanSource = new JsonObject();
+//                        cleanSource.add("type", sourceConfig.get("type"));
+//                        newImagery.add("sourceConfig", cleanSource);
+//                    } else if (sourceConfig.get("type").getAsString().equals("Planet")) {
+//                        var cleanSource = new JsonObject();
+//                        cleanSource.add("type",  sourceConfig.get("type"));
+//                        cleanSource.add("month", sourceConfig.get("month"));
+//                        cleanSource.add("year",  sourceConfig.get("year"));
+//                        newImagery.add("sourceConfig", cleanSource);
+//                    } else {
+//                        newImagery.add("sourceConfig", sourceConfig);
+//                    };
 
+                    newImagery.add("sourceConfig", sourceConfig);
                     imageryArray.add(newImagery);
                 }
             }
