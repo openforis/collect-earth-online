@@ -1,6 +1,15 @@
 import React, { Fragment } from "react";
 import ReactDOM from "react-dom";
 
+import {
+    Accordion,
+    AccordionItem,
+    AccordionItemHeading,
+    AccordionItemButton,
+    AccordionItemPanel,
+    AccordionItemState,
+} from 'react-accessible-accordion';
+
 import InstitutionEditor from "./components/InstitutionEditor";
 import { sortAlphabetically, capitalizeFirst, UnicodeIcon } from "./utils/textUtils";
 
@@ -49,21 +58,7 @@ class ReviewInstitution extends React.Component {
                     userId={this.props.userId}
                 />
                 <div className="row">
-                    <div className="col-lg-3 col-xs-12">
-                        <h2 className="header">
-                            Imagery
-                            <span className="badge badge-pill badge-light ml-2">
-                                {this.state.imageryCount}
-                            </span>
-                        </h2>
-                        <ImageryList
-                            documentRoot={this.props.documentRoot}
-                            isAdmin={this.state.isAdmin}
-                            institutionId={this.props.institutionId}
-                            setImageryCount={this.setImageryCount}
-                        />
-                    </div>
-                    <div className="col-lg-5 col-xs-12">
+                    <div className="col-lg-6 col-xs-12">
                         <h2 className="header">
                             Projects
                             <span className="badge badge-pill badge-light ml-2">
@@ -78,22 +73,66 @@ class ReviewInstitution extends React.Component {
                             isLoggedIn={this.props.userId > 0}
                         />
                     </div>
-                    <div className="col-lg-4 col-xs-12">
-                        <h2 className="header">
-                            Users
-                            <span className="badge badge-pill badge-light ml-2">
-                                {this.state.usersCount}
-                            </span>
-                        </h2>
-                        {this.props.userId > 0 &&
-                            <UserList
-                                documentRoot={this.props.documentRoot}
-                                institutionId={this.props.institutionId}
-                                isAdmin={this.state.isAdmin}
-                                setUsersCount={this.setUsersCount}
-                                userId={this.props.userId}
-                            />
-                        }
+                    <div className="col-lg-6 col-xs-12">
+                        <Accordion className="accordion" allowZeroExpanded="true">
+                            <AccordionItem>
+                                <AccordionItemState>
+                                    {({ expanded }) => (
+                                        <React.Fragment>
+                                            <AccordionItemHeading>
+                                                <AccordionItemButton>
+                                                    Imagery
+                                                    <span className="badge badge-pill badge-light ml-2">
+                                                        {this.state.imageryCount}
+                                                    </span>
+                                                    <span className="float-right">
+                                                        { expanded ? '▼' : '▶' }
+                                                    </span>
+                                                </AccordionItemButton>
+                                            </AccordionItemHeading>
+                                            <AccordionItemPanel>
+                                                <ImageryList
+                                                    documentRoot={this.props.documentRoot}
+                                                    isAdmin={this.state.isAdmin}
+                                                    institutionId={this.props.institutionId}
+                                                    setImageryCount={this.setImageryCount}
+                                                />
+                                            </AccordionItemPanel>
+                                        </React.Fragment>
+                                    )}
+                                </AccordionItemState>
+                            </AccordionItem>
+                            <AccordionItem>
+                                <AccordionItemState>
+                                    {({ expanded }) => (
+                                        <React.Fragment>
+                                            <AccordionItemHeading>
+                                                <AccordionItemButton>
+                                                    Users
+                                                    <span className="badge badge-pill badge-light ml-2">
+                                                        {this.state.usersCount}
+                                                    </span>
+                                                    <span className="float-right">
+                                                        { expanded ? '▼' : '▶' }
+                                                    </span>
+                                                </AccordionItemButton>
+                                            </AccordionItemHeading>
+                                            <AccordionItemPanel>
+                                            {this.props.userId > 0 &&
+                                                <UserList
+                                                    documentRoot={this.props.documentRoot}
+                                                    institutionId={this.props.institutionId}
+                                                    isAdmin={this.state.isAdmin}
+                                                    setUsersCount={this.setUsersCount}
+                                                    userId={this.props.userId}
+                                                />
+                                            }
+                                            </AccordionItemPanel>
+                                        </React.Fragment>
+                                    )}
+                                </AccordionItemState>
+                            </AccordionItem>
+                        </Accordion>
                     </div>
                 </div>
             </div>
