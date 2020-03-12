@@ -549,6 +549,8 @@ class MapWidget extends React.Component {
                 needFetch = this.createTileServerFromCache(postObject.ImageCollectionAsset + JSON.stringify(postObject.visParams), widget.id);
             } else if (postObject.index && localStorage.getItem(postObject.index + postObject.dateFrom + postObject.dateTo)) {
                 needFetch = this.createTileServerFromCache(postObject.index + postObject.dateFrom + postObject.dateTo, widget.id);
+            } else if (postObject.path && localStorage.getItem(postObject.path + postObject.dateFrom + postObject.dateTo)) {
+                needFetch = this.createTileServerFromCache(postObject.path + postObject.dateFrom + postObject.dateTo, widget.id);
             } else if (localStorage.getItem(JSON.stringify(postObject))) {
                 needFetch = this.createTileServerFromCache(JSON.stringify(postObject), widget.id);
             }
@@ -559,6 +561,8 @@ class MapWidget extends React.Component {
                     needFetch = this.createTileServerFromCache(dualImageObject.ImageCollectionAsset + JSON.stringify(dualImageObject.visParams), widget.id, true);
                 } else if (dualImageObject.index && localStorage.getItem(dualImageObject.index + dualImageObject.dateFrom + dualImageObject.dateTo)) {
                     needFetch = this.createTileServerFromCache(dualImageObject.index + dualImageObject.dateFrom + dualImageObject.dateTo, widget.id, true);
+                } else if (dualImageObject.path && localStorage.getItem(dualImageObject.path + dualImageObject.dateFrom + dualImageObject.dateTo)) {
+                    needFetch = this.createTileServerFromCache(dualImageObject.path + dualImageObject.dateFrom + dualImageObject.dateTo, widget.id, true);
                 } else if (localStorage.getItem(JSON.stringify(dualImageObject))) {
                     needFetch = this.createTileServerFromCache(JSON.stringify(dualImageObject), widget.id, true);
                 } else {
@@ -593,9 +597,7 @@ class MapWidget extends React.Component {
                             localStorage.setItem(postObject.index + postObject.dateFrom + postObject.dateTo, JSON.stringify(data));
                         }  else if (postObject.path && postObject.dateFrom + postObject.dateTo) {
                             localStorage.setItem(postObject.path + postObject.dateFrom + postObject.dateTo, JSON.stringify(data));
-                        }  else if (postObject.path && postObject.dateFrom + postObject.dateTo) {
-                            localStorage.setItem(postObject.path + postObject.dateFrom + postObject.dateTo, JSON.stringify(data));
-                        } else {
+                        }  else {
                             localStorage.setItem(JSON.stringify(postObject), JSON.stringify(data));
                         }
                         this.addTileServer(data.mapid, data.token, "widgetmap_" + widget.id);
