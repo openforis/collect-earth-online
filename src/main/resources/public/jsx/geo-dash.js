@@ -591,6 +591,10 @@ class MapWidget extends React.Component {
                             localStorage.setItem(postObject.ImageCollectionAsset + JSON.stringify(postObject.visParams), JSON.stringify(data));
                         } else if (postObject.index && postObject.dateFrom + postObject.dateTo) {
                             localStorage.setItem(postObject.index + postObject.dateFrom + postObject.dateTo, JSON.stringify(data));
+                        }  else if (postObject.path && postObject.dateFrom + postObject.dateTo) {
+                            localStorage.setItem(postObject.path + postObject.dateFrom + postObject.dateTo, JSON.stringify(data));
+                        }  else if (postObject.path && postObject.dateFrom + postObject.dateTo) {
+                            localStorage.setItem(postObject.path + postObject.dateFrom + postObject.dateTo, JSON.stringify(data));
                         } else {
                             localStorage.setItem(JSON.stringify(postObject), JSON.stringify(data));
                         }
