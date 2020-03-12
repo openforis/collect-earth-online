@@ -351,9 +351,9 @@ class MapWidget extends React.Component {
             mapRef: null,
             opacity: 90,
             geeTimeOut: null,
-            internalExtent:null,
-            mapCenter:null,
-            wasFull:false,
+            internalExtent: null,
+            mapCenter: null,
+            wasFull: false,
         };
     }
 
@@ -595,9 +595,9 @@ class MapWidget extends React.Component {
                             localStorage.setItem(postObject.ImageCollectionAsset + JSON.stringify(postObject.visParams), JSON.stringify(data));
                         } else if (postObject.index && postObject.dateFrom + postObject.dateTo) {
                             localStorage.setItem(postObject.index + postObject.dateFrom + postObject.dateTo, JSON.stringify(data));
-                        }  else if (postObject.path && postObject.dateFrom + postObject.dateTo) {
+                        } else if (postObject.path && postObject.dateFrom + postObject.dateTo) {
                             localStorage.setItem(postObject.path + postObject.dateFrom + postObject.dateTo, JSON.stringify(data));
-                        }  else {
+                        } else {
                             localStorage.setItem(JSON.stringify(postObject), JSON.stringify(data));
                         }
                         this.addTileServer(data.mapid, data.token, "widgetmap_" + widget.id);
