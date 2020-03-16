@@ -172,11 +172,27 @@ public class PostgresPlots implements Plots {
 
         try (var conn = connect()) {
             if (getUserPlots) {
-                try (var pstmt = conn.prepareStatement("SELECT * FROM select_next_user_plot(?,?,?)")) {
-                    pstmt.setInt(1, projectId);
-                    pstmt.setInt(2, plotId);
-                    pstmt.setString(3, userName);
-                    return queryPlot(pstmt, projectId, userId);
+                var q = conn.prepareStatement("SELECT administrator FROM users WHERE user_uid=? LIMIT 1");
+                q.setInt(1, userId);
+                try (var result = q.executeQuery()) {
+                    if (result.next()) {
+                        if (result.getBoolean("administrator")) {
+                            try (var pstmt = conn.prepareStatement("SELECT * FROM select_next_user_plot_by_admin(?,?)")) {
+                                pstmt.setInt(1, projectId);
+                                pstmt.setInt(2, plotId);
+                                return queryPlot(pstmt, projectId, userId);
+                            }
+                        } else {
+                            try (var pstmt = conn.prepareStatement("SELECT * FROM select_next_user_plot(?,?,?)")) {
+                                pstmt.setInt(1, projectId);
+                                pstmt.setInt(2, plotId);
+                                pstmt.setString(3, userName);
+                                return queryPlot(pstmt, projectId, userId);
+                            }
+                        }
+                    } else {
+                        return "";
+                    }
                 }
             } else {
                 try (var pstmt = conn.prepareStatement("SELECT * FROM select_next_unassigned_plot(?,?)")) {
@@ -200,11 +216,27 @@ public class PostgresPlots implements Plots {
 
         try (var conn = connect()) {
             if (getUserPlots) {
-                try (var pstmt = conn.prepareStatement("SELECT * FROM select_prev_user_plot(?,?,?)")) {
-                    pstmt.setInt(1, projectId);
-                    pstmt.setInt(2, plotId);
-                    pstmt.setString(3, userName);
-                    return queryPlot(pstmt, projectId, userId);
+                var q = conn.prepareStatement("SELECT administrator FROM users WHERE user_uid=? LIMIT 1");
+                q.setInt(1, userId);
+                try (var result = q.executeQuery()) {
+                    if (result.next()) {
+                        if (result.getBoolean("administrator")) {
+                            try (var pstmt = conn.prepareStatement("SELECT * FROM select_prev_user_plot_by_admin(?,?)")) {
+                                pstmt.setInt(1, projectId);
+                                pstmt.setInt(2, plotId);
+                                return queryPlot(pstmt, projectId, userId);
+                            }
+                        } else {
+                            try (var pstmt = conn.prepareStatement("SELECT * FROM select_prev_user_plot(?,?,?)")) {
+                                pstmt.setInt(1, projectId);
+                                pstmt.setInt(2, plotId);
+                                pstmt.setString(3, userName);
+                                return queryPlot(pstmt, projectId, userId);
+                            }
+                        }
+                    } else {
+                        return "";
+                    }
                 }
             } else {
                 try (var pstmt = conn.prepareStatement("SELECT * FROM select_prev_unassigned_plot(?,?)")) {
