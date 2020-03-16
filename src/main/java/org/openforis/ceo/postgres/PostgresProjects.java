@@ -639,14 +639,14 @@ public class PostgresProjects implements Projects {
                 pstmt.execute();
             } catch (SQLException s) {
                 System.out.println(s.getMessage());
-                throw new RuntimeException("Plot file failed to load.");
+                throw new RuntimeException("Plot file failed to load.\n" + s);
             }
             return plots_table;
         } catch (Exception e) {
             if (plotDistribution.equals("csv")) {
-                throw new RuntimeException("Malformed plot CSV. Fields must be LON,LAT,PLOTID.", e);
+                throw new RuntimeException("Malformed plot CSV. Fields must be LON,LAT,PLOTID. \n" + e);
             } else {
-                throw new RuntimeException("Malformed plot Shapefile. All features must be of type polygon and include a PLOTID field.", e);
+                throw new RuntimeException("Malformed plot Shapefile. All features must be of type polygon and include a PLOTID field. \n" + e);
             }
         }
     }
@@ -745,7 +745,7 @@ public class PostgresProjects implements Projects {
                         pstmt.setInt(1, projectId);
                         pstmt.execute();
                     } catch (SQLException e) {
-                        throw new RuntimeException("Error merging both files.", e);
+                        throw new RuntimeException("Error merging both files.\n" + e);
                     }
                 // Add plots from file and use returned plot ID to create samples
                 } else {
