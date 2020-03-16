@@ -589,9 +589,9 @@ class MapWidget extends React.Component {
                 .then(data => {
                     if (data.hasOwnProperty("mapid")) {
                         data.lastGatewayUpdate = new Date();
-                        if (postObject.ImageAsset + JSON.stringify(postObject.visParams)) {
+                        if (postObject.ImageAsset && JSON.stringify(postObject.visParams)) {
                             localStorage.setItem(postObject.ImageAsset + JSON.stringify(postObject.visParams), JSON.stringify(data));
-                        } else if (postObject.ImageCollectionAsset + JSON.stringify(postObject.visParams)) {
+                        } else if (postObject.ImageCollectionAsset && JSON.stringify(postObject.visParams)) {
                             localStorage.setItem(postObject.ImageCollectionAsset + JSON.stringify(postObject.visParams), JSON.stringify(data));
                         } else if (postObject.index && postObject.dateFrom + postObject.dateTo) {
                             localStorage.setItem(postObject.index + postObject.dateFrom + postObject.dateTo, JSON.stringify(data));
@@ -625,9 +625,9 @@ class MapWidget extends React.Component {
                                 .then(data => {
                                     if (data.hasOwnProperty("mapid")) {
                                         data.lastGatewayUpdate = new Date();
-                                        if (postObject.ImageAsset + JSON.stringify(postObject.visParams)) {
+                                        if (postObject.ImageAsset && JSON.stringify(postObject.visParams)) {
                                             localStorage.setItem(postObject.ImageAsset + JSON.stringify(postObject.visParams), JSON.stringify(data));
-                                        } else if (postObject.ImageCollectionAsset + JSON.stringify(postObject.visParams)) {
+                                        } else if (postObject.ImageCollectionAsset && JSON.stringify(postObject.visParams)) {
                                             localStorage.setItem(postObject.ImageCollectionAsset + JSON.stringify(postObject.visParams), JSON.stringify(data));
                                         } else if (postObject.index && postObject.dateFrom + postObject.dateTo) {
                                             localStorage.setItem(postObject.index + postObject.dateFrom + postObject.dateTo, JSON.stringify(data));
@@ -657,9 +657,9 @@ class MapWidget extends React.Component {
                                     .then(data => {
                                         if (data.hasOwnProperty("mapid")) {
                                             data.lastGatewayUpdate = new Date();
-                                            if (dualImageObject.ImageAsset + JSON.stringify(dualImageObject.visParams)) {
+                                            if (dualImageObject.ImageAsset && JSON.stringify(dualImageObject.visParams)) {
                                                 localStorage.setItem(dualImageObject.ImageAsset + JSON.stringify(dualImageObject.visParams), JSON.stringify(data));
-                                            } else if (dualImageObject.ImageCollectionAsset + JSON.stringify(dualImageObject.visParams)) {
+                                            } else if (dualImageObject.ImageCollectionAsset && JSON.stringify(dualImageObject.visParams)) {
                                                 localStorage.setItem(dualImageObject.ImageCollectionAsset + JSON.stringify(dualImageObject.visParams), JSON.stringify(data));
                                             } else if (dualImageObject.index && dualImageObject.dateFrom + dualImageObject.dateTo) {
                                                 localStorage.setItem(dualImageObject.index + dualImageObject.dateFrom + dualImageObject.dateTo, JSON.stringify(data));
