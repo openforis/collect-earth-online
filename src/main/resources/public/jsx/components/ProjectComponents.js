@@ -172,7 +172,7 @@ export function ProjectAOI({ coordinates: { latMax, lonMin, lonMax, latMin }, in
                             {
                                 imageryList.filter(layerConfig => layerConfig.sourceConfig.type !== "PlanetDaily")
                                     .map((imagery, uid) =>
-                                        <option key={uid} value={imagery.id}>{imagery.title}</option>
+                                        <option key={uid} value={imagery.title}>{imagery.title}</option>
                                     )
                             }
                         </select>
