@@ -202,6 +202,19 @@ CREATE OR REPLACE FUNCTION get_user(_email text)
 
 $$ LANGUAGE SQL;
 
+CREATE OR REPLACE FUNCTION get_user_by_id(_user_rid integer)
+    RETURNS TABLE (
+                      email            text,
+                      administrator    boolean,
+                      reset_key        text
+                  ) AS $$
+
+SELECT email, administrator, reset_key
+FROM users
+WHERE user_uid = _user_rid
+
+$$ LANGUAGE SQL;
+
 -- Get all users by institution ID, includes role
 CREATE OR REPLACE FUNCTION get_all_users_by_institution_id(_institution_rid integer)
  RETURNS TABLE (
