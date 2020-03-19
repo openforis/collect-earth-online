@@ -166,32 +166,46 @@ public class PostgresPlots implements Plots {
     public synchronized String getNextPlot(Request req, Response res) {
         final var getUserPlots =       Boolean.parseBoolean(req.queryParams("getUserPlots"));
         final var projectId =          Integer.parseInt(req.queryParams("projectId"));
+        final var institutionId =      Integer.parseInt(req.queryParams("institutionId"));
         final var plotId =             Integer.parseInt(req.queryParams("plotId"));
         final var userId =             Integer.parseInt(req.queryParams("userId"));
         final var userName =           req.queryParams("userName");
 
         try (var conn = connect()) {
             if (getUserPlots) {
-                var q = conn.prepareStatement("SELECT administrator FROM users WHERE user_uid=? LIMIT 1");
-                q.setInt(1, userId);
-                try (var result = q.executeQuery()) {
-                    if (result.next()) {
-                        if (result.getBoolean("administrator")) {
-                            try (var pstmt = conn.prepareStatement("SELECT * FROM select_next_user_plot_by_admin(?,?)")) {
-                                pstmt.setInt(1, projectId);
-                                pstmt.setInt(2, plotId);
-                                return queryPlot(pstmt, projectId, userId);
-                            }
+                Boolean isAdmin = false;
+                var query1 = conn.prepareStatement("SELECT administrator FROM users WHERE user_uid=? LIMIT 1");
+                query1.setInt(1, userId);
+                try(var result1 = query1.executeQuery()) {
+                    if (result1.next()) {
+                        if (result1.getBoolean("administrator")) {
+                            isAdmin = true;
                         } else {
-                            try (var pstmt = conn.prepareStatement("SELECT * FROM select_next_user_plot(?,?,?)")) {
-                                pstmt.setInt(1, projectId);
-                                pstmt.setInt(2, plotId);
-                                pstmt.setString(3, userName);
-                                return queryPlot(pstmt, projectId, userId);
+                            var query2 = conn.prepareStatement("SELECT * FROM get_institution_user_roles(?)");
+                            query2.setInt(1, userId);
+                            try (var result2 = query2.executeQuery()) {
+                                while (result2.next()) {
+                                    if (result2.getInt("institution_rid") == institutionId && result2.getString("role").equals("admin")) {
+                                        isAdmin = true;
+                                        break;
+                                    }
+                                }
                             }
                         }
-                    } else {
-                        return "";
+                    }
+                }
+                if (isAdmin) {
+                    try (var pstmt = conn.prepareStatement("SELECT * FROM select_next_user_plot_by_admin(?,?)")) {
+                        pstmt.setInt(1, projectId);
+                        pstmt.setInt(2, plotId);
+                        return queryPlot(pstmt, projectId, userId);
+                    }
+                } else {
+                    try (var pstmt = conn.prepareStatement("SELECT * FROM select_next_user_plot(?,?,?)")) {
+                        pstmt.setInt(1, projectId);
+                        pstmt.setInt(2, plotId);
+                        pstmt.setString(3, userName);
+                        return queryPlot(pstmt, projectId, userId);
                     }
                 }
             } else {
@@ -210,32 +224,46 @@ public class PostgresPlots implements Plots {
     public synchronized String getPrevPlot(Request req, Response res) {
         final var getUserPlots =       Boolean.parseBoolean(req.queryParams("getUserPlots"));
         final var projectId =          Integer.parseInt(req.queryParams("projectId"));
+        final var institutionId =      Integer.parseInt(req.queryParams("institutionId"));
         final var plotId =             Integer.parseInt(req.queryParams("plotId"));
         final var userId =             Integer.parseInt(req.queryParams("userId"));
         final var userName =           req.queryParams("userName");
 
         try (var conn = connect()) {
             if (getUserPlots) {
-                var q = conn.prepareStatement("SELECT administrator FROM users WHERE user_uid=? LIMIT 1");
-                q.setInt(1, userId);
-                try (var result = q.executeQuery()) {
-                    if (result.next()) {
-                        if (result.getBoolean("administrator")) {
-                            try (var pstmt = conn.prepareStatement("SELECT * FROM select_prev_user_plot_by_admin(?,?)")) {
-                                pstmt.setInt(1, projectId);
-                                pstmt.setInt(2, plotId);
-                                return queryPlot(pstmt, projectId, userId);
-                            }
+                Boolean isAdmin = false;
+                var query1 = conn.prepareStatement("SELECT administrator FROM users WHERE user_uid=? LIMIT 1");
+                query1.setInt(1, userId);
+                try(var result1 = query1.executeQuery()) {
+                    if (result1.next()) {
+                        if (result1.getBoolean("administrator")) {
+                            isAdmin = true;
                         } else {
-                            try (var pstmt = conn.prepareStatement("SELECT * FROM select_prev_user_plot(?,?,?)")) {
-                                pstmt.setInt(1, projectId);
-                                pstmt.setInt(2, plotId);
-                                pstmt.setString(3, userName);
-                                return queryPlot(pstmt, projectId, userId);
+                            var query2 = conn.prepareStatement("SELECT * FROM get_institution_user_roles(?)");
+                            query2.setInt(1, userId);
+                            try (var result2 = query2.executeQuery()) {
+                                while (result2.next()) {
+                                    if (result2.getInt("institution_rid") == institutionId && result2.getString("role").equals("admin")) {
+                                        isAdmin = true;
+                                        break;
+                                    }
+                                }
                             }
                         }
-                    } else {
-                        return "";
+                    }
+                }
+                if (isAdmin) {
+                    try (var pstmt = conn.prepareStatement("SELECT * FROM select_prev_user_plot_by_admin(?,?)")) {
+                        pstmt.setInt(1, projectId);
+                        pstmt.setInt(2, plotId);
+                        return queryPlot(pstmt, projectId, userId);
+                    }
+                } else {
+                    try (var pstmt = conn.prepareStatement("SELECT * FROM select_prev_user_plot(?,?,?)")) {
+                        pstmt.setInt(1, projectId);
+                        pstmt.setInt(2, plotId);
+                        pstmt.setString(3, userName);
+                        return queryPlot(pstmt, projectId, userId);
                     }
                 }
             } else {
