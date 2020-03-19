@@ -412,21 +412,23 @@ public class ProjectUtils {
     }
 
     public static void runBashScriptForProject(int projectId, String plotsOrSamples, String script, String rpath) {
+        String os = System.getProperty("os.name").toLowerCase();
         try {
-            System.out.println("Running " + script);
-            var pb = new ProcessBuilder("/bin/sh", script, "project-" + projectId + "-" + plotsOrSamples);
-            pb.directory(new File(expandResourcePath(rpath)));
-            pb.redirectOutput(new File("out.txt"));
-            var p = pb.start();
-            if (p.waitFor(10L, TimeUnit.SECONDS)) {
-                System.out.println("Linux Conversion complete.");
+            if (!os.contains("win")) {
+                System.out.println("Running " + script);
+                String arg = "project-" + projectId + "-" + plotsOrSamples;
+                var pb = new ProcessBuilder("/bin/sh", script, arg);
+                pb.directory(new File(expandResourcePath(rpath)));
+                pb.redirectOutput(new File("out.txt"));
+                var p = pb.start();
+                if (p.waitFor(10L, TimeUnit.SECONDS)) {
+                    //if (p.exitValue() > 0) {
+                    System.out.println("Linux Conversion complete.");
+                } else {
+                    p.destroy();
+                    throw new RuntimeException("");
+                }
             } else {
-                p.destroy();
-                throw new RuntimeException("");
-            }
-        } catch (Exception e) {
-            // for windows
-            try {
                 System.out.println("Running " + script + " with git bash.");
                 var pb = new ProcessBuilder("C:\\Program Files\\Git\\bin\\bash.exe", script, "project-" + projectId + "-" + plotsOrSamples);
                 pb.directory(new File(expandResourcePath(rpath)));
@@ -439,10 +441,10 @@ public class ProjectUtils {
                     p.destroy();
                     throw new RuntimeException("");
                 }
-            } catch (Exception e2) {
-                deleteShapeFileDirectories(projectId);
-                throw new RuntimeException("Error in processing the zipped Shapefile. Please check the format and try again.");
             }
+        } catch (Exception e) {
+            deleteShapeFileDirectories(projectId);
+            throw new RuntimeException("Error in processing the zipped Shapefile. Please check the format and try again.");
         }
     }
 

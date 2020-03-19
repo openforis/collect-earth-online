@@ -31,7 +31,10 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 
 import java.io.StringWriter;
+import java.io.BufferedWriter;
+import java.io.FileReader;
 import java.io.PrintWriter;
+import java.io.Reader;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.sql.PreparedStatement;
@@ -46,7 +49,14 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.UUID;
 import javax.servlet.http.HttpServletResponse;
+
+import org.apache.commons.csv.CSVFormat;
+import org.apache.commons.csv.CSVParser;
+import org.apache.commons.csv.CSVPrinter;
+import org.apache.commons.csv.CSVRecord;
 import org.openforis.ceo.db_api.Projects;
+import org.openforis.ceo.utils.JsonUtils;
+
 import spark.Request;
 import spark.Response;
 
@@ -982,12 +992,30 @@ public class PostgresProjects implements Projects {
                         } else {
 
                             if (List.of("csv", "shp").contains(newProject.get("plotDistribution").getAsString())) {
-                                newProject.addProperty("plotsFile", writeFilePartBase64(
+                                var plotsFile = writeFilePartBase64(
                                     newProject.get("plotFileName").getAsString(),
                                     newProject.get("plotFileBase64").getAsString(),
                                     expandResourcePath("/" + newProject.get("plotDistribution").getAsString()),
-                                    "project-" + newProjectId + "-plots"
-                                ));
+                                    "project-" + newProjectId + "-plots-0"
+                                );
+                                newProject.addProperty("plotsFile", "project-" + newProjectId + "-plots.csv");
+                                String fileToRead = expandResourcePath("/" + newProject.get("plotDistribution").getAsString()) + "/" + plotsFile;
+                                String fileToWrite = expandResourcePath("/" + newProject.get("plotDistribution").getAsString()) + "/" + "project-" + newProjectId + "-plots" + ".csv";
+                                Reader reader = new FileReader(fileToRead);
+                                CSVParser records = CSVFormat.DEFAULT.withFirstRecordAsHeader().parse(reader);
+                                List<String> csvHeader = records.getHeaderNames();
+                                BufferedWriter writer = Files.newBufferedWriter(Paths.get(fileToWrite));
+                                CSVPrinter csvPrinter = new CSVPrinter(writer, CSVFormat.DEFAULT.withEscape('\\'));
+                                csvPrinter.printRecord(csvHeader.get(0), csvHeader.get(1), csvHeader.get(2), "JSON");
+                                for (CSVRecord record : records) {
+                                    var map = record.toMap();
+                                    map.remove(csvHeader.get(0));
+                                    map.remove(csvHeader.get(1));
+                                    map.remove(csvHeader.get(2));
+                                    var json = JsonUtils.toJson(map);
+                                    csvPrinter.printRecord(record.get(0), record.get(1), record.get(2), json);
+                                };
+                                csvPrinter.close();
                             }
 
                             if (List.of("csv", "shp").contains(newProject.get("sampleDistribution").getAsString())) {
