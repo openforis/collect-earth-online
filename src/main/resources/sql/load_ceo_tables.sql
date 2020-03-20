@@ -318,5 +318,6 @@ CREATE TYPE plots_return AS (
     ext_id               integer,
     plotId               integer,
     geom                 text,
-    analysis_duration    numeric
+    analysis_duration    numeric,
+    extra_fields         text
  );

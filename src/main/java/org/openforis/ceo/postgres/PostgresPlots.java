@@ -29,6 +29,7 @@ public class PostgresPlots implements Plots {
             singlePlot.addProperty("analysisDuration", rs.getString("analysis_duration"));
             singlePlot.addProperty("plotId", rs.getString("plotId"));
             singlePlot.addProperty("geom", rs.getString("geom"));
+            singlePlot.addProperty("extraFields", rs.getString("extra_fields"));
         } catch (SQLException e) {
             System.out.println(e.getMessage());
         }

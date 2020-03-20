@@ -904,8 +904,8 @@ CREATE OR REPLACE FUNCTION add_file_plots(_project_uid integer)
             FROM projects
             WHERE project_uid = _project_uid
     ))), plotrows AS (
-        INSERT INTO plots (project_rid, center, ext_id, extra_fields)
-        SELECT _project_uid, center, ext_id, extra_fields
+        INSERT INTO plots (project_rid, center, ext_id)
+        SELECT _project_uid, center, ext_id
         FROM plot_tbl
         RETURNING plot_uid, ext_id, center
     )
@@ -1462,7 +1462,8 @@ CREATE OR REPLACE FUNCTION select_all_project_plots(_project_rid integer)
         fd.ext_id,
         (CASE WHEN fd.plotId IS NULL THEN plot_uid ELSE fd.plotId END) as plotId,
         ST_AsGeoJSON(fd.geom) as geom,
-        plotsum.analysis_duration
+        plotsum.analysis_duration,
+        fd.extra_fields
     FROM plots
     LEFT JOIN plotsum
         ON plot_uid = plotsum.plot_rid
@@ -1495,7 +1496,8 @@ CREATE OR REPLACE FUNCTION select_limited_project_plots(_project_rid integer, _m
         all_plots.assigned,       all_plots.username,
         all_plots.confidence,     all_plots.collection_time,
         all_plots.ext_id,         all_plots.plotId,
-        all_plots.geom,           all_plots.analysis_duration
+        all_plots.geom,           all_plots.analysis_duration,
+        all_plots.extra_fields
      FROM (
         SELECT *,
             row_number() OVER(ORDER BY plot_id) AS rows,
