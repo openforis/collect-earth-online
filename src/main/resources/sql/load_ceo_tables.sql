@@ -112,7 +112,8 @@ CREATE TABLE plots (
     plot_uid       SERIAL PRIMARY KEY,
     project_rid    integer NOT NULL REFERENCES projects (project_uid) ON DELETE CASCADE ON UPDATE CASCADE,
     center         geometry(Point,4326),
-    ext_id         integer
+    ext_id         integer,
+    extra_fields   text
 );
 
 CREATE TABLE packet_plots (

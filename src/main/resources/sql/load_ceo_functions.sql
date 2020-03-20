@@ -51,10 +51,11 @@ $$ LANGUAGE SQL;
 -- Select known columns from a shp or csv file
 CREATE OR REPLACE FUNCTION select_partial_table_by_name(_table_name text)
  RETURNS TABLE (
-    ext_id    integer,
-    plotId    integer,
-    center    geometry,
-    geom      geometry
+    ext_id          integer,
+    plotId          integer,
+    center          geometry,
+    geom            geometry,
+    extra_fields    text
  ) AS $$
 
  DECLARE
@@ -67,7 +68,7 @@ CREATE OR REPLACE FUNCTION select_partial_table_by_name(_table_name text)
     IF i = 0
     THEN
         RETURN QUERY EXECUTE
-            'SELECT gid, plotid::integer, ST_SetSRID(ST_MakePoint(lon, lat), 4326), ST_Centroid(NULL) as geom FROM ext_tables.' || _table_name;
+            'SELECT gid, plotid::integer, ST_SetSRID(ST_MakePoint(lon, lat), 4326), ST_Centroid(NULL) as geom, extra_fields FROM ext_tables.' || _table_name;
     ELSE
         RETURN QUERY EXECUTE
             'SELECT gid, plotid::integer, ST_Centroid(ST_Force2D(geom)), ST_Force2D(geom) FROM ext_tables.' || _table_name;
@@ -903,8 +904,8 @@ CREATE OR REPLACE FUNCTION add_file_plots(_project_uid integer)
             FROM projects
             WHERE project_uid = _project_uid
     ))), plotrows AS (
-        INSERT INTO plots (project_rid, center, ext_id)
-        SELECT _project_uid, center, ext_id
+        INSERT INTO plots (project_rid, center, ext_id, extra_fields)
+        SELECT _project_uid, center, ext_id, extra_fields
         FROM plot_tbl
         RETURNING plot_uid, ext_id, center
     )

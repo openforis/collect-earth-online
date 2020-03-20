@@ -1006,7 +1006,7 @@ public class PostgresProjects implements Projects {
                                 List<String> csvHeader = records.getHeaderNames();
                                 BufferedWriter writer = Files.newBufferedWriter(Paths.get(fileToWrite));
                                 CSVPrinter csvPrinter = new CSVPrinter(writer, CSVFormat.DEFAULT.withEscape('\\'));
-                                csvPrinter.printRecord(csvHeader.get(0), csvHeader.get(1), csvHeader.get(2), "JSON");
+                                csvPrinter.printRecord(csvHeader.get(0), csvHeader.get(1), csvHeader.get(2), "extra_fields");
                                 for (CSVRecord record : records) {
                                     var map = record.toMap();
                                     map.remove(csvHeader.get(0));
