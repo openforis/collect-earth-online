@@ -1159,6 +1159,9 @@ class Collection extends React.Component {
                     {this.state.currentPlot
                         ?
                             <>
+                                <PlotInformation
+                                    plot={this.state.currentPlot}
+                                />
                                 {this.unansweredColor()}
                                 <SurveyCollection
                                     selectedQuestion={this.state.selectedQuestion}
@@ -1420,6 +1423,20 @@ class PlotNavigation extends React.Component {
             </div>
         );
     }
+}
+
+class PlotInformation extends React.Component {
+    constructor(props) {
+        super(props);
+    }
+
+    render() {
+        const { plot: { extraFields }} = this.props;
+        return (
+            <div>{extraFields}</div>
+        );
+    }
+
 }
 
 class ImageryOptions extends React.Component {
