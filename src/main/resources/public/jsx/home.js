@@ -11,12 +11,13 @@ class Home extends React.Component {
             imagery: [],
             institutions: [],
             showSidePanel: true,
+            userInstitutions: [],
         };
     }
 
     componentDidMount() {
         // Fetch projects
-        Promise.all([this.getProjects(), this.getImagery(), this.getInstitutions()])
+        Promise.all([this.getImagery(), this.getInstitutions(), this.getProjects()])
             .catch(response => {
                 console.log(response);
                 alert("Error retrieving the collection data. See console for details.");
@@ -49,7 +50,12 @@ class Home extends React.Component {
         .then(response => response.ok ? response.json() : Promise.reject(response))
         .then(data => {
             if (data.length > 0) {
-                this.setState({ institutions: data });
+                const userInstitutions = (this.props.userRole !== "admin") ? data.filter(project => project.members.includes(this.props.userId)) : [];
+                const institutions = (userInstitutions.length > 0) ? data.filter(project => !userInstitutions.includes(project)) : data;
+                this.setState({
+                    institutions: institutions,
+                    userInstitutions: userInstitutions,
+                });
                 return Promise.resolve();
             } else {
                 return Promise.reject("No institutions found");
@@ -70,6 +76,8 @@ class Home extends React.Component {
                             projects={this.state.projects}
                             showSidePanel={this.state.showSidePanel}
                             userId={this.props.userId}
+                            userInstitutions={this.state.userInstitutions}
+                            userRole={this.props.userRole}
                         />
                         <MapPanel
                             documentRoot={this.props.documentRoot}
@@ -232,6 +240,23 @@ class SideBar extends React.Component {
                 {this.props.userId > 0 &&
                     <CreateInstitutionButton documentRoot={this.props.documentRoot}/>
                 }
+                {this.props.userId > 0 && this.props.userRole !== "admin" &&
+                    <div className="bg-darkgreen">
+                        <h2 className="tree_label" id="panelTitle">Your Affiliations</h2>
+                    </div>
+                }
+                {this.props.userId > 0 && this.props.userRole !== "admin" &&
+                    <UserInstitutionList
+                        documentRoot={this.props.documentRoot}
+                        userInstitutions={this.props.userInstitutions}
+                        projects={this.props.projects}
+                    />
+                }
+                {this.props.userId > 0 && this.props.userRole !== "admin" &&
+                    <div className="bg-darkgreen">
+                        <h2 className="tree_label" id="panelTitle">Other Institutions</h2>
+                    </div>
+                }
                 <InstitutionFilter
                     documentRoot={this.props.documentRoot}
                     updateFilterText={this.updateFilterText}
@@ -258,7 +283,7 @@ class SideBar extends React.Component {
                         filterInstitution={this.state.filterInstitution}
                         sortByNumber={this.state.sortByNumber}
                         showEmptyInstitutions={this.state.showEmptyInstitutions}
-                      />
+                    />
                     : <h3 className="p-3">Loading data...</h3>
                 }
             </div>
@@ -323,6 +348,30 @@ function InstitutionList({
             )}
         </ul>
         : <h3 className="p-3">{filterInstitution ? "No Institutions Found..." : "No Projects Found..."}</h3>
+    );
+}
+
+function UserInstitutionList({
+    documentRoot,
+    userInstitutions,
+    projects
+}) {
+
+    return (
+        userInstitutions.length > 0
+            ? <ul className="tree" style={{ overflowY: "scroll", overflowX: "hidden" }}>
+                {userInstitutions.map((institution, uid) =>
+                    <Institution
+                        key={uid}
+                        id={institution.id}
+                        name={institution.name}
+                        documentRoot={documentRoot}
+                        projects={projects.filter(project => project.institution === institution.id)}
+                        forceInstitutionExpand={!projects}
+                    />
+                )}
+            </ul>
+            : <h3 className="p-3">{"No affiliations found..."}</h3>
     );
 }
 
@@ -623,6 +672,7 @@ export function renderHomePage(args) {
         <Home
             documentRoot={args.documentRoot}
             userId={args.userId === "" ? -1 : parseInt(args.userId)}
+            userRole={args.userRole}
         />,
         document.getElementById("home")
     );
