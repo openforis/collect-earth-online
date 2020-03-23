@@ -1135,6 +1135,13 @@ class Collection extends React.Component {
                         KMLFeatures={this.state.KMLFeatures}
                         zoomMapToPlot={() => mercator.zoomMapToLayer(this.state.mapConfig, "currentPlot")}
                     />
+                    {this.state.currentPlot
+                        ?
+                            <PlotInformation
+                                plot={this.state.currentPlot}
+                            />
+                        : null
+                    }
                     <ImageryOptions
                         baseMapSource={this.state.currentImagery.id}
                         imageryTitle={this.state.currentImagery.title}
@@ -1159,9 +1166,6 @@ class Collection extends React.Component {
                     {this.state.currentPlot
                         ?
                             <>
-                                <PlotInformation
-                                    plot={this.state.currentPlot}
-                                />
                                 {this.unansweredColor()}
                                 <SurveyCollection
                                     selectedQuestion={this.state.selectedQuestion}
@@ -1428,12 +1432,41 @@ class PlotNavigation extends React.Component {
 class PlotInformation extends React.Component {
     constructor(props) {
         super(props);
+        this.state = {
+            showInfo: false,
+        };
+    }
+
+    str2obj(str) {
+        try {
+            return JSON.parse(str);
+        } catch (e) {
+            return null;
+        }
     }
 
     render() {
         const { plot: { extraFields }} = this.props;
+        const { showInfo } = this.state;
+        const parsedExtraFields = this.str2obj(extraFields);
         return (
-            <div>{extraFields}</div>
+            <>
+                <CollapsibleTitle
+                    title="Plot Information"
+                    showGroup={showInfo}
+                    toggleShow={() => this.setState(prevState => ({ showInfo: !prevState.showInfo }))}
+                />
+                {this.state.showInfo
+                    ?
+                        parsedExtraFields ?
+                            <ul className="mb-3">
+                                { Object.entries(parsedExtraFields).map((key, value) => <li key={key}>{key} - {value}</li> ) }
+                            </ul>
+                        :
+                            <div className="mb-3">There are no extra information for this plot!</div>
+                    : null
+                }
+            </>
         );
     }
 
