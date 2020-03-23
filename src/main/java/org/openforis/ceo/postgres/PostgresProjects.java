@@ -310,6 +310,7 @@ public class PostgresProjects implements Projects {
                     final var sampleValueGroups = parseJson(rs.getString("survey_questions")).getAsJsonArray();
                     final var projectName = rs.getString("name").replace(" ", "-").replace(",", "").toLowerCase();
                     var plotHeaders = getPlotHeaders(conn, projectId);
+                    var plotExtraHeaders = new HashSet<String>();
 
                     try (var pstmtDump = conn.prepareStatement("SELECT * FROM dump_project_plot_data(?)")) {
                         pstmtDump.setInt(1, projectId);
@@ -335,14 +336,30 @@ public class PostgresProjects implements Projects {
 
                                 if (valueOrBlank(rsDump.getString("ext_plot_data")) != "") {
                                     var ext_plot_data = parseJson(rsDump.getString("ext_plot_data")).getAsJsonObject();
-
-                                    plotHeaders.forEach(head ->
-                                        plotSummary.addProperty("pl_" + head, getOrEmptyString(ext_plot_data, head).getAsString())
-                                    );
+                                    plotHeaders.forEach(head -> {
+                                        if (head.equals("extra_fields")) {
+                                            try {
+                                                var stringExtraFields = getOrEmptyString(ext_plot_data, head).getAsString();
+                                                JsonObject extraFields = JsonUtils.elementToObject(JsonUtils.parseJson(stringExtraFields));
+                                                extraFields.keySet().forEach(key -> {
+                                                    plotExtraHeaders.add(key);
+                                                    plotSummary.addProperty("pl_" + key, getOrEmptyString(extraFields, key).getAsString());
+                                                });
+                                            } catch (Exception e) {
+                                                System.out.println(e.getMessage());
+                                            }
+                                        } else {
+                                            plotSummary.addProperty("pl_" + head, getOrEmptyString(ext_plot_data, head).getAsString());
+                                        }
+                                    });
                                 }
 
                                 plotSummaries.add(plotSummary);
                             }
+                        }
+                        if (plotExtraHeaders.size() > 0) {
+                            plotHeaders.remove("extra_fields");
+                            plotHeaders.addAll(plotExtraHeaders);
                         }
                         var combinedHeaders = plotHeaders.stream()
                             .map(head -> !head.toString().contains("pl_") ? "pl_" + head : head)
@@ -447,8 +464,8 @@ public class PostgresProjects implements Projects {
                             }
                         }
                         if (plotExtraHeaders.size() > 0) {
-	                        plotHeaders.remove("extra_fields");
-	                        plotHeaders.addAll(plotExtraHeaders);
+                            plotHeaders.remove("extra_fields");
+                            plotHeaders.addAll(plotExtraHeaders);
                         }
                         var combinedHeaders =
                         Stream.concat(
