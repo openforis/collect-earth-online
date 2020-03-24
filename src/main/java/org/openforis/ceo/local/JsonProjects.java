@@ -43,9 +43,12 @@ import static org.openforis.ceo.utils.ProjectUtils.runBashScriptForProject;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonArray;
 import java.time.LocalDate;
+import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileReader;
 import java.io.StringWriter;
 import java.io.PrintWriter;
+import java.io.Reader;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.nio.file.Files;
@@ -63,7 +66,13 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.UUID;
 import javax.servlet.http.HttpServletResponse;
+
+import org.apache.commons.csv.CSVFormat;
+import org.apache.commons.csv.CSVParser;
+import org.apache.commons.csv.CSVRecord;
 import org.openforis.ceo.db_api.Projects;
+import org.openforis.ceo.utils.JsonUtils;
+
 import spark.Request;
 import spark.Response;
 
@@ -803,6 +812,34 @@ public class JsonProjects implements Projects {
         }
     }
 
+    // NOTE: The CSV file should contain a header row (which will be skipped) and these fields: LON,LAT,PLOTID
+   private static List<Map<String, String>> loadCsvPlotFields(String filename) {
+       try {
+           var plotPoints = new ArrayList<Map<String, String>>();
+           Reader reader = new FileReader(expandResourcePath("/csv/" + filename));
+           CSVParser records = CSVFormat.DEFAULT.withFirstRecordAsHeader().parse(reader);
+           List<String> csvHeader = records.getHeaderNames();
+           for (CSVRecord record : records) {
+               Map<String, String> fields = new HashMap<String, String>();
+               fields.put("plotId", record.get("PLOTID"));
+               fields.put("lon", record.get("LON"));
+               fields.put("lat", record.get("LAT"));
+               if (csvHeader.size() > 3) {
+                   var map = record.toMap();
+                   map.remove(csvHeader.get(0));
+                   map.remove(csvHeader.get(1));
+                   map.remove(csvHeader.get(2));
+                   var json = JsonUtils.toJson(map);
+                   fields.put("extraFields", json);
+                   plotPoints.add(fields);
+               }
+           };
+           return plotPoints;
+       } catch (Exception e) {
+           throw new RuntimeException("Malformed plot CSV. Fields must be LON,LAT,PLOTID.", e);
+       }
+   }
+
     // The uploaded GeoJson must contain Polygon geometries with PLOTID properties
     private static HashMap<Integer, JsonObject> getGeoJsonPlotGeometries(int projectId) {
         try {
@@ -1114,6 +1151,8 @@ public class JsonProjects implements Projects {
             latMax = csvPlotBounds[3];
         }
 
+        var csvPlotFields = loadCsvPlotFields(newProject.get("plots-csv").getAsString());
+
         // If sampleDistribution is csv, calculate the lat/lon bounds from the csv contents
         var csvSamplePoints = new HashMap<Integer, HashMap<Integer, Double[]>>();
         if (sampleDistribution.equals("csv")) {
@@ -1196,6 +1235,13 @@ public class JsonProjects implements Projects {
                     newPlot.addProperty("flagged", false);
                     newPlot.addProperty("analyses", 0);
                     newPlot.add("user", null);
+
+                    var plotFields = csvPlotFields.get(newPlotId - 1);
+                    if (plotFields.containsKey("extraFields")) {
+                        var stringExtraFields = plotFields.get("extraFields");
+                        JsonObject extraFields = JsonUtils.elementToObject(JsonUtils.parseJson(stringExtraFields));
+                        newPlot.add("extraFields", extraFields);
+                    }
 
                     var plotId =
                         List.of("csv", "shp").contains(plotDistribution)
