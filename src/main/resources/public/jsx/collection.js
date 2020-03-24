@@ -1448,7 +1448,7 @@ class PlotInformation extends React.Component {
     render() {
         const { plot: { extraFields }} = this.props;
         const { showInfo } = this.state;
-        const parsedExtraFields = this.str2obj(extraFields);
+        const parsedExtraFields = typeof extraFields === "object" ? extraFields : this.str2obj(extraFields);
         return (
             <>
                 <CollapsibleTitle

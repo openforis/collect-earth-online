@@ -331,7 +331,7 @@ public class JsonProjects implements Projects {
             final var fieldNames =  Arrays.stream(linesArr[0].split(",")).toArray(String[]::new);
             for (int r = 1; r != linesArr.length ; r++) {
                 var plotField = new HashMap<String, String>();
-                final var fieldData = Arrays.stream(linesArr[r].split(",")).toArray(String[]::new);
+                final var fieldData = Arrays.stream(linesArr[r].split(",", fieldNames.length)).toArray(String[]::new);
                 for (int i = 0; i != fieldNames.length ; i++) {
                     plotField.put(fieldNames[i], fieldData[i]);
                 }
