@@ -465,8 +465,8 @@ const imageryOptions = [
         type: "SecureWatch",
         params: [
             { key: "connectid", display: "Connect ID" },
-            { key: "startDate", display: "Start Date", type: "date"},
-            { key: "endDate", display: "End Date", type: "date"},
+            { key: "startDate", display: "Start Date", type: "date" },
+            { key: "endDate", display: "End Date", type: "date" },
         ],
     },
 ];
@@ -488,7 +488,7 @@ class NewImagery extends React.Component {
         if (prevState.selectedType !== this.state.selectedType) {
             // Clear params different to each type.
             if (imageryOptions[this.state.selectedType].type === "BingMaps") {
-                this.setState({ newImageryParams: { "imageryId": imageryOptions[this.state.selectedType]["params"][0]["options"][0] } });
+                this.setState({ newImageryParams: { "imageryId": imageryOptions[this.state.selectedType]["params"][0]["options"][0] }});
             } else {
                 this.setState({ newImageryParams: {} });
             }
@@ -517,7 +517,7 @@ class NewImagery extends React.Component {
                     "VERSION": "1.1.1",
                     "STYLES": "",
                     "LAYERS": "DigitalGlobe:Imagery",
-                    "CONNECTID": sourceConfig.connectid
+                    "CONNECTID": sourceConfig.connectid,
                 };
                 sourceConfig["geoserverParams"] = geoserverParams;
             }
