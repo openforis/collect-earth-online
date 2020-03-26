@@ -558,7 +558,7 @@ class NewImagery extends React.Component {
         } else if (sourceConfig.type === "PlanetDaily") {
             const startDate = sourceConfig.startDate;
             const endDate = sourceConfig.endDate;
-            return (startDate > endDate) ? "Start date must be smaller than the end date." : null;
+            return (new Date(startDate) > new Date(endDate)) ? "Start date must be smaller than the end date." : null;
         }
     };
 

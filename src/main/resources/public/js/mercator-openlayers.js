@@ -79,6 +79,12 @@ mercator.getViewExtent = function (mapConfig) {
     return transformExtent(extent, "EPSG:3857", "EPSG:4326");
 };
 
+// [Pure] Returns the polygon from the current map view
+mercator.polygonFromExtent = function (mapConfig) {
+    return fromExtent(mercator.getViewExtent(mapConfig));
+}
+
+
 // [Pure] Returns the minimum distance in meters from the view center
 // to the view extent.
 mercator.getViewRadius = function (mapConfig) {
@@ -90,7 +96,7 @@ mercator.getViewRadius = function (mapConfig) {
 };
 
 // Layer switcher for planet daily maps
-export default class PlanetLayerSwitcher extends Control {
+class PlanetLayerSwitcher extends Control {
 
     constructor(opt_options) {
 
@@ -1254,4 +1260,5 @@ mercator.getKMLFromFeatures = function (features) {
 export {
     mercator,
     ceoMapStyles,
+    PlanetLayerSwitcher,
 };

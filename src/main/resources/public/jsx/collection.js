@@ -4,7 +4,6 @@ import { mercator, ceoMapStyles } from "../js/mercator-openlayers.js";
 import { SurveyCollection } from "./components/SurveyCollection";
 import { convertSampleValuesToSurveyQuestions } from "./utils/surveyUtils";
 import { UnicodeIcon } from "./utils/textUtils";
-import { fromExtent } from "ol/geom/Polygon";
 
 class Collection extends React.Component {
     constructor(props) {
@@ -389,7 +388,7 @@ class Collection extends React.Component {
         const { imageryStartDatePlanetDaily, imageryEndDatePlanetDaily, currentPlot } = this.state;
         // check so that the function is not called before the state is propagated
         if (imageryStartDatePlanetDaily && imageryEndDatePlanetDaily && currentPlot) {
-            const geometry = fromExtent(mercator.getViewExtent(this.state.mapConfig));
+            const geometry = mercator.polygonFromExtent(this.state.mapConfig);
             mercator.updateLayerSource(this.state.mapConfig,
                                        this.state.currentImagery.title,
                                        "{\"type\": \"Polygon\", \"coordinates\":" + JSON.stringify(geometry.getCoordinates()) + "}",
