@@ -343,9 +343,11 @@ class Collection extends React.Component {
                 ].join("-"),
             });
         } else if (this.state.currentImagery.sourceConfig.type === "SecureWatch") {
+            const imageryAttribution = this.state.currentImagery.attribution + " | " + this.state.currentImagery.sourceConfig.startDate + " to " + this.state.currentImagery.sourceConfig.endDate;
             this.setState({
                 imageryStartDateSecureWatch: this.state.currentImagery.sourceConfig.startDate,
                 imageryEndDateSecureWatch: this.state.currentImagery.sourceConfig.endDate,
+                imageryAttribution: imageryAttribution,
             });
         }
     };
@@ -1619,8 +1621,7 @@ class ImageryOptions extends React.Component {
                                         (imagery, uid) =>
                                             <option key={uid} value={imagery.id}>{imagery.title}</option>
                                     )
-                                    : props.imageryList.filter(layerConfig => layerConfig.sourceConfig.type !== "PlanetDaily"
-                                    && layerConfig.sourceConfig.type !== "SecureWatch")
+                                    : props.imageryList.filter(layerConfig => layerConfig.sourceConfig.type !== "PlanetDaily")
                                         .map(
                                             (imagery, uid) =>
                                                 <option key={uid} value={imagery.id}>{imagery.title}</option>

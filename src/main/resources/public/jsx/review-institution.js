@@ -520,6 +520,7 @@ class NewImagery extends React.Component {
                     "CONNECTID": sourceConfig.connectid,
                 };
                 sourceConfig["geoserverParams"] = geoserverParams;
+                delete sourceConfig.connectid;
             }
 
             fetch(this.props.documentRoot + "/add-institution-imagery",
