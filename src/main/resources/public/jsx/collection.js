@@ -228,12 +228,23 @@ class Collection extends React.Component {
                 : newImagery.sourceConfig.type === "PlanetDaily"
                     ? newImagery.attribution + " | " + this.state.imageryStartDatePlanetDaily + " to " + this.state.imageryEndDatePlanetDaily
                     : newImagery.sourceConfig.type === "SecureWatch"
-                        ? newImagery.attribution + " | " + this.state.imageryStartDateSecureWatch + " to " + this.state.imageryEndDateSecureWatch
+                        ? newImagery.attribution
+                          + " | " + (this.state.imageryStartDateSecureWatch || newImagery.sourceConfig.startDate)
+                          + " to " + (this.state.imageryEndDateSecureWatch || newImagery.sourceConfig.endDate)
                         : newImagery.attribution;
-        this.setState({
-            currentImagery: newImagery,
-            imageryAttribution: newImageryAttribution,
-        });
+        if (newImagery.sourceConfig.type === "SecureWatch") {
+            this.setState({
+                currentImagery: newImagery,
+                imageryAttribution: newImageryAttribution,
+                imageryStartDateSecureWatch: (this.state.imageryStartDateSecureWatch || newImagery.sourceConfig.startDate),
+                imageryEndDateSecureWatch: (this.state.imageryEndDateSecureWatch || newImagery.sourceConfig.endDate),
+            });
+        } else {
+            this.setState({
+                currentImagery: newImagery,
+                imageryAttribution: newImageryAttribution,
+            });
+        }
     };
 
     setImageryYearDG = (newImageryYearDG) => {
@@ -281,8 +292,8 @@ class Collection extends React.Component {
 
     setImageryDateSecureWatch = (eventTarget) => {
         const { imageryStartDateSecureWatch, imageryEndDateSecureWatch, currentImagery } = this.state;
-        const startDate = (eventTarget.id === "secureWatchStartDate") ? eventTarget.value : imageryStartDateSecureWatch;
-        const endDate = (eventTarget.id === "secureWatchEndDate") ? eventTarget.value : imageryEndDateSecureWatch;
+        const startDate = (eventTarget.id === "secureWatchStartDate") && eventTarget.value ? eventTarget.value : imageryStartDateSecureWatch;
+        const endDate = (eventTarget.id === "secureWatchEndDate") && eventTarget.value ? eventTarget.value : imageryEndDateSecureWatch;
         if (new Date(startDate) > new Date(endDate)) {
             alert("Start date must be smaller than the end date.");
         } else {
