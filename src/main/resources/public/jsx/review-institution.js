@@ -461,6 +461,14 @@ const imageryOptions = [
             { key: "accessToken", display: "Access Token" },
         ],
     },
+    {
+        type: "SecureWatch",
+        params: [
+            { key: "connectid", display: "Connect ID" },
+            { key: "startDate", display: "Start Date", type: "date" },
+            { key: "endDate", display: "End Date", type: "date" },
+        ],
+    },
 ];
 
 class NewImagery extends React.Component {
@@ -480,7 +488,7 @@ class NewImagery extends React.Component {
         if (prevState.selectedType !== this.state.selectedType) {
             // Clear params different to each type.
             if (imageryOptions[this.state.selectedType].type === "BingMaps") {
-                this.setState({ newImageryParams: { "imageryId": imageryOptions[this.state.selectedType]["params"][0]["options"][0] } });
+                this.setState({ newImageryParams: { "imageryId": imageryOptions[this.state.selectedType]["params"][0]["options"][0] }});
             } else {
                 this.setState({ newImageryParams: {} });
             }
@@ -502,6 +510,19 @@ class NewImagery extends React.Component {
             // stackParams() will fail if parent is not entered as a JSON string.
             alert("Invalid JSON in JSON field(s).");
         } else {
+            // modify the sourceConfig as needed (for example SecureWatch Imagery)
+            if (sourceConfig.type === "SecureWatch") {
+                sourceConfig["geoserverUrl"] = "https://securewatch.digitalglobe.com/mapservice/wmsaccess";
+                const geoserverParams = {
+                    "VERSION": "1.1.1",
+                    "STYLES": "",
+                    "LAYERS": "DigitalGlobe:Imagery",
+                    "CONNECTID": sourceConfig.connectid,
+                };
+                sourceConfig["geoserverParams"] = geoserverParams;
+                delete sourceConfig.connectid;
+            }
+
             fetch(this.props.documentRoot + "/add-institution-imagery",
                   {
                       method: "POST",
@@ -663,6 +684,8 @@ class NewImagery extends React.Component {
             this.setState({ newImageryAttribution: "Planet Labs Global Mosaic | © Planet Labs, Inc" });
         } else if (imageryOptions[val].type === "EarthWatch") {
             this.setState({ newImageryAttribution: "EarthWatch Maps API: Recent Imagery | © Maxar, Inc" });
+        } else if (imageryOptions[val].type === "SecureWatch") {
+            this.setState({ newImageryAttribution: "SecureWatch Imagery | © Maxar Technologies Inc." });
         }
     };
 
