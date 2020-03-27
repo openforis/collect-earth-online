@@ -80,7 +80,7 @@ mercator.getViewExtent = function (mapConfig) {
 };
 
 // [Pure] Returns the polygon from the current map view
-mercator.polygonFromExtent = function (mapConfig) {
+mercator.getViewPolygon = function (mapConfig) {
     return fromExtent(mercator.getViewExtent(mapConfig));
 }
 

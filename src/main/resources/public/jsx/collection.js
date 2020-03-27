@@ -388,7 +388,7 @@ class Collection extends React.Component {
         const { imageryStartDatePlanetDaily, imageryEndDatePlanetDaily, currentPlot } = this.state;
         // check so that the function is not called before the state is propagated
         if (imageryStartDatePlanetDaily && imageryEndDatePlanetDaily && currentPlot) {
-            const geometry = mercator.polygonFromExtent(this.state.mapConfig);
+            const geometry = mercator.getViewPolygon(this.state.mapConfig);
             mercator.updateLayerSource(this.state.mapConfig,
                                        this.state.currentImagery.title,
                                        "{\"type\": \"Polygon\", \"coordinates\":" + JSON.stringify(geometry.getCoordinates()) + "}",
