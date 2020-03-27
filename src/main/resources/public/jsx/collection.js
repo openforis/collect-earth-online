@@ -336,30 +336,34 @@ class Collection extends React.Component {
         // FIXME, update mercator to take ID instead of name in cases of duplicate names
         mercator.setVisibleLayer(this.state.mapConfig, this.state.currentImagery.title);
 
-        if (this.state.currentImagery.title && this.state.currentImagery.title.includes("DigitalGlobeWMSImagery")) {
-            this.updateDGWMSLayer();
-        } else if (this.state.currentImagery.sourceConfig.type === "Planet") {
-            this.updatePlanetLayer();
-        } else if (this.state.currentImagery.sourceConfig.type === "PlanetDaily") {
+        if (this.state.currentImagery.sourceConfig.type === "PlanetDaily") {
+            const startDate = this.state.currentImagery.sourceConfig.startDate || "2019-01-01";
+            const endDate = this.state.currentImagery.sourceConfig.endDate || "2019-02-01";
             this.setState({
-                imageryStartDatePlanetDaily: [
-                    this.state.currentImagery.sourceConfig.startYear,
-                    (parseInt(this.state.currentImagery.sourceConfig.startMonth) > 9 ? "" : "0") + parseInt(this.state.currentImagery.sourceConfig.startMonth),
-                    (parseInt(this.state.currentImagery.sourceConfig.startDay) > 9 ? "" : "0") + parseInt(this.state.currentImagery.sourceConfig.startDay),
-                ].join("-"),
-                imageryEndDatePlanetDaily: [
-                    this.state.currentImagery.sourceConfig.endYear,
-                    (parseInt(this.state.currentImagery.sourceConfig.endMonth) > 9 ? "" : "0") + parseInt(this.state.currentImagery.sourceConfig.endMonth),
-                    (parseInt(this.state.currentImagery.sourceConfig.endDay) > 9 ? "" : "0") + parseInt(this.state.currentImagery.sourceConfig.endDay),
-                ].join("-"),
+                imageryStartDatePlanetDaily: startDate,
+                imageryEndDatePlanetDaily: endDate,
+                imageryAttribution: this.state.currentImagery.attribution + " | " + startDate + " to " + endDate,
             });
-        } else if (this.state.currentImagery.sourceConfig.type === "SecureWatch") {
-            const imageryAttribution = this.state.currentImagery.attribution + " | " + this.state.currentImagery.sourceConfig.startDate + " to " + this.state.currentImagery.sourceConfig.endDate;
+        } else {
+            mercator.currentMap.getControls().getArray().filter(control => control.element.classList.contains("planet-layer-switcher"))
+                .map(control => mercator.currentMap.removeControl(control));
             this.setState({
-                imageryStartDateSecureWatch: this.state.currentImagery.sourceConfig.startDate,
-                imageryEndDateSecureWatch: this.state.currentImagery.sourceConfig.endDate,
-                imageryAttribution: imageryAttribution,
+                imageryStartDatePlanetDaily: "",
+                imageryEndDatePlanetDaily: "",
             });
+            if (this.state.currentImagery.title && this.state.currentImagery.title.includes("DigitalGlobeWMSImagery")) {
+                this.updateDGWMSLayer();
+            } else if (this.state.currentImagery.sourceConfig.type === "Planet") {
+                this.updatePlanetLayer();
+            } else if (this.state.currentImagery.sourceConfig.type === "SecureWatch") {
+                const startDate = this.state.currentImagery.sourceConfig.startDate;
+                const endDate = this.state.currentImagery.sourceConfig.endDate;
+                this.setState({
+                    imageryStartDateSecureWatch: startDate,
+                    imageryEndDateSecureWatch: endDate,
+                    imageryAttribution: this.state.currentImagery.attribution + " | " + startDate + " to " + endDate,
+                });
+            }
         }
     };
 
@@ -423,24 +427,18 @@ class Collection extends React.Component {
     };
 
     updatePlanetDailyLayer = () => {
+        mercator.currentMap.getControls().getArray().filter(control => control.element.classList.contains("planet-layer-switcher"))
+            .map(control => mercator.currentMap.removeControl(control));
         const { imageryStartDatePlanetDaily, imageryEndDatePlanetDaily, currentPlot } = this.state;
         // check so that the function is not called before the state is propagated
         if (imageryStartDatePlanetDaily && imageryEndDatePlanetDaily && currentPlot) {
-            const geometry = currentPlot.geom
-                  ? mercator.parseGeoJson(currentPlot.geom, true)
-                  : mercator.getPlotPolygon(currentPlot.center,
-                                            this.state.currentProject.plotSize + 200, // add 200 meters
-                                            "square");
+            const geometry = mercator.getViewPolygon(this.state.mapConfig);
             mercator.updateLayerSource(this.state.mapConfig,
                                        this.state.currentImagery.title,
-                                       "{\"type\": \"Polygon\", \"coordinates\":" + JSON.stringify(geometry.transform("EPSG:3857", "EPSG:4326").getCoordinates()) + "}",
+                                       "{\"type\": \"Polygon\", \"coordinates\":" + JSON.stringify(geometry.getCoordinates()) + "}",
                                        sourceConfig => {
-                                           sourceConfig.startYear = parseInt(imageryStartDatePlanetDaily.split("-")[0]);
-                                           sourceConfig.startMonth = parseInt(imageryStartDatePlanetDaily.split("-")[1]);
-                                           sourceConfig.startDay = parseInt(imageryStartDatePlanetDaily.split("-")[2]);
-                                           sourceConfig.endYear = parseInt(imageryEndDatePlanetDaily.split("-")[0]);
-                                           sourceConfig.endMonth = parseInt(imageryEndDatePlanetDaily.split("-")[1]);
-                                           sourceConfig.endDay = parseInt(imageryEndDatePlanetDaily.split("-")[2]);
+                                           sourceConfig.startDate = imageryStartDatePlanetDaily;
+                                           sourceConfig.endDate = imageryEndDatePlanetDaily;
                                            return sourceConfig;
                                        },
                                        this,

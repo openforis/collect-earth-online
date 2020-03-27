@@ -629,3 +629,34 @@ ul.samplevalue{
         width:100% !important;
     }
 }
+
+/****************************/
+/* Planet Layer Switcher    */
+/****************************/
+
+.planet-layer-switcher {
+    position: absolute;
+    top: 0.5em;
+    right: 0.5em;
+    text-align: left;
+}
+
+.planet-layer-switcher-panel {
+    padding: 0 1em 0 0;
+    margin: 0;
+    border: 4px solid #eee;
+    border-radius: 4px;
+    background-color: white;
+    max-height: 20em;
+    overflow-y: scroll;
+}
+
+.planet-layer-switcher-ul {
+    padding-left: 2em;
+    list-style: none;
+}
+
+.planet-layer-switcher-layer {
+    display: table;
+    margin-left: -18px;
+}

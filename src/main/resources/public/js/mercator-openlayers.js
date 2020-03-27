@@ -18,7 +18,7 @@
 
 import "ol/ol.css";
 import { Feature, Map, Overlay, View } from "ol";
-import { defaults as ControlDefaults, ScaleLine } from "ol/control";
+import { Control, defaults as ControlDefaults, ScaleLine } from "ol/control";
 import { platformModifierKeyOnly } from "ol/events/condition";
 import { Circle, LineString, Point } from "ol/geom";
 import { DragBox, Select } from "ol/interaction";
@@ -79,6 +79,12 @@ mercator.getViewExtent = function (mapConfig) {
     return transformExtent(extent, "EPSG:3857", "EPSG:4326");
 };
 
+// [Pure] Returns the polygon from the current map view
+mercator.getViewPolygon = function (mapConfig) {
+    return fromExtent(mercator.getViewExtent(mapConfig));
+}
+
+
 // [Pure] Returns the minimum distance in meters from the view center
 // to the view extent.
 mercator.getViewRadius = function (mapConfig) {
@@ -88,6 +94,67 @@ mercator.getViewRadius = function (mapConfig) {
     const height = Math.abs(ury - lly);
     return Math.min(width, height) / 2.0;
 };
+
+// Layer switcher for planet daily maps
+class PlanetLayerSwitcher extends Control {
+
+    constructor(opt_options) {
+
+        const options = opt_options;
+
+        const layerLists = options.layers;
+
+        const element = document.createElement("div");
+
+        super({
+            element: element,
+            target: options.target,
+        });
+
+        this.hiddenClassName = "ol-unselectable ol-control planet-layer-switcher";
+
+        element.className = this.hiddenClassName;
+
+        const panel = document.createElement("div");
+        panel.className = "planet-layer-switcher-panel";
+        element.appendChild(panel);
+
+        const ul = document.createElement("ul");
+        ul.className = "planet-layer-switcher-ul";
+        panel.appendChild(ul);
+
+        layerLists.map(layer => {
+            const li = this.createLayerList(layer);
+            ul.appendChild(li);
+        });
+
+    }
+
+    setMap = (map) => super.setMap(map);
+
+    createLayerList = (layer) => {
+        const li = document.createElement("li");
+        li.className = "planet-layer-switcher-layer";
+
+        const label = document.createElement("label");
+        label.style.marginLeft = "0.5em";
+        label.htmlFor = layer.get("title");
+        label.innerHTML = layer.get("title");
+
+        const input = document.createElement("input");
+        input.type = "checkbox";
+        input.id = layer.get("title");
+        input.checked = layer.getVisible();
+
+        input.onchange = function(e) {
+            layer.setVisible(!layer.getVisible());
+        };
+
+        li.appendChild(input);
+        li.appendChild(label);
+        return li;
+    };
+}
 
 /*****************************************************************************
 ***
@@ -119,16 +186,8 @@ mercator.createSource = function (sourceConfig, imageryId, documentRoot,
         const theJson = {
             path: "getPlanetTile",
             apiKey: sourceConfig.accessToken,
-            dateFrom: [
-                sourceConfig.startYear,
-                (parseInt(sourceConfig.startMonth) > 9 ? "" : "0") + parseInt(sourceConfig.startMonth),
-                (parseInt(sourceConfig.startDay) > 9 ? "" : "0") + parseInt(sourceConfig.startDay),
-            ].join("-"),
-            dateTo: [
-                sourceConfig.endYear,
-                (parseInt(sourceConfig.endMonth) > 9 ? "" : "0") + parseInt(sourceConfig.endMonth),
-                (parseInt(sourceConfig.endDay) > 9 ? "" : "0") + parseInt(sourceConfig.endDay),
-            ].join("-"),
+            dateFrom: sourceConfig.startDate,
+            dateTo: sourceConfig.endDate,
             layerCount: 20, // FIXME: what should this optimally be?
             geometry: extent,
         };
@@ -162,18 +221,21 @@ mercator.createSource = function (sourceConfig, imageryId, documentRoot,
                         source: new XYZ({
                             url: "https://tiles0.planet.com/data/v1/layers/" + d["layerID"] + "/{z}/{x}/{y}.png",
                         }),
+                        title: d["date"]
                     }));
                 if (planetLayers.length === 0) {
                     alert("No usable results found for Planet Daily imagery. Check your access token and/or change the date.");
                 }
                 const dummyPlanetLayer = mercator.currentMap.getLayers().getArray().find(lyr => theID === lyr.getSource().get("id"));
                 mercator.currentMap.removeLayer(dummyPlanetLayer);
-                mercator.currentMap.addLayer(new LayerGroup({
+                const layerGroup = new LayerGroup({
                     title: dummyPlanetLayer.get("title"),
                     visible: show,
                     layers: planetLayers,
-                }));
+                });
+                mercator.currentMap.addLayer(layerGroup);
                 if (callback) callback();
+                mercator.currentMap.addControl(new PlanetLayerSwitcher({ layers: layerGroup.getLayersArray() }));
             }).catch(response => {
                 console.log("Error loading Planet Daily imagery: ");
                 console.log(response);
@@ -1204,4 +1266,5 @@ mercator.getKMLFromFeatures = function (features) {
 export {
     mercator,
     ceoMapStyles,
+    PlanetLayerSwitcher,
 };
