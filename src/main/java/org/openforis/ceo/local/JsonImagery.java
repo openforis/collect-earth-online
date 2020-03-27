@@ -36,6 +36,13 @@ public class JsonImagery implements Imagery {
                                     cleanSource.add("type", sourceConfig.get("type"));
                                     imagery.add("sourceConfig", cleanSource);
                                     return imagery;
+                                } else if (sourceConfig.get("type").getAsString().equals("SecureWatch")) {
+                                    var cleanSource = new JsonObject();
+                                    cleanSource.add("type", sourceConfig.get("type"));
+                                    cleanSource.add("startDate", sourceConfig.get("startDate"));
+                                    cleanSource.add("endDate", sourceConfig.get("endDate"));
+                                    imagery.add("sourceConfig", cleanSource);
+                                    return imagery;
                                 } else if (sourceConfig.get("type").getAsString().equals("Planet")) {
                                     var cleanSource = new JsonObject();
                                     cleanSource.add("type",  sourceConfig.get("type"));
