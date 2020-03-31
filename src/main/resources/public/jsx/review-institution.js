@@ -435,6 +435,7 @@ const imageryOptions = [
     },
     {
         type: "Planet",
+        label: "Planet Monthly",
         params: [
             { key: "year", display: "Default Year", type: "number" },
             { key: "month", display: "Default Month", type: "number" },
@@ -678,7 +679,7 @@ class NewImagery extends React.Component {
                         value={this.state.selectedType}
                     >
                         {imageryOptions.map((o, i) =>
-                            <option value={i} key={i}>{o.type}</option>
+                            <option value={i} key={i}>{o.label || o.type}</option>
                         )}
                     </select>
                 </div>
