@@ -68,7 +68,7 @@ class Project extends React.Component {
         if (this.state.mapConfig
             && this.state.projectDetails.baseMapSource !== prevState.projectDetails.baseMapSource) {
             // occurs when template project is selected first and then unselected
-            // if (this.state.projectDetails.baseMapSource === "") this.state.projectDetails.baseMapSource = this.state.imageryList[0]["title"];
+            if (this.state.projectDetails.baseMapSource === "") this.state.projectDetails.baseMapSource = this.state.imageryList[0]["title"];
             mercator.setVisibleLayer(this.state.mapConfig, this.state.projectDetails.baseMapSource);
         }
 
