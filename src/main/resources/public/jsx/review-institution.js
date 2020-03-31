@@ -498,7 +498,7 @@ class NewImagery extends React.Component {
         const message = this.checkDateField(sourceConfig);
         if (!this.checkAllParams()) {
             alert("You must fill out all fields.");
-        } else if (["Planet", "PlanetDaily"].includes(sourceConfig.type) && message) {
+        } else if (["Planet", "PlanetDaily", "SecureWatch"].includes(sourceConfig.type) && message) {
             alert(message);
         } else if (this.props.titleIsTaken(this.state.newImageryTitle)) {
             alert("The title '" + this.state.newImageryTitle + "' is already taken.");
@@ -576,7 +576,7 @@ class NewImagery extends React.Component {
             return isNaN(year)                              ? "Please enter the year as a 4 digit number."
                 : (isNaN(month) || month < 1 || month > 12) ? "Month should be between 1 and 12!"
                 : null;
-        } else if (sourceConfig.type === "PlanetDaily") {
+        } else if (sourceConfig.type === "PlanetDaily" || sourceConfig.type === "SecureWatch") {
             const startDate = sourceConfig.startDate;
             const endDate = sourceConfig.endDate;
             return (new Date(startDate) > new Date(endDate)) ? "Start date must be smaller than the end date." : null;
