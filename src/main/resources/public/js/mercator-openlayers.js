@@ -82,7 +82,7 @@ mercator.getViewExtent = function (mapConfig) {
 // [Pure] Returns the polygon from the current map view
 mercator.getViewPolygon = function (mapConfig) {
     return fromExtent(mercator.getViewExtent(mapConfig));
-}
+};
 
 
 // [Pure] Returns the minimum distance in meters from the view center
@@ -215,17 +215,26 @@ mercator.createSource = function (sourceConfig, imageryId, documentRoot,
             })
             .then(data => {
                 console.log("Here's the response data:\n\n" + JSON.stringify(data));
+                // arrange in ascending order of dates
+                data = data
+                    .filter(d => d.hasOwnProperty("layerID") && d["layerID"] !== "null" && d.hasOwnProperty("date"))
+                    .sort(function (a, b) {
+                        const dateA = new Date(a.date),
+                            dateB = new Date(b.date);
+                        if (dateA < dateB) return -1;
+                        if (dateA > dateB) return 1;
+                        return 0;
+                    });
+                if (data.length === 0) {
+                    alert("No usable results found for Planet Daily imagery. Check your access token and/or change the date.");
+                }
                 const planetLayers = data
-                    .filter(d => d.hasOwnProperty("layerID") && d["layerID"] !== "null")
                     .map(d => new TileLayer({
                         source: new XYZ({
                             url: "https://tiles0.planet.com/data/v1/layers/" + d["layerID"] + "/{z}/{x}/{y}.png",
                         }),
-                        title: d["date"]
+                        title: d["date"],
                     }));
-                if (planetLayers.length === 0) {
-                    alert("No usable results found for Planet Daily imagery. Check your access token and/or change the date.");
-                }
                 const dummyPlanetLayer = mercator.currentMap.getLayers().getArray().find(lyr => theID === lyr.getSource().get("id"));
                 mercator.currentMap.removeLayer(dummyPlanetLayer);
                 const layerGroup = new LayerGroup({
@@ -235,7 +244,7 @@ mercator.createSource = function (sourceConfig, imageryId, documentRoot,
                 });
                 mercator.currentMap.addLayer(layerGroup);
                 if (callback) callback();
-                mercator.currentMap.addControl(new PlanetLayerSwitcher({ layers: layerGroup.getLayersArray() }));
+                mercator.currentMap.addControl(new PlanetLayerSwitcher({ layers: layerGroup.getLayersArray().reverse() }));
             }).catch(response => {
                 console.log("Error loading Planet Daily imagery: ");
                 console.log(response);
