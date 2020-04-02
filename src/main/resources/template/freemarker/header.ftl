@@ -23,11 +23,12 @@
         <!-- JQuery -->
         <link rel="stylesheet" type="text/css" href="${root}/css/jquery-ui.css">
         <link rel="stylesheet" type="text/css" href="${root}/css/datepicker.css">
-        <script type="text/javascript" src="${root}/js/jquery-3.1.1.min.js"></script>
+        <script type="text/javascript" src="${root}/js/jquery-3.4.1.min.js"></script>
         <script type="text/javascript" src="${root}/js/jquery-ui.min.js"></script>
 
         <!-- Bootstrap -->
         <link rel="stylesheet" type="text/css" href="${root}/css/bootstrap.min.css">
+        <script type="text/javascript" src="${root}/js/bootstrap.min.js"></script>
 
         <!-- Highcharts -->
         <script type="text/javascript" src="${root}/js/highcharts.js"></script>
