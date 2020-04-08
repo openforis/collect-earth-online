@@ -424,6 +424,7 @@ class Collection extends React.Component {
                                 : visible[0].geom
                                     ? ceoMapStyles.whitePolygon
                                     : ceoMapStyles.whiteCircle);
+        this.highlightSamplesByQuestion();
     };
 
     updatePlanetDailyLayer = () => {
@@ -774,6 +775,7 @@ class Collection extends React.Component {
         } : (this.state.currentImagery.sourceConfig.type === "PlanetDaily") ? {
             imageryStartDatePlanetDaily: this.state.imageryStartDatePlanetDaily,
             imageryEndDatePlanetDaily: this.state.imageryEndDatePlanetDaily,
+            imageryDatePlanetDaily: mercator.getTopVisiblePlanetLayerDate(this.state.mapConfig, this.state.currentImagery.title),
         } : (this.state.currentImagery.sourceConfig.type === "SecureWatch") ? {
             imageryStartDateSecureWatch: this.state.imageryStartDateSecureWatch,
             imageryEndDateSecureWatch: this.state.imageryEndDateSecureWatch,

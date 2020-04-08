@@ -156,6 +156,22 @@ class PlanetLayerSwitcher extends Control {
     };
 }
 
+//
+mercator.getTopVisiblePlanetLayerDate = (mapConfig, layerTitle) => {
+    const layer = mercator.getLayerByTitle(mapConfig, layerTitle);
+    const layerConfig = mercator.getLayerConfigByTitle(mapConfig, layerTitle);
+    if (layer && layerConfig && layer instanceof LayerGroup) {
+        const planetLayers = [...layer.getLayers().getArray()];
+        for (const planetLayer of planetLayers.reverse()) {
+            if (planetLayer.getVisible()) {
+                return planetLayer.get("title");
+            }
+        }
+        return "NA";
+    }
+    return "NA";
+};
+
 /*****************************************************************************
 ***
 *** Create map source and layer objects from JSON descriptions
