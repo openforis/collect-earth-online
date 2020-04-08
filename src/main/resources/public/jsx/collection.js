@@ -37,6 +37,7 @@ class Collection extends React.Component {
             storedInterval: null,
             KMLFeatures: null,
             hasGeoDash: false,
+            loading: false,
         };
     }
 
@@ -424,9 +425,11 @@ class Collection extends React.Component {
                                 : visible[0].geom
                                     ? ceoMapStyles.whitePolygon
                                     : ceoMapStyles.whiteCircle);
+        this.setState({loading: false});
     };
 
     updatePlanetDailyLayer = () => {
+        this.setState({loading: true});
         mercator.currentMap.getControls().getArray().filter(control => control.element.classList.contains("planet-layer-switcher"))
             .map(control => mercator.currentMap.removeControl(control));
         const { imageryStartDatePlanetDaily, imageryEndDatePlanetDaily, currentPlot } = this.state;
@@ -1164,6 +1167,7 @@ class Collection extends React.Component {
                     projectId={this.props.projectId}
                     plotId={plotId}
                     KMLFeatures={this.state.KMLFeatures}
+                    loader={this.state.loading}
                 />
                 <SideBar
                     projectId={this.props.projectId}
@@ -1257,6 +1261,7 @@ function ImageAnalysisPane(props) {
     return (
         // Mercator hooks into image-analysis-pane
         <div id="image-analysis-pane" className="col-xl-9 col-lg-9 col-md-12 pl-0 pr-0 full-height">
+            {props.loader ? <div id="spinner" style={{ top: "45%", zIndex: "5000", visibility: "visible" }}></div> : null }
             <div id="imagery-info" className="row">
                 <p className="col small">{ props.imageryAttribution }</p>
             </div>
