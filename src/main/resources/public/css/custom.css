@@ -528,6 +528,19 @@ ul.samplevalue{
     background-color: rgba(75,75,150,1.0);
     z-index: 100;
 }
+
+#download-kml {
+    position: absolute;
+    left: 40%;
+    bottom: 5px;
+    height: 2rem;
+    padding: 0.25rem;
+    text-align: center;
+    background-color: #31BAB0;
+    z-index: 100;
+    width: 20%;
+    border-radius: 10px;
+}
 /*********************************************************************/
 /* NEW COLLECTION PAGE */
 /*********************************************************************/
