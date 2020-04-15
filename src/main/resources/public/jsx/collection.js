@@ -1260,7 +1260,6 @@ class Collection extends React.Component {
 }
 
 function ImageAnalysisPane(props) {
-    console.log("props.loader: ", props.loader);
     return (
         // Mercator hooks into image-analysis-pane
         <div id="image-analysis-pane" className="col-xl-9 col-lg-9 col-md-12 pl-0 pr-0 full-height">
