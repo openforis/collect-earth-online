@@ -50,8 +50,8 @@ class Home extends React.Component {
         .then(response => response.ok ? response.json() : Promise.reject(response))
         .then(data => {
             if (data.length > 0) {
-                const userInstitutions = (this.props.userRole !== "admin") ? data.filter(project => project.members.includes(this.props.userId)) : [];
-                const institutions = (userInstitutions.length > 0) ? data.filter(project => !userInstitutions.includes(project)) : data;
+                const userInstitutions = (this.props.userRole !== "admin") ? data.filter(institution => institution.members.includes(this.props.userId)) : [];
+                const institutions = (userInstitutions.length > 0) ? data.filter(institution => !userInstitutions.includes(institution)) : data;
                 this.setState({
                     institutions: institutions,
                     userInstitutions: userInstitutions,
@@ -240,23 +240,25 @@ class SideBar extends React.Component {
                 {this.props.userId > 0 &&
                     <CreateInstitutionButton documentRoot={this.props.documentRoot}/>
                 }
-                {this.props.userId > 0 && this.props.userRole !== "admin" &&
-                    <div className="bg-darkgreen">
-                        <h2 className="tree_label" id="panelTitle">Your Affiliations</h2>
-                    </div>
-                }
-                {this.props.userId > 0 && this.props.userRole !== "admin" &&
-                    <UserInstitutionList
-                        documentRoot={this.props.documentRoot}
-                        userInstitutions={this.props.userInstitutions}
-                        projects={this.props.projects}
-                    />
-                }
-                {this.props.userId > 0 && this.props.userRole !== "admin" &&
-                    <div className="bg-darkgreen">
-                        <h2 className="tree_label" id="panelTitle">Other Institutions</h2>
-                    </div>
-                }
+                <Fragment>
+                    {this.props.userId > 0 && this.props.userRole !== "admin" &&
+                        <div className="bg-darkgreen">
+                            <h2 className="tree_label" id="panelTitle">Your Affiliations</h2>
+                        </div>
+                    }
+                    {this.props.userId > 0 && this.props.userRole !== "admin" &&
+                        <UserInstitutionList
+                            documentRoot={this.props.documentRoot}
+                            userInstitutions={this.props.userInstitutions}
+                            projects={this.props.projects}
+                        />
+                    }
+                    {this.props.userId > 0 && this.props.userRole !== "admin" &&
+                        <div className="bg-darkgreen">
+                            <h2 className="tree_label" id="panelTitle">Other Institutions</h2>
+                        </div>
+                    }
+                </Fragment>
                 <InstitutionFilter
                     documentRoot={this.props.documentRoot}
                     updateFilterText={this.updateFilterText}
@@ -272,8 +274,8 @@ class SideBar extends React.Component {
                     showFilters={this.state.showFilters}
                     toggleShowFilters={this.toggleShowFilters}
                 />
-                {this.props.institutions.length > 0 && this.props.projects.length > 0
-                    ? <InstitutionList
+                {this.props.institutions.length > 0 && this.props.projects.length > 0 ?
+                    <InstitutionList
                         documentRoot={this.props.documentRoot}
                         userId={this.props.userId}
                         institutions={this.props.institutions}
@@ -283,8 +285,8 @@ class SideBar extends React.Component {
                         filterInstitution={this.state.filterInstitution}
                         sortByNumber={this.state.sortByNumber}
                         showEmptyInstitutions={this.state.showEmptyInstitutions}
-                    />
-                    : <h3 className="p-3">Loading data...</h3>
+                    /> :
+                    <h3 className="p-3">Loading data...</h3>
                 }
             </div>
             ) : (
@@ -356,7 +358,6 @@ function UserInstitutionList({
     userInstitutions,
     projects
 }) {
-
     return (
         userInstitutions.length > 0
             ? <ul className="tree" style={{ overflowY: "scroll", overflowX: "hidden" }}>
