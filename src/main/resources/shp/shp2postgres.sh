@@ -9,7 +9,7 @@ check_path()
 {
   shpfile=(`find ./ -maxdepth 1 -name "*.shp"`)
   if ! [ ${#shpfile[@]} -gt 0 ]; then
-    dname=$(find . -type d -iname "*" ! -iname "_*" ! -iname ".*" -maxdepth 1  -exec basename {} .shp ';')
+    dname=$(find . -type d -iname "*" ! -iname "_*" ! -iname ".*" -maxdepth 1 -exec basename {} .shp ';')
     cd $dname
     check_path
   fi
