@@ -33,6 +33,10 @@ public class JsonInstitutions implements Institutions {
             : jInstitutionId != null ? Integer.parseInt(jInstitutionId)
             : 0;
 
+        return isInstitutionAdmin(userId, institutionId);
+    }
+
+    public static Boolean isInstitutionAdmin(String userId, Integer institutionId) {
         var matchingInstitution = getInstitutionById(institutionId);
         if (matchingInstitution.isPresent()) {
             final var institution = matchingInstitution.get();
