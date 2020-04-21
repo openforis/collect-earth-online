@@ -232,33 +232,29 @@ class SideBar extends React.Component {
     updateFilterText = (newText) => this.setState({ filterText: newText });
 
     render() {
-        return this.props.showSidePanel
-            ? (<div id="lPanel" className="col-lg-3 pr-0 pl-0 overflow-hidden full-height d-flex flex-column">
+        return this.props.showSidePanel &&
+            <div id="lPanel" className="col-lg-3 pr-0 pl-0 overflow-hidden full-height d-flex flex-column">
                 <div className="bg-darkgreen">
                     <h1 className="tree_label" id="panelTitle">Institutions</h1>
                 </div>
                 {this.props.userId > 0 &&
-                    <CreateInstitutionButton documentRoot={this.props.documentRoot}/>
+                 <CreateInstitutionButton documentRoot={this.props.documentRoot}/>
                 }
-                <Fragment>
-                    {this.props.userId > 0 && this.props.userRole !== "admin" &&
-                        <div className="bg-darkgreen">
-                            <h2 className="tree_label" id="panelTitle">Your Affiliations</h2>
-                        </div>
-                    }
-                    {this.props.userId > 0 && this.props.userRole !== "admin" &&
-                        <UserInstitutionList
-                            documentRoot={this.props.documentRoot}
-                            userInstitutions={this.props.userInstitutions}
-                            projects={this.props.projects}
-                        />
-                    }
-                    {this.props.userId > 0 && this.props.userRole !== "admin" &&
-                        <div className="bg-darkgreen">
-                            <h2 className="tree_label" id="panelTitle">Other Institutions</h2>
-                        </div>
-                    }
-                </Fragment>
+                {this.props.userId > 0 && this.props.userRole !== "admin" &&
+                 <Fragment>
+                     <div className="bg-darkgreen">
+                         <h2 className="tree_label" id="panelTitle">Your Affiliations</h2>
+                     </div>
+                     <UserInstitutionList
+                         documentRoot={this.props.documentRoot}
+                         userInstitutions={this.props.userInstitutions}
+                         projects={this.props.projects}
+                     />
+                     <div className="bg-darkgreen">
+                         <h2 className="tree_label" id="panelTitle">Other Institutions</h2>
+                     </div>
+                 </Fragment>
+                }
                 <InstitutionFilter
                     documentRoot={this.props.documentRoot}
                     updateFilterText={this.updateFilterText}
@@ -275,23 +271,20 @@ class SideBar extends React.Component {
                     toggleShowFilters={this.toggleShowFilters}
                 />
                 {this.props.institutions.length > 0 && this.props.projects.length > 0 ?
-                    <InstitutionList
-                        documentRoot={this.props.documentRoot}
-                        userId={this.props.userId}
-                        institutions={this.props.institutions}
-                        projects={this.props.projects}
-                        filterText={this.state.filterText}
-                        useFirstLetter={this.state.useFirstLetter}
-                        filterInstitution={this.state.filterInstitution}
-                        sortByNumber={this.state.sortByNumber}
-                        showEmptyInstitutions={this.state.showEmptyInstitutions}
-                    /> :
-                    <h3 className="p-3">Loading data...</h3>
+                 <InstitutionList
+                     documentRoot={this.props.documentRoot}
+                     userId={this.props.userId}
+                     institutions={this.props.institutions}
+                     projects={this.props.projects}
+                     filterText={this.state.filterText}
+                     useFirstLetter={this.state.useFirstLetter}
+                     filterInstitution={this.state.filterInstitution}
+                     sortByNumber={this.state.sortByNumber}
+                     showEmptyInstitutions={this.state.showEmptyInstitutions}
+                 /> :
+                 <h3 className="p-3">Loading data...</h3>
                 }
-            </div>
-            ) : (
-                ""
-            );
+            </div>;
     }
 }
 
