@@ -1,5 +1,7 @@
 package org.openforis.ceo.local;
 
+import static org.openforis.ceo.local.JsonInstitutions.isGlobalAdmin;
+import static org.openforis.ceo.local.JsonInstitutions.isProjectAdmin;
 import static org.openforis.ceo.local.JsonUsers.sumUserInfo;
 import static org.openforis.ceo.utils.JsonUtils.elementToArray;
 import static org.openforis.ceo.utils.JsonUtils.filterJsonArray;
@@ -11,7 +13,6 @@ import static org.openforis.ceo.utils.JsonUtils.parseJson;
 import static org.openforis.ceo.utils.JsonUtils.readJsonFile;
 import static org.openforis.ceo.utils.JsonUtils.toStream;
 import static org.openforis.ceo.utils.ProjectUtils.getOrEmptyString;
-import static org.openforis.ceo.local.JsonInstitutions.isInstitutionAdmin;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
@@ -76,39 +77,18 @@ public class JsonPlots implements Plots {
                             String userName,
                             Integer userId
     ) {
-
-        var isAdmin = false;
-        final var users = elementToArray(readJsonFile("user-list.json").getAsJsonArray());
-        final var matchedUser = findInJsonArray(users, user -> user.get("id").getAsInt() == userId && user.get("role").equals("admin"));
-        if (matchedUser.isPresent()) {
-            if (matchedUser.get().get("admin").getAsBoolean()) {
-                isAdmin = true;
-            }
-        }
-        if (!isAdmin) {
-            final var projects = elementToArray(readJsonFile("project-list.json").getAsJsonArray());
-            var matchedProject = findInJsonArray(projects, project -> project.get("id").getAsInt() == projectId);
-            if (matchedProject.isPresent()) {
-                var institutionId = matchedProject.get().get("institution");
-                if (institutionId.getAsBoolean()) {
-                    if (isInstitutionAdmin(userId.toString(), institutionId.getAsInt())) {
-                        isAdmin = true;
-                    }
-                }
-            }
-        }
-
+        final var isAdmin = isGlobalAdmin(userId) || isProjectAdmin(userId, projectId);
         final var plots = readJsonFile("plot-data-" + projectId + ".json").getAsJsonArray();
-        final boolean finalIsAdmin = isAdmin;
         final var matchingPlot = toStream(plots)
-                                    .filter(pl -> getUserPlots
-                                        ?  getOrEmptyString(pl, "user").getAsString().equals(userName)
-                                        :  finalIsAdmin
-                                            ? pl.get("analyses").getAsInt() > 0
-                                                && pl.get("user") != null
-                                            : pl.get("analyses").getAsInt() == 0
-                                                && pl.get("flagged").getAsBoolean() == false
-                                                && !isLocked(pl)
+                                    .filter(plot -> getUserPlots
+                                        ?  getOrEmptyString(plot, "user").getAsString().equals(userName)
+                                        :  isAdmin
+                                            ? plot.get("analyses").getAsInt() > 0
+                                                && plot.get("user") != null
+                                                && !isLocked(plot)
+                                            : plot.get("analyses").getAsInt() == 0
+                                                && plot.get("flagged").getAsBoolean() == false
+                                                && !isLocked(plot)
                                     )
                                     .filter(filterPredicate)
                                     .sorted(sortComparator)
