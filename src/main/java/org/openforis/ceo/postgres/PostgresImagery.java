@@ -177,6 +177,7 @@ public class PostgresImagery implements Imagery {
             pstmt.execute();
         } catch (SQLException e) {
             System.out.println(e.getMessage());
+            res.status(409);
         }
 
         return "";
