@@ -282,7 +282,9 @@ class SideBar extends React.Component {
                      sortByNumber={this.state.sortByNumber}
                      showEmptyInstitutions={this.state.showEmptyInstitutions}
                  /> :
-                 <h3 className="p-3">Loading data...</h3>
+                 (this.props.userInstitutions.length > 0 ?
+                  <h3 className="p-3">No unaffiliated institutions found.</h3> :
+                  <h3 className="p-3">Loading data...</h3>)
                 }
             </div>;
     }
