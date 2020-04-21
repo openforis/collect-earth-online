@@ -699,7 +699,7 @@ function PlotDesign ({
                             {plotDistribution === "gridded" &&
                             "Plot centers will be arranged on a grid within the AOI using the plot spacing selected below."}
                             {plotDistribution === "csv" &&
-                            "Specify your own plot centers by uploading a CSV with these fields: LONGITUDE,LATITUDE,PLOTID."}
+                            "Specify your own plot centers by uploading a CSV with these fields: LON,LAT,PLOTID."}
                             {plotDistribution === "shp" &&
                             "Specify your own plot boundaries by uploading a zipped Shapefile (containing SHP, SHX, DBF, and PRJ files) of polygon features. Each feature must have a unique PLOTID field."}
                         </p>
@@ -923,7 +923,7 @@ function SampleDesign ({
                     {sampleDistribution === "gridded" &&
                         "Sample points will be arranged on a grid within the plot boundary using the sample resolution selected below."}
                     {sampleDistribution === "csv" &&
-                        "Specify your own sample points by uploading a CSV with these fields: LONGITUDE,LATITUDE,PLOTID,SAMPLEID."}
+                        "Specify your own sample points by uploading a CSV with these fields: LON,LAT,PLOTID,SAMPLEID."}
                     {sampleDistribution === "shp" &&
                         "Specify your own sample shapes by uploading a zipped Shapefile (containing SHP, SHX, DBF, and PRJ files) of polygon features. Each feature must have PLOTID and SAMPLEID fields."}
                 </p>
