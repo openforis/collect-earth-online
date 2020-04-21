@@ -173,7 +173,7 @@ public class PostgresPlots implements Plots {
 
         try (var conn = connect()) {
             if (getUserPlots) {
-                Boolean isAdmin = false;
+                var isAdmin = false;
                 var query1 = conn.prepareStatement("SELECT administrator FROM users WHERE user_uid=? LIMIT 1");
                 query1.setInt(1, userId);
                 try(var result1 = query1.executeQuery()) {
@@ -231,7 +231,7 @@ public class PostgresPlots implements Plots {
 
         try (var conn = connect()) {
             if (getUserPlots) {
-                Boolean isAdmin = false;
+                var isAdmin = false;
                 var query1 = conn.prepareStatement("SELECT administrator FROM users WHERE user_uid=? LIMIT 1");
                 query1.setInt(1, userId);
                 try(var result1 = query1.executeQuery()) {
