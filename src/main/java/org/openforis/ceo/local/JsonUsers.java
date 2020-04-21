@@ -473,10 +473,9 @@ public class JsonUsers implements Users {
         var role = jsonInputs.get("role").getAsString();
 
         // get user email
-        var user = toStream(elementToArray(readJsonFile("user-list.json")))
-                .filter(_user -> _user.get("id") == userId)
-                .findFirst().get();
-        var userEmail = user.get("email").getAsString();
+        var userEmail = findInJsonArray(elementToArray(readJsonFile("user-list.json")),
+                                        user -> user.get("id") == userId)
+                            .get().get("email").getAsString();
 
         mapJsonFile("institution-list.json",
                     institution -> {
