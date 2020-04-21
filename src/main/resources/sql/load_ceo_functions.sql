@@ -76,7 +76,7 @@ CREATE OR REPLACE FUNCTION select_partial_table_by_name(_table_name text)
 
 $$ LANGUAGE PLPGSQL;
 
--- Converts unknown colums to a single json colum for processsing in Java
+-- Converts unknown columns to a single json column for processing in Java
 CREATE OR REPLACE FUNCTION select_json_table_by_name(_table_name text)
  RETURNS TABLE (
     ext_id      integer,

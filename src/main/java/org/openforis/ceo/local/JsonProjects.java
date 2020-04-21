@@ -772,7 +772,7 @@ public class JsonProjects implements Projects {
                     });
             return plotPoints;
         } catch (Exception e) {
-            throw new RuntimeException("Malformed plot CSV. Fields must be LON,LAT,PLOTID.", e);
+            throw new RuntimeException("Malformed plot CSV. Fields must be LON,LAT,PLOTID.\n" + e);
         }
     }
 
@@ -827,7 +827,7 @@ public class JsonProjects implements Projects {
             }
         } catch (Exception e) {
             deleteShapeFileDirectories(projectId);
-            throw new RuntimeException("Malformed plot Shapefile. All features must be of type polygon and include a PLOTID field.", e);
+            throw new RuntimeException("Malformed plot Shapefile. All features must be of type polygon and include a PLOTID field.\n" + e);
         }
     }
 
