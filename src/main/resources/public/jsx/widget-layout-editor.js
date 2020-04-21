@@ -357,10 +357,11 @@ class BasicLayout extends React.PureComponent {
     getBandsFromGateway = isDual => {
         // go get available bands
         const url = this.props.documentRoot + "/geo-dash/gateway-request";
-        if (event.target.value !== 'custom') {
-            const postObject = {};
-            postObject.path = "getAvailableBands";
-            postObject.imageCollection = event.target.value;  //"LANDSAT/LT05/C01/T1"
+        if (event.target.value !== "custom") {
+            const postObject = {
+                path: "getAvailableBands",
+                imageCollection: event.target.value, //"LANDSAT/LT05/C01/T1"
+            };
             fetch(url, {
                 method: "POST",
                 headers: {
@@ -369,13 +370,7 @@ class BasicLayout extends React.PureComponent {
                 },
                 body: JSON.stringify(postObject),
             })
-                .then(res => {
-                    if (res.ok) {
-                        return res.json();
-                    } else {
-                        Promise.reject();
-                    }
-                })
+                .then(res => res.ok ? res.json() : Promise.reject())
                 .then(data => {
                     if (data.hasOwnProperty("bands")) {
                         if (isDual) {
@@ -1093,7 +1088,7 @@ class BasicLayout extends React.PureComponent {
             value={this.state.widgetTitle}
             className="form-control"
             onChange={this.onWidgetTitleChange}
-            placeholder={"enter title"}
+            placeholder={"Enter title"}
         />
     </div>;
 
@@ -1173,48 +1168,51 @@ class BasicLayout extends React.PureComponent {
     </div>;
 
     getDualLayerDateRangeControl = () => {
-        if (this.state.dualLayer === true) {
-            return <div>
-                <label>Select the Date Range for the top layer</label>
-                <div className="input-group input-daterange" id="range_new_cooked2">
-                    <input
-                        type="text"
-                        className="form-control"
-                        onChange={this.onStartDate2Changed}
-                        value={this.state.startDate2}
-                        placeholder={"YYYY-MM-DD"}
-                        id="sDate_new_cooked2"
-                    />
-                    <div className="input-group-addon">to</div>
-                    <input
-                        type="text"
-                        className="form-control"
-                        onChange={this.onEndDate2Changed}
-                        value={this.state.endDate2}
-                        placeholder={"YYYY-MM-DD"}
-                        id="eDate_new_cooked2"
-                    />
+        return (this.state.dualLayer === true)
+            ? (
+                <div>
+                    <label>Select the Date Range for the top layer</label>
+                    <div className="input-group input-daterange" id="range_new_cooked2">
+                        <input
+                            type="text"
+                            className="form-control"
+                            onChange={this.onStartDate2Changed}
+                            value={this.state.startDate2}
+                            placeholder={"YYYY-MM-DD"}
+                            id="sDate_new_cooked2"
+                        />
+                        <div className="input-group-addon">to</div>
+                        <input
+                            type="text"
+                            className="form-control"
+                            onChange={this.onEndDate2Changed}
+                            value={this.state.endDate2}
+                            placeholder={"YYYY-MM-DD"}
+                            id="eDate_new_cooked2"
+                        />
+                    </div>
                 </div>
-            </div>;
-        }
+            ) : "";
     };
 
     getAvailableBandsControl = () => {
-        if (this.state.availableBands.length > 0) {
-            return <div>
-                <label>Available Bands: </label><br />
-                <label>{this.state.availableBands} </label>
-            </div>
-        }
+        return (this.state.availableBands.length > 0)
+            ? (
+                <div>
+                    <label>Available Bands: </label><br />
+                    <label>{this.state.availableBands}</label>
+                </div>
+            ) : "";
     };
 
     getAvailableBandsControlDual = () => {
-        if (this.state.availableBandsDual.length > 0) {
-            return <div>
-                <label>Available Bands: </label><br />
-                <label>{this.state.availableBandsDual} </label>
-            </div>
-        }
+        return (this.state.availableBandsDual.length > 0)
+            ? (
+                <div>
+                    <label>Available Bands: </label><br />
+                    <label>{this.state.availableBandsDual}</label>
+                </div>
+            ) : "";
     };
 
     getDataForm = () => {
