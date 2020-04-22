@@ -355,7 +355,7 @@ function UserInstitutionList({
 }) {
     return (
         userInstitutions.length > 0
-            ? <ul className="tree" style={{ overflowY: "scroll", overflowX: "hidden" }}>
+            ? <ul className="tree">
                 {userInstitutions.map((institution, uid) =>
                     <Institution
                         key={uid}
