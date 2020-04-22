@@ -512,6 +512,7 @@ class Collection extends React.Component {
                   getUserPlots: this.state.reviewPlots,
                   plotId: plotId,
                   projectId: this.props.projectId,
+                  institutionId: this.state.currentProject.institution,
                   userId: this.props.userId,
                   userName: this.props.userName,
               }))
@@ -548,6 +549,7 @@ class Collection extends React.Component {
                   getUserPlots: this.state.reviewPlots,
                   plotId: plotId,
                   projectId: this.props.projectId,
+                  institutionId: this.state.currentProject.institution,
                   userId: this.props.userId,
                   userName: this.props.userName,
               }))

@@ -1,5 +1,7 @@
 package org.openforis.ceo.local;
 
+import static org.openforis.ceo.local.JsonInstitutions.isGlobalAdmin;
+import static org.openforis.ceo.local.JsonInstitutions.isProjectAdmin;
 import static org.openforis.ceo.local.JsonUsers.sumUserInfo;
 import static org.openforis.ceo.utils.JsonUtils.elementToArray;
 import static org.openforis.ceo.utils.JsonUtils.filterJsonArray;
@@ -75,15 +77,18 @@ public class JsonPlots implements Plots {
                             String userName,
                             Integer userId
     ) {
-
+        final var isAdmin = isGlobalAdmin(userId) || isProjectAdmin(userId, projectId);
         final var plots = readJsonFile("plot-data-" + projectId + ".json").getAsJsonArray();
-
         final var matchingPlot = toStream(plots)
-                                    .filter(pl -> getUserPlots
-                                        ?  getOrEmptyString(pl, "user").getAsString().equals(userName)
-                                        :  pl.get("analyses").getAsInt() == 0
-                                            && pl.get("flagged").getAsBoolean() == false
-                                            && !isLocked(pl)
+                                    .filter(plot -> getUserPlots
+                                        ?  getOrEmptyString(plot, "user").getAsString().equals(userName)
+                                        :  isAdmin
+                                            ? plot.get("analyses").getAsInt() > 0
+                                                && plot.get("user") != null
+                                                && !isLocked(plot)
+                                            : plot.get("analyses").getAsInt() == 0
+                                                && plot.get("flagged").getAsBoolean() == false
+                                                && !isLocked(plot)
                                     )
                                     .filter(filterPredicate)
                                     .sorted(sortComparator)
