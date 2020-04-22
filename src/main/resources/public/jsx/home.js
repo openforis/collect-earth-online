@@ -211,17 +211,24 @@ class SideBar extends React.Component {
         super(props);
         this.state = {
             filterText: "",
+            filterTextUserInstitution: "",
             filterInstitution: true,
+            filterUserInstitution: true,
             useFirstLetter: false,
             sortByNumber: true,
             showEmptyInstitutions: false,
             showFilters: false,
+            showUserInstitutionFilter: false,
         };
     }
 
     toggleShowFilters = () => this.setState({ showFilters: !this.state.showFilters });
 
+    toggleShowUserInstitutionFilter = () => this.setState({ showUserInstitutionFilter: !this.state.showUserInstitutionFilter });
+
     toggleFilterInstitution = () => this.setState({ filterInstitution: !this.state.filterInstitution });
+
+    toggleFilterUserInstitution = () => this.setState({ filterUserInstitution: !this.state.filterUserInstitution });
 
     toggleShowEmptyInstitutions = () => this.setState({ showEmptyInstitutions: !this.state.showEmptyInstitutions });
 
@@ -230,6 +237,8 @@ class SideBar extends React.Component {
     toggleUseFirst = () => this.setState({ useFirstLetter: !this.state.useFirstLetter });
 
     updateFilterText = (newText) => this.setState({ filterText: newText });
+
+    updateFilterTextUserInstitution = (newText) => this.setState({ filterTextUserInstitution: newText });
 
     render() {
         return this.props.showSidePanel &&
@@ -245,10 +254,24 @@ class SideBar extends React.Component {
                      <div className="bg-darkgreen">
                          <h2 className="tree_label" id="panelTitle">Your Affiliations</h2>
                      </div>
+                     {this.props.userInstitutions.length > 0 &&
+                     <UserInstitutionFilter
+                         documentRoot={this.props.documentRoot}
+                         filterTextUserInstitution={this.state.filterTextUserInstitution}
+                         updateFilterTextUserInstitution={this.updateFilterTextUserInstitution}
+                         filterUserInstitution={this.state.filterUserInstitution}
+                         toggleFilterUserInstitution={this.toggleFilterUserInstitution}
+                         showUserInstitutionFilter={this.state.showUserInstitutionFilter}
+                         toggleShowUserInstitutionFilter={this.toggleShowUserInstitutionFilter}
+                     />
+                     }
                      <UserInstitutionList
                          documentRoot={this.props.documentRoot}
+                         userId={this.props.userId}
                          userInstitutions={this.props.userInstitutions}
                          projects={this.props.projects}
+                         filterTextUserInstitution={this.state.filterTextUserInstitution}
+                         filterUserInstitution={this.state.filterUserInstitution}
                      />
                      <div className="bg-darkgreen">
                          <h2 className="tree_label" id="panelTitle">Other Institutions</h2>
@@ -331,7 +354,7 @@ function InstitutionList({
 
     return (
         filteredInstitutions.length > 0
-        ? <ul className="tree" style={{ overflowY: "scroll", overflowX: "hidden" }}>
+        ? <ul className="tree" style={{ overflowY: "scroll", overflowX: "hidden", minHeight: "3.5rem" }}>
             {filteredInstitutions.map((institution, uid) =>
                 <Institution
                     key={uid}
@@ -350,24 +373,45 @@ function InstitutionList({
 
 function UserInstitutionList({
     documentRoot,
+    userId,
     userInstitutions,
-    projects
+    projects,
+    filterTextUserInstitution,
+    filterUserInstitution
 }) {
+    const filterTextLower = filterTextUserInstitution.toLocaleLowerCase();
+
+    const filteredProjects = projects.filter(proj => filterUserInstitution || proj.name.toLocaleLowerCase().includes(filterTextLower));
+
+    const filterString = (inst) => inst.name.toLocaleLowerCase().includes(filterTextLower);
+
+    const filterHasProj = (inst) => filteredProjects.some(proj => inst.id === proj.institution)
+        || inst.admins.includes(userId)
+        || inst.members.includes(userId);
+
+    const filteredInstitutions = userInstitutions
+        // Filtering by institution, contains search string and contains projects or user is member
+        .filter(inst => !filterUserInstitution || filterString(inst))
+        .filter(inst => !filterUserInstitution || filterTextLower.length > 0 || filterHasProj(inst))
+        // Filtering by projects, and has projects to show
+        .filter(inst => filterUserInstitution || filteredProjects.some(proj => inst.id === proj.institution))
+        .sort((a, b) => sortAlphabetically(a.name, b.name));
+
     return (
-        userInstitutions.length > 0
-            ? <ul className="tree">
-                {userInstitutions.map((institution, uid) =>
+        filteredInstitutions.length > 0
+            ? <ul className="tree" style={{ overflowY: "scroll", overflowX: "hidden", minHeight: "3.5rem" }}>
+                {filteredInstitutions.map((institution, uid) =>
                     <Institution
                         key={uid}
                         id={institution.id}
                         name={institution.name}
                         documentRoot={documentRoot}
-                        projects={projects.filter(project => project.institution === institution.id)}
-                        forceInstitutionExpand={!projects}
+                        projects={filteredProjects.filter(project => project.institution === institution.id)}
+                        forceInstitutionExpand={!filterUserInstitution && filterTextUserInstitution.length > 0}
                     />
                 )}
             </ul>
-            : <h3 className="p-3">{"No affiliations found..."}</h3>
+            : <h3 className="p-3">{filterUserInstitution ? "No affiliations found..." : "No projects found..."}</h3>
     );
 }
 
@@ -469,6 +513,65 @@ function InstitutionFilter(props) {
                         </div>
                     </div>
                 </Fragment>
+            }
+        </div>
+    );
+}
+
+function UserInstitutionFilter(props) {
+    return (
+        <div className="InstitutionFilter form-control">
+            <div id="filter-user-institution" style={{ display: "inline-flex", width: "100%" }}>
+                <input
+                    type="text"
+                    id="filterUserInstitution"
+                    autoComplete="off"
+                    placeholder="Enter text to filter"
+                    className="form-control"
+                    value={props.filterText}
+                    onChange={e => props.updateFilterTextUserInstitution(e.target.value)}
+                />
+                <a href="#" onClick={props.toggleShowUserInstitutionFilter}>
+                    <img
+                        src={props.documentRoot + (props.showUserInstitutionFilter ? "/img/hidefilter.png" : "/img/showfilter.png")}
+                        width="40"
+                        height="40"
+                        style={{ padding: "5px" }}
+                        alt="Show/Hide Filters"
+                        title="show/hide filters"
+                    />
+                </a>
+            </div>
+            {props.showUserInstitutionFilter &&
+            <Fragment>
+                <div className="d-inlineflex">
+                    <div className="form-check form-check-inline">
+                        Filter By:
+                    </div>
+                    <div className="form-check form-check-inline">
+                        <input
+                            className="form-check-input"
+                            type="radio"
+                            id="filter-user-institution-by-word"
+                            name="filter-user-institution"
+                            checked={props.filterUserInstitution}
+                            onChange={props.toggleFilterUserInstitution}
+                        />
+                        Institution
+                    </div>
+                    <div className="form-check form-check-inline">
+                        <input
+                            className="form-check-input"
+                            type="radio"
+                            id="filter-user-institution-by-letter"
+                            name="filter-user-institution"
+                            checked={!props.filterUserInstitution}
+                            onChange={props.toggleFilterUserInstitution}
+                        />
+                        Project
+                    </div>
+                </div>
+            </Fragment>
             }
         </div>
     );
