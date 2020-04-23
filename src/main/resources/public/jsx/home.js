@@ -211,24 +211,17 @@ class SideBar extends React.Component {
         super(props);
         this.state = {
             filterText: "",
-            filterTextUserInstitution: "",
             filterInstitution: true,
-            filterUserInstitution: true,
             useFirstLetter: false,
             sortByNumber: true,
             showEmptyInstitutions: false,
             showFilters: false,
-            showUserInstitutionFilter: false,
         };
     }
 
     toggleShowFilters = () => this.setState({ showFilters: !this.state.showFilters });
 
-    toggleShowUserInstitutionFilter = () => this.setState({ showUserInstitutionFilter: !this.state.showUserInstitutionFilter });
-
     toggleFilterInstitution = () => this.setState({ filterInstitution: !this.state.filterInstitution });
-
-    toggleFilterUserInstitution = () => this.setState({ filterUserInstitution: !this.state.filterUserInstitution });
 
     toggleShowEmptyInstitutions = () => this.setState({ showEmptyInstitutions: !this.state.showEmptyInstitutions });
 
@@ -237,8 +230,6 @@ class SideBar extends React.Component {
     toggleUseFirst = () => this.setState({ useFirstLetter: !this.state.useFirstLetter });
 
     updateFilterText = (newText) => this.setState({ filterText: newText });
-
-    updateFilterTextUserInstitution = (newText) => this.setState({ filterTextUserInstitution: newText });
 
     render() {
         return this.props.showSidePanel &&
@@ -467,65 +458,6 @@ function InstitutionFilter(props) {
                         </div>
                     </div>
                 </Fragment>
-            }
-        </div>
-    );
-}
-
-function UserInstitutionFilter(props) {
-    return (
-        <div className="InstitutionFilter form-control">
-            <div id="filter-user-institution" style={{ display: "inline-flex", width: "100%" }}>
-                <input
-                    type="text"
-                    id="filterUserInstitution"
-                    autoComplete="off"
-                    placeholder="Enter text to filter"
-                    className="form-control"
-                    value={props.filterText}
-                    onChange={e => props.updateFilterTextUserInstitution(e.target.value)}
-                />
-                <a href="#" onClick={props.toggleShowUserInstitutionFilter}>
-                    <img
-                        src={props.documentRoot + (props.showUserInstitutionFilter ? "/img/hidefilter.png" : "/img/showfilter.png")}
-                        width="40"
-                        height="40"
-                        style={{ padding: "5px" }}
-                        alt="Show/Hide Filters"
-                        title="show/hide filters"
-                    />
-                </a>
-            </div>
-            {props.showUserInstitutionFilter &&
-            <Fragment>
-                <div className="d-inlineflex">
-                    <div className="form-check form-check-inline">
-                        Filter By:
-                    </div>
-                    <div className="form-check form-check-inline">
-                        <input
-                            className="form-check-input"
-                            type="radio"
-                            id="filter-user-institution-by-word"
-                            name="filter-user-institution"
-                            checked={props.filterUserInstitution}
-                            onChange={props.toggleFilterUserInstitution}
-                        />
-                        Institution
-                    </div>
-                    <div className="form-check form-check-inline">
-                        <input
-                            className="form-check-input"
-                            type="radio"
-                            id="filter-user-institution-by-letter"
-                            name="filter-user-institution"
-                            checked={!props.filterUserInstitution}
-                            onChange={props.toggleFilterUserInstitution}
-                        />
-                        Project
-                    </div>
-                </div>
-            </Fragment>
             }
         </div>
     );
