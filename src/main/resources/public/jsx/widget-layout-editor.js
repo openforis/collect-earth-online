@@ -11,7 +11,11 @@ class BasicLayout extends React.PureComponent {
             layout: [],
             widgets: [],
             imagery: [],
+            selectedProjectId: 0,
+            projectList: [],
+            projectFilter:"",
             isEditing: false,
+            copyDialog: false,
             addCustomImagery: false,
             selectedWidgetType: "-1",
             selectedDataType: "-1",
@@ -66,7 +70,6 @@ class BasicLayout extends React.PureComponent {
                         },
                     }
                     : widget);
-                this.checkWidgetStructure(updatedWidgets);
                 this.setState({
                     dashboardID: data.dashboardID,
                     widgets:     updatedWidgets,
@@ -90,6 +93,7 @@ class BasicLayout extends React.PureComponent {
                 console.log(response);
                 alert("Error downloading the imagery list. See console for details.");
             });
+        this.getProjectList();
     }
 
     getParameterByName = (name, url) => {
@@ -401,6 +405,7 @@ class BasicLayout extends React.PureComponent {
             addCustomImagery: false,
             selectedDataTypeDual: "-1",
             isEditing: false,
+            copyDialog: false,
             selectedDataType: "-1",
             widgetTitle: "",
             imageCollection: "",
@@ -652,6 +657,7 @@ class BasicLayout extends React.PureComponent {
                         selectedWidgetType: "-1",
                         selectedDataTypeDual: "-1",
                         isEditing: false,
+                        copyDialog: false,
                         selectedDataType: "-1",
                         widgetTitle: "",
                         imageCollection: "",
@@ -865,9 +871,84 @@ class BasicLayout extends React.PureComponent {
         }
     };
 
+    getProjectList = () => {
+        fetch(this.props.documentRoot + "/get-all-projects")
+            .then(response => response.ok ? response.json() : Promise.reject(response))
+            .then(data => this.setState({ projectList: data }))
+            .catch(response => {
+                console.log(response);
+                alert("Error retrieving the project list. See console for details.");
+            });
+    };
+
+    setWidgetLayoutTemplate = id => {
+        this.setState({ selectedProjectId: id});
+        this.state.widgets.forEach( widget => {
+            this.deleteWidgetFromServer( widget );
+        });
+        this.getWidgetTemplateByProjectId( id );
+    };
+
+    getWidgetTemplateByProjectId = id => {
+        fetch(this.state.theURI + "/get-by-projid?projectId=" + id)
+            .then(response => response.ok ? response.json() : Promise.reject(response))
+            .then(data => {
+                const widgets = Array.isArray(data.widgets)
+                    ? data.widgets
+                    : Array.isArray(eval(data.widgets))
+                        ? eval(data.widgets)
+                        : [];
+                const updatedWidgets = widgets.map(widget => widget.layout
+                    ? {
+                        ...widget,
+                        layout: {
+                            ...widget.layout,
+                            y: widget.layout.y ? widget.layout.y : 0,
+                        },
+                    }
+                    : widget);
+                this.checkWidgetStructure(updatedWidgets);
+                this.setState({
+                    widgets:     updatedWidgets,
+                    haveWidgets: true,
+                    layout:      this.generateLayout(),
+                });
+            })
+            .then( () =>{
+                this.state.widgets.forEach( widget => {
+                    this.addTemplateWidget( widget );
+                });
+            })
+            .catch(response => {
+                console.log(response);
+                alert("Error downloading the widget list. See console for details.");
+            });
+    };
+
+    addTemplateWidget = widget => {
+        fetch(this.state.theURI + "/create-widget",
+            {
+                method: "POST",
+                headers: {
+                    "Accept": "application/json",
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    projectId: this.state.projectId,
+                    dashID: this.state.dashboardID,
+                    widgetJSON: JSON.stringify(widget),
+                }),
+            })
+            .catch(response => {
+                console.log(response);
+                alert("Error downloading the widget list. See console for details.");
+            });
+    };
+
     getNewWidgetForm = () => {
-        if (this.state.isEditing) {
-            return <React.Fragment>
+        return (this.state.isEditing === true)
+            ? (
+                <React.Fragment>
                 <div className="modal fade show" style={{ display: "block" }}>
                     <div className="modal-dialog" role="document">
                         <div className="modal-content">
@@ -912,8 +993,67 @@ class BasicLayout extends React.PureComponent {
                     </div>
                 </div>
                 <div className="modal-backdrop fade show"> </div>
-            </React.Fragment>;
-        }
+            </React.Fragment>
+            ) : (this.state.copyDialog === true)
+                ? (
+                    <React.Fragment>
+                        <div className="modal fade show" style={{ display: "block" }}>
+                            <div className="modal-dialog" role="document">
+                                <div className="modal-content">
+                                    <div className="modal-header">
+                                        <h5 className="modal-title" id="exampleModalLabel">Copy Widget Layout</h5>
+                                        <button type="button" className="close" data-dismiss="modal" aria-label="Close" onClick={this.onCancelNewWidget}>
+                                            <span aria-hidden="true">×</span>
+                                        </button>
+                                    </div>
+                                    <div className="modal-body">
+                                        <form>
+                                            <div className="form-group">
+                                                <label htmlFor="project-filter">Template Filter (Name or ID)</label>
+                                                <input
+                                                    className="form-control form-control-sm"
+                                                    id="project-filter"
+                                                    type="text"
+                                                    value={this.state.projectFilter}
+                                                    onChange={e => this.setState({ projectFilter: e.target.value })}
+                                                />
+                                            </div>
+                                            <div className="form-group">
+                                                <label htmlFor="widgetTypeSelect">From Project</label>
+                                                <select
+                                                    className="form-control form-control-sm"
+                                                    id="project-template"
+                                                    name="project-template"
+                                                    size="1"
+                                                    value={this.state.selectedProjectId}
+                                                    onChange={e => this.setWidgetLayoutTemplate(parseInt(e.target.value))}
+                                                >
+                                                    <option key={0} value={0}>None</option>
+                                                    {
+                                                        this.state.projectList
+                                                            .filter(proj => proj
+                                                                && proj.id > 0
+                                                                && proj.availability !== "archived"
+                                                                && (proj.id + proj.name.toLocaleLowerCase())
+                                                                    .includes(this.state.projectFilter.toLocaleLowerCase()))
+                                                            .map((proj, uid) => <option key={uid} value={proj.id}>{proj.id} - {proj.name}</option>)
+                                                    }
+                                                </select>
+                                            </div>
+                                            <div className="form-group">
+                                                <span>Updates are done in real time</span>
+                                            </div>
+                                        </form>
+                                    </div>
+                                    <div className="modal-footer">
+                                        <button type="button" className="btn btn-secondary" data-dismiss="modal" onClick={this.onCancelNewWidget}>Close</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div className="modal-backdrop fade show"> </div>
+                    </React.Fragment>
+                ): "";
     };
 
     getFormButtons = () => <React.Fragment>
@@ -1758,6 +1898,10 @@ class BasicLayout extends React.PureComponent {
         this.setState({ isEditing : true });
     };
 
+    openCopyWidgetsDialog = () => {
+        this.setState({copyDialog: true });
+    }
+
     render() {
         const { layout } = this.state;
         return (
@@ -1766,6 +1910,15 @@ class BasicLayout extends React.PureComponent {
                     type="button"
                     id="addWidget"
                     onClick={this.onAddItem}
+                    className="btn btn-outline-lightgreen btn-sm"
+                    style={{ display: "none" }}
+                >
+                    Add Widget
+                </button>
+                <button
+                    type="button"
+                    id="copyWidgets"
+                    onClick={this.openCopyWidgetsDialog}
                     className="btn btn-outline-lightgreen btn-sm"
                     style={{ display: "none" }}
                 >
