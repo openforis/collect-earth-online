@@ -845,6 +845,9 @@ class Collection extends React.Component {
         } : (this.state.currentImagery.sourceConfig.type === "SecureWatch") ? {
             imageryStartDateSecureWatch: this.state.imageryStartDateSecureWatch,
             imageryEndDateSecureWatch: this.state.imageryEndDateSecureWatch,
+        } : (this.state.currentImagery.sourceConfig.type === "Sentinel2") ? {
+            sentinel2MosaicYearMonth: this.state.imageryYearSentinel2 + " - " +
+                (this.state.imageryYearSentinel2 > 9 ? "" : "0") + this.state.imageryYearSentinel2
         } : {};
 
     getChildQuestions = (currentQuestionId) => {
