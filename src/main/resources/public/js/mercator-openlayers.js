@@ -28,6 +28,7 @@ import { BingMaps, Cluster, TileWMS, Vector as VectorSource, XYZ } from "ol/sour
 import { Circle as CircleStyle, Icon, Fill, Stroke, Style, Text as StyleText, RegularShape } from "ol/style";
 import { fromLonLat, transform, transformExtent } from "ol/proj";
 import { fromExtent, fromCircle } from "ol/geom/Polygon";
+import { formatDateISO } from "../jsx/utils/dateUtils";
 
 /******************************************************************************
 ***
@@ -82,7 +83,7 @@ mercator.getViewExtent = function (mapConfig) {
 // [Pure] Returns the polygon from the current map view
 mercator.getViewPolygon = function (mapConfig) {
     return fromExtent(mercator.getViewExtent(mapConfig));
-}
+};
 
 
 // [Pure] Returns the minimum distance in meters from the view center
@@ -221,7 +222,7 @@ mercator.createSource = function (sourceConfig, imageryId, documentRoot,
                         source: new XYZ({
                             url: "https://tiles0.planet.com/data/v1/layers/" + d["layerID"] + "/{z}/{x}/{y}.png",
                         }),
-                        title: d["date"]
+                        title: d["date"],
                     }));
                 if (planetLayers.length === 0) {
                     alert("No usable results found for Planet Daily imagery. Check your access token and/or change the date.");
@@ -260,6 +261,67 @@ mercator.createSource = function (sourceConfig, imageryId, documentRoot,
             url: documentRoot + "/get-tile",
             params: { imageryId: imageryId },
         });
+    } else if (sourceConfig.type === "Sentinel2") {
+        const bandCombination = sourceConfig.bandCombination;
+        // default to true color
+        const bands = bandCombination === "FalseColorInfrared" ? "B8,B4,B3"
+            : bandCombination === "FalseColorUrban" ? "B12,B11,B4"
+                : bandCombination === "Agriculture" ? "B11,B8,B2"
+                    : bandCombination === "HealthyVegetation" ? "B8,B11,B2"
+                        : bandCombination === "ShortWaveInfrared" ? "B12,B8A,B4" : "B4,B3,B2";
+        const year = parseInt(sourceConfig.year);
+        const month = (parseInt(sourceConfig.month) > 9 ? "" : "0") + parseInt(sourceConfig.month);
+        // month is zero based
+        const endDate = new Date(new Date(year, month, 1).setDate(new Date(year, month, 1).getDate() - 1));
+
+        const theJson = {
+            path: "FilteredSentinel",
+            bands: bands,
+            min: sourceConfig.min,
+            max: sourceConfig.max,
+            cloudLessThan: parseInt(sourceConfig.cloudScore),
+            dateFrom: sourceConfig.year + "-" + month + "-01",
+            dateTo : formatDateISO(endDate),
+        };
+        const theID = Math.random().toString(36).substr(2, 16) + "_" + Math.random().toString(36).substr(2, 9);
+        const geeLayer = new XYZ({
+            url: "https://earthengine.googleapis.com/map/temp/{z}/{x}/{y}?token=",
+            id: theID,
+        });
+        geeLayer.setProperties({ id: theID });
+        fetch(documentRoot + "/geo-dash/gateway-request", {
+            method: "POST",
+            headers: {
+                "Accept": "application/json",
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify(theJson),
+        })
+            .then(res => {
+                if (res.ok) {
+                    return res.json();
+                } else {
+                    Promise.reject();
+                }
+            })
+            .then(data => {
+                if (data.hasOwnProperty("mapid") && data.hasOwnProperty("token")) {
+                    const geeLayer = new XYZ({
+                        url: "https://earthengine.googleapis.com/map/" + data.mapid + "/{z}/{x}/{y}?token=" + data.token,
+                    });
+                    mercator.currentMap.getLayers().forEach(function (lyr) {
+                        if (theID && theID === lyr.getSource().get("id")) {
+                            lyr.setSource(geeLayer);
+                        }
+                    });
+                } else {
+                    console.warn("Wrong Data Returned");
+                }
+            }).catch(response => {
+                console.log("Error loading Sentinel-2 imagery: ");
+                console.log(response);
+            });
+        return geeLayer;
     } else if (sourceConfig.type === "GeeGateway") {
         //get variables and make ajax call to get mapid and token
         //then add xyz layer

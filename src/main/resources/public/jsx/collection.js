@@ -4,6 +4,7 @@ import { mercator, ceoMapStyles } from "../js/mercator-openlayers.js";
 import { SurveyCollection } from "./components/SurveyCollection";
 import { convertSampleValuesToSurveyQuestions } from "./utils/surveyUtils";
 import { UnicodeIcon } from "./utils/textUtils";
+import { formatDateISO } from "./utils/dateUtils";
 
 class Collection extends React.Component {
     constructor(props) {
@@ -23,6 +24,9 @@ class Collection extends React.Component {
             imageryEndDatePlanetDaily: "",
             imageryStartDateSecureWatch: "",
             imageryEndDateSecureWatch: "",
+            imageryMonthSentinel2: "",
+            imageryYearSentinel2: "",
+            bandCombinationSentinel2: "",
             mapConfig: null,
             nextPlotButtonDisabled: false,
             plotList: [],
@@ -140,6 +144,12 @@ class Collection extends React.Component {
         if (this.state.imageryStartDateSecureWatch !== prevState.imageryStartDateSecureWatch
             || this.state.imageryEndDateSecureWatch !== prevState.imageryEndDateSecureWatch) {
             this.updateSecureWatchLayer();
+        }
+
+        if (this.state.imageryMonthSentinel2 !== prevState.imageryMonthSentinel2
+            || this.state.imageryYearSentinel2 !== prevState.imageryYearSentinel2
+            || this.state.bandCombinationSentinel2 !== prevState.bandCombinationSentinel2) {
+            this.updateSentinel2Layer();
         }
     }
 
@@ -333,6 +343,32 @@ class Collection extends React.Component {
         });
     };
 
+    setImageryMonthSentinel2 = (newImageryMonthSentinel2) => {
+        const { imageryYearSentinel2 } = this.state;
+        const startDate = imageryYearSentinel2 + "-" + (newImageryMonthSentinel2 > 9 ? "" : "0") + newImageryMonthSentinel2 + "-01";
+        const endDate = new Date(new Date(imageryYearSentinel2, newImageryMonthSentinel2, 1).setDate(new Date(imageryYearSentinel2, newImageryMonthSentinel2, 1).getDate() - 1));
+        this.setState({
+            imageryMonthSentinel2: newImageryMonthSentinel2,
+            imageryAttribution: this.state.currentImagery.attribution + " | " + startDate + " to " + formatDateISO(endDate),
+        });
+    };
+
+    setImageryYearSentinel2 = (newImageryYearSentinel2) => {
+        const { imageryMonthSentinel2 } = this.state;
+        const startDate = newImageryYearSentinel2 + "-" + (imageryMonthSentinel2 > 9 ? "" : "0") + imageryMonthSentinel2 + "-01";
+        const endDate = new Date(
+            new Date(newImageryYearSentinel2, imageryMonthSentinel2, 1)
+                .setDate(new Date(newImageryYearSentinel2, imageryMonthSentinel2, 1).getDate() - 1)
+        );
+
+        this.setState({
+            imageryYearSentinel2: newImageryYearSentinel2,
+            imageryAttribution: this.state.currentImagery.attribution + " | " + startDate + " to " + formatDateISO(endDate),
+        });
+    };
+
+    setBandCombinationSentinel2 = (newBandCombinationSentinel2) => this.setState({ bandCombinationSentinel2: newBandCombinationSentinel2 });
+
     updateMapImagery = () => {
         // FIXME, update mercator to take ID instead of name in cases of duplicate names
         mercator.setVisibleLayer(this.state.mapConfig, this.state.currentImagery.title);
@@ -363,6 +399,19 @@ class Collection extends React.Component {
                     imageryStartDateSecureWatch: startDate,
                     imageryEndDateSecureWatch: endDate,
                     imageryAttribution: this.state.currentImagery.attribution + " | " + startDate + " to " + endDate,
+                });
+            } else if (this.state.currentImagery.sourceConfig.type === "Sentinel2") {
+                const month = parseInt(this.state.currentImagery.sourceConfig.month) || 1;
+                const year = parseInt(this.state.currentImagery.sourceConfig.year) || 2018;
+                const bandCombination = this.state.currentImagery.sourceConfig.bandCombination || "TrueColor";
+                const startDate = year + "-" + (month > 9 ? "" : "0") + month + "-01";
+                const endDate = new Date(new Date(year, month, 1).setDate(new Date(year, month, 1).getDate() - 1));
+
+                this.setState({
+                    imageryMonthSentinel2: month,
+                    imageryYearSentinel2: year,
+                    bandCombinationSentinel2: bandCombination,
+                    imageryAttribution: this.state.currentImagery.attribution + " | " + startDate + " to " + formatDateISO(endDate),
                 });
             }
         }
@@ -425,11 +474,11 @@ class Collection extends React.Component {
                                 : visible[0].geom
                                     ? ceoMapStyles.whitePolygon
                                     : ceoMapStyles.whiteCircle);
-        this.setState({loading: false});
+        this.setState({ loading: false });
     };
 
     updatePlanetDailyLayer = () => {
-        this.setState({loading: true});
+        this.setState({ loading: true });
         mercator.currentMap.getControls().getArray().filter(control => control.element.classList.contains("planet-layer-switcher"))
             .map(control => mercator.currentMap.removeControl(control));
         const { imageryStartDatePlanetDaily, imageryEndDatePlanetDaily, currentPlot } = this.state;
@@ -447,6 +496,20 @@ class Collection extends React.Component {
                                        this,
                                        this.removeAndAddVector);
         }
+    };
+
+    updateSentinel2Layer = () => {
+        const { currentImagery, imageryMonthSentinel2, imageryYearSentinel2, bandCombinationSentinel2 } = this.state;
+        mercator.updateLayerSource(this.state.mapConfig,
+                                   currentImagery.title,
+                                   this.state.currentProject.boundary,
+                                   sourceConfig => {
+                                       sourceConfig.month = imageryMonthSentinel2;
+                                       sourceConfig.year = imageryYearSentinel2;
+                                       sourceConfig.bandCombination = bandCombinationSentinel2;
+                                       return sourceConfig;
+                                   },
+                                   this);
     };
 
     updateSecureWatchLayer = () => {
@@ -1213,6 +1276,12 @@ class Collection extends React.Component {
                         imageryEndDatePlanetDaily={this.state.imageryEndDatePlanetDaily}
                         imageryStartDateSecureWatch={this.state.imageryStartDateSecureWatch}
                         imageryEndDateSecureWatch={this.state.imageryEndDateSecureWatch}
+                        imageryMonthSentinel2={this.state.imageryMonthSentinel2}
+                        imageryYearSentinel2={this.state.imageryYearSentinel2}
+                        setImageryMonthSentinel2={this.setImageryMonthSentinel2}
+                        setImageryYearSentinel2={this.setImageryYearSentinel2}
+                        bandCombinationSentinel2={this.state.bandCombinationSentinel2}
+                        setBandCombinationSentinel2={this.setBandCombinationSentinel2}
                         showPlanetDaily={this.state.currentPlot != null}
                         stackingProfileDG={this.state.stackingProfileDG}
                         setBaseMapSource={this.setBaseMapSource}
@@ -1617,6 +1686,57 @@ class ImageryOptions extends React.Component {
         </div>
     );
 
+    sentinel2Menus = () => {
+        const bandCombinationOptions = [
+            { label: "True Color", value: "TrueColor" },
+            { label: "False Color Infrared", value: "FalseColorInfrared" },
+            { label: "False Color Urban", value: "FalseColorUrban" },
+            { label: "Agriculture", value: "Agriculture" },
+            { label: "Healthy Vegetation", value: "HealthyVegetation" },
+            { label: "Short Wave Infrared", value: "ShortWaveInfrared" },
+        ];
+
+        return (
+            <div className="Sentinel2Menu my-2">
+                <div className="slidecontainer form-control form-control-sm">
+                    <input
+                        type="range"
+                        min="2015"
+                        max={new Date().getFullYear()}
+                        value={this.props.imageryYearSentinel2}
+                        className="slider"
+                        onChange={e => this.props.setImageryYearSentinel2(parseInt(e.target.value))}
+                    />
+                    <p>Year: <span>{this.props.imageryYearSentinel2}</span></p>
+                </div>
+                <div className="slidecontainer form-control form-control-sm">
+                    <input
+                        type="range"
+                        min="1"
+                        max="12"
+                        value={this.props.imageryMonthSentinel2}
+                        className="slider"
+                        onChange={e => this.props.setImageryMonthSentinel2(parseInt(e.target.value))}
+                    />
+                    <p>Month: <span id="demo">{this.props.imageryMonthSentinel2}</span></p>
+                </div>
+                <div className="form-control form-control-sm" >
+                    <div className="mb-3">
+                        <label>Band Combination</label>
+                        <select
+                            className="form-control"
+                            onChange={e => this.props.setBandCombinationSentinel2(e.target.value)}
+                            value={this.props.bandCombinationSentinel2}
+                        >
+                            { bandCombinationOptions
+                                .map(el => <option value={el.value} key={el.value}>{el.label}</option>) }
+                        </select>
+                    </div>
+                </div>
+            </div>
+        );
+    };
+
     render() {
         const { props } = this;
         return (
@@ -1654,6 +1774,7 @@ class ImageryOptions extends React.Component {
                         {props.imageryType === "Planet" && this.planetMenus()}
                         {props.imageryType === "PlanetDaily" && this.planetDailyMenus()}
                         {props.imageryType === "SecureWatch" && this.secureWatchMenus()}
+                        {props.imageryType === "Sentinel2" && this.sentinel2Menus()}
                     </Fragment>
                 }
             </div>
