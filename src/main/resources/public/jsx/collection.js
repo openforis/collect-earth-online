@@ -199,6 +199,41 @@ class Collection extends React.Component {
             });
     };
 
+    // Call with connectId="4a2c3e8e-b318-48bc-b88b-a1b9dd879e6d" and
+    // bbox="12122301.189802673%2C6398696.511808675%2C12132085.129423175%2C6408480.451429177"
+    // to see example results.
+    //
+    // FIXME: Hook this into componentDidMount() and
+    // componentDidUpdate() to run when SecureWatch imagery is
+    // selected and when the BBOX is moved by zooming or panning the
+    // map. Change console.log() to this.setState() in .then(data =>
+    // ...) below. Display these dates in the sidebar near the Start
+    // Date and End Date calendar selectors.
+    getSecureWatchAvailableDates = (connectId, bbox) => {
+        const secureWatchFeatureInfoUrl = "https://securewatch.digitalglobe.com/mapservice/wmsaccess?"
+              + "CONNECTID=" + connectId
+              + "&SERVICE=WMS"
+              + "&VERSION=1.1.1"
+              + "&REQUEST=GetFeatureInfo"
+              + "&CRS=EPSG%3A3857"
+              + "&BBOX=" + bbox
+              + "&WIDTH=256"
+              + "&HEIGHT=256"
+              + "&LAYERS=DigitalGlobe:ImageryFootprint"
+              + "&QUERY_LAYERS=DigitalGlobe:ImageryFootprint"
+              + "&FEATURE_COUNT=1000"
+              + "&X=0"
+              + "&Y=0"
+              + "&INFO_FORMAT=application/json";
+        fetch(secureWatchFeatureInfoUrl)
+            .then(response => response.ok ? response.json() : Promise.reject(response))
+            .then(data => console.log(data.features.map(feature => feature.properties.acquisitionDate)))
+            .catch(response => {
+                console.log(response);
+                alert("Error retrieving available imagery dates. See console for details.");
+            });
+    };
+
     initializeProjectMap = () => {
         const mapConfig = mercator.createMap("image-analysis-pane", [0.0, 0.0], 1, this.state.imageryList, this.props.documentRoot, this.state.currentProject.boundary);
         mercator.addVectorLayer(mapConfig,
