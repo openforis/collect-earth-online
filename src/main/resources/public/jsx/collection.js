@@ -23,6 +23,7 @@ class Collection extends React.Component {
             imageryEndDatePlanetDaily: "",
             imageryStartDateSecureWatch: "",
             imageryEndDateSecureWatch: "",
+            imageryFeatureProfileSecureWatch: "",
             mapConfig: null,
             nextPlotButtonDisabled: false,
             plotList: [],
@@ -138,7 +139,8 @@ class Collection extends React.Component {
         }
 
         if (this.state.imageryStartDateSecureWatch !== prevState.imageryStartDateSecureWatch
-            || this.state.imageryEndDateSecureWatch !== prevState.imageryEndDateSecureWatch) {
+            || this.state.imageryEndDateSecureWatch !== prevState.imageryEndDateSecureWatch
+            || this.state.imageryFeatureProfileSecureWatch !== prevState.imageryFeatureProfileSecureWatch) {
             this.updateSecureWatchLayer();
         }
     }
@@ -333,13 +335,22 @@ class Collection extends React.Component {
         if (new Date(startDate) > new Date(endDate)) {
             alert("Start date must be smaller than the end date.");
         } else {
-            const imageryAttribution = this.getImageryByTitle(currentImagery.title).attribution + " | " + startDate + " to " + endDate;
+            const imageryAttribution = this.getImageryByTitle(currentImagery.title).attribution + " | " + startDate + " to " + endDate + " (" + this.state.imageryFeatureProfileSecureWatch + ")";
             this.setState({
                 imageryStartDateSecureWatch: startDate,
                 imageryEndDateSecureWatch: endDate,
                 imageryAttribution: imageryAttribution,
             });
         }
+    };
+
+    setImageryFeatureProfileSecureWatch = (newFeatureProfile) => {
+        const { imageryStartDateSecureWatch, imageryEndDateSecureWatch, currentImagery } = this.state;
+        const imageryAttribution = this.getImageryByTitle(currentImagery.title).attribution + " | " + imageryStartDateSecureWatch + " to " + imageryEndDateSecureWatch + " (" + newFeatureProfile + ")";
+        this.setState({
+            imageryFeatureProfileSecureWatch: newFeatureProfile,
+            imageryAttribution: imageryAttribution,
+        });
     };
 
     setImageryMonthPlanet = (newImageryMonthPlanet) => {
@@ -392,12 +403,14 @@ class Collection extends React.Component {
             } else if (this.state.currentImagery.sourceConfig.type === "Planet") {
                 this.updatePlanetLayer();
             } else if (this.state.currentImagery.sourceConfig.type === "SecureWatch") {
-                const startDate = this.state.currentImagery.sourceConfig.startDate;
-                const endDate = this.state.currentImagery.sourceConfig.endDate;
+                const startDate = this.state.currentImagery.sourceConfig.startDate || "2019-01-01";
+                const endDate = this.state.currentImagery.sourceConfig.endDate || "2019-03-01";
+                const featureProfile = this.state.currentImagery.sourceConfig.featureProfile || "Default_Profile";
                 this.setState({
                     imageryStartDateSecureWatch: startDate,
                     imageryEndDateSecureWatch: endDate,
-                    imageryAttribution: this.state.currentImagery.attribution + " | " + startDate + " to " + endDate,
+                    imageryFeatureProfileSecureWatch: featureProfile,
+                    imageryAttribution: this.state.currentImagery.attribution + " | " + startDate + " to " + endDate + " (" + featureProfile + ")",
                 });
             }
         }
@@ -460,11 +473,11 @@ class Collection extends React.Component {
                                 : visible[0].geom
                                     ? ceoMapStyles.whitePolygon
                                     : ceoMapStyles.whiteCircle);
-        this.setState({loading: false});
+        this.setState({ loading: false });
     };
 
     updatePlanetDailyLayer = () => {
-        this.setState({loading: true});
+        this.setState({ loading: true });
         mercator.currentMap.getControls().getArray().filter(control => control.element.classList.contains("planet-layer-switcher"))
             .map(control => mercator.currentMap.removeControl(control));
         const { imageryStartDatePlanetDaily, imageryEndDatePlanetDaily, currentPlot } = this.state;
@@ -491,6 +504,7 @@ class Collection extends React.Component {
                                       {
                                           COVERAGE_CQL_FILTER: "(acquisitionDate>='" + imageryStartDateSecureWatch + "')"
                                                              + "AND(acquisitionDate<='" + imageryEndDateSecureWatch + "')",
+                                          FEATUREPROFILE: this.state.imageryFeatureProfileSecureWatch,
                                       });
     };
 
@@ -817,6 +831,7 @@ class Collection extends React.Component {
         } : (this.state.currentImagery.sourceConfig.type === "SecureWatch") ? {
             imageryStartDateSecureWatch: this.state.imageryStartDateSecureWatch,
             imageryEndDateSecureWatch: this.state.imageryEndDateSecureWatch,
+            imageryFeatureProfileSecureWatch: this.state.imageryFeatureProfileSecureWatch,
         } : {};
 
     getChildQuestions = (currentQuestionId) => {
@@ -1256,6 +1271,8 @@ class Collection extends React.Component {
                         setImageryMonthPlanet={this.setImageryMonthPlanet}
                         setImageryDatePlanetDaily={this.setImageryDatePlanetDaily}
                         setImageryDateSecureWatch={this.setImageryDateSecureWatch}
+                        imageryFeatureProfileSecureWatch={this.state.imageryFeatureProfileSecureWatch}
+                        setImageryFeatureProfileSecureWatch={this.setImageryFeatureProfileSecureWatch}
                         setStackingProfileDG={this.setStackingProfileDG}
                         loadingImages={this.state.imageryList.length === 0}
                     />
@@ -1300,7 +1317,7 @@ function ImageAnalysisPane(props) {
         <div id="image-analysis-pane" className="col-xl-9 col-lg-9 col-md-12 pl-0 pr-0 full-height">
             {props.loader ? <div id="spinner" style={{ top: "45%", zIndex: "5000", visibility: "visible" }}></div> : null }
             <div id="imagery-info" className="row">
-                <p className="col small">{ props.imageryAttribution }</p>
+                <p className="col small" style={{ transform: "translateY(25%)" }}>{ props.imageryAttribution }</p>
             </div>
             {props.plotId &&
                 <div id="download-kml" className="row">
@@ -1623,34 +1640,69 @@ class ImageryOptions extends React.Component {
         </div>
     );
 
-    secureWatchMenus = () => (
-        <div className="SecureWatchMenu my-2">
-            <label>Start Date</label>
-            <div className="slidecontainer form-control form-control-sm">
-                <input
-                    type="date"
-                    id="secureWatchStartDate"
-                    value={this.props.imageryStartDateSecureWatch}
-                    max={new Date().toJSON().slice(0, 10)}
-                    min="2010-01-01"
-                    style={{ width: "100%" }}
-                    onChange={e => this.props.setImageryDateSecureWatch(e.target)}
-                />
+    secureWatchMenus = () => {
+        const featureProfileOptions = [
+            { label: "Default", value: "Default_Profile" },
+            { label: "Accuracy", value: "Accuracy_Profile" },
+            { label: "Classic Color Consumer", value: "Classic_Color_Consumer_Profile" },
+            { label: "Cloud Cover Currency", value: "Cloud_Cover_Currency_Profile" },
+            { label: "Cloud Cover", value: "Cloud_Cover_Profile" },
+            { label: "Color Consumer", value: "Color_Consumer_Profile" },
+            { label: "Color Infrared", value: "Color_Infrared_Profile" },
+            { label: "Consumer", value: "Consumer_Profile" },
+            { label: "Currency", value: "Currency_Profile" },
+            { label: "Currency RGB", value: "Currency_RGB_Profile" },
+            { label: "Dynamic Mosaic", value: "Dynamic_Mosaic_Profile" },
+            { label: "Global Currency", value: "Global_Currency_Profile" },
+            { label: "Legacy", value: "Legacy_Profile" },
+            { label: "Most Aesthetic Mosaic", value: "Most_Aesthetic_Mosaic_Profile" },
+            { label: "MyDG Color Consumer", value: "MyDG_Color_Consumer_Profile" },
+            { label: "MyDG Consumer", value: "MyDG_Consumer_Profile" },
+            { label: "Only Mosaics", value: "Only_Mosaics_Profile" },
+            { label: "True Currency", value: "True_Currency_Profile" },
+        ];
+        return (
+            <div className="SecureWatchMenu form-control form-control-sm my-2 mb-3">
+                <label>Start Date</label>
+                <div className="slidecontainer">
+                    <input
+                        className="form-control form-control-sm"
+                        type="date"
+                        id="secureWatchStartDate"
+                        value={this.props.imageryStartDateSecureWatch}
+                        max={new Date().toJSON().slice(0, 10)}
+                        min="2010-01-01"
+                        style={{ width: "100%" }}
+                        onChange={e => this.props.setImageryDateSecureWatch(e.target)}
+                    />
+                </div>
+                <label>End Date</label>
+                <div className="slidecontainer">
+                    <input
+                        className="form-control form-control-sm"
+                        type="date"
+                        id="secureWatchEndDate"
+                        value={this.props.imageryEndDateSecureWatch}
+                        max={new Date().toJSON().slice(0, 10)}
+                        min="2010-01-01"
+                        style={{ width: "100%" }}
+                        onChange={e => this.props.setImageryDateSecureWatch(e.target)}
+                    />
+                </div>
+                <label>Feature Profiles</label>
+                <div className="selecterContainer mb-2" >
+                    <select
+                        className="form-control form-control-sm"
+                        onChange={e => this.props.setImageryFeatureProfileSecureWatch(e.target.value)}
+                        value={this.props.imageryFeatureProfileSecureWatch}
+                    >
+                        { featureProfileOptions
+                            .map(el => <option value={el.value} key={el.value}>{el.label}</option>) }
+                    </select>
+                </div>
             </div>
-            <label>End Date</label>
-            <div className="slidecontainer form-control form-control-sm">
-                <input
-                    type="date"
-                    id="secureWatchEndDate"
-                    value={this.props.imageryEndDateSecureWatch}
-                    max={new Date().toJSON().slice(0, 10)}
-                    min="2010-01-01"
-                    style={{ width: "100%" }}
-                    onChange={e => this.props.setImageryDateSecureWatch(e.target)}
-                />
-            </div>
-        </div>
-    );
+        );
+    };
 
     render() {
         const { props } = this;

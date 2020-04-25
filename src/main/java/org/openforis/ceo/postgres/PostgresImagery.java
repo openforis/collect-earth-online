@@ -52,6 +52,7 @@ public class PostgresImagery implements Imagery {
                         cleanSource.add("type", sourceConfig.get("type"));
                         cleanSource.add("startDate", sourceConfig.get("startDate"));
                         cleanSource.add("endDate", sourceConfig.get("endDate"));
+                        cleanSource.add("featureProfile", sourceConfig.get("featureProfile"));
                         newImagery.add("sourceConfig", cleanSource);
                     } else if (sourceConfig.get("type").getAsString().equals("Planet")) {
                         var cleanSource = new JsonObject();
