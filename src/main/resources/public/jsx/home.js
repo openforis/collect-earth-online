@@ -340,7 +340,7 @@ function InstitutionList({
 
     return (
         filteredInstitutions.length > 0
-        ? <ul className="tree" style={{ overflowY: "scroll", overflowX: "hidden" }}>
+        ? <ul className="tree" style={{ overflowY: "scroll", overflowX: "hidden", minHeight: "3.5rem" }}>
             {filteredInstitutions.map((institution, uid) =>
                 <Institution
                     key={uid}
