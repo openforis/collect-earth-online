@@ -1632,7 +1632,7 @@ class ImageryOptions extends React.Component {
                     id="secureWatchStartDate"
                     value={this.props.imageryStartDateSecureWatch}
                     max={new Date().toJSON().slice(0, 10)}
-                    min="2010-01-01"
+                    /* min="2010-01-01" */
                     style={{ width: "100%" }}
                     onChange={e => this.props.setImageryDateSecureWatch(e.target)}
                 />
@@ -1644,7 +1644,7 @@ class ImageryOptions extends React.Component {
                     id="secureWatchEndDate"
                     value={this.props.imageryEndDateSecureWatch}
                     max={new Date().toJSON().slice(0, 10)}
-                    min="2010-01-01"
+                    /* min="2010-01-01" */
                     style={{ width: "100%" }}
                     onChange={e => this.props.setImageryDateSecureWatch(e.target)}
                 />
