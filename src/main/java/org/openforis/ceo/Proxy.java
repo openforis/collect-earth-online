@@ -53,8 +53,10 @@ public class Proxy {
                 + Stream.concat(Arrays.stream(queryParams)
                                 .filter(q -> {
                                         // Remove imageryId, LAYERS, and any params from the GeoServer Params field
+                                        // also remove the empty featureprofile
                                         final var param = q.split("=")[0];
-                                        return !param.equals("imageryId") && !geoserverParams.keySet().contains(param);
+                                        return !param.equals("imageryId") && !geoserverParams.keySet().contains(param)
+                                                && !q.toUpperCase().equals("FEATUREPROFILE=");
                                     })
                                 .map(q -> {
                                         // If STYLES="", set STYLES="default". If LAYERS has multiple entries, match those in STYLES.

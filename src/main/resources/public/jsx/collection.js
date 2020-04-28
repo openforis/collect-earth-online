@@ -24,6 +24,8 @@ class Collection extends React.Component {
             imageryStartDateSecureWatch: "",
             imageryEndDateSecureWatch: "",
             imageryFeatureProfileSecureWatch: "",
+            imagerySecureWatchSelectRange: true,
+            imagerySecureWatchAvailableDates: [],
             mapConfig: null,
             nextPlotButtonDisabled: false,
             plotList: [],
@@ -91,6 +93,12 @@ class Collection extends React.Component {
             clearInterval(this.state.storedInterval);
             this.setState({ storedInterval: setInterval(() => this.resetPlotLock, 2.3 * 60 * 1000) });
             if (this.state.currentImagery.sourceConfig.type === "PlanetDaily") this.updatePlanetDailyLayer();
+            if (this.state.currentImagery.sourceConfig.type === "SecureWatch") {
+                this.setState({ imagerySecureWatchSelectRange: true });
+                this.updateSecureWatchLayer();
+                this.getSecureWatchAvailableDates();
+                this.setSecureWatchAvailableDatesOptionDefault();
+            }
         }
 
         // Conditions required for samples to be shown
@@ -211,14 +219,16 @@ class Collection extends React.Component {
     // map. Change console.log() to this.setState() in .then(data =>
     // ...) below. Display these dates in the sidebar near the Start
     // Date and End Date calendar selectors.
-    getSecureWatchAvailableDates = (connectId, bbox) => {
+    getSecureWatchAvailableDates = () => {
+        console.log("getSecureWatchAvailableDates");
+        const geometry = mercator.getViewPolygon(this.state.mapConfig);
         const secureWatchFeatureInfoUrl = "https://securewatch.digitalglobe.com/mapservice/wmsaccess?"
-              + "CONNECTID=" + connectId
+              + "CONNECTID=" + this.state.currentImagery.sourceConfig.connectId
               + "&SERVICE=WMS"
               + "&VERSION=1.1.1"
               + "&REQUEST=GetFeatureInfo"
               + "&CRS=EPSG%3A3857"
-              + "&BBOX=" + bbox
+              + "&BBOX=" + geometry.getExtent().join(",")
               + "&WIDTH=256"
               + "&HEIGHT=256"
               + "&LAYERS=DigitalGlobe:ImageryFootprint"
@@ -229,7 +239,11 @@ class Collection extends React.Component {
               + "&INFO_FORMAT=application/json";
         fetch(secureWatchFeatureInfoUrl)
             .then(response => response.ok ? response.json() : Promise.reject(response))
-            .then(data => console.log(data.features.map(feature => feature.properties.acquisitionDate)))
+            .then(data => {
+                const features = data.features;
+                const availableDatesMapping = features.map(feature => ({ date: feature.properties.acquisitionDate, featureId: feature.properties.featureId }));
+                this.setState({ imagerySecureWatchAvailableDates: availableDatesMapping });
+            })
             .catch(response => {
                 console.log(response);
                 alert("Error retrieving available imagery dates. See console for details.");
@@ -351,6 +365,23 @@ class Collection extends React.Component {
             imageryFeatureProfileSecureWatch: newFeatureProfile,
             imageryAttribution: imageryAttribution,
         });
+    };
+
+    setSecureWatchAvailableDatesOptionDefault = () => {
+        const dateSelectEl = document.getElementById("securewatch-option2-select");
+        dateSelectEl.value = "DEFAULT";
+    };
+
+    setImagerySecureWatchSelectRange = (eventTarget) => {
+        const imagerySecureWatchSelectRange = (eventTarget.id === "securewatch-option1-radio") && eventTarget.value
+            ? eventTarget.value === "on"
+                ? true : false
+            : (eventTarget.id === "securewatch-option2-radio") && eventTarget.value
+                ? eventTarget.value === "on"
+                    ? false : true
+                : true;
+        if (eventTarget.id === "securewatch-option1-radio") this.setSecureWatchAvailableDatesOptionDefault();
+        this.setState({ imagerySecureWatchSelectRange: imagerySecureWatchSelectRange });
     };
 
     setImageryMonthPlanet = (newImageryMonthPlanet) => {
@@ -505,6 +536,18 @@ class Collection extends React.Component {
                                           COVERAGE_CQL_FILTER: "(acquisitionDate>='" + imageryStartDateSecureWatch + "')"
                                                              + "AND(acquisitionDate<='" + imageryEndDateSecureWatch + "')",
                                           FEATUREPROFILE: this.state.imageryFeatureProfileSecureWatch,
+                                      });
+        const geometry = mercator.getViewPolygon(this.state.mapConfig);
+        this.getSecureWatchAvailableDates(currentImagery.sourceConfig.connectId, geometry.getExtent().join(","));
+    };
+
+    updateSecureWatchSingleLayer = (featureId) => {
+        const { currentImagery } = this.state;
+        mercator.updateLayerWmsParams(this.state.mapConfig,
+                                      currentImagery.title,
+                                      {
+                                          COVERAGE_CQL_FILTER: "featureId='" + featureId + "'",
+                                          FEATUREPROFILE: ""
                                       });
     };
 
@@ -1273,6 +1316,10 @@ class Collection extends React.Component {
                         setImageryDateSecureWatch={this.setImageryDateSecureWatch}
                         imageryFeatureProfileSecureWatch={this.state.imageryFeatureProfileSecureWatch}
                         setImageryFeatureProfileSecureWatch={this.setImageryFeatureProfileSecureWatch}
+                        imagerySecureWatchSelectRange={this.state.imagerySecureWatchSelectRange}
+                        setImagerySecureWatchSelectRange={this.setImagerySecureWatchSelectRange}
+                        imagerySecureWatchAvailableDates={this.state.imagerySecureWatchAvailableDates}
+                        updateSecureWatchSingleLayer={this.updateSecureWatchSingleLayer}
                         setStackingProfileDG={this.setStackingProfileDG}
                         loadingImages={this.state.imageryList.length === 0}
                     />
@@ -1663,42 +1710,86 @@ class ImageryOptions extends React.Component {
         ];
         return (
             <div className="SecureWatchMenu form-control form-control-sm my-2 mb-3">
-                <label>Start Date</label>
-                <div className="slidecontainer">
-                    <input
-                        className="form-control form-control-sm"
-                        type="date"
-                        id="secureWatchStartDate"
-                        value={this.props.imageryStartDateSecureWatch}
-                        max={new Date().toJSON().slice(0, 10)}
-                        min="2010-01-01"
-                        style={{ width: "100%" }}
-                        onChange={e => this.props.setImageryDateSecureWatch(e.target)}
-                    />
+                <div className="form-control form-control-sm">
+                    <div className="form-check form-check-inline mb-3">
+                        <input
+                            className="form-check-input ml-2"
+                            checked={this.props.imagerySecureWatchSelectRange}
+                            id="securewatch-option1-radio"
+                            onChange={e => this.props.setImagerySecureWatchSelectRange(e.target)}
+                            type="radio"
+                            name="securewatch-option1-radio"
+                        />
+                        Select Range
+                    </div>
+                    <div>
+                        <label>Start Date</label>
+                        <div className="slidecontainer">
+                            <input
+                                disabled={!this.props.imagerySecureWatchSelectRange}
+                                className="form-control form-control-sm"
+                                type="date"
+                                id="secureWatchStartDate"
+                                value={this.props.imageryStartDateSecureWatch}
+                                max={new Date().toJSON().slice(0, 10)}
+                                /* min="2010-01-01" */
+                                style={{ width: "100%" }}
+                                onChange={e => this.props.setImageryDateSecureWatch(e.target)}
+                            />
+                        </div>
+                        <label>End Date</label>
+                        <div className="slidecontainer">
+                            <input
+                                disabled={!this.props.imagerySecureWatchSelectRange}
+                                className="form-control form-control-sm"
+                                type="date"
+                                id="secureWatchEndDate"
+                                value={this.props.imageryEndDateSecureWatch}
+                                max={new Date().toJSON().slice(0, 10)}
+                                /* min="2010-01-01" */
+                                style={{ width: "100%" }}
+                                onChange={e => this.props.setImageryDateSecureWatch(e.target)}
+                            />
+                        </div>
+                        <label>Feature Profiles</label>
+                        <div className="selecterContainer mb-2" >
+                            <select
+                                disabled={!this.props.imagerySecureWatchSelectRange}
+                                className="form-control form-control-sm"
+                                onChange={e => this.props.setImageryFeatureProfileSecureWatch(e.target.value)}
+                                value={this.props.imageryFeatureProfileSecureWatch}
+                            >
+                                { featureProfileOptions
+                                    .map(el => <option value={el.value} key={el.value}>{el.label}</option>) }
+                            </select>
+                        </div>
+                    </div>
                 </div>
-                <label>End Date</label>
-                <div className="slidecontainer">
-                    <input
-                        className="form-control form-control-sm"
-                        type="date"
-                        id="secureWatchEndDate"
-                        value={this.props.imageryEndDateSecureWatch}
-                        max={new Date().toJSON().slice(0, 10)}
-                        min="2010-01-01"
-                        style={{ width: "100%" }}
-                        onChange={e => this.props.setImageryDateSecureWatch(e.target)}
-                    />
-                </div>
-                <label>Feature Profiles</label>
-                <div className="selecterContainer mb-2" >
-                    <select
-                        className="form-control form-control-sm"
-                        onChange={e => this.props.setImageryFeatureProfileSecureWatch(e.target.value)}
-                        value={this.props.imageryFeatureProfileSecureWatch}
-                    >
-                        { featureProfileOptions
-                            .map(el => <option value={el.value} key={el.value}>{el.label}</option>) }
-                    </select>
+                <div className="form-control form-control-sm">
+                    <div className="form-check form-check-inline mb-3">
+                        <input
+                            className="form-check-input ml-2"
+                            checked={!this.props.imagerySecureWatchSelectRange}
+                            id="securewatch-option2-radio"
+                            onChange={e => this.props.setImagerySecureWatchSelectRange(e.target)}
+                            type="radio"
+                            name="securewatch-option2-radio"
+                        />
+                        Select Dates
+                    </div>
+                    <div>
+                        <label>Available Dates</label>
+                        <select
+                            disabled={this.props.imagerySecureWatchSelectRange}
+                            className="form-control form-control-sm"
+                            onChange={e => this.props.updateSecureWatchSingleLayer(e.target.value)}
+                            defaultValue={"DEFAULT"}
+                            id="securewatch-option2-select"
+                        >
+                            <option value="DEFAULT" disabled> -- select a date -- </option>
+                            { this.props.imagerySecureWatchAvailableDates.map(el => <option value={el.featureId} key={el.featureId}>{el.date.split(" ")[0]}</option>) },
+                        </select>
+                    </div>
                 </div>
             </div>
         );

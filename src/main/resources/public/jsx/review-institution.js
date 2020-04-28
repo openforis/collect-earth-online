@@ -498,13 +498,13 @@ const imageryOptions = [
                 key: "startDate",
                 display: "Start Date",
                 type: "date",
-                options: { min: "2010-01-01", max: new Date().toJSON().split("T")[0] }
+                options: { max: new Date().toJSON().split("T")[0] }
             },
             {
                 key: "endDate",
                 display: "End Date",
                 type: "date",
-                options: { min: "2010-01-01", max: new Date().toJSON().split("T")[0] }
+                options: { max: new Date().toJSON().split("T")[0] }
             },
         ],
     },
