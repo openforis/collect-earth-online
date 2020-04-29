@@ -1,20 +1,17 @@
-import React from 'react';
-import ReactDOM from 'react-dom';
+import React from "react";
+import ReactDOM from "react-dom";
 
 class TimeSync extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
-            documentRoot: props.documentRoot,
-            userId: props.userId,
             version: "",
-            // tsDashMessage: new URLSearchParams(window.location.search).keys().next().value,
-
+            // tsDashMessage: props.tsDashMessage,
             tsServer: "https://localhost:8080",
             geeServer: "https://localhost:8888",
 
             //UI
-            spectralIndex: 'TCW', //default index to display
+            spectralIndex: "TCW", //default index to display
             chipStripWindow: null, //keep track of whether the chipstrip window is open or not so it is not opened in multiple new window on each chip click
             highLightColor: "#32CD32",
             activeRedSpectralIndex: "TCB",
@@ -30,17 +27,11 @@ class TimeSync extends React.Component {
                 zoomLevel: 20,
                 plotColor: "#FFFFFF"
             },
-
             minZoom: 0,
             maxZoom: 40,
             stopZoom: 40,
             sAjd: [0],
-            // lwAdj: [chipDisplayProps.box],
             zoomIn: 0,
-
-            //windowH: $(window).height(); //NOT state variable, should get it on the fly
-            //windowW: $(window).width(); //NOT state variable, should get it on the fly
-
 
             //Interpretation
             vertInfo: [],   //vertices
@@ -48,14 +39,12 @@ class TimeSync extends React.Component {
             isExample: 0,   //is current plot an explanatory plot, -- DELETE
             selectThese: [],         //strange way of keeping index of vertices, -- REFACTORY
 
-
             //D3
             rgbColor: [],        //annual color used for spectral trajectory -- changed to on-the-fly calculation
             allDataRGBColor: [], //color used for spectral trajectory -- changed to on-the-fly calculation
             selectedCircles: [], //index of selected data points?
             lineData: [],        //used to draw trajectory line
             ylabel: "",
-
 
             //Spectral
             data: {values: []},     //selected annual data, why dictionary is used?
@@ -79,7 +68,6 @@ class TimeSync extends React.Component {
             },
 
             packetInfo: {},
-
             chipInfo: {
                 useThisChip: [],
                 canvasIDs: [],
@@ -96,25 +84,17 @@ class TimeSync extends React.Component {
                 src: [],
                 sensor: []
             },
-
-
-
         };
-        console.log(this.state);
     }
 
     componentDidMount() {
-        fetch(this.state.documentRoot + "/timesync/version")
-            .then(response => {
-                let d = response.text();
-                console.log(d);
-                if (response.ok) {
-                    return d;
-                } else {
-                    alert("Error retrieving the TimeSync info. See console for details.");
-                }
+        fetch(this.props.documentRoot + "/timesync/version")
+            .then(response => response.ok ? response.text() : Promise.reject(response))
+            .then(data => this.setState({version: data}))
+            .catch(response=>{
+                console.log(response);
+                alert("Error retrieving the TimeSync info. See console for details.");
             })
-            .then(data => this.setState({version: data}));
     }
 
     render() {
@@ -123,14 +103,9 @@ class TimeSync extends React.Component {
                 <h1>TimeSync</h1>
                 <MainToolbar/>
                 <MainPanel/>
-
                 <ChipGallery/>
-
-
                 {/* where should the following code go? */}
-
                 <div id="img-gallery"></div>
-
                 <div id="contextMenu" style={{display: "none", position: "absolute"}}>
                     <p className="subHeader">Copy options:</p>
                     <ul id="contextMenuList">
@@ -255,7 +230,7 @@ class PlotPanel extends React.Component {
         return (
             <div id="plotSelectionDiv" className="sectionDiv">
                 <p className="header">Plots</p>
-                <ul id="plotList"/>
+                <ul id="plotList"></ul>
             </div>
         );
     }
@@ -570,6 +545,7 @@ export function renderTimeSyncPage(args) {
         <TimeSync
             documentRoot={args.documentRoot}
             userId={args.userId === "" ? -1 : parseInt(args.userId)}
+            tsDashMessage={args.tsDashMessage}
         />,
         document.getElementById("timesync")
     );
