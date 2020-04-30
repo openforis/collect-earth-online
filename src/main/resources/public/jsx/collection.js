@@ -220,8 +220,7 @@ class Collection extends React.Component {
     // ...) below. Display these dates in the sidebar near the Start
     // Date and End Date calendar selectors.
     getSecureWatchAvailableDates = () => {
-        console.log("getSecureWatchAvailableDates");
-        const geometry = mercator.getViewPolygon(this.state.mapConfig);
+        const geometry = mercator.getViewPolygon(this.state.mapConfig).transform("EPSG:4326", "EPSG:3857");
         const secureWatchFeatureInfoUrl = "https://securewatch.digitalglobe.com/mapservice/wmsaccess?"
               + "CONNECTID=" + this.state.currentImagery.sourceConfig.connectId
               + "&SERVICE=WMS"
@@ -380,7 +379,10 @@ class Collection extends React.Component {
                 ? eventTarget.value === "on"
                     ? false : true
                 : true;
-        if (eventTarget.id === "securewatch-option1-radio") this.setSecureWatchAvailableDatesOptionDefault();
+        if (eventTarget.id === "securewatch-option1-radio") {
+            this.updateSecureWatchLayer();
+            this.setSecureWatchAvailableDatesOptionDefault();
+        }
         this.setState({ imagerySecureWatchSelectRange: imagerySecureWatchSelectRange });
     };
 
