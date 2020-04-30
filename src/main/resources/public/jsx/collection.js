@@ -208,21 +208,10 @@ class Collection extends React.Component {
             });
     };
 
-    // Call with connectId="4a2c3e8e-b318-48bc-b88b-a1b9dd879e6d" and
-    // bbox="12122301.189802673%2C6398696.511808675%2C12132085.129423175%2C6408480.451429177"
-    // to see example results.
-    //
-    // FIXME: Hook this into componentDidMount() and
-    // componentDidUpdate() to run when SecureWatch imagery is
-    // selected and when the BBOX is moved by zooming or panning the
-    // map. Change console.log() to this.setState() in .then(data =>
-    // ...) below. Display these dates in the sidebar near the Start
-    // Date and End Date calendar selectors.
     getSecureWatchAvailableDates = () => {
-        console.log("getSecureWatchAvailableDates");
         // FIXME: Remove hard-coded CONNECTID
         const connectId = "4a2c3e8e-b318-48bc-b88b-a1b9dd879e6d";
-        const geometry = mercator.getViewPolygon(this.state.mapConfig);
+        const geometry = mercator.getViewPolygon(this.state.mapConfig).transform("EPSG:4326", "EPSG:3857");
         const secureWatchFeatureInfoUrl = "https://securewatch.digitalglobe.com/mapservice/wmsaccess?"
               + "CONNECTID=" + connectId
               + "&SERVICE=WMS"
@@ -379,7 +368,10 @@ class Collection extends React.Component {
                 ? eventTarget.value === "on"
                     ? false : true
                 : true;
-        if (eventTarget.id === "securewatch-option1-radio") this.setSecureWatchAvailableDatesOptionDefault();
+        if (eventTarget.id === "securewatch-option1-radio") {
+            this.updateSecureWatchLayer();
+            this.setSecureWatchAvailableDatesOptionDefault();
+        }
         this.setState({ imagerySecureWatchSelectRange: imagerySecureWatchSelectRange });
     };
 
