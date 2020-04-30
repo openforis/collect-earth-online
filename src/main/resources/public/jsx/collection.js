@@ -209,8 +209,7 @@ class Collection extends React.Component {
     };
 
     getSecureWatchAvailableDates = () => {
-        // FIXME: Remove hard-coded CONNECTID
-        const connectId = "4a2c3e8e-b318-48bc-b88b-a1b9dd879e6d";
+        const connectId = this.state.currentImagery.sourceConfig.connectId;
         const geometry = mercator.getViewPolygon(this.state.mapConfig).transform("EPSG:4326", "EPSG:3857");
         const secureWatchFeatureInfoUrl = "https://securewatch.digitalglobe.com/mapservice/wmsaccess?"
               + "CONNECTID=" + connectId

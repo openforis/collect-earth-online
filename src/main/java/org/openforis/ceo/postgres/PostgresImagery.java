@@ -54,7 +54,7 @@ public class PostgresImagery implements Imagery {
                         cleanSource.add("endDate", sourceConfig.get("endDate"));
                         cleanSource.add("featureProfile", sourceConfig.get("featureProfile"));
                         // FIXME: make securewatch dates function server side
-                        cleanSource.add("connectId", (sourceConfig.get("geoserverParams").getAsJsonObject().get("CONNECTID")));
+                        cleanSource.add("connectId", sourceConfig.get("geoserverParams").getAsJsonObject().get("CONNECTID"));
                         newImagery.add("sourceConfig", cleanSource);
                     } else if (sourceConfig.get("type").getAsString().equals("Planet")) {
                         var cleanSource = new JsonObject();
