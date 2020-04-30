@@ -531,25 +531,12 @@ class Collection extends React.Component {
         this.getSecureWatchAvailableDates();
     };
 
-    addDays = (dateString, days) => {
-        const date = new Date(dateString);
-        date.setDate(date.getDate() + days);
-        return date.toISOString().slice(0, 10);
-    };
-
-    // FIXME: Match on the exact date rather than a range.
     updateSecureWatchSingleLayer = (date) => {
-        const dateStart = this.addDays(date, -1);
-        const dateEnd = this.addDays(date, 1);
-        console.log("Date Start: " + dateStart);
-        console.log("Date End: " + dateEnd);
         const { currentImagery } = this.state;
         mercator.updateLayerWmsParams(this.state.mapConfig,
                                       currentImagery.title,
                                       {
-                                          COVERAGE_CQL_FILTER: "(acquisitionDate>='" + dateStart + "')"
-                                              + "AND(acquisitionDate<='" + dateEnd + "')",
-                                          // COVERAGE_CQL_FILTER: "acquisitionDate='" + date + "'",
+                                          COVERAGE_CQL_FILTER: "acquisitionDate='" + date + "'",
                                           FEATUREPROFILE: this.state.imageryFeatureProfileSecureWatch,
                                       });
     };
