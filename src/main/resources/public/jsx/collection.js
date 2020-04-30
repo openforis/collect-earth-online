@@ -96,7 +96,6 @@ class Collection extends React.Component {
             if (this.state.currentImagery.sourceConfig.type === "SecureWatch") {
                 this.setState({ imagerySecureWatchSelectRange: true });
                 this.updateSecureWatchLayer();
-                this.getSecureWatchAvailableDates();
                 this.setSecureWatchAvailableDatesOptionDefault();
             }
         }
@@ -221,9 +220,11 @@ class Collection extends React.Component {
     // Date and End Date calendar selectors.
     getSecureWatchAvailableDates = () => {
         console.log("getSecureWatchAvailableDates");
+        // FIXME: Remove hard-coded CONNECTID
+        const connectId = "4a2c3e8e-b318-48bc-b88b-a1b9dd879e6d";
         const geometry = mercator.getViewPolygon(this.state.mapConfig);
         const secureWatchFeatureInfoUrl = "https://securewatch.digitalglobe.com/mapservice/wmsaccess?"
-              + "CONNECTID=" + this.state.currentImagery.sourceConfig.connectId
+              + "CONNECTID=" + connectId
               + "&SERVICE=WMS"
               + "&VERSION=1.1.1"
               + "&REQUEST=GetFeatureInfo"
@@ -240,9 +241,7 @@ class Collection extends React.Component {
         fetch(secureWatchFeatureInfoUrl)
             .then(response => response.ok ? response.json() : Promise.reject(response))
             .then(data => {
-                const features = data.features;
-                const availableDatesMapping = features.map(feature => ({ date: feature.properties.acquisitionDate, featureId: feature.properties.featureId }));
-                this.setState({ imagerySecureWatchAvailableDates: availableDatesMapping });
+                this.setState({ imagerySecureWatchAvailableDates: data.features.map(feature => feature.properties.acquisitionDate) });
             })
             .catch(response => {
                 console.log(response);
@@ -347,7 +346,7 @@ class Collection extends React.Component {
         const startDate = (eventTarget.id === "secureWatchStartDate") && eventTarget.value ? eventTarget.value : imageryStartDateSecureWatch;
         const endDate = (eventTarget.id === "secureWatchEndDate") && eventTarget.value ? eventTarget.value : imageryEndDateSecureWatch;
         if (new Date(startDate) > new Date(endDate)) {
-            alert("Start date must be smaller than the end date.");
+            alert("Start date must not come after the end date.");
         } else {
             const imageryAttribution = this.getImageryByTitle(currentImagery.title).attribution + " | " + startDate + " to " + endDate + " (" + this.state.imageryFeatureProfileSecureWatch + ")";
             this.setState({
@@ -537,17 +536,29 @@ class Collection extends React.Component {
                                                              + "AND(acquisitionDate<='" + imageryEndDateSecureWatch + "')",
                                           FEATUREPROFILE: this.state.imageryFeatureProfileSecureWatch,
                                       });
-        const geometry = mercator.getViewPolygon(this.state.mapConfig);
-        this.getSecureWatchAvailableDates(currentImagery.sourceConfig.connectId, geometry.getExtent().join(","));
+        this.getSecureWatchAvailableDates();
     };
 
-    updateSecureWatchSingleLayer = (featureId) => {
+    addDays = (dateString, days) => {
+        const date = new Date(dateString);
+        date.setDate(date.getDate() + days);
+        return date.toISOString().slice(0, 10);
+    };
+
+    // FIXME: Match on the exact date rather than a range.
+    updateSecureWatchSingleLayer = (date) => {
+        const dateStart = this.addDays(date, -1);
+        const dateEnd = this.addDays(date, 1);
+        console.log("Date Start: " + dateStart);
+        console.log("Date End: " + dateEnd);
         const { currentImagery } = this.state;
         mercator.updateLayerWmsParams(this.state.mapConfig,
                                       currentImagery.title,
                                       {
-                                          COVERAGE_CQL_FILTER: "featureId='" + featureId + "'",
-                                          FEATUREPROFILE: ""
+                                          COVERAGE_CQL_FILTER: "(acquisitionDate>='" + dateStart + "')"
+                                              + "AND(acquisitionDate<='" + dateEnd + "')",
+                                          // COVERAGE_CQL_FILTER: "acquisitionDate='" + date + "'",
+                                          FEATUREPROFILE: this.state.imageryFeatureProfileSecureWatch,
                                       });
     };
 
@@ -1787,7 +1798,7 @@ class ImageryOptions extends React.Component {
                             id="securewatch-option2-select"
                         >
                             <option value="DEFAULT" disabled> -- select a date -- </option>
-                            { this.props.imagerySecureWatchAvailableDates.map(el => <option value={el.featureId} key={el.featureId}>{el.date.split(" ")[0]}</option>) },
+                            { this.props.imagerySecureWatchAvailableDates.map((date, uid) => <option key={uid} value={date}>{date}</option>) },
                         </select>
                     </div>
                 </div>
