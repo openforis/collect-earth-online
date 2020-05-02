@@ -376,7 +376,6 @@ class Collection extends React.Component {
 
     getSecureWatchSingleDate = () => {
         const element = document.getElementById("securewatch-option2-select");
-        console.log(element.options[element.selectedIndex].value);
         return element.options[element.selectedIndex].value;
     };
 
