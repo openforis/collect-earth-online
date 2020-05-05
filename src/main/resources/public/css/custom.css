@@ -129,7 +129,7 @@ h4 {font-size: 0.5rem;}
     background-color:#0C4D48!important;
     color:white;
 }
-.bg-darkgreen h1{
+.bg-darkgreen h1,h2{
     padding:1rem;
     color:white;
     margin:0;
@@ -520,7 +520,7 @@ ul.samplevalue{
     position: absolute;
     top: 0px;
     left: 20%;
-    height: 2rem;
+    height: auto;
     width: 60%;
     padding: 0.25rem;
     text-align: center;
