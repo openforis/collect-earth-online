@@ -76,7 +76,7 @@ CREATE OR REPLACE FUNCTION select_partial_table_by_name(_table_name text)
 
 $$ LANGUAGE PLPGSQL;
 
--- Converts unknown colums to a single json colum for processsing in Java
+-- Converts unknown columns to a single json column for processing in Java
 CREATE OR REPLACE FUNCTION select_json_table_by_name(_table_name text)
  RETURNS TABLE (
     ext_id      integer,
@@ -199,6 +199,19 @@ CREATE OR REPLACE FUNCTION get_user(_email text)
     SELECT user_uid, administrator, reset_key
     FROM users
     WHERE email = _email
+
+$$ LANGUAGE SQL;
+
+CREATE OR REPLACE FUNCTION get_user_by_id(_user_rid integer)
+    RETURNS TABLE (
+                      email            text,
+                      administrator    boolean,
+                      reset_key        text
+                  ) AS $$
+
+SELECT email, administrator, reset_key
+FROM users
+WHERE user_uid = _user_rid
 
 $$ LANGUAGE SQL;
 
@@ -1543,6 +1556,19 @@ CREATE OR REPLACE FUNCTION select_next_user_plot(_project_rid integer, _plot_uid
 
 $$ LANGUAGE SQL;
 
+-- Returns next user analyzed plot asked by admin
+CREATE OR REPLACE FUNCTION select_next_user_plot_by_admin(_project_rid integer, _plot_uid integer)
+    RETURNS setOf plots_return AS $$
+
+SELECT *
+FROM select_all_project_plots(_project_rid) as spp
+WHERE spp.plotId > _plot_uid
+  AND spp.username != ''
+ORDER BY plotId ASC
+LIMIT 1
+
+$$ LANGUAGE SQL;
+
 -- Returns prev unanalyzed plot
 CREATE OR REPLACE FUNCTION select_prev_unassigned_plot(_project_rid integer, _plot_uid integer)
  RETURNS setOf plots_return AS $$
@@ -1565,6 +1591,18 @@ CREATE OR REPLACE FUNCTION select_prev_user_plot(_project_rid integer, _plot_uid
         AND spp.username = _username
     ORDER BY plotId DESC
     LIMIT 1
+
+$$ LANGUAGE SQL;
+
+-- Returns prev user analyzed plot asked by admin
+CREATE OR REPLACE FUNCTION select_prev_user_plot_by_admin(_project_rid integer, _plot_uid integer)
+    RETURNS setOf plots_return AS $$
+
+SELECT * FROM select_all_project_plots(_project_rid) as spp
+WHERE spp.plotId < _plot_uid
+  AND spp.username != ''
+ORDER BY plotId DESC
+LIMIT 1
 
 $$ LANGUAGE SQL;
 

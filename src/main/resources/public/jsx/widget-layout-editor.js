@@ -57,7 +57,6 @@ class BasicLayout extends React.PureComponent {
                     : Array.isArray(eval(data.widgets))
                         ? eval(data.widgets)
                         : [];
-                console.log("before updatedWidgets");
                 const updatedWidgets = widgets.map(widget => widget.layout
                     ? {
                         ...widget,
@@ -67,9 +66,7 @@ class BasicLayout extends React.PureComponent {
                         },
                     }
                     : widget);
-                console.log("before checkWidgetStructure");
                 this.checkWidgetStructure(updatedWidgets);
-                console.log("before setState");
                 this.setState({
                     dashboardID: data.dashboardID,
                     widgets:     updatedWidgets,
@@ -340,7 +337,8 @@ class BasicLayout extends React.PureComponent {
             widgetCloudScoreDual:"",
             formReady: false,
             wizardStep: 1,
-
+            availableBands:"",
+            availableBandsDual:"",
         });
     };
 
@@ -356,10 +354,45 @@ class BasicLayout extends React.PureComponent {
         this.props.onMouseUp(e);
     };
 
+    getBandsFromGateway = isDual => {
+        // go get available bands
+        const url = this.props.documentRoot + "/geo-dash/gateway-request";
+        if (event.target.value !== "custom") {
+            const postObject = {
+                path: "getAvailableBands",
+                imageCollection: event.target.value, //"LANDSAT/LT05/C01/T1"
+            };
+            fetch(url, {
+                method: "POST",
+                headers: {
+                    "Accept": "application/json",
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify(postObject),
+            })
+                .then(res => res.ok ? res.json() : Promise.reject())
+                .then(data => {
+                    if (data.hasOwnProperty("bands")) {
+                        if (isDual) {
+                            this.setState({
+                                availableBandsDual: data.bands.join(", "),
+                            });
+                        } else {
+                            this.setState({
+                                availableBands: data.bands.join(", "),
+                            });
+                        }
+                    }
+                });
+        }
+    };
+
     onDataTypeSelectChanged = event => {
         this.setState({
+            availableBands: "",
             selectedDataType: event.target.value,
         });
+       this.getBandsFromGateway(false);
     };
 
     onCancelNewWidget = () => {
@@ -394,6 +427,8 @@ class BasicLayout extends React.PureComponent {
             widgetCloudScoreDual:"",
             formReady: false,
             wizardStep: 1,
+            availableBands:"",
+            availableBandsDual:"",
         });
     };
 
@@ -654,7 +689,11 @@ class BasicLayout extends React.PureComponent {
     };
 
     onImageCollectionChange = event => {
-        this.setState({ imageCollection: event.target.value });
+        this.setState({
+            imageCollection: event.target.value,
+            availableBands: "",
+        });
+        this.getBandsFromGateway(false);
     };
 
     onGraphBandChange = event => {
@@ -715,7 +754,11 @@ class BasicLayout extends React.PureComponent {
     };
 
     onImageCollectionChangeDual = event => {
-        this.setState({ imageCollectionDual: event.target.value });
+        this.setState({
+            imageCollectionDual: event.target.value,
+            availableBandsDual: "",
+        });
+        this.getBandsFromGateway(true);
     };
 
     onImageParamsChangeDual = event => {
@@ -765,9 +808,11 @@ class BasicLayout extends React.PureComponent {
 
     onDataTypeSelectChangedDual = event => {
         this.setState({
+            availableBandsDual: "",
             selectedDataTypeDual: event.target.value.trim(),
             formReady: true,
         });
+        this.getBandsFromGateway(true);
     };
 
     setFormStateByDates = isDual => {
@@ -920,6 +965,7 @@ class BasicLayout extends React.PureComponent {
                         value={this.state.widgetTitle}
                         className="form-control"
                         onChange={this.onWidgetTitleChange}
+                        placeholder={"Enter title"}
                     />
                 </div>
             </React.Fragment>;
@@ -1042,6 +1088,7 @@ class BasicLayout extends React.PureComponent {
             value={this.state.widgetTitle}
             className="form-control"
             onChange={this.onWidgetTitleChange}
+            placeholder={"Enter title"}
         />
     </div>;
 
@@ -1067,6 +1114,7 @@ class BasicLayout extends React.PureComponent {
             className="form-control"
             onChange={() => this.setState({ addCustomImagery: event.target.checked })}
             style={{ width:"auto", display: "inline-block", marginLeft: "8px" }}
+            title={"Make this imagery available in the collection page for the entire institution"}
         />
     </div>;
 
@@ -1120,30 +1168,51 @@ class BasicLayout extends React.PureComponent {
     </div>;
 
     getDualLayerDateRangeControl = () => {
-        if (this.state.dualLayer === true) {
-            return <div>
-                <label>Select the Date Range for the top layer</label>
-                <div className="input-group input-daterange" id="range_new_cooked2">
-                    <input
-                        type="text"
-                        className="form-control"
-                        onChange={this.onStartDate2Changed}
-                        value={this.state.startDate2}
-                        placeholder={"YYYY-MM-DD"}
-                        id="sDate_new_cooked2"
-                    />
-                    <div className="input-group-addon">to</div>
-                    <input
-                        type="text"
-                        className="form-control"
-                        onChange={this.onEndDate2Changed}
-                        value={this.state.endDate2}
-                        placeholder={"YYYY-MM-DD"}
-                        id="eDate_new_cooked2"
-                    />
+        return (this.state.dualLayer === true)
+            ? (
+                <div>
+                    <label>Select the Date Range for the top layer</label>
+                    <div className="input-group input-daterange" id="range_new_cooked2">
+                        <input
+                            type="text"
+                            className="form-control"
+                            onChange={this.onStartDate2Changed}
+                            value={this.state.startDate2}
+                            placeholder={"YYYY-MM-DD"}
+                            id="sDate_new_cooked2"
+                        />
+                        <div className="input-group-addon">to</div>
+                        <input
+                            type="text"
+                            className="form-control"
+                            onChange={this.onEndDate2Changed}
+                            value={this.state.endDate2}
+                            placeholder={"YYYY-MM-DD"}
+                            id="eDate_new_cooked2"
+                        />
+                    </div>
                 </div>
-            </div>;
-        }
+            ) : "";
+    };
+
+    getAvailableBandsControl = () => {
+        return (this.state.availableBands.length > 0)
+            ? (
+                <div>
+                    <label>Available Bands: </label><br />
+                    <label>{this.state.availableBands}</label>
+                </div>
+            ) : "";
+    };
+
+    getAvailableBandsControlDual = () => {
+        return (this.state.availableBandsDual.length > 0)
+            ? (
+                <div>
+                    <label>Available Bands: </label><br />
+                    <label>{this.state.availableBandsDual}</label>
+                </div>
+            ) : "";
     };
 
     getDataForm = () => {
@@ -1171,6 +1240,7 @@ class BasicLayout extends React.PureComponent {
                         onChange={this.onImageCollectionChange}
                     />
                 </div>
+                {this.getAvailableBandsControl()}
                 {this.getImageParamsBlock()}
                 {this.getCustomImageryCheckbox()}
             </React.Fragment>;
@@ -1191,7 +1261,6 @@ class BasicLayout extends React.PureComponent {
                                         ? gObject.onEndDateChanged
                                         : this.id === "sDate_new_cooked2"
                                             ? gObject.onStartDate2Changed : gObject.onEndDate2Changed;
-                        console.log("i did this!");
                         $(this).datepicker({
                             changeMonth: true,
                             changeYear: true,
@@ -1206,12 +1275,14 @@ class BasicLayout extends React.PureComponent {
                 });
             }, 250);
             if (["LANDSAT5", "LANDSAT7", "LANDSAT8", "Sentinel2"].includes(this.state.selectedDataType) && this.state.wizardStep === 1) {
+                //need to get available bands
                 return <React.Fragment>
                     {this.getTitleBlock()}
                     <label>Select the Date Range you would like</label>
                     {this.getDateRangeControl()}
                     {this.getDualImageCollectionTimeSpanOption()}
                     {this.getDualLayerDateRangeControl()}
+                    {this.getAvailableBandsControl()}
                     <div className="form-group">
                         <label htmlFor="widgetBands">Bands</label>
                         <input
@@ -1221,6 +1292,7 @@ class BasicLayout extends React.PureComponent {
                             value={this.state.widgetBands}
                             className="form-control"
                             onChange={this.onWidgetBandsChange}
+                            placeholder={"xx,xx,xx"}
                         />
                     </div>
 
@@ -1233,6 +1305,7 @@ class BasicLayout extends React.PureComponent {
                             value={this.state.widgetMin}
                             className="form-control"
                             onChange={this.onWidgetMinChange}
+                            placeholder={"-1"}
                         />
                     </div>
                     <div className="form-group">
@@ -1244,6 +1317,7 @@ class BasicLayout extends React.PureComponent {
                             value={this.state.widgetMax}
                             className="form-control"
                             onChange={this.onWidgetMaxChange}
+                            placeholder={"100"}
                         />
                     </div>
                     <div className="form-group">
@@ -1255,6 +1329,7 @@ class BasicLayout extends React.PureComponent {
                             value={this.state.widgetCloudScore}
                             className="form-control"
                             onChange={this.onWidgetCloudScoreChange}
+                            placeholder={"90"}
                         />
                     </div>
                     {this.getNextStepButton()}
@@ -1281,6 +1356,7 @@ class BasicLayout extends React.PureComponent {
                             id="eDate_new_cookedDual"
                         />
                     </div>
+                    {this.getAvailableBandsControlDual()}
                     <div className="form-group">
                         <label htmlFor="widgetBands">Bands</label>
                         <input
@@ -1351,6 +1427,7 @@ class BasicLayout extends React.PureComponent {
                             onChange={this.onImageCollectionChange}
                         />
                     </div>
+                    {this.getAvailableBandsControl()}
                     <div className="form-group">
                         <label htmlFor="imageParams">Image Parameters (json format)</label>
                         <textarea
@@ -1382,6 +1459,7 @@ class BasicLayout extends React.PureComponent {
                             onChange={this.onImageCollectionChangeDual}
                         />
                     </div>
+                    {this.getAvailableBandsControlDual()}
                     <div className="form-group">
                         <label htmlFor="imageParams">Image Parameters (json format)</label>
                         <textarea
@@ -1421,6 +1499,7 @@ class BasicLayout extends React.PureComponent {
                             onChange={this.onImageCollectionChange}
                         />
                     </div>
+                    {this.getAvailableBandsControl()}
                     <div className="form-group">
                         <label htmlFor="imageParams">Image Parameters (json format)</label>
                         <textarea
@@ -1455,6 +1534,7 @@ class BasicLayout extends React.PureComponent {
                             onChange={this.onImageCollectionChangeDual}
                         />
                     </div>
+                    {this.getAvailableBandsControlDual()}
                     <div className="form-group">
                         <label htmlFor="imageParams">Image Parameters (json format)</label>
                         <textarea
@@ -1587,6 +1667,7 @@ class BasicLayout extends React.PureComponent {
                             onChange={this.onImageCollectionChange}
                         />
                     </div>
+                    {this.getAvailableBandsControl()}
                     <div className="form-group">
                         <label htmlFor="graphBand">Band to graph</label>
                         <input

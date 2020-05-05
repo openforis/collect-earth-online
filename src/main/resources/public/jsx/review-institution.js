@@ -428,7 +428,15 @@ const imageryOptions = [
     {
         type: "BingMaps",
         params: [
-            { key: "imageryId", display: "Imagery Id", type: "select", options: ["Aerial", "AerialWithLabels"] },
+            {
+                key: "imageryId",
+                display: "Imagery Id",
+                type: "select",
+                options: [
+                    { label: "Aerial", value: "Aerial" },
+                    { label: "Aerial with Labels", value: "AerialWithLabels" },
+                ]
+            },
             { key: "accessToken", display: "Access Token" },
         ],
         url: "https://docs.microsoft.com/en-us/bingmaps/getting-started/bing-maps-dev-center-help/getting-a-bing-maps-key",
@@ -461,8 +469,43 @@ const imageryOptions = [
         type: "SecureWatch",
         params: [
             { key: "connectid", display: "Connect ID" },
-            { key: "startDate", display: "Start Date", type: "date" },
-            { key: "endDate", display: "End Date", type: "date" },
+            {
+                key: "featureProfile",
+                display: "Feature Profile",
+                type: "select",
+                options: [
+                    { label: "Default", value: "Default_Profile" },
+                    { label: "Accuracy", value: "Accuracy_Profile" },
+                    { label: "Classic Color Consumer", value: "Classic_Color_Consumer_Profile" },
+                    { label: "Cloud Cover Currency", value: "Cloud_Cover_Currency_Profile" },
+                    { label: "Cloud Cover", value: "Cloud_Cover_Profile" },
+                    { label: "Color Consumer", value: "Color_Consumer_Profile" },
+                    { label: "Color Infrared", value: "Color_Infrared_Profile" },
+                    { label: "Consumer", value: "Consumer_Profile" },
+                    { label: "Currency", value: "Currency_Profile" },
+                    { label: "Currency RGB", value: "Currency_RGB_Profile" },
+                    { label: "Dynamic Mosaic", value: "Dynamic_Mosaic_Profile" },
+                    { label: "Global Currency", value: "Global_Currency_Profile" },
+                    { label: "Legacy", value: "Legacy_Profile" },
+                    { label: "Most Aesthetic Mosaic", value: "Most_Aesthetic_Mosaic_Profile" },
+                    { label: "MyDG Color Consumer", value: "MyDG_Color_Consumer_Profile" },
+                    { label: "MyDG Consumer", value: "MyDG_Consumer_Profile" },
+                    { label: "Only Mosaics", value: "Only_Mosaics_Profile" },
+                    { label: "True Currency", value: "True_Currency_Profile" },
+                ]
+            },
+            {
+                key: "startDate",
+                display: "Start Date",
+                type: "date",
+                options: { max: new Date().toJSON().split("T")[0] }
+            },
+            {
+                key: "endDate",
+                display: "End Date",
+                type: "date",
+                options: { max: new Date().toJSON().split("T")[0] }
+            },
         ],
     },
 ];
@@ -476,19 +519,6 @@ class NewImagery extends React.Component {
             selectedType: 0,
             newImageryParams: {},
         };
-    }
-
-    //    Lifecycle Methods    //
-
-    componentDidUpdate(prevProps, prevState) {
-        if (prevState.selectedType !== this.state.selectedType) {
-            // Clear params different to each type.
-            if (imageryOptions[this.state.selectedType].type === "BingMaps") {
-                this.setState({ newImageryParams: { "imageryId": imageryOptions[this.state.selectedType]["params"][0]["options"][0] }});
-            } else {
-                this.setState({ newImageryParams: {} });
-            }
-        }
     }
 
     //    Remote Calls    //
@@ -585,7 +615,7 @@ class NewImagery extends React.Component {
 
     //    Render Functions    //
 
-    formInput = (title, type, value, callback, link = null) => (
+    formInput = (title, type, value, callback, link = null, options = {}) => (
         <div className="mb-3" key={title}>
             <label>{title}</label> {link}
             <input
@@ -594,6 +624,7 @@ class NewImagery extends React.Component {
                 autoComplete="off"
                 onChange={e => callback(e)}
                 value={value || ""}
+                {...options}
             />
         </div>
     );
@@ -615,16 +646,17 @@ class NewImagery extends React.Component {
         (o.type && o.type === "select")
             ? this.formSelect(
                 o.display,
-                this.state.newImageryParams.imageryId,
+                this.state.newImageryParams[o.key],
                 e => this.setState({
                     newImageryParams: {
                         ...this.state.newImageryParams,
                         [o.key]: e.target.value,
-                        imageryId: e.target.value,
                     },
-                    newImageryAttribution: "Bing Maps API: " + e.target.value + " | © Microsoft Corporation",
+                    newImageryAttribution: imageryOptions[this.state.selectedType].type === "BingMaps"
+                        ? "Bing Maps API: " + e.target.value + " | © Microsoft Corporation"
+                        : this.state.newImageryAttribution,
                 }),
-                o.options.map(el => <option value={el} key={el}>{el}</option>),
+                o.options.map(el => <option value={el.value} key={el.value}>{el.label}</option>),
                 (imageryOptions[this.state.selectedType].url && o.key === "accessToken")
                     ? (
                         <a href={imageryOptions[this.state.selectedType].url} target="_blank" rel="noreferrer noopener">
@@ -646,7 +678,8 @@ class NewImagery extends React.Component {
                             Click here for help.
                         </a>
                     )
-                    : null
+                    : null,
+                o.options ? o.options : {}
             )
     );
 
@@ -656,13 +689,27 @@ class NewImagery extends React.Component {
         const val = e.target.value;
         this.setState({ selectedType: val });
         if (imageryOptions[val].type === "BingMaps") {
-            this.setState({ newImageryAttribution: "Bing Maps API: " + imageryOptions[val]["params"][0]["options"][0] + " | © Microsoft Corporation" });
+            this.setState({
+                newImageryAttribution: "Bing Maps API: " + imageryOptions[val]["params"][0]["options"][0] + " | © Microsoft Corporation",
+                newImageryParams: { imageryId: imageryOptions[val]["params"].filter(param => param.key === "imageryId")[0].options[0].value }
+            });
         } else if (imageryOptions[val].type === "Planet" || imageryOptions[val].type === "PlanetDaily") {
-            this.setState({ newImageryAttribution: "Planet Labs Global Mosaic | © Planet Labs, Inc" });
+            this.setState({
+                newImageryAttribution: "Planet Labs Global Mosaic | © Planet Labs, Inc",
+                newImageryParams: {}
+            });
         } else if (imageryOptions[val].type === "EarthWatch") {
-            this.setState({ newImageryAttribution: "EarthWatch Maps API: Recent Imagery | © Maxar, Inc" });
+            this.setState({
+                newImageryAttribution: "EarthWatch Maps API: Recent Imagery | © Maxar, Inc",
+                newImageryParams: {}
+            });
         } else if (imageryOptions[val].type === "SecureWatch") {
-            this.setState({ newImageryAttribution: "SecureWatch Imagery | © Maxar Technologies Inc." });
+            this.setState({
+                newImageryAttribution: "SecureWatch Imagery | © Maxar Technologies Inc.",
+                newImageryParams: { featureProfile: imageryOptions[val]["params"].filter(param => param.key === "featureProfile")[0].options[0].value }
+            });
+        } else {
+            this.setState({ newImageryParams: {} });
         }
     };
 

@@ -23,6 +23,9 @@ class Collection extends React.Component {
             imageryEndDatePlanetDaily: "",
             imageryStartDateSecureWatch: "",
             imageryEndDateSecureWatch: "",
+            imageryFeatureProfileSecureWatch: "",
+            imagerySecureWatchSelectRange: true,
+            imagerySecureWatchAvailableDates: [],
             mapConfig: null,
             nextPlotButtonDisabled: false,
             plotList: [],
@@ -37,7 +40,8 @@ class Collection extends React.Component {
             storedInterval: null,
             KMLFeatures: null,
             hasGeoDash: false,
-            projectOptions: {}
+            projectOptions: {},
+            loading: false,
         };
     }
 
@@ -90,6 +94,11 @@ class Collection extends React.Component {
             clearInterval(this.state.storedInterval);
             this.setState({ storedInterval: setInterval(() => this.resetPlotLock, 2.3 * 60 * 1000) });
             if (this.state.currentImagery.sourceConfig.type === "PlanetDaily") this.updatePlanetDailyLayer();
+            if (this.state.currentImagery.sourceConfig.type === "SecureWatch") {
+                this.setState({ imagerySecureWatchSelectRange: true });
+                this.updateSecureWatchLayer();
+                this.setSecureWatchAvailableDatesOptionDefault();
+            }
         }
 
         // Conditions required for samples to be shown
@@ -138,7 +147,8 @@ class Collection extends React.Component {
         }
 
         if (this.state.imageryStartDateSecureWatch !== prevState.imageryStartDateSecureWatch
-            || this.state.imageryEndDateSecureWatch !== prevState.imageryEndDateSecureWatch) {
+            || this.state.imageryEndDateSecureWatch !== prevState.imageryEndDateSecureWatch
+            || this.state.imageryFeatureProfileSecureWatch !== prevState.imageryFeatureProfileSecureWatch) {
             this.updateSecureWatchLayer();
         }
     }
@@ -199,6 +209,35 @@ class Collection extends React.Component {
             .catch(response => {
                 console.log(response);
                 alert("Error retrieving the imagery list. See console for details.");
+            });
+    };
+
+    getSecureWatchAvailableDates = () => {
+        const connectId = this.state.currentImagery.sourceConfig.connectId;
+        const geometry = mercator.getViewPolygon(this.state.mapConfig).transform("EPSG:4326", "EPSG:3857");
+        const secureWatchFeatureInfoUrl = "https://securewatch.digitalglobe.com/mapservice/wmsaccess?"
+              + "CONNECTID=" + connectId
+              + "&SERVICE=WMS"
+              + "&VERSION=1.1.1"
+              + "&REQUEST=GetFeatureInfo"
+              + "&CRS=EPSG%3A3857"
+              + "&BBOX=" + geometry.getExtent().join(",")
+              + "&WIDTH=256"
+              + "&HEIGHT=256"
+              + "&LAYERS=DigitalGlobe:ImageryFootprint"
+              + "&QUERY_LAYERS=DigitalGlobe:ImageryFootprint"
+              + "&FEATURE_COUNT=1000"
+              + "&X=0"
+              + "&Y=0"
+              + "&INFO_FORMAT=application/json";
+        fetch(secureWatchFeatureInfoUrl)
+            .then(response => response.ok ? response.json() : Promise.reject(response))
+            .then(data => {
+                this.setState({ imagerySecureWatchAvailableDates: data.features.map(feature => feature.properties.acquisitionDate) });
+            })
+            .catch(response => {
+                console.log(response);
+                alert("Error retrieving available imagery dates. See console for details.");
             });
     };
 
@@ -299,15 +338,49 @@ class Collection extends React.Component {
         const startDate = (eventTarget.id === "secureWatchStartDate") && eventTarget.value ? eventTarget.value : imageryStartDateSecureWatch;
         const endDate = (eventTarget.id === "secureWatchEndDate") && eventTarget.value ? eventTarget.value : imageryEndDateSecureWatch;
         if (new Date(startDate) > new Date(endDate)) {
-            alert("Start date must be smaller than the end date.");
+            alert("Start date must not come after the end date.");
         } else {
-            const imageryAttribution = this.getImageryByTitle(currentImagery.title).attribution + " | " + startDate + " to " + endDate;
+            const imageryAttribution = this.getImageryByTitle(currentImagery.title).attribution + " | " + startDate + " to " + endDate + " (" + this.state.imageryFeatureProfileSecureWatch + ")";
             this.setState({
                 imageryStartDateSecureWatch: startDate,
                 imageryEndDateSecureWatch: endDate,
                 imageryAttribution: imageryAttribution,
             });
         }
+    };
+
+    setImageryFeatureProfileSecureWatch = (newFeatureProfile) => {
+        const { imageryStartDateSecureWatch, imageryEndDateSecureWatch, currentImagery } = this.state;
+        const imageryAttribution = this.getImageryByTitle(currentImagery.title).attribution + " | " + imageryStartDateSecureWatch + " to " + imageryEndDateSecureWatch + " (" + newFeatureProfile + ")";
+        this.setState({
+            imageryFeatureProfileSecureWatch: newFeatureProfile,
+            imageryAttribution: imageryAttribution,
+        });
+    };
+
+    setSecureWatchAvailableDatesOptionDefault = () => {
+        const dateSelectEl = document.getElementById("securewatch-option2-select");
+        dateSelectEl.value = "DEFAULT";
+    };
+
+    setImagerySecureWatchSelectRange = (eventTarget) => {
+        const imagerySecureWatchSelectRange = (eventTarget.id === "securewatch-option1-radio") && eventTarget.value
+            ? eventTarget.value === "on"
+                ? true : false
+            : (eventTarget.id === "securewatch-option2-radio") && eventTarget.value
+                ? eventTarget.value === "on"
+                    ? false : true
+                : true;
+        if (eventTarget.id === "securewatch-option1-radio") {
+            this.updateSecureWatchLayer();
+            this.setSecureWatchAvailableDatesOptionDefault();
+        }
+        this.setState({ imagerySecureWatchSelectRange: imagerySecureWatchSelectRange });
+    };
+
+    getSecureWatchSingleDate = () => {
+        const element = document.getElementById("securewatch-option2-select");
+        return element.options[element.selectedIndex].value;
     };
 
     setImageryMonthPlanet = (newImageryMonthPlanet) => {
@@ -360,12 +433,14 @@ class Collection extends React.Component {
             } else if (this.state.currentImagery.sourceConfig.type === "Planet") {
                 this.updatePlanetLayer();
             } else if (this.state.currentImagery.sourceConfig.type === "SecureWatch") {
-                const startDate = this.state.currentImagery.sourceConfig.startDate;
-                const endDate = this.state.currentImagery.sourceConfig.endDate;
+                const startDate = this.state.currentImagery.sourceConfig.startDate || "2019-01-01";
+                const endDate = this.state.currentImagery.sourceConfig.endDate || "2019-03-01";
+                const featureProfile = this.state.currentImagery.sourceConfig.featureProfile || "Default_Profile";
                 this.setState({
                     imageryStartDateSecureWatch: startDate,
                     imageryEndDateSecureWatch: endDate,
-                    imageryAttribution: this.state.currentImagery.attribution + " | " + startDate + " to " + endDate,
+                    imageryFeatureProfileSecureWatch: featureProfile,
+                    imageryAttribution: this.state.currentImagery.attribution + " | " + startDate + " to " + endDate + " (" + featureProfile + ")",
                 });
             }
         }
@@ -428,9 +503,11 @@ class Collection extends React.Component {
                                 : visible[0].geom
                                     ? ceoMapStyles.whitePolygon
                                     : ceoMapStyles.whiteCircle);
+        this.setState({ loading: false });
     };
 
     updatePlanetDailyLayer = () => {
+        this.setState({ loading: true });
         mercator.currentMap.getControls().getArray().filter(control => control.element.classList.contains("planet-layer-switcher"))
             .map(control => mercator.currentMap.removeControl(control));
         const { imageryStartDatePlanetDaily, imageryEndDatePlanetDaily, currentPlot } = this.state;
@@ -457,6 +534,18 @@ class Collection extends React.Component {
                                       {
                                           COVERAGE_CQL_FILTER: "(acquisitionDate>='" + imageryStartDateSecureWatch + "')"
                                                              + "AND(acquisitionDate<='" + imageryEndDateSecureWatch + "')",
+                                          FEATUREPROFILE: this.state.imageryFeatureProfileSecureWatch,
+                                      });
+        this.getSecureWatchAvailableDates();
+    };
+
+    updateSecureWatchSingleLayer = (date) => {
+        const { currentImagery } = this.state;
+        mercator.updateLayerWmsParams(this.state.mapConfig,
+                                      currentImagery.title,
+                                      {
+                                          COVERAGE_CQL_FILTER: "acquisitionDate='" + date + "'",
+                                          FEATUREPROFILE: this.state.imageryFeatureProfileSecureWatch,
                                       });
     };
 
@@ -513,6 +602,7 @@ class Collection extends React.Component {
                   getUserPlots: this.state.reviewPlots,
                   plotId: plotId,
                   projectId: this.props.projectId,
+                  institutionId: this.state.currentProject.institution,
                   userId: this.props.userId,
                   userName: this.props.userName,
               }))
@@ -549,6 +639,7 @@ class Collection extends React.Component {
                   getUserPlots: this.state.reviewPlots,
                   plotId: plotId,
                   projectId: this.props.projectId,
+                  institutionId: this.state.currentProject.institution,
                   userId: this.props.userId,
                   userName: this.props.userName,
               }))
@@ -779,8 +870,10 @@ class Collection extends React.Component {
             imageryStartDatePlanetDaily: this.state.imageryStartDatePlanetDaily,
             imageryEndDatePlanetDaily: this.state.imageryEndDatePlanetDaily,
         } : (this.state.currentImagery.sourceConfig.type === "SecureWatch") ? {
-            imageryStartDateSecureWatch: this.state.imageryStartDateSecureWatch,
-            imageryEndDateSecureWatch: this.state.imageryEndDateSecureWatch,
+            imageryStartDateSecureWatch: this.state.imagerySecureWatchSelectRange ? this.state.imageryStartDateSecureWatch : "",
+            imageryEndDateSecureWatch: this.state.imagerySecureWatchSelectRange ? this.state.imageryEndDateSecureWatch : "",
+            imageryFeatureProfileSecureWatch: this.state.imagerySecureWatchSelectRange ? this.state.imageryFeatureProfileSecureWatch : "",
+            imageryDateSecureWatch: this.state.imagerySecureWatchSelectRange ? "" : this.getSecureWatchSingleDate(),
         } : {};
 
     getChildQuestions = (currentQuestionId) => {
@@ -1163,7 +1256,13 @@ class Collection extends React.Component {
         const isFlagged = this.state.currentPlot && this.state.currentPlot.flagged;
         return (
             <Fragment>
-                <ImageAnalysisPane imageryAttribution={this.state.imageryAttribution}/>
+                <ImageAnalysisPane
+                    imageryAttribution={this.state.imageryAttribution}
+                    projectId={this.props.projectId}
+                    plotId={plotId}
+                    KMLFeatures={this.state.KMLFeatures}
+                    loader={this.state.loading}
+                />
                 <SideBar
                     projectId={this.props.projectId}
                     plotId={plotId}
@@ -1216,6 +1315,12 @@ class Collection extends React.Component {
                         setImageryMonthPlanet={this.setImageryMonthPlanet}
                         setImageryDatePlanetDaily={this.setImageryDatePlanetDaily}
                         setImageryDateSecureWatch={this.setImageryDateSecureWatch}
+                        imageryFeatureProfileSecureWatch={this.state.imageryFeatureProfileSecureWatch}
+                        setImageryFeatureProfileSecureWatch={this.setImageryFeatureProfileSecureWatch}
+                        imagerySecureWatchSelectRange={this.state.imagerySecureWatchSelectRange}
+                        setImagerySecureWatchSelectRange={this.setImagerySecureWatchSelectRange}
+                        imagerySecureWatchAvailableDates={this.state.imagerySecureWatchAvailableDates}
+                        updateSecureWatchSingleLayer={this.updateSecureWatchSingleLayer}
                         setStackingProfileDG={this.setStackingProfileDG}
                         loadingImages={this.state.imageryList.length === 0}
                     />
@@ -1254,13 +1359,27 @@ class Collection extends React.Component {
     }
 }
 
-function ImageAnalysisPane({ imageryAttribution }) {
+function ImageAnalysisPane(props) {
     return (
         // Mercator hooks into image-analysis-pane
         <div id="image-analysis-pane" className="col-xl-9 col-lg-9 col-md-12 pl-0 pr-0 full-height">
+            {props.loader ? <div id="spinner" style={{ top: "45%", zIndex: "5000", visibility: "visible" }}></div> : null }
             <div id="imagery-info" className="row">
-                <p className="col small">{ imageryAttribution }</p>
+                <p className="col small" style={{ transform: "translateY(25%)" }}>{ props.imageryAttribution }</p>
             </div>
+            {props.plotId &&
+                <div id="download-kml" className="row">
+                    <a
+                        className="col"
+                        style={{ color: "white", fontWeight: "bold" }}
+                        href={"data:earth.kml+xml application/vnd.google-earth.kmz, "
+                        + encodeURIComponent(props.KMLFeatures)}
+                        download={"ceo_" + props.projectId + "_" + props.plotId + ".kml"}
+                    >
+                        Download Plot KML
+                    </a>
+                </div>
+            }
         </div>
     );
 }
@@ -1424,7 +1543,7 @@ class PlotNavigation extends React.Component {
     );
 
     geoButtons = () => (
-        <div className="PlotNavigation__geo-buttons d-flex justify-content-between" id="plot-nav">
+        <div className="PlotNavigation__geo-buttons d-flex justify-content-between my-2" id="plot-nav">
             <input
                 className="btn btn-outline-lightgreen btn-sm col-6 mr-1"
                 type="button"
@@ -1438,17 +1557,6 @@ class PlotNavigation extends React.Component {
                 onClick={this.props.showGeoDash}
             />
         </div>
-    );
-
-    kmlButton = () => (
-        <a
-            className="btn btn-outline-lightgreen btn-sm btn-block my-2"
-            href={"data:earth.kml+xml application/vnd.google-earth.kmz, "
-                + encodeURIComponent(this.props.KMLFeatures)}
-            download={"ceo_" + this.props.projectId + "_" + this.props.plotId + ".kml"}
-        >
-            Download Plot KML
-        </a>
     );
 
     loadGEEScript = () => {
@@ -1492,7 +1600,6 @@ class PlotNavigation extends React.Component {
                             </div>
                         </div>
                         {props.plotId && this.geoButtons()}
-                        {props.KMLFeatures && props.plotId && this.kmlButton()}
                         {props.plotId && props.projectOptions.hasOwnProperty("showGEEScript") && props.projectOptions.showGEEScript && this.geeButton()}
                     </Fragment>
                 }
@@ -1597,34 +1704,111 @@ class ImageryOptions extends React.Component {
         </div>
     );
 
-    secureWatchMenus = () => (
-        <div className="SecureWatchMenu my-2">
-            <label>Start Date</label>
-            <div className="slidecontainer form-control form-control-sm">
-                <input
-                    type="date"
-                    id="secureWatchStartDate"
-                    value={this.props.imageryStartDateSecureWatch}
-                    max={new Date().toJSON().slice(0, 10)}
-                    min="2010-01-01"
-                    style={{ width: "100%" }}
-                    onChange={e => this.props.setImageryDateSecureWatch(e.target)}
-                />
+    secureWatchMenus = () => {
+        const featureProfileOptions = [
+            { label: "Default", value: "Default_Profile" },
+            { label: "Accuracy", value: "Accuracy_Profile" },
+            { label: "Classic Color Consumer", value: "Classic_Color_Consumer_Profile" },
+            { label: "Cloud Cover Currency", value: "Cloud_Cover_Currency_Profile" },
+            { label: "Cloud Cover", value: "Cloud_Cover_Profile" },
+            { label: "Color Consumer", value: "Color_Consumer_Profile" },
+            { label: "Color Infrared", value: "Color_Infrared_Profile" },
+            { label: "Consumer", value: "Consumer_Profile" },
+            { label: "Currency", value: "Currency_Profile" },
+            { label: "Currency RGB", value: "Currency_RGB_Profile" },
+            { label: "Dynamic Mosaic", value: "Dynamic_Mosaic_Profile" },
+            { label: "Global Currency", value: "Global_Currency_Profile" },
+            { label: "Legacy", value: "Legacy_Profile" },
+            { label: "Most Aesthetic Mosaic", value: "Most_Aesthetic_Mosaic_Profile" },
+            { label: "MyDG Color Consumer", value: "MyDG_Color_Consumer_Profile" },
+            { label: "MyDG Consumer", value: "MyDG_Consumer_Profile" },
+            { label: "Only Mosaics", value: "Only_Mosaics_Profile" },
+            { label: "True Currency", value: "True_Currency_Profile" },
+        ];
+        return (
+            <div className="SecureWatchMenu form-control form-control-sm my-2 mb-3">
+                <div className="form-control form-control-sm">
+                    <div className="form-check form-check-inline mb-3">
+                        <input
+                            className="form-check-input ml-2"
+                            checked={this.props.imagerySecureWatchSelectRange}
+                            id="securewatch-option1-radio"
+                            onChange={e => this.props.setImagerySecureWatchSelectRange(e.target)}
+                            type="radio"
+                            name="securewatch-option1-radio"
+                        />
+                        Select Range
+                    </div>
+                    <div>
+                        <label>Start Date</label>
+                        <div className="slidecontainer">
+                            <input
+                                disabled={!this.props.imagerySecureWatchSelectRange}
+                                className="form-control form-control-sm"
+                                type="date"
+                                id="secureWatchStartDate"
+                                value={this.props.imageryStartDateSecureWatch}
+                                max={new Date().toJSON().slice(0, 10)}
+                                style={{ width: "100%" }}
+                                onChange={e => this.props.setImageryDateSecureWatch(e.target)}
+                            />
+                        </div>
+                        <label>End Date</label>
+                        <div className="slidecontainer">
+                            <input
+                                disabled={!this.props.imagerySecureWatchSelectRange}
+                                className="form-control form-control-sm"
+                                type="date"
+                                id="secureWatchEndDate"
+                                value={this.props.imageryEndDateSecureWatch}
+                                max={new Date().toJSON().slice(0, 10)}
+                                style={{ width: "100%" }}
+                                onChange={e => this.props.setImageryDateSecureWatch(e.target)}
+                            />
+                        </div>
+                        <label>Feature Profiles</label>
+                        <div className="selecterContainer mb-2" >
+                            <select
+                                disabled={!this.props.imagerySecureWatchSelectRange}
+                                className="form-control form-control-sm"
+                                onChange={e => this.props.setImageryFeatureProfileSecureWatch(e.target.value)}
+                                value={this.props.imageryFeatureProfileSecureWatch}
+                            >
+                                { featureProfileOptions
+                                    .map(el => <option value={el.value} key={el.value}>{el.label}</option>) }
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div className="form-control form-control-sm">
+                    <div className="form-check form-check-inline mb-3">
+                        <input
+                            className="form-check-input ml-2"
+                            checked={!this.props.imagerySecureWatchSelectRange}
+                            id="securewatch-option2-radio"
+                            onChange={e => this.props.setImagerySecureWatchSelectRange(e.target)}
+                            type="radio"
+                            name="securewatch-option2-radio"
+                        />
+                        Select Dates
+                    </div>
+                    <div>
+                        <label>Available Dates</label>
+                        <select
+                            disabled={this.props.imagerySecureWatchSelectRange}
+                            className="form-control form-control-sm"
+                            onChange={e => this.props.updateSecureWatchSingleLayer(e.target.value)}
+                            defaultValue={"DEFAULT"}
+                            id="securewatch-option2-select"
+                        >
+                            <option value="DEFAULT" disabled> -- select a date -- </option>
+                            { this.props.imagerySecureWatchAvailableDates.map((date, uid) => <option key={uid} value={date}>{date}</option>) },
+                        </select>
+                    </div>
+                </div>
             </div>
-            <label>End Date</label>
-            <div className="slidecontainer form-control form-control-sm">
-                <input
-                    type="date"
-                    id="secureWatchEndDate"
-                    value={this.props.imageryEndDateSecureWatch}
-                    max={new Date().toJSON().slice(0, 10)}
-                    min="2010-01-01"
-                    style={{ width: "100%" }}
-                    onChange={e => this.props.setImageryDateSecureWatch(e.target)}
-                />
-            </div>
-        </div>
-    );
+        );
+    };
 
     render() {
         const { props } = this;
