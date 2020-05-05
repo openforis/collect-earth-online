@@ -41,6 +41,9 @@ public class JsonImagery implements Imagery {
                                     cleanSource.add("type", sourceConfig.get("type"));
                                     cleanSource.add("startDate", sourceConfig.get("startDate"));
                                     cleanSource.add("endDate", sourceConfig.get("endDate"));
+                                    cleanSource.add("featureProfile", sourceConfig.get("featureProfile"));
+                                    // FIXME: make securewatch dates function server side
+                                    cleanSource.add("connectId", sourceConfig.get("geoserverParams").getAsJsonObject().get("CONNECTID"));
                                     imagery.add("sourceConfig", cleanSource);
                                     return imagery;
                                 } else if (sourceConfig.get("type").getAsString().equals("Planet")) {

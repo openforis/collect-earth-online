@@ -520,7 +520,7 @@ ul.samplevalue{
     position: absolute;
     top: 0px;
     left: 20%;
-    height: 2rem;
+    height: auto;
     width: 60%;
     padding: 0.25rem;
     text-align: center;

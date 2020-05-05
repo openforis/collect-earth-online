@@ -469,8 +469,43 @@ const imageryOptions = [
         type: "SecureWatch",
         params: [
             { key: "connectid", display: "Connect ID" },
-            { key: "startDate", display: "Start Date", type: "date" },
-            { key: "endDate", display: "End Date", type: "date" },
+            {
+                key: "featureProfile",
+                display: "Feature Profile",
+                type: "select",
+                options: [
+                    { label: "Default", value: "Default_Profile" },
+                    { label: "Accuracy", value: "Accuracy_Profile" },
+                    { label: "Classic Color Consumer", value: "Classic_Color_Consumer_Profile" },
+                    { label: "Cloud Cover Currency", value: "Cloud_Cover_Currency_Profile" },
+                    { label: "Cloud Cover", value: "Cloud_Cover_Profile" },
+                    { label: "Color Consumer", value: "Color_Consumer_Profile" },
+                    { label: "Color Infrared", value: "Color_Infrared_Profile" },
+                    { label: "Consumer", value: "Consumer_Profile" },
+                    { label: "Currency", value: "Currency_Profile" },
+                    { label: "Currency RGB", value: "Currency_RGB_Profile" },
+                    { label: "Dynamic Mosaic", value: "Dynamic_Mosaic_Profile" },
+                    { label: "Global Currency", value: "Global_Currency_Profile" },
+                    { label: "Legacy", value: "Legacy_Profile" },
+                    { label: "Most Aesthetic Mosaic", value: "Most_Aesthetic_Mosaic_Profile" },
+                    { label: "MyDG Color Consumer", value: "MyDG_Color_Consumer_Profile" },
+                    { label: "MyDG Consumer", value: "MyDG_Consumer_Profile" },
+                    { label: "Only Mosaics", value: "Only_Mosaics_Profile" },
+                    { label: "True Currency", value: "True_Currency_Profile" },
+                ]
+            },
+            {
+                key: "startDate",
+                display: "Start Date",
+                type: "date",
+                options: { max: new Date().toJSON().split("T")[0] }
+            },
+            {
+                key: "endDate",
+                display: "End Date",
+                type: "date",
+                options: { max: new Date().toJSON().split("T")[0] }
+            },
         ],
     },
     {
@@ -655,7 +690,7 @@ class NewImagery extends React.Component {
                 e => this.setState({
                     newImageryParams: {
                         ...this.state.newImageryParams,
-                        [o.key]: e.target.value
+                        [o.key]: e.target.value,
                     },
                     newImageryAttribution: imageryOptions[this.state.selectedType].type === "BingMaps"
                         ? "Bing Maps API: " + e.target.value + " | © Microsoft Corporation"
@@ -696,7 +731,7 @@ class NewImagery extends React.Component {
         if (imageryOptions[val].type === "BingMaps") {
             this.setState({
                 newImageryAttribution: "Bing Maps API: " + imageryOptions[val]["params"][0]["options"][0] + " | © Microsoft Corporation",
-                newImageryParams: { imageryId: imageryOptions[val]["params"].filter(param => param.key === "imageryId")[0]["options"][0] }
+                newImageryParams: { imageryId: imageryOptions[val]["params"].filter(param => param.key === "imageryId")[0].options[0].value }
             });
         } else if (imageryOptions[val].type === "Planet" || imageryOptions[val].type === "PlanetDaily") {
             this.setState({
@@ -711,7 +746,7 @@ class NewImagery extends React.Component {
         } else if (imageryOptions[val].type === "SecureWatch") {
             this.setState({
                 newImageryAttribution: "SecureWatch Imagery | © Maxar Technologies Inc.",
-                newImageryParams: {}
+                newImageryParams: { featureProfile: imageryOptions[val]["params"].filter(param => param.key === "featureProfile")[0].options[0].value }
             });
         } else if (imageryOptions[val].type === "Sentinel2") {
             this.setState({
