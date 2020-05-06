@@ -443,6 +443,7 @@ const imageryOptions = [
     },
     {
         type: "Planet",
+        label: "Planet Monthly",
         params: [
             { key: "year", display: "Default Year", type: "number" },
             { key: "month", display: "Default Month", type: "number" },
@@ -452,6 +453,7 @@ const imageryOptions = [
     },
     {
         type: "PlanetDaily",
+        label: "Planet Daily",
         params: [
             { key: "accessToken", display: "Access Token" },
             { key: "startDate", display: "Start Date", type: "date"},
@@ -509,7 +511,34 @@ const imageryOptions = [
         ],
     },
     {
+        type: "Sentinel1",
+        label: "Sentinel 1",
+        params: [
+            {
+                key: "year",
+                display: "Default Year",
+                type: "number",
+                options: { min: "2014", max: new Date().getFullYear().toString(), step: "1" }
+            },
+            { key: "month", display: "Default Month", type: "number", options: { min: "1", max: "12", step: "1" } },
+            {
+                key: "bandCombination",
+                display: "Bands Combination",
+                type: "select",
+                options: [
+                    { label: "VH,VV,VH/VV", value: "VH,VV,VH/VV" },
+                    { label: "VH,VV,VV/VH", value: "VH,VV,VV/VH" },
+                    { label: "VV,VH,VV/VH", value: "VV,VH,VV/VH" },
+                    { label: "VV,VH,VH/VV", value: "VV,VH,VH/VV" },
+                ]
+            },
+            { key: "min", display: "Min", type: "number", options: { step: "0.01" } },
+            { key: "max", display: "Max", type: "number", options: { step: "0.01" } },
+        ],
+    },
+    {
         type: "Sentinel2",
+        label: "Sentinel 2",
         params: [
             {
                 key: "year",
@@ -557,7 +586,7 @@ class NewImagery extends React.Component {
         const message = this.checkDateField(sourceConfig);
         if (!this.checkAllParams()) {
             alert("You must fill out all fields.");
-        } else if (["Planet", "PlanetDaily", "Sentinel2"].includes(sourceConfig.type) && message) {
+        } else if (["Planet", "PlanetDaily", "Sentinel1", "Sentinel2"].includes(sourceConfig.type) && message) {
             alert(message);
         } else if (this.props.titleIsTaken(this.state.newImageryTitle)) {
             alert("The title '" + this.state.newImageryTitle + "' is already taken.");
@@ -629,15 +658,16 @@ class NewImagery extends React.Component {
                         || (this.state.newImageryParams[o.key] && this.state.newImageryParams[o.key].length > 0));
 
     checkDateField = (sourceConfig) => {
-        if (sourceConfig.type === "Sentinel2") {
+        if (sourceConfig.type === "Sentinel2" || sourceConfig.type === "Sentinel1") {
             const year = parseInt(sourceConfig.year);
+            const yearMinimum = sourceConfig.type === "Sentinel2" ? 2015 : 2014;
             const month = parseInt(sourceConfig.month);
-            const cloudScore = parseInt(sourceConfig.cloudScore);
-            return (isNaN(year) || year.toString().length !== 4 || year < 2015 || year > new Date().getFullYear())
-                ? "Year should be 4 digit number and between 2015 and " + new Date().getFullYear()
+            const cloudScore = sourceConfig.type === "Sentinel2" ? parseInt(sourceConfig.cloudScore) : null;
+            return (isNaN(year) || year.toString().length !== 4 || year < yearMinimum || year > new Date().getFullYear())
+                ? "Year should be 4 digit number and between " + yearMinimum + " and " + new Date().getFullYear()
                 : (isNaN(month) || month < 1 || month > 12)
                     ? "Month should be between 1 and 12!"
-                    : (isNaN(cloudScore) || cloudScore < 0 || cloudScore > 100)
+                    : (cloudScore && (isNaN(cloudScore) || cloudScore < 0 || cloudScore > 100))
                         ? "Cloud Score should be between 0 and 100!"
                         : null;
         } else if (sourceConfig.type === "Planet") {
@@ -748,10 +778,10 @@ class NewImagery extends React.Component {
                 newImageryAttribution: "SecureWatch Imagery | © Maxar Technologies Inc.",
                 newImageryParams: { featureProfile: imageryOptions[val]["params"].filter(param => param.key === "featureProfile")[0].options[0].value }
             });
-        } else if (imageryOptions[val].type === "Sentinel2") {
+        } else if (imageryOptions[val].type === "Sentinel2" || imageryOptions[val].type === "Sentinel1") {
             this.setState({
                 newImageryAttribution: "Google Earth Engine | © Google LLC",
-                newImageryParams: { "bandCombination": imageryOptions[val]["params"].filter(param => param.key === "bandCombination")[0]["options"][0] }
+                newImageryParams: { "bandCombination": imageryOptions[val]["params"].filter(param => param.key === "bandCombination")[0].options[0].value }
             });
         } else {
             this.setState({ newImageryParams: {} });
@@ -770,7 +800,7 @@ class NewImagery extends React.Component {
                         value={this.state.selectedType}
                     >
                         {imageryOptions.map((o, i) =>
-                            <option value={i} key={i}>{o.type}</option>
+                            <option value={i} key={i}>{o.label || o.type}</option>
                         )}
                     </select>
                 </div>

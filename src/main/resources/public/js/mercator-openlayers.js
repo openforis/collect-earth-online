@@ -261,31 +261,30 @@ mercator.createSource = function (sourceConfig, imageryId, documentRoot,
             url: documentRoot + "/get-tile",
             params: { imageryId: imageryId },
         });
-    } else if (sourceConfig.type === "Sentinel2") {
+    } else if (sourceConfig.type === "Sentinel2" || sourceConfig.type === "Sentinel1") {
         const bandCombination = sourceConfig.bandCombination;
-        // default to true color
-        const bands = bandCombination === "FalseColorInfrared" ? "B8,B4,B3"
+        const bands = sourceConfig.type === "Sentinel2" ? bandCombination === "FalseColorInfrared" ? "B8,B4,B3"
             : bandCombination === "FalseColorUrban" ? "B12,B11,B4"
                 : bandCombination === "Agriculture" ? "B11,B8,B2"
                     : bandCombination === "HealthyVegetation" ? "B8,B11,B2"
-                        : bandCombination === "ShortWaveInfrared" ? "B12,B8A,B4" : "B4,B3,B2";
+                        : bandCombination === "ShortWaveInfrared" ? "B12,B8A,B4" : "B4,B3,B2" : bandCombination;
         const year = parseInt(sourceConfig.year);
         const month = (parseInt(sourceConfig.month) > 9 ? "" : "0") + parseInt(sourceConfig.month);
         // month is zero based
         const endDate = new Date(new Date(year, month, 1).setDate(new Date(year, month, 1).getDate() - 1));
 
         const theJson = {
-            path: "FilteredSentinel",
+            path: sourceConfig.type === "Sentinel2" ? "FilteredSentinel" : "FilteredSentinelSAR",
             bands: bands,
             min: sourceConfig.min,
             max: sourceConfig.max,
-            cloudLessThan: parseInt(sourceConfig.cloudScore),
+            cloudLessThan: sourceConfig.type === "Sentinel2" ? parseInt(sourceConfig.cloudScore) : null,
             dateFrom: sourceConfig.year + "-" + month + "-01",
             dateTo : formatDateISO(endDate),
         };
         const theID = Math.random().toString(36).substr(2, 16) + "_" + Math.random().toString(36).substr(2, 9);
         const geeLayer = new XYZ({
-            url: "https://earthengine.googleapis.com/map/temp/{z}/{x}/{y}?token=",
+            url: "https://earthengine.googleapis.com/v1alpha/projects/earthengine-legacy/maps/temp/tiles/{z}/{x}/{y}",
             id: theID,
         });
         geeLayer.setProperties({ id: theID });
@@ -305,9 +304,9 @@ mercator.createSource = function (sourceConfig, imageryId, documentRoot,
                 }
             })
             .then(data => {
-                if (data.hasOwnProperty("mapid") && data.hasOwnProperty("token")) {
+                if (data.hasOwnProperty("url")) {
                     const geeLayer = new XYZ({
-                        url: "https://earthengine.googleapis.com/map/" + data.mapid + "/{z}/{x}/{y}?token=" + data.token,
+                        url: data.url,
                     });
                     mercator.currentMap.getLayers().forEach(function (lyr) {
                         if (theID && theID === lyr.getSource().get("id")) {
@@ -318,7 +317,7 @@ mercator.createSource = function (sourceConfig, imageryId, documentRoot,
                     console.warn("Wrong Data Returned");
                 }
             }).catch(response => {
-                console.log("Error loading Sentinel-2 imagery: ");
+                console.log("Error loading " + sourceConfig.type + " imagery: ");
                 console.log(response);
             });
         return geeLayer;
