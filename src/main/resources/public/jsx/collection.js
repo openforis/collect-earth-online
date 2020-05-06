@@ -2049,8 +2049,8 @@ class ImageryOptions extends React.Component {
                         {props.imageryType === "Planet" && this.planetMenus()}
                         {props.imageryType === "PlanetDaily" && this.planetDailyMenus()}
                         {props.imageryType === "SecureWatch" && this.secureWatchMenus()}
-                        {props.imageryType === "Sentinel2" && this.sentinel2Menus()}
                         {props.imageryType === "Sentinel1" && this.sentinel1Menus()}
+                        {props.imageryType === "Sentinel2" && this.sentinel2Menus()}
                     </Fragment>
                 }
             </div>

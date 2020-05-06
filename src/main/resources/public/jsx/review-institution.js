@@ -658,9 +658,9 @@ class NewImagery extends React.Component {
                         || (this.state.newImageryParams[o.key] && this.state.newImageryParams[o.key].length > 0));
 
     checkDateField = (sourceConfig) => {
-        if (sourceConfig.type === "Sentinel2" || sourceConfig.type === "Sentinel1") {
+        if (sourceConfig.type === "Sentinel1" || sourceConfig.type === "Sentinel2") {
             const year = parseInt(sourceConfig.year);
-            const yearMinimum = sourceConfig.type === "Sentinel2" ? 2015 : 2014;
+            const yearMinimum = sourceConfig.type === "Sentinel1" ? 2014 : 2015;
             const month = parseInt(sourceConfig.month);
             const cloudScore = sourceConfig.type === "Sentinel2" ? parseInt(sourceConfig.cloudScore) : null;
             return (isNaN(year) || year.toString().length !== 4 || year < yearMinimum || year > new Date().getFullYear())
@@ -778,7 +778,7 @@ class NewImagery extends React.Component {
                 newImageryAttribution: "SecureWatch Imagery | © Maxar Technologies Inc.",
                 newImageryParams: { featureProfile: imageryOptions[val]["params"].filter(param => param.key === "featureProfile")[0].options[0].value }
             });
-        } else if (imageryOptions[val].type === "Sentinel2" || imageryOptions[val].type === "Sentinel1") {
+        } else if (imageryOptions[val].type === "Sentinel1" || imageryOptions[val].type === "Sentinel2") {
             this.setState({
                 newImageryAttribution: "Google Earth Engine | © Google LLC",
                 newImageryParams: { "bandCombination": imageryOptions[val]["params"].filter(param => param.key === "bandCombination")[0].options[0].value }
