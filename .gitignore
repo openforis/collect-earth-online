@@ -39,4 +39,4 @@ src/main/resources/scripts/lib
 src/main/resources/scripts/pip-selfcheck.json
 
 # Log files
-/logs
+/logs/*.log
