@@ -78,9 +78,9 @@ class Geodash extends React.Component {
         widgets[index] = { ...widget };
         widgets[index].isFull = !widgets[index].isFull;
         this.setState({ widgets },
-                      () => {
-                          this.updateSize(widget);
-                      }
+            () => {
+                this.updateSize(widget);
+            }
         );
     };
 
@@ -200,26 +200,26 @@ class Widget extends React.Component {
     constructor(props) {
         super(props);
         this.imageCollectionList = ["ImageElevation",
-                                    "ImageCollectionCustom",
-                                    "addImageCollection",
-                                    "ndviImageCollection",
-                                    "ImageCollectionNDVI",
-                                    "ImageCollectionEVI",
-                                    "ImageCollectionEVI2",
-                                    "ImageCollectionNDWI",
-                                    "ImageCollectionNDMI",
-                                    "ImageCollectionLANDSAT5",
-                                    "ImageCollectionLANDSAT7",
-                                    "ImageCollectionLANDSAT8",
-                                    "ImageCollectionSentinel2"];
+            "ImageCollectionCustom",
+            "addImageCollection",
+            "ndviImageCollection",
+            "ImageCollectionNDVI",
+            "ImageCollectionEVI",
+            "ImageCollectionEVI2",
+            "ImageCollectionNDWI",
+            "ImageCollectionNDMI",
+            "ImageCollectionLANDSAT5",
+            "ImageCollectionLANDSAT7",
+            "ImageCollectionLANDSAT8",
+            "ImageCollectionSentinel2"];
         this.graphControlList = ["customTimeSeries",
-                                 "timeSeriesGraph",
-                                 "ndviTimeSeries",
-                                 "ndwiTimeSeries",
-                                 "eviTimeSeries",
-                                 "evi2TimeSeries",
-                                 "ndmiTimeSeries",
-                                 "mekong_tc_l_c"];
+            "timeSeriesGraph",
+            "ndviTimeSeries",
+            "ndwiTimeSeries",
+            "eviTimeSeries",
+            "evi2TimeSeries",
+            "ndmiTimeSeries",
+            "mekong_tc_l_c"];
     }
 
     generateGridColumn = (x, w) => (x + 1) + " / span " + w;
@@ -238,8 +238,8 @@ class Widget extends React.Component {
                 <div
                     className={
                         this.getClassNames(widget.isFull,
-                                           widget.gridcolumn || "",
-                                           widget.gridrow || (widget.layout && "span " + widget.layout.h) || ""
+                            widget.gridcolumn || "",
+                            widget.gridrow || (widget.layout && "span " + widget.layout.h) || ""
                         )
                     }
                     style={{
@@ -587,7 +587,7 @@ class MapWidget extends React.Component {
                     }
                 })
                 .then(data => {
-                    if (data.hasOwnProperty("mapid")) {
+                    if (data.hasOwnProperty("url")) {
                         data.lastGatewayUpdate = new Date();
                         if (postObject.ImageAsset && JSON.stringify(postObject.visParams)) {
                             localStorage.setItem(postObject.ImageAsset + JSON.stringify(postObject.visParams), JSON.stringify(data));
@@ -600,7 +600,7 @@ class MapWidget extends React.Component {
                         } else {
                             localStorage.setItem(JSON.stringify(postObject), JSON.stringify(data));
                         }
-                        this.addTileServer(data.mapid, data.token, "widgetmap_" + widget.id);
+                        this.addTileServer(data.url, data.token, "widgetmap_" + widget.id);
                         return true;
                     } else {
                         console.warn("Wrong Data Returned");
@@ -623,7 +623,7 @@ class MapWidget extends React.Component {
                             })
                                 .then(res => res.json())
                                 .then(data => {
-                                    if (data.hasOwnProperty("mapid")) {
+                                    if (data.hasOwnProperty("url")) {
                                         data.lastGatewayUpdate = new Date();
                                         if (postObject.ImageAsset && JSON.stringify(postObject.visParams)) {
                                             localStorage.setItem(postObject.ImageAsset + JSON.stringify(postObject.visParams), JSON.stringify(data));
@@ -634,7 +634,7 @@ class MapWidget extends React.Component {
                                         } else {
                                             localStorage.setItem(JSON.stringify(postObject), JSON.stringify(data));
                                         }
-                                        this.addDualLayer(data.mapid, data.token, "widgetmap_" + widget.id);
+                                        this.addDualLayer(data.url, data.token, "widgetmap_" + widget.id);
                                     }
                                 });
                         } else if (dualImageObject) {
@@ -655,7 +655,7 @@ class MapWidget extends React.Component {
                                 })
                                     .then(res => res.json())
                                     .then(data => {
-                                        if (data.hasOwnProperty("mapid")) {
+                                        if (data.hasOwnProperty("url")) {
                                             data.lastGatewayUpdate = new Date();
                                             if (dualImageObject.ImageAsset && JSON.stringify(dualImageObject.visParams)) {
                                                 localStorage.setItem(dualImageObject.ImageAsset + JSON.stringify(dualImageObject.visParams), JSON.stringify(data));
@@ -666,7 +666,7 @@ class MapWidget extends React.Component {
                                             } else {
                                                 localStorage.setItem(JSON.stringify(dualImageObject), JSON.stringify(data));
                                             }
-                                            this.addDualLayer(data.mapid, data.token, "widgetmap_" + widget.id);
+                                            this.addDualLayer(data.url, data.token, "widgetmap_" + widget.id);
                                         } else {
                                             console.warn("Wrong Data Returned");
                                         }
@@ -710,10 +710,10 @@ class MapWidget extends React.Component {
 
         return (widget.filterType && widget.filterType.length > 0) ? fts[widget.filterType]
             : (widget.ImageAsset && widget.ImageAsset.length > 0) ? "image"
-            : (widget.ImageCollectionAsset && widget.ImageCollectionAsset.length > 0) ? "ImageCollectionAsset"
-            : (widget.properties && "ImageCollectionCustom" === widget.properties[0]) ? "meanImageByMosaicCollections"
-            : (collectionName.trim().length > 0) ? "cloudMaskImageByMosaicCollection"
-            : "ImageCollectionbyIndex";
+                : (widget.ImageCollectionAsset && widget.ImageCollectionAsset.length > 0) ? "ImageCollectionAsset"
+                    : (widget.properties && "ImageCollectionCustom" === widget.properties[0]) ? "meanImageByMosaicCollections"
+                        : (collectionName.trim().length > 0) ? "cloudMaskImageByMosaicCollection"
+                            : "ImageCollectionbyIndex";
 
     };
 
@@ -748,28 +748,28 @@ class MapWidget extends React.Component {
 
     getRequestedIndex = collectionName =>
         ["ImageCollectionNDVI",
-         "ImageCollectionEVI",
-         "ImageCollectionEVI2",
-         "ImageCollectionNDMI",
-         "ImageCollectionNDWI"].includes(collectionName)
+            "ImageCollectionEVI",
+            "ImageCollectionEVI2",
+            "ImageCollectionNDMI",
+            "ImageCollectionNDWI"].includes(collectionName)
             ? collectionName.replace("ImageCollection", "")
             : "";
 
     convertCollectionName = collectionName =>
         ["ImageCollectionNDVI",
-         "ImageCollectionEVI",
-         "ImageCollectionEVI2",
-         "ImageCollectionNDMI",
-         "ImageCollectionNDWI"].includes(collectionName)
+            "ImageCollectionEVI",
+            "ImageCollectionEVI2",
+            "ImageCollectionNDMI",
+            "ImageCollectionNDWI"].includes(collectionName)
             ? ""
             : collectionName;
 
-    addSecondMapLayer = (mapid, token, widgetid) => {
+    addSecondMapLayer = (url, token, widgetid) => {
         if (this.state.mapRef) {
-            this.addDualLayer(mapid, token, widgetid);
+            this.addDualLayer(url, token, widgetid);
         } else {
             setTimeout(() => {
-                this.addDualLayer(mapid, token, widgetid);
+                this.addDualLayer(url, token, widgetid);
             }, 1000);
         }
     };
@@ -789,9 +789,9 @@ class MapWidget extends React.Component {
         const mapinfo = JSON.parse(localStorage.getItem(storageItem));
         if (new Date(mapinfo.lastGatewayUpdate) > currentDate) {
             if (isSecond) {
-                this.addSecondMapLayer(mapinfo.mapid, mapinfo.token, "widgetmap_" + widgetId);
+                this.addSecondMapLayer(mapinfo.url, mapinfo.token, "widgetmap_" + widgetId);
             } else {
-                this.addTileServer(mapinfo.mapid, mapinfo.token, "widgetmap_" + widgetId);
+                this.addTileServer(mapinfo.url, mapinfo.token, "widgetmap_" + widgetId);
             }
             return false;
         }
@@ -891,10 +891,10 @@ class MapWidget extends React.Component {
         }
     };
 
-    addTileServer = (imageid, token, mapdiv, isDual) => {
+    addTileServer = (url, token, mapdiv, isDual) => {
         window.setTimeout(() => {
             const source = new XYZ({
-                url: "https://earthengine.googleapis.com/map/" + imageid + "/{z}/{x}/{y}?token=" + token,
+                url: url,
             });
             source.on("tileloaderror", function(error) {
                 try {
@@ -917,10 +917,10 @@ class MapWidget extends React.Component {
         }, Math.floor(Math.random() * (300 - 200 + 1) + 200));
     };
 
-    addDualLayer = (imageid, token, mapdiv) => {
+    addDualLayer = (url, token, mapdiv) => {
         const googleLayer = new TileLayer({
             source: new XYZ({
-                url: "https://earthengine.googleapis.com/map/" + imageid + "/{z}/{x}/{y}?token=" + token,
+                url: url,
             }),
             id: mapdiv + "_dual",
         });
@@ -960,10 +960,10 @@ class MapWidget extends React.Component {
                 const bufferPolygon = new Polygon(
                     [
                         [[bufferedExtent[0], bufferedExtent[1]],
-                         [bufferedExtent[0], bufferedExtent[3]],
-                         [bufferedExtent[2], bufferedExtent[3]],
-                         [bufferedExtent[2], bufferedExtent[1]],
-                         [bufferedExtent[0], bufferedExtent[1]]],
+                            [bufferedExtent[0], bufferedExtent[3]],
+                            [bufferedExtent[2], bufferedExtent[3]],
+                            [bufferedExtent[2], bufferedExtent[1]],
+                            [bufferedExtent[0], bufferedExtent[1]]],
                     ]
                 );
                 const bufferedFeature = new Feature(bufferPolygon);
@@ -1053,8 +1053,8 @@ class GraphWidget extends React.Component {
             const dd = this.getDate();
 
             return [this.getFullYear(),
-                    (mm > 9 ? "" : "0") + mm,
-                    (dd > 9 ? "" : "0") + dd,
+                (mm > 9 ? "" : "0") + mm,
+                (dd > 9 ? "" : "0") + dd,
             ].join("-");
         };
     }
@@ -1155,8 +1155,8 @@ class GraphWidget extends React.Component {
 
     multiComparator = (a, b) =>
         (a[0] < b[0]) ? -1 :
-        (a[0] > b[0]) ? 1 :
-        0;
+            (a[0] > b[0]) ? 1 :
+                0;
 
     sortMultiData = data => data.sort(this.multiComparator);
 
