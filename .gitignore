@@ -40,3 +40,6 @@ src/main/resources/scripts/pip-selfcheck.json
 
 # Log files
 /logs/*.log
+
+# SSL keystore
+/deploy/keystore.jks
