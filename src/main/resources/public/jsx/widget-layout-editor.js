@@ -70,6 +70,7 @@ class BasicLayout extends React.PureComponent {
                         },
                     }
                     : widget);
+                this.checkWidgetStructure(updatedWidgets)
                 this.setState({
                     dashboardID: data.dashboardID,
                     widgets:     updatedWidgets,
@@ -152,7 +153,7 @@ class BasicLayout extends React.PureComponent {
                 if (widget.gridrow) {
                     //do the y and h
                     y = parseInt(widget.gridrow.trim().split(" ")[0]) - 1;
-                    h = widget.gridrow.trim().split(" ")[3] !== null ? parseInt(widget.gridrow.trim().split(" ")[3]) : 1;
+                    h = widget.gridrow.trim().split(" ")[3] !== undefined ? parseInt(widget.gridrow.trim().split(" ")[3]) : 1;
                 }
                 // create .layout
                 widget.layout = { x : x, y: y, w: w, h: h };
@@ -1892,7 +1893,7 @@ class BasicLayout extends React.PureComponent {
 
     openCopyWidgetsDialog = () => {
         this.setState({ copyDialog: true });
-    }
+    };
 
     render() {
         const { layout } = this.state;
