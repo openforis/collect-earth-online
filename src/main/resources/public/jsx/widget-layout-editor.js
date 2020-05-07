@@ -232,7 +232,7 @@ class BasicLayout extends React.PureComponent {
             <div
                 onDragStart={this.onDragStart}
                 onDragEnd={this.onDragEnd}
-                key={widget.layout.i}
+                key={widget.layout ? widget.layout.i : i}
                 data-grid={widget.layout}
                 className="front widgetEditor-widgetBackground"
                 style={{ backgroundImage: "url(" + this.getImageByType(widget.properties[0]) + ")" }}
