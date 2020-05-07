@@ -97,7 +97,7 @@ class BasicLayout extends React.PureComponent {
     }
 
     getParameterByName = (name, url) => {
-        const regex = new RegExp("[?&]" + name.replace(/[\[\]]/g, "\\$&") + "(=([^&#]*)|&|#|$)");
+        const regex = new RegExp("[?&]" + name.replace(/[[\]]/g, "\\$&") + "(=([^&#]*)|&|#|$)");
         const results = regex.exec(decodeURIComponent(url || window.location.href)); //regex.exec(url);
         return results
             ? results[2]
@@ -396,7 +396,7 @@ class BasicLayout extends React.PureComponent {
             availableBands: "",
             selectedDataType: event.target.value,
         });
-       this.getBandsFromGateway(false);
+        this.getBandsFromGateway(false);
     };
 
     onCancelNewWidget = () => {
@@ -882,7 +882,7 @@ class BasicLayout extends React.PureComponent {
     };
 
     setWidgetLayoutTemplate = id => {
-        this.setState({ selectedProjectId: id});
+        this.setState({ selectedProjectId: id });
         this.state.widgets.forEach( widget => {
             this.deleteWidgetFromServer( widget );
         });
@@ -927,73 +927,72 @@ class BasicLayout extends React.PureComponent {
 
     addTemplateWidget = widget => {
         fetch(this.state.theURI + "/create-widget",
-            {
-                method: "POST",
-                headers: {
-                    "Accept": "application/json",
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify({
-                    projectId: this.state.projectId,
-                    dashID: this.state.dashboardID,
-                    widgetJSON: JSON.stringify(widget),
-                }),
-            })
+              {
+                  method: "POST",
+                  headers: {
+                      "Accept": "application/json",
+                      "Content-Type": "application/json",
+                  },
+                  body: JSON.stringify({
+                      projectId: this.state.projectId,
+                      dashID: this.state.dashboardID,
+                      widgetJSON: JSON.stringify(widget),
+                  }),
+              })
             .catch(response => {
                 console.log(response);
                 alert("Error downloading the widget list. See console for details.");
             });
     };
 
-    getNewWidgetForm = () => {
-        return (this.state.isEditing === true)
+    getNewWidgetForm = () => (this.state.isEditing === true)
             ? (
                 <React.Fragment>
-                <div className="modal fade show" style={{ display: "block" }}>
-                    <div className="modal-dialog" role="document">
-                        <div className="modal-content">
-                            <div className="modal-header">
-                                <h5 className="modal-title" id="exampleModalLabel">Create Widget</h5>
-                                <button type="button" className="close" data-dismiss="modal" aria-label="Close" onClick={this.onCancelNewWidget}>
-                                    <span aria-hidden="true">×</span>
-                                </button>
-                            </div>
-                            <div className="modal-body">
-                                <form>
-                                    <div className="form-group">
-                                        <label htmlFor="widgetTypeSelect">Type</label>
-                                        <select
-                                            name="widgetTypeSelect"
-                                            className="form-control"
-                                            value={this.state.selectedWidgetType}
-                                            id="widgetTypeSelect"
-                                            onChange={e => this.onWidgetTypeSelectChanged(e, "i am anything")}
-                                        >
-                                            <option value="-1">Please select type</option>
-                                            <option label="Image Collection" value="ImageCollection">Image Collection</option>
-                                            <option label="Time Series Graph" value="TimeSeries">Time Series Graph</option>
-                                            <option label="Statistics" value="statistics">Statistics</option>
-                                            <option label="Dual Image Collection" value="DualImageCollection">Dual Image Collection</option>
-                                            <option label="Image Asset" value="imageAsset">Image Asset</option>
-                                            <option label="Image Collection Asset" value="imageCollectionAsset">Image Collection Asset</option>
-                                            <option label="SRTM Digital Elevation Data 30m" value="ImageElevation">SRTM Digital Elevation Data 30m</option>
-                                        </select>
-                                    </div>
-                                    {this.getBaseMapSelector()}
-                                    {this.getDataTypeSelectionControl()}
-                                    {this.getDataForm()}
-                                </form>
-                            </div>
-                            <div className="modal-footer">
-                                {
-                                    this.getFormButtons()
-                                }
+                    <div className="modal fade show" style={{ display: "block" }}>
+                        <div className="modal-dialog" role="document">
+                            <div className="modal-content">
+                                <div className="modal-header">
+                                    <h5 className="modal-title" id="exampleModalLabel">Create Widget</h5>
+                                    <button type="button" className="close" data-dismiss="modal" aria-label="Close" onClick={this.onCancelNewWidget}>
+                                        <span aria-hidden="true">×</span>
+                                    </button>
+                                </div>
+                                <div className="modal-body">
+                                    <form>
+                                        <div className="form-group">
+                                            <label htmlFor="widgetTypeSelect">Type</label>
+                                            <select
+                                                name="widgetTypeSelect"
+                                                className="form-control"
+                                                value={this.state.selectedWidgetType}
+                                                id="widgetTypeSelect"
+                                                onChange={e => this.onWidgetTypeSelectChanged(e, "i am anything")}
+                                            >
+                                                <option value="-1">Please select type</option>
+                                                <option label="Image Collection" value="ImageCollection">Image Collection</option>
+                                                <option label="Time Series Graph" value="TimeSeries">Time Series Graph</option>
+                                                <option label="Statistics" value="statistics">Statistics</option>
+                                                <option label="Dual Image Collection" value="DualImageCollection">Dual Image Collection</option>
+                                                <option label="Image Asset" value="imageAsset">Image Asset</option>
+                                                <option label="Image Collection Asset" value="imageCollectionAsset">Image Collection Asset</option>
+                                                <option label="SRTM Digital Elevation Data 30m" value="ImageElevation">SRTM Digital Elevation Data 30m</option>
+                                            </select>
+                                        </div>
+                                        {this.getBaseMapSelector()}
+                                        {this.getDataTypeSelectionControl()}
+                                        {this.getDataForm()}
+                                    </form>
+                                </div>
+                                <div className="modal-footer">
+                                    {
+                                        this.getFormButtons()
+                                    }
+                                </div>
                             </div>
                         </div>
                     </div>
-                </div>
-                <div className="modal-backdrop fade show"> </div>
-            </React.Fragment>
+                    <div className="modal-backdrop fade show"> </div>
+                </React.Fragment>
             ) : (this.state.copyDialog === true)
                 ? (
                     <React.Fragment>
@@ -1053,8 +1052,7 @@ class BasicLayout extends React.PureComponent {
                         </div>
                         <div className="modal-backdrop fade show"> </div>
                     </React.Fragment>
-                ): "";
-    };
+                ) : "";
 
     getFormButtons = () => <React.Fragment>
         <button type="button" className="btn btn-secondary" data-dismiss="modal" onClick={this.onCancelNewWidget}>Cancel</button>
@@ -1307,8 +1305,7 @@ class BasicLayout extends React.PureComponent {
         />
     </div>;
 
-    getDualLayerDateRangeControl = () => {
-        return (this.state.dualLayer === true)
+    getDualLayerDateRangeControl = () => (this.state.dualLayer === true)
             ? (
                 <div>
                     <label>Select the Date Range for the top layer</label>
@@ -1333,27 +1330,22 @@ class BasicLayout extends React.PureComponent {
                     </div>
                 </div>
             ) : "";
-    };
 
-    getAvailableBandsControl = () => {
-        return (this.state.availableBands.length > 0)
+    getAvailableBandsControl = () => (this.state.availableBands.length > 0)
             ? (
                 <div>
                     <label>Available Bands: </label><br />
                     <label>{this.state.availableBands}</label>
                 </div>
             ) : "";
-    };
 
-    getAvailableBandsControlDual = () => {
-        return (this.state.availableBandsDual.length > 0)
+    getAvailableBandsControlDual = () => (this.state.availableBandsDual.length > 0)
             ? (
                 <div>
                     <label>Available Bands: </label><br />
                     <label>{this.state.availableBandsDual}</label>
                 </div>
             ) : "";
-    };
 
     getDataForm = () => {
         if (this.state.selectedWidgetType === "ImageElevation") {
@@ -1899,7 +1891,7 @@ class BasicLayout extends React.PureComponent {
     };
 
     openCopyWidgetsDialog = () => {
-        this.setState({copyDialog: true });
+        this.setState({ copyDialog: true });
     }
 
     render() {
@@ -1926,8 +1918,8 @@ class BasicLayout extends React.PureComponent {
                 </button>
                 <ReactGridLayout
                     {...this.props} // FIXME, the only prop left is documentRoot, ill bet the ReactGridLayout does not need that.
-                    isDraggable={true}
-                    isResizable={true}
+                    isDraggable
+                    isResizable
                     className={"layout"}
                     items={0}
                     rowHeight={300}
