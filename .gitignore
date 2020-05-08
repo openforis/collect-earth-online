@@ -37,3 +37,10 @@ src/main/resources/scripts/bin
 src/main/resources/scripts/include
 src/main/resources/scripts/lib
 src/main/resources/scripts/pip-selfcheck.json
+src/main/resources/scripts/pyvenv.cfg
+
+# Log files
+/logs/*.log
+
+# SSL keystore
+/deploy/keystore.jks
