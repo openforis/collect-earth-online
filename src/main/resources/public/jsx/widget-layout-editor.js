@@ -14,7 +14,7 @@ class BasicLayout extends React.PureComponent {
             selectedProjectId: 0,
             projectList: [],
             projectFilter:"",
-            isEditing: false,
+            addDialog: false,
             copyDialog: false,
             addCustomImagery: false,
             selectedWidgetType: "-1",
@@ -53,31 +53,7 @@ class BasicLayout extends React.PureComponent {
 
 
     componentDidMount() {
-        fetch(this.state.theURI + "/get-by-projid?projectId=" + this.state.projectId)
-            .then(response => response.ok ? response.json() : Promise.reject(response))
-            .then(data => {
-                const widgets = Array.isArray(data.widgets)
-                    ? data.widgets
-                    : Array.isArray(eval(data.widgets))
-                        ? eval(data.widgets)
-                        : [];
-                const updatedWidgets = widgets.map(widget => widget.layout
-                    ? {
-                        ...widget,
-                        layout: {
-                            ...widget.layout,
-                            y: widget.layout.y ? widget.layout.y : 0,
-                        },
-                    }
-                    : widget);
-                this.checkWidgetStructure(updatedWidgets)
-                this.setState({
-                    dashboardID: data.dashboardID,
-                    widgets:     updatedWidgets,
-                    haveWidgets: true,
-                    layout:      this.generateLayout(),
-                });
-            })
+        this.fetchProject(this.state.projectId, true)
             .catch(response => {
                 console.log(response);
                 alert("Error downloading the widget list. See console for details.");
@@ -313,12 +289,23 @@ class BasicLayout extends React.PureComponent {
     };
 
     onWidgetTypeSelectChanged = event => {
+        let formReady = false;
+        let imageCollection = "";
+        if (event.target.value === "statistics"
+            || event.target.value === "imageAsset"
+            || event.target.value === "imageCollectionAsset"
+            || event.target.value === "ImageElevation") {
+            formReady = true;
+        }
+        if (event.target.value === "ImageElevation") {
+            imageCollection = "USGS/SRTMGL1_003";
+        }
         this.setState({
             selectedWidgetType: event.target.value,
             addCustomImagery: false,
             selectedDataType: "-1",
             widgetTitle: "",
-            imageCollection: "",
+            imageCollection: imageCollection,
             graphBand: "",
             graphReducer: "Min",
             imageParams: "",
@@ -340,7 +327,7 @@ class BasicLayout extends React.PureComponent {
             widgetMinDual:"",
             widgetMaxDual:"",
             widgetCloudScoreDual:"",
-            formReady: false,
+            formReady: formReady,
             wizardStep: 1,
             availableBands:"",
             availableBandsDual:"",
@@ -890,16 +877,15 @@ class BasicLayout extends React.PureComponent {
         this.getWidgetTemplateByProjectId( id );
     };
 
-    getWidgetTemplateByProjectId = id => {
-        fetch(this.state.theURI + "/get-by-projid?projectId=" + id)
-            .then(response => response.ok ? response.json() : Promise.reject(response))
-            .then(data => {
-                const widgets = Array.isArray(data.widgets)
+    fetchProject = (id, setDashboardID) => fetch(this.state.theURI + "/get-by-projid?projectId=" + id)
+        .then(response => response.ok ? response.json() : Promise.reject(response))
+        .then(data => {
+            const widgets = Array.isArray(data.widgets)
                     ? data.widgets
                     : Array.isArray(eval(data.widgets))
                         ? eval(data.widgets)
                         : [];
-                const updatedWidgets = widgets.map(widget => widget.layout
+            const updatedWidgets = widgets.map(widget => widget.layout
                     ? {
                         ...widget,
                         layout: {
@@ -908,16 +894,21 @@ class BasicLayout extends React.PureComponent {
                         },
                     }
                     : widget);
-                this.checkWidgetStructure(updatedWidgets);
-                this.setState({
-                    widgets:     updatedWidgets,
-                    haveWidgets: true,
-                    layout:      this.generateLayout(),
-                });
-            })
-            .then( () =>{
-                this.state.widgets.forEach( widget => {
-                    this.addTemplateWidget( widget );
+            this.checkWidgetStructure(updatedWidgets);
+            this.setState({
+                dashboardID: setDashboardID ? data.dashboardID : this.state.dashboardID,
+                widgets:     updatedWidgets,
+                haveWidgets: true,
+                layout:      this.generateLayout(),
+            });
+        });
+
+
+    getWidgetTemplateByProjectId = id => {
+        this.fetchProject(id)
+            .then(() =>{
+                this.state.widgets.forEach(widget => {
+                    this.addTemplateWidget(widget);
                 });
             })
             .catch(response => {
@@ -942,11 +933,10 @@ class BasicLayout extends React.PureComponent {
               })
             .catch(response => {
                 console.log(response);
-                alert("Error downloading the widget list. See console for details.");
             });
     };
 
-    getNewWidgetForm = () => (this.state.isEditing === true)
+    getNewWidgetForm = () => this.state.isEditing === true
             ? (
                 <React.Fragment>
                     <div className="modal fade show" style={{ display: "block" }}>
@@ -985,16 +975,14 @@ class BasicLayout extends React.PureComponent {
                                     </form>
                                 </div>
                                 <div className="modal-footer">
-                                    {
-                                        this.getFormButtons()
-                                    }
+                                    {this.getFormButtons()}
                                 </div>
                             </div>
                         </div>
                     </div>
                     <div className="modal-backdrop fade show"> </div>
                 </React.Fragment>
-            ) : (this.state.copyDialog === true)
+            ) : this.state.copyDialog === true
                 ? (
                     <React.Fragment>
                         <div className="modal fade show" style={{ display: "block" }}>
@@ -1019,7 +1007,7 @@ class BasicLayout extends React.PureComponent {
                                                 />
                                             </div>
                                             <div className="form-group">
-                                                <label htmlFor="widgetTypeSelect">From Project</label>
+                                                <label htmlFor="project-template">From Project</label>
                                                 <select
                                                     className="form-control form-control-sm"
                                                     id="project-template"
@@ -1041,7 +1029,7 @@ class BasicLayout extends React.PureComponent {
                                                 </select>
                                             </div>
                                             <div className="form-group">
-                                                <span>Updates are done in real time</span>
+                                                <span>Warning, selecting a template project will overwrite existing widgets immediately.</span>
                                             </div>
                                         </form>
                                     </div>
@@ -1086,14 +1074,12 @@ class BasicLayout extends React.PureComponent {
     });
 
     getDataTypeSelectionControl = () => {
-        if (this.state.selectedWidgetType === "-1") {
+        if (this.state.selectedWidgetType === "-1"
+            || this.state.selectedWidgetType === "imageAsset"
+            || this.state.selectedWidgetType === "imageCollectionAsset"
+            || this.state.selectedWidgetType === "ImageElevation") {
             return <br/>;
         } else if (this.state.selectedWidgetType === "statistics") {
-            if (this.state.formReady !== true) {
-                this.setState({
-                    formReady: true,
-                });
-            }
             return <React.Fragment>
                 <div className="form-group">
                     <label htmlFor="widgetTitle">Title</label>
@@ -1108,15 +1094,6 @@ class BasicLayout extends React.PureComponent {
                     />
                 </div>
             </React.Fragment>;
-        } else if (this.state.selectedWidgetType === "imageAsset"
-                    || this.state.selectedWidgetType === "imageCollectionAsset"
-                    || this.state.selectedWidgetType === "ImageElevation") {
-            if (this.state.formReady !== true) {
-                this.setState({
-                    formReady: true,
-                });
-            }
-            return <br/>;
         } else if (this.state.selectedWidgetType === "ImageCollection") {
             return <React.Fragment>
                 <label htmlFor="widgetIndicesSelect">Data</label>
@@ -1307,52 +1284,46 @@ class BasicLayout extends React.PureComponent {
     </div>;
 
     getDualLayerDateRangeControl = () => (this.state.dualLayer === true)
-            ? (
-                <div>
-                    <label>Select the Date Range for the top layer</label>
-                    <div className="input-group input-daterange" id="range_new_cooked2">
-                        <input
-                            type="text"
-                            className="form-control"
-                            onChange={this.onStartDate2Changed}
-                            value={this.state.startDate2}
-                            placeholder={"YYYY-MM-DD"}
-                            id="sDate_new_cooked2"
-                        />
-                        <div className="input-group-addon">to</div>
-                        <input
-                            type="text"
-                            className="form-control"
-                            onChange={this.onEndDate2Changed}
-                            value={this.state.endDate2}
-                            placeholder={"YYYY-MM-DD"}
-                            id="eDate_new_cooked2"
-                        />
-                    </div>
+            ? <div>
+                <label>Select the Date Range for the top layer</label>
+                <div className="input-group input-daterange" id="range_new_cooked2">
+                    <input
+                        type="text"
+                        className="form-control"
+                        onChange={this.onStartDate2Changed}
+                        value={this.state.startDate2}
+                        placeholder={"YYYY-MM-DD"}
+                        id="sDate_new_cooked2"
+                    />
+                    <div className="input-group-addon">to</div>
+                    <input
+                        type="text"
+                        className="form-control"
+                        onChange={this.onEndDate2Changed}
+                        value={this.state.endDate2}
+                        placeholder={"YYYY-MM-DD"}
+                        id="eDate_new_cooked2"
+                    />
                 </div>
-            ) : "";
+            </div>
+             : "";
 
     getAvailableBandsControl = () => (this.state.availableBands.length > 0)
-            ? (
-                <div>
-                    <label>Available Bands: </label><br />
-                    <label>{this.state.availableBands}</label>
-                </div>
-            ) : "";
+            ? <div>
+                <label>Available Bands: </label><br />
+                <label>{this.state.availableBands}</label>
+            </div>
+             : "";
 
     getAvailableBandsControlDual = () => (this.state.availableBandsDual.length > 0)
-            ? (
-                <div>
-                    <label>Available Bands: </label><br />
-                    <label>{this.state.availableBandsDual}</label>
-                </div>
-            ) : "";
+            ? <div>
+                <label>Available Bands: </label><br />
+                <label>{this.state.availableBandsDual}</label>
+            </div>
+             : "";
 
     getDataForm = () => {
         if (this.state.selectedWidgetType === "ImageElevation") {
-            this.setState({
-                imageCollection: "USGS/SRTMGL1_003",
-            });
             return <React.Fragment>
                 {this.getTitleBlock()}
                 {this.getImageParamsBlock()}
@@ -1915,7 +1886,7 @@ class BasicLayout extends React.PureComponent {
                     className="btn btn-outline-lightgreen btn-sm"
                     style={{ display: "none" }}
                 >
-                    Add Widget
+                    Copy Layout
                 </button>
                 <ReactGridLayout
                     {...this.props} // FIXME, the only prop left is documentRoot, ill bet the ReactGridLayout does not need that.
