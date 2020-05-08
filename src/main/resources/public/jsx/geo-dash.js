@@ -2,7 +2,6 @@ import React from "react";
 import ReactDOM from "react-dom";
 import { mercator } from "../js/mercator-openlayers.js";
 import { UnicodeIcon } from "./utils/textUtils";
-
 import { Feature, Map, View } from "ol";
 import { buffer as ExtentBuffer } from "ol/extent";
 import { Circle, Polygon, Point } from "ol/geom";
@@ -78,9 +77,9 @@ class Geodash extends React.Component {
         widgets[index] = { ...widget };
         widgets[index].isFull = !widgets[index].isFull;
         this.setState({ widgets },
-            () => {
-                this.updateSize(widget);
-            }
+                      () => {
+                          this.updateSize(widget);
+                      }
         );
     };
 
@@ -200,26 +199,26 @@ class Widget extends React.Component {
     constructor(props) {
         super(props);
         this.imageCollectionList = ["ImageElevation",
-            "ImageCollectionCustom",
-            "addImageCollection",
-            "ndviImageCollection",
-            "ImageCollectionNDVI",
-            "ImageCollectionEVI",
-            "ImageCollectionEVI2",
-            "ImageCollectionNDWI",
-            "ImageCollectionNDMI",
-            "ImageCollectionLANDSAT5",
-            "ImageCollectionLANDSAT7",
-            "ImageCollectionLANDSAT8",
-            "ImageCollectionSentinel2"];
+                                    "ImageCollectionCustom",
+                                    "addImageCollection",
+                                    "ndviImageCollection",
+                                    "ImageCollectionNDVI",
+                                    "ImageCollectionEVI",
+                                    "ImageCollectionEVI2",
+                                    "ImageCollectionNDWI",
+                                    "ImageCollectionNDMI",
+                                    "ImageCollectionLANDSAT5",
+                                    "ImageCollectionLANDSAT7",
+                                    "ImageCollectionLANDSAT8",
+                                    "ImageCollectionSentinel2"];
         this.graphControlList = ["customTimeSeries",
-            "timeSeriesGraph",
-            "ndviTimeSeries",
-            "ndwiTimeSeries",
-            "eviTimeSeries",
-            "evi2TimeSeries",
-            "ndmiTimeSeries",
-            "mekong_tc_l_c"];
+                                 "timeSeriesGraph",
+                                 "ndviTimeSeries",
+                                 "ndwiTimeSeries",
+                                 "eviTimeSeries",
+                                 "evi2TimeSeries",
+                                 "ndmiTimeSeries",
+                                 "mekong_tc_l_c"];
     }
 
     generateGridColumn = (x, w) => (x + 1) + " / span " + w;
@@ -238,8 +237,8 @@ class Widget extends React.Component {
                 <div
                     className={
                         this.getClassNames(widget.isFull,
-                            widget.gridcolumn || "",
-                            widget.gridrow || (widget.layout && "span " + widget.layout.h) || ""
+                                           widget.gridcolumn || "",
+                                           widget.gridrow || (widget.layout && "span " + widget.layout.h) || ""
                         )
                     }
                     style={{
@@ -299,7 +298,7 @@ class Widget extends React.Component {
                     title="Recenter"
                     style={{ marginRight: "10px" }}
                 >
-                    <img src="img/ceoicon.png"/>
+                    <img src={window.location.origin + "/img/ceoicon.png"} alt="Collect Earth Online"/>
                 </a>
             </li>;
         }
@@ -329,7 +328,7 @@ class Widget extends React.Component {
         } else if (widget.properties[0] === "getStats") {
             return <div className="front"><StatsWidget widget={widget} projPairAOI={this.props.projPairAOI} documentRoot={this.props.documentRoot}/></div>;
         } else {
-            return <img src="data:image/gif;base64,R0lGODlhAQABAIAAAHd3dwAAACH5BAAAAAAALAAAAAABAAEAAAICRAEAOw==" width ="200" height ="200" className="img-responsive" />;
+            return <img src="data:image/gif;base64,R0lGODlhAQABAIAAAHd3dwAAACH5BAAAAAAALAAAAAABAAEAAAICRAEAOw==" width ="200" height ="200" className="img-responsive" alt="Blank Widget"/>;
         }
     };
 
@@ -351,8 +350,6 @@ class MapWidget extends React.Component {
             mapRef: null,
             opacity: 90,
             geeTimeOut: null,
-            internalExtent: null,
-            mapCenter: null,
             wasFull: false,
         };
     }
@@ -554,7 +551,7 @@ class MapWidget extends React.Component {
             } else if (localStorage.getItem(JSON.stringify(postObject))) {
                 needFetch = this.createTileServerFromCache(JSON.stringify(postObject), widget.id);
             }
-            if (widget.dualImageCollection) {
+            if (widget.dualImageCollection && dualImageObject != null) {
                 if (localStorage.getItem(dualImageObject.ImageAsset + dualImageObject.visParams)) {
                     needFetch = this.createTileServerFromCache(dualImageObject.ImageAsset + dualImageObject.visParams, widget.id, true);
                 } else if (localStorage.getItem(dualImageObject.ImageCollectionAsset + JSON.stringify(dualImageObject.visParams))) {
@@ -707,14 +704,12 @@ class MapWidget extends React.Component {
             "LANDSAT8": "Landsat8Filtered",
             "Sentinel2": "FilteredSentinel",
         };
-
         return (widget.filterType && widget.filterType.length > 0) ? fts[widget.filterType]
             : (widget.ImageAsset && widget.ImageAsset.length > 0) ? "image"
-                : (widget.ImageCollectionAsset && widget.ImageCollectionAsset.length > 0) ? "ImageCollectionAsset"
-                    : (widget.properties && "ImageCollectionCustom" === widget.properties[0]) ? "meanImageByMosaicCollections"
-                        : (collectionName.trim().length > 0) ? "cloudMaskImageByMosaicCollection"
-                            : "ImageCollectionbyIndex";
-
+            : (widget.ImageCollectionAsset && widget.ImageCollectionAsset.length > 0) ? "ImageCollectionAsset"
+            : (widget.properties && "ImageCollectionCustom" === widget.properties[0]) ? "meanImageByMosaicCollections"
+            : (collectionName.trim().length > 0) ? "cloudMaskImageByMosaicCollection"
+            : "ImageCollectionbyIndex";
     };
 
     getImageParams = widget => {
@@ -748,19 +743,19 @@ class MapWidget extends React.Component {
 
     getRequestedIndex = collectionName =>
         ["ImageCollectionNDVI",
-            "ImageCollectionEVI",
-            "ImageCollectionEVI2",
-            "ImageCollectionNDMI",
-            "ImageCollectionNDWI"].includes(collectionName)
+         "ImageCollectionEVI",
+         "ImageCollectionEVI2",
+         "ImageCollectionNDMI",
+         "ImageCollectionNDWI"].includes(collectionName)
             ? collectionName.replace("ImageCollection", "")
             : "";
 
     convertCollectionName = collectionName =>
         ["ImageCollectionNDVI",
-            "ImageCollectionEVI",
-            "ImageCollectionEVI2",
-            "ImageCollectionNDMI",
-            "ImageCollectionNDWI"].includes(collectionName)
+         "ImageCollectionEVI",
+         "ImageCollectionEVI2",
+         "ImageCollectionNDMI",
+         "ImageCollectionNDWI"].includes(collectionName)
             ? ""
             : collectionName;
 
@@ -960,10 +955,10 @@ class MapWidget extends React.Component {
                 const bufferPolygon = new Polygon(
                     [
                         [[bufferedExtent[0], bufferedExtent[1]],
-                            [bufferedExtent[0], bufferedExtent[3]],
-                            [bufferedExtent[2], bufferedExtent[3]],
-                            [bufferedExtent[2], bufferedExtent[1]],
-                            [bufferedExtent[0], bufferedExtent[1]]],
+                         [bufferedExtent[0], bufferedExtent[3]],
+                         [bufferedExtent[2], bufferedExtent[3]],
+                         [bufferedExtent[2], bufferedExtent[1]],
+                         [bufferedExtent[0], bufferedExtent[1]]],
                     ]
                 );
                 const bufferedFeature = new Feature(bufferPolygon);
@@ -1044,17 +1039,14 @@ class MapWidget extends React.Component {
 class GraphWidget extends React.Component {
     constructor(props) {
         super(props);
-        this.state = {
-            graphRef: null,
-            isFull:this.props.widget.isFull,
-        };
+        this.state = { graphRef: null };
         Date.prototype.yyyymmdd = function() {
             const mm = this.getMonth() + 1; // getMonth() is zero-based
             const dd = this.getDate();
 
             return [this.getFullYear(),
-                (mm > 9 ? "" : "0") + mm,
-                (dd > 9 ? "" : "0") + dd,
+                    (mm > 9 ? "" : "0") + mm,
+                    (dd > 9 ? "" : "0") + dd,
             ].join("-");
         };
     }
@@ -1305,13 +1297,14 @@ class StatsWidget extends React.Component {
                     <div className="input-group">
                         <div className="input-group-addon">
                             <img
-                                src="img/icon-population.png"
+                                src={window.location.origin + "/img/icon-population.png"}
                                 style={{
                                     width: "50px",
                                     height: "50px",
                                     borderRadius: "25px",
                                     backgroundColor: "#31bab0",
                                 }}
+                                alt="Population"
                             />
                         </div>
                         <label htmlFor={"totalPop_" + widget.id} style={{ color: "#787878", padding: "10px 20px" }}>Total population</label>
@@ -1330,13 +1323,14 @@ class StatsWidget extends React.Component {
                     <div className="input-group">
                         <div className="input-group-addon">
                             <img
-                                src="img/icon-area.png"
+                                src={window.location.origin + "/img/icon-area.png"}
                                 style={{
                                     width: "50px",
                                     height: "50px",
                                     borderRadius: "25px",
                                     backgroundColor: "#31bab0",
                                 }}
+                                alt="Area"
                             />
                         </div>
                         <label htmlFor={"totalArea_" + widget.id} style={{ color: "#787878", padding: "10px 20px" }}>Area</label>
@@ -1355,13 +1349,14 @@ class StatsWidget extends React.Component {
                     <div className="input-group">
                         <div className="input-group-addon">
                             <img
-                                src="img/icon-elevation.png"
+                                src={window.location.origin + "/img/icon-elevation.png"}
                                 style={{
                                     width: "50px",
                                     height: "50px",
                                     borderRadius: "25px",
                                     backgroundColor: "#31bab0",
                                 }}
+                                alt="Elevation"
                             />
                         </div>
                         <label htmlFor={"elevationRange_" + widget.id} style={{ color: "#787878", padding: "10px 20px" }}>Elevation</label>
