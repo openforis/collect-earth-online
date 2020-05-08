@@ -51,7 +51,6 @@ class BasicLayout extends React.PureComponent {
         };
     }
 
-
     componentDidMount() {
         this.fetchProject(this.state.projectId, true)
             .catch(response => {
@@ -289,23 +288,12 @@ class BasicLayout extends React.PureComponent {
     };
 
     onWidgetTypeSelectChanged = event => {
-        let formReady = false;
-        let imageCollection = "";
-        if (event.target.value === "statistics"
-            || event.target.value === "imageAsset"
-            || event.target.value === "imageCollectionAsset"
-            || event.target.value === "ImageElevation") {
-            formReady = true;
-        }
-        if (event.target.value === "ImageElevation") {
-            imageCollection = "USGS/SRTMGL1_003";
-        }
         this.setState({
             selectedWidgetType: event.target.value,
             addCustomImagery: false,
             selectedDataType: "-1",
             widgetTitle: "",
-            imageCollection: imageCollection,
+            imageCollection: event.target.value === "ImageElevation" ? "USGS/SRTMGL1_003" : "",
             graphBand: "",
             graphReducer: "Min",
             imageParams: "",
@@ -327,7 +315,7 @@ class BasicLayout extends React.PureComponent {
             widgetMinDual:"",
             widgetMaxDual:"",
             widgetCloudScoreDual:"",
-            formReady: formReady,
+            formReady: event.target.value === "statistics" || event.target.value === "imageAsset" || event.target.value === "imageCollectionAsset" || event.target.value === "ImageElevation",
             wizardStep: 1,
             availableBands:"",
             availableBandsDual:"",
@@ -392,7 +380,7 @@ class BasicLayout extends React.PureComponent {
             selectedWidgetType: "-1",
             addCustomImagery: false,
             selectedDataTypeDual: "-1",
-            isEditing: false,
+            addDialog: false,
             copyDialog: false,
             selectedDataType: "-1",
             widgetTitle: "",
@@ -644,7 +632,7 @@ class BasicLayout extends React.PureComponent {
                         addCustomImagery: false,
                         selectedWidgetType: "-1",
                         selectedDataTypeDual: "-1",
-                        isEditing: false,
+                        addDialog: false,
                         copyDialog: false,
                         selectedDataType: "-1",
                         widgetTitle: "",
@@ -903,7 +891,6 @@ class BasicLayout extends React.PureComponent {
             });
         });
 
-
     getWidgetTemplateByProjectId = id => {
         this.fetchProject(id)
             .then(() =>{
@@ -936,7 +923,7 @@ class BasicLayout extends React.PureComponent {
             });
     };
 
-    getNewWidgetForm = () => this.state.isEditing === true
+    getNewWidgetForm = () => this.state.addDialog === true
             ? (
                 <React.Fragment>
                     <div className="modal fade show" style={{ display: "block" }}>
@@ -1859,7 +1846,7 @@ class BasicLayout extends React.PureComponent {
     };
 
     onAddItem = () => {
-        this.setState({ isEditing : true });
+        this.setState({ addDialog : true });
     };
 
     openCopyWidgetsDialog = () => {
