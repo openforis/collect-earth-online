@@ -234,9 +234,11 @@ class SideBar extends React.Component {
     render() {
         return this.props.showSidePanel &&
             <div id="lPanel" className="col-lg-3 pr-0 pl-0 overflow-hidden full-height d-flex flex-column">
+                {(this.props.userRole === "admin" || this.props.userId === -1) &&
                 <div className="bg-darkgreen">
                     <h1 className="tree_label" id="panelTitle">Institutions</h1>
                 </div>
+                }
                 {this.props.userId > 0 &&
                  <CreateInstitutionButton documentRoot={this.props.documentRoot}/>
                 }
