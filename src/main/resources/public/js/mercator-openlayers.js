@@ -237,7 +237,6 @@ mercator.createSource = function (sourceConfig, imageryId, documentRoot,
                         if (dateA > dateB) return 1;
                         return 0;
                     });
-                // console.log("sortedData", sortedData);
                 if (sortedData.length === 0) {
                     alert("No usable results found for Planet Daily imagery. Check your access token and/or change the date.");
                 }

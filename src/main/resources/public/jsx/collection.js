@@ -504,7 +504,7 @@ class Collection extends React.Component {
     };
 
     updatePlanetDailyLayer = () => {
-        this.state.currentImagery.sourceConfig.type === "PlanetDaily" ? this.setState({ loading: true }) : null;
+        this.setState({ loading: this.state.currentImagery.sourceConfig.type === "PlanetDaily" });
         mercator.currentMap.getControls().getArray().filter(control => control.element.classList.contains("planet-layer-switcher"))
             .map(control => mercator.currentMap.removeControl(control));
         const { imageryStartDatePlanetDaily, imageryEndDatePlanetDaily, currentPlot } = this.state;
