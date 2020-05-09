@@ -1858,8 +1858,8 @@ CREATE OR REPLACE FUNCTION dump_project_plot_data(_project_uid integer)
             MAX(username) AS email,
             MAX(confidence) as confidence,
             cast(SUM(CASE WHEN flagged > 0 THEN 1 ELSE 0 END) as int) as flagged,
-            cast(COUNT(1) - SUM(CASE WHEN flagged > 0 THEN 1 ELSE 0 END) as int) as assigned,
             MAX(collection_time) as collection_time,
+            cast(SUM(CASE WHEN collection_time IS NOT NULL AND flagged=0 THEN 1 ELSE 0 END) as int) as assigned,
             MAX(analysis_duration) as analysis_duration,
             format('[%s]', string_agg(
                 (CASE WHEN "value" IS NULL THEN
