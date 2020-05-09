@@ -36,8 +36,9 @@ class Project extends React.Component {
             projectDetails: blankProject,
             useTemplatePlots: false,
             useTemplateWidgets: false,
-            projectOptions: {},
-            showGEEScript: false,
+            projectOptions: {
+                showGEEScript: false
+            },
             imageryList: [],
             mapConfig: null,
             plotList: [],
@@ -404,7 +405,7 @@ class Project extends React.Component {
                                     : ceoMapStyles.yellowSquare);
     };
 
-    onShowGEEScriptClick = () => this.setState({ projectOptions: {...this.state.projectOptions, showGEEScript: !this.state.showGEEScript }});
+    onShowGEEScriptClick = () => this.setState({ projectOptions: {...this.state.projectOptions, showGEEScript: !this.state.projectOptions.showGEEScript }});
 
     render() {
         return (

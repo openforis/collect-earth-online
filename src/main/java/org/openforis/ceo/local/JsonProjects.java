@@ -744,6 +744,7 @@ public class JsonProjects implements Projects {
                         project.addProperty("description",   getOrEmptyString(jsonInputs, "description").getAsString());
                         project.addProperty("privacyLevel",  getOrEmptyString(jsonInputs, "privacyLevel").getAsString());
                         project.addProperty("baseMapSource", getOrEmptyString(jsonInputs, "baseMapSource").getAsString());
+                        project.add("projectOptions",        jsonInputs.get("projectOptions").getAsJsonObject());
                         return project;
                     } else {
                         return project;
@@ -1315,6 +1316,7 @@ public class JsonProjects implements Projects {
             newProject.add("surveyRules", jsonInputs.get("surveyRules").getAsJsonArray());
             newProject.addProperty("useTemplatePlots", jsonInputs.get("useTemplatePlots").getAsBoolean());
             newProject.addProperty("useTemplateWidgets", jsonInputs.get("useTemplateWidgets").getAsBoolean());
+            newProject.add("projectOptions", jsonInputs.get("projectOptions").getAsJsonObject());
 
             // Add constant values
             newProject.addProperty("availability", "unpublished");

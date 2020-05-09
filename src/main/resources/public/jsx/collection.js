@@ -40,7 +40,6 @@ class Collection extends React.Component {
             storedInterval: null,
             KMLFeatures: null,
             hasGeoDash: false,
-            projectOptions: {},
             loading: false,
         };
     }
@@ -166,10 +165,7 @@ class Collection extends React.Component {
         .then(project => {
             if (project.id > 0 && project.availability !== "archived") {
                 const surveyQuestions = convertSampleValuesToSurveyQuestions(project.sampleValues);
-                this.setState({
-                    currentProject: { ...project, surveyQuestions: surveyQuestions },
-                    projectOptions: project.projectOptions
-                });
+                this.setState({ currentProject: { ...project, surveyQuestions: surveyQuestions }});
                 return Promise.resolve("resolved");
             } else {
                 return Promise.reject(project.availability === "archived"
@@ -1291,7 +1287,7 @@ class Collection extends React.Component {
                         loadingPlots={this.state.plotList.length === 0}
                         KMLFeatures={this.state.KMLFeatures}
                         zoomMapToPlot={() => mercator.zoomMapToLayer(this.state.mapConfig, "currentPlot")}
-                        projectOptions={this.state.projectOptions}
+                        projectOptions={this.state.currentProject.projectOptions}
                         mapConfig={this.state.mapConfig}
                     />
                     <ImageryOptions
@@ -1562,7 +1558,7 @@ class PlotNavigation extends React.Component {
     loadGEEScript = () => {
         const geometry = mercator.getViewPolygon(this.props.mapConfig);
         const geoJson = "{\"type\": \"Polygon\", \"coordinates\":" + JSON.stringify(geometry.getCoordinates()) + "}";
-        window.open("https://billyz313.users.earthengine.app/view/ceoplotancillary#geoJson=" + geoJson);
+        window.open("https://billyz313.users.earthengine.app/view/ceoplotancillary#geoJson=" + geoJson, "_ceo-plot-ancillary");
     };
 
     geeButton = () => (
@@ -1600,7 +1596,9 @@ class PlotNavigation extends React.Component {
                             </div>
                         </div>
                         {props.plotId && this.geoButtons()}
-                        {props.plotId && props.projectOptions.hasOwnProperty("showGEEScript") && props.projectOptions.showGEEScript && this.geeButton()}
+                        {props.plotId
+                            && props.projectOptions.hasOwnProperty("showGEEScript")
+                            && props.projectOptions.showGEEScript && this.geeButton()}
                     </Fragment>
                 }
             </div>
