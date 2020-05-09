@@ -523,7 +523,7 @@ const imageryOptions = [
             { key: "month", display: "Default Month", type: "number", options: { min: "1", max: "12", step: "1" } },
             {
                 key: "bandCombination",
-                display: "Bands Combination",
+                display: "Band Combination",
                 type: "select",
                 options: [
                     { label: "VH,VV,VH/VV", value: "VH,VV,VH/VV" },
@@ -549,7 +549,7 @@ const imageryOptions = [
             { key: "month", display: "Default Month", type: "number", options: { min: "1", max: "12", step: "1" } },
             {
                 key: "bandCombination",
-                display: "Bands Combination",
+                display: "Band Combination",
                 type: "select",
                 options: [
                     { label: "True Color", value: "TrueColor" },
@@ -583,7 +583,7 @@ class NewImagery extends React.Component {
 
     addCustomImagery = () => {
         const sourceConfig = this.stackParams();
-        const message = this.checkDateField(sourceConfig);
+        const message = this.validateData(sourceConfig);
         if (!this.checkAllParams()) {
             alert("You must fill out all fields.");
         } else if (["Planet", "PlanetDaily", "Sentinel1", "Sentinel2"].includes(sourceConfig.type) && message) {
@@ -657,7 +657,7 @@ class NewImagery extends React.Component {
             .every(o => o.required === false
                         || (this.state.newImageryParams[o.key] && this.state.newImageryParams[o.key].length > 0));
 
-    checkDateField = (sourceConfig) => {
+    validateData = (sourceConfig) => {
         if (sourceConfig.type === "Sentinel1" || sourceConfig.type === "Sentinel2") {
             const year = parseInt(sourceConfig.year);
             const yearMinimum = sourceConfig.type === "Sentinel1" ? 2014 : 2015;
@@ -681,6 +681,7 @@ class NewImagery extends React.Component {
             const endDate = sourceConfig.endDate;
             return (new Date(startDate) > new Date(endDate)) ? "Start date must be smaller than the end date." : null;
         }
+        return null;
     };
 
     //    Render Functions    //
@@ -781,7 +782,7 @@ class NewImagery extends React.Component {
         } else if (imageryOptions[val].type === "Sentinel1" || imageryOptions[val].type === "Sentinel2") {
             this.setState({
                 newImageryAttribution: "Google Earth Engine | © Google LLC",
-                newImageryParams: { "bandCombination": imageryOptions[val]["params"].filter(param => param.key === "bandCombination")[0].options[0].value }
+                newImageryParams: { bandCombination: imageryOptions[val]["params"].filter(param => param.key === "bandCombination")[0].options[0].value }
             });
         } else {
             this.setState({ newImageryParams: {} });

@@ -434,8 +434,8 @@ class Collection extends React.Component {
             ? newImageryYearSentinel1 + "-" + (imageryMonthSentinel1 > 9 ? "" : "0") + imageryMonthSentinel1 + "-01"
             : newImageryYearSentinel2 + "-" + (imageryMonthSentinel2 > 9 ? "" : "0") + imageryMonthSentinel2 + "-01";
         const endDate = eventTarget.id === "sentinel1-year"
-            ? new Date(new Date(newImageryYearSentinel1, imageryMonthSentinel1, 1).setDate(new Date(newImageryYearSentinel1, imageryMonthSentinel1, 1).getDate() - 1))
-            : new Date(new Date(newImageryYearSentinel2, imageryMonthSentinel2, 1).setDate(new Date(newImageryYearSentinel2, imageryMonthSentinel2, 1).getDate() - 1));
+            ? new Date(newImageryYearSentinel1, imageryMonthSentinel1, 0)
+            : new Date(newImageryYearSentinel2, imageryMonthSentinel2, 0);
 
         this.setState({
             imageryYearSentinel1: newImageryYearSentinel1,
@@ -454,8 +454,8 @@ class Collection extends React.Component {
             ? imageryYearSentinel1 + "-" + (newImageryMonthSentinel1 > 9 ? "" : "0") + newImageryMonthSentinel1 + "-01"
             : imageryYearSentinel2 + "-" + (newImageryMonthSentinel2 > 9 ? "" : "0") + newImageryMonthSentinel2 + "-01";
         const endDate = eventTarget.id === "sentinel1-month"
-            ? new Date(new Date(imageryYearSentinel1, newImageryMonthSentinel1, 1).setDate(new Date(imageryYearSentinel1, newImageryMonthSentinel1, 1).getDate() - 1))
-            : new Date(new Date(imageryYearSentinel2, newImageryMonthSentinel2, 1).setDate(new Date(imageryYearSentinel2, newImageryMonthSentinel2, 1).getDate() - 1));
+            ? new Date(imageryYearSentinel1, newImageryMonthSentinel1, 0)
+            : new Date(imageryYearSentinel2, newImageryMonthSentinel2, 0);
 
         this.setState({
             imageryMonthSentinel1: newImageryMonthSentinel1,
@@ -466,13 +466,9 @@ class Collection extends React.Component {
 
     setBandCombinationSentinel = (eventTarget) => {
         const { bandCombinationSentinel1, bandCombinationSentinel2 } = this.state;
-
-        const newBandCombinationSentinel1 = (eventTarget.id === "sentinel1-bandCombination") && eventTarget.value ? eventTarget.value : bandCombinationSentinel1;
-        const newBandCombinationSentinel2 = (eventTarget.id === "sentinel2-bandCombination") && eventTarget.value ? eventTarget.value : bandCombinationSentinel2;
-
         this.setState({
-            bandCombinationSentinel1: newBandCombinationSentinel1,
-            bandCombinationSentinel2: newBandCombinationSentinel2,
+            bandCombinationSentinel1: (eventTarget.id === "sentinel1-bandCombination") && eventTarget.value ? eventTarget.value : bandCombinationSentinel1,
+            bandCombinationSentinel2: (eventTarget.id === "sentinel2-bandCombination") && eventTarget.value ? eventTarget.value : bandCombinationSentinel2,
         });
     };
 
@@ -516,14 +512,14 @@ class Collection extends React.Component {
                 const bandCombination = this.state.currentImagery.sourceConfig.bandCombination ||
                     (this.state.currentImagery.sourceConfig.type === "Sentinel1" ? "VH,VV,VH/VV" : "TrueColor");
                 const startDate = year + "-" + (month > 9 ? "" : "0") + month + "-01";
-                const endDate = new Date(new Date(year, month, 1).setDate(new Date(year, month, 1).getDate() - 1));
+                const endDate = new Date(year, month, 0);
 
-                const stateValues = {};
-                stateValues[this.state.currentImagery.sourceConfig.type === "Sentinel1" ? "imageryYearSentinel1" : "imageryYearSentinel2"] = year;
-                stateValues[this.state.currentImagery.sourceConfig.type === "Sentinel1" ? "imageryMonthSentinel1" : "imageryMonthSentinel2"] = month;
-                stateValues[this.state.currentImagery.sourceConfig.type === "Sentinel1" ? "bandCombinationSentinel1" : "bandCombinationSentinel2"] = bandCombination;
-                stateValues["imageryAttribution"] = this.state.currentImagery.attribution + " | " + startDate + " to " + formatDateISO(endDate);
-                this.setState(stateValues);
+                this.setState({
+                    [this.state.currentImagery.sourceConfig.type === "Sentinel1" ? "imageryYearSentinel1" : "imageryYearSentinel2"] : year,
+                    [this.state.currentImagery.sourceConfig.type === "Sentinel1" ? "imageryMonthSentinel1" : "imageryMonthSentinel2"] : month,
+                    [this.state.currentImagery.sourceConfig.type === "Sentinel1" ? "bandCombinationSentinel1" : "bandCombinationSentinel2"] : bandCombination,
+                    "imageryAttribution" : this.state.currentImagery.attribution + " | " + startDate + " to " + formatDateISO(endDate),
+                });
             }
         }
     };
@@ -618,8 +614,8 @@ class Collection extends React.Component {
                                    currentImagery.title,
                                    this.state.currentProject.boundary,
                                    sourceConfig => {
-                                       sourceConfig.month = (type === "sentinel1") ? imageryMonthSentinel1 : imageryMonthSentinel2;
-                                       sourceConfig.year = (type === "sentinel1") ? imageryYearSentinel1 : imageryYearSentinel2;
+                                       sourceConfig.month = (type === "sentinel1") ? imageryMonthSentinel1.toString() : imageryMonthSentinel2.toString();
+                                       sourceConfig.year = (type === "sentinel1") ? imageryYearSentinel1.toString() : imageryYearSentinel2.toString();
                                        sourceConfig.bandCombination = (type === "sentinel1") ? bandCombinationSentinel1 : bandCombinationSentinel2;
                                        return sourceConfig;
                                    },
@@ -1870,8 +1866,7 @@ class ImageryOptions extends React.Component {
                                 onChange={e => this.props.setImageryFeatureProfileSecureWatch(e.target.value)}
                                 value={this.props.imageryFeatureProfileSecureWatch}
                             >
-                                { featureProfileOptions
-                                    .map(el => <option value={el.value} key={el.value}>{el.label}</option>) }
+                                {featureProfileOptions.map(el => <option value={el.value} key={el.value}>{el.label}</option>)}
                             </select>
                         </div>
                     </div>
@@ -1898,7 +1893,7 @@ class ImageryOptions extends React.Component {
                             id="securewatch-option2-select"
                         >
                             <option value="DEFAULT" disabled> -- select a date -- </option>
-                            { this.props.imagerySecureWatchAvailableDates.map((date, uid) => <option key={uid} value={date}>{date}</option>) },
+                            {this.props.imagerySecureWatchAvailableDates.map((date, uid) => <option key={uid} value={date}>{date}</option>)}
                         </select>
                     </div>
                 </div>
@@ -1949,8 +1944,7 @@ class ImageryOptions extends React.Component {
                             onChange={e => this.props.setBandCombinationSentinel(e.target)}
                             value={this.props.bandCombinationSentinel1}
                         >
-                            { bandCombinationOptions
-                                .map(el => <option value={el.value} key={el.value}>{el.label}</option>) }
+                            {bandCombinationOptions.map(el => <option value={el.value} key={el.value}>{el.label}</option>)}
                         </select>
                     </div>
                 </div>
@@ -2003,8 +1997,7 @@ class ImageryOptions extends React.Component {
                             onChange={e => this.props.setBandCombinationSentinel(e.target)}
                             value={this.props.bandCombinationSentinel2}
                         >
-                            { bandCombinationOptions
-                                .map(el => <option value={el.value} key={el.value}>{el.label}</option>) }
+                            {bandCombinationOptions.map(el => <option value={el.value} key={el.value}>{el.label}</option>)}
                         </select>
                     </div>
                 </div>

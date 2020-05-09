@@ -263,23 +263,23 @@ mercator.createSource = function (sourceConfig, imageryId, documentRoot,
         });
     } else if (sourceConfig.type === "Sentinel2" || sourceConfig.type === "Sentinel1") {
         const bandCombination = sourceConfig.bandCombination;
-        const bands = sourceConfig.type === "Sentinel2" ? bandCombination === "FalseColorInfrared" ? "B8,B4,B3"
-            : bandCombination === "FalseColorUrban" ? "B12,B11,B4"
-                : bandCombination === "Agriculture" ? "B11,B8,B2"
-                    : bandCombination === "HealthyVegetation" ? "B8,B11,B2"
-                        : bandCombination === "ShortWaveInfrared" ? "B12,B8A,B4" : "B4,B3,B2" : bandCombination;
-        const year = parseInt(sourceConfig.year);
-        const month = (parseInt(sourceConfig.month) > 9 ? "" : "0") + parseInt(sourceConfig.month);
-        // month is zero based
-        const endDate = new Date(new Date(year, month, 1).setDate(new Date(year, month, 1).getDate() - 1));
+        const bands = sourceConfig.type === "Sentinel1" ? bandCombination
+            : bandCombination === "FalseColorInfrared" ? "B8,B4,B3"
+                : bandCombination === "FalseColorUrban" ? "B12,B11,B4"
+                    : bandCombination === "Agriculture" ? "B11,B8,B2"
+                        : bandCombination === "HealthyVegetation" ? "B8,B11,B2"
+                            : bandCombination === "ShortWaveInfrared" ? "B12,B8A,B4"
+                                : "B4,B3,B2";
 
+        const endDate = new Date(sourceConfig.year, sourceConfig.month, 0);
+        console.log(sourceConfig);
         const theJson = {
             path: sourceConfig.type === "Sentinel2" ? "FilteredSentinel" : "FilteredSentinelSAR",
             bands: bands,
             min: sourceConfig.min,
             max: sourceConfig.max,
             cloudLessThan: sourceConfig.type === "Sentinel2" ? parseInt(sourceConfig.cloudScore) : null,
-            dateFrom: sourceConfig.year + "-" + month + "-01",
+            dateFrom: sourceConfig.year + "-" + (sourceConfig.month.length === 1 ? "0" : "") + sourceConfig.month + "-01",
             dateTo : formatDateISO(endDate),
         };
         const theID = Math.random().toString(36).substr(2, 16) + "_" + Math.random().toString(36).substr(2, 9);
