@@ -67,8 +67,6 @@ class Project extends React.Component {
 
         if (this.state.mapConfig
             && this.state.projectDetails.baseMapSource !== prevState.projectDetails.baseMapSource) {
-            // occurs when template project is selected first and then unselected
-            // if (this.state.projectDetails.baseMapSource === "") this.state.projectDetails.baseMapSource = this.state.imageryList[0]["title"];
             mercator.setVisibleLayer(this.state.mapConfig, this.state.projectDetails.baseMapSource);
         }
 
@@ -234,6 +232,10 @@ class Project extends React.Component {
             alert("A sample SHP (.zip) file is required.");
             return false;
 
+        } else if (!projectDetails.baseMapSource) {
+            alert("Select a valid Basemap.");
+            return false;
+
         } else {
             return true;
         }
@@ -242,7 +244,7 @@ class Project extends React.Component {
     setProjectTemplate = (newTemplateId) => {
         if (parseInt(newTemplateId) === 0) {
             this.setState({
-                projectDetails: blankProject,
+                projectDetails: { ...blankProject, baseMapSource : this.state.imageryList[0].title },
                 plotList: [],
                 coordinates: {
                     lonMin: "",
@@ -253,6 +255,7 @@ class Project extends React.Component {
                 useTemplatePlots: false,
                 useTemplateWidgets: false,
             });
+            mercator.removeLayerByTitle(this.state.mapConfig, "dragBoxLayer");
         } else {
             const templateProject = this.state.projectList.find(p => p.id === newTemplateId);
             const newSurveyQuestions = convertSampleValuesToSurveyQuestions(templateProject.sampleValues);
