@@ -82,8 +82,7 @@ mercator.getViewExtent = function (mapConfig) {
 // [Pure] Returns the polygon from the current map view
 mercator.getViewPolygon = function (mapConfig) {
     return fromExtent(mercator.getViewExtent(mapConfig));
-}
-
+};
 
 // [Pure] Returns the minimum distance in meters from the view center
 // to the view extent.
