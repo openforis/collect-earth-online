@@ -340,9 +340,11 @@ function InstitutionList({
                                 - projects.filter(proj => a.id === proj.institution).length
                             : sortAlphabetically(a.name, b.name));
 
+    const userInstStyle = userInstitutionList ? { maxHeight: "fit-content" } : {};
+
     return (
         filteredInstitutions.length > 0
-        ? <ul className="tree" style={{ overflowY: "scroll", overflowX: "hidden", minHeight: "3.5rem" }}>
+        ? <ul className="tree" style={{ overflowY: "scroll", overflowX: "hidden", minHeight: "3.5rem", flex: "1 1 0%", ...userInstStyle }}>
             {filteredInstitutions.map((institution, uid) =>
                 <Institution
                     key={uid}
