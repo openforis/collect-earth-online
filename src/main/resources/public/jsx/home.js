@@ -240,7 +240,7 @@ class SideBar extends React.Component {
                 </div>
                 }
                 {this.props.userId > 0 &&
-                 <CreateInstitutionButton documentRoot={this.props.documentRoot}/>
+                <CreateInstitutionButton documentRoot={this.props.documentRoot}/>
                 }
                 <InstitutionFilter
                     documentRoot={this.props.documentRoot}
@@ -258,43 +258,43 @@ class SideBar extends React.Component {
                     toggleShowFilters={this.toggleShowFilters}
                 />
                 {this.props.userId > 0 && this.props.userRole !== "admin" &&
-                 <Fragment>
-                     <div className="bg-darkgreen">
-                         <h2 className="tree_label" id="panelTitle">Your Affiliations</h2>
-                     </div>
-                     <InstitutionList
-                         documentRoot={this.props.documentRoot}
-                         userId={this.props.userId}
-                         institutions={this.props.userInstitutions}
-                         projects={this.props.projects}
-                         filterText={this.state.filterText}
-                         useFirstLetter={this.state.useFirstLetter}
-                         filterInstitution={this.state.filterInstitution}
-                         sortByNumber={this.state.sortByNumber}
-                         showEmptyInstitutions={this.state.showEmptyInstitutions}
-                         userInstitutionList={true}
-                     />
-                     <div className="bg-darkgreen">
-                         <h2 className="tree_label" id="panelTitle">Other Institutions</h2>
-                     </div>
-                 </Fragment>
+                <Fragment>
+                    <div className="bg-darkgreen">
+                        <h2 className="tree_label" id="panelTitle">Your Affiliations</h2>
+                    </div>
+                    <InstitutionList
+                        documentRoot={this.props.documentRoot}
+                        userId={this.props.userId}
+                        institutions={this.props.userInstitutions}
+                        projects={this.props.projects}
+                        filterText={this.state.filterText}
+                        useFirstLetter={this.state.useFirstLetter}
+                        filterInstitution={this.state.filterInstitution}
+                        sortByNumber={this.state.sortByNumber}
+                        showEmptyInstitutions={this.state.showEmptyInstitutions}
+                        userInstitutionList
+                    />
+                    <div className="bg-darkgreen">
+                        <h2 className="tree_label" id="panelTitle">Other Institutions</h2>
+                    </div>
+                </Fragment>
                 }
                 {this.props.institutions.length > 0 && this.props.projects.length > 0 ?
-                 <InstitutionList
-                     documentRoot={this.props.documentRoot}
-                     userId={this.props.userId}
-                     institutions={this.props.institutions}
-                     projects={this.props.projects}
-                     filterText={this.state.filterText}
-                     useFirstLetter={this.state.useFirstLetter}
-                     filterInstitution={this.state.filterInstitution}
-                     sortByNumber={this.state.sortByNumber}
-                     showEmptyInstitutions={this.state.showEmptyInstitutions}
-                     userInstitutionList={false}
-                 /> :
+                    <InstitutionList
+                        documentRoot={this.props.documentRoot}
+                        userId={this.props.userId}
+                        institutions={this.props.institutions}
+                        projects={this.props.projects}
+                        filterText={this.state.filterText}
+                        useFirstLetter={this.state.useFirstLetter}
+                        filterInstitution={this.state.filterInstitution}
+                        sortByNumber={this.state.sortByNumber}
+                        showEmptyInstitutions={this.state.showEmptyInstitutions}
+                        userInstitutionList={false}
+                    /> :
                  (this.props.userInstitutions.length > 0 ?
-                  <h3 className="p-3">No unaffiliated institutions found.</h3> :
-                  <h3 className="p-3">Loading data...</h3>)
+                     <h3 className="p-3">No unaffiliated institutions found.</h3> :
+                     <h3 className="p-3">Loading data...</h3>)
                 }
             </div>;
     }
@@ -310,7 +310,7 @@ function InstitutionList({
     useFirstLetter,
     showEmptyInstitutions,
     sortByNumber,
-    userInstitutionList
+    userInstitutionList,
 }) {
     const filterTextLower = filterText.toLocaleLowerCase();
 
