@@ -272,7 +272,6 @@ mercator.createSource = function (sourceConfig, imageryId, documentRoot,
                                 : "B4,B3,B2";
 
         const endDate = new Date(sourceConfig.year, sourceConfig.month, 0);
-        console.log(sourceConfig);
         const theJson = {
             path: sourceConfig.type === "Sentinel2" ? "FilteredSentinel" : "FilteredSentinelSAR",
             bands: bands,

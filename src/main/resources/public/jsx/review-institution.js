@@ -680,8 +680,9 @@ class NewImagery extends React.Component {
             const startDate = sourceConfig.startDate;
             const endDate = sourceConfig.endDate;
             return (new Date(startDate) > new Date(endDate)) ? "Start date must be smaller than the end date." : null;
+        } else {
+            return null;
         }
-        return null;
     };
 
     //    Render Functions    //
@@ -785,7 +786,7 @@ class NewImagery extends React.Component {
                 newImageryParams: { bandCombination: imageryOptions[val]["params"].filter(param => param.key === "bandCombination")[0].options[0].value }
             });
         } else {
-            this.setState({ newImageryParams: {} });
+            this.setState({ newImageryParams: {}});
         }
     };
 
