@@ -735,6 +735,7 @@ public class PostgresProjects implements Projects {
                 var computedSamplesPerPlot =
                     sampleDistribution.equals("gridded") ? countGriddedSampleSet(plotSize, sampleResolution)
                     : sampleDistribution.equals("random") ? samplesPerPlot
+                    : sampleDistribution.equals("center") ? 1
                     : (extSampleCount / extPlotCount);
 
                 checkPlotLimits(extPlotCount, 50000, computedSamplesPerPlot, 200, 350000);
@@ -781,8 +782,8 @@ public class PostgresProjects implements Projects {
                 if (totalPlots == 0) {throw new RuntimeException("You cannot create a project with 0 plots.");}
 
                 var plotsPerSample =
-                    sampleDistribution.equals("gridded")
-                        ? countGriddedSampleSet(plotSize, sampleResolution)
+                    sampleDistribution.equals("gridded") ? countGriddedSampleSet(plotSize, sampleResolution)
+                        : sampleDistribution.equals("center") ? 1
                         : samplesPerPlot;
 
                 checkPlotLimits(totalPlots, 5000, plotsPerSample, 200, 50000);
@@ -853,7 +854,7 @@ public class PostgresProjects implements Projects {
     private static void createProjectSamples(Connection conn, Integer newPlotId, String sampleDistribution, Double[] plotCenter, String plotShape, Double plotSize, Integer samplesPerPlot, Double sampleResolution, Boolean isShp) {
 
         var newSamplePoints =
-        isShp || !List.of("random", "gridded").contains(sampleDistribution)
+        isShp || !List.of("random", "gridded", "center").contains(sampleDistribution)
         ? new Double[][]{plotCenter}
         : sampleDistribution.equals("random")
             ? createRandomSampleSet(plotCenter, plotShape, plotSize, samplesPerPlot)

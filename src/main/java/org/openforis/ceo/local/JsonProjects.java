@@ -1175,6 +1175,7 @@ public class JsonProjects implements Projects {
         var computedSamplesPerPlot =
             sampleDistribution.equals("random") ? samplesPerPlot
             : sampleDistribution.equals("gridded") ? countGriddedSampleSet(plotSize, sampleResolution)
+            : sampleDistribution.equals("center") ? 1
             : sampleDistribution.equals("csv") ? (csvSamplePointsFinal.size() / totalPlots)
             : (shpSampleCentersFinal.size() / totalPlots);
 
@@ -1223,7 +1224,7 @@ public class JsonProjects implements Projects {
                         ? (List.of("random", "gridded", "csv").contains(plotDistribution)
                            ? createRandomSampleSet(plotCenter, plotShape, plotSize, samplesPerPlot)
                            : new Double[][]{plotCenter})
-                        : (sampleDistribution.equals("gridded")
+                        : ((sampleDistribution.equals("gridded") || sampleDistribution.equals("center"))
                            ? (List.of("random", "gridded", "csv").contains(plotDistribution)
                               ? createGriddedSampleSet(plotCenter, plotShape, plotSize, sampleResolution)
                               : new Double[][]{plotCenter})

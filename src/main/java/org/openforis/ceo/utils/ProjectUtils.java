@@ -106,7 +106,7 @@ public class ProjectUtils {
             return valueDistribution;
         }
     }
-         
+
     private static HttpServletResponse writeCsvFile(HttpServletResponse response, String header, String content,
                                                     String outputFileName) {
         response.setContentType("text/csv");
@@ -130,7 +130,7 @@ public class ProjectUtils {
         var sampleValueKeys = getSampleKeys(sampleValueGroups);
         // fileds are straight forward json values
         final String[] fields = Stream.concat(
-                        Arrays.stream(new String[]{"plot_id", "center_lon", "center_lat", "size_m", "shape", "flagged", "analyses", "sample_points", "user_id"}), 
+                        Arrays.stream(new String[]{"plot_id", "center_lon", "center_lat", "size_m", "shape", "flagged", "analyses", "sample_points", "user_id"}),
                         Arrays.stream(externalHeaders))
                         .toArray(String[]::new);
         // labels require interpretation of the next json object
@@ -139,7 +139,7 @@ public class ProjectUtils {
         final String csvHeader = Stream.concat(Arrays.stream(fields), Arrays.stream(labels))
                                     .map(field -> csvQuotes(field).toUpperCase())
                                     .collect(Collectors.joining(","));
-        
+
         var csvContent = toStream(plotSummaries)
                 .map(plotSummary -> {
                     var fieldStream = Arrays.stream(fields);
@@ -152,7 +152,7 @@ public class ProjectUtils {
                                         : csvQuotes(plotSummary.get(field).getAsString())
                                     : ""),
                             labelStream.map(label -> distribution.has(label)
-                                    ? distribution.getAsJsonObject().get(label).isJsonPrimitive() 
+                                    ? distribution.getAsJsonObject().get(label).isJsonPrimitive()
                                         ? csvQuotes(distribution.get(label).getAsString())
                                         : csvQuotes(distribution.getAsJsonObject().get(label).getAsJsonObject().get("answer").getAsString())
                                     : "0.0")
@@ -163,7 +163,7 @@ public class ProjectUtils {
         var outputFileName = "ceo-" + projectName + "-plot-data-" + currentDate;
 
         return writeCsvFile(res.raw(), csvHeader, csvContent, outputFileName);
-        
+
     }
 
     public static HttpServletResponse outputRawCsv(Response res, JsonArray sampleValueGroups, JsonArray sampleSummaries, String projectName, String[] externalHeaders) {
@@ -175,7 +175,7 @@ public class ProjectUtils {
 
         // fileds are straight forward json values
         final String[] fields = Stream.concat(
-                        Arrays.stream(new String[]{"plot_id", "sample_id", "lon", "lat", "flagged", "analyses", "user_id"}), 
+                        Arrays.stream(new String[]{"plot_id", "sample_id", "lon", "lat", "flagged", "analyses", "user_id"}),
                         Arrays.stream(externalHeaders))
                         .toArray(String[]::new);
         // labels require interpretation of the next json object
@@ -191,7 +191,7 @@ public class ProjectUtils {
                 .map(sampleSummary -> {
                     var fieldStream = Arrays.stream(fields);
                     var labelStream = Arrays.stream(labels);
-                    return Stream.concat(fieldStream.map(field -> !sampleSummary.has(field) || sampleSummary.get(field).isJsonNull() 
+                    return Stream.concat(fieldStream.map(field -> !sampleSummary.has(field) || sampleSummary.get(field).isJsonNull()
                         ? "" : sampleSummary.get(field).getAsString()),
                             labelStream.map(label -> {
                                 var value = sampleSummary.get("value");
@@ -212,7 +212,7 @@ public class ProjectUtils {
                                 } else {
                                     return "";
                                 }
-                            })).collect(Collectors.joining(","));         
+                            })).collect(Collectors.joining(","));
                 }).collect(Collectors.joining("\n"));
 
         var currentDate = LocalDate.now().toString();

@@ -133,7 +133,9 @@ class Project extends React.Component {
                       projectTemplate: this.state.projectDetails.id,
                       sampleDistribution: this.state.projectDetails.sampleDistribution,
                       samplesPerPlot: this.state.projectDetails.samplesPerPlot,
-                      sampleResolution: this.state.projectDetails.sampleResolution,
+                      sampleResolution: this.state.projectDetails.sampleDistribution === "center"
+                            ? 2 * this.state.projectDetails.plotSize
+                            : this.state.projectDetails.sampleResolution,
                       sampleValues: this.state.projectDetails.surveyQuestions,
                       surveyRules: this.state.projectDetails.surveyRules,
                       plotFileName: this.state.projectDetails.plotFileName,
@@ -238,6 +240,18 @@ class Project extends React.Component {
 
         } else if (!projectDetails.baseMapSource) {
             alert("Select a valid Basemap.");
+            return false;
+
+        } else if (projectDetails.sampleDistribution !== "center"
+                    && projectDetails.plotShape === "circle"
+                    && projectDetails.sampleResolution >= projectDetails.plotSize / Math.sqrt(2)) {
+            alert("The sample resolution must be less than plot diameter divided by the square root of 2.");
+            return false;
+
+        } else if (projectDetails.sampleDistribution !== "center"
+                    && projectDetails.plotShape === "square"
+                    && parseInt(projectDetails.sampleResolution) >= projectDetails.plotSize) {
+            alert("The sample resolution must be less than the plot width.");
             return false;
 
         } else {
@@ -865,6 +879,24 @@ function SampleDesign ({
                     <input
                         className="form-check-input"
                         type="radio"
+                        id="sample-distribution-center"
+                        name="sample-distribution"
+                        defaultValue="center"
+                        onChange={() => setProjectDetail("sampleDistribution", "center")}
+                        checked={sampleDistribution === "center"}
+                        disabled={plotDistribution === "shp"}
+                    />
+                    <label
+                        className="form-check-label"
+                        htmlFor="sample-distribution-center"
+                    >
+                        Center
+                    </label>
+                </div>
+                <div className="form-check form-check-inline">
+                    <input
+                        className="form-check-input"
+                        type="radio"
                         id="sample-distribution-csv"
                         name="sample-distribution"
                         defaultValue="csv"
@@ -937,6 +969,8 @@ function SampleDesign ({
                         "Sample points will be randomly distributed within the plot boundary."}
                     {sampleDistribution === "gridded" &&
                         "Sample points will be arranged on a grid within the plot boundary using the sample resolution selected below."}
+                    {sampleDistribution === "center" &&
+                        "A Sample point will be placed on the center of the plot."}
                     {sampleDistribution === "csv" &&
                         "Specify your own sample points by uploading a CSV with these fields: LON,LAT,PLOTID,SAMPLEID."}
                     {sampleDistribution === "shp" &&
