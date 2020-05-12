@@ -236,6 +236,18 @@ class Project extends React.Component {
             alert("Select a valid Basemap.");
             return false;
 
+        } else if (projectDetails.sampleDistribution !== "center"
+                    && projectDetails.plotShape === "circle"
+                    && projectDetails.sampleResolution >= projectDetails.plotSize / Math.sqrt(2)) {
+            alert("The sample resolution must be less than diameter divided by the square root of 2.");
+            return false;
+
+        } else if (projectDetails.sampleDistribution !== "center"
+                    && projectDetails.plotShape === "square"
+                    && parseInt(projectDetails.sampleResolution) >= projectDetails.plotSize) {
+            alert("The sample resolution must be less than the width.");
+            return false;
+
         } else {
             return true;
         }
@@ -302,6 +314,8 @@ class Project extends React.Component {
 
     setProjectDetail = (key, newValue) =>
         this.setState({ projectDetails: { ...this.state.projectDetails, [key]: newValue }});
+
+    setProjectDetails = (obj) => this.setState({ projectDetails: { ...this.state.projectDetails, ...obj }});
 
     setSurveyQuestions = (newSurveyQuestions) =>
         this.setState({ projectDetails: { ...this.state.projectDetails, surveyQuestions: newSurveyQuestions }});
@@ -416,6 +430,7 @@ class Project extends React.Component {
                             projectDetails={this.state.projectDetails}
                             projectList={this.state.projectList}
                             setProjectDetail={this.setProjectDetail}
+                            setProjectDetails={this.setProjectDetails}
                             setProjectTemplate={this.setProjectTemplate}
                             setSurveyQuestions={this.setSurveyQuestions}
                             setSurveyRules={this.setSurveyRules}
@@ -467,8 +482,8 @@ function ProjectDesignForm(props) {
                 </Fragment>
             :
                 <Fragment>
-                    <PlotDesign projectDetails={props.projectDetails} setProjectDetail={props.setProjectDetail}/>
-                    <SampleDesign projectDetails={props.projectDetails} setProjectDetail={props.setProjectDetail}/>
+                    <PlotDesign projectDetails={props.projectDetails} setProjectDetail={props.setProjectDetail} setProjectDetails={props.setProjectDetails}/>
+                    <SampleDesign projectDetails={props.projectDetails} setProjectDetail={props.setProjectDetail} setProjectDetails={props.setProjectDetails}/>
                 </Fragment>
             }
             <SurveyDesign
@@ -585,8 +600,10 @@ function PlotDesign ({
         plotSpacing,
         plotSize,
         plotFileName,
+        sampleDistribution
     },
     setProjectDetail,
+    setProjectDetails
 }) {
 
     return (
@@ -789,7 +806,11 @@ function PlotDesign ({
                             step="any"
                             value={plotSize}
                             disabled={plotDistribution === "shp"}
-                            onChange={e => setProjectDetail("plotSize", e.target.value)}
+                            onChange={e => {
+                                sampleDistribution === "center"
+                                    ? setProjectDetails({"plotSize": e.target.value, "sampleResolution": 2 * parseInt(e.target.value)})
+                                    : setProjectDetail("plotSize", e.target.value);
+                            }}
                         />
                     </div>
                 </div>
@@ -801,8 +822,10 @@ function PlotDesign ({
 
 function SampleDesign ({
     setProjectDetail,
+    setProjectDetails,
     projectDetails: {
         plotDistribution,
+        plotSize,
         sampleDistribution,
         samplesPerPlot,
         sampleResolution,
@@ -847,6 +870,24 @@ function SampleDesign ({
                         htmlFor="sample-distribution-gridded"
                     >
                         Gridded
+                    </label>
+                </div>
+                <div className="form-check form-check-inline">
+                    <input
+                        className="form-check-input"
+                        type="radio"
+                        id="sample-distribution-center"
+                        name="sample-distribution"
+                        defaultValue="center"
+                        onChange={() => setProjectDetails({"sampleDistribution": "center", "sampleResolution": 2 * parseInt(plotSize)})}
+                        checked={sampleDistribution === "center"}
+                        disabled={plotDistribution === "shp"}
+                    />
+                    <label
+                        className="form-check-label"
+                        htmlFor="sample-distribution-center"
+                    >
+                        Center
                     </label>
                 </div>
                 <div className="form-check form-check-inline">
@@ -925,6 +966,8 @@ function SampleDesign ({
                         "Sample points will be randomly distributed within the plot boundary."}
                     {sampleDistribution === "gridded" &&
                         "Sample points will be arranged on a grid within the plot boundary using the sample resolution selected below."}
+                    {sampleDistribution === "center" &&
+                        "A Sample point will be placed on the center of the plot."}
                     {sampleDistribution === "csv" &&
                         "Specify your own sample points by uploading a CSV with these fields: LON,LAT,PLOTID,SAMPLEID."}
                     {sampleDistribution === "shp" &&

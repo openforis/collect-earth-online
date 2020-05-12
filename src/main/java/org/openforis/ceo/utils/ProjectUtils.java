@@ -379,24 +379,13 @@ public class ProjectUtils {
         var top = centerY + radius;
         var steps = (long) Math.floor(plotSize / sampleResolution);
         var padding = (plotSize - steps * sampleResolution) / 2.0;
-        var griddedSamples = Stream.iterate(left + padding, x -> x + sampleResolution)
+        return Stream.iterate(left + padding, x -> x + sampleResolution)
                 .limit(steps + 1)
                 .flatMap(x -> Stream.iterate(bottom + padding, y -> y + sampleResolution)
                         .limit(steps + 1)
                         .filter(y -> plotShape.equals("square") || squareDistance(x, y, centerX, centerY) < radiusSquared)
                         .map(y -> reprojectPoint(new Double[]{x, y}, 3857, 4326)))
                 .toArray(Double[][]::new);
-        if (griddedSamples.length == 0) {
-            var paddingNew = (plotSize - steps * sampleResolution) / 4.0;
-            griddedSamples = Stream.iterate(left + paddingNew, x -> x + sampleResolution)
-                    .limit(steps + 1)
-                    .flatMap(x -> Stream.iterate(bottom + paddingNew, y -> y + sampleResolution)
-                            .limit(steps + 1)
-                            .filter(y -> plotShape.equals("square") || squareDistance(x, y, centerX, centerY) < radiusSquared)
-                            .map(y -> reprojectPoint(new Double[]{x, y}, 3857, 4326)))
-                    .toArray(Double[][]::new);
-        }
-        return griddedSamples;
     }
 
     public static JsonElement getOrZero(JsonObject obj, String field) {
