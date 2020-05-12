@@ -1183,8 +1183,7 @@ public class JsonProjects implements Projects {
         // Generate the plot objects and their associated sample points
         var newPlotCenters =
             plotDistribution.equals("random") ? createRandomPointsInBounds(left, bottom, right, top, numPlots)
-            : plotDistribution.equals("gridded")
-                    || plotDistribution.equals("center") ? createGriddedPointsInBounds(left, bottom, right, top, plotSpacing)
+            : plotDistribution.equals("gridded") ? createGriddedPointsInBounds(left, bottom, right, top, plotSpacing)
             : plotDistribution.equals("csv") ? csvPlotPoints.entrySet().toArray()
             : shpPlotCenters.entrySet().toArray();
 
@@ -1221,7 +1220,7 @@ public class JsonProjects implements Projects {
 
                     var newSamplePoints =
                         sampleDistribution.equals("random")
-                        ? (List.of("random", "gridded", "center", "csv").contains(plotDistribution)
+                        ? (List.of("random", "gridded", "csv").contains(plotDistribution)
                            ? createRandomSampleSet(plotCenter, plotShape, plotSize, samplesPerPlot)
                            : new Double[][]{plotCenter})
                         : ((sampleDistribution.equals("gridded") || sampleDistribution.equals("center"))
