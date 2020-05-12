@@ -331,5 +331,5 @@ optional arguments:
 - stefano.ricci@fao.org
 - roberto.fontanarosa@fao.org
 - alfonso.sanchezpausdiaz@fao.org
-- semail@snasa.io
+- mspencer@sig-gis.com
 - bbhandari@sig-gis.com
