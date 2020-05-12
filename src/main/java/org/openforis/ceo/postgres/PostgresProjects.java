@@ -135,8 +135,9 @@ public class PostgresProjects implements Projects {
             newProject.addProperty("classification_times", "");
             newProject.addProperty("editable",             rs.getBoolean("editable"));
             newProject.addProperty("validBoundary",        rs.getBoolean("valid_boundary"));
-            newProject.add("sampleValues", parseJson(rs.getString("survey_questions")).getAsJsonArray());
-            newProject.add("surveyRules",  parseJson(rs.getString("survey_rules")).getAsJsonArray());
+            newProject.add("sampleValues",                 parseJson(rs.getString("survey_questions")).getAsJsonArray());
+            newProject.add("surveyRules",                  parseJson(rs.getString("survey_rules")).getAsJsonArray());
+            newProject.add("projectOptions",               parseJson(rs.getString("options")).getAsJsonObject());
         } catch (SQLException e) {
             System.out.println(e.getMessage());
         }
@@ -903,6 +904,7 @@ public class PostgresProjects implements Projects {
             newProject.add("surveyRules",                jsonInputs.get("surveyRules").getAsJsonArray());
             newProject.addProperty("useTemplatePlots",   getOrFalse(jsonInputs, "useTemplatePlots").getAsBoolean());
             newProject.addProperty("useTemplateWidgets", getOrFalse(jsonInputs, "useTemplateWidgets").getAsBoolean());
+            newProject.add("projectOptions",             jsonInputs.get("projectOptions").getAsJsonObject());
 
             // file part properties
             newProject.addProperty("plotFileName",     getOrEmptyString(jsonInputs, "plotFileName").getAsString());
@@ -922,7 +924,7 @@ public class PostgresProjects implements Projects {
 
             final var tokenKey = UUID.randomUUID().toString();
 
-            var SQL = "SELECT * FROM create_project(?,?,?,?,?,ST_SetSRID(ST_GeomFromGeoJSON(?), 4326),?,?,?,?,?,?,?,?,?,?::JSONB,?::JSONB,?::date,?::JSONB,?)";
+            var SQL = "SELECT * FROM create_project(?,?,?,?,?,ST_SetSRID(ST_GeomFromGeoJSON(?), 4326),?,?,?,?,?,?,?,?,?,?::JSONB,?::JSONB,?::date,?::JSONB,?,?::JSONB)";
             try (var conn = connect();
                  var pstmt = conn.prepareStatement(SQL)) {
 
@@ -946,6 +948,7 @@ public class PostgresProjects implements Projects {
                 pstmt.setString(18, newProject.get("createdDate").getAsString());
                 pstmt.setString(19, null);  //classification times
                 pstmt.setString(20, tokenKey);  //token key
+                pstmt.setString(21, newProject.get("projectOptions").getAsJsonObject().toString());
 
                 try (var rs = pstmt.executeQuery()) {
                     if (rs.next()) {

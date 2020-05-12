@@ -48,6 +48,7 @@ class Collection extends React.Component {
             KMLFeatures: null,
             hasGeoDash: false,
             loading: false,
+            auxWindow: null,
         };
     }
 
@@ -1392,6 +1393,8 @@ class Collection extends React.Component {
                         loadingPlots={this.state.plotList.length === 0}
                         KMLFeatures={this.state.KMLFeatures}
                         zoomMapToPlot={() => mercator.zoomMapToLayer(this.state.mapConfig, "currentPlot")}
+                        projectOptions={this.state.currentProject.projectOptions}
+                        mapConfig={this.state.mapConfig}
                     />
                     <ImageryOptions
                         baseMapSource={this.state.currentImagery.id}
@@ -1667,6 +1670,22 @@ class PlotNavigation extends React.Component {
         </div>
     );
 
+    loadGEEScript = () => {
+        const geometry = mercator.getViewPolygon(this.props.mapConfig);
+        const geoJson = "{\"type\": \"Polygon\", \"coordinates\":" + JSON.stringify(geometry.getCoordinates()) + "}";
+        if (this.state.auxWindow) this.state.auxWindow.close();
+        this.setState({ auxWindow: window.open("https://billyz313.users.earthengine.app/view/ceoplotancillary#geoJson=" + geoJson, "_ceo-plot-ancillary") });
+    };
+
+    geeButton = () => (
+        <input
+            className="btn btn-outline-lightgreen btn-sm btn-block my-2"
+            type="button"
+            value="Go to GEE Script"
+            onClick={this.loadGEEScript}
+        />
+    );
+
     render() {
         const { props } = this;
         return (
@@ -1693,6 +1712,9 @@ class PlotNavigation extends React.Component {
                             </div>
                         </div>
                         {props.plotId && this.geoButtons()}
+                        {props.plotId
+                            && props.projectOptions.hasOwnProperty("showGEEScript")
+                            && props.projectOptions.showGEEScript && this.geeButton()}
                     </Fragment>
                 }
             </div>

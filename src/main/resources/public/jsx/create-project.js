@@ -2,7 +2,7 @@ import React, { Fragment } from "react";
 import ReactDOM from "react-dom";
 
 import { FormLayout, SectionBlock } from "./components/FormComponents";
-import { ProjectInfo, ProjectAOI, PlotReview, SampleReview } from "./components/ProjectComponents";
+import { ProjectInfo, ProjectAOI, ProjectOptions, PlotReview, SampleReview } from "./components/ProjectComponents";
 import { mercator, ceoMapStyles } from "../js/mercator-openlayers.js";
 import { SurveyDesign } from "./components/SurveyDesign";
 import { convertSampleValuesToSurveyQuestions } from "./utils/surveyUtils";
@@ -36,6 +36,9 @@ class Project extends React.Component {
             projectDetails: blankProject,
             useTemplatePlots: false,
             useTemplateWidgets: false,
+            projectOptions: {
+                showGEEScript: false
+            },
             imageryList: [],
             mapConfig: null,
             plotList: [],
@@ -120,6 +123,7 @@ class Project extends React.Component {
                       baseMapSource: this.state.projectDetails.baseMapSource,
                       description: this.state.projectDetails.description,
                       name: this.state.projectDetails.name,
+                      projectOptions: this.state.projectOptions,
                       numPlots: this.state.projectDetails.numPlots,
                       plotDistribution: this.state.projectDetails.plotDistribution,
                       plotShape: this.state.projectDetails.plotShape,
@@ -404,6 +408,8 @@ class Project extends React.Component {
                                     : ceoMapStyles.yellowSquare);
     };
 
+    onShowGEEScriptClick = () => this.setState({ projectOptions: {...this.state.projectOptions, showGEEScript: !this.state.projectOptions.showGEEScript }});
+
     render() {
         return (
             <FormLayout id="project-design" title="Create Project">
@@ -423,6 +429,8 @@ class Project extends React.Component {
                             toggleTemplateWidgets={this.toggleTemplateWidgets}
                             useTemplatePlots={this.state.useTemplatePlots}
                             useTemplateWidgets={this.state.useTemplateWidgets}
+                            showGEEScript={this.state.showGEEScript}
+                            onShowGEEScriptClick={this.onShowGEEScriptClick}
                         />
                         <ProjectManagement createProject={this.createProject} />
                     </Fragment>
@@ -458,6 +466,10 @@ function ProjectDesignForm(props) {
                 baseMapSource={props.projectDetails.baseMapSource}
                 imageryList={props.imageryList}
                 setProjectDetail={props.setProjectDetail}
+            />
+            <ProjectOptions
+                showGEEScript={props.showGEEScript}
+                onShowGEEScriptClick={props.onShowGEEScriptClick}
             />
             {props.useTemplatePlots
             ?
