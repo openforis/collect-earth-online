@@ -293,7 +293,7 @@ public class PostgresProjects implements Projects {
         try (var conn = connect();
              var pstmt = conn.prepareStatement("SELECT * FROM select_project(?)")) {
             // check if project exists
-            pstmt.setInt(1,projectId);
+            pstmt.setInt(1, projectId);
             try (var rs = pstmt.executeQuery()) {
                 if (rs.next()) {
                     var plotSummaries = new JsonArray();
