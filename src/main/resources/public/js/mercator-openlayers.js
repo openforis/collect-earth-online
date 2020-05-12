@@ -123,11 +123,7 @@ class PlanetLayerSwitcher extends Control {
         ul.className = "planet-layer-switcher-ul";
         panel.appendChild(ul);
 
-        layerLists.map(layer => {
-            const li = this.createLayerList(layer);
-            ul.appendChild(li);
-        });
-
+        layerLists.map(layer => this.createLayerList(layer)).reverse().map(li => ul.appendChild(li));
     }
 
     setMap = (map) => super.setMap(map);
@@ -155,6 +151,18 @@ class PlanetLayerSwitcher extends Control {
         return li;
     };
 }
+
+//
+mercator.getTopVisiblePlanetLayerDate = (mapConfig, layerTitle) => {
+    const layer = mercator.getLayerByTitle(mapConfig, layerTitle);
+    if (layer && layer instanceof LayerGroup) {
+        const planetLayers = [...layer.getLayers().getArray()];
+        const visibleLayer = planetLayers.reverse().find(planetLayer => planetLayer.getVisible());
+        return visibleLayer ? visibleLayer.get("title") : "NA";
+    } else {
+        return "NA";
+    }
+};
 
 /*****************************************************************************
 ***
@@ -215,17 +223,23 @@ mercator.createSource = function (sourceConfig, imageryId, documentRoot,
             })
             .then(data => {
                 console.log("Here's the response data:\n\n" + JSON.stringify(data));
-                const planetLayers = data
-                    .filter(d => d.hasOwnProperty("layerID") && d["layerID"] !== "null")
-                    .map(d => new TileLayer({
-                        source: new XYZ({
-                            url: "https://tiles0.planet.com/data/v1/layers/" + d["layerID"] + "/{z}/{x}/{y}.png",
-                        }),
-                        title: d["date"],
-                    }));
-                if (planetLayers.length === 0) {
-                    alert("No usable results found for Planet Daily imagery. Check your access token and/or change the date.");
-                }
+                // arrange in ascending order of dates
+                const sortedData = data
+                    .filter(d => d.hasOwnProperty("layerID") && d["layerID"] !== "null" && d.hasOwnProperty("date"))
+                    .sort((a, b) => {
+                        const dateA = new Date(a.date),
+                            dateB = new Date(b.date);
+                        if (dateA < dateB) return -1;
+                        if (dateA > dateB) return 1;
+                        return 0;
+                    });
+                if (sortedData.length === 0) alert("No usable results found for Planet Daily imagery. Check your access token and/or change the date.");
+                const planetLayers = sortedData.map(d => new TileLayer({
+                    source: new XYZ({
+                        url: "https://tiles0.planet.com/data/v1/layers/" + d["layerID"] + "/{z}/{x}/{y}.png",
+                    }),
+                    title: d["date"],
+                }));
                 const dummyPlanetLayer = mercator.currentMap.getLayers().getArray().find(lyr => theID === lyr.getSource().get("id"));
                 mercator.currentMap.removeLayer(dummyPlanetLayer);
                 const layerGroup = new LayerGroup({
@@ -235,7 +249,7 @@ mercator.createSource = function (sourceConfig, imageryId, documentRoot,
                 });
                 mercator.currentMap.addLayer(layerGroup);
                 if (callback) callback();
-                mercator.currentMap.addControl(new PlanetLayerSwitcher({ layers: layerGroup.getLayersArray() }));
+                mercator.currentMap.addControl(new PlanetLayerSwitcher({ layers: layerGroup.getLayers().getArray() }));
             }).catch(response => {
                 console.log("Error loading Planet Daily imagery: ");
                 console.log(response);

@@ -582,11 +582,12 @@ class Collection extends React.Component {
                                 : visible[0].geom
                                     ? ceoMapStyles.whitePolygon
                                     : ceoMapStyles.whiteCircle);
+        this.highlightSamplesByQuestion();
         this.setState({ loading: false });
     };
 
     updatePlanetDailyLayer = () => {
-        this.setState({ loading: true });
+        this.setState({ loading: this.state.currentImagery.sourceConfig.type === "PlanetDaily" });
         mercator.currentMap.getControls().getArray().filter(control => control.element.classList.contains("planet-layer-switcher"))
             .map(control => mercator.currentMap.removeControl(control));
         const { imageryStartDatePlanetDaily, imageryEndDatePlanetDaily, currentPlot } = this.state;
@@ -965,6 +966,7 @@ class Collection extends React.Component {
         } : (this.state.currentImagery.sourceConfig.type === "PlanetDaily") ? {
             imageryStartDatePlanetDaily: this.state.imageryStartDatePlanetDaily,
             imageryEndDatePlanetDaily: this.state.imageryEndDatePlanetDaily,
+            imageryDatePlanetDaily: mercator.getTopVisiblePlanetLayerDate(this.state.mapConfig, this.state.currentImagery.title),
         } : (this.state.currentImagery.sourceConfig.type === "SecureWatch") ? {
             imageryStartDateSecureWatch: this.state.imagerySecureWatchSelectRange ? this.state.imageryStartDateSecureWatch : "",
             imageryEndDateSecureWatch: this.state.imagerySecureWatchSelectRange ? this.state.imageryEndDateSecureWatch : "",
