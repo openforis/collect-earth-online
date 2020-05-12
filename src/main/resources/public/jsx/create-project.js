@@ -127,9 +127,7 @@ class Project extends React.Component {
                       plotSpacing: this.state.projectDetails.plotSpacing,
                       privacyLevel: this.state.projectDetails.privacyLevel,
                       projectTemplate: this.state.projectDetails.id,
-                      sampleDistribution: this.state.projectDetails.sampleDistribution === "center"
-                            ? "gridded"
-                            : this.state.projectDetails.sampleDistribution,
+                      sampleDistribution: this.state.projectDetails.sampleDistribution,
                       samplesPerPlot: this.state.projectDetails.samplesPerPlot,
                       sampleResolution: this.state.projectDetails.sampleDistribution === "center"
                             ? 2 * this.state.projectDetails.plotSize
@@ -243,13 +241,13 @@ class Project extends React.Component {
         } else if (projectDetails.sampleDistribution !== "center"
                     && projectDetails.plotShape === "circle"
                     && projectDetails.sampleResolution >= projectDetails.plotSize / Math.sqrt(2)) {
-            alert("The sample resolution must be less than diameter divided by the square root of 2.");
+            alert("The sample resolution must be less than plot diameter divided by the square root of 2.");
             return false;
 
         } else if (projectDetails.sampleDistribution !== "center"
                     && projectDetails.plotShape === "square"
                     && parseInt(projectDetails.sampleResolution) >= projectDetails.plotSize) {
-            alert("The sample resolution must be less than the width.");
+            alert("The sample resolution must be less than the plot width.");
             return false;
 
         } else {

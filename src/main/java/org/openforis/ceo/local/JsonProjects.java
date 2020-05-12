@@ -1174,6 +1174,7 @@ public class JsonProjects implements Projects {
         var computedSamplesPerPlot =
             sampleDistribution.equals("random") ? samplesPerPlot
             : sampleDistribution.equals("gridded") ? countGriddedSampleSet(plotSize, sampleResolution)
+            : sampleDistribution.equals("center") ? 1
             : sampleDistribution.equals("csv") ? (csvSamplePointsFinal.size() / totalPlots)
             : (shpSampleCentersFinal.size() / totalPlots);
 
@@ -1182,7 +1183,8 @@ public class JsonProjects implements Projects {
         // Generate the plot objects and their associated sample points
         var newPlotCenters =
             plotDistribution.equals("random") ? createRandomPointsInBounds(left, bottom, right, top, numPlots)
-            : plotDistribution.equals("gridded") ? createGriddedPointsInBounds(left, bottom, right, top, plotSpacing)
+            : plotDistribution.equals("gridded")
+                    || plotDistribution.equals("center") ? createGriddedPointsInBounds(left, bottom, right, top, plotSpacing)
             : plotDistribution.equals("csv") ? csvPlotPoints.entrySet().toArray()
             : shpPlotCenters.entrySet().toArray();
 
@@ -1219,10 +1221,10 @@ public class JsonProjects implements Projects {
 
                     var newSamplePoints =
                         sampleDistribution.equals("random")
-                        ? (List.of("random", "gridded", "csv").contains(plotDistribution)
+                        ? (List.of("random", "gridded", "center", "csv").contains(plotDistribution)
                            ? createRandomSampleSet(plotCenter, plotShape, plotSize, samplesPerPlot)
                            : new Double[][]{plotCenter})
-                        : (sampleDistribution.equals("gridded")
+                        : ((sampleDistribution.equals("gridded") || sampleDistribution.equals("center"))
                            ? (List.of("random", "gridded", "csv").contains(plotDistribution)
                               ? createGriddedSampleSet(plotCenter, plotShape, plotSize, sampleResolution)
                               : new Double[][]{plotCenter})
