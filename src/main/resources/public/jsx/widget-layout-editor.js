@@ -11,7 +11,11 @@ class BasicLayout extends React.PureComponent {
             layout: [],
             widgets: [],
             imagery: [],
-            isEditing: false,
+            selectedProjectId: 0,
+            projectList: [],
+            projectFilter:"",
+            addDialog: false,
+            copyDialog: false,
             addCustomImagery: false,
             selectedWidgetType: "-1",
             selectedDataType: "-1",
@@ -47,33 +51,8 @@ class BasicLayout extends React.PureComponent {
         };
     }
 
-
     componentDidMount() {
-        fetch(this.state.theURI + "/get-by-projid?projectId=" + this.state.projectId)
-            .then(response => response.ok ? response.json() : Promise.reject(response))
-            .then(data => {
-                const widgets = Array.isArray(data.widgets)
-                    ? data.widgets
-                    : Array.isArray(eval(data.widgets))
-                        ? eval(data.widgets)
-                        : [];
-                const updatedWidgets = widgets.map(widget => widget.layout
-                    ? {
-                        ...widget,
-                        layout: {
-                            ...widget.layout,
-                            y: widget.layout.y ? widget.layout.y : 0,
-                        },
-                    }
-                    : widget);
-                this.checkWidgetStructure(updatedWidgets);
-                this.setState({
-                    dashboardID: data.dashboardID,
-                    widgets:     updatedWidgets,
-                    haveWidgets: true,
-                    layout:      this.generateLayout(),
-                });
-            })
+        this.fetchProject(this.state.projectId, true)
             .catch(response => {
                 console.log(response);
                 alert("Error downloading the widget list. See console for details.");
@@ -90,10 +69,11 @@ class BasicLayout extends React.PureComponent {
                 console.log(response);
                 alert("Error downloading the imagery list. See console for details.");
             });
+        this.getProjectList();
     }
 
     getParameterByName = (name, url) => {
-        const regex = new RegExp("[?&]" + name.replace(/[\[\]]/g, "\\$&") + "(=([^&#]*)|&|#|$)");
+        const regex = new RegExp("[?&]" + name.replace(/[[\]]/g, "\\$&") + "(=([^&#]*)|&|#|$)");
         const results = regex.exec(decodeURIComponent(url || window.location.href)); //regex.exec(url);
         return results
             ? results[2]
@@ -148,7 +128,7 @@ class BasicLayout extends React.PureComponent {
                 if (widget.gridrow) {
                     //do the y and h
                     y = parseInt(widget.gridrow.trim().split(" ")[0]) - 1;
-                    h = widget.gridrow.trim().split(" ")[3] !== null ? parseInt(widget.gridrow.trim().split(" ")[3]) : 1;
+                    h = widget.gridrow.trim().split(" ")[3] !== undefined ? parseInt(widget.gridrow.trim().split(" ")[3]) : 1;
                 }
                 // create .layout
                 widget.layout = { x : x, y: y, w: w, h: h };
@@ -228,7 +208,7 @@ class BasicLayout extends React.PureComponent {
             <div
                 onDragStart={this.onDragStart}
                 onDragEnd={this.onDragEnd}
-                key={widget.layout.i}
+                key={widget.layout ? widget.layout.i : i}
                 data-grid={widget.layout}
                 className="front widgetEditor-widgetBackground"
                 style={{ backgroundImage: "url(" + this.getImageByType(widget.properties[0]) + ")" }}
@@ -313,7 +293,7 @@ class BasicLayout extends React.PureComponent {
             addCustomImagery: false,
             selectedDataType: "-1",
             widgetTitle: "",
-            imageCollection: "",
+            imageCollection: event.target.value === "ImageElevation" ? "USGS/SRTMGL1_003" : "",
             graphBand: "",
             graphReducer: "Min",
             imageParams: "",
@@ -335,7 +315,7 @@ class BasicLayout extends React.PureComponent {
             widgetMinDual:"",
             widgetMaxDual:"",
             widgetCloudScoreDual:"",
-            formReady: false,
+            formReady: event.target.value === "statistics" || event.target.value === "imageAsset" || event.target.value === "imageCollectionAsset" || event.target.value === "ImageElevation",
             wizardStep: 1,
             availableBands:"",
             availableBandsDual:"",
@@ -392,7 +372,7 @@ class BasicLayout extends React.PureComponent {
             availableBands: "",
             selectedDataType: event.target.value,
         });
-       this.getBandsFromGateway(false);
+        this.getBandsFromGateway(false);
     };
 
     onCancelNewWidget = () => {
@@ -400,7 +380,8 @@ class BasicLayout extends React.PureComponent {
             selectedWidgetType: "-1",
             addCustomImagery: false,
             selectedDataTypeDual: "-1",
-            isEditing: false,
+            addDialog: false,
+            copyDialog: false,
             selectedDataType: "-1",
             widgetTitle: "",
             imageCollection: "",
@@ -651,7 +632,8 @@ class BasicLayout extends React.PureComponent {
                         addCustomImagery: false,
                         selectedWidgetType: "-1",
                         selectedDataTypeDual: "-1",
-                        isEditing: false,
+                        addDialog: false,
+                        copyDialog: false,
                         selectedDataType: "-1",
                         widgetTitle: "",
                         imageCollection: "",
@@ -865,56 +847,188 @@ class BasicLayout extends React.PureComponent {
         }
     };
 
-    getNewWidgetForm = () => {
-        if (this.state.isEditing) {
-            return <React.Fragment>
-                <div className="modal fade show" style={{ display: "block" }}>
-                    <div className="modal-dialog" role="document">
-                        <div className="modal-content">
-                            <div className="modal-header">
-                                <h5 className="modal-title" id="exampleModalLabel">Create Widget</h5>
-                                <button type="button" className="close" data-dismiss="modal" aria-label="Close" onClick={this.onCancelNewWidget}>
-                                    <span aria-hidden="true">×</span>
-                                </button>
-                            </div>
-                            <div className="modal-body">
-                                <form>
-                                    <div className="form-group">
-                                        <label htmlFor="widgetTypeSelect">Type</label>
-                                        <select
-                                            name="widgetTypeSelect"
-                                            className="form-control"
-                                            value={this.state.selectedWidgetType}
-                                            id="widgetTypeSelect"
-                                            onChange={e => this.onWidgetTypeSelectChanged(e, "i am anything")}
-                                        >
-                                            <option value="-1">Please select type</option>
-                                            <option label="Image Collection" value="ImageCollection">Image Collection</option>
-                                            <option label="Time Series Graph" value="TimeSeries">Time Series Graph</option>
-                                            <option label="Statistics" value="statistics">Statistics</option>
-                                            <option label="Dual Image Collection" value="DualImageCollection">Dual Image Collection</option>
-                                            <option label="Image Asset" value="imageAsset">Image Asset</option>
-                                            <option label="Image Collection Asset" value="imageCollectionAsset">Image Collection Asset</option>
-                                            <option label="SRTM Digital Elevation Data 30m" value="ImageElevation">SRTM Digital Elevation Data 30m</option>
-                                        </select>
-                                    </div>
-                                    {this.getBaseMapSelector()}
-                                    {this.getDataTypeSelectionControl()}
-                                    {this.getDataForm()}
-                                </form>
-                            </div>
-                            <div className="modal-footer">
-                                {
-                                    this.getFormButtons()
-                                }
+    getProjectList = () => {
+        fetch(this.props.documentRoot + "/get-all-projects")
+            .then(response => response.ok ? response.json() : Promise.reject(response))
+            .then(data => this.setState({ projectList: data }))
+            .catch(response => {
+                console.log(response);
+                alert("Error retrieving the project list. See console for details.");
+            });
+    };
+
+    setWidgetLayoutTemplate = id => {
+        this.setState({ selectedProjectId: id });
+        this.state.widgets.forEach( widget => {
+            this.deleteWidgetFromServer( widget );
+        });
+        this.getWidgetTemplateByProjectId( id );
+    };
+
+    fetchProject = (id, setDashboardID) => fetch(this.state.theURI + "/get-by-projid?projectId=" + id)
+        .then(response => response.ok ? response.json() : Promise.reject(response))
+        .then(data => {
+            const widgets = Array.isArray(data.widgets)
+                    ? data.widgets
+                    : Array.isArray(eval(data.widgets))
+                        ? eval(data.widgets)
+                        : [];
+            const updatedWidgets = widgets.map(widget => widget.layout
+                    ? {
+                        ...widget,
+                        layout: {
+                            ...widget.layout,
+                            y: widget.layout.y ? widget.layout.y : 0,
+                        },
+                    }
+                    : widget);
+            this.checkWidgetStructure(updatedWidgets);
+            this.setState({
+                dashboardID: setDashboardID ? data.dashboardID : this.state.dashboardID,
+                widgets:     updatedWidgets,
+                haveWidgets: true,
+                layout:      this.generateLayout(),
+            });
+        });
+
+    getWidgetTemplateByProjectId = id => {
+        this.fetchProject(id)
+            .then(() =>{
+                this.state.widgets.forEach(widget => {
+                    this.addTemplateWidget(widget);
+                });
+            })
+            .catch(response => {
+                console.log(response);
+                alert("Error downloading the widget list. See console for details.");
+            });
+    };
+
+    addTemplateWidget = widget => {
+        fetch(this.state.theURI + "/create-widget",
+              {
+                  method: "POST",
+                  headers: {
+                      "Accept": "application/json",
+                      "Content-Type": "application/json",
+                  },
+                  body: JSON.stringify({
+                      projectId: this.state.projectId,
+                      dashID: this.state.dashboardID,
+                      widgetJSON: JSON.stringify(widget),
+                  }),
+              })
+            .catch(response => {
+                console.log(response);
+            });
+    };
+
+    getNewWidgetForm = () => this.state.addDialog === true
+            ? (
+                <React.Fragment>
+                    <div className="modal fade show" style={{ display: "block" }}>
+                        <div className="modal-dialog" role="document">
+                            <div className="modal-content">
+                                <div className="modal-header">
+                                    <h5 className="modal-title" id="exampleModalLabel">Create Widget</h5>
+                                    <button type="button" className="close" data-dismiss="modal" aria-label="Close" onClick={this.onCancelNewWidget}>
+                                        <span aria-hidden="true">×</span>
+                                    </button>
+                                </div>
+                                <div className="modal-body">
+                                    <form>
+                                        <div className="form-group">
+                                            <label htmlFor="widgetTypeSelect">Type</label>
+                                            <select
+                                                name="widgetTypeSelect"
+                                                className="form-control"
+                                                value={this.state.selectedWidgetType}
+                                                id="widgetTypeSelect"
+                                                onChange={e => this.onWidgetTypeSelectChanged(e, "i am anything")}
+                                            >
+                                                <option value="-1">Please select type</option>
+                                                <option label="Image Collection" value="ImageCollection">Image Collection</option>
+                                                <option label="Time Series Graph" value="TimeSeries">Time Series Graph</option>
+                                                <option label="Statistics" value="statistics">Statistics</option>
+                                                <option label="Dual Image Collection" value="DualImageCollection">Dual Image Collection</option>
+                                                <option label="Image Asset" value="imageAsset">Image Asset</option>
+                                                <option label="Image Collection Asset" value="imageCollectionAsset">Image Collection Asset</option>
+                                                <option label="SRTM Digital Elevation Data 30m" value="ImageElevation">SRTM Digital Elevation Data 30m</option>
+                                            </select>
+                                        </div>
+                                        {this.getBaseMapSelector()}
+                                        {this.getDataTypeSelectionControl()}
+                                        {this.getDataForm()}
+                                    </form>
+                                </div>
+                                <div className="modal-footer">
+                                    {this.getFormButtons()}
+                                </div>
                             </div>
                         </div>
                     </div>
-                </div>
-                <div className="modal-backdrop fade show"> </div>
-            </React.Fragment>;
-        }
-    };
+                    <div className="modal-backdrop fade show"> </div>
+                </React.Fragment>
+            ) : this.state.copyDialog === true
+                ? (
+                    <React.Fragment>
+                        <div className="modal fade show" style={{ display: "block" }}>
+                            <div className="modal-dialog" role="document">
+                                <div className="modal-content">
+                                    <div className="modal-header">
+                                        <h5 className="modal-title" id="exampleModalLabel">Copy Widget Layout</h5>
+                                        <button type="button" className="close" data-dismiss="modal" aria-label="Close" onClick={this.onCancelNewWidget}>
+                                            <span aria-hidden="true">×</span>
+                                        </button>
+                                    </div>
+                                    <div className="modal-body">
+                                        <form>
+                                            <div className="form-group">
+                                                <label htmlFor="project-filter">Template Filter (Name or ID)</label>
+                                                <input
+                                                    className="form-control form-control-sm"
+                                                    id="project-filter"
+                                                    type="text"
+                                                    value={this.state.projectFilter}
+                                                    onChange={e => this.setState({ projectFilter: e.target.value })}
+                                                />
+                                            </div>
+                                            <div className="form-group">
+                                                <label htmlFor="project-template">From Project</label>
+                                                <select
+                                                    className="form-control form-control-sm"
+                                                    id="project-template"
+                                                    name="project-template"
+                                                    size="1"
+                                                    value={this.state.selectedProjectId}
+                                                    onChange={e => this.setWidgetLayoutTemplate(parseInt(e.target.value))}
+                                                >
+                                                    <option key={0} value={0}>None</option>
+                                                    {
+                                                        this.state.projectList
+                                                            .filter(proj => proj
+                                                                && proj.id > 0
+                                                                && proj.availability !== "archived"
+                                                                && (proj.id + proj.name.toLocaleLowerCase())
+                                                                    .includes(this.state.projectFilter.toLocaleLowerCase()))
+                                                            .map((proj, uid) => <option key={uid} value={proj.id}>{proj.id} - {proj.name}</option>)
+                                                    }
+                                                </select>
+                                            </div>
+                                            <div className="form-group">
+                                                <span>Warning, selecting a template project will overwrite existing widgets immediately.</span>
+                                            </div>
+                                        </form>
+                                    </div>
+                                    <div className="modal-footer">
+                                        <button type="button" className="btn btn-secondary" data-dismiss="modal" onClick={this.onCancelNewWidget}>Close</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div className="modal-backdrop fade show"> </div>
+                    </React.Fragment>
+                ) : "";
 
     getFormButtons = () => <React.Fragment>
         <button type="button" className="btn btn-secondary" data-dismiss="modal" onClick={this.onCancelNewWidget}>Cancel</button>
@@ -947,14 +1061,12 @@ class BasicLayout extends React.PureComponent {
     });
 
     getDataTypeSelectionControl = () => {
-        if (this.state.selectedWidgetType === "-1") {
+        if (this.state.selectedWidgetType === "-1"
+            || this.state.selectedWidgetType === "imageAsset"
+            || this.state.selectedWidgetType === "imageCollectionAsset"
+            || this.state.selectedWidgetType === "ImageElevation") {
             return <br/>;
         } else if (this.state.selectedWidgetType === "statistics") {
-            if (this.state.formReady !== true) {
-                this.setState({
-                    formReady: true,
-                });
-            }
             return <React.Fragment>
                 <div className="form-group">
                     <label htmlFor="widgetTitle">Title</label>
@@ -969,15 +1081,6 @@ class BasicLayout extends React.PureComponent {
                     />
                 </div>
             </React.Fragment>;
-        } else if (this.state.selectedWidgetType === "imageAsset"
-                    || this.state.selectedWidgetType === "imageCollectionAsset"
-                    || this.state.selectedWidgetType === "ImageElevation") {
-            if (this.state.formReady !== true) {
-                this.setState({
-                    formReady: true,
-                });
-            }
-            return <br/>;
         } else if (this.state.selectedWidgetType === "ImageCollection") {
             return <React.Fragment>
                 <label htmlFor="widgetIndicesSelect">Data</label>
@@ -1167,59 +1270,47 @@ class BasicLayout extends React.PureComponent {
         />
     </div>;
 
-    getDualLayerDateRangeControl = () => {
-        return (this.state.dualLayer === true)
-            ? (
-                <div>
-                    <label>Select the Date Range for the top layer</label>
-                    <div className="input-group input-daterange" id="range_new_cooked2">
-                        <input
-                            type="text"
-                            className="form-control"
-                            onChange={this.onStartDate2Changed}
-                            value={this.state.startDate2}
-                            placeholder={"YYYY-MM-DD"}
-                            id="sDate_new_cooked2"
-                        />
-                        <div className="input-group-addon">to</div>
-                        <input
-                            type="text"
-                            className="form-control"
-                            onChange={this.onEndDate2Changed}
-                            value={this.state.endDate2}
-                            placeholder={"YYYY-MM-DD"}
-                            id="eDate_new_cooked2"
-                        />
-                    </div>
+    getDualLayerDateRangeControl = () => (this.state.dualLayer === true)
+            ? <div>
+                <label>Select the Date Range for the top layer</label>
+                <div className="input-group input-daterange" id="range_new_cooked2">
+                    <input
+                        type="text"
+                        className="form-control"
+                        onChange={this.onStartDate2Changed}
+                        value={this.state.startDate2}
+                        placeholder={"YYYY-MM-DD"}
+                        id="sDate_new_cooked2"
+                    />
+                    <div className="input-group-addon">to</div>
+                    <input
+                        type="text"
+                        className="form-control"
+                        onChange={this.onEndDate2Changed}
+                        value={this.state.endDate2}
+                        placeholder={"YYYY-MM-DD"}
+                        id="eDate_new_cooked2"
+                    />
                 </div>
-            ) : "";
-    };
+            </div>
+             : "";
 
-    getAvailableBandsControl = () => {
-        return (this.state.availableBands.length > 0)
-            ? (
-                <div>
-                    <label>Available Bands: </label><br />
-                    <label>{this.state.availableBands}</label>
-                </div>
-            ) : "";
-    };
+    getAvailableBandsControl = () => (this.state.availableBands.length > 0)
+            ? <div>
+                <label>Available Bands: </label><br />
+                <label>{this.state.availableBands}</label>
+            </div>
+             : "";
 
-    getAvailableBandsControlDual = () => {
-        return (this.state.availableBandsDual.length > 0)
-            ? (
-                <div>
-                    <label>Available Bands: </label><br />
-                    <label>{this.state.availableBandsDual}</label>
-                </div>
-            ) : "";
-    };
+    getAvailableBandsControlDual = () => (this.state.availableBandsDual.length > 0)
+            ? <div>
+                <label>Available Bands: </label><br />
+                <label>{this.state.availableBandsDual}</label>
+            </div>
+             : "";
 
     getDataForm = () => {
         if (this.state.selectedWidgetType === "ImageElevation") {
-            this.setState({
-                imageCollection: "USGS/SRTMGL1_003",
-            });
             return <React.Fragment>
                 {this.getTitleBlock()}
                 {this.getImageParamsBlock()}
@@ -1755,7 +1846,11 @@ class BasicLayout extends React.PureComponent {
     };
 
     onAddItem = () => {
-        this.setState({ isEditing : true });
+        this.setState({ addDialog : true });
+    };
+
+    openCopyWidgetsDialog = () => {
+        this.setState({ copyDialog: true });
     };
 
     render() {
@@ -1771,10 +1866,19 @@ class BasicLayout extends React.PureComponent {
                 >
                     Add Widget
                 </button>
+                <button
+                    type="button"
+                    id="copyWidgets"
+                    onClick={this.openCopyWidgetsDialog}
+                    className="btn btn-outline-lightgreen btn-sm"
+                    style={{ display: "none" }}
+                >
+                    Copy Layout
+                </button>
                 <ReactGridLayout
                     {...this.props} // FIXME, the only prop left is documentRoot, ill bet the ReactGridLayout does not need that.
-                    isDraggable={true}
-                    isResizable={true}
+                    isDraggable
+                    isResizable
                     className={"layout"}
                     items={0}
                     rowHeight={300}

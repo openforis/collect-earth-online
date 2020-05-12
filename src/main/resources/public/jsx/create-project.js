@@ -232,6 +232,10 @@ class Project extends React.Component {
             alert("A sample SHP (.zip) file is required.");
             return false;
 
+        } else if (!projectDetails.baseMapSource) {
+            alert("Select a valid Basemap.");
+            return false;
+
         } else {
             return true;
         }
@@ -240,7 +244,7 @@ class Project extends React.Component {
     setProjectTemplate = (newTemplateId) => {
         if (parseInt(newTemplateId) === 0) {
             this.setState({
-                projectDetails: blankProject,
+                projectDetails: { ...blankProject, baseMapSource : this.state.imageryList[0].title },
                 plotList: [],
                 coordinates: {
                     lonMin: "",
@@ -251,6 +255,7 @@ class Project extends React.Component {
                 useTemplatePlots: false,
                 useTemplateWidgets: false,
             });
+            mercator.removeLayerByTitle(this.state.mapConfig, "dragBoxLayer");
         } else {
             const templateProject = this.state.projectList.find(p => p.id === newTemplateId);
             const newSurveyQuestions = convertSampleValuesToSurveyQuestions(templateProject.sampleValues);

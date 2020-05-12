@@ -443,6 +443,7 @@ const imageryOptions = [
     },
     {
         type: "Planet",
+        label: "Planet Monthly",
         params: [
             { key: "year", display: "Default Year", type: "number" },
             { key: "month", display: "Default Month", type: "number" },
@@ -452,6 +453,7 @@ const imageryOptions = [
     },
     {
         type: "PlanetDaily",
+        label: "Planet Daily",
         params: [
             { key: "accessToken", display: "Access Token" },
             { key: "startDate", display: "Start Date", type: "date"},
@@ -508,6 +510,62 @@ const imageryOptions = [
             },
         ],
     },
+    {
+        type: "Sentinel1",
+        label: "Sentinel 1",
+        params: [
+            {
+                key: "year",
+                display: "Default Year",
+                type: "number",
+                options: { min: "2014", max: new Date().getFullYear().toString(), step: "1" }
+            },
+            { key: "month", display: "Default Month", type: "number", options: { min: "1", max: "12", step: "1" } },
+            {
+                key: "bandCombination",
+                display: "Band Combination",
+                type: "select",
+                options: [
+                    { label: "VH,VV,VH/VV", value: "VH,VV,VH/VV" },
+                    { label: "VH,VV,VV/VH", value: "VH,VV,VV/VH" },
+                    { label: "VV,VH,VV/VH", value: "VV,VH,VV/VH" },
+                    { label: "VV,VH,VH/VV", value: "VV,VH,VH/VV" },
+                ]
+            },
+            { key: "min", display: "Min", type: "number", options: { step: "0.01" } },
+            { key: "max", display: "Max", type: "number", options: { step: "0.01" } },
+        ],
+    },
+    {
+        type: "Sentinel2",
+        label: "Sentinel 2",
+        params: [
+            {
+                key: "year",
+                display: "Default Year",
+                type: "number",
+                options: { min: "2015", max: new Date().getFullYear().toString(), step: "1" }
+            },
+            { key: "month", display: "Default Month", type: "number", options: { min: "1", max: "12", step: "1" } },
+            {
+                key: "bandCombination",
+                display: "Band Combination",
+                type: "select",
+                options: [
+                    { label: "True Color", value: "TrueColor" },
+                    { label: "False Color Infrared", value: "FalseColorInfrared" },
+                    { label: "False Color Urban", value: "FalseColorUrban" },
+                    { label: "Agriculture", value: "Agriculture" },
+                    { label: "Healthy Vegetation", value: "HealthyVegetation" },
+                    { label: "Short Wave Infrared", value: "ShortWaveInfrared" },
+                ]
+            },
+            { key: "min", display: "Min", type: "number", options: { step: "0.01" } },
+            { key: "max", display: "Max", type: "number", options: { step: "0.01" } },
+            { key: "cloudScore", display: "Cloud Score", type: "number", options: { min: "0", max: "100", step: "1" }
+            },
+        ],
+    },
 ];
 
 class NewImagery extends React.Component {
@@ -525,10 +583,10 @@ class NewImagery extends React.Component {
 
     addCustomImagery = () => {
         const sourceConfig = this.stackParams();
-        const message = this.checkDateField(sourceConfig);
+        const message = this.validateData(sourceConfig);
         if (!this.checkAllParams()) {
             alert("You must fill out all fields.");
-        } else if (["Planet", "PlanetDaily"].includes(sourceConfig.type) && message) {
+        } else if (["Planet", "PlanetDaily", "SecureWatch", "Sentinel1", "Sentinel2"].includes(sourceConfig.type) && message) {
             alert(message);
         } else if (this.props.titleIsTaken(this.state.newImageryTitle)) {
             alert("The title '" + this.state.newImageryTitle + "' is already taken.");
@@ -599,17 +657,31 @@ class NewImagery extends React.Component {
             .every(o => o.required === false
                         || (this.state.newImageryParams[o.key] && this.state.newImageryParams[o.key].length > 0));
 
-    checkDateField = (sourceConfig) => {
-        if (sourceConfig.type === "Planet") {
+    validateData = (sourceConfig) => {
+        if (sourceConfig.type === "Sentinel1" || sourceConfig.type === "Sentinel2") {
+            const year = parseInt(sourceConfig.year);
+            const yearMinimum = sourceConfig.type === "Sentinel1" ? 2014 : 2015;
+            const month = parseInt(sourceConfig.month);
+            const cloudScore = sourceConfig.type === "Sentinel2" ? parseInt(sourceConfig.cloudScore) : null;
+            return (isNaN(year) || year.toString().length !== 4 || year < yearMinimum || year > new Date().getFullYear())
+                ? "Year should be 4 digit number and between " + yearMinimum + " and " + new Date().getFullYear()
+                : (isNaN(month) || month < 1 || month > 12)
+                    ? "Month should be between 1 and 12!"
+                    : (cloudScore && (isNaN(cloudScore) || cloudScore < 0 || cloudScore > 100))
+                        ? "Cloud Score should be between 0 and 100!"
+                        : null;
+        } else if (sourceConfig.type === "Planet") {
             const year = parseInt(sourceConfig.year);
             const month = parseInt(sourceConfig.month);
-            return isNaN(year)                              ? "Please enter the year as a 4 digit number."
-                : (isNaN(month) || month < 1 || month > 12) ? "Month should be between 1 and 12!"
-                : null;
-        } else if (sourceConfig.type === "PlanetDaily") {
+            return (isNaN(year) || year.toString().length !== 4) ? "Year should be 4 digit number"
+                 : (isNaN(month) || month < 1 || month > 12)     ? "Month should be between 1 and 12!"
+                 : null;
+        } else if (sourceConfig.type === "PlanetDaily" || sourceConfig.type === "SecureWatch") {
             const startDate = sourceConfig.startDate;
             const endDate = sourceConfig.endDate;
             return (new Date(startDate) > new Date(endDate)) ? "Start date must be smaller than the end date." : null;
+        } else {
+            return null;
         }
     };
 
@@ -708,8 +780,13 @@ class NewImagery extends React.Component {
                 newImageryAttribution: "SecureWatch Imagery | © Maxar Technologies Inc.",
                 newImageryParams: { featureProfile: imageryOptions[val]["params"].filter(param => param.key === "featureProfile")[0].options[0].value }
             });
+        } else if (imageryOptions[val].type === "Sentinel1" || imageryOptions[val].type === "Sentinel2") {
+            this.setState({
+                newImageryAttribution: "Google Earth Engine | © Google LLC",
+                newImageryParams: { bandCombination: imageryOptions[val]["params"].filter(param => param.key === "bandCombination")[0].options[0].value }
+            });
         } else {
-            this.setState({ newImageryParams: {} });
+            this.setState({ newImageryParams: {}});
         }
     };
 
@@ -725,7 +802,7 @@ class NewImagery extends React.Component {
                         value={this.state.selectedType}
                     >
                         {imageryOptions.map((o, i) =>
-                            <option value={i} key={i}>{o.type}</option>
+                            <option value={i} key={i}>{o.label || o.type}</option>
                         )}
                     </select>
                 </div>
