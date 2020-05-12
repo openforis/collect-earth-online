@@ -48,6 +48,7 @@ class Collection extends React.Component {
             KMLFeatures: null,
             hasGeoDash: false,
             loading: false,
+            auxWindow: null,
         };
     }
 
@@ -1672,7 +1673,8 @@ class PlotNavigation extends React.Component {
     loadGEEScript = () => {
         const geometry = mercator.getViewPolygon(this.props.mapConfig);
         const geoJson = "{\"type\": \"Polygon\", \"coordinates\":" + JSON.stringify(geometry.getCoordinates()) + "}";
-        window.open("https://billyz313.users.earthengine.app/view/ceoplotancillary#geoJson=" + geoJson, "_ceo-plot-ancillary");
+        if (this.state.auxWindow) this.state.auxWindow.close();
+        this.setState({ auxWindow: window.open("https://billyz313.users.earthengine.app/view/ceoplotancillary#geoJson=" + geoJson, "_ceo-plot-ancillary") });
     };
 
     geeButton = () => (
