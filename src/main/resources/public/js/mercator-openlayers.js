@@ -124,11 +124,7 @@ class PlanetLayerSwitcher extends Control {
         ul.className = "planet-layer-switcher-ul";
         panel.appendChild(ul);
 
-        layerLists.map(layer => {
-            const li = this.createLayerList(layer);
-            ul.appendChild(li);
-        });
-
+        layerLists.map(layer => this.createLayerList(layer)).reverse().map(li => ul.appendChild(li));
     }
 
     setMap = (map) => super.setMap(map);
@@ -254,7 +250,7 @@ mercator.createSource = function (sourceConfig, imageryId, documentRoot,
                 });
                 mercator.currentMap.addLayer(layerGroup);
                 if (callback) callback();
-                mercator.currentMap.addControl(new PlanetLayerSwitcher({ layers: [...layerGroup.getLayers().getArray()].reverse() }));
+                mercator.currentMap.addControl(new PlanetLayerSwitcher({ layers: layerGroup.getLayers().getArray() }));
             }).catch(response => {
                 console.log("Error loading Planet Daily imagery: ");
                 console.log(response);
