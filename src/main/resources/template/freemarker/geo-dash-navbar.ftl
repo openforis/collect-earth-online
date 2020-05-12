@@ -49,7 +49,8 @@
 	            	</#if>
 	        	</#if>
 				 <#if navlink != "Geo-Dash">
-					<li class="nav-item my-auto ml-1"><button class="btn btn-outline-lightgreen btn-sm" onclick="$('#addWidget' ).click();">Add Widget</button></li>
+					 <li class="nav-item my-auto ml-1" id="copyWidgetLayout"><button class="btn btn-outline-lightgreen btn-sm" onclick="$('#copyWidgets').click();">Copy Layout</button></li>
+					<li class="nav-item my-auto ml-1"><button class="btn btn-outline-lightgreen btn-sm" onclick="$('#addWidget').click();">Add Widget</button></li>
 				 <li class="nav-item my-auto ml-1"><button class="btn btn-outline-lightgreen btn-sm" onclick="openHelp()">Geo-Dash Help</button></li>
 				 </#if>
         	     <#--<li class="nav-item my-auto ml-1">                   -->

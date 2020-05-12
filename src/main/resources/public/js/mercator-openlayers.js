@@ -28,6 +28,7 @@ import { BingMaps, Cluster, TileWMS, Vector as VectorSource, XYZ } from "ol/sour
 import { Circle as CircleStyle, Icon, Fill, Stroke, Style, Text as StyleText, RegularShape } from "ol/style";
 import { fromLonLat, transform, transformExtent } from "ol/proj";
 import { fromExtent, fromCircle } from "ol/geom/Polygon";
+import { formatDateISO } from "../jsx/utils/dateUtils";
 
 /******************************************************************************
 ***
@@ -269,6 +270,65 @@ mercator.createSource = function (sourceConfig, imageryId, documentRoot,
             url: documentRoot + "/get-tile",
             params: { imageryId: imageryId },
         });
+    } else if (sourceConfig.type === "Sentinel2" || sourceConfig.type === "Sentinel1") {
+        const bandCombination = sourceConfig.bandCombination;
+        const bands = sourceConfig.type === "Sentinel1" ? bandCombination
+            : bandCombination === "FalseColorInfrared" ? "B8,B4,B3"
+                : bandCombination === "FalseColorUrban" ? "B12,B11,B4"
+                    : bandCombination === "Agriculture" ? "B11,B8,B2"
+                        : bandCombination === "HealthyVegetation" ? "B8,B11,B2"
+                            : bandCombination === "ShortWaveInfrared" ? "B12,B8A,B4"
+                                : "B4,B3,B2";
+
+        const endDate = new Date(sourceConfig.year, sourceConfig.month, 0);
+        const theJson = {
+            path: sourceConfig.type === "Sentinel2" ? "FilteredSentinel" : "FilteredSentinelSAR",
+            bands: bands,
+            min: sourceConfig.min,
+            max: sourceConfig.max,
+            cloudLessThan: sourceConfig.type === "Sentinel2" ? parseInt(sourceConfig.cloudScore) : null,
+            dateFrom: sourceConfig.year + "-" + (sourceConfig.month.length === 1 ? "0" : "") + sourceConfig.month + "-01",
+            dateTo : formatDateISO(endDate),
+        };
+        const theID = Math.random().toString(36).substr(2, 16) + "_" + Math.random().toString(36).substr(2, 9);
+        const geeLayer = new XYZ({
+            url: "https://earthengine.googleapis.com/v1alpha/projects/earthengine-legacy/maps/temp/tiles/{z}/{x}/{y}",
+            id: theID,
+        });
+        geeLayer.setProperties({ id: theID });
+        fetch(documentRoot + "/geo-dash/gateway-request", {
+            method: "POST",
+            headers: {
+                "Accept": "application/json",
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify(theJson),
+        })
+            .then(res => {
+                if (res.ok) {
+                    return res.json();
+                } else {
+                    Promise.reject();
+                }
+            })
+            .then(data => {
+                if (data.hasOwnProperty("url")) {
+                    const geeLayer = new XYZ({
+                        url: data.url,
+                    });
+                    mercator.currentMap.getLayers().forEach(function (lyr) {
+                        if (theID && theID === lyr.getSource().get("id")) {
+                            lyr.setSource(geeLayer);
+                        }
+                    });
+                } else {
+                    console.warn("Wrong Data Returned");
+                }
+            }).catch(response => {
+                console.log("Error loading " + sourceConfig.type + " imagery: ");
+                console.log(response);
+            });
+        return geeLayer;
     } else if (sourceConfig.type === "GeeGateway") {
         //get variables and make ajax call to get mapid and token
         //then add xyz layer

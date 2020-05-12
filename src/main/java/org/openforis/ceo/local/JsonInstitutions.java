@@ -23,6 +23,18 @@ import spark.Response;
 
 public class JsonInstitutions implements Institutions {
 
+    public static Boolean isInstitutionAdmin(String userId, Integer institutionId) {
+        var matchingInstitution = getInstitutionById(institutionId);
+        if (matchingInstitution.isPresent()) {
+            final var institution = matchingInstitution.get();
+            final var admins = institution.has("admins") ? institution.get("admins").getAsJsonArray() : new JsonArray();
+            final var archived = institution.has("archived") ? institution.get("archived").getAsBoolean() : true;
+            return admins.contains(parseJson(userId)) && !archived;
+        } else {
+            return false;
+        }
+    }
+
     public Boolean isInstAdmin(Request req) {
         final var userId = req.session().attributes().contains("userid") ? req.session().attribute("userid").toString() : "-1";
         final var qInstitutionId = req.queryParams("institutionId");
@@ -33,15 +45,24 @@ public class JsonInstitutions implements Institutions {
             : jInstitutionId != null ? Integer.parseInt(jInstitutionId)
             : 0;
 
-        var matchingInstitution = getInstitutionById(institutionId);
-        if (matchingInstitution.isPresent()) {
-            final var institution = matchingInstitution.get();
-            final var admins = institution.has("admins") ? institution.get("admins").getAsJsonArray() : new JsonArray();
-            final var archived = institution.has("archived") ? institution.get("archived").getAsBoolean() : true;
-            return admins.contains(parseJson(userId)) && !archived;
+        return isInstitutionAdmin(userId, institutionId);
+    }
+
+    public static Boolean isProjectAdmin(Integer userId, Integer projectId) {
+        final var projects = readJsonFile("project-list.json").getAsJsonArray();
+        final var matchedProject = findInJsonArray(projects, project -> project.get("id").getAsInt() == projectId);
+        if (matchedProject.isPresent()) {
+            final var institutionId = matchedProject.get().get("institution").getAsInt();
+            return isInstitutionAdmin(userId.toString(), institutionId);
         } else {
             return false;
         }
+    }
+
+    public static Boolean isGlobalAdmin(Integer userId) {
+        final var users = readJsonFile("user-list.json").getAsJsonArray();
+        final var matchedUser = findInJsonArray(users, user -> user.get("id").getAsInt() == userId);
+        return matchedUser.isPresent() && matchedUser.get().get("role").equals("admin");
     }
 
     public String getAllInstitutions(Request req, Response res) {

@@ -129,7 +129,7 @@ h4 {font-size: 0.5rem;}
     background-color:#0C4D48!important;
     color:white;
 }
-.bg-darkgreen h1{
+.bg-darkgreen h1,h2{
     padding:1rem;
     color:white;
     margin:0;
@@ -520,13 +520,26 @@ ul.samplevalue{
     position: absolute;
     top: 0px;
     left: 20%;
-    height: 2rem;
+    height: auto;
     width: 60%;
     padding: 0.25rem;
     text-align: center;
     color: white;
     background-color: rgba(75,75,150,1.0);
     z-index: 100;
+}
+
+#download-kml {
+    position: absolute;
+    left: 40%;
+    bottom: 5px;
+    height: 2rem;
+    padding: 0.25rem;
+    text-align: center;
+    background-color: #31BAB0;
+    z-index: 100;
+    width: 20%;
+    border-radius: 10px;
 }
 /*********************************************************************/
 /* NEW COLLECTION PAGE */
