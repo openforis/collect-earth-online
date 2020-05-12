@@ -127,9 +127,13 @@ class Project extends React.Component {
                       plotSpacing: this.state.projectDetails.plotSpacing,
                       privacyLevel: this.state.projectDetails.privacyLevel,
                       projectTemplate: this.state.projectDetails.id,
-                      sampleDistribution: this.state.projectDetails.sampleDistribution,
+                      sampleDistribution: this.state.projectDetails.sampleDistribution === "center"
+                            ? "gridded"
+                            : this.state.projectDetails.sampleDistribution,
                       samplesPerPlot: this.state.projectDetails.samplesPerPlot,
-                      sampleResolution: this.state.projectDetails.sampleResolution,
+                      sampleResolution: this.state.projectDetails.sampleDistribution === "center"
+                            ? 2 * this.state.projectDetails.plotSize
+                            : this.state.projectDetails.sampleResolution,
                       sampleValues: this.state.projectDetails.surveyQuestions,
                       surveyRules: this.state.projectDetails.surveyRules,
                       plotFileName: this.state.projectDetails.plotFileName,
@@ -315,8 +319,6 @@ class Project extends React.Component {
     setProjectDetail = (key, newValue) =>
         this.setState({ projectDetails: { ...this.state.projectDetails, [key]: newValue }});
 
-    setProjectDetails = (obj) => this.setState({ projectDetails: { ...this.state.projectDetails, ...obj }});
-
     setSurveyQuestions = (newSurveyQuestions) =>
         this.setState({ projectDetails: { ...this.state.projectDetails, surveyQuestions: newSurveyQuestions }});
 
@@ -430,7 +432,6 @@ class Project extends React.Component {
                             projectDetails={this.state.projectDetails}
                             projectList={this.state.projectList}
                             setProjectDetail={this.setProjectDetail}
-                            setProjectDetails={this.setProjectDetails}
                             setProjectTemplate={this.setProjectTemplate}
                             setSurveyQuestions={this.setSurveyQuestions}
                             setSurveyRules={this.setSurveyRules}
@@ -482,8 +483,8 @@ function ProjectDesignForm(props) {
                 </Fragment>
             :
                 <Fragment>
-                    <PlotDesign projectDetails={props.projectDetails} setProjectDetail={props.setProjectDetail} setProjectDetails={props.setProjectDetails}/>
-                    <SampleDesign projectDetails={props.projectDetails} setProjectDetail={props.setProjectDetail} setProjectDetails={props.setProjectDetails}/>
+                    <PlotDesign projectDetails={props.projectDetails} setProjectDetail={props.setProjectDetail}/>
+                    <SampleDesign projectDetails={props.projectDetails} setProjectDetail={props.setProjectDetail}/>
                 </Fragment>
             }
             <SurveyDesign
@@ -600,10 +601,8 @@ function PlotDesign ({
         plotSpacing,
         plotSize,
         plotFileName,
-        sampleDistribution
     },
     setProjectDetail,
-    setProjectDetails
 }) {
 
     return (
@@ -806,11 +805,7 @@ function PlotDesign ({
                             step="any"
                             value={plotSize}
                             disabled={plotDistribution === "shp"}
-                            onChange={e => {
-                                sampleDistribution === "center"
-                                    ? setProjectDetails({"plotSize": e.target.value, "sampleResolution": 2 * parseInt(e.target.value)})
-                                    : setProjectDetail("plotSize", e.target.value);
-                            }}
+                            onChange={e => setProjectDetail("plotSize", e.target.value)}
                         />
                     </div>
                 </div>
@@ -822,10 +817,8 @@ function PlotDesign ({
 
 function SampleDesign ({
     setProjectDetail,
-    setProjectDetails,
     projectDetails: {
         plotDistribution,
-        plotSize,
         sampleDistribution,
         samplesPerPlot,
         sampleResolution,
@@ -879,7 +872,7 @@ function SampleDesign ({
                         id="sample-distribution-center"
                         name="sample-distribution"
                         defaultValue="center"
-                        onChange={() => setProjectDetails({"sampleDistribution": "center", "sampleResolution": 2 * parseInt(plotSize)})}
+                        onChange={() => setProjectDetail("sampleDistribution", "center")}
                         checked={sampleDistribution === "center"}
                         disabled={plotDistribution === "shp"}
                     />
