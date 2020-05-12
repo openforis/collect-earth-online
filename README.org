@@ -320,6 +320,7 @@ optional arguments:
 - Roberto Fontanarosa (FAO)
 - Alfonso SanchezPausDiaz (FAO)
 - Matt Spencer (SIG)
+- Biplov Bhandari (SIG)
 
 *Emails:*
 
@@ -331,3 +332,4 @@ optional arguments:
 - roberto.fontanarosa@fao.org
 - alfonso.sanchezpausdiaz@fao.org
 - semail@snasa.io
+- bbhandari@sig-gis.com
