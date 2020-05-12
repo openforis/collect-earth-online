@@ -435,7 +435,7 @@ const imageryOptions = [
                 options: [
                     { label: "Aerial", value: "Aerial" },
                     { label: "Aerial with Labels", value: "AerialWithLabels" },
-                ]
+                ],
             },
             { key: "accessToken", display: "Access Token" },
         ],
@@ -456,8 +456,8 @@ const imageryOptions = [
         label: "Planet Daily",
         params: [
             { key: "accessToken", display: "Access Token" },
-            { key: "startDate", display: "Start Date", type: "date"},
-            { key: "endDate", display: "End Date", type: "date"},
+            { key: "startDate", display: "Start Date", type: "date" },
+            { key: "endDate", display: "End Date", type: "date" },
         ],
         url: "https://developers.planet.com/docs/quickstart/getting-started/",
     },
@@ -494,19 +494,19 @@ const imageryOptions = [
                     { label: "MyDG Consumer", value: "MyDG_Consumer_Profile" },
                     { label: "Only Mosaics", value: "Only_Mosaics_Profile" },
                     { label: "True Currency", value: "True_Currency_Profile" },
-                ]
+                ],
             },
             {
                 key: "startDate",
                 display: "Start Date",
                 type: "date",
-                options: { max: new Date().toJSON().split("T")[0] }
+                options: { max: new Date().toJSON().split("T")[0] },
             },
             {
                 key: "endDate",
                 display: "End Date",
                 type: "date",
-                options: { max: new Date().toJSON().split("T")[0] }
+                options: { max: new Date().toJSON().split("T")[0] },
             },
         ],
     },
@@ -518,9 +518,9 @@ const imageryOptions = [
                 key: "year",
                 display: "Default Year",
                 type: "number",
-                options: { min: "2014", max: new Date().getFullYear().toString(), step: "1" }
+                options: { min: "2014", max: new Date().getFullYear().toString(), step: "1" },
             },
-            { key: "month", display: "Default Month", type: "number", options: { min: "1", max: "12", step: "1" } },
+            { key: "month", display: "Default Month", type: "number", options: { min: "1", max: "12", step: "1" }},
             {
                 key: "bandCombination",
                 display: "Band Combination",
@@ -530,10 +530,10 @@ const imageryOptions = [
                     { label: "VH,VV,VV/VH", value: "VH,VV,VV/VH" },
                     { label: "VV,VH,VV/VH", value: "VV,VH,VV/VH" },
                     { label: "VV,VH,VH/VV", value: "VV,VH,VH/VV" },
-                ]
+                ],
             },
-            { key: "min", display: "Min", type: "number", options: { step: "0.01" } },
-            { key: "max", display: "Max", type: "number", options: { step: "0.01" } },
+            { key: "min", display: "Min", type: "number", options: { step: "0.01" }},
+            { key: "max", display: "Max", type: "number", options: { step: "0.01" }},
         ],
     },
     {
@@ -544,9 +544,9 @@ const imageryOptions = [
                 key: "year",
                 display: "Default Year",
                 type: "number",
-                options: { min: "2015", max: new Date().getFullYear().toString(), step: "1" }
+                options: { min: "2015", max: new Date().getFullYear().toString(), step: "1" },
             },
-            { key: "month", display: "Default Month", type: "number", options: { min: "1", max: "12", step: "1" } },
+            { key: "month", display: "Default Month", type: "number", options: { min: "1", max: "12", step: "1" }},
             {
                 key: "bandCombination",
                 display: "Band Combination",
@@ -558,12 +558,11 @@ const imageryOptions = [
                     { label: "Agriculture", value: "Agriculture" },
                     { label: "Healthy Vegetation", value: "HealthyVegetation" },
                     { label: "Short Wave Infrared", value: "ShortWaveInfrared" },
-                ]
+                ],
             },
-            { key: "min", display: "Min", type: "number", options: { step: "0.01" } },
-            { key: "max", display: "Max", type: "number", options: { step: "0.01" } },
-            { key: "cloudScore", display: "Cloud Score", type: "number", options: { min: "0", max: "100", step: "1" }
-            },
+            { key: "min", display: "Min", type: "number", options: { step: "0.01" }},
+            { key: "max", display: "Max", type: "number", options: { step: "0.01" }},
+            { key: "cloudScore", display: "Cloud Score", type: "number", options: { min: "0", max: "100", step: "1" }},
         ],
     },
 ];
@@ -674,7 +673,7 @@ class NewImagery extends React.Component {
             const year = parseInt(sourceConfig.year);
             const month = parseInt(sourceConfig.month);
             return (isNaN(year) || year.toString().length !== 4) ? "Year should be 4 digit number"
-                 : (isNaN(month) || month < 1 || month > 12)     ? "Month should be between 1 and 12!"
+                 : (isNaN(month) || month < 1 || month > 12) ? "Month should be between 1 and 12!"
                  : null;
         } else if (sourceConfig.type === "PlanetDaily" || sourceConfig.type === "SecureWatch") {
             const startDate = sourceConfig.startDate;
@@ -763,27 +762,27 @@ class NewImagery extends React.Component {
         if (imageryOptions[val].type === "BingMaps") {
             this.setState({
                 newImageryAttribution: "Bing Maps API: " + imageryOptions[val]["params"][0]["options"][0] + " | © Microsoft Corporation",
-                newImageryParams: { imageryId: imageryOptions[val]["params"].filter(param => param.key === "imageryId")[0].options[0].value }
+                newImageryParams: { imageryId: imageryOptions[val]["params"].filter(param => param.key === "imageryId")[0].options[0].value },
             });
         } else if (imageryOptions[val].type === "Planet" || imageryOptions[val].type === "PlanetDaily") {
             this.setState({
                 newImageryAttribution: "Planet Labs Global Mosaic | © Planet Labs, Inc",
-                newImageryParams: {}
+                newImageryParams: {},
             });
         } else if (imageryOptions[val].type === "EarthWatch") {
             this.setState({
                 newImageryAttribution: "EarthWatch Maps API: Recent Imagery | © Maxar, Inc",
-                newImageryParams: {}
+                newImageryParams: {},
             });
         } else if (imageryOptions[val].type === "SecureWatch") {
             this.setState({
                 newImageryAttribution: "SecureWatch Imagery | © Maxar Technologies Inc.",
-                newImageryParams: { featureProfile: imageryOptions[val]["params"].filter(param => param.key === "featureProfile")[0].options[0].value }
+                newImageryParams: { featureProfile: imageryOptions[val]["params"].filter(param => param.key === "featureProfile")[0].options[0].value },
             });
         } else if (imageryOptions[val].type === "Sentinel1" || imageryOptions[val].type === "Sentinel2") {
             this.setState({
                 newImageryAttribution: "Google Earth Engine | © Google LLC",
-                newImageryParams: { bandCombination: imageryOptions[val]["params"].filter(param => param.key === "bandCombination")[0].options[0].value }
+                newImageryParams: { bandCombination: imageryOptions[val]["params"].filter(param => param.key === "bandCombination")[0].options[0].value },
             });
         } else {
             this.setState({ newImageryParams: {}});

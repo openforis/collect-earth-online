@@ -14,8 +14,6 @@ import java.util.stream.Collectors;
 import javax.servlet.http.Part;
 import spark.Request;
 
-import static org.openforis.ceo.utils.JsonUtils.parseJson;
-
 public class PartUtils {
 
     public static String camelCase(String kebabString) {
@@ -93,7 +91,7 @@ public class PartUtils {
                 // Append the uploaded file extension to outputFilePrefix
                 var inputFileType = inputFileName.substring(inputFileName.lastIndexOf(".") + 1);
                 var outputFileName = outputFilePrefix + "." + inputFileType;
-                
+
                 byte[] data = Base64.getDecoder().decode(encodedFile.split(",")[1]);
                 // Write the file to outputDirectory and return the filename
                 try (OutputStream stream = new FileOutputStream((new File(outputDirectory, outputFileName)).toPath().toString())) {

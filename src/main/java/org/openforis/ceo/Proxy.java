@@ -3,7 +3,6 @@ package org.openforis.ceo;
 import static org.openforis.ceo.utils.RequestUtils.prepareGetRequest;
 
 import com.google.api.client.http.HttpResponseException;
-import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;

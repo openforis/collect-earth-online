@@ -12,7 +12,7 @@ class Collection extends React.Component {
         this.state = {
             collectionStart: 0,
             currentProject: { surveyQuestions: [], institution: "" },
-            currentImagery: { id: "", sourceConfig: {} },
+            currentImagery: { id: "", sourceConfig: {}},
             currentPlot: null,
             imageryAttribution: "",
             imageryList: [],
@@ -48,7 +48,6 @@ class Collection extends React.Component {
             KMLFeatures: null,
             hasGeoDash: false,
             loading: false,
-            auxWindow: null,
         };
     }
 
@@ -1588,6 +1587,7 @@ class PlotNavigation extends React.Component {
         this.state = {
             newPlotInput: "",
             showNav: true,
+            auxWindow: null,
         };
     }
 

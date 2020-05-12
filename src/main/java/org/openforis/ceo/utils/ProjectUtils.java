@@ -375,8 +375,6 @@ public class ProjectUtils {
         var radiusSquared = radius * radius;
         var left = centerX - radius;
         var bottom = centerY - radius;
-        var right = centerX + radius;
-        var top = centerY + radius;
         var steps = (long) Math.floor(plotSize / sampleResolution);
         var padding = (plotSize - steps * sampleResolution) / 2.0;
         return Stream.iterate(left + padding, x -> x + sampleResolution)
