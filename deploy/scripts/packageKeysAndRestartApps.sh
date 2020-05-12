@@ -13,6 +13,7 @@ sudo keytool -delete -keystore /etc/ssl/certs/java/cacerts -alias 'ceo_chain' -s
 sudo keytool --importcert -file /etc/letsencrypt/live/$CERT_DOMAIN/fullchain.pem -keystore /etc/ssl/certs/java/cacerts -v -alias ceo_chain -storepass $CACERT_PASSWORD -noprompt
 
 sudo mv keystore.jks ../
+sudo rm ceo.p12
 
 echo "starting CEO server"
 sh startceo.sh
