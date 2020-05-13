@@ -242,13 +242,13 @@ class Project extends React.Component {
             alert("Select a valid Basemap.");
             return false;
 
-        } else if (projectDetails.sampleDistribution !== "center"
+        } else if (projectDetails.sampleDistribution === "gridded"
                     && projectDetails.plotShape === "circle"
                     && projectDetails.sampleResolution >= projectDetails.plotSize / Math.sqrt(2)) {
             alert("The sample resolution must be less than plot diameter divided by the square root of 2.");
             return false;
 
-        } else if (projectDetails.sampleDistribution !== "center"
+        } else if (projectDetails.sampleDistribution === "gridded"
                     && projectDetails.plotShape === "square"
                     && parseInt(projectDetails.sampleResolution) >= projectDetails.plotSize) {
             alert("The sample resolution must be less than the plot width.");
