@@ -560,12 +560,23 @@ const imageryOptions = [
         ],
     },
     {
-        type: "MapBox",
+        type: "MapBoxRaster",
+        label: "MapBox Raster",
+        params: [
+            { key: "layerName", display: "Layer Name" },
+            { key: "accessToken", display: "Access Token" },
+        ],
+        url: "https://docs.mapbox.com/help/glossary/raster-tiles-api/",
+    },
+    {
+        type: "MapBoxStatic",
+        label: "MapBox Static",
         params: [
             { key: "userName", display: "User Name" },
             { key: "mapStyleId", display: "Map Style Id" },
             { key: "accessToken", display: "Access Token" },
         ],
+        url: "https://docs.mapbox.com/help/glossary/static-tiles-api/"
     },
 ];
 

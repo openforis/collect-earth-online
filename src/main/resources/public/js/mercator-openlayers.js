@@ -399,7 +399,15 @@ mercator.createSource = function (sourceConfig, imageryId, documentRoot,
                 });
         }
         return geeLayer;
-    } else if (sourceConfig.type === "MapBox") {
+    } else if (sourceConfig.type === "MapBoxRaster") {
+        return new XYZ({
+            url: "https://api.mapbox.com/v4/"
+                 + sourceConfig.layerName
+                 + "/{z}/{x}/{y}.jpg90"
+                 + "?access_token=" + sourceConfig.accessToken,
+            attribution: "© MapBox",
+        });
+    } else if (sourceConfig.type === "MapBoxStatic") {
         return new XYZ({
             url: "https://api.mapbox.com/styles/v1/"
                  + sourceConfig.userName + "/"
