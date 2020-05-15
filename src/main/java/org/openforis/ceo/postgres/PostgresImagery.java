@@ -43,7 +43,7 @@ public class PostgresImagery implements Imagery {
                         : parseJson(rs.getString("extent")).getAsJsonArray());
                     var sourceConfig = parseJson(rs.getString("source_config")).getAsJsonObject();
                     // Return only necessary fields for types we proxy
-                    if (List.of("DigitalGlobe", "EarthWatch", "GeoServer").contains(sourceConfig.get("type").getAsString())) {
+                    if (sourceConfig.get("type").getAsString().equals("GeoServer")) {
                         var cleanSource = new JsonObject();
                         cleanSource.add("type", sourceConfig.get("type"));
                         newImagery.add("sourceConfig", cleanSource);

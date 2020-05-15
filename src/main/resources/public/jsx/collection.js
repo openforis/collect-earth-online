@@ -86,7 +86,11 @@ class Collection extends React.Component {
         // initialize current imagery to project default
         if (this.state.mapConfig && this.state.currentProject
             && this.state.imageryList.length > 0 && !this.state.currentImagery.id) {
-            this.setBaseMapSource(this.getImageryByTitle(this.state.currentProject.baseMapSource).id);
+            if (this.getImageryByTitle(this.state.currentProject.baseMapSource)) {
+                this.setBaseMapSource(this.getImageryByTitle(this.state.currentProject.baseMapSource).id);
+            } else {
+                this.setBaseMapSource(this.state.imageryList[0].id);
+            }
         }
 
         //
@@ -135,11 +139,6 @@ class Collection extends React.Component {
             && (this.state.currentImagery.id !== prevState.currentImagery.id
                 || this.state.mapConfig !== prevState.mapConfig)) {
             this.updateMapImagery();
-        }
-
-        if (this.state.imageryYearDG !== prevState.imageryYearDG
-            || this.state.stackingProfileDG !== prevState.stackingProfileDG) {
-            this.updateDGWMSLayer();
         }
 
         if (this.state.imageryMonthPlanet !== prevState.imageryMonthPlanet
@@ -279,17 +278,15 @@ class Collection extends React.Component {
 
     setBaseMapSource = (newBaseMapSource) => {
         const newImagery = this.getImageryById(newBaseMapSource);
-        const newImageryAttribution = (newImagery.title && newImagery.title.includes("DigitalGlobeWMSImagery"))
-            ? newImagery.attribution + " | " + this.state.imageryYearDG + " (" + this.state.stackingProfileDG + ")"
-            : newImagery.sourceConfig.type === "Planet"
-                ? newImagery.attribution + " | " + this.state.imageryYearPlanet + "-" + this.state.imageryMonthPlanet
-                : newImagery.sourceConfig.type === "PlanetDaily"
-                    ? newImagery.attribution + " | " + this.state.imageryStartDatePlanetDaily + " to " + this.state.imageryEndDatePlanetDaily
-                    : newImagery.sourceConfig.type === "SecureWatch"
-                        ? newImagery.attribution
-                          + " | " + (this.state.imageryStartDateSecureWatch || newImagery.sourceConfig.startDate)
-                          + " to " + (this.state.imageryEndDateSecureWatch || newImagery.sourceConfig.endDate)
-                        : newImagery.attribution;
+        const newImageryAttribution = newImagery.sourceConfig.type === "Planet"
+            ? newImagery.attribution + " | " + this.state.imageryYearPlanet + "-" + this.state.imageryMonthPlanet
+            : newImagery.sourceConfig.type === "PlanetDaily"
+                ? newImagery.attribution + " | " + this.state.imageryStartDatePlanetDaily + " to " + this.state.imageryEndDatePlanetDaily
+                : newImagery.sourceConfig.type === "SecureWatch"
+                    ? newImagery.attribution
+                        + " | " + (this.state.imageryStartDateSecureWatch || newImagery.sourceConfig.startDate)
+                        + " to " + (this.state.imageryEndDateSecureWatch || newImagery.sourceConfig.endDate)
+                    : newImagery.attribution;
         if (newImagery.sourceConfig.type === "SecureWatch") {
             this.setState({
                 currentImagery: newImagery,
@@ -491,9 +488,7 @@ class Collection extends React.Component {
                 imageryStartDatePlanetDaily: "",
                 imageryEndDatePlanetDaily: "",
             });
-            if (this.state.currentImagery.title && this.state.currentImagery.title.includes("DigitalGlobeWMSImagery")) {
-                this.updateDGWMSLayer();
-            } else if (this.state.currentImagery.sourceConfig.type === "Planet") {
+            if (this.state.currentImagery.sourceConfig.type === "Planet") {
                 this.updatePlanetLayer();
             } else if (this.state.currentImagery.sourceConfig.type === "SecureWatch") {
                 const startDate = this.state.currentImagery.sourceConfig.startDate || "2019-01-01";
@@ -527,17 +522,6 @@ class Collection extends React.Component {
     getImageryByTitle = (imageryTitle) => this.state.imageryList.find(imagery => imagery.title === imageryTitle);
 
     getImageryById = (imageryId) => this.state.imageryList.find(imagery => imagery.id === imageryId);
-
-    updateDGWMSLayer = () => {
-        const { currentImagery, imageryYearDG, stackingProfileDG } = this.state;
-        mercator.updateLayerWmsParams(this.state.mapConfig,
-                                      currentImagery.title,
-                                      {
-                                          COVERAGE_CQL_FILTER: "(acquisitionDate>='" + imageryYearDG + "-01-01')"
-                                              + "AND(acquisitionDate<='" + imageryYearDG + "-12-31')",
-                                          FEATUREPROFILE: stackingProfileDG,
-                                      });
-    };
 
     updatePlanetLayer = () => {
         const { currentImagery, imageryMonthPlanet, imageryYearPlanet } = this.state;
@@ -956,10 +940,7 @@ class Collection extends React.Component {
     };
 
     getImageryAttributes = () =>
-        (this.state.currentImagery.title && this.state.currentImagery.title.includes("DigitalGlobeWMSImagery")) ? {
-            imageryYearDG:     this.state.imageryYearDG,
-            stackingProfileDG: this.state.stackingProfileDG,
-        } : (this.state.currentImagery.sourceConfig.type === "Planet") ? {
+        (this.state.currentImagery.sourceConfig.type === "Planet") ? {
             imageryMonthPlanet: this.state.imageryMonthPlanet,
             imageryYearPlanet:  this.state.imageryYearPlanet,
         } : (this.state.currentImagery.sourceConfig.type === "PlanetDaily") ? {
@@ -1732,36 +1713,6 @@ class ImageryOptions extends React.Component {
         };
     }
 
-    digitalGlobeMenus = () => (
-        <div className="DG-Menu my-2">
-            <div className="slidecontainer form-control form-control-sm">
-                <input
-                    type="range"
-                    min="2000"
-                    max="2018"
-                    value={this.props.imageryYearDG}
-                    className="slider"
-                    id="myRange"
-                    onChange={e => this.props.setImageryYearDG(parseInt(e.target.value))}
-                />
-                <p>Year: <span id="demo">{this.props.imageryYearDG}</span></p>
-            </div>
-            <select
-                className="form-control form-control-sm"
-                id="dg-stacking-profile"
-                name="dg-stacking-profile"
-                size="1"
-                value={this.props.stackingProfileDG}
-                onChange={e => this.props.setStackingProfileDG(e.target.value)}
-            >
-                {
-                    ["Accuracy_Profile", "Cloud_Cover_Profile", "Global_Currency_Profile", "MyDG_Color_Consumer_Profile", "MyDG_Consumer_Profile"]
-                        .map(profile => <option key={profile} value={profile}>{profile}</option>)
-                }
-            </select>
-        </div>
-    );
-
     planetMenus = () => (
         <div className="PlanetsMenu my-2">
             <div className="slidecontainer form-control form-control-sm">
@@ -2062,7 +2013,6 @@ class ImageryOptions extends React.Component {
                                         )
                             }
                         </select>
-                        {props.imageryTitle && props.imageryTitle.includes("DigitalGlobeWMSImagery") && this.digitalGlobeMenus()}
                         {props.imageryType === "Planet" && this.planetMenus()}
                         {props.imageryType === "PlanetDaily" && this.planetDailyMenus()}
                         {props.imageryType === "SecureWatch" && this.secureWatchMenus()}
