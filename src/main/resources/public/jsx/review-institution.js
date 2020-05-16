@@ -462,12 +462,6 @@ const imageryOptions = [
         url: "https://developers.planet.com/docs/quickstart/getting-started/",
     },
     {
-        type: "EarthWatch",
-        params: [
-            { key: "accessToken", display: "Access Token" },
-        ],
-    },
-    {
         type: "SecureWatch",
         params: [
             { key: "connectid", display: "Connect ID" },
@@ -564,6 +558,25 @@ const imageryOptions = [
             { key: "max", display: "Max", type: "number", options: { step: "0.01" }},
             { key: "cloudScore", display: "Cloud Score", type: "number", options: { min: "0", max: "100", step: "1" }},
         ],
+    },
+    {
+        type: "MapBoxRaster",
+        label: "MapBox Raster",
+        params: [
+            { key: "layerName", display: "Layer Name" },
+            { key: "accessToken", display: "Access Token" },
+        ],
+        url: "https://docs.mapbox.com/help/glossary/raster-tiles-api/",
+    },
+    {
+        type: "MapBoxStatic",
+        label: "MapBox Static",
+        params: [
+            { key: "userName", display: "User Name" },
+            { key: "mapStyleId", display: "Map Style Id" },
+            { key: "accessToken", display: "Access Token" },
+        ],
+        url: "https://docs.mapbox.com/help/glossary/static-tiles-api/"
     },
 ];
 
@@ -769,11 +782,6 @@ class NewImagery extends React.Component {
                 newImageryAttribution: "Planet Labs Global Mosaic | © Planet Labs, Inc",
                 newImageryParams: {},
             });
-        } else if (imageryOptions[val].type === "EarthWatch") {
-            this.setState({
-                newImageryAttribution: "EarthWatch Maps API: Recent Imagery | © Maxar, Inc",
-                newImageryParams: {},
-            });
         } else if (imageryOptions[val].type === "SecureWatch") {
             this.setState({
                 newImageryAttribution: "SecureWatch Imagery | © Maxar Technologies Inc.",
@@ -783,6 +791,11 @@ class NewImagery extends React.Component {
             this.setState({
                 newImageryAttribution: "Google Earth Engine | © Google LLC",
                 newImageryParams: { bandCombination: imageryOptions[val]["params"].filter(param => param.key === "bandCombination")[0].options[0].value },
+            });
+        } else if (imageryOptions[val].type === "MapBox") {
+            this.setState({
+                newImageryAttribution: "MapBox | © MapBox",
+                newImageryParams: {},
             });
         } else {
             this.setState({ newImageryParams: {}});

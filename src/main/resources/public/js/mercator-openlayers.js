@@ -24,7 +24,7 @@ import { Circle, LineString, Point } from "ol/geom";
 import { DragBox, Select } from "ol/interaction";
 import { GeoJSON, KML } from "ol/format";
 import { Tile as TileLayer, Vector as VectorLayer, Group as LayerGroup } from "ol/layer";
-import { BingMaps, Cluster, TileWMS, Vector as VectorSource, XYZ } from "ol/source";
+import { BingMaps, Cluster, TileWMS, Vector as VectorSource, XYZ, OSM } from "ol/source";
 import { Circle as CircleStyle, Icon, Fill, Stroke, Style, Text as StyleText, RegularShape } from "ol/style";
 import { fromLonLat, transform, transformExtent } from "ol/proj";
 import { fromExtent, fromCircle } from "ol/geom/Polygon";
@@ -176,12 +176,7 @@ mercator.createSource = function (sourceConfig, imageryId, documentRoot,
                                   extent = [[-180, -90], [180, -90], [180, 90], [-180, 90], [-180, -90]],
                                   show = false,
                                   callback = null) {
-    if (["DigitalGlobe", "EarthWatch"].includes(sourceConfig.type)) {
-        return new XYZ({
-            url: documentRoot + "/get-tile?imageryId=" + imageryId + "&z={z}&x={x}&y={-y}",
-            attribution: "© DigitalGlobe, Inc",
-        });
-    } else if (sourceConfig.type === "Planet") {
+    if (sourceConfig.type === "Planet") {
         return new XYZ({
             url: documentRoot
                  + "/get-tile?imageryId=" + imageryId
@@ -404,9 +399,25 @@ mercator.createSource = function (sourceConfig, imageryId, documentRoot,
                 });
         }
         return geeLayer;
-
+    } else if (sourceConfig.type === "MapBoxRaster") {
+        return new XYZ({
+            url: "https://api.mapbox.com/v4/"
+                 + sourceConfig.layerName
+                 + "/{z}/{x}/{y}.jpg90"
+                 + "?access_token=" + sourceConfig.accessToken,
+            attribution: "© MapBox",
+        });
+    } else if (sourceConfig.type === "MapBoxStatic") {
+        return new XYZ({
+            url: "https://api.mapbox.com/styles/v1/"
+                 + sourceConfig.userName + "/"
+                 + sourceConfig.mapStyleId
+                 + "/tiles/256/{z}/{x}/{y}"
+                 + "?access_token=" + sourceConfig.accessToken,
+            attribution: "© MapBox",
+        });
     } else {
-        return null;
+        return new OSM();
     }
 };
 

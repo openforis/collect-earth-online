@@ -107,7 +107,7 @@ class MapPanel extends React.Component {
         if (this.state.mapConfig == null && this.props.imagery.length > 0 && prevProps.imagery.length === 0) {
             const homePageLayer = this.props.imagery.find(
                 function (imagery) {
-                    return imagery.title === "DigitalGlobeRecentImagery";
+                    return imagery.title === "MapBox Satellite w/ Labels";
                 }
             );
             const mapConfig = mercator.createMap("home-map-pane", [70, 15], 2.1, [homePageLayer], this.props.documentRoot);
