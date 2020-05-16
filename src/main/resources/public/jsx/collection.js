@@ -278,15 +278,20 @@ class Collection extends React.Component {
 
     setBaseMapSource = (newBaseMapSource) => {
         const newImagery = this.getImageryById(newBaseMapSource);
-        const newImageryAttribution = newImagery.sourceConfig.type === "Planet"
-            ? newImagery.attribution + " | " + this.state.imageryYearPlanet + "-" + this.state.imageryMonthPlanet
+        const newImageryAttribution =
+            newImagery.sourceConfig.type === "Planet"
+                ? newImagery.attribution
+                    + " | " + this.state.imageryYearPlanet
+                    + "-" + this.state.imageryMonthPlanet
             : newImagery.sourceConfig.type === "PlanetDaily"
-                ? newImagery.attribution + " | " + this.state.imageryStartDatePlanetDaily + " to " + this.state.imageryEndDatePlanetDaily
-                : newImagery.sourceConfig.type === "SecureWatch"
-                    ? newImagery.attribution
-                        + " | " + (this.state.imageryStartDateSecureWatch || newImagery.sourceConfig.startDate)
-                        + " to " + (this.state.imageryEndDateSecureWatch || newImagery.sourceConfig.endDate)
-                    : newImagery.attribution;
+                ? newImagery.attribution
+                    + " | " + this.state.imageryStartDatePlanetDaily
+                    + " to " + this.state.imageryEndDatePlanetDaily
+            : newImagery.sourceConfig.type === "SecureWatch"
+                ? newImagery.attribution
+                    + " | " + (this.state.imageryStartDateSecureWatch || newImagery.sourceConfig.startDate)
+                    + " to " + (this.state.imageryEndDateSecureWatch || newImagery.sourceConfig.endDate)
+            : newImagery.attribution;
         if (newImagery.sourceConfig.type === "SecureWatch") {
             this.setState({
                 currentImagery: newImagery,

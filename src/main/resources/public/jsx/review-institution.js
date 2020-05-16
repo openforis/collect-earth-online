@@ -596,7 +596,6 @@ class NewImagery extends React.Component {
     addCustomImagery = () => {
         const sourceConfig = this.stackParams();
         const message = this.validateData(sourceConfig);
-        console.log(sourceConfig);
         if (!this.checkAllParams()) {
             alert("You must fill out all fields.");
         } else if (["Planet", "PlanetDaily", "SecureWatch", "Sentinel1", "Sentinel2"].includes(sourceConfig.type) && message) {
