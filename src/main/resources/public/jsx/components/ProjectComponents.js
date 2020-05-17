@@ -189,7 +189,7 @@ export function ProjectOptions( { showGEEScript, onShowGEEScriptClick } ) {
             <div className="form-check">
                 <input
                     className="form-check-input"
-                    checked={showGEEScript ? "checked" : null}
+                    checked={showGEEScript}
                     id="showGEEScript"
                     onChange={onShowGEEScriptClick}
                     type="checkbox"
