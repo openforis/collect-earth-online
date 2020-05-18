@@ -1320,6 +1320,12 @@ class GraphWidget extends React.Component {
                                             },
                                         },
                                     },
+                                    tooltip: {
+                                        pointFormat: "<span style=\"color:{series.color}\">{point.x:%Y-%m-%d}</span>: <b>{point.y:.6f}</b><br/>",
+                                        valueDecimals: 20,
+                                        split: false,
+                                        xDateFormat: "%Y-%m-%d",
+                                    },
                                 });
                             });
                         }
@@ -1413,6 +1419,11 @@ class GraphWidget extends React.Component {
                     },
                     threshold: null,
                 },
+                scatter: {
+                    marker: {
+                        radius: 2,
+                    },
+                }
             },
             tooltip: {
                 pointFormat: "<span style=\"color:{series.color}\">{series.name}</span>: <b>{point.y:.6f}</b><br/>",
@@ -1423,7 +1434,6 @@ class GraphWidget extends React.Component {
             series: series,
         }, () => {
             document.getElementById("widgettitle_" + wIndex).innerHTML = wText;
-            //document.getElementsByClassName("highcharts-yaxis")[0].firstChild.innerHTML = wText;
         });
     };
 
