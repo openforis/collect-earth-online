@@ -1296,6 +1296,7 @@ public class JsonProjects implements Projects {
             newProject.addProperty("baseMapSource", jsonInputs.get("baseMapSource").getAsString());
             newProject.addProperty("description", jsonInputs.get("description").getAsString());
             newProject.addProperty("institution", jsonInputs.get("institutionId").getAsInt());
+            newProject.addProperty("imageryId", jsonInputs.get("imageryId").getAsInt());
             newProject.addProperty("lonMin", getOrZero(jsonInputs,"lonMin").getAsDouble());
             newProject.addProperty("latMin", getOrZero(jsonInputs,"latMin").getAsDouble());
             newProject.addProperty("lonMax", getOrZero(jsonInputs,"lonMax").getAsDouble());

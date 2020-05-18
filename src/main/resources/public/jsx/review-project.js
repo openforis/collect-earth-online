@@ -68,6 +68,7 @@ class Project extends React.Component {
                       body: JSON.stringify({
                           projectId: this.state.projectDetails.id,
                           baseMapSource: this.state.projectDetails.baseMapSource,
+                          imageryId: this.state.projectDetails.imageryId,
                           description: this.state.projectDetails.description,
                           name: this.state.projectDetails.name,
                           privacyLevel: this.state.projectDetails.privacyLevel,
@@ -254,6 +255,8 @@ class Project extends React.Component {
     setProjectDetail = (key, newValue) =>
         this.setState({ projectDetails: { ...this.state.projectDetails, [key]: newValue }});
 
+    setProjectDetails = (obj) => this.setState({ projectDetails: { ...this.state.projectDetails, ...obj }});
+
     projectNotFound = (projectId) => (
         <SectionBlock title="Project Information">
             <h3>Project {projectId} not found.</h3>
@@ -271,6 +274,7 @@ class Project extends React.Component {
                             imageryList={this.state.imageryList}
                             projectDetails={this.state.projectDetails}
                             setProjectDetail={this.setProjectDetail}
+                            setProjectDetails={this.setProjectDetails}
                         />
                         <ProjectManagement
                             changeAvailability={this.changeAvailability}
@@ -448,7 +452,7 @@ class ProjectStats extends React.Component {
     }
 }
 
-function ProjectDesignReview({ projectDetails, coordinates, imageryList, setProjectDetail }) {
+function ProjectDesignReview({ projectDetails, coordinates, imageryList, setProjectDetail, setProjectDetails }) {
     return (
         <div id="project-design-form" className="px-2 pb-2">
             <ProjectInfo
@@ -459,9 +463,9 @@ function ProjectDesignReview({ projectDetails, coordinates, imageryList, setProj
             />
             <ProjectAOI
                 coordinates={coordinates}
-                baseMapSource={projectDetails.baseMapSource}
+                imageryId={projectDetails.imageryId}
                 imageryList={imageryList}
-                setProjectDetail={setProjectDetail}
+                setProjectDetails={setProjectDetails}
             />
             <PlotReview projectDetails={projectDetails}/>
             <SampleReview projectDetails={projectDetails}/>

@@ -11,6 +11,7 @@ import { encodeFileAsBase64 } from "./utils/fileUtils";
 const blankProject = {
     archived: false,
     availability: "nonexistent",
+    imageryId: "",
     baseMapSource: "",
     boundary: null,
     description: "",
@@ -116,6 +117,7 @@ class Project extends React.Component {
                   contentType: "application/json; charset=utf-8",
                   body: JSON.stringify({
                       institutionId: this.props.institutionId,
+                      imageryId:this.state.projectDetails.imageryId,
                       lonMin: this.state.coordinates.lonMin,
                       lonMax: this.state.coordinates.lonMax,
                       latMin: this.state.coordinates.latMin,
@@ -262,7 +264,11 @@ class Project extends React.Component {
     setProjectTemplate = (newTemplateId) => {
         if (parseInt(newTemplateId) === 0) {
             this.setState({
-                projectDetails: { ...blankProject, baseMapSource : this.state.imageryList[0].title },
+                projectDetails: {
+                    ...blankProject,
+                    baseMapSource : this.state.imageryList[0].title,
+                    imageryId: this.state.imageryList[0].id
+                },
                 plotList: [],
                 coordinates: {
                     lonMin: "",
@@ -318,8 +324,9 @@ class Project extends React.Component {
 
     toggleTemplateWidgets = () => this.setState({ useTemplateWidgets: !this.state.useTemplateWidgets });
 
-    setProjectDetail = (key, newValue) =>
-        this.setState({ projectDetails: { ...this.state.projectDetails, [key]: newValue }});
+    setProjectDetail = (key, newValue) => this.setState({ projectDetails: { ...this.state.projectDetails, [key]: newValue }});
+
+    setProjectDetails = (obj) => this.setState({ projectDetails: { ...this.state.projectDetails, ...obj }});
 
     setSurveyQuestions = (newSurveyQuestions) =>
         this.setState({ projectDetails: { ...this.state.projectDetails, surveyQuestions: newSurveyQuestions }});
@@ -348,6 +355,7 @@ class Project extends React.Component {
                     projectDetails: {
                         ...this.state.projectDetails,
                         baseMapSource: sorted[0].title,
+                        imageryId: sorted[0].id
                     },
                 });
             })
@@ -437,6 +445,7 @@ class Project extends React.Component {
                             projectDetails={this.state.projectDetails}
                             projectList={this.state.projectList}
                             setProjectDetail={this.setProjectDetail}
+                            setProjectDetails={this.setProjectDetails}
                             setProjectTemplate={this.setProjectTemplate}
                             setSurveyQuestions={this.setSurveyQuestions}
                             setSurveyRules={this.setSurveyRules}
@@ -478,9 +487,9 @@ function ProjectDesignForm(props) {
             <ProjectAOI
                 coordinates={props.coordinates}
                 inDesignMode
-                baseMapSource={props.projectDetails.baseMapSource}
+                imageryId={props.projectDetails.imageryId}
                 imageryList={props.imageryList}
-                setProjectDetail={props.setProjectDetail}
+                setProjectDetails={props.setProjectDetails}
             />
             <ProjectOptions
                 showGEEScript={props.showGEEScript}

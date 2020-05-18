@@ -55,6 +55,7 @@ CREATE TABLE imagery (
 CREATE TABLE projects (
     project_uid             SERIAL PRIMARY KEY,
     institution_rid         integer NOT NULL REFERENCES institutions (institution_uid) ON DELETE CASCADE ON UPDATE CASCADE,
+    imagery_rid             integer REFERENCES imagery (imagery_uid),
     availability            text,
     name                    text NOT NULL,
     description             text,
@@ -284,6 +285,7 @@ CREATE TYPE imagery_return AS (
 CREATE TYPE project_return AS (
     project_id              integer,
     institution_id          integer,
+    imagery_id              integer,
     availability            text,
     name                    text,
     description             text,
