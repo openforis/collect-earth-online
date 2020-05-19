@@ -13,7 +13,7 @@ CREATE FUNCTION update_project(
     _description             text,
     _privacy_level           text,
     _base_map_source         text,
-    _show_gee_script         boolean
+    _options                 jsonb
  ) RETURNS void AS $$
 
     UPDATE projects
@@ -21,7 +21,7 @@ CREATE FUNCTION update_project(
         description = _description,
         privacy_level = _privacy_level,
         base_map_source = _base_map_source,
-        options = jsonb_set(options, '{showGEEScript}', _show_gee_script::text::jsonb)
+        options = _options
     WHERE project_uid = _project_uid
 
 $$ LANGUAGE SQL;

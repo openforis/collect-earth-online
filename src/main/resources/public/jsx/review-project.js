@@ -71,7 +71,7 @@ class Project extends React.Component {
                           description: this.state.projectDetails.description,
                           name: this.state.projectDetails.name,
                           privacyLevel: this.state.projectDetails.privacyLevel,
-                          showGEEScript: this.state.projectDetails.projectOptions.showGEEScript,
+                          projectOptions: this.state.projectDetails.projectOptions,
                       }),
                   })
                 .then(response => {

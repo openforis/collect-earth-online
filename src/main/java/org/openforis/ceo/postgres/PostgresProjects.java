@@ -501,7 +501,7 @@ public class PostgresProjects implements Projects {
 
     public String updateProject(Request req, Response res) {
         try (var conn = connect();
-             var pstmt = conn.prepareStatement("SELECT * FROM update_project(?,?,?,?,?,?)")) {
+             var pstmt = conn.prepareStatement("SELECT * FROM update_project(?,?,?,?,?,?::JSONB)")) {
 
             final var jsonInputs = parseJson(req.body()).getAsJsonObject();
             pstmt.setInt(1,    Integer.parseInt(getOrEmptyString(jsonInputs, "projectId").getAsString()));
@@ -509,7 +509,7 @@ public class PostgresProjects implements Projects {
             pstmt.setString(3, getOrEmptyString(jsonInputs, "description").getAsString());
             pstmt.setString(4, getOrEmptyString(jsonInputs, "privacyLevel").getAsString());
             pstmt.setString(5, getOrEmptyString(jsonInputs, "baseMapSource").getAsString());
-            pstmt.setBoolean(6, getOrFalse(jsonInputs, "showGEEScript").getAsBoolean());
+            pstmt.setString(6, jsonInputs.get("projectOptions").getAsJsonObject().toString());
             pstmt.execute();
             return "";
         } catch (SQLException e) {
