@@ -398,7 +398,6 @@ class DegradationWidget extends React.Component {
     }
 
     handleSelectDate = (date) => {
-        console.log("Date selected was: " + date);
         this.setState({ selectedDate: date });
     };
 
@@ -1312,11 +1311,7 @@ class GraphWidget extends React.Component {
                                             select: e => {
                                                 const full = new Date(e.target.x);
                                                 const date = full.getFullYear() + "-" + (full.getMonth() + 1) + "-" + full.getDate();
-                                                try {
-                                                    this.props.selectDate(date);
-                                                } catch (e) {
-                                                    console.log("dumb rule!");
-                                                }
+                                                this.handleSelectDate(date);
                                             },
                                         },
                                     },
@@ -1438,7 +1433,11 @@ class GraphWidget extends React.Component {
     };
 
     getLoading = () => this.state.loading === true
-            ? <img src={window.location.origin + "/img/ceo-loading.gif"} alt={"Loading"} style={{ position: "absolute", bottom: "50%", left: "50%" }} />
+            ? <img
+                src={window.location.origin + "/img/ceo-loading.gif"}
+                alt={"Loading"}
+                style={{ position: "absolute", bottom: "50%", left: "50%" }}
+            />
             : "";
 
     render() {
@@ -1482,7 +1481,11 @@ class StatsWidget extends React.Component {
                     } catch (e) {
                         area = "N/A";
                     }
-                    this.setState({ totalPop: this.numberWithCommas(data.pop), area: area + " ha", elevation: this.numberWithCommas(data.minElev) + " - " + this.numberWithCommas(data.maxElev) + " m" });
+                    this.setState({
+                        totalPop: this.numberWithCommas(data.pop),
+                        area: area + " ha",
+                        elevation: this.numberWithCommas(data.minElev) + " - " + this.numberWithCommas(data.maxElev) + " m"
+                    });
                 }
             })
             .catch(error => console.log(error));
@@ -1504,8 +1507,7 @@ class StatsWidget extends React.Component {
 
     calculateArea = poly => {
         try {
-            const area = sphereGetArea(poly);
-            return this.numberWithCommas(Math.round(Math.abs(area)) / 10000);
+            return this.numberWithCommas(Math.round(Math.abs(sphereGetArea(poly))) / 10000);
         } catch (e) {
             return "N/A";
         }
