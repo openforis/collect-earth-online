@@ -82,7 +82,8 @@ CREATE TABLE projects (
     ts_end_year             integer,
     ts_target_day           integer DEFAULT 215,
     ts_plot_size            integer DEFAULT 1,
-    token_key               text DEFAULT NULL
+    token_key               text DEFAULT NULL,
+    options                 jsonb NOT NULL DEFAULT '{}'::jsonb
 );
 
 -- Stores information about plot packet
@@ -302,6 +303,7 @@ CREATE TYPE project_return AS (
     classification_times    jsonb,
     valid_boundary          boolean,
     token_key               text,
+    options                 jsonb,
     editable                boolean
 );
 

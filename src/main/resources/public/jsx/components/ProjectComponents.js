@@ -183,6 +183,23 @@ export function ProjectAOI({ coordinates: { latMax, lonMin, lonMax, latMin }, in
     );
 }
 
+export function ProjectOptions( { showGEEScript, onShowGEEScriptClick } ) {
+    return (
+        <SectionBlock title="Project Options">
+            <div className="form-check">
+                <input
+                    className="form-check-input"
+                    checked={showGEEScript ? "checked" : null}
+                    id="showGEEScript"
+                    onChange={onShowGEEScriptClick}
+                    type="checkbox"
+                />
+                <label htmlFor="showGEEScript" className="form-check-label">Show GEE Script in Collection Page?</label>
+            </div>
+        </SectionBlock>
+    );
+}
+
 export function PlotReview({ projectDetails: { plotDistribution, numPlots, plotSpacing, plotShape, plotSize }}) {
     return (
         <SectionBlock title="Plot Review">

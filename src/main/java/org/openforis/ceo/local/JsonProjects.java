@@ -44,8 +44,6 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonArray;
 import java.time.LocalDate;
 import java.io.File;
-import java.io.StringWriter;
-import java.io.PrintWriter;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.nio.file.Files;
@@ -744,6 +742,7 @@ public class JsonProjects implements Projects {
                         project.addProperty("description",   getOrEmptyString(jsonInputs, "description").getAsString());
                         project.addProperty("privacyLevel",  getOrEmptyString(jsonInputs, "privacyLevel").getAsString());
                         project.addProperty("baseMapSource", getOrEmptyString(jsonInputs, "baseMapSource").getAsString());
+                        project.add("projectOptions",        jsonInputs.get("projectOptions").getAsJsonObject());
                         return project;
                     } else {
                         return project;
@@ -1174,6 +1173,7 @@ public class JsonProjects implements Projects {
         var computedSamplesPerPlot =
             sampleDistribution.equals("random") ? samplesPerPlot
             : sampleDistribution.equals("gridded") ? countGriddedSampleSet(plotSize, sampleResolution)
+            : sampleDistribution.equals("center") ? 1
             : sampleDistribution.equals("csv") ? (csvSamplePointsFinal.size() / totalPlots)
             : (shpSampleCentersFinal.size() / totalPlots);
 
@@ -1222,7 +1222,7 @@ public class JsonProjects implements Projects {
                         ? (List.of("random", "gridded", "csv").contains(plotDistribution)
                            ? createRandomSampleSet(plotCenter, plotShape, plotSize, samplesPerPlot)
                            : new Double[][]{plotCenter})
-                        : (sampleDistribution.equals("gridded")
+                        : ((sampleDistribution.equals("gridded") || sampleDistribution.equals("center"))
                            ? (List.of("random", "gridded", "csv").contains(plotDistribution)
                               ? createGriddedSampleSet(plotCenter, plotShape, plotSize, sampleResolution)
                               : new Double[][]{plotCenter})
@@ -1315,6 +1315,7 @@ public class JsonProjects implements Projects {
             newProject.add("surveyRules", jsonInputs.get("surveyRules").getAsJsonArray());
             newProject.addProperty("useTemplatePlots", jsonInputs.get("useTemplatePlots").getAsBoolean());
             newProject.addProperty("useTemplateWidgets", jsonInputs.get("useTemplateWidgets").getAsBoolean());
+            newProject.add("projectOptions", jsonInputs.get("projectOptions").getAsJsonObject());
 
             // Add constant values
             newProject.addProperty("availability", "unpublished");

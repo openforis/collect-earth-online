@@ -2,7 +2,7 @@ import React, { Fragment } from "react";
 import ReactDOM from "react-dom";
 
 import { FormLayout, SectionBlock } from "./components/FormComponents";
-import { ProjectInfo, ProjectAOI, PlotReview, SampleReview } from "./components/ProjectComponents";
+import { ProjectInfo, ProjectAOI, ProjectOptions, PlotReview, SampleReview } from "./components/ProjectComponents";
 import { mercator, ceoMapStyles } from "../js/mercator-openlayers.js";
 import { SurveyDesign } from "./components/SurveyDesign";
 import { convertSampleValuesToSurveyQuestions } from "./utils/surveyUtils";
@@ -36,6 +36,9 @@ class Project extends React.Component {
             projectDetails: blankProject,
             useTemplatePlots: false,
             useTemplateWidgets: false,
+            projectOptions: {
+                showGEEScript: false,
+            },
             imageryList: [],
             mapConfig: null,
             plotList: [],
@@ -67,8 +70,6 @@ class Project extends React.Component {
 
         if (this.state.mapConfig
             && this.state.projectDetails.baseMapSource !== prevState.projectDetails.baseMapSource) {
-            // occurs when template project is selected first and then unselected
-            // if (this.state.projectDetails.baseMapSource === "") this.state.projectDetails.baseMapSource = this.state.imageryList[0]["title"];
             mercator.setVisibleLayer(this.state.mapConfig, this.state.projectDetails.baseMapSource);
         }
 
@@ -122,6 +123,7 @@ class Project extends React.Component {
                       baseMapSource: this.state.projectDetails.baseMapSource,
                       description: this.state.projectDetails.description,
                       name: this.state.projectDetails.name,
+                      projectOptions: this.state.projectOptions,
                       numPlots: this.state.projectDetails.numPlots,
                       plotDistribution: this.state.projectDetails.plotDistribution,
                       plotShape: this.state.projectDetails.plotShape,
@@ -131,7 +133,9 @@ class Project extends React.Component {
                       projectTemplate: this.state.projectDetails.id,
                       sampleDistribution: this.state.projectDetails.sampleDistribution,
                       samplesPerPlot: this.state.projectDetails.samplesPerPlot,
-                      sampleResolution: this.state.projectDetails.sampleResolution,
+                      sampleResolution: this.state.projectDetails.sampleDistribution === "center"
+                            ? 2 * this.state.projectDetails.plotSize
+                            : this.state.projectDetails.sampleResolution,
                       sampleValues: this.state.projectDetails.surveyQuestions,
                       surveyRules: this.state.projectDetails.surveyRules,
                       plotFileName: this.state.projectDetails.plotFileName,
@@ -234,6 +238,22 @@ class Project extends React.Component {
             alert("A sample SHP (.zip) file is required.");
             return false;
 
+        } else if (!projectDetails.baseMapSource) {
+            alert("Select a valid Basemap.");
+            return false;
+
+        } else if (projectDetails.sampleDistribution === "gridded"
+                    && projectDetails.plotShape === "circle"
+                    && projectDetails.sampleResolution >= projectDetails.plotSize / Math.sqrt(2)) {
+            alert("The sample resolution must be less than plot diameter divided by the square root of 2.");
+            return false;
+
+        } else if (projectDetails.sampleDistribution === "gridded"
+                    && projectDetails.plotShape === "square"
+                    && parseInt(projectDetails.sampleResolution) >= projectDetails.plotSize) {
+            alert("The sample resolution must be less than the plot width.");
+            return false;
+
         } else {
             return true;
         }
@@ -242,7 +262,7 @@ class Project extends React.Component {
     setProjectTemplate = (newTemplateId) => {
         if (parseInt(newTemplateId) === 0) {
             this.setState({
-                projectDetails: blankProject,
+                projectDetails: { ...blankProject, baseMapSource : this.state.imageryList[0].title },
                 plotList: [],
                 coordinates: {
                     lonMin: "",
@@ -253,6 +273,7 @@ class Project extends React.Component {
                 useTemplatePlots: false,
                 useTemplateWidgets: false,
             });
+            mercator.removeLayerByTitle(this.state.mapConfig, "dragBoxLayer");
         } else {
             const templateProject = this.state.projectList.find(p => p.id === newTemplateId);
             const newSurveyQuestions = convertSampleValuesToSurveyQuestions(templateProject.sampleValues);
@@ -321,11 +342,12 @@ class Project extends React.Component {
         fetch(this.props.documentRoot + "/get-all-imagery?institutionId=" + institutionId)
             .then(response => response.ok ? response.json() : Promise.reject(response))
             .then(data => {
+                const sorted = [...data.filter(a => a.title.includes("MapBox")), ...data.filter(a => !a.title.includes("MapBox"))];
                 this.setState({
-                    imageryList: data,
+                    imageryList: sorted,
                     projectDetails: {
                         ...this.state.projectDetails,
-                        baseMapSource: data[0].title,
+                        baseMapSource: sorted[0].title,
                     },
                 });
             })
@@ -401,6 +423,8 @@ class Project extends React.Component {
                                     : ceoMapStyles.yellowSquare);
     };
 
+    onShowGEEScriptClick = () => this.setState({ projectOptions: { ...this.state.projectOptions, showGEEScript: !this.state.projectOptions.showGEEScript }});
+
     render() {
         return (
             <FormLayout id="project-design" title="Create Project">
@@ -420,6 +444,8 @@ class Project extends React.Component {
                             toggleTemplateWidgets={this.toggleTemplateWidgets}
                             useTemplatePlots={this.state.useTemplatePlots}
                             useTemplateWidgets={this.state.useTemplateWidgets}
+                            showGEEScript={this.state.showGEEScript}
+                            onShowGEEScriptClick={this.onShowGEEScriptClick}
                         />
                         <ProjectManagement createProject={this.createProject} />
                     </Fragment>
@@ -455,6 +481,10 @@ function ProjectDesignForm(props) {
                 baseMapSource={props.projectDetails.baseMapSource}
                 imageryList={props.imageryList}
                 setProjectDetail={props.setProjectDetail}
+            />
+            <ProjectOptions
+                showGEEScript={props.showGEEScript}
+                onShowGEEScriptClick={props.onShowGEEScriptClick}
             />
             {props.useTemplatePlots
             ?
@@ -850,6 +880,24 @@ function SampleDesign ({
                     <input
                         className="form-check-input"
                         type="radio"
+                        id="sample-distribution-center"
+                        name="sample-distribution"
+                        defaultValue="center"
+                        onChange={() => setProjectDetail("sampleDistribution", "center")}
+                        checked={sampleDistribution === "center"}
+                        disabled={plotDistribution === "shp"}
+                    />
+                    <label
+                        className="form-check-label"
+                        htmlFor="sample-distribution-center"
+                    >
+                        Center
+                    </label>
+                </div>
+                <div className="form-check form-check-inline">
+                    <input
+                        className="form-check-input"
+                        type="radio"
                         id="sample-distribution-csv"
                         name="sample-distribution"
                         defaultValue="csv"
@@ -922,6 +970,8 @@ function SampleDesign ({
                         "Sample points will be randomly distributed within the plot boundary."}
                     {sampleDistribution === "gridded" &&
                         "Sample points will be arranged on a grid within the plot boundary using the sample resolution selected below."}
+                    {sampleDistribution === "center" &&
+                        "A Sample point will be placed on the center of the plot."}
                     {sampleDistribution === "csv" &&
                         "Specify your own sample points by uploading a CSV with these fields: LON,LAT,PLOTID,SAMPLEID."}
                     {sampleDistribution === "shp" &&

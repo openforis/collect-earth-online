@@ -30,8 +30,6 @@ import static org.openforis.ceo.utils.ProjectUtils.runBashScriptForProject;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 
-import java.io.StringWriter;
-import java.io.PrintWriter;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.sql.PreparedStatement;
@@ -135,8 +133,9 @@ public class PostgresProjects implements Projects {
             newProject.addProperty("classification_times", "");
             newProject.addProperty("editable",             rs.getBoolean("editable"));
             newProject.addProperty("validBoundary",        rs.getBoolean("valid_boundary"));
-            newProject.add("sampleValues", parseJson(rs.getString("survey_questions")).getAsJsonArray());
-            newProject.add("surveyRules",  parseJson(rs.getString("survey_rules")).getAsJsonArray());
+            newProject.add("sampleValues",                 parseJson(rs.getString("survey_questions")).getAsJsonArray());
+            newProject.add("surveyRules",                  parseJson(rs.getString("survey_rules")).getAsJsonArray());
+            newProject.add("projectOptions",               parseJson(rs.getString("options")).getAsJsonObject());
         } catch (SQLException e) {
             System.out.println(e.getMessage());
         }
@@ -292,7 +291,7 @@ public class PostgresProjects implements Projects {
         try (var conn = connect();
              var pstmt = conn.prepareStatement("SELECT * FROM select_project(?)")) {
             // check if project exists
-            pstmt.setInt(1,projectId);
+            pstmt.setInt(1, projectId);
             try (var rs = pstmt.executeQuery()) {
                 if (rs.next()) {
                     var plotSummaries = new JsonArray();
@@ -734,6 +733,7 @@ public class PostgresProjects implements Projects {
                 var computedSamplesPerPlot =
                     sampleDistribution.equals("gridded") ? countGriddedSampleSet(plotSize, sampleResolution)
                     : sampleDistribution.equals("random") ? samplesPerPlot
+                    : sampleDistribution.equals("center") ? 1
                     : (extSampleCount / extPlotCount);
 
                 checkPlotLimits(extPlotCount, 50000, computedSamplesPerPlot, 200, 350000);
@@ -780,8 +780,8 @@ public class PostgresProjects implements Projects {
                 if (totalPlots == 0) {throw new RuntimeException("You cannot create a project with 0 plots.");}
 
                 var plotsPerSample =
-                    sampleDistribution.equals("gridded")
-                        ? countGriddedSampleSet(plotSize, sampleResolution)
+                    sampleDistribution.equals("gridded") ? countGriddedSampleSet(plotSize, sampleResolution)
+                        : sampleDistribution.equals("center") ? 1
                         : samplesPerPlot;
 
                 checkPlotLimits(totalPlots, 5000, plotsPerSample, 200, 50000);
@@ -852,7 +852,7 @@ public class PostgresProjects implements Projects {
     private static void createProjectSamples(Connection conn, Integer newPlotId, String sampleDistribution, Double[] plotCenter, String plotShape, Double plotSize, Integer samplesPerPlot, Double sampleResolution, Boolean isShp) {
 
         var newSamplePoints =
-        isShp || !List.of("random", "gridded").contains(sampleDistribution)
+        isShp || !List.of("random", "gridded", "center").contains(sampleDistribution)
         ? new Double[][]{plotCenter}
         : sampleDistribution.equals("random")
             ? createRandomSampleSet(plotCenter, plotShape, plotSize, samplesPerPlot)
@@ -903,6 +903,7 @@ public class PostgresProjects implements Projects {
             newProject.add("surveyRules",                jsonInputs.get("surveyRules").getAsJsonArray());
             newProject.addProperty("useTemplatePlots",   getOrFalse(jsonInputs, "useTemplatePlots").getAsBoolean());
             newProject.addProperty("useTemplateWidgets", getOrFalse(jsonInputs, "useTemplateWidgets").getAsBoolean());
+            newProject.add("projectOptions",             jsonInputs.get("projectOptions").getAsJsonObject());
 
             // file part properties
             newProject.addProperty("plotFileName",     getOrEmptyString(jsonInputs, "plotFileName").getAsString());
@@ -922,7 +923,7 @@ public class PostgresProjects implements Projects {
 
             final var tokenKey = UUID.randomUUID().toString();
 
-            var SQL = "SELECT * FROM create_project(?,?,?,?,?,ST_SetSRID(ST_GeomFromGeoJSON(?), 4326),?,?,?,?,?,?,?,?,?,?::JSONB,?::JSONB,?::date,?::JSONB,?)";
+            var SQL = "SELECT * FROM create_project(?,?,?,?,?,ST_SetSRID(ST_GeomFromGeoJSON(?), 4326),?,?,?,?,?,?,?,?,?,?::JSONB,?::JSONB,?::date,?::JSONB,?,?::JSONB)";
             try (var conn = connect();
                  var pstmt = conn.prepareStatement(SQL)) {
 
@@ -946,6 +947,7 @@ public class PostgresProjects implements Projects {
                 pstmt.setString(18, newProject.get("createdDate").getAsString());
                 pstmt.setString(19, null);  //classification times
                 pstmt.setString(20, tokenKey);  //token key
+                pstmt.setString(21, newProject.get("projectOptions").getAsJsonObject().toString());
 
                 try (var rs = pstmt.executeQuery()) {
                     if (rs.next()) {

@@ -31,7 +31,7 @@ public class JsonImagery implements Imagery {
                             imagery -> {
                                 var sourceConfig = imagery.get("sourceConfig").getAsJsonObject();
                                 // Return only necessary fields for types we proxy
-                                if (List.of("DigitalGlobe", "EarthWatch", "GeoServer").contains(sourceConfig.get("type").getAsString())) {
+                                if (sourceConfig.get("type").getAsString().equals("GeoServer")) {
                                     var cleanSource = new JsonObject();
                                     cleanSource.add("type", sourceConfig.get("type"));
                                     imagery.add("sourceConfig", cleanSource);

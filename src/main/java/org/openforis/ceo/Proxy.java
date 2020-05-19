@@ -3,7 +3,6 @@ package org.openforis.ceo;
 import static org.openforis.ceo.utils.RequestUtils.prepareGetRequest;
 
 import com.google.api.client.http.HttpResponseException;
-import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -28,11 +27,7 @@ public class Proxy {
         var sourceConfig = imagery.getImagerySourceConfig(getQParamNoNull(req, "imageryId"));
         var sourceType = sourceConfig.get("type").getAsString();
 
-        if (List.of("EarthWatch", "DigitalGlobe").contains(sourceType)) {
-            var connectId = sourceConfig.get("connectId").getAsString();
-            var baseUrl   = "https://access.maxar.com/earthservice/tmsaccess/tms/1.0.0/DigitalGlobe:ImageryTileService@EPSG:3857@jpg/{z}/{x}/{y}.jpg?connectId=";
-            return baseUrl.replace("{z}", z).replace("{x}", x).replace("{y}", y) + connectId;
-        } else if (sourceType.equals("Planet")) {
+        if (sourceType.equals("Planet")) {
             var apiKey  = sourceConfig.get("accessToken").getAsString();
             var year    = req.queryParamOrDefault("year", "");
             var month   = req.queryParamOrDefault("month", "");

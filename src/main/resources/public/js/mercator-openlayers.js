@@ -24,10 +24,11 @@ import { Circle, LineString, Point } from "ol/geom";
 import { DragBox, Select } from "ol/interaction";
 import { GeoJSON, KML } from "ol/format";
 import { Tile as TileLayer, Vector as VectorLayer, Group as LayerGroup } from "ol/layer";
-import { BingMaps, Cluster, TileWMS, Vector as VectorSource, XYZ } from "ol/source";
+import { BingMaps, Cluster, TileWMS, Vector as VectorSource, XYZ, OSM } from "ol/source";
 import { Circle as CircleStyle, Icon, Fill, Stroke, Style, Text as StyleText, RegularShape } from "ol/style";
 import { fromLonLat, transform, transformExtent } from "ol/proj";
 import { fromExtent, fromCircle } from "ol/geom/Polygon";
+import { formatDateISO } from "../jsx/utils/dateUtils";
 
 /******************************************************************************
 ***
@@ -82,8 +83,7 @@ mercator.getViewExtent = function (mapConfig) {
 // [Pure] Returns the polygon from the current map view
 mercator.getViewPolygon = function (mapConfig) {
     return fromExtent(mercator.getViewExtent(mapConfig));
-}
-
+};
 
 // [Pure] Returns the minimum distance in meters from the view center
 // to the view extent.
@@ -123,11 +123,7 @@ class PlanetLayerSwitcher extends Control {
         ul.className = "planet-layer-switcher-ul";
         panel.appendChild(ul);
 
-        layerLists.map(layer => {
-            const li = this.createLayerList(layer);
-            ul.appendChild(li);
-        });
-
+        layerLists.map(layer => this.createLayerList(layer)).reverse().map(li => ul.appendChild(li));
     }
 
     setMap = (map) => super.setMap(map);
@@ -156,6 +152,18 @@ class PlanetLayerSwitcher extends Control {
     };
 }
 
+//
+mercator.getTopVisiblePlanetLayerDate = (mapConfig, layerTitle) => {
+    const layer = mercator.getLayerByTitle(mapConfig, layerTitle);
+    if (layer && layer instanceof LayerGroup) {
+        const planetLayers = [...layer.getLayers().getArray()];
+        const visibleLayer = planetLayers.reverse().find(planetLayer => planetLayer.getVisible());
+        return visibleLayer ? visibleLayer.get("title") : "NA";
+    } else {
+        return "NA";
+    }
+};
+
 /*****************************************************************************
 ***
 *** Create map source and layer objects from JSON descriptions
@@ -168,12 +176,7 @@ mercator.createSource = function (sourceConfig, imageryId, documentRoot,
                                   extent = [[-180, -90], [180, -90], [180, 90], [-180, 90], [-180, -90]],
                                   show = false,
                                   callback = null) {
-    if (["DigitalGlobe", "EarthWatch"].includes(sourceConfig.type)) {
-        return new XYZ({
-            url: documentRoot + "/get-tile?imageryId=" + imageryId + "&z={z}&x={x}&y={-y}",
-            attribution: "© DigitalGlobe, Inc",
-        });
-    } else if (sourceConfig.type === "Planet") {
+    if (sourceConfig.type === "Planet") {
         return new XYZ({
             url: documentRoot
                  + "/get-tile?imageryId=" + imageryId
@@ -215,17 +218,23 @@ mercator.createSource = function (sourceConfig, imageryId, documentRoot,
             })
             .then(data => {
                 console.log("Here's the response data:\n\n" + JSON.stringify(data));
-                const planetLayers = data
-                    .filter(d => d.hasOwnProperty("layerID") && d["layerID"] !== "null")
-                    .map(d => new TileLayer({
-                        source: new XYZ({
-                            url: "https://tiles0.planet.com/data/v1/layers/" + d["layerID"] + "/{z}/{x}/{y}.png",
-                        }),
-                        title: d["date"]
-                    }));
-                if (planetLayers.length === 0) {
-                    alert("No usable results found for Planet Daily imagery. Check your access token and/or change the date.");
-                }
+                // arrange in ascending order of dates
+                const sortedData = data
+                    .filter(d => d.hasOwnProperty("layerID") && d["layerID"] !== "null" && d.hasOwnProperty("date"))
+                    .sort((a, b) => {
+                        const dateA = new Date(a.date),
+                            dateB = new Date(b.date);
+                        if (dateA < dateB) return -1;
+                        if (dateA > dateB) return 1;
+                        return 0;
+                    });
+                if (sortedData.length === 0) alert("No usable results found for Planet Daily imagery. Check your access token and/or change the date.");
+                const planetLayers = sortedData.map(d => new TileLayer({
+                    source: new XYZ({
+                        url: "https://tiles0.planet.com/data/v1/layers/" + d["layerID"] + "/{z}/{x}/{y}.png",
+                    }),
+                    title: d["date"],
+                }));
                 const dummyPlanetLayer = mercator.currentMap.getLayers().getArray().find(lyr => theID === lyr.getSource().get("id"));
                 mercator.currentMap.removeLayer(dummyPlanetLayer);
                 const layerGroup = new LayerGroup({
@@ -235,7 +244,7 @@ mercator.createSource = function (sourceConfig, imageryId, documentRoot,
                 });
                 mercator.currentMap.addLayer(layerGroup);
                 if (callback) callback();
-                mercator.currentMap.addControl(new PlanetLayerSwitcher({ layers: layerGroup.getLayersArray() }));
+                mercator.currentMap.addControl(new PlanetLayerSwitcher({ layers: layerGroup.getLayers().getArray() }));
             }).catch(response => {
                 console.log("Error loading Planet Daily imagery: ");
                 console.log(response);
@@ -260,6 +269,65 @@ mercator.createSource = function (sourceConfig, imageryId, documentRoot,
             url: documentRoot + "/get-tile",
             params: { imageryId: imageryId },
         });
+    } else if (sourceConfig.type === "Sentinel2" || sourceConfig.type === "Sentinel1") {
+        const bandCombination = sourceConfig.bandCombination;
+        const bands = sourceConfig.type === "Sentinel1" ? bandCombination
+            : bandCombination === "FalseColorInfrared" ? "B8,B4,B3"
+                : bandCombination === "FalseColorUrban" ? "B12,B11,B4"
+                    : bandCombination === "Agriculture" ? "B11,B8,B2"
+                        : bandCombination === "HealthyVegetation" ? "B8,B11,B2"
+                            : bandCombination === "ShortWaveInfrared" ? "B12,B8A,B4"
+                                : "B4,B3,B2";
+
+        const endDate = new Date(sourceConfig.year, sourceConfig.month, 0);
+        const theJson = {
+            path: sourceConfig.type === "Sentinel2" ? "FilteredSentinel" : "FilteredSentinelSAR",
+            bands: bands,
+            min: sourceConfig.min,
+            max: sourceConfig.max,
+            cloudLessThan: sourceConfig.type === "Sentinel2" ? parseInt(sourceConfig.cloudScore) : null,
+            dateFrom: sourceConfig.year + "-" + (sourceConfig.month.length === 1 ? "0" : "") + sourceConfig.month + "-01",
+            dateTo : formatDateISO(endDate),
+        };
+        const theID = Math.random().toString(36).substr(2, 16) + "_" + Math.random().toString(36).substr(2, 9);
+        const geeLayer = new XYZ({
+            url: "https://earthengine.googleapis.com/v1alpha/projects/earthengine-legacy/maps/temp/tiles/{z}/{x}/{y}",
+            id: theID,
+        });
+        geeLayer.setProperties({ id: theID });
+        fetch(documentRoot + "/geo-dash/gateway-request", {
+            method: "POST",
+            headers: {
+                "Accept": "application/json",
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify(theJson),
+        })
+            .then(res => {
+                if (res.ok) {
+                    return res.json();
+                } else {
+                    Promise.reject();
+                }
+            })
+            .then(data => {
+                if (data.hasOwnProperty("url")) {
+                    const geeLayer = new XYZ({
+                        url: data.url,
+                    });
+                    mercator.currentMap.getLayers().forEach(function (lyr) {
+                        if (theID && theID === lyr.getSource().get("id")) {
+                            lyr.setSource(geeLayer);
+                        }
+                    });
+                } else {
+                    console.warn("Wrong Data Returned");
+                }
+            }).catch(response => {
+                console.log("Error loading " + sourceConfig.type + " imagery: ");
+                console.log(response);
+            });
+        return geeLayer;
     } else if (sourceConfig.type === "GeeGateway") {
         //get variables and make ajax call to get mapid and token
         //then add xyz layer
@@ -331,9 +399,25 @@ mercator.createSource = function (sourceConfig, imageryId, documentRoot,
                 });
         }
         return geeLayer;
-
+    } else if (sourceConfig.type === "MapBoxRaster") {
+        return new XYZ({
+            url: "https://api.mapbox.com/v4/"
+                 + sourceConfig.layerName
+                 + "/{z}/{x}/{y}.jpg90"
+                 + "?access_token=" + sourceConfig.accessToken,
+            attribution: "© MapBox",
+        });
+    } else if (sourceConfig.type === "MapBoxStatic") {
+        return new XYZ({
+            url: "https://api.mapbox.com/styles/v1/"
+                 + sourceConfig.userName + "/"
+                 + sourceConfig.mapStyleId
+                 + "/tiles/256/{z}/{x}/{y}"
+                 + "?access_token=" + sourceConfig.accessToken,
+            attribution: "© MapBox",
+        });
     } else {
-        return null;
+        return new OSM();
     }
 };
 
