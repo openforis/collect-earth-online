@@ -322,7 +322,8 @@ class Project extends React.Component {
 
     toggleTemplateWidgets = () => this.setState({ useTemplateWidgets: !this.state.useTemplateWidgets });
 
-    setProjectDetail = (key, newValue) => this.setState({ projectDetails: { ...this.state.projectDetails, [key]: newValue }});
+    setProjectDetail = (key, newValue) =>
+        this.setState({ projectDetails: { ...this.state.projectDetails, [key]: newValue }});
 
     setSurveyQuestions = (newSurveyQuestions) =>
         this.setState({ projectDetails: { ...this.state.projectDetails, surveyQuestions: newSurveyQuestions }});

@@ -741,6 +741,7 @@ public class JsonProjects implements Projects {
                         project.addProperty("name",          getOrEmptyString(jsonInputs, "name").getAsString());
                         project.addProperty("description",   getOrEmptyString(jsonInputs, "description").getAsString());
                         project.addProperty("privacyLevel",  getOrEmptyString(jsonInputs, "privacyLevel").getAsString());
+                        project.addProperty("imageryId",     getOrZero(jsonInputs, "imageryId").getAsInt());
                         project.add("projectOptions",        jsonInputs.get("projectOptions").getAsJsonObject());
                         return project;
                     } else {

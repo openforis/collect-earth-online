@@ -51,7 +51,10 @@ class Project extends React.Component {
 
         if (this.state.mapConfig && this.state.plotList.length > 0
                 && (!prevState.mapConfig || prevState.plotList.length === 0)) {
-            mercator.addPlotOverviewLayers(this.state.mapConfig, this.state.plotList, this.state.projectDetails.plotShape);
+            mercator.addPlotOverviewLayers(
+                this.state.mapConfig, this.state.plotList,
+                this.state.projectDetails.plotShape
+            );
         }
 
     }
