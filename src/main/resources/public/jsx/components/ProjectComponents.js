@@ -96,7 +96,7 @@ export function ProjectInfo({ name, description, privacyLevel, setProjectDetail 
     );
 }
 
-export function ProjectAOI({ coordinates: { latMax, lonMin, lonMax, latMin }, inDesignMode, imageryId, imageryList, setProjectDetails }) {
+export function ProjectAOI({ coordinates: { latMax, lonMin, lonMax, latMin }, inDesignMode, imageryId, imageryList, setProjectDetail }) {
     return (
         <SectionBlock title="Project AOI">
             <div id="project-aoi">
@@ -167,10 +167,7 @@ export function ProjectAOI({ coordinates: { latMax, lonMin, lonMax, latMin }, in
                             className="form-control form-control-sm"
                             size="1"
                             value={imageryId || ""}
-                            onChange={e => setProjectDetails({
-                                "baseMapSource": e.target.selectedOptions[0].label,
-                                "imageryId": parseInt(e.target.value)
-                            })}
+                            onChange={e => setProjectDetail("imageryId", parseInt(e.target.value))}
                         >
                             {
                                 imageryList.filter(layerConfig => layerConfig.sourceConfig.type !== "PlanetDaily")

@@ -741,7 +741,6 @@ public class JsonProjects implements Projects {
                         project.addProperty("name",          getOrEmptyString(jsonInputs, "name").getAsString());
                         project.addProperty("description",   getOrEmptyString(jsonInputs, "description").getAsString());
                         project.addProperty("privacyLevel",  getOrEmptyString(jsonInputs, "privacyLevel").getAsString());
-                        project.addProperty("baseMapSource", getOrEmptyString(jsonInputs, "baseMapSource").getAsString());
                         project.add("projectOptions",        jsonInputs.get("projectOptions").getAsJsonObject());
                         return project;
                     } else {
@@ -1293,7 +1292,6 @@ public class JsonProjects implements Projects {
 
             var newProject = new JsonObject();
 
-            newProject.addProperty("baseMapSource", jsonInputs.get("baseMapSource").getAsString());
             newProject.addProperty("description", jsonInputs.get("description").getAsString());
             newProject.addProperty("institution", jsonInputs.get("institutionId").getAsInt());
             newProject.addProperty("imageryId", jsonInputs.get("imageryId").getAsInt());

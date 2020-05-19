@@ -12,7 +12,6 @@ const blankProject = {
     archived: false,
     availability: "nonexistent",
     imageryId: "",
-    baseMapSource: "",
     boundary: null,
     description: "",
     id: 0,
@@ -70,8 +69,9 @@ class Project extends React.Component {
         }
 
         if (this.state.mapConfig
-            && this.state.projectDetails.baseMapSource !== prevState.projectDetails.baseMapSource) {
-            mercator.setVisibleLayer(this.state.mapConfig, this.state.projectDetails.baseMapSource);
+            && this.state.projectDetails.imageryId !== prevState.projectDetails.imageryId) {
+            const baseMap = this.state.imageryList.find(imagery => imagery.id === this.state.projectDetails.imageryId);
+            mercator.setVisibleLayer(this.state.mapConfig, baseMap.title);
         }
 
         if (this.state.mapConfig
@@ -122,7 +122,6 @@ class Project extends React.Component {
                       lonMax: this.state.coordinates.lonMax,
                       latMin: this.state.coordinates.latMin,
                       latMax: this.state.coordinates.latMax,
-                      baseMapSource: this.state.projectDetails.baseMapSource,
                       description: this.state.projectDetails.description,
                       name: this.state.projectDetails.name,
                       projectOptions: this.state.projectOptions,
@@ -240,7 +239,7 @@ class Project extends React.Component {
             alert("A sample SHP (.zip) file is required.");
             return false;
 
-        } else if (!projectDetails.baseMapSource) {
+        } else if (!projectDetails.imageryId) {
             alert("Select a valid Basemap.");
             return false;
 
@@ -266,7 +265,6 @@ class Project extends React.Component {
             this.setState({
                 projectDetails: {
                     ...blankProject,
-                    baseMapSource : this.state.imageryList[0].title,
                     imageryId: this.state.imageryList[0].id
                 },
                 plotList: [],
@@ -326,8 +324,6 @@ class Project extends React.Component {
 
     setProjectDetail = (key, newValue) => this.setState({ projectDetails: { ...this.state.projectDetails, [key]: newValue }});
 
-    setProjectDetails = (obj) => this.setState({ projectDetails: { ...this.state.projectDetails, ...obj }});
-
     setSurveyQuestions = (newSurveyQuestions) =>
         this.setState({ projectDetails: { ...this.state.projectDetails, surveyQuestions: newSurveyQuestions }});
 
@@ -354,7 +350,6 @@ class Project extends React.Component {
                     imageryList: sorted,
                     projectDetails: {
                         ...this.state.projectDetails,
-                        baseMapSource: sorted[0].title,
                         imageryId: sorted[0].id
                     },
                 });
@@ -445,7 +440,6 @@ class Project extends React.Component {
                             projectDetails={this.state.projectDetails}
                             projectList={this.state.projectList}
                             setProjectDetail={this.setProjectDetail}
-                            setProjectDetails={this.setProjectDetails}
                             setProjectTemplate={this.setProjectTemplate}
                             setSurveyQuestions={this.setSurveyQuestions}
                             setSurveyRules={this.setSurveyRules}
@@ -489,7 +483,7 @@ function ProjectDesignForm(props) {
                 inDesignMode
                 imageryId={props.projectDetails.imageryId}
                 imageryList={props.imageryList}
-                setProjectDetails={props.setProjectDetails}
+                setProjectDetail={props.setProjectDetail}
             />
             <ProjectOptions
                 showGEEScript={props.showGEEScript}

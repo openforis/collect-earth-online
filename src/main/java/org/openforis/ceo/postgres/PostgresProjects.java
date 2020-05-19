@@ -121,7 +121,6 @@ public class PostgresProjects implements Projects {
             newProject.addProperty("description",          rs.getString("description"));
             newProject.addProperty("privacyLevel",         rs.getString("privacy_level"));
             newProject.addProperty("boundary",             rs.getString("boundary"));
-            newProject.addProperty("baseMapSource",        rs.getString("base_map_source"));
             newProject.addProperty("plotDistribution",     rs.getString("plot_distribution"));
             newProject.addProperty("numPlots",             rs.getInt("num_plots"));
             newProject.addProperty("plotSpacing",          rs.getDouble("plot_spacing"));
@@ -502,15 +501,14 @@ public class PostgresProjects implements Projects {
 
     public String updateProject(Request req, Response res) {
         try (var conn = connect();
-             var pstmt = conn.prepareStatement("SELECT * FROM update_project(?,?,?,?,?,?)")) {
+             var pstmt = conn.prepareStatement("SELECT * FROM update_project(?,?,?,?,?)")) {
 
             final var jsonInputs = parseJson(req.body()).getAsJsonObject();
             pstmt.setInt(1,    Integer.parseInt(getOrEmptyString(jsonInputs, "projectId").getAsString()));
             pstmt.setString(2, getOrEmptyString(jsonInputs, "name").getAsString());
             pstmt.setString(3, getOrEmptyString(jsonInputs, "description").getAsString());
             pstmt.setString(4, getOrEmptyString(jsonInputs, "privacyLevel").getAsString());
-            pstmt.setString(5, getOrEmptyString(jsonInputs, "baseMapSource").getAsString());
-            pstmt.setInt(6,    getOrZero(jsonInputs, "imageryId").getAsInt());
+            pstmt.setInt(5,    getOrZero(jsonInputs, "imageryId").getAsInt());
             pstmt.execute();
             return "";
         } catch (SQLException e) {
@@ -883,7 +881,6 @@ public class PostgresProjects implements Projects {
 
             var newProject = new JsonObject();
 
-            newProject.addProperty("baseMapSource",      getOrEmptyString(jsonInputs, "baseMapSource").getAsString());
             newProject.addProperty("description",        getOrEmptyString(jsonInputs, "description").getAsString());
             newProject.addProperty("institution",        getOrZero(jsonInputs, "institutionId").getAsInt());
             newProject.addProperty("imageryId",          getOrZero(jsonInputs, "imageryId").getAsInt());
@@ -926,7 +923,7 @@ public class PostgresProjects implements Projects {
 
             final var tokenKey = UUID.randomUUID().toString();
 
-            var SQL = "SELECT * FROM create_project(?,?,?,?,?,?,ST_SetSRID(ST_GeomFromGeoJSON(?), 4326),?,?,?,?,?,?,?,?,?,?::JSONB,?::JSONB,?::date,?::JSONB,?,?::JSONB)";
+            var SQL = "SELECT * FROM create_project(?,?,?,?,?,?,ST_SetSRID(ST_GeomFromGeoJSON(?), 4326),?,?,?,?,?,?,?,?,?::JSONB,?::JSONB,?::date,?::JSONB,?,?::JSONB)";
             try (var conn = connect();
                  var pstmt = conn.prepareStatement(SQL)) {
 
@@ -937,21 +934,20 @@ public class PostgresProjects implements Projects {
                 pstmt.setString(5,  newProject.get("description").getAsString());
                 pstmt.setString(6,  newProject.get("privacyLevel").getAsString());
                 pstmt.setString(7,  newProject.get("boundary").getAsString());
-                pstmt.setString(8,  newProject.get("baseMapSource").getAsString());
-                pstmt.setString(9,  newProject.get("plotDistribution").getAsString());
-                pstmt.setInt(10,    newProject.get("numPlots").getAsInt());
-                pstmt.setDouble(11, newProject.get("plotSpacing").getAsDouble());
-                pstmt.setString(12, newProject.get("plotShape").getAsString());
-                pstmt.setDouble(13, newProject.get("plotSize").getAsDouble());
-                pstmt.setString(14, newProject.get("sampleDistribution").getAsString());
-                pstmt.setInt(15,    newProject.get("samplesPerPlot").getAsInt());
-                pstmt.setDouble(16, newProject.get("sampleResolution").getAsDouble());
-                pstmt.setString(17, newProject.get("sampleValues").getAsJsonArray().toString());
-                pstmt.setString(18, newProject.get("surveyRules").getAsJsonArray().toString());
-                pstmt.setString(19, newProject.get("createdDate").getAsString());
-                pstmt.setString(20, null);  //classification times
-                pstmt.setString(21, tokenKey);  //token key
-                pstmt.setString(22, newProject.get("projectOptions").getAsJsonObject().toString());
+                pstmt.setString(8,  newProject.get("plotDistribution").getAsString());
+                pstmt.setInt(9,    newProject.get("numPlots").getAsInt());
+                pstmt.setDouble(10, newProject.get("plotSpacing").getAsDouble());
+                pstmt.setString(11, newProject.get("plotShape").getAsString());
+                pstmt.setDouble(12, newProject.get("plotSize").getAsDouble());
+                pstmt.setString(13, newProject.get("sampleDistribution").getAsString());
+                pstmt.setInt(14,    newProject.get("samplesPerPlot").getAsInt());
+                pstmt.setDouble(15, newProject.get("sampleResolution").getAsDouble());
+                pstmt.setString(16, newProject.get("sampleValues").getAsJsonArray().toString());
+                pstmt.setString(17, newProject.get("surveyRules").getAsJsonArray().toString());
+                pstmt.setString(18, newProject.get("createdDate").getAsString());
+                pstmt.setString(19, null);  // classification times
+                pstmt.setString(20, tokenKey);  // token key
+                pstmt.setString(21, newProject.get("projectOptions").getAsJsonObject().toString());
 
                 try (var rs = pstmt.executeQuery()) {
                     if (rs.next()) {
