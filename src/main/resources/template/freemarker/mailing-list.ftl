@@ -29,13 +29,13 @@
 
 <script type="text/javascript">
 
-    ClassicEditor.create(document.querySelector('#editor')).catch(error => {
+    ClassicEditor.create(document.querySelector("#editor")).catch(error => {
         console.error(error);
     });
 
     $(function() {
        $("#submit-mailing-list").click(function(event){
-          if (!confirm("Are you sure you want to send this mailing list?")) {
+          if (!confirm("Are you sure you want to send to this mailing list?")) {
              event.preventDefault();
           }
        });

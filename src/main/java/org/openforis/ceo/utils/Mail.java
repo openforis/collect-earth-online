@@ -4,7 +4,6 @@ import java.util.List;
 import java.util.Properties;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
-
 import javax.mail.Address;
 import javax.mail.Message;
 import javax.mail.MessagingException;
@@ -30,16 +29,17 @@ public class Mail {
     }
 
     private static Address[] fromStringListToAddressArray(List<String> listString) {
-        List<Address> toList = listString.stream().map(email -> {
-            Address address = null;
-            try {
-                address = new InternetAddress(email);
-            } catch (AddressException e) {
-                //e.printStackTrace();
-            }
-            return address;
-        }).collect(Collectors.toList());
-        return toList.toArray(new Address[0]);
+        return listString.stream()
+            .map(email -> {
+                try {
+                    return new InternetAddress(email);
+                } catch (AddressException e) {
+                    //e.printStackTrace();
+                    return null;
+                }
+            })
+            .collect(Collectors.toList())
+            .toArray(new Address[0]);
     }
 
     public static void sendMail(String from, List<String> to, List<String> cc, List<String> bcc, String smtpServer, String smtpPort,

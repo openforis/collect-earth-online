@@ -408,27 +408,27 @@ public class PostgresUsers implements Users {
     }
 
     public Request sendMailingList(Request req, Response res) {
-        var inputSubject =        req.queryParams("subject");
-        var inputBody =           req.queryParams("body");
+        var inputSubject = req.queryParams("subject");
+        var inputBody = req.queryParams("body");
 
-        if (inputSubject == null || inputSubject.isEmpty() || inputBody == null || inputSubject.isEmpty()) {
+        if (inputSubject == null || inputSubject.isEmpty() || inputBody == null || inputBody.isEmpty()) {
             req.session().attribute("flash_message", "Subject and Body are mandatory fields.");
         } else {
             try (var conn = connect();
-                    var pstmt = conn.prepareStatement("SELECT * FROM get_all_users()")) {
+                 var pstmt = conn.prepareStatement("SELECT * FROM get_all_users()")) {
 
-                   List<String> emails = new ArrayList<String>();
-                   try (var rs = pstmt.executeQuery()) {
-                       while (rs.next()) {
-                           emails.add(rs.getString("email"));
-                       }
-                       sendMail(SMTP_USER, null, null, emails, SMTP_SERVER, SMTP_PORT, SMTP_PASSWORD, inputSubject, inputBody, Mail.CONTENT_TYPE_HTML);
-                       req.session().attribute("flash_message", "The mailing list has been sent.");
-                   }
-               } catch (SQLException e) {
-                   System.out.println(e.getMessage());
-                   req.session().attribute("flash_message", "There was an issue sending the mailing list.  Please check the console.");
-               }
+                var emails = new ArrayList<String>();
+                try (var rs = pstmt.executeQuery()) {
+                    while (rs.next()) {
+                       emails.add(rs.getString("email"));
+                    }
+                    sendMail(SMTP_USER, null, null, emails, SMTP_SERVER, SMTP_PORT, SMTP_PASSWORD, inputSubject, inputBody, Mail.CONTENT_TYPE_HTML);
+                    req.session().attribute("flash_message", "Your message has been sent to the mailing list.");
+                }
+            } catch (SQLException e) {
+                System.out.println(e.getMessage());
+                req.session().attribute("flash_message", "There was an issue sending to the mailing list. Please check the server logs.");
+            }
         }
         return req;
     }
