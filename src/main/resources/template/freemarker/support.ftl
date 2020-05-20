@@ -13,7 +13,7 @@
                 &#x1F4BE; Institution & Project Creation Manual (For Admin)
             </a>
             <a class="btn btn-outline-lightgreen btn-block" href="${root}/downloads/CEO_Theoretical_Manual.pdf" role="button">
-                &#x1F4BE; Theoretical Project Development
+                &#x1F4BE; Project Development Theory
             </a>
         </div>
         <h1>Code and Bug Support</h1>
