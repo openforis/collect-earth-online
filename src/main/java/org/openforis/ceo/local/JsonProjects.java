@@ -738,11 +738,12 @@ public class JsonProjects implements Projects {
         mapJsonFile("project-list.json",
                 project -> {
                     if (project.get("id").getAsString().equals(getOrEmptyString(jsonInputs, "projectId").getAsString())) {
-                        project.addProperty("name",          getOrEmptyString(jsonInputs, "name").getAsString());
-                        project.addProperty("description",   getOrEmptyString(jsonInputs, "description").getAsString());
-                        project.addProperty("privacyLevel",  getOrEmptyString(jsonInputs, "privacyLevel").getAsString());
-                        project.addProperty("baseMapSource", getOrEmptyString(jsonInputs, "baseMapSource").getAsString());
-                        project.add("projectOptions",        jsonInputs.get("projectOptions").getAsJsonObject());
+                        project.addProperty("name",           getOrEmptyString(jsonInputs, "name").getAsString());
+                        project.addProperty("description",    getOrEmptyString(jsonInputs, "description").getAsString());
+                        project.addProperty("privacyLevel",   getOrEmptyString(jsonInputs, "privacyLevel").getAsString());
+                        project.addProperty("baseMapSource",  getOrEmptyString(jsonInputs, "baseMapSource").getAsString());
+                        final var projectOptions = getOrEmptyString(jsonInputs, "projectOptions").getAsString();
+                        project.addProperty("projectOptions", projectOptions == "" ? "{\"showGEEScript\":false}" : projectOptions);
                         return project;
                     } else {
                         return project;
@@ -1315,7 +1316,8 @@ public class JsonProjects implements Projects {
             newProject.add("surveyRules", jsonInputs.get("surveyRules").getAsJsonArray());
             newProject.addProperty("useTemplatePlots", jsonInputs.get("useTemplatePlots").getAsBoolean());
             newProject.addProperty("useTemplateWidgets", jsonInputs.get("useTemplateWidgets").getAsBoolean());
-            newProject.add("projectOptions", jsonInputs.get("projectOptions").getAsJsonObject());
+            final var projectOptions = jsonInputs.get("projectOptions").getAsString();
+            newProject.addProperty("projectOptions", projectOptions == "" ? "{\"showGEEScript\":false}" : projectOptions);
 
             // Add constant values
             newProject.addProperty("availability", "unpublished");
