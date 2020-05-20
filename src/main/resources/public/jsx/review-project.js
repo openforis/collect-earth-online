@@ -255,15 +255,15 @@ class Project extends React.Component {
     setProjectDetail = (key, newValue) =>
         this.setState({ projectDetails: { ...this.state.projectDetails, [key]: newValue }});
 
-    onShowGEEScriptClick = (event) =>
+    onShowGEEScriptClick = () =>
         this.setState({
             projectDetails: {
                 ...this.state.projectDetails,
                 projectOptions: {
                     ...this.state.projectDetails.projectOptions,
-                    showGEEScript: !this.state.projectDetails.projectOptions.showGEEScript
-                }
-            }
+                    showGEEScript: !this.state.projectDetails.projectOptions.showGEEScript,
+                },
+            },
         });
 
     projectNotFound = (projectId) => (
@@ -316,7 +316,7 @@ class ProjectStatsGroup extends React.Component {
         };
     }
 
-    updateShown =() => this.setState({ showStats: !this.state.showStats });
+    updateShown = () => this.setState({ showStats: !this.state.showStats });
 
     render() {
         return (
@@ -344,12 +344,6 @@ class ProjectStats extends React.Component {
 
     componentDidMount() {
         this.getProjectStats();
-    }
-
-    asPercentage(part, total) {
-        return (part && total)
-            ? (100.0 * part / total).toFixed(2)
-            : "0.00";
     }
 
     getProjectStats = () => {
