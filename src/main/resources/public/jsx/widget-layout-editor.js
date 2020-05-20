@@ -22,7 +22,7 @@ class BasicLayout extends React.PureComponent {
             widgetTitle: "",
             imageCollection: "",
             graphBand: "",
-            graphBandDeg: "",
+            graphBandDeg: "NDFI",
             graphReducer: "Min",
             imageParams: "",
             dualLayer: false,
@@ -297,7 +297,7 @@ class BasicLayout extends React.PureComponent {
             widgetTitle: "",
             imageCollection: event.target.value === "ImageElevation" ? "USGS/SRTMGL1_003" : "",
             graphBand: "",
-            graphBandDeg: "",
+            graphBandDeg: "NDFI",
             graphReducer: "Min",
             imageParams: "",
             widgetBaseMap: "osm",
@@ -389,7 +389,7 @@ class BasicLayout extends React.PureComponent {
             widgetTitle: "",
             imageCollection: "",
             graphBand: "",
-            graphBandDeg: "",
+            graphBandDeg: "NDFI",
             graphReducer: "Min",
             imageParams: "",
             widgetBaseMap: "osm",
@@ -572,17 +572,14 @@ class BasicLayout extends React.PureComponent {
             widget.filterType = "";
             widget.startDate = this.state.startDate;
             widget.endDate = this.state.endDate;
-            widget.graphBand = this.state.graphBandDeg;
+            widget.graphBand = this.state.graphBandDeg === "" ? "NDFI" : this.state.graphBandDeg;
             widget.baseMap = this.state.widgetBaseMap;
         } else {
-            const wType = this.state.selectedWidgetType === "TimeSeries"
-                ? this.state.selectedDataType.toLowerCase() + this.state.selectedWidgetType
-                : this.state.selectedWidgetType === "ImageCollection"
-                    ? this.state.selectedWidgetType + this.state.selectedDataType
-                    : this.state.selectedWidgetType === "statistics"
-                        ? "getStats"
-                        : this.state.selectedWidgetType === "ImageElevation"
-                            ? "ImageElevation" : "custom";
+            const wType = this.state.selectedWidgetType === "TimeSeries" ? this.state.selectedDataType.toLowerCase() + this.state.selectedWidgetType
+                : this.state.selectedWidgetType === "ImageCollection" ? this.state.selectedWidgetType + this.state.selectedDataType
+                : this.state.selectedWidgetType === "statistics" ? "getStats"
+                : this.state.selectedWidgetType === "ImageElevation" ? "ImageElevation"
+                : "custom";
             let prop1 = "";
             const properties = [];
             const prop4 = this.state.selectedDataType !== null ? this.state.selectedDataType : "";
@@ -650,7 +647,7 @@ class BasicLayout extends React.PureComponent {
                         widgetTitle: "",
                         imageCollection: "",
                         graphBand: "",
-                        graphBandDeg: "",
+                        graphBandDeg: "NDFI",
                         graphReducer: "Min",
                         imageParams: "",
                         widgetBaseMap: "osm",
@@ -1054,12 +1051,7 @@ class BasicLayout extends React.PureComponent {
     </React.Fragment>;
 
     getBaseMapSelector = () => {
-        if (this.state.selectedWidgetType === "ImageCollection"
-            || this.state.selectedWidgetType === "DualImageCollection"
-            || this.state.selectedWidgetType === "imageAsset"
-            || this.state.selectedWidgetType === "imageCollectionAsset"
-            || this.state.selectedWidgetType === "ImageElevation"
-            || this.state.selectedWidgetType === "DegradationTool") {
+        if (["ImageCollection", "DualImageCollection", "imageAsset", "imageCollectionAsset", "ImageElevation", "DegradationTool"].includes(this.state.selectedWidgetType)) {
             return <React.Fragment>
                 <label htmlFor="widgetIndicesSelect">Basemap</label>
                 <select
@@ -1080,11 +1072,7 @@ class BasicLayout extends React.PureComponent {
     });
 
     getDataTypeSelectionControl = () => {
-        if (this.state.selectedWidgetType === "-1"
-            || this.state.selectedWidgetType === "imageAsset"
-            || this.state.selectedWidgetType === "imageCollectionAsset"
-            || this.state.selectedWidgetType === "ImageElevation"
-            || this.state.selectedWidgetType === "DegradationTool") {
+        if (["-1", "imageAsset", "imageCollectionAsset", "ImageElevation", "DegradationTool"].includes(this.state.selectedWidgetType)) {
             return <br/>;
         } else if (this.state.selectedWidgetType === "statistics") {
             return <React.Fragment>
@@ -1329,6 +1317,31 @@ class BasicLayout extends React.PureComponent {
             </div>
              : "";
 
+    initDatePickers(gObject) {
+        setTimeout(() => {
+            $(".input-daterange input").each(function () {
+                try {
+                    const bindEvt = this.id === "sDate_new_cookedDual" ? gObject.onStartDateChangedDual
+                        : this.id === "eDate_new_cookedDual" ? gObject.onEndDateChangedDual
+                        : this.id === "sDate_new_cooked" ? gObject.onStartDateChanged
+                        : this.id === "eDate_new_cooked" ? gObject.onEndDateChanged
+                        : this.id === "sDate_new_cooked2" ? gObject.onStartDate2Changed
+                        : gObject.onEndDate2Changed;
+                    $(this).datepicker({
+                        changeMonth: true,
+                        changeYear: true,
+                        dateFormat: "yy-mm-dd",
+                        onSelect: function() {
+                            bindEvt(this.value);
+                        },
+                    });
+                } catch (e) {
+                    console.warn(e.message);
+                }
+            });
+        }, 250);
+    }
+
     getDataForm = () => {
         if (this.state.selectedWidgetType === "ImageElevation") {
             return <React.Fragment>
@@ -1347,15 +1360,21 @@ class BasicLayout extends React.PureComponent {
                 </div>
                 <div className="form-group">
                     <label htmlFor="graphBand">Band to graph</label>
-                    <input
-                        type="text"
+                    <select
                         name="graphBandDeg"
-                        id="graphBandDeg"
-                        placeholder={"NDFI"}
                         value={this.state.graphBandDeg}
                         className="form-control"
+                        id="widgetIndicesSelect"
                         onChange={this.onGraphBandDegChange}
-                    />
+                    >
+                        <option label="NDFI" value="NDFI" selected>NDFI</option>
+                        <option label="SWIR1" value="SWIR1">SWIR1</option>
+                        <option label="NIR" value="NIR">NIR</option>
+                        <option label="RED" value="RED">RED</option>
+                        <option label="GREEN" value="GREEN">GREEN</option>
+                        <option label="BLUE" value="BLUE">BLUE</option>
+                        <option label="SWIR2" value="SWIR2">SWIR2</option>
+                    </select>
                 </div>
                 <label>Select the Date Range you would like</label>
                 {this.getDateRangeControl()}
@@ -1912,35 +1931,6 @@ class BasicLayout extends React.PureComponent {
                 {this.getNewWidgetForm()}
             </React.Fragment>
         );
-    }
-
-    initDatePickers(gObject) {
-        setTimeout(() => {
-            $(".input-daterange input").each(function () {
-                try {
-                    const bindEvt = this.id === "sDate_new_cookedDual"
-                        ? gObject.onStartDateChangedDual
-                        : this.id === "eDate_new_cookedDual"
-                            ? gObject.onEndDateChangedDual
-                            : this.id === "sDate_new_cooked"
-                                ? gObject.onStartDateChanged
-                                : this.id === "eDate_new_cooked"
-                                    ? gObject.onEndDateChanged
-                                    : this.id === "sDate_new_cooked2"
-                                        ? gObject.onStartDate2Changed : gObject.onEndDate2Changed;
-                    $(this).datepicker({
-                        changeMonth: true,
-                        changeYear: true,
-                        dateFormat: "yy-mm-dd",
-                        onSelect: function() {
-                            bindEvt(this.value);
-                        },
-                    });
-                } catch (e) {
-                    console.warn(e.message);
-                }
-            });
-        }, 250);
     }
 }
 
