@@ -639,16 +639,11 @@ class MapWidget extends React.Component {
         postObject.index = requestedIndex;
         postObject.path = path;
         // see if we need to fetch or just add the tile server
-        let needFetch = true;
         const currentDate = new Date();
         currentDate.setDate(currentDate.getDate() - 1);
-        if (typeof(Storage) !== "undefined") {
-            needFetch = this.checkForCache(postObject, widget, false);
-            if (! needFetch && widget.dualImageCollection && dualImageObject != null) {
-                needFetch = this.checkForCache(dualImageObject, widget, true);
-            }
-        }
-        if (needFetch) {
+        if (typeof(Storage) !== "undefined"
+            && (this.checkForCache(postObject, widget, false)
+                || (widget.dualImageCollection && dualImageObject && this.checkForCache(dualImageObject, widget, true)))) {
             this.fetchMapInfo(postObject, url, widget, dualImageObject);
         }
         window.addEventListener("resize", () => this.handleResize());
