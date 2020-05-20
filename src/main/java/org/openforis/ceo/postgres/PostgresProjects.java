@@ -904,23 +904,23 @@ public class PostgresProjects implements Projects {
             newProject.add("surveyRules",                jsonInputs.get("surveyRules").getAsJsonArray());
             newProject.addProperty("useTemplatePlots",   getOrFalse(jsonInputs, "useTemplatePlots").getAsBoolean());
             newProject.addProperty("useTemplateWidgets", getOrFalse(jsonInputs, "useTemplateWidgets").getAsBoolean());
-            newProject.add("projectOptions",             jsonInputs.get("projectOptions").getAsJsonObject());
+            newProject.add("projectOptions",             jsonInputs.get("projectOptions") == null ? new JsonObject() : jsonInputs.get("projectOptions").getAsJsonObject());
 
             // file part properties
-            newProject.addProperty("plotFileName",     getOrEmptyString(jsonInputs, "plotFileName").getAsString());
-            newProject.addProperty("plotFileBase64",   getOrEmptyString(jsonInputs, "plotFileBase64").getAsString());
-            newProject.addProperty("sampleFileName",   getOrEmptyString(jsonInputs, "sampleFileName").getAsString());
-            newProject.addProperty("sampleFileBase64", getOrEmptyString(jsonInputs, "sampleFileBase64").getAsString());
+            newProject.addProperty("plotFileName",       getOrEmptyString(jsonInputs, "plotFileName").getAsString());
+            newProject.addProperty("plotFileBase64",     getOrEmptyString(jsonInputs, "plotFileBase64").getAsString());
+            newProject.addProperty("sampleFileName",     getOrEmptyString(jsonInputs, "sampleFileName").getAsString());
+            newProject.addProperty("sampleFileBase64",   getOrEmptyString(jsonInputs, "sampleFileBase64").getAsString());
 
             // Add constant values
             newProject.addProperty("availability", "unpublished");
-            newProject.addProperty("createdDate", LocalDate.now().toString());
+            newProject.addProperty("createdDate",         LocalDate.now().toString());
 
-            final var lonMin = getOrZero(newProject, "lonMin").getAsDouble();
-            final var latMin = getOrZero(newProject, "latMin").getAsDouble();
-            final var lonMax = getOrZero(newProject, "lonMax").getAsDouble();
-            final var latMax = getOrZero(newProject, "latMax").getAsDouble();
-            newProject.addProperty("boundary", makeGeoJsonPolygon(lonMin, latMin, lonMax, latMax).toString());
+            final var lonMin = getOrZero(newProject,      "lonMin").getAsDouble();
+            final var latMin = getOrZero(newProject,      "latMin").getAsDouble();
+            final var lonMax = getOrZero(newProject,      "lonMax").getAsDouble();
+            final var latMax = getOrZero(newProject,      "latMax").getAsDouble();
+            newProject.addProperty("boundary",            makeGeoJsonPolygon(lonMin, latMin, lonMax, latMax).toString());
 
             final var tokenKey = UUID.randomUUID().toString();
 
