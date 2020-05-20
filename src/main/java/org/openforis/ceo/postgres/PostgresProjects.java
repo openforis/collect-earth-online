@@ -509,9 +509,8 @@ public class PostgresProjects implements Projects {
             pstmt.setString(3, getOrEmptyString(jsonInputs, "description").getAsString());
             pstmt.setString(4, getOrEmptyString(jsonInputs, "privacyLevel").getAsString());
             pstmt.setString(5, getOrEmptyString(jsonInputs, "baseMapSource").getAsString());
-            var geeScriptOption = new JsonObject();
-            geeScriptOption.addProperty("showGEEScript", false);
-            pstmt.setString(6, jsonInputs.get("projectOptions") == null ? geeScriptOption.toString() : jsonInputs.get("projectOptions").getAsJsonObject().toString());
+            final var projectOptions = getOrEmptyString(jsonInputs, "projectOptions").getAsString();
+            pstmt.setString(6, projectOptions == "" ? "{\"showGEEScript\":false}" : projectOptions);
             pstmt.execute();
             return "";
         } catch (SQLException e) {
@@ -906,9 +905,8 @@ public class PostgresProjects implements Projects {
             newProject.add("surveyRules",                jsonInputs.get("surveyRules").getAsJsonArray());
             newProject.addProperty("useTemplatePlots",   getOrFalse(jsonInputs, "useTemplatePlots").getAsBoolean());
             newProject.addProperty("useTemplateWidgets", getOrFalse(jsonInputs, "useTemplateWidgets").getAsBoolean());
-            var geeScriptOption = new JsonObject();
-            geeScriptOption.addProperty("showGEEScript", false);
-            newProject.add("projectOptions",             jsonInputs.get("projectOptions") == null ? geeScriptOption : jsonInputs.get("projectOptions").getAsJsonObject());
+            final var projectOptions = getOrEmptyString(jsonInputs, "projectOptions").getAsString();
+            newProject.addProperty("projectOptions",     projectOptions == "" ? "{\"showGEEScript\":false}" : projectOptions);
 
             // file part properties
             newProject.addProperty("plotFileName",       getOrEmptyString(jsonInputs, "plotFileName").getAsString());
@@ -952,7 +950,7 @@ public class PostgresProjects implements Projects {
                 pstmt.setString(18, newProject.get("createdDate").getAsString());
                 pstmt.setString(19, null);  //classification times
                 pstmt.setString(20, tokenKey);  //token key
-                pstmt.setString(21, newProject.get("projectOptions").getAsJsonObject().toString());
+                pstmt.setString(21, newProject.get("projectOptions").getAsString());
 
                 try (var rs = pstmt.executeQuery()) {
                     if (rs.next()) {
