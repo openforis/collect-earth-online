@@ -2,7 +2,6 @@ import React from "react";
 import ReactDOM from "react-dom";
 import { mercator } from "../js/mercator-openlayers.js";
 import { UnicodeIcon } from "./utils/textUtils";
-
 import { Feature, Map, View } from "ol";
 import { buffer as ExtentBuffer } from "ol/extent";
 import { Circle, Polygon, Point } from "ol/geom";
@@ -11,6 +10,7 @@ import { transform as projTransform } from "ol/proj";
 import { OSM, Vector, XYZ } from "ol/source";
 import { Style, Stroke } from "ol/style";
 import { getArea as sphereGetArea } from "ol/sphere";
+import { formatDateISO } from "./utils/dateUtils";
 
 class Geodash extends React.Component {
     constructor(props) {
@@ -30,7 +30,10 @@ class Geodash extends React.Component {
             initCenter:null,
             initZoom:null,
         };
-        const theSplit = decodeURI(this.state.projAOI).replace("[", "").replace("]", "").split(",");
+        const theSplit = decodeURI(this.state.projAOI)
+            .replace("[", "")
+            .replace("]", "")
+            .split(",");
         this.state.projPairAOI = "[["
             + theSplit[0] + ","
             + theSplit[1] + "],["
@@ -78,9 +81,9 @@ class Geodash extends React.Component {
         widgets[index] = { ...widget };
         widgets[index].isFull = !widgets[index].isFull;
         this.setState({ widgets },
-            () => {
-                this.updateSize(widget);
-            }
+                      () => {
+                          this.updateSize(widget);
+                      }
         );
     };
 
@@ -200,26 +203,26 @@ class Widget extends React.Component {
     constructor(props) {
         super(props);
         this.imageCollectionList = ["ImageElevation",
-            "ImageCollectionCustom",
-            "addImageCollection",
-            "ndviImageCollection",
-            "ImageCollectionNDVI",
-            "ImageCollectionEVI",
-            "ImageCollectionEVI2",
-            "ImageCollectionNDWI",
-            "ImageCollectionNDMI",
-            "ImageCollectionLANDSAT5",
-            "ImageCollectionLANDSAT7",
-            "ImageCollectionLANDSAT8",
-            "ImageCollectionSentinel2"];
+                                    "ImageCollectionCustom",
+                                    "addImageCollection",
+                                    "ndviImageCollection",
+                                    "ImageCollectionNDVI",
+                                    "ImageCollectionEVI",
+                                    "ImageCollectionEVI2",
+                                    "ImageCollectionNDWI",
+                                    "ImageCollectionNDMI",
+                                    "ImageCollectionLANDSAT5",
+                                    "ImageCollectionLANDSAT7",
+                                    "ImageCollectionLANDSAT8",
+                                    "ImageCollectionSentinel2"];
         this.graphControlList = ["customTimeSeries",
-            "timeSeriesGraph",
-            "ndviTimeSeries",
-            "ndwiTimeSeries",
-            "eviTimeSeries",
-            "evi2TimeSeries",
-            "ndmiTimeSeries",
-            "mekong_tc_l_c"];
+                                 "timeSeriesGraph",
+                                 "ndviTimeSeries",
+                                 "ndwiTimeSeries",
+                                 "eviTimeSeries",
+                                 "evi2TimeSeries",
+                                 "ndmiTimeSeries",
+                                 "mekong_tc_l_c"];
     }
 
     generateGridColumn = (x, w) => (x + 1) + " / span " + w;
@@ -238,8 +241,8 @@ class Widget extends React.Component {
                 <div
                     className={
                         this.getClassNames(widget.isFull,
-                            widget.gridcolumn || "",
-                            widget.gridrow || (widget.layout && "span " + widget.layout.h) || ""
+                                           widget.gridcolumn || "",
+                                           widget.gridrow || (widget.layout && "span " + widget.layout.h) || ""
                         )
                     }
                     style={{
@@ -299,7 +302,7 @@ class Widget extends React.Component {
                     title="Recenter"
                     style={{ marginRight: "10px" }}
                 >
-                    <img src="img/ceoicon.png"/>
+                    <img src={"img/ceoicon.png"} alt="Collect Earth Online"/>
                 </a>
             </li>;
         }
@@ -325,11 +328,44 @@ class Widget extends React.Component {
                 />
             </div>;
         } else if (this.graphControlList.includes(widget.properties[0])) {
-            return <div className="front"><GraphWidget widget={widget} projPairAOI={this.props.projPairAOI} getParameterByName={this.props.getParameterByName} documentRoot={this.props.documentRoot} initCenter={this.props.initCenter}/></div>;
+            return <div className="front">
+                <GraphWidget
+                    widget={widget}
+                    projPairAOI={this.props.projPairAOI}
+                    getParameterByName={this.props.getParameterByName}
+                    documentRoot={this.props.documentRoot}
+                    initCenter={this.props.initCenter}
+                />
+            </div>;
         } else if (widget.properties[0] === "getStats") {
-            return <div className="front"><StatsWidget widget={widget} projPairAOI={this.props.projPairAOI} documentRoot={this.props.documentRoot}/></div>;
+            return <div className="front">
+                <StatsWidget
+                    widget={widget}
+                    projPairAOI={this.props.projPairAOI}
+                    documentRoot={this.props.documentRoot}
+                />
+            </div>;
+        } else if (widget.properties[0] === "DegradationTool") {
+            return <div className="front">
+                <DegradationWidget
+                    widget={widget}
+                    projPairAOI={this.props.projPairAOI}
+                    getParameterByName={this.props.getParameterByName}
+                    documentRoot={this.props.documentRoot}
+                    initCenter={this.props.initCenter}
+                    mapCenter={this.props.mapCenter}
+                    mapZoom={this.props.mapZoom}
+                    projAOI={this.props.projAOI}
+                    onSliderChange={onSliderChange}
+                    onSwipeChange={onSwipeChange}
+                    syncMapWidgets={this.syncMapWidgets}
+                    setCenterAndZoom={this.props.setCenterAndZoom}
+                    imageryList={this.props.imageryList}
+                    resetCenterAndZoom={this.props.resetCenterAndZoom}
+                />
+            </div>;
         } else {
-            return <img src="data:image/gif;base64,R0lGODlhAQABAIAAAHd3dwAAACH5BAAAAAAALAAAAAABAAEAAAICRAEAOw==" width ="200" height ="200" className="img-responsive" />;
+            return <img src="data:image/gif;base64,R0lGODlhAQABAIAAAHd3dwAAACH5BAAAAAAALAAAAAABAAEAAAICRAEAOw==" width ="200" height ="200" className="img-responsive" alt="Blank Widget"/>;
         }
     };
 
@@ -340,7 +376,67 @@ class Widget extends React.Component {
 
     render() {
         const { widget } = this.props;
-        return ( <React.Fragment>{ this.getWidgetHtml(widget, this.props.onSliderChange, this.props.onSwipeChange) }</React.Fragment>);
+        return (<React.Fragment>{ this.getWidgetHtml(widget, this.props.onSliderChange, this.props.onSwipeChange) }</React.Fragment>);
+    }
+}
+
+class DegradationWidget extends React.Component {
+    constructor(props) {
+        super(props);
+        this.state = {
+            selectedDate: "",
+        };
+    }
+
+    handleSelectDate = (date) => {
+        this.setState({ selectedDate: date });
+    };
+
+    render() {
+        return <React.Fragment>
+            <div id={"degradation_" + this.props.widget.id} style={{ width: "100%", minHeight: "200px" }}>
+                <div style={{ display: "table", position: "absolute", width: "100%", height: "calc(100% - 45px)" }}>
+                    <div style={{ display: "table-row", height: "65%" }}>
+                        <div style={{ display: "table-cell", position: "relative" }}>
+                            <div className="front">
+                                <MapWidget
+                                    widget={this.props.widget}
+                                    mapCenter={this.props.mapCenter}
+                                    mapZoom={this.props.mapZoom}
+                                    projAOI={this.props.projAOI}
+                                    projPairAOI={this.props.projPairAOI}
+                                    onSliderChange={this.props.onSliderChange}
+                                    onSwipeChange={this.props.onSwipeChange}
+                                    syncMapWidgets={this.syncMapWidgets}
+                                    getParameterByName={this.props.getParameterByName}
+                                    documentRoot={this.props.documentRoot}
+                                    setCenterAndZoom={this.props.setCenterAndZoom}
+                                    imageryList={this.props.imageryList}
+                                    resetCenterAndZoom={this.props.resetCenterAndZoom}
+                                    selectedDate={this.state.selectedDate}
+                                    isDegradation
+                                />
+                            </div>
+                        </div>
+                    </div>
+                    <div style={{ display: "table-row" }}>
+                        <div style={{ display: "table-cell", position: "relative" }}>
+                            <div className="front">
+                                <GraphWidget
+                                    widget={this.props.widget}
+                                    projPairAOI={this.props.projPairAOI}
+                                    getParameterByName={this.props.getParameterByName}
+                                    documentRoot={this.props.documentRoot}
+                                    initCenter={this.props.initCenter}
+                                    handleSelectDate={this.handleSelectDate}
+                                    isDegradation
+                                />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </React.Fragment>;
     }
 }
 
@@ -351,9 +447,10 @@ class MapWidget extends React.Component {
             mapRef: null,
             opacity: 90,
             geeTimeOut: null,
-            internalExtent: null,
-            mapCenter: null,
             wasFull: false,
+            selectedDate: "",
+            stretch: 321,
+            lastStretch: 0,
         };
     }
 
@@ -425,8 +522,11 @@ class MapWidget extends React.Component {
         }
         widget.bands = bands;
 
-        /*********************Check here if widget is dualImageCollection *********************/
-        if (widget.dualImageCollection && widget.dualImageCollection != null) {
+        if (widget.properties[0] === "DegradationTool") {
+            postObject.imageDate = this.props.selectedDate;
+            postObject.stretch = this.state.stretch;
+            path = "getDegraditionTileUrl";
+        } else if (widget.dualImageCollection && widget.dualImageCollection != null) {
 
             const firstImage = widget.dualImageCollection[0];
             const secondImage = widget.dualImageCollection[1];
@@ -539,149 +639,15 @@ class MapWidget extends React.Component {
         postObject.index = requestedIndex;
         postObject.path = path;
         // see if we need to fetch or just add the tile server
-        let needFetch = true;
         const currentDate = new Date();
         currentDate.setDate(currentDate.getDate() - 1);
-        if (typeof(Storage) !== "undefined") {
-            if (localStorage.getItem(postObject.ImageAsset + JSON.stringify(postObject.visParams))) {
-                needFetch = this.createTileServerFromCache(postObject.ImageAsset + JSON.stringify(postObject.visParams), widget.id);
-            } else if (localStorage.getItem(postObject.ImageCollectionAsset + JSON.stringify(postObject.visParams))) {
-                needFetch = this.createTileServerFromCache(postObject.ImageCollectionAsset + JSON.stringify(postObject.visParams), widget.id);
-            } else if (postObject.index && localStorage.getItem(postObject.index + postObject.dateFrom + postObject.dateTo)) {
-                needFetch = this.createTileServerFromCache(postObject.index + postObject.dateFrom + postObject.dateTo, widget.id);
-            } else if (postObject.path && localStorage.getItem(postObject.path + postObject.dateFrom + postObject.dateTo)) {
-                needFetch = this.createTileServerFromCache(postObject.path + postObject.dateFrom + postObject.dateTo, widget.id);
-            } else if (localStorage.getItem(JSON.stringify(postObject))) {
-                needFetch = this.createTileServerFromCache(JSON.stringify(postObject), widget.id);
-            }
-            if (widget.dualImageCollection) {
-                if (localStorage.getItem(dualImageObject.ImageAsset + dualImageObject.visParams)) {
-                    needFetch = this.createTileServerFromCache(dualImageObject.ImageAsset + dualImageObject.visParams, widget.id, true);
-                } else if (localStorage.getItem(dualImageObject.ImageCollectionAsset + JSON.stringify(dualImageObject.visParams))) {
-                    needFetch = this.createTileServerFromCache(dualImageObject.ImageCollectionAsset + JSON.stringify(dualImageObject.visParams), widget.id, true);
-                } else if (dualImageObject.index && localStorage.getItem(dualImageObject.index + dualImageObject.dateFrom + dualImageObject.dateTo)) {
-                    needFetch = this.createTileServerFromCache(dualImageObject.index + dualImageObject.dateFrom + dualImageObject.dateTo, widget.id, true);
-                } else if (dualImageObject.path && localStorage.getItem(dualImageObject.path + dualImageObject.dateFrom + dualImageObject.dateTo)) {
-                    needFetch = this.createTileServerFromCache(dualImageObject.path + dualImageObject.dateFrom + dualImageObject.dateTo, widget.id, true);
-                } else if (localStorage.getItem(JSON.stringify(dualImageObject))) {
-                    needFetch = this.createTileServerFromCache(JSON.stringify(dualImageObject), widget.id, true);
-                } else {
-                    needFetch = true;
-                }
-            }
-        }
-        if (needFetch) {
-            fetch(url, {
-                method: "POST",
-                headers: {
-                    "Accept": "application/json",
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify(postObject),
-            })
-                .then(res => {
-                    if (res.ok) {
-                        return res.json();
-                    } else {
-                        Promise.reject();
-                    }
-                })
-                .then(data => {
-                    if (data.hasOwnProperty("url")) {
-                        data.lastGatewayUpdate = new Date();
-                        if (postObject.ImageAsset && JSON.stringify(postObject.visParams)) {
-                            localStorage.setItem(postObject.ImageAsset + JSON.stringify(postObject.visParams), JSON.stringify(data));
-                        } else if (postObject.ImageCollectionAsset && JSON.stringify(postObject.visParams)) {
-                            localStorage.setItem(postObject.ImageCollectionAsset + JSON.stringify(postObject.visParams), JSON.stringify(data));
-                        } else if (postObject.index && postObject.dateFrom + postObject.dateTo) {
-                            localStorage.setItem(postObject.index + postObject.dateFrom + postObject.dateTo, JSON.stringify(data));
-                        } else if (postObject.path && postObject.dateFrom + postObject.dateTo) {
-                            localStorage.setItem(postObject.path + postObject.dateFrom + postObject.dateTo, JSON.stringify(data));
-                        } else {
-                            localStorage.setItem(JSON.stringify(postObject), JSON.stringify(data));
-                        }
-                        this.addTileServer(data.url, data.token, "widgetmap_" + widget.id);
-                        return true;
-                    } else {
-                        console.warn("Wrong Data Returned");
-                        return false;
-                    }
-                })
-                .then(isValid => {
-                    if (isValid) {
-                        if (widget.dualLayer) {
-                            postObject.dateFrom = widget.dualStart;
-                            postObject.dateTo = widget.dualEnd;
-
-                            fetch(url, {
-                                method: "POST",
-                                headers: {
-                                    "Accept": "application/json",
-                                    "Content-Type": "application/json",
-                                },
-                                body: JSON.stringify(postObject),
-                            })
-                                .then(res => res.json())
-                                .then(data => {
-                                    if (data.hasOwnProperty("url")) {
-                                        data.lastGatewayUpdate = new Date();
-                                        if (postObject.ImageAsset && JSON.stringify(postObject.visParams)) {
-                                            localStorage.setItem(postObject.ImageAsset + JSON.stringify(postObject.visParams), JSON.stringify(data));
-                                        } else if (postObject.ImageCollectionAsset && JSON.stringify(postObject.visParams)) {
-                                            localStorage.setItem(postObject.ImageCollectionAsset + JSON.stringify(postObject.visParams), JSON.stringify(data));
-                                        } else if (postObject.index && postObject.dateFrom + postObject.dateTo) {
-                                            localStorage.setItem(postObject.index + postObject.dateFrom + postObject.dateTo, JSON.stringify(data));
-                                        } else {
-                                            localStorage.setItem(JSON.stringify(postObject), JSON.stringify(data));
-                                        }
-                                        this.addDualLayer(data.url, data.token, "widgetmap_" + widget.id);
-                                    }
-                                });
-                        } else if (dualImageObject) {
-                            let workingObject;
-                            try {
-                                workingObject = JSON.parse(dualImageObject);
-                            } catch (e) {
-                                workingObject = dualImageObject;
-                            }
-                            if (workingObject != null) {
-                                fetch(workingObject.url, {
-                                    method: "POST",
-                                    headers: {
-                                        "Accept": "application/json",
-                                        "Content-Type": "application/json",
-                                    },
-                                    body: JSON.stringify(workingObject),
-                                })
-                                    .then(res => res.json())
-                                    .then(data => {
-                                        if (data.hasOwnProperty("url")) {
-                                            data.lastGatewayUpdate = new Date();
-                                            if (dualImageObject.ImageAsset && JSON.stringify(dualImageObject.visParams)) {
-                                                localStorage.setItem(dualImageObject.ImageAsset + JSON.stringify(dualImageObject.visParams), JSON.stringify(data));
-                                            } else if (dualImageObject.ImageCollectionAsset && JSON.stringify(dualImageObject.visParams)) {
-                                                localStorage.setItem(dualImageObject.ImageCollectionAsset + JSON.stringify(dualImageObject.visParams), JSON.stringify(data));
-                                            } else if (dualImageObject.index && dualImageObject.dateFrom + dualImageObject.dateTo) {
-                                                localStorage.setItem(dualImageObject.index + dualImageObject.dateFrom + dualImageObject.dateTo, JSON.stringify(data));
-                                            } else {
-                                                localStorage.setItem(JSON.stringify(dualImageObject), JSON.stringify(data));
-                                            }
-                                            this.addDualLayer(data.url, data.token, "widgetmap_" + widget.id);
-                                        } else {
-                                            console.warn("Wrong Data Returned");
-                                        }
-                                    });
-                            }
-                        }
-                    }
-                })
-                .catch(error => {
-                    console.log(error);
-                });
+        if (typeof(Storage) !== "undefined"
+            && (this.checkForCache(postObject, widget, false)
+                || (widget.dualImageCollection && dualImageObject && this.checkForCache(dualImageObject, widget, true)))) {
+            this.fetchMapInfo(postObject, url, widget, dualImageObject);
         }
         window.addEventListener("resize", () => this.handleResize());
     }
-
 
     componentDidUpdate() {
         if (this.props.widget.isFull !== this.state.wasFull) {
@@ -691,7 +657,157 @@ class MapWidget extends React.Component {
         if (this.props.mapCenter) {
             this.centerAndZoomMap(this.props.mapCenter, this.props.mapZoom);
         }
+        if (this.props.selectedDate !== this.state.selectedDate || this.state.stretch !== this.state.lastStretch) {
+            if (this.props.widget.properties[0] === "DegradationTool" && this.props.selectedDate !== "") {
+                const postObject = {};
+                postObject.imageDate = this.props.selectedDate;
+                postObject.stretch = this.state.stretch;
+                postObject.path = "getDegraditionTileUrl";
+                postObject.geometry = JSON.parse(this.props.projPairAOI);
+                const map = this.state.mapRef;
+                try {
+                    map.getLayers().getArray().filter(layer =>
+                        layer.get("id") !== undefined && layer.get("id") === "widgetmap_" + this.props.widget.id
+                    ).forEach(layer => map.removeLayer(layer));
+                } catch (e) {
+                    console.log("removal error");
+                }
+                if (typeof(Storage) !== "undefined"
+                    && this.checkForCache(postObject, this.props.widget, false)) {
+                    this.fetchMapInfo(postObject, this.props.documentRoot + "/geo-dash/gateway-request", this.props.widget, null);
+                }
+                this.setState({
+                    selectedDate: this.props.selectedDate,
+                    lastStretch: this.state.stretch,
+                });
+            }
+        }
     }
+
+    checkForCache = (postObject, widget, isSecond) => localStorage.getItem(postObject.ImageAsset + JSON.stringify(postObject.visParams))
+            ? this.createTileServerFromCache(postObject.ImageAsset + JSON.stringify(postObject.visParams), widget.id, isSecond)
+        : localStorage.getItem(postObject.ImageCollectionAsset + JSON.stringify(postObject.visParams))
+            ? this.createTileServerFromCache(postObject.ImageCollectionAsset + JSON.stringify(postObject.visParams), widget.id, isSecond)
+        : postObject.index && localStorage.getItem(postObject.index + postObject.dateFrom + postObject.dateTo)
+            ? this.createTileServerFromCache(postObject.index + postObject.dateFrom + postObject.dateTo, widget.id, isSecond)
+        : postObject.path && localStorage.getItem(postObject.path + postObject.dateFrom + postObject.dateTo)
+            ? this.createTileServerFromCache(postObject.path + postObject.dateFrom + postObject.dateTo, widget.id, isSecond)
+        : localStorage.getItem(JSON.stringify(postObject))
+            ? this.createTileServerFromCache(JSON.stringify(postObject), widget.id, isSecond)
+        : true;
+
+    fetchMapInfo = (postObject, url, widget, dualImageObject) => {
+        if (postObject.path === "getDegraditionTileUrl" && url.trim() === "") {
+            return;
+        }
+        fetch(url, {
+            method: "POST",
+            headers: {
+                "Accept": "application/json",
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify(postObject),
+        })
+            .then(res => {
+                if (res.ok) {
+                    return res.json();
+                } else {
+                    Promise.reject();
+                }
+            })
+            .then(data => {
+                if (data.hasOwnProperty("url")) {
+                    data.lastGatewayUpdate = new Date();
+                    if (postObject.ImageAsset && JSON.stringify(postObject.visParams)) {
+                        localStorage.setItem(postObject.ImageAsset + JSON.stringify(postObject.visParams), JSON.stringify(data));
+                    } else if (postObject.ImageCollectionAsset && JSON.stringify(postObject.visParams)) {
+                        localStorage.setItem(postObject.ImageCollectionAsset + JSON.stringify(postObject.visParams), JSON.stringify(data));
+                    } else if (postObject.index && postObject.dateFrom + postObject.dateTo) {
+                        localStorage.setItem(postObject.index + postObject.dateFrom + postObject.dateTo, JSON.stringify(data));
+                    } else if (postObject.path && postObject.dateFrom + postObject.dateTo) {
+                        localStorage.setItem(postObject.path + postObject.dateFrom + postObject.dateTo, JSON.stringify(data));
+                    } else {
+                        localStorage.setItem(JSON.stringify(postObject), JSON.stringify(data));
+                    }
+                    this.addTileServer(data.url, data.token, "widgetmap_" + widget.id);
+                    return true;
+                } else {
+                    console.warn("Wrong Data Returned");
+                    return false;
+                }
+            })
+            .then(isValid => {
+                if (isValid) {
+                    if (widget.dualLayer) {
+                        postObject.dateFrom = widget.dualStart;
+                        postObject.dateTo = widget.dualEnd;
+
+                        fetch(url, {
+                            method: "POST",
+                            headers: {
+                                "Accept": "application/json",
+                                "Content-Type": "application/json",
+                            },
+                            body: JSON.stringify(postObject),
+                        })
+                            .then(res => res.json())
+                            .then(data => {
+                                if (data.hasOwnProperty("url")) {
+                                    data.lastGatewayUpdate = new Date();
+                                    if (postObject.ImageAsset && JSON.stringify(postObject.visParams)) {
+                                        localStorage.setItem(postObject.ImageAsset + JSON.stringify(postObject.visParams), JSON.stringify(data));
+                                    } else if (postObject.ImageCollectionAsset && JSON.stringify(postObject.visParams)) {
+                                        localStorage.setItem(postObject.ImageCollectionAsset + JSON.stringify(postObject.visParams), JSON.stringify(data));
+                                    } else if (postObject.index && postObject.dateFrom + postObject.dateTo) {
+                                        localStorage.setItem(postObject.index + postObject.dateFrom + postObject.dateTo, JSON.stringify(data));
+                                    } else {
+                                        localStorage.setItem(JSON.stringify(postObject), JSON.stringify(data));
+                                    }
+                                    this.addDualLayer(data.url, data.token, "widgetmap_" + widget.id);
+                                }
+                            });
+                    } else if (dualImageObject) {
+                        let workingObject;
+                        try {
+                            workingObject = JSON.parse(dualImageObject);
+                        } catch (e) {
+                            workingObject = dualImageObject;
+                        }
+                        if (workingObject != null) {
+                            fetch(workingObject.url, {
+                                method: "POST",
+                                headers: {
+                                    "Accept": "application/json",
+                                    "Content-Type": "application/json",
+                                },
+                                body: JSON.stringify(workingObject),
+                            })
+                                .then(res => res.json())
+                                .then(data => {
+                                    if (data.hasOwnProperty("url")) {
+                                        data.lastGatewayUpdate = new Date();
+                                        if (dualImageObject.ImageAsset && JSON.stringify(dualImageObject.visParams)) {
+                                            localStorage.setItem(dualImageObject.ImageAsset + JSON.stringify(dualImageObject.visParams), JSON.stringify(data));
+                                        } else if (dualImageObject.ImageCollectionAsset && JSON.stringify(dualImageObject.visParams)) {
+                                            localStorage.setItem(dualImageObject.ImageCollectionAsset + JSON.stringify(dualImageObject.visParams), JSON.stringify(data));
+                                        } else if (dualImageObject.index && dualImageObject.dateFrom + dualImageObject.dateTo) {
+                                            localStorage.setItem(dualImageObject.index + dualImageObject.dateFrom + dualImageObject.dateTo, JSON.stringify(data));
+                                        } else {
+                                            localStorage.setItem(JSON.stringify(dualImageObject), JSON.stringify(data));
+                                        }
+                                        this.addDualLayer(data.url, data.token, "widgetmap_" + widget.id);
+                                    } else {
+                                        console.warn("Wrong Data Returned");
+                                    }
+                                });
+                        }
+                    }
+                }
+            })
+            .catch(error => {
+                console.log(error);
+            });
+    };
 
     getRasterByBasemapConfig = basemap =>
         new TileLayer({
@@ -707,14 +823,12 @@ class MapWidget extends React.Component {
             "LANDSAT8": "Landsat8Filtered",
             "Sentinel2": "FilteredSentinel",
         };
-
         return (widget.filterType && widget.filterType.length > 0) ? fts[widget.filterType]
             : (widget.ImageAsset && widget.ImageAsset.length > 0) ? "image"
                 : (widget.ImageCollectionAsset && widget.ImageCollectionAsset.length > 0) ? "ImageCollectionAsset"
                     : (widget.properties && "ImageCollectionCustom" === widget.properties[0]) ? "meanImageByMosaicCollections"
                         : (collectionName.trim().length > 0) ? "cloudMaskImageByMosaicCollection"
                             : "ImageCollectionbyIndex";
-
     };
 
     getImageParams = widget => {
@@ -748,19 +862,19 @@ class MapWidget extends React.Component {
 
     getRequestedIndex = collectionName =>
         ["ImageCollectionNDVI",
-            "ImageCollectionEVI",
-            "ImageCollectionEVI2",
-            "ImageCollectionNDMI",
-            "ImageCollectionNDWI"].includes(collectionName)
+         "ImageCollectionEVI",
+         "ImageCollectionEVI2",
+         "ImageCollectionNDMI",
+         "ImageCollectionNDWI"].includes(collectionName)
             ? collectionName.replace("ImageCollection", "")
             : "";
 
     convertCollectionName = collectionName =>
         ["ImageCollectionNDVI",
-            "ImageCollectionEVI",
-            "ImageCollectionEVI2",
-            "ImageCollectionNDMI",
-            "ImageCollectionNDWI"].includes(collectionName)
+         "ImageCollectionEVI",
+         "ImageCollectionEVI2",
+         "ImageCollectionNDMI",
+         "ImageCollectionNDWI"].includes(collectionName)
             ? ""
             : collectionName;
 
@@ -816,8 +930,8 @@ class MapWidget extends React.Component {
                     min = "0"
                     max = "1"
                     step = ".01"
-                    onChange = {evt => this.onOpacityChange( evt )}
-                    onInput = {evt => this.onOpacityChange( evt )}
+                    onChange = {evt => this.onOpacityChange(evt)}
+                    onInput = {evt => this.onOpacityChange(evt)}
                     style={oStyle}
                 />
                 <input
@@ -843,8 +957,8 @@ class MapWidget extends React.Component {
                     min = "0"
                     max = "1"
                     step = ".01"
-                    onChange = {evt => this.onOpacityChange( evt )}
-                    onInput = {evt => this.onOpacityChange( evt )}
+                    onChange = {evt => this.onOpacityChange(evt)}
+                    onInput = {evt => this.onOpacityChange(evt)}
                 />);
         }
     };
@@ -960,10 +1074,10 @@ class MapWidget extends React.Component {
                 const bufferPolygon = new Polygon(
                     [
                         [[bufferedExtent[0], bufferedExtent[1]],
-                            [bufferedExtent[0], bufferedExtent[3]],
-                            [bufferedExtent[2], bufferedExtent[3]],
-                            [bufferedExtent[2], bufferedExtent[1]],
-                            [bufferedExtent[0], bufferedExtent[1]]],
+                         [bufferedExtent[0], bufferedExtent[3]],
+                         [bufferedExtent[2], bufferedExtent[3]],
+                         [bufferedExtent[2], bufferedExtent[1]],
+                         [bufferedExtent[0], bufferedExtent[1]]],
                     ]
                 );
                 const bufferedFeature = new Feature(bufferPolygon);
@@ -1032,11 +1146,33 @@ class MapWidget extends React.Component {
         }
     };
 
+    toggleStretch = evt => {
+        try {
+            evt.target.checked === true
+                ? this.setState({ stretch: 543 })
+                : this.setState({ stretch: 321 });
+        } catch (e) {
+            console.log(e.message);
+        }
+    };
+
+    getStretchToggle = () => this.props.isDegradation === true
+        ? <div className="col-12">
+            <span className="ctrlText font-weight-bold">Stretch: </span>
+            <span className="ctrlText">321 </span>
+            <label className="switch">
+                <input type="checkbox" onChange={evt => this.toggleStretch(evt)} />
+                <span className="switchslider round"></span>
+            </label>
+            <span className="ctrlText"> 543</span>
+        </div>
+        : "";
+
     render() {
         return <React.Fragment>
-            <div id={"widgetmap_" + this.props.widget.id} className="minmapwidget" style={{ width:"100%", minHeight:"200px" }}>
-            </div>
+            <div id={"widgetmap_" + this.props.widget.id} className="minmapwidget" style={{ width:"100%", minHeight:"200px" }}/>
             {this.getSliderControl()}
+            {this.getStretchToggle()}
         </React.Fragment>;
     }
 }
@@ -1046,16 +1182,7 @@ class GraphWidget extends React.Component {
         super(props);
         this.state = {
             graphRef: null,
-            isFull:this.props.widget.isFull,
-        };
-        Date.prototype.yyyymmdd = function() {
-            const mm = this.getMonth() + 1; // getMonth() is zero-based
-            const dd = this.getDate();
-
-            return [this.getFullYear(),
-                (mm > 9 ? "" : "0") + mm,
-                (dd > 9 ? "" : "0") + dd,
-            ].join("-");
+            loading: true,
         };
     }
 
@@ -1063,14 +1190,14 @@ class GraphWidget extends React.Component {
         const bcenter = this.props.getParameterByName("bcenter");
         const centerPoint = JSON.parse(bcenter).coordinates;
         const widget = this.props.widget;
+        const widgetType = widget.type || "";
         const collectionName = widget.properties[1];
         const indexName = widget.properties[4];
         const date = new Date();
-        const path = collectionName.trim() === "timeSeriesAssetForPoint"
-            ? "timeSeriesAssetForPoint"
-            : collectionName.trim().length > 0
-                ? "timeSeriesIndex"
-                : "timeSeriesIndex2";
+        const path = widgetType === "DegradationTool" ? "getImagePlotDegradition"
+            : collectionName.trim() === "timeSeriesAssetForPoint" ? "timeSeriesAssetForPoint"
+            : collectionName.trim().length > 0 ? "timeSeriesIndex"
+            : "timeSeriesIndex2";
         fetch(this.props.documentRoot + "/geo-dash/gateway-request", {
             method: "POST",
             headers: {
@@ -1082,11 +1209,14 @@ class GraphWidget extends React.Component {
                 geometry: JSON.parse(this.props.projPairAOI),
                 indexName: widget.graphBand != null ? widget.graphBand : indexName,
                 dateFromTimeSeries: widget.properties[2].trim().length === 10 ? widget.properties[2].trim() : "2000-01-01",
-                dateToTimeSeries: widget.properties[3].trim().length === 10 ? widget.properties[3].trim() : date.yyyymmdd(),
+                dateToTimeSeries: widget.properties[3].trim().length === 10 ? widget.properties[3].trim() : formatDateISO(date),
                 reducer: widget.graphReducer != null ? widget.graphReducer.toLowerCase() : "",
                 scale: 200,
                 path: path,
                 point: centerPoint,
+                start: widget.startDate || "",
+                end: widget.endDate || "",
+                band: widget.graphBand || "",
             }),
         })
             .then(res => res.json())
@@ -1113,7 +1243,7 @@ class GraphWidget extends React.Component {
                         } else {
                             const theKeys = Object.keys(res.timeseries[0][1]);
                             const compiledData = [];
-                            res.timeseries.forEach( d => {
+                            res.timeseries.forEach(d => {
                                 for (let i = 0; i < theKeys.length; i++) {
                                     const tempData = [];
                                     const anObject = {};
@@ -1126,18 +1256,36 @@ class GraphWidget extends React.Component {
                                     compiledData[i].push(tempData);
                                 }
                             });
-                            compiledData.forEach( (d, index) => {
+                            compiledData.forEach((d, index) => {
                                 const cdata = this.convertData(d);
                                 pData.push({
-                                    type: "area",
+                                    type: widgetType === "DegradationTool" ? "scatter" : "area",
                                     name: theKeys[index],
                                     data: this.sortMultiData(cdata),
                                     valueDecimals: 20,
-                                    connectNulls: true,
+                                    connectNulls:  widgetType !== "DegradationTool",
+                                    color: "#31bab0",
+                                    allowPointSelect: true,
+                                    point: {
+                                        events: {
+                                            select: e => {
+                                                this.props.handleSelectDate(formatDateISO(new Date(e.target.x)));
+                                            },
+                                        },
+                                    },
+                                    tooltip: {
+                                        pointFormat: "<span style=\"color:{series.color}\">{point.x:%Y-%m-%d}</span>: <b>{point.y:.6f}</b><br/>",
+                                        valueDecimals: 20,
+                                        split: false,
+                                        xDateFormat: "%Y-%m-%d",
+                                    },
                                 });
                             });
                         }
-                        this.setState({ graphRef: this.createChart(widget.id, indexName, pData, indexName) });
+                        this.setState({
+                            graphRef: this.createChart(widget.id, indexName, pData, indexName),
+                            loading: false,
+                        });
                     } else {
                         console.warn("Wrong Data Returned");
                     }
@@ -1224,6 +1372,11 @@ class GraphWidget extends React.Component {
                     },
                     threshold: null,
                 },
+                scatter: {
+                    marker: {
+                        radius: 2,
+                    },
+                },
             },
             tooltip: {
                 pointFormat: "<span style=\"color:{series.color}\">{series.name}</span>: <b>{point.y:.6f}</b><br/>",
@@ -1234,9 +1387,16 @@ class GraphWidget extends React.Component {
             series: series,
         }, () => {
             document.getElementById("widgettitle_" + wIndex).innerHTML = wText;
-            //document.getElementsByClassName("highcharts-yaxis")[0].firstChild.innerHTML = wText;
         });
     };
+
+    getLoading = () => this.state.loading === true
+        ? <img
+            src={"img/ceo-loading.gif"}
+            alt={"Loading"}
+            style={{ position: "absolute", bottom: "50%", left: "50%" }}
+        />
+        : "";
 
     render() {
         const widget = this.props.widget;
@@ -1244,6 +1404,7 @@ class GraphWidget extends React.Component {
         return <div id={"widgetgraph_" + widget.id} className="minmapwidget">
             <div id={"graphcontainer_" + widget.id} className="minmapwidget graphwidget normal">
             </div>
+            {this.getLoading()}
             <h3 id={"widgettitle_" + widget.id} />
         </div>;
     }
@@ -1272,7 +1433,17 @@ class StatsWidget extends React.Component {
                 if (data.errMsg) {
                     console.warn(data.errMsg);
                 } else {
-                    this.setState({ totalPop: this.numberWithCommas(data.pop), area: this.calculateArea(JSON.parse(projPairAOI)) + " ha", elevation: this.numberWithCommas(data.minElev) + " - " + this.numberWithCommas(data.maxElev) + " m" });
+                    let area = "N/A";
+                    try {
+                        area = sphereGetArea(JSON.parse(projPairAOI));
+                    } catch (e) {
+                        area = "N/A";
+                    }
+                    this.setState({
+                        totalPop: this.numberWithCommas(data.pop),
+                        area: area + " ha",
+                        elevation: this.numberWithCommas(data.minElev) + " - " + this.numberWithCommas(data.maxElev) + " m",
+                    });
                 }
             })
             .catch(error => console.log(error));
@@ -1292,7 +1463,13 @@ class StatsWidget extends React.Component {
         }
     };
 
-    calculateArea = poly => this.numberWithCommas(Math.round(Math.abs(sphereGetArea(poly))) / 10000);
+    calculateArea = poly => {
+        try {
+            return this.numberWithCommas(Math.round(Math.abs(sphereGetArea(poly))) / 10000);
+        } catch (e) {
+            return "N/A";
+        }
+    };
 
     render() {
         const widget = this.props.widget;
@@ -1305,13 +1482,14 @@ class StatsWidget extends React.Component {
                     <div className="input-group">
                         <div className="input-group-addon">
                             <img
-                                src="img/icon-population.png"
+                                src={"img/icon-population.png"}
                                 style={{
                                     width: "50px",
                                     height: "50px",
                                     borderRadius: "25px",
                                     backgroundColor: "#31bab0",
                                 }}
+                                alt="Population"
                             />
                         </div>
                         <label htmlFor={"totalPop_" + widget.id} style={{ color: "#787878", padding: "10px 20px" }}>Total population</label>
@@ -1330,13 +1508,14 @@ class StatsWidget extends React.Component {
                     <div className="input-group">
                         <div className="input-group-addon">
                             <img
-                                src="img/icon-area.png"
+                                src={"img/icon-area.png"}
                                 style={{
                                     width: "50px",
                                     height: "50px",
                                     borderRadius: "25px",
                                     backgroundColor: "#31bab0",
                                 }}
+                                alt="Area"
                             />
                         </div>
                         <label htmlFor={"totalArea_" + widget.id} style={{ color: "#787878", padding: "10px 20px" }}>Area</label>
@@ -1355,13 +1534,14 @@ class StatsWidget extends React.Component {
                     <div className="input-group">
                         <div className="input-group-addon">
                             <img
-                                src="img/icon-elevation.png"
+                                src={"img/icon-elevation.png"}
                                 style={{
                                     width: "50px",
                                     height: "50px",
                                     borderRadius: "25px",
                                     backgroundColor: "#31bab0",
                                 }}
+                                alt="Elevation"
                             />
                         </div>
                         <label htmlFor={"elevationRange_" + widget.id} style={{ color: "#787878", padding: "10px 20px" }}>Elevation</label>
