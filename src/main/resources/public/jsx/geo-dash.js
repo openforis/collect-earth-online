@@ -394,8 +394,8 @@ class DegradationWidget extends React.Component {
 
     render() {
         return <React.Fragment>
-            <div id={"degradation_" + this.props.widget.id} style={{ width:"100%", minHeight:"200px" }}>
-                <div style={{ display:"table", position: "absolute", width: "100%", height: "calc(100% - 45px)" }}>
+            <div id={"degradation_" + this.props.widget.id} style={{ width: "100%", minHeight: "200px" }}>
+                <div style={{ display: "table", position: "absolute", width: "100%", height: "calc(100% - 45px)" }}>
                     <div style={{ display: "table-row", height: "65%" }}>
                         <div style={{ display: "table-cell", position: "relative" }}>
                             <div className="front">
@@ -1214,9 +1214,9 @@ class GraphWidget extends React.Component {
                 scale: 200,
                 path: path,
                 point: centerPoint,
-                start: widget.startDate ? widget.startDate : "",
-                end: widget.endDate ? widget.endDate : "",
-                band: widget.graphBand ? widget.graphBand : "",
+                start: widget.startDate || "",
+                end: widget.endDate || "",
+                band: widget.graphBand || "",
             }),
         })
             .then(res => res.json())
