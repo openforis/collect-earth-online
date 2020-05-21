@@ -742,8 +742,9 @@ public class JsonProjects implements Projects {
                         project.addProperty("description",    getOrEmptyString(jsonInputs, "description").getAsString());
                         project.addProperty("privacyLevel",   getOrEmptyString(jsonInputs, "privacyLevel").getAsString());
                         project.addProperty("baseMapSource",  getOrEmptyString(jsonInputs, "baseMapSource").getAsString());
-                        final var projectOptions = getOrEmptyString(jsonInputs, "projectOptions").getAsString();
-                        project.addProperty("projectOptions", projectOptions == "" ? "{\"showGEEScript\":false}" : projectOptions);
+                        project.add("projectOptions",         jsonInputs.has("projectOptions")
+                                                                ? jsonInputs.get("projectOptions").getAsJsonObject()
+                                                                : parseJson("{\"showGEEScript\":false}").getAsJsonObject());
                         return project;
                     } else {
                         return project;
@@ -1316,8 +1317,9 @@ public class JsonProjects implements Projects {
             newProject.add("surveyRules", jsonInputs.get("surveyRules").getAsJsonArray());
             newProject.addProperty("useTemplatePlots", jsonInputs.get("useTemplatePlots").getAsBoolean());
             newProject.addProperty("useTemplateWidgets", jsonInputs.get("useTemplateWidgets").getAsBoolean());
-            final var projectOptions = jsonInputs.get("projectOptions").getAsString();
-            newProject.addProperty("projectOptions", projectOptions == "" ? "{\"showGEEScript\":false}" : projectOptions);
+            newProject.add("projectOptions", jsonInputs.has("projectOptions")
+                                                ? jsonInputs.get("projectOptions").getAsJsonObject()
+                                                : parseJson("{\"showGEEScript\":false}").getAsJsonObject());
 
             // Add constant values
             newProject.addProperty("availability", "unpublished");
