@@ -7,7 +7,10 @@
         <h1>Collect Earth Online Manuals</h1>
         <div class="btn-group-vertical btn-block mb-4">
             <a class="btn btn-outline-lightgreen btn-block" href="${root}/downloads/CEO_Manual_DataCollector_20200520.pdf" role="button">
-                &#x1F4BE; Data Collection Manual
+                &#x1F4BE; Data Collection Manual (English)
+            </a>
+            <a class="btn btn-outline-lightgreen btn-block" href="${root}/downloads/CEO_Manual_DataCollector_20200520_español.pdf" role="button">
+                &#x1F4BE; Data Collection Manual (Español)
             </a>
             <a class="btn btn-outline-lightgreen btn-block" href="${root}/downloads/CEO_Manual_InstitutionProject_20200520.pdf" role="button">
                 &#x1F4BE; Institution & Project Creation Manual (For Admin)
