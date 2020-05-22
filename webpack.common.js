@@ -21,6 +21,7 @@ module.exports = {
         geo_dash              : path.resolve(__dirname, "src/main/resources/public/jsx/geo-dash.js"),
         widget_layout_editor  : path.resolve(__dirname, "src/main/resources/public/jsx/widget-layout-editor.js"),
         geo_dash_help         : path.resolve(__dirname, "src/main/resources/public/jsx/geo-dash-help.js"),
+        mailing_list          : path.resolve(__dirname, "src/main/resources/public/jsx/mailing-list.js"),
     },
     output: {
         path: path.resolve(__dirname, outdir + "/public/js"),

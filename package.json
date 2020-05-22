@@ -52,6 +52,8 @@
     },
     "private": true,
     "dependencies": {
+        "@ckeditor/ckeditor5-build-classic": "^19.0.0",
+        "@ckeditor/ckeditor5-react": "^2.1.0",
         "lodash": "^4.17.15",
         "ogr2ogr": "^1.4.0",
         "ol": "^5.3.3",

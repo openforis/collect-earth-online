@@ -408,8 +408,9 @@ public class PostgresUsers implements Users {
     }
 
     public Request sendMailingList(Request req, Response res) {
-        var inputSubject = req.queryParams("subject");
-        var inputBody = req.queryParams("body");
+        var jsonInputs = parseJson(req.body()).getAsJsonObject();
+        var inputSubject = jsonInputs.get("subject").getAsString();
+        var inputBody = jsonInputs.get("body").getAsString();
 
         if (inputSubject == null || inputSubject.isEmpty() || inputBody == null || inputBody.isEmpty()) {
             req.session().attribute("flash_message", "Subject and Body are mandatory fields.");
