@@ -12,32 +12,6 @@ WHERE projects.institution_rid = imagery.institution_rid AND projects.base_map_s
 ALTER TABLE projects
 DROP COLUMN base_map_source CASCADE;
 
-CREATE VIEW project_boundary AS
-SELECT
-    project_uid,
-    institution_rid,
-    imagery_rid,
-    availability,
-    name,
-    description,
-    privacy_level,
-    ST_AsGeoJSON(boundary),
-    plot_distribution,
-    num_plots,
-    plot_spacing,
-    plot_shape,
-    plot_size,
-    sample_distribution,
-    samples_per_plot,
-    sample_resolution,
-    survey_questions,
-    survey_rules,
-    classification_times,
-    valid_boundary(boundary),
-    token_key,
-    options
-FROM projects;
-
 DROP FUNCTION create_project(
     _institution_rid         integer,
     _availability            text,
@@ -119,7 +93,8 @@ DROP FUNCTION update_project(
     _name                    text,
     _description             text,
     _privacy_level           text,
-    _base_map_source         text
+    _base_map_source         text,
+    _options                 jsonb
 );
 
 -- Update select set of project fields
@@ -128,17 +103,45 @@ CREATE FUNCTION update_project(
     _name                    text,
     _description             text,
     _privacy_level           text,
-    _imagery_rid             integer
+    _imagery_rid             integer,
+    _options                 jsonb
  ) RETURNS void AS $$
 
     UPDATE projects
     SET name = _name,
         description = _description,
         privacy_level = _privacy_level,
-        imagery_rid = _imagery_rid
+        imagery_rid = _imagery_rid,
+        options = _options
     WHERE project_uid = _project_uid
 
 $$ LANGUAGE SQL;
+
+CREATE VIEW project_boundary AS
+SELECT
+    project_uid,
+    institution_rid,
+    imagery_rid,
+    availability,
+    name,
+    description,
+    privacy_level,
+    ST_AsGeoJSON(boundary),
+    plot_distribution,
+    num_plots,
+    plot_spacing,
+    plot_shape,
+    plot_size,
+    sample_distribution,
+    samples_per_plot,
+    sample_resolution,
+    survey_questions,
+    survey_rules,
+    classification_times,
+    valid_boundary(boundary),
+    token_key,
+    options
+FROM projects;
 
 DROP TYPE project_return CASCADE;
 
