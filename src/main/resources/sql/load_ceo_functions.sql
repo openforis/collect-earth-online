@@ -757,14 +757,16 @@ CREATE OR REPLACE FUNCTION update_project(
     _name                    text,
     _description             text,
     _privacy_level           text,
-    _imagery_rid             integer
+    _imagery_rid             integer,
+    _options                 jsonb
  ) RETURNS void AS $$
 
     UPDATE projects
     SET name = _name,
         description = _description,
         privacy_level = _privacy_level,
-        imagery_rid = _imagery_rid
+        imagery_rid = _imagery_rid,
+        options = _options
     WHERE project_uid = _project_uid
 
 $$ LANGUAGE SQL;

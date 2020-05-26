@@ -2,7 +2,7 @@ import React, { Fragment } from "react";
 import ReactDOM from "react-dom";
 
 import { FormLayout, SectionBlock, StatsCell, StatsRow } from "./components/FormComponents";
-import { ProjectInfo, ProjectAOI, PlotReview, SampleReview } from "./components/ProjectComponents";
+import { ProjectInfo, ProjectAOI, PlotReview, SampleReview, ProjectOptions } from "./components/ProjectComponents";
 import SurveyCardList from "./components/SurveyCardList";
 import { convertSampleValuesToSurveyQuestions } from "./utils/surveyUtils";
 import { mercator, ceoMapStyles } from "../js/mercator-openlayers.js";
@@ -72,6 +72,7 @@ class Project extends React.Component {
                           description: this.state.projectDetails.description,
                           name: this.state.projectDetails.name,
                           privacyLevel: this.state.projectDetails.privacyLevel,
+                          projectOptions: this.state.projectDetails.projectOptions,
                       }),
                   })
                 .then(response => {
@@ -256,6 +257,17 @@ class Project extends React.Component {
     setProjectDetail = (key, newValue) =>
         this.setState({ projectDetails: { ...this.state.projectDetails, [key]: newValue }});
 
+    onShowGEEScriptClick = () =>
+        this.setState({
+            projectDetails: {
+                ...this.state.projectDetails,
+                projectOptions: {
+                    ...this.state.projectDetails.projectOptions,
+                    showGEEScript: !this.state.projectDetails.projectOptions.showGEEScript,
+                },
+            },
+        });
+
     projectNotFound = (projectId) => (
         <SectionBlock title="Project Information">
             <h3>Project {projectId} not found.</h3>
@@ -273,6 +285,7 @@ class Project extends React.Component {
                             imageryList={this.state.imageryList}
                             projectDetails={this.state.projectDetails}
                             setProjectDetail={this.setProjectDetail}
+                            onShowGEEScriptClick={this.onShowGEEScriptClick}
                         />
                         <ProjectManagement
                             changeAvailability={this.changeAvailability}
@@ -305,7 +318,7 @@ class ProjectStatsGroup extends React.Component {
         };
     }
 
-    updateShown =() => this.setState({ showStats: !this.state.showStats });
+    updateShown = () => this.setState({ showStats: !this.state.showStats });
 
     render() {
         return (
@@ -333,12 +346,6 @@ class ProjectStats extends React.Component {
 
     componentDidMount() {
         this.getProjectStats();
-    }
-
-    asPercentage(part, total) {
-        return (part && total)
-            ? (100.0 * part / total).toFixed(2)
-            : "0.00";
     }
 
     getProjectStats = () => {
@@ -450,7 +457,7 @@ class ProjectStats extends React.Component {
     }
 }
 
-function ProjectDesignReview({ projectDetails, coordinates, imageryList, setProjectDetail }) {
+function ProjectDesignReview({ projectDetails, coordinates, imageryList, setProjectDetail, onShowGEEScriptClick }) {
     return (
         <div id="project-design-form" className="px-2 pb-2">
             <ProjectInfo
@@ -464,6 +471,10 @@ function ProjectDesignReview({ projectDetails, coordinates, imageryList, setProj
                 imageryId={projectDetails.imageryId}
                 imageryList={imageryList}
                 setProjectDetail={setProjectDetail}
+            />
+            <ProjectOptions
+                showGEEScript={projectDetails.projectOptions.showGEEScript}
+                onShowGEEScriptClick={onShowGEEScriptClick}
             />
             <PlotReview projectDetails={projectDetails}/>
             <SampleReview projectDetails={projectDetails}/>

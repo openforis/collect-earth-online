@@ -501,7 +501,7 @@ public class PostgresProjects implements Projects {
 
     public String updateProject(Request req, Response res) {
         try (var conn = connect();
-             var pstmt = conn.prepareStatement("SELECT * FROM update_project(?,?,?,?,?)")) {
+             var pstmt = conn.prepareStatement("SELECT * FROM update_project(?,?,?,?,?,?::JSONB)")) {
 
             final var jsonInputs = parseJson(req.body()).getAsJsonObject();
             pstmt.setInt(1,    Integer.parseInt(getOrEmptyString(jsonInputs, "projectId").getAsString()));
@@ -509,6 +509,9 @@ public class PostgresProjects implements Projects {
             pstmt.setString(3, getOrEmptyString(jsonInputs, "description").getAsString());
             pstmt.setString(4, getOrEmptyString(jsonInputs, "privacyLevel").getAsString());
             pstmt.setInt(5,    getOrZero(jsonInputs, "imageryId").getAsInt());
+            pstmt.setString(6, jsonInputs.has("projectOptions")
+                                    ? jsonInputs.get("projectOptions").getAsJsonObject().toString()
+                                    : "{\"showGEEScript\":false}");
             pstmt.execute();
             return "";
         } catch (SQLException e) {
@@ -903,23 +906,25 @@ public class PostgresProjects implements Projects {
             newProject.add("surveyRules",                jsonInputs.get("surveyRules").getAsJsonArray());
             newProject.addProperty("useTemplatePlots",   getOrFalse(jsonInputs, "useTemplatePlots").getAsBoolean());
             newProject.addProperty("useTemplateWidgets", getOrFalse(jsonInputs, "useTemplateWidgets").getAsBoolean());
-            newProject.add("projectOptions",             jsonInputs.get("projectOptions").getAsJsonObject());
+            newProject.add("projectOptions",             jsonInputs.has("projectOptions")
+                                                            ? jsonInputs.get("projectOptions").getAsJsonObject()
+                                                            : parseJson("{\"showGEEScript\":false}").getAsJsonObject());
 
             // file part properties
-            newProject.addProperty("plotFileName",     getOrEmptyString(jsonInputs, "plotFileName").getAsString());
-            newProject.addProperty("plotFileBase64",   getOrEmptyString(jsonInputs, "plotFileBase64").getAsString());
-            newProject.addProperty("sampleFileName",   getOrEmptyString(jsonInputs, "sampleFileName").getAsString());
-            newProject.addProperty("sampleFileBase64", getOrEmptyString(jsonInputs, "sampleFileBase64").getAsString());
+            newProject.addProperty("plotFileName",       getOrEmptyString(jsonInputs, "plotFileName").getAsString());
+            newProject.addProperty("plotFileBase64",     getOrEmptyString(jsonInputs, "plotFileBase64").getAsString());
+            newProject.addProperty("sampleFileName",     getOrEmptyString(jsonInputs, "sampleFileName").getAsString());
+            newProject.addProperty("sampleFileBase64",   getOrEmptyString(jsonInputs, "sampleFileBase64").getAsString());
 
             // Add constant values
             newProject.addProperty("availability", "unpublished");
-            newProject.addProperty("createdDate", LocalDate.now().toString());
+            newProject.addProperty("createdDate",         LocalDate.now().toString());
 
-            final var lonMin = getOrZero(newProject, "lonMin").getAsDouble();
-            final var latMin = getOrZero(newProject, "latMin").getAsDouble();
-            final var lonMax = getOrZero(newProject, "lonMax").getAsDouble();
-            final var latMax = getOrZero(newProject, "latMax").getAsDouble();
-            newProject.addProperty("boundary", makeGeoJsonPolygon(lonMin, latMin, lonMax, latMax).toString());
+            final var lonMin = getOrZero(newProject,      "lonMin").getAsDouble();
+            final var latMin = getOrZero(newProject,      "latMin").getAsDouble();
+            final var lonMax = getOrZero(newProject,      "lonMax").getAsDouble();
+            final var latMax = getOrZero(newProject,      "latMax").getAsDouble();
+            newProject.addProperty("boundary",            makeGeoJsonPolygon(lonMin, latMin, lonMax, latMax).toString());
 
             final var tokenKey = UUID.randomUUID().toString();
 
@@ -948,7 +953,6 @@ public class PostgresProjects implements Projects {
                 pstmt.setString(19, null);  // classification times
                 pstmt.setString(20, tokenKey);  // token key
                 pstmt.setString(21, newProject.get("projectOptions").getAsJsonObject().toString());
-
                 try (var rs = pstmt.executeQuery()) {
                     if (rs.next()) {
                         newProjectId = rs.getInt("create_project");
