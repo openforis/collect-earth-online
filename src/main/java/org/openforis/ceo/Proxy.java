@@ -59,10 +59,12 @@ public class Proxy {
                                             if (geoserverLayers.contains(",")) {
                                                 return "STYLES=" +
                                                     Arrays.stream(geoserverLayers.split(","))
-                                                    .map(layer -> "default")
+                                                    .map(layer -> sourceType == "SecureWatch" ? "default" : "")
                                                     .collect(Collectors.joining(","));
-                                            } else {
+                                            } else if (sourceType == "SecureWatch") {
                                                 return "STYLES=default";
+                                            } else {
+                                                return "STYLES=";
                                             }
                                         } else {
                                             return q;
