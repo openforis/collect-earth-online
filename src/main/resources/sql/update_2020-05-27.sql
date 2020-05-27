@@ -53,7 +53,7 @@ CREATE FUNCTION dump_project_plot_data(_project_uid integer)
             pl_ext_id,
             project_id,
             MAX(imagerySecureWatchDate) as common_securewatch_date,
-			COUNT(imagerySecureWatchDate) as total_securewatch_date
+            COUNT(imagerySecureWatchDate) as total_securewatch_date
         FROM all_rows
         GROUP BY plot_id, center, pl_ext_id, project_id
     )
@@ -70,7 +70,7 @@ CREATE FUNCTION dump_project_plot_data(_project_uid integer)
         analysis_duration,
         samples,
         common_securewatch_date,
-		total_securewatch_date::integer,
+        total_securewatch_date::integer,
         pfd.rem_data
     FROM projects p
     INNER JOIN plots_agg pa
