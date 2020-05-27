@@ -563,7 +563,7 @@ class Collection extends React.Component {
         });
         this.setState({
             imagerySecureWatchDate: eventTarget.options[eventTarget.selectedIndex].getAttribute("date"),
-            imagerySecureWatchCloudCover: parseFloat(eventTarget.options[eventTarget.options.selectedIndex].getAttribute("cloud")) * 100,
+            imagerySecureWatchCloudCover: eventTarget.options[eventTarget.options.selectedIndex].getAttribute("cloud"),
             imageryAttribution: this.state.currentImagery.attribution + " | " + eventTarget.options[eventTarget.options.selectedIndex].text,
         });
     }
@@ -888,7 +888,7 @@ class Collection extends React.Component {
             imageryDatePlanetDaily: mercator.getTopVisiblePlanetLayerDate(this.state.mapConfig, this.state.currentImagery.title),
         } : (this.state.currentImagery.sourceConfig.type === "SecureWatch") ? {
             imagerySecureWatchDate: this.state.imagerySecureWatchDate,
-            imagerySecureWatchCloudCover: this.state.imagerySecureWatchCloudCover,
+            imagerySecureWatchCloudCover: this.state.imagerySecureWatchCloudCover ? (parseFloat(this.state.imagerySecureWatchCloudCover) * 100).toFixed(2) : "",
         } : (this.state.currentImagery.sourceConfig.type === "Sentinel1") ? {
             sentinel1MosaicYearMonth: this.state.imageryYearSentinel1 + " - " +
                 (this.state.imageryYearSentinel1 > 9 ? "" : "0") + this.state.imageryYearSentinel1,
