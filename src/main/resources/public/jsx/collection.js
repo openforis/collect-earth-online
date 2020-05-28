@@ -52,6 +52,7 @@ class Collection extends React.Component {
     }
 
     componentDidMount() {
+        window.name = "_ceocollection";
         this.getProjectData();
     }
 
