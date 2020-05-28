@@ -1,7 +1,9 @@
 package org.openforis.ceo.utils;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Properties;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import javax.mail.Address;
@@ -106,6 +108,18 @@ public class Mail {
         } catch (MessagingException e) {
             // e.printStackTrace();
             System.out.println("Error sending mail: " + e.getMessage());
+        }
+    }
+
+    public static void sendMailingList(String from, List<String> bcc, String smtpServer, String smtpPort, String smtpPassword, String subject, String body, String contentType, int chunkSize) {
+        final AtomicInteger counter = new AtomicInteger();
+        if (bcc.size() > 0) {
+            final Collection<List<String>> chunkedBcc = bcc.stream()
+                    .collect(Collectors.groupingBy(it -> counter.getAndIncrement() / chunkSize))
+                    .values();
+            chunkedBcc.forEach(chunkBcc -> {
+                sendMail(from, null, null, chunkBcc, smtpServer, smtpPort, smtpPassword, subject, body, contentType);
+            });
         }
     }
 

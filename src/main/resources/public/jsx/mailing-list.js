@@ -8,14 +8,13 @@ class MailingList extends React.Component {
         super(props);
         this.state = {
             subject: "",
-            body: "",
+            body: `<br /><br />--<p><a href="${window.location.origin}/unsubscribe">Unsubscribe</a></p>`,
         };
     }
 
     submit = () => {
         if (confirm("Are you sure you want to send to this mailing list?")) {
             const { subject, body } = this.state;
-            console.log(this.props.documentRoot + "/mailing-list");
             fetch(this.props.documentRoot + "/mailing-list", {
                 method: "POST",
                 body: JSON.stringify({
@@ -34,7 +33,7 @@ class MailingList extends React.Component {
 
     onChangeBody = (event, editor) => {
         this.setState({
-            body:  editor.getData(),
+            body: editor.getData(),
         });
     }
 
@@ -57,6 +56,7 @@ class MailingList extends React.Component {
                                         <label for="body">Body</label>
                                         <CKEditor
                                             editor={ClassicEditor}
+                                            data={this.state.body}
                                             onChange={this.onChangeBody}
                                         />
                                     </div>
@@ -71,9 +71,6 @@ class MailingList extends React.Component {
     }
 
 }
-
-
-
 
 export function renderMailingListPage(args) {
     ReactDOM.render(

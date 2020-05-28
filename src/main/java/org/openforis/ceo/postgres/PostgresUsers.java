@@ -5,6 +5,7 @@ import static org.openforis.ceo.postgres.PostgresInstitutions.getInstitutionById
 import static org.openforis.ceo.utils.JsonUtils.parseJson;
 import static org.openforis.ceo.utils.Mail.isEmail;
 import static org.openforis.ceo.utils.Mail.sendMail;
+import static org.openforis.ceo.utils.Mail.sendMailingList;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
@@ -423,7 +424,7 @@ public class PostgresUsers implements Users {
                     while (rs.next()) {
                        emails.add(rs.getString("email"));
                     }
-                    sendMail(SMTP_USER, null, null, emails, SMTP_SERVER, SMTP_PORT, SMTP_PASSWORD, inputSubject, inputBody, Mail.CONTENT_TYPE_HTML);
+                    Mail.sendMailingList(SMTP_USER, emails, SMTP_SERVER, SMTP_PORT, SMTP_PASSWORD, inputSubject, inputBody, Mail.CONTENT_TYPE_HTML, 499);
                     req.session().attribute("flash_message", "Your message has been sent to the mailing list.");
                 }
             } catch (SQLException e) {
