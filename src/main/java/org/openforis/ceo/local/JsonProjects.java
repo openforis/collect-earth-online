@@ -537,21 +537,20 @@ public class JsonProjects implements Projects {
                         );
                         plotSummary.addProperty("total_securewatch_dates", samplesUsingSecureWatch.size());
 
-                        var dates = new ArrayList<String>();
-                        samplesUsingSecureWatch.forEach((sample) -> {
-                            final var attributeData = sample.getAsJsonObject().get("imageryAttributes").getAsJsonObject();
-                            var date = attributeData.get("imagerySecureWatchDate").getAsString().substring(0, 10);
-                            dates.add(date);
-                        });
-
-                        var commonSecurewatchDate = dates.stream()
-                                .collect(Collectors.groupingBy(w -> w, Collectors.counting()))
-                                .entrySet()
-                                .stream()
-                                .max(Comparator.comparing(Map.Entry::getValue))
-                                .get()
-                                .getKey();
-                        plotSummary.addProperty("common_securewatch_date", commonSecurewatchDate);
+                        var commonSecureWatchDate = toStream(samplesUsingSecureWatch)
+                            .map(sample ->
+                                 sample.get("imageryAttributes")
+                                 .getAsJsonObject()
+                                 .get("imagerySecureWatchDate")
+                                 .getAsString()
+                                 .substring(0, 10))
+                            .collect(Collectors.groupingBy(w -> w, Collectors.counting()))
+                            .entrySet()
+                            .stream()
+                            .max(Comparator.comparing(Map.Entry::getValue))
+                            .get()
+                            .getKey();
+                        plotSummary.addProperty("common_securewatch_date", commonSecureWatchDate);
 
                         if (plotHeaders.size() > 0 && plotData.containsKey(plot.has("plotId")
                                 ? plot.get("plotId").getAsString()
