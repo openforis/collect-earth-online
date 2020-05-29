@@ -406,6 +406,7 @@ a:hover{
     -webkit-box-shadow: 3px -10px 3px rgba(0,0,0,.35);
     box-shadow: 3px 5px 3px rgba(0,0,0,.35);
     border-radius: 5px;
+    max-height: 40vh;
 }
 /* .ol-popup-content .cContent{ */
 .ol-overlay-container .cContent {

@@ -599,11 +599,11 @@ class ProjectPopup extends React.Component {
 
     render() {
         return (
-            <div id="projectPopUp">
+            <div id="projectPopUp" className="d-flex flex-column" style={{ height: "100%" }}>
                 <div className="cTitle">
                     <h1>{this.props.features.length > 1 ? "Cluster info" : "Project info"}</h1>
                 </div>
-                <div className="cContent" style={{ padding:"10px" }}>
+                <div className="cContent" style={{ padding: "10px", overflow: "auto" }}>
                     <table className="table table-sm">
                         <tbody>
                             {
@@ -627,7 +627,9 @@ class ProjectPopup extends React.Component {
                                         </tr>
                                         <tr className="d-flex">
                                             <td className="small col-6 px-0 my-auto">Description</td>
-                                            <td className="small col-6 pr-0">{feature.get("description")}</td>
+                                            <td className="small col-6 pr-0" style={{ wordBreak: "break-all" }}>
+                                                {feature.get("description")}
+                                            </td>
                                         </tr>
                                         <tr className="d-flex" style={{ borderBottom: "1px solid gray" }}>
                                             <td className="small col-6 px-0 my-auto">Number of plots</td>
