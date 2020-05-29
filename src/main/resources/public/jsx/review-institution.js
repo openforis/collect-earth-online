@@ -524,7 +524,7 @@ const imageryOptions = [
     },
     {
         type: "MapBoxRaster",
-        label: "MapBox Raster",
+        label: "Mapbox Raster",
         params: [
             { key: "layerName", display: "Layer Name" },
             { key: "accessToken", display: "Access Token" },
@@ -533,7 +533,7 @@ const imageryOptions = [
     },
     {
         type: "MapBoxStatic",
-        label: "MapBox Static",
+        label: "Mapbox Static",
         params: [
             { key: "userName", display: "User Name" },
             { key: "mapStyleId", display: "Map Style Id" },
@@ -755,9 +755,9 @@ class NewImagery extends React.Component {
                 newImageryAttribution: "Google Earth Engine | © Google LLC",
                 newImageryParams: { bandCombination: imageryOptions[val]["params"].filter(param => param.key === "bandCombination")[0].options[0].value },
             });
-        } else if (imageryOptions[val].type === "MapBox") {
+        } else if (imageryOptions[val].includes("Mapbox")) {
             this.setState({
-                newImageryAttribution: "MapBox | © MapBox",
+                newImageryAttribution: "Mapbox (OSM and Mapbox links)",
                 newImageryParams: {},
             });
         } else {

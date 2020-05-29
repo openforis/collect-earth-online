@@ -107,9 +107,9 @@ class MapPanel extends React.Component {
         if (this.state.mapConfig == null && this.props.imagery.length > 0 && prevProps.imagery.length === 0) {
             const homePageLayer = this.props.imagery.find(
                 function (imagery) {
-                    return imagery.title === "MapBox Satellite w/ Labels";
+                    return imagery.title === "Mapbox Satellite w/ Labels";
                 }
-            );
+            ) || this.props.imagery[0];
             const mapConfig = mercator.createMap("home-map-pane", [70, 15], 2.1, [homePageLayer], this.props.documentRoot);
             mercator.setVisibleLayer(mapConfig, homePageLayer.title);
             this.setState({ mapConfig: mapConfig });
@@ -192,7 +192,7 @@ class MapPanel extends React.Component {
                         </div>
                     </div>
                     <div className="col-xl-11 mr-0 ml-0 bg-lightgray">
-                        <div id="home-map-pane" style={{ width: "100%", height: "100%", position: "fixed" }}></div>
+                        <div id="home-map-pane" style={{ width: "100%", height: "calc(100vh - 61px)", position: "fixed" }}></div>
                     </div>
                 </div>
                 <ProjectPopup

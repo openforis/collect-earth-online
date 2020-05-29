@@ -342,7 +342,8 @@ class Project extends React.Component {
         fetch(this.props.documentRoot + "/get-all-imagery?institutionId=" + institutionId)
             .then(response => response.ok ? response.json() : Promise.reject(response))
             .then(data => {
-                const sorted = [...data.filter(a => a.title.includes("MapBox")), ...data.filter(a => !a.title.includes("MapBox"))];
+                const sorted = [...data.filter(a => a.title.toLocaleLowerCase().includes("mapbox")),
+                                ...data.filter(a => !a.title.toLocaleLowerCase().includes("mapbox"))];
                 this.setState({
                     imageryList: sorted,
                     projectDetails: {
