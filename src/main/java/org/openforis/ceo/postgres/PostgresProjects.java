@@ -319,7 +319,7 @@ public class PostgresProjects implements Projects {
                                 plotSummary.addProperty("analysis_duration", valueOrBlank(rsDump.getString("analysis_duration")));
                                 plotSummary.addProperty("collection_time", valueOrBlank(rsDump.getString("collection_time")));
                                 plotSummary.addProperty("common_securewatch_date", valueOrBlank(rsDump.getString("common_securewatch_date")));
-                                plotSummary.addProperty("total_securewatch_date", rsDump.getInt("total_securewatch_date"));
+                                plotSummary.addProperty("total_securewatch_dates", rsDump.getInt("total_securewatch_dates"));
                                 plotSummary.add("distribution",
                                         getValueDistribution(samples, getSampleValueTranslations(sampleValueGroups)));
 

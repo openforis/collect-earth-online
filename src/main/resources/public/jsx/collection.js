@@ -1342,7 +1342,6 @@ class Collection extends React.Component {
                         setImageryYearPlanet={this.setImageryYearPlanet}
                         setImageryMonthPlanet={this.setImageryMonthPlanet}
                         setImageryDatePlanetDaily={this.setImageryDatePlanetDaily}
-                        setImageryDateSecureWatch={this.setImageryDateSecureWatch}
                         imagerySecureWatchAvailableDates={this.state.imagerySecureWatchAvailableDates}
                         updateSecureWatchSingleLayer={this.updateSecureWatchSingleLayer}
                         setStackingProfileDG={this.setStackingProfileDG}
