@@ -390,16 +390,6 @@ class DegradationWidget extends React.Component {
         };
     }
 
-    handleStartLoading = () => {
-        this.setState({ graphLoading: true });
-        return true;
-    };
-
-    handleFinishLoading = () => {
-        this.setState({ graphLoading: false });
-        return false;
-    };
-
     handleDegDataType = (dataType) => {
         this.setState({
             degDataType: dataType,
@@ -435,7 +425,6 @@ class DegradationWidget extends React.Component {
                                     selectedDate={this.state.selectedDate}
                                     degDataType={this.state.degDataType}
                                     handleDegDataType={this.handleDegDataType}
-                                    handleStartLoading={this.handleStartLoading}
                                     isDegradation
                                 />
                             </div>
@@ -453,9 +442,6 @@ class DegradationWidget extends React.Component {
                                     handleSelectDate={this.handleSelectDate}
                                     degDataType={this.state.degDataType}
                                     handleDegDataType={this.state.handleDegDataType}
-                                    graphLoading={this.state.graphLoading}
-                                    handleStartLoading={this.handleStartLoading}
-                                    handleFinishLoading={this.handleFinishLoading}
                                     isDegradation
                                 />
                             </div>
@@ -474,11 +460,8 @@ class MapWidget extends React.Component {
             mapRef: null,
             opacity: 90,
             geeTimeOut: null,
-            wasFull: false,
-            selectedDate: "",
             stretch: 321,
             lastStretch: 0,
-            lastDegDataType: "",
         };
     }
 
@@ -677,17 +660,18 @@ class MapWidget extends React.Component {
         window.addEventListener("resize", () => this.handleResize());
     }
 
-    componentDidUpdate() {
-        if (this.props.widget.isFull !== this.state.wasFull) {
+    componentDidUpdate(prevProps, prevState) {
+        if (this.props.widget.isFull !== prevProps.widget.isFull) {
             this.state.mapRef.updateSize();
-            this.setState({ wasFull: this.props.widget.isFull });
         }
+
         if (this.props.mapCenter) {
             this.centerAndZoomMap(this.props.mapCenter, this.props.mapZoom);
         }
-        if (this.props.selectedDate !== this.state.selectedDate
-            || this.state.stretch !== this.state.lastStretch
-            || this.props.degDataType !== this.state.lastDegDataType) {
+
+        if (this.props.selectedDate !== prevProps.selectedDate
+            || this.state.stretch !== prevState.stretch
+            || this.props.degDataType !== prevProps.degDataType) {
             if (this.props.widget.properties[0] === "DegradationTool" && this.props.selectedDate !== "") {
                 const postObject = {};
                 postObject.imageDate = this.props.selectedDate;
@@ -707,11 +691,6 @@ class MapWidget extends React.Component {
                     && this.checkForCache(postObject, this.props.widget, false)) {
                     this.fetchMapInfo(postObject, this.props.documentRoot + "/geo-dash/gateway-request", this.props.widget, null);
                 }
-                this.setState({
-                    selectedDate: this.props.selectedDate,
-                    lastStretch: this.state.stretch,
-                    lastDegDataType: this.props.degDataType,
-                });
             }
         }
     }
@@ -1178,25 +1157,9 @@ class MapWidget extends React.Component {
         }
     };
 
-    toggleStretch = evt => {
-        try {
-            evt.target.checked === true
-                ? this.setState({ stretch: 543 })
-                : this.setState({ stretch: 321 });
-        } catch (e) {
-            console.log(e.message);
-        }
-    };
+    toggleStretch = evt => this.setState({ stretch: evt.target.checked ? 543 : 321 });
 
-    toggleDegDataType = evt => {
-        try {
-            evt.target.checked === true
-                ? this.props.handleDegDataType("sar")
-                : this.props.handleDegDataType("landsat");
-        } catch (e) {
-            console.log(e.message);
-        }
-    };
+    toggleDegDataType = evt => this.props.handleDegDataType(evt.target.checked ? "sar" : "landsat");
 
     getStretchToggle = () => this.props.degDataType === "landsat"
         ? <div className="col-6">
@@ -1240,10 +1203,8 @@ class GraphWidget extends React.Component {
         super(props);
         this.state = {
             graphRef: null,
-            lastDegDataType: "landsat",
             selectSarGraphBand: "VV",
-            lastSarBand: "VV",
-            graphLoading: this.props.degDataType ? this.props.graphLoading : true,
+            graphLoading: true,
         };
     }
 
@@ -1251,12 +1212,11 @@ class GraphWidget extends React.Component {
         this.loadGraph(this.props.widget);
     }
 
-    componentDidUpdate() {
-        if (this.props.degDataType && (this.state.lastDegDataType !== this.props.degDataType || this.state.lastSarBand !== this.state.selectSarGraphBand)) {
-            if (this.state.graphLoading !== this.props.graphLoading) {
-                this.setState({ graphLoading: this.props.graphLoading });
+    componentDidUpdate(prevProps, prevState) {
+        if (this.props.degDataType && (prevProps.degDataType !== this.props.degDataType || prevState.selectSarGraphBand !== this.state.selectSarGraphBand)) {
+            if (this.state.graphLoading !== true) {
+                this.setState({ graphLoading: true }, this.loadGraph(this.props.widget));
             }
-            this.loadGraph(this.props.widget);
         }
         this.handleResize();
     }
@@ -1268,8 +1228,8 @@ class GraphWidget extends React.Component {
         const indexName = widget.properties[4];
         const path = widgetType === "DegradationTool" ? "getImagePlotDegradition"
             : collectionName.trim() === "timeSeriesAssetForPoint" ? "timeSeriesAssetForPoint"
-                : collectionName.trim().length > 0 ? "timeSeriesIndex"
-                    : "timeSeriesIndex2";
+            : collectionName.trim().length > 0 ? "timeSeriesIndex"
+            : "timeSeriesIndex2";
         fetch(this.props.documentRoot + "/geo-dash/gateway-request", {
             method: "POST",
             headers: {
@@ -1299,7 +1259,6 @@ class GraphWidget extends React.Component {
                 } else {
                     if (res.hasOwnProperty("timeseries")) {
                         const pData = [];
-                        let theKeys = [];
                         let timeseriesData = [];
                         if (res.timeseries.length === 0) {
                             console.log("no data");
@@ -1318,7 +1277,7 @@ class GraphWidget extends React.Component {
                             });
                         } else {
                             // this is where degData ends up
-                            theKeys = Object.keys(res.timeseries[0][1]);
+                            const theKeys = Object.keys(res.timeseries[0][1]);
                             const compiledData = [];
                             res.timeseries.forEach(d => {
                                 for (let i = 0; i < theKeys.length; i++) {
@@ -1364,15 +1323,9 @@ class GraphWidget extends React.Component {
                             });
                         }
                         this.setState({
-                            lastDegDataType: this.props.degDataType || "",
-                            lastSarBand: this.state.selectSarGraphBand,
+                            graphLoading:false,
                             graphRef: this.createChart(widget.id, indexName, pData, indexName),
                         });
-                        if (this.props.widget.type === "DegradationTool") {
-                            this.setState({ graphLoading:this.props.handleFinishLoading() });
-                        } else {
-                            this.setState({ graphLoading:false });
-                        }
                     } else {
                         console.warn("Wrong Data Returned");
                     }
@@ -1476,8 +1429,8 @@ class GraphWidget extends React.Component {
     selectSarGraphBand = evt => {
         this.setState({
             selectSarGraphBand: evt.target.value,
-            graphLoading: this.props.handleStartLoading(),
-        });
+            graphLoading: true,
+        }, this.loadGraph(this.props.widget));
     };
 
     getLoading = () => this.state.graphLoading === true
