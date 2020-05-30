@@ -665,7 +665,7 @@ class MapWidget extends React.Component {
             this.state.mapRef.updateSize();
         }
 
-        if (this.props.mapCenter) {
+        if (this.props.mapCenter !== prevProps.mapCenter) {
             this.centerAndZoomMap(this.props.mapCenter, this.props.mapZoom);
         }
 
