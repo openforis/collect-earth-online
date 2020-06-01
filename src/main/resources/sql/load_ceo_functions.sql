@@ -1431,7 +1431,8 @@ CREATE OR REPLACE FUNCTION flag_plot(_plot_rid integer, _user_rid integer, _conf
         (user_rid, plot_rid, flagged, confidence, collection_time)
     VALUES
         (_user_rid, _plot_rid, true, _confidence, Now())
-    ON CONFLICT (user_rid, plot_rid) DO UPDATE
+    ON CONFLICT (user_rid, plot_rid) DO
+        UPDATE
         SET flagged = excluded.flagged,
             user_rid = excluded.user_rid,
             confidence = excluded.confidence,
@@ -1813,7 +1814,8 @@ CREATE OR REPLACE FUNCTION update_user_samples(
     INSERT INTO sample_values
         (user_plot_rid, sample_rid, imagery_rid, imagery_attributes, value)
         (SELECT user_plot_uid, sample_id, imagery_id, imagery_attributes, value FROM plot_samples)
-        ON CONFLICT (user_plot_rid, sample_rid) DO UPDATE
+    ON CONFLICT (user_plot_rid, sample_rid) DO
+        UPDATE
         SET user_plot_rid = excluded.user_plot_rid,
             imagery_rid = excluded.imagery_rid,
             imagery_attributes = excluded.imagery_attributes,
