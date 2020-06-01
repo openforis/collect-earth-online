@@ -386,14 +386,12 @@ class DegradationWidget extends React.Component {
         this.state = {
             selectedDate: "",
             degDataType: "landsat",
-            graphLoading: true,
         };
     }
 
     handleDegDataType = (dataType) => {
         this.setState({
             degDataType: dataType,
-            graphLoading: true,
         });
     };
 
@@ -441,7 +439,6 @@ class DegradationWidget extends React.Component {
                                     initCenter={this.props.initCenter}
                                     handleSelectDate={this.handleSelectDate}
                                     degDataType={this.state.degDataType}
-                                    handleDegDataType={this.state.handleDegDataType}
                                     isDegradation
                                 />
                             </div>
@@ -461,7 +458,6 @@ class MapWidget extends React.Component {
             opacity: 90,
             geeTimeOut: null,
             stretch: 321,
-            lastStretch: 0,
         };
     }
 
@@ -1213,7 +1209,9 @@ class GraphWidget extends React.Component {
     }
 
     componentDidUpdate(prevProps, prevState) {
-        if (this.props.degDataType && (prevProps.degDataType !== this.props.degDataType || prevState.selectSarGraphBand !== this.state.selectSarGraphBand)) {
+        if (this.props.degDataType
+            && (prevProps.degDataType !== this.props.degDataType
+                || prevState.selectSarGraphBand !== this.state.selectSarGraphBand)) {
             if (this.state.graphLoading !== true) {
                 this.setState({ graphLoading: true }, this.loadGraph(this.props.widget));
             }
@@ -1294,9 +1292,9 @@ class GraphWidget extends React.Component {
                             });
                             compiledData.forEach((d, index) => {
                                 const cdata = this.convertData(d);
-                                if (widgetType !== "DegradationTool" ||
-                                    this.props.degDataType !== "sar" ||
-                                    this.props.degDataType === "sar" && theKeys[index] === this.state.selectSarGraphBand) {
+                                if (widgetType !== "DegradationTool"
+                                    || this.props.degDataType !== "sar"
+                                    || this.props.degDataType === "sar" && theKeys[index] === this.state.selectSarGraphBand) {
                                     pData.push({
                                         type: widgetType === "DegradationTool" ? "scatter" : "area",
                                         name: theKeys[index],
@@ -1433,7 +1431,7 @@ class GraphWidget extends React.Component {
         }, this.loadGraph(this.props.widget));
     };
 
-    getLoading = () => this.state.graphLoading === true
+    getLoading = () => this.state.graphLoading
         ? <img
             src={"img/ceo-loading.gif"}
             alt={"Loading"}
