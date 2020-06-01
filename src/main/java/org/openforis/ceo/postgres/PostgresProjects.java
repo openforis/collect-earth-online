@@ -499,6 +499,23 @@ public class PostgresProjects implements Projects {
         }
     }
 
+    public Integer getFirstPublicImageryId() {
+        try (var conn = connect();
+             var pstmt = conn.prepareStatement("SELECT * FROM select_first_public_imagery()") ;) {
+
+            try (var rs = pstmt.executeQuery()) {
+                var imageryId = 0;
+                if (rs.next()) {
+                    imageryId = rs.getInt("select_first_public_imagery");
+                }
+                return imageryId;
+            }
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+            return 0;
+        }
+    }
+
     public String updateProject(Request req, Response res) {
         try (var conn = connect();
              var pstmt = conn.prepareStatement("SELECT * FROM update_project(?,?,?,?,?,?::JSONB)")) {
@@ -508,6 +525,9 @@ public class PostgresProjects implements Projects {
             pstmt.setString(2, getOrEmptyString(jsonInputs, "name").getAsString());
             pstmt.setString(3, getOrEmptyString(jsonInputs, "description").getAsString());
             pstmt.setString(4, getOrEmptyString(jsonInputs, "privacyLevel").getAsString());
+            pstmt.setInt(5,    jsonInputs.has("imageryId")
+                                    ? jsonInputs.get("imageryId").getAsInt()
+                                    : getFirstPublicImageryId());
             pstmt.setInt(5,    getOrZero(jsonInputs, "imageryId").getAsInt());
             pstmt.setString(6, jsonInputs.has("projectOptions")
                                     ? jsonInputs.get("projectOptions").getAsJsonObject().toString()

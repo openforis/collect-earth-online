@@ -11,7 +11,7 @@ import { encodeFileAsBase64 } from "./utils/fileUtils";
 const blankProject = {
     archived: false,
     availability: "nonexistent",
-    imageryId: "",
+    imageryId: -1,
     boundary: null,
     description: "",
     id: 0,
@@ -239,7 +239,7 @@ class Project extends React.Component {
             alert("A sample SHP (.zip) file is required.");
             return false;
 
-        } else if (!projectDetails.imageryId) {
+        } else if (!projectDetails.imageryId > 0) {
             alert("Select a valid Basemap.");
             return false;
 

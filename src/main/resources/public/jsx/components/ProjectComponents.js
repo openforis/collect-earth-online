@@ -166,7 +166,7 @@ export function ProjectAOI({ coordinates: { latMax, lonMin, lonMax, latMin }, in
                         <select
                             className="form-control form-control-sm"
                             size="1"
-                            value={imageryId || ""}
+                            value={imageryId || -1}
                             onChange={e => setProjectDetail("imageryId", parseInt(e.target.value))}
                         >
                             {

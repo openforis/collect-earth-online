@@ -613,6 +613,18 @@ CREATE OR REPLACE FUNCTION update_imagery(_imagery_uid integer, _institution_rid
 
 $$ LANGUAGE SQL;
 
+-- Returns first public imagery
+CREATE OR REPLACE FUNCTION select_first_public_imagery()
+ RETURNS integer AS $$
+
+    SELECT imagery_uid
+    FROM imagery
+    WHERE visibility = 'public'
+    ORDER BY imagery_uid
+    LIMIT 1
+
+$$ LANGUAGE SQL;
+
 --
 --  WIDGET FUNCTIONS
 --

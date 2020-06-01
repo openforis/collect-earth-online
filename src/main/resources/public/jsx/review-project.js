@@ -35,7 +35,8 @@ class Project extends React.Component {
             this.getProjectPlots();
         }
 
-        if (this.state.projectDetails.imageryId && this.state.imageryList.length > 0
+        if (this.state.projectDetails.imageryId
+                && this.state.imageryList.length > 0
                 && prevState.imageryList.length === 0) {
             this.initProjectMap();
         }
@@ -49,7 +50,8 @@ class Project extends React.Component {
             this.showProjectMap();
         }
 
-        if (this.state.mapConfig && this.state.plotList.length > 0
+        if (this.state.mapConfig
+                && this.state.plotList.length > 0
                 && (!prevState.mapConfig || prevState.plotList.length === 0)) {
             mercator.addPlotOverviewLayers(
                 this.state.mapConfig, this.state.plotList,

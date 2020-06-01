@@ -1,12 +1,57 @@
+-- Returns first public imagery
+CREATE FUNCTION select_first_public_imagery()
+ RETURNS integer AS $$
+
+    SELECT imagery_uid
+    FROM imagery
+    WHERE visibility = 'public'
+    ORDER BY imagery_uid
+    LIMIT 1
+
+$$ LANGUAGE SQL;
+
 -- add imagery_rid
 ALTER TABLE projects
 ADD COLUMN imagery_rid integer REFERENCES imagery (imagery_uid);
 
--- update imagery_rid
+-- projects utilizing public imagery
 UPDATE projects
 SET imagery_rid = imagery.imagery_uid
 FROM imagery
-WHERE projects.institution_rid = imagery.institution_rid AND projects.base_map_source = imagery.title;
+WHERE projects.base_map_source = imagery.title
+    AND imagery.visibility = 'public';
+
+-- projects for the institution utilizing private imagery
+UPDATE projects
+SET imagery_rid = imagery.imagery_uid
+FROM imagery
+WHERE projects.base_map_source = imagery.title
+    AND imagery.visibility = 'private'
+    AND projects.institution_rid = imagery.institution_rid;
+
+-- projects without base_map_source
+UPDATE projects
+SET imagery_rid = (
+    SELECT imagery_uid
+    FROM imagery
+    WHERE visibility = 'public'
+    ORDER BY imagery_uid
+    LIMIT 1
+)
+WHERE base_map_source = '';
+
+-- projects where the base_map_source is not available in the imagery table
+UPDATE projects
+SET imagery_rid = (
+    SELECT imagery_uid
+    FROM imagery
+    WHERE visibility = 'public'
+    ORDER BY imagery_uid
+    LIMIT 1
+)
+WHERE base_map_source NOT IN (
+	SELECT title FROM imagery
+);
 
 -- drop base_map_source
 ALTER TABLE projects
@@ -116,6 +161,8 @@ CREATE FUNCTION update_project(
     WHERE project_uid = _project_uid
 
 $$ LANGUAGE SQL;
+
+DROP VIEW project_boundary;
 
 CREATE VIEW project_boundary AS
 SELECT
