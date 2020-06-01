@@ -530,7 +530,6 @@ public class PostgresProjects implements Projects {
             pstmt.setInt(5,    jsonInputs.has("imageryId")
                                     ? jsonInputs.get("imageryId").getAsInt()
                                     : getFirstPublicImageryId());
-            pstmt.setInt(5,    getOrZero(jsonInputs, "imageryId").getAsInt());
             pstmt.setString(6, jsonInputs.has("projectOptions")
                                     ? jsonInputs.get("projectOptions").getAsJsonObject().toString()
                                     : "{\"showGEEScript\":false}");
@@ -908,7 +907,9 @@ public class PostgresProjects implements Projects {
 
             newProject.addProperty("description",        getOrEmptyString(jsonInputs, "description").getAsString());
             newProject.addProperty("institution",        getOrZero(jsonInputs, "institutionId").getAsInt());
-            newProject.addProperty("imageryId",          getOrZero(jsonInputs, "imageryId").getAsInt());
+            newProject.addProperty("imageryId",          jsonInputs.has("imageryId")
+                                                            ? jsonInputs.get("imageryId").getAsInt()
+                                                            : getFirstPublicImageryId());
             newProject.addProperty("lonMin",             getOrZero(jsonInputs, "lonMin").getAsDouble());
             newProject.addProperty("latMin",             getOrZero(jsonInputs, "latMin").getAsDouble());
             newProject.addProperty("lonMax",             getOrZero(jsonInputs, "lonMax").getAsDouble());
