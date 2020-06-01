@@ -130,7 +130,7 @@ public class ProjectUtils {
         var sampleValueKeys = getSampleKeys(sampleValueGroups);
         // fileds are straight forward json values
         final String[] fields = Stream.concat(
-                        Arrays.stream(new String[]{"plot_id", "center_lon", "center_lat", "size_m", "shape", "flagged", "analyses", "sample_points", "user_id"}),
+                        Arrays.stream(new String[]{"plot_id", "center_lon", "center_lat", "size_m", "shape", "flagged", "analyses", "sample_points", "user_id", "common_securewatch_date", "total_securewatch_dates"}),
                         Arrays.stream(externalHeaders))
                         .toArray(String[]::new);
         // labels require interpretation of the next json object

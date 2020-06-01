@@ -22,16 +22,14 @@ class Collection extends React.Component {
             imageryYearPlanet: 2018,
             imageryStartDatePlanetDaily: "",
             imageryEndDatePlanetDaily: "",
-            imageryStartDateSecureWatch: "",
-            imageryEndDateSecureWatch: "",
             imageryMonthSentinel1: "",
             imageryYearSentinel1: "",
             bandCombinationSentinel1: "",
             imageryMonthSentinel2: "",
             imageryYearSentinel2: "",
             bandCombinationSentinel2: "",
-            imageryFeatureProfileSecureWatch: "",
-            imagerySecureWatchSelectRange: true,
+            imagerySecureWatchDate: "",
+            imagerySecureWatchCloudCover: "",
             imagerySecureWatchAvailableDates: [],
             mapConfig: null,
             nextPlotButtonDisabled: false,
@@ -105,7 +103,6 @@ class Collection extends React.Component {
             this.setState({ storedInterval: setInterval(() => this.resetPlotLock, 2.3 * 60 * 1000) });
             if (this.state.currentImagery.sourceConfig.type === "PlanetDaily") this.updatePlanetDailyLayer();
             if (this.state.currentImagery.sourceConfig.type === "SecureWatch") {
-                this.setState({ imagerySecureWatchSelectRange: true });
                 this.updateSecureWatchLayer();
                 this.setSecureWatchAvailableDatesOptionDefault();
             }
@@ -121,7 +118,6 @@ class Collection extends React.Component {
                 || this.state.sampleOutlineBlack !== prevState.sampleOutlineBlack
                 || this.state.userSamples !== prevState.userSamples
                 || !prevState.selectedQuestion.visible) {
-
                 this.showPlotSamples();
                 this.highlightSamplesByQuestion();
                 this.createPlotKML();
@@ -149,12 +145,6 @@ class Collection extends React.Component {
         if (this.state.imageryStartDatePlanetDaily !== prevState.imageryStartDatePlanetDaily
             || this.state.imageryEndDatePlanetDaily !== prevState.imageryEndDatePlanetDaily) {
             this.updatePlanetDailyLayer();
-        }
-
-        if (this.state.imageryStartDateSecureWatch !== prevState.imageryStartDateSecureWatch
-            || this.state.imageryEndDateSecureWatch !== prevState.imageryEndDateSecureWatch
-            || this.state.imageryFeatureProfileSecureWatch !== prevState.imageryFeatureProfileSecureWatch) {
-            this.updateSecureWatchLayer();
         }
 
         if (this.state.imageryMonthSentinel1 !== prevState.imageryMonthSentinel1
@@ -247,7 +237,13 @@ class Collection extends React.Component {
         fetch(secureWatchFeatureInfoUrl)
             .then(response => response.ok ? response.json() : Promise.reject(response))
             .then(data => {
-                this.setState({ imagerySecureWatchAvailableDates: data.features.map(feature => feature.properties.acquisitionDate) });
+                this.setState({
+                    imagerySecureWatchAvailableDates: data.features.map(feature => ({
+                        acquisitionDate: feature.properties.acquisitionDate,
+                        cloudCover: feature.properties.cloudCover,
+                        featureId: feature.properties.featureId,
+                    })),
+                });
             })
             .catch(response => {
                 console.log(response);
@@ -287,24 +283,11 @@ class Collection extends React.Component {
                 ? newImagery.attribution
                     + " | " + this.state.imageryStartDatePlanetDaily
                     + " to " + this.state.imageryEndDatePlanetDaily
-            : newImagery.sourceConfig.type === "SecureWatch"
-                ? newImagery.attribution
-                    + " | " + (this.state.imageryStartDateSecureWatch || newImagery.sourceConfig.startDate)
-                    + " to " + (this.state.imageryEndDateSecureWatch || newImagery.sourceConfig.endDate)
             : newImagery.attribution;
-        if (newImagery.sourceConfig.type === "SecureWatch") {
-            this.setState({
-                currentImagery: newImagery,
-                imageryAttribution: newImageryAttribution,
-                imageryStartDateSecureWatch: (this.state.imageryStartDateSecureWatch || newImagery.sourceConfig.startDate),
-                imageryEndDateSecureWatch: (this.state.imageryEndDateSecureWatch || newImagery.sourceConfig.endDate),
-            });
-        } else {
-            this.setState({
-                currentImagery: newImagery,
-                imageryAttribution: newImageryAttribution,
-            });
-        }
+        this.setState({
+            currentImagery: newImagery,
+            imageryAttribution: newImageryAttribution,
+        });
     };
 
     setImageryYearDG = (newImageryYearDG) => {
@@ -350,54 +333,9 @@ class Collection extends React.Component {
         }
     };
 
-    setImageryDateSecureWatch = (eventTarget) => {
-        const { imageryStartDateSecureWatch, imageryEndDateSecureWatch, currentImagery } = this.state;
-        const startDate = (eventTarget.id === "secureWatchStartDate") && eventTarget.value ? eventTarget.value : imageryStartDateSecureWatch;
-        const endDate = (eventTarget.id === "secureWatchEndDate") && eventTarget.value ? eventTarget.value : imageryEndDateSecureWatch;
-        if (new Date(startDate) > new Date(endDate)) {
-            alert("Start date must not come after the end date.");
-        } else {
-            const imageryAttribution = this.getImageryByTitle(currentImagery.title).attribution + " | " + startDate + " to " + endDate + " (" + this.state.imageryFeatureProfileSecureWatch + ")";
-            this.setState({
-                imageryStartDateSecureWatch: startDate,
-                imageryEndDateSecureWatch: endDate,
-                imageryAttribution: imageryAttribution,
-            });
-        }
-    };
-
-    setImageryFeatureProfileSecureWatch = (newFeatureProfile) => {
-        const { imageryStartDateSecureWatch, imageryEndDateSecureWatch, currentImagery } = this.state;
-        const imageryAttribution = this.getImageryByTitle(currentImagery.title).attribution + " | " + imageryStartDateSecureWatch + " to " + imageryEndDateSecureWatch + " (" + newFeatureProfile + ")";
-        this.setState({
-            imageryFeatureProfileSecureWatch: newFeatureProfile,
-            imageryAttribution: imageryAttribution,
-        });
-    };
-
     setSecureWatchAvailableDatesOptionDefault = () => {
-        const dateSelectEl = document.getElementById("securewatch-option2-select");
+        const dateSelectEl = document.getElementById("securewatch-option-select");
         dateSelectEl.value = "DEFAULT";
-    };
-
-    setImagerySecureWatchSelectRange = (eventTarget) => {
-        const imagerySecureWatchSelectRange = (eventTarget.id === "securewatch-option1-radio") && eventTarget.value
-            ? eventTarget.value === "on"
-                ? true : false
-            : (eventTarget.id === "securewatch-option2-radio") && eventTarget.value
-                ? eventTarget.value === "on"
-                    ? false : true
-                : true;
-        if (eventTarget.id === "securewatch-option1-radio") {
-            this.updateSecureWatchLayer();
-            this.setSecureWatchAvailableDatesOptionDefault();
-        }
-        this.setState({ imagerySecureWatchSelectRange: imagerySecureWatchSelectRange });
-    };
-
-    getSecureWatchSingleDate = () => {
-        const element = document.getElementById("securewatch-option2-select");
-        return element.options[element.selectedIndex].value;
     };
 
     setImageryMonthPlanet = (newImageryMonthPlanet) => {
@@ -496,15 +434,8 @@ class Collection extends React.Component {
             if (this.state.currentImagery.sourceConfig.type === "Planet") {
                 this.updatePlanetLayer();
             } else if (this.state.currentImagery.sourceConfig.type === "SecureWatch") {
-                const startDate = this.state.currentImagery.sourceConfig.startDate || "2019-01-01";
-                const endDate = this.state.currentImagery.sourceConfig.endDate || "2019-03-01";
-                const featureProfile = this.state.currentImagery.sourceConfig.featureProfile || "Default_Profile";
-                this.setState({
-                    imageryStartDateSecureWatch: startDate,
-                    imageryEndDateSecureWatch: endDate,
-                    imageryFeatureProfileSecureWatch: featureProfile,
-                    imageryAttribution: this.state.currentImagery.attribution + " | " + startDate + " to " + endDate + " (" + featureProfile + ")",
-                });
+                this.setState({ imageryAttribution: this.state.currentImagery.attribution + " | Latest Image Mosaic" });
+                this.updateSecureWatchLayer();
             } else if (this.state.currentImagery.sourceConfig.type === "Sentinel1"
                 || this.state.currentImagery.sourceConfig.type === "Sentinel2") {
                 const month = parseInt(this.state.currentImagery.sourceConfig.month) || 1;
@@ -613,26 +544,29 @@ class Collection extends React.Component {
     };
 
     updateSecureWatchLayer = () => {
-        const { currentImagery, imageryStartDateSecureWatch, imageryEndDateSecureWatch } = this.state;
-        mercator.updateLayerWmsParams(this.state.mapConfig,
-                                      currentImagery.title,
-                                      {
-                                          COVERAGE_CQL_FILTER: "(acquisitionDate>='" + imageryStartDateSecureWatch + "')"
-                                                             + "AND(acquisitionDate<='" + imageryEndDateSecureWatch + "')",
-                                          FEATUREPROFILE: this.state.imageryFeatureProfileSecureWatch,
-                                      });
+        // inserting cql filter to empty out the previously set cql filter
+        mercator.updateLayerWmsParams(this.state.mapConfig, this.state.currentImagery.title, {
+            COVERAGE_CQL_FILTER: "",
+        });
+        // get all available dates for the plot
         this.getSecureWatchAvailableDates();
+        this.setState({
+            imagerySecureWatchDate: "",
+            imagerySecureWatchCloudCover: "",
+            imageryAttribution: this.state.currentImagery.attribution + " | Latest Image Mosaic",
+        });
     };
 
-    updateSecureWatchSingleLayer = (date) => {
-        const { currentImagery } = this.state;
-        mercator.updateLayerWmsParams(this.state.mapConfig,
-                                      currentImagery.title,
-                                      {
-                                          COVERAGE_CQL_FILTER: "acquisitionDate='" + date + "'",
-                                          FEATUREPROFILE: this.state.imageryFeatureProfileSecureWatch,
-                                      });
-    };
+    updateSecureWatchSingleLayer = (eventTarget) => {
+        mercator.updateLayerWmsParams(this.state.mapConfig, this.state.currentImagery.title, {
+            COVERAGE_CQL_FILTER: "featureId='" + eventTarget.value + "'",
+        });
+        this.setState({
+            imagerySecureWatchDate: eventTarget.options[eventTarget.selectedIndex].getAttribute("date"),
+            imagerySecureWatchCloudCover: eventTarget.options[eventTarget.options.selectedIndex].getAttribute("cloud"),
+            imageryAttribution: this.state.currentImagery.attribution + " | " + eventTarget.options[eventTarget.options.selectedIndex].text,
+        });
+    }
 
     getQueryString = (params) => "?" + Object.keys(params)
         .map(k => encodeURIComponent(k) + "=" + encodeURIComponent(params[k]))
@@ -953,10 +887,8 @@ class Collection extends React.Component {
             imageryEndDatePlanetDaily: this.state.imageryEndDatePlanetDaily,
             imageryDatePlanetDaily: mercator.getTopVisiblePlanetLayerDate(this.state.mapConfig, this.state.currentImagery.title),
         } : (this.state.currentImagery.sourceConfig.type === "SecureWatch") ? {
-            imageryStartDateSecureWatch: this.state.imagerySecureWatchSelectRange ? this.state.imageryStartDateSecureWatch : "",
-            imageryEndDateSecureWatch: this.state.imagerySecureWatchSelectRange ? this.state.imageryEndDateSecureWatch : "",
-            imageryFeatureProfileSecureWatch: this.state.imagerySecureWatchSelectRange ? this.state.imageryFeatureProfileSecureWatch : "",
-            imageryDateSecureWatch: this.state.imagerySecureWatchSelectRange ? "" : this.getSecureWatchSingleDate(),
+            imagerySecureWatchDate: this.state.imagerySecureWatchDate,
+            imagerySecureWatchCloudCover: this.state.imagerySecureWatchCloudCover ? (parseFloat(this.state.imagerySecureWatchCloudCover) * 100).toFixed(2) : "",
         } : (this.state.currentImagery.sourceConfig.type === "Sentinel1") ? {
             sentinel1MosaicYearMonth: this.state.imageryYearSentinel1 + " - " +
                 (this.state.imageryYearSentinel1 > 9 ? "" : "0") + this.state.imageryYearSentinel1,
@@ -1394,8 +1326,6 @@ class Collection extends React.Component {
                         imageryMonthNamePlanet={this.state.imageryMonthNamePlanet}
                         imageryStartDatePlanetDaily={this.state.imageryStartDatePlanetDaily}
                         imageryEndDatePlanetDaily={this.state.imageryEndDatePlanetDaily}
-                        imageryStartDateSecureWatch={this.state.imageryStartDateSecureWatch}
-                        imageryEndDateSecureWatch={this.state.imageryEndDateSecureWatch}
                         imageryMonthSentinel1={this.state.imageryMonthSentinel1}
                         imageryYearSentinel1={this.state.imageryYearSentinel1}
                         bandCombinationSentinel1={this.state.bandCombinationSentinel1}
@@ -1412,11 +1342,6 @@ class Collection extends React.Component {
                         setImageryYearPlanet={this.setImageryYearPlanet}
                         setImageryMonthPlanet={this.setImageryMonthPlanet}
                         setImageryDatePlanetDaily={this.setImageryDatePlanetDaily}
-                        setImageryDateSecureWatch={this.setImageryDateSecureWatch}
-                        imageryFeatureProfileSecureWatch={this.state.imageryFeatureProfileSecureWatch}
-                        setImageryFeatureProfileSecureWatch={this.setImageryFeatureProfileSecureWatch}
-                        imagerySecureWatchSelectRange={this.state.imagerySecureWatchSelectRange}
-                        setImagerySecureWatchSelectRange={this.setImagerySecureWatchSelectRange}
                         imagerySecureWatchAvailableDates={this.state.imagerySecureWatchAvailableDates}
                         updateSecureWatchSingleLayer={this.updateSecureWatchSingleLayer}
                         setStackingProfileDG={this.setStackingProfileDG}
@@ -1776,110 +1701,26 @@ class ImageryOptions extends React.Component {
         </div>
     );
 
-    secureWatchMenus = () => {
-        const featureProfileOptions = [
-            { label: "Default", value: "Default_Profile" },
-            { label: "Accuracy", value: "Accuracy_Profile" },
-            { label: "Classic Color Consumer", value: "Classic_Color_Consumer_Profile" },
-            { label: "Cloud Cover Currency", value: "Cloud_Cover_Currency_Profile" },
-            { label: "Cloud Cover", value: "Cloud_Cover_Profile" },
-            { label: "Color Consumer", value: "Color_Consumer_Profile" },
-            { label: "Color Infrared", value: "Color_Infrared_Profile" },
-            { label: "Consumer", value: "Consumer_Profile" },
-            { label: "Currency", value: "Currency_Profile" },
-            { label: "Currency RGB", value: "Currency_RGB_Profile" },
-            { label: "Dynamic Mosaic", value: "Dynamic_Mosaic_Profile" },
-            { label: "Global Currency", value: "Global_Currency_Profile" },
-            { label: "Legacy", value: "Legacy_Profile" },
-            { label: "Most Aesthetic Mosaic", value: "Most_Aesthetic_Mosaic_Profile" },
-            { label: "MyDG Color Consumer", value: "MyDG_Color_Consumer_Profile" },
-            { label: "MyDG Consumer", value: "MyDG_Consumer_Profile" },
-            { label: "Only Mosaics", value: "Only_Mosaics_Profile" },
-            { label: "True Currency", value: "True_Currency_Profile" },
-        ];
-        return (
-            <div className="SecureWatchMenu form-control form-control-sm my-2 mb-3">
-                <div className="form-control form-control-sm">
-                    <div className="form-check form-check-inline mb-3">
-                        <input
-                            className="form-check-input ml-2"
-                            checked={this.props.imagerySecureWatchSelectRange}
-                            id="securewatch-option1-radio"
-                            onChange={e => this.props.setImagerySecureWatchSelectRange(e.target)}
-                            type="radio"
-                            name="securewatch-option1-radio"
-                        />
-                        Select Range
-                    </div>
-                    <div>
-                        <label>Start Date</label>
-                        <div className="slidecontainer">
-                            <input
-                                disabled={!this.props.imagerySecureWatchSelectRange}
-                                className="form-control form-control-sm"
-                                type="date"
-                                id="secureWatchStartDate"
-                                value={this.props.imageryStartDateSecureWatch}
-                                max={new Date().toJSON().slice(0, 10)}
-                                style={{ width: "100%" }}
-                                onChange={e => this.props.setImageryDateSecureWatch(e.target)}
-                            />
-                        </div>
-                        <label>End Date</label>
-                        <div className="slidecontainer">
-                            <input
-                                disabled={!this.props.imagerySecureWatchSelectRange}
-                                className="form-control form-control-sm"
-                                type="date"
-                                id="secureWatchEndDate"
-                                value={this.props.imageryEndDateSecureWatch}
-                                max={new Date().toJSON().slice(0, 10)}
-                                style={{ width: "100%" }}
-                                onChange={e => this.props.setImageryDateSecureWatch(e.target)}
-                            />
-                        </div>
-                        <label>Feature Profiles</label>
-                        <div className="selecterContainer mb-2" >
-                            <select
-                                disabled={!this.props.imagerySecureWatchSelectRange}
-                                className="form-control form-control-sm"
-                                onChange={e => this.props.setImageryFeatureProfileSecureWatch(e.target.value)}
-                                value={this.props.imageryFeatureProfileSecureWatch}
-                            >
-                                {featureProfileOptions.map(el => <option value={el.value} key={el.value}>{el.label}</option>)}
-                            </select>
-                        </div>
-                    </div>
-                </div>
-                <div className="form-control form-control-sm">
-                    <div className="form-check form-check-inline mb-3">
-                        <input
-                            className="form-check-input ml-2"
-                            checked={!this.props.imagerySecureWatchSelectRange}
-                            id="securewatch-option2-radio"
-                            onChange={e => this.props.setImagerySecureWatchSelectRange(e.target)}
-                            type="radio"
-                            name="securewatch-option2-radio"
-                        />
-                        Select Dates
-                    </div>
-                    <div>
-                        <label>Available Dates</label>
-                        <select
-                            disabled={this.props.imagerySecureWatchSelectRange}
-                            className="form-control form-control-sm"
-                            onChange={e => this.props.updateSecureWatchSingleLayer(e.target.value)}
-                            defaultValue={"DEFAULT"}
-                            id="securewatch-option2-select"
-                        >
-                            <option value="DEFAULT" disabled> -- select a date -- </option>
-                            {this.props.imagerySecureWatchAvailableDates.map((date, uid) => <option key={uid} value={date}>{date}</option>)}
-                        </select>
-                    </div>
-                </div>
+    secureWatchMenus = () => (
+        <div className="SecureWatchMenu my-2 mb-3">
+            <div className="form-control form-control-sm">
+                <label>Available Layers</label>
+                <select
+                    className="form-control form-control-sm"
+                    onChange={e => this.props.updateSecureWatchSingleLayer(e.target)}
+                    defaultValue={"DEFAULT"}
+                    id="securewatch-option-select"
+                >
+                    <option value="DEFAULT">Latest Image Mosaic</option>
+                    {this.props.imagerySecureWatchAvailableDates.map((obj, uid) =>
+                        <option key={uid} value={obj.featureId} date={obj.acquisitionDate} cloud={obj.cloudCover}>
+                            {obj.acquisitionDate + " (" + (obj.cloudCover * 100).toFixed(2) + "% cloudy)"}
+                        </option>
+                    )}
+                </select>
             </div>
-        );
-    };
+        </div>
+    );
 
     sentinel1Menus = () => {
         const bandCombinationOptions = [

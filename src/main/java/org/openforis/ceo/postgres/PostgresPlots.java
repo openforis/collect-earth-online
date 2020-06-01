@@ -331,14 +331,14 @@ public class PostgresPlots implements Plots {
     }
 
     public String addUserSamples(Request req, Response res) {
-        final var jsonInputs =            parseJson(req.body()).getAsJsonObject();
-        final var projectId =             jsonInputs.get("projectId").getAsString();
-        final var plotId =                jsonInputs.get("plotId").getAsString();
-        final var userId =                jsonInputs.get("userId").getAsInt();
-        final var confidence =            jsonInputs.get("confidence").getAsInt();
-        final var collectionStart =       jsonInputs.get("collectionStart").getAsString();
-        final var userSamples =           jsonInputs.get("userSamples").getAsJsonObject();
-        final var userImages =            jsonInputs.get("userImages").getAsJsonObject();
+        final var jsonInputs =      parseJson(req.body()).getAsJsonObject();
+        final var projectId =       jsonInputs.get("projectId").getAsString();
+        final var plotId =          jsonInputs.get("plotId").getAsString();
+        final var userId =          jsonInputs.get("userId").getAsInt();
+        final var confidence =      jsonInputs.get("confidence").getAsInt();
+        final var collectionStart = jsonInputs.get("collectionStart").getAsString();
+        final var userSamples =     jsonInputs.get("userSamples").getAsJsonObject();
+        final var userImages =      jsonInputs.get("userImages").getAsJsonObject();
 
         try (var conn = connect();
             final var usPstmt = conn.prepareStatement("SELECT * FROM check_user_plots(?,?,?)")) {
@@ -352,14 +352,14 @@ public class PostgresPlots implements Plots {
                     final var userPlotId = usRs.getInt("user_plot_id");
                     final var SQL = "SELECT * FROM update_user_samples(?,?,?,?,?::int,?::timestamp,?::jsonb,?::jsonb)";
                     final var pstmt = conn.prepareStatement(SQL) ;
-                    pstmt.setInt(1, userPlotId);
-                    pstmt.setInt(2, Integer.parseInt(projectId));
-                    pstmt.setInt(3, Integer.parseInt(plotId));
-                    pstmt.setInt(4, userId);
-                    pstmt.setString(5, confidence == -1 ? null : Integer.toString(confidence));
+                    pstmt.setInt(1,       userPlotId);
+                    pstmt.setInt(2,       Integer.parseInt(projectId));
+                    pstmt.setInt(3,       Integer.parseInt(plotId));
+                    pstmt.setInt(4,       userId);
+                    pstmt.setString(5,    confidence == -1 ? null : Integer.toString(confidence));
                     pstmt.setTimestamp(6, new Timestamp(Long.parseLong(collectionStart)));
-                    pstmt.setString(7, userSamples.toString());
-                    pstmt.setString(8, userImages.toString());
+                    pstmt.setString(7,    userSamples.toString());
+                    pstmt.setString(8,    userImages.toString());
                     pstmt.execute();
                     return plotId;
                 // add new

@@ -339,8 +339,9 @@ a:hover{
 /*********************************************************************/
 /* HOME PAGE */
 /*********************************************************************/
-#home-map-pane {
-    height: 100%;
+
+#home-map-pane .ol-attribution {
+    position: fixed;
 }
 
 #home #ceo-description {
@@ -406,6 +407,7 @@ a:hover{
     -webkit-box-shadow: 3px -10px 3px rgba(0,0,0,.35);
     box-shadow: 3px 5px 3px rgba(0,0,0,.35);
     border-radius: 5px;
+    max-height: 40vh;
 }
 /* .ol-popup-content .cContent{ */
 .ol-overlay-container .cContent {
@@ -435,7 +437,6 @@ a.ol-popup-closer.close{
 .ol-overlay-container tr{border-top: 1px solid #dee2e6;}
 .ol-overlay-container tr:first-child{border-top: none;margin-top:.3rem;}
 .ol-overlay-container tr:last-child{}
-
 
 /*********************************************************************/
 /* LOGIN PAGE/REGISTER PAGE */
@@ -567,7 +568,7 @@ ul.samplevalue{
 }
 .panel-default > .panel-heading {
     min-height: 45px;
-    background-color: #31BAB0;!important
+    background-color: #31BAB0;
     border-color: #ddd;
     color: white;
 }
@@ -601,7 +602,7 @@ ul.samplevalue{
 /*********************************************************************/
 
 .container-fluid.widgetEditor{
-    width:100%;!important
+    width:100%;
 }
 .active-widget{
     opacity: .5;

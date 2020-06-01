@@ -18,7 +18,7 @@
 
 import "ol/ol.css";
 import { Feature, Map, Overlay, View } from "ol";
-import { Control, defaults as ControlDefaults, ScaleLine } from "ol/control";
+import { Control, ScaleLine, Attribution, Zoom, Rotate } from "ol/control";
 import { platformModifierKeyOnly } from "ol/events/condition";
 import { Circle, LineString, Point } from "ol/geom";
 import { DragBox, Select } from "ol/interaction";
@@ -172,7 +172,7 @@ mercator.getTopVisiblePlanetLayerDate = (mapConfig, layerTitle) => {
 
 // [Pure] Returns a new ol.source.* object or null if the sourceConfig
 // is invalid.
-mercator.createSource = function (sourceConfig, imageryId, documentRoot,
+mercator.createSource = function (sourceConfig, imageryId, attribution, documentRoot,
                                   extent = [[-180, -90], [180, -90], [180, 90], [-180, 90], [-180, -90]],
                                   show = false,
                                   callback = null) {
@@ -182,7 +182,7 @@ mercator.createSource = function (sourceConfig, imageryId, documentRoot,
                  + "/get-tile?imageryId=" + imageryId
                  + "&z={z}&x={x}&y={y}&tile={0-3}&month=" + sourceConfig.month
                  + "&year=" + sourceConfig.year,
-            attribution: "© Planet Labs, Inc",
+            attributions: attribution,
         });
     } else if (sourceConfig.type === "PlanetDaily") {
         // make ajax call to get layerid then add xyz layer
@@ -198,6 +198,7 @@ mercator.createSource = function (sourceConfig, imageryId, documentRoot,
         const planetLayer = new XYZ({
             // some random tiles to be replaced later
             url: "https://tiles0.planet.com/data/v1/layers/DkTnYnMW_G7i-E6Nj6lb9s7PaG8PG-Hy23Iyug/{z}/{x}/{y}.png",
+            attributions: attribution,
         });
         planetLayer.setProperties({ id: theID });
         console.log("Calling out to /geo-dash/gateway-request with this JSON:\n\n" + JSON.stringify(theJson));
@@ -232,6 +233,7 @@ mercator.createSource = function (sourceConfig, imageryId, documentRoot,
                 const planetLayers = sortedData.map(d => new TileLayer({
                     source: new XYZ({
                         url: "https://tiles0.planet.com/data/v1/layers/" + d["layerID"] + "/{z}/{x}/{y}.png",
+                        attributions: attribution,
                     }),
                     title: d["date"],
                 }));
@@ -256,18 +258,21 @@ mercator.createSource = function (sourceConfig, imageryId, documentRoot,
             imagerySet: sourceConfig.imageryId,
             key: sourceConfig.accessToken,
             maxZoom: 19,
+            attributions: attribution,
         });
     } else if (sourceConfig.type === "GeoServer") {
         return new TileWMS({
             serverType: "geoserver",
             url: documentRoot + "/get-tile",
             params: { LAYERS: "none", imageryId: imageryId },
+            attributions: attribution,
         });
     } else if (sourceConfig.type === "SecureWatch") {
         return new TileWMS({
             serverType: "geoserver",
             url: documentRoot + "/get-tile",
             params: { imageryId: imageryId },
+            attributions: attribution,
         });
     } else if (sourceConfig.type === "Sentinel2" || sourceConfig.type === "Sentinel1") {
         const bandCombination = sourceConfig.bandCombination;
@@ -293,6 +298,7 @@ mercator.createSource = function (sourceConfig, imageryId, documentRoot,
         const geeLayer = new XYZ({
             url: "https://earthengine.googleapis.com/v1alpha/projects/earthengine-legacy/maps/temp/tiles/{z}/{x}/{y}",
             id: theID,
+            attributions: attribution,
         });
         geeLayer.setProperties({ id: theID });
         fetch(documentRoot + "/geo-dash/gateway-request", {
@@ -314,6 +320,7 @@ mercator.createSource = function (sourceConfig, imageryId, documentRoot,
                 if (data.hasOwnProperty("url")) {
                     const geeLayer = new XYZ({
                         url: data.url,
+                        attributions: attribution,
                     });
                     mercator.currentMap.getLayers().forEach(function (lyr) {
                         if (theID && theID === lyr.getSource().get("id")) {
@@ -360,6 +367,7 @@ mercator.createSource = function (sourceConfig, imageryId, documentRoot,
         const geeLayer = new XYZ({
             url: "https://earthengine.googleapis.com/map/temp/{z}/{x}/{y}?token=",
             id: theID,
+            attributions: attribution,
         });
         geeLayer.setProperties({ id: theID });
         if (sourceConfig.create) {
@@ -384,6 +392,7 @@ mercator.createSource = function (sourceConfig, imageryId, documentRoot,
                     if (data.hasOwnProperty("mapid")) {
                         const geeLayer = new XYZ({
                             url: "https://earthengine.googleapis.com/map/" + data.mapid + "/{z}/{x}/{y}?token=" + data.token,
+                            attributions: attribution,
                         });
                         mercator.currentMap.getLayers().forEach(function (lyr) {
                             if (theID && theID === lyr.getSource().get("id")) {
@@ -405,7 +414,7 @@ mercator.createSource = function (sourceConfig, imageryId, documentRoot,
                  + sourceConfig.layerName
                  + "/{z}/{x}/{y}.jpg90"
                  + "?access_token=" + sourceConfig.accessToken,
-            attribution: "© MapBox",
+            attributions: attribution,
         });
     } else if (sourceConfig.type === "MapBoxStatic") {
         return new XYZ({
@@ -414,7 +423,7 @@ mercator.createSource = function (sourceConfig, imageryId, documentRoot,
                  + sourceConfig.mapStyleId
                  + "/tiles/256/{z}/{x}/{y}"
                  + "?access_token=" + sourceConfig.accessToken,
-            attribution: "© MapBox",
+            attributions: attribution,
         });
     } else {
         return new OSM();
@@ -425,7 +434,15 @@ mercator.createSource = function (sourceConfig, imageryId, documentRoot,
 // layerConfig is invalid.
 mercator.createLayer = function (layerConfig, documentRoot, projectAOI, show = false, callback = null) {
     layerConfig.sourceConfig.create = true;
-    const source = mercator.createSource(layerConfig.sourceConfig, layerConfig.id, documentRoot, projectAOI, show, callback);
+    const source = mercator.createSource(
+        layerConfig.sourceConfig,
+        layerConfig.id,
+        layerConfig.attribution,
+        documentRoot,
+        projectAOI,
+        show,
+        callback
+    );
     if (!source) {
         return null;
     } else if (layerConfig.extent != null) {
@@ -548,7 +565,7 @@ mercator.createMap = function (divName, centerCoords, zoomLevel, layerConfigs, d
             .map(layerConfig => mercator.createLayer(layerConfig, documentRoot, projectAOI));
 
         // Add a scale line to the default map controls
-        const controls = ControlDefaults().extend([new ScaleLine()]);
+        const controls = [new ScaleLine(), new Attribution({ collapsed: false }), new Zoom(), new Rotate()];
 
         // Create the map view using the passed in centerCoords and zoomLevel
         const view = new View({
@@ -683,7 +700,11 @@ mercator.updateLayerSource = function (mapConfig, layerTitle, projectBoundary, t
         } else {
             // This is a Layer
             console.log("Layer detected.");
-            layer.setSource(mercator.createSource(newSourceConfig, layerConfig.id, mapConfig.documentRoot, projectAOI));
+            layer.setSource(mercator.createSource(newSourceConfig,
+                                                  layerConfig.id,
+                                                  layerConfig.attribution,
+                                                  mapConfig.documentRoot,
+                                                  projectAOI));
         }
     } else if (layerConfig.sourceConfig.type === "PlanetDaily") {
         // since PlanetDaily layer is not created when collection page is loaded

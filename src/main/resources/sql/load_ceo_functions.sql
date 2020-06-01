@@ -1842,23 +1842,28 @@ $$ LANGUAGE SQL;
 -- Returns project aggregate data
 CREATE OR REPLACE FUNCTION dump_project_plot_data(_project_uid integer)
  RETURNS TABLE (
-        plot_id              integer,
-        lon                  float,
-        lat                  float,
-        plot_shape           text,
-        plot_size            float,
-        email                text,
-        confidence           integer,
-        flagged              integer,
-        assigned             integer,
-        collection_time      timestamp,
-        analysis_duration    numeric,
-        samples              text,
-        ext_plot_data        jsonb
+        plot_id                     integer,
+        lon                         float,
+        lat                         float,
+        plot_shape                  text,
+        plot_size                   float,
+        email                       text,
+        confidence                  integer,
+        flagged                     integer,
+        assigned                    integer,
+        collection_time             timestamp,
+        analysis_duration           numeric,
+        samples                     text,
+        common_securewatch_date     date,
+        total_securewatch_dates     integer,
+        ext_plot_data               jsonb
  ) AS $$
 
     WITH all_rows AS (
-        SELECT pl.ext_id as pl_ext_id, *
+        SELECT pl.ext_id as pl_ext_id,
+        (CASE WHEN imagery_attributes->>'imagerySecureWatchDate' = '' OR imagery_attributes->'imagerySecureWatchDate' IS NULL THEN NULL
+  			ELSE TO_DATE(imagery_attributes->>'imagerySecureWatchDate', 'YYYY-MM-DD') END) as imagerySecureWatchDate,
+        *
         FROM select_all_project_plots(_project_uid) pl
         INNER JOIN samples s
             ON s.plot_rid = pl.plot_id
@@ -1886,7 +1891,9 @@ CREATE OR REPLACE FUNCTION dump_project_plot_data(_project_uid integer)
                     format('{"%s":"%s", "%s":%s}', 'id', sample_uid, 'value', "value")
                 END) , ', ')) as samples,
             pl_ext_id,
-            project_id
+            project_id,
+            MAX(imagerySecureWatchDate) as common_securewatch_date,
+            COUNT(imagerySecureWatchDate) as total_securewatch_dates
         FROM all_rows
         GROUP BY plot_id, center, pl_ext_id, project_id
     )
@@ -1902,6 +1909,8 @@ CREATE OR REPLACE FUNCTION dump_project_plot_data(_project_uid integer)
         collection_time::timestamp,
         analysis_duration,
         samples,
+        common_securewatch_date,
+        total_securewatch_dates::integer,
         pfd.rem_data
     FROM projects p
     INNER JOIN plots_agg pa

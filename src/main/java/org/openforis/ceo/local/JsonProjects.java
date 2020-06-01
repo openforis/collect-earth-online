@@ -531,6 +531,27 @@ public class JsonProjects implements Projects {
                         plotSummary.add("distribution",
                                 getValueDistribution(samples, getSampleValueTranslations(sampleValueGroups)));
 
+                        final var samplesUsingSecureWatch = filterJsonArray(samples, sample ->
+                                sample.has("imageryAttributes") &&
+                                    sample.get("imageryAttributes").getAsJsonObject().has("imagerySecureWatchDate")
+                        );
+                        plotSummary.addProperty("total_securewatch_dates", samplesUsingSecureWatch.size());
+
+                        var commonSecureWatchDate = toStream(samplesUsingSecureWatch)
+                            .map(sample ->
+                                 sample.get("imageryAttributes")
+                                 .getAsJsonObject()
+                                 .get("imagerySecureWatchDate")
+                                 .getAsString()
+                                 .substring(0, 10))
+                            .collect(Collectors.groupingBy(w -> w, Collectors.counting()))
+                            .entrySet()
+                            .stream()
+                            .max(Comparator.comparing(Map.Entry::getValue))
+                            .get()
+                            .getKey();
+                        plotSummary.addProperty("common_securewatch_date", commonSecureWatchDate);
+
                         if (plotHeaders.size() > 0 && plotData.containsKey(plot.has("plotId")
                                 ? plot.get("plotId").getAsString()
                                 : plot.get("id").getAsString()))
@@ -551,7 +572,7 @@ public class JsonProjects implements Projects {
                         .map(head -> !head.toString().contains("pl_") ? "pl_" + head : head)
                     ).toArray(String[]::new);
 
-            return outputAggregateCsv(res, sampleValueGroups, plotSummaries, projectName,combinedHeaders);
+            return outputAggregateCsv(res, sampleValueGroups, plotSummaries, projectName, combinedHeaders);
 
         } else {
             res.raw().setStatus(SC_NO_CONTENT);
@@ -633,6 +654,18 @@ public class JsonProjects implements Projects {
                                         sampleSummary.addProperty(key, attributes.get(key).getAsString());
                                         if (!optionalHeaders.contains(key)) optionalHeaders.add(key);
                                     });
+                                }
+                            }
+
+                            if (sample.has("imageryAttributes")) {
+                                final var attributeData = sample.get("imageryAttributes").getAsJsonObject();
+                                if (attributeData.has("imagerySecureWatchDate")) {
+                                    sampleSummary.addProperty("imagerySecureWatchDate", attributeData.get("imagerySecureWatchDate").getAsString());
+                                    if (!optionalHeaders.contains("imagerySecureWatchDate")) optionalHeaders.add("imagerySecureWatchDate");
+                                }
+                                if (attributeData.has("imagerySecureWatchCloudCover")) {
+                                    sampleSummary.addProperty("imagerySecureWatchCloudCover", attributeData.get("imagerySecureWatchCloudCover").getAsString());
+                                    if (!optionalHeaders.contains("imagerySecureWatchCloudCover")) optionalHeaders.add("imagerySecureWatchCloudCover");
                                 }
                             }
 
