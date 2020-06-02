@@ -1,4 +1,4 @@
-export const attributionText =
+export const mapboxAttributionText =
 "<div class=\"mapbox-attribution-container\"> \
     <a href=\"http://mapbox.com/about/maps\" \
         class=\"mapbox-wordmark\" \
