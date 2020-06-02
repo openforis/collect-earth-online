@@ -155,32 +155,31 @@ public class JsonUsers implements Users {
         var inputCurrentPassword = req.queryParams("current-password");
 
         // Validate input params and assign flash_message if invalid
-        if (!isEmail(inputEmail)) {
+        if (inputCurrentPassword.length() == 0) {
+            req.session().attribute("flash_message", "Current Password required");
+        // let user change email without changing password
+        } else if (inputEmail.length() > 0 && !isEmail(inputEmail)) {
             req.session().attribute("flash_message", inputEmail + " is not a valid email address.");
-            return req;
-        } else if (inputPassword.length() < 8) {
-            req.session().attribute("flash_message", "Password must be at least 8 characters.");
-            return req;
+        // let user change email without changing password
+        } else if (inputPassword.length() > 0 && inputPassword.length() < 8) {
+            req.session().attribute("flash_message", "New Password must be at least 8 characters.");
         } else if (!inputPassword.equals(inputPasswordConfirmation)) {
-            req.session().attribute("flash_message", "Password and Password confirmation do not match.");
-            return req;
+            req.session().attribute("flash_message", "New Password and Password confirmation do not match.");
         } else {
             var users = elementToArray(readJsonFile("user-list.json"));
             var matchingUser = findInJsonArray(users, user -> user.get("id").getAsString().equals(userId));
             if (!matchingUser.isPresent()) {
                 req.session().attribute("flash_message", "The requested user account does not exist.");
-                return req;
             } else {
                 var foundUser = matchingUser.get();
                 if (!foundUser.get("password").getAsString().equals(inputCurrentPassword)) {
                     req.session().attribute("flash_message", "Invalid password.");
-                    return req;
                 } else {
                     mapJsonFile("user-list.json",
                                 user -> {
                                     if (user.get("id").getAsString().equals(userId)) {
-                                        user.addProperty("email", inputEmail);
-                                        user.addProperty("password", inputPassword);
+                                        user.addProperty("email", inputEmail.isEmpty() ? foundUser.get("email").getAsString() : inputEmail);
+                                        user.addProperty("password", inputPassword.isEmpty() ? foundUser.get("password").getAsString() : inputPassword);
                                         user.addProperty("mailing-list", mailingListSubscription != null);
                                         return user;
                                     } else {
@@ -189,10 +188,10 @@ public class JsonUsers implements Users {
                                 });
                     req.session().attribute("username", inputEmail);
                     req.session().attribute("flash_message", "The user has been updated.");
-                    return req;
                 }
             }
         }
+        return req;
     }
 
     public Request getPasswordResetKey(Request req, Response res) {
@@ -331,9 +330,9 @@ public class JsonUsers implements Users {
             return "";
         } else {
             var foundUser = matchingUser.get();
-            foundUser.remove("password");
-            foundUser.remove("resetKey");
-            return foundUser.getAsString();
+            var userDetailsObject = new JsonObject();
+            userDetailsObject.addProperty("mailingListSubscription", foundUser.get("mailing-list").getAsBoolean());
+            return userDetailsObject.toString();
         }
     }
 
