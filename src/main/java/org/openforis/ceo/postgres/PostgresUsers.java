@@ -130,11 +130,12 @@ public class PostgresUsers implements Users {
     }
 
     public Request updateAccount(Request req, Response res) {
-        final var userId =                        Integer.parseInt(req.queryParams("userId"));
+        final var userId =                        Integer.parseInt(req.session().attribute("userid"));
         final var storedEmail =                   (String) req.session().attribute("username");
         final var inputEmail =                    req.queryParams("email");
         final var inputPassword =                 req.queryParams("password");
         final var inputPasswordConfirmation =     req.queryParams("password-confirmation");
+        final var mailingListSubscription =       req.queryParams("mailing-list-subscription");
         final var inputCurrentPassword =          req.queryParams("current-password");
 
         // Validate input params and assign flash_message if invalid
@@ -152,7 +153,8 @@ public class PostgresUsers implements Users {
             try (var conn = connect();
                  var pstmt_user = conn.prepareStatement("SELECT * FROM email_taken(?,?)");
                  var pstmt_email = conn.prepareStatement("SELECT * FROM set_user_email(?,?)");
-                 var pstmt_pass = conn.prepareStatement("SELECT * FROM update_password(?,?)")) {
+                 var pstmt_pass = conn.prepareStatement("SELECT * FROM update_password(?,?)");
+                 var pstmt_mailing_list = conn.prepareStatement("SELECT * FROM set_mailing_list(?,?)")) {
                 if (inputEmail.length() > 0 && !storedEmail.equals(inputEmail)) {
                     pstmt_user.setString(1, inputEmail);
                     pstmt_user.setInt(2, userId);
@@ -174,6 +176,11 @@ public class PostgresUsers implements Users {
                     pstmt_pass.execute();
                     req.session().attribute("flash_message", "The user password has been updated.");
                 }
+                var enableMailingList = mailingListSubscription != null;
+                pstmt_mailing_list.setInt(1, userId);
+                pstmt_mailing_list.setBoolean(2, enableMailingList);
+                pstmt_mailing_list.execute();
+                req.session().attribute("flash_message", "The changes have been updated.");
             } catch (SQLException e) {
                 System.out.println(e.getMessage());
                 req.session().attribute("flash_message", "There was an issue updating your account.  Please check the console.");
@@ -311,6 +318,25 @@ public class PostgresUsers implements Users {
         }
     }
 
+    public String getUserDetails(Request req, Response res) {
+        final var userId = Integer.parseInt(req.queryParams("userId"));
+        try (var conn = connect();
+             var pstmt = conn.prepareStatement("SELECT * FROM get_user_details(?)");) {
+
+            pstmt.setInt(1, userId);
+            try (var rs = pstmt.executeQuery()) {
+                var userJson = new JsonObject();
+                if (rs.next()) {
+                    userJson.addProperty("mailingListSubscription", rs.getBoolean("mailing_list"));
+                }
+                return userJson.toString();
+            }
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+            return "";
+        }
+    }
+
     public String getUserStats(Request req, Response res) {
         final var userName = Integer.parseInt(req.queryParams("userId"));
         try (var conn = connect();
@@ -418,7 +444,7 @@ public class PostgresUsers implements Users {
             req.session().attribute("flash_message", "Subject and Body are mandatory fields.");
         } else {
             try (var conn = connect();
-                 var pstmt = conn.prepareStatement("SELECT * FROM get_all_users()")) {
+                 var pstmt = conn.prepareStatement("SELECT * FROM get_all_mailing_list_users()")) {
 
                 var emails = new ArrayList<String>();
                 try (var rs = pstmt.executeQuery()) {

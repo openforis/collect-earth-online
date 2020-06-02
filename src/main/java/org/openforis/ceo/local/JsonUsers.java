@@ -40,6 +40,7 @@ public class JsonUsers implements Users {
     private static final String SMTP_SERVER   = CeoConfig.smtpServer;
     private static final String SMTP_PORT     = CeoConfig.smtpPort;
     private static final String SMTP_PASSWORD = CeoConfig.smtpPassword;
+    private static final String SMTP_RECIPIENT_LIMIT = CeoConfig.smtpRecipientLimit;
 
     public Request login(Request req, Response res) {
         var inputEmail = req.queryParams("email");
@@ -150,6 +151,7 @@ public class JsonUsers implements Users {
         var inputEmail = req.queryParams("email");
         var inputPassword = req.queryParams("password");
         var inputPasswordConfirmation = req.queryParams("password-confirmation");
+        var mailingListSubscription = req.queryParams("mailing-list-subscription");
         var inputCurrentPassword = req.queryParams("current-password");
 
         // Validate input params and assign flash_message if invalid
@@ -179,6 +181,7 @@ public class JsonUsers implements Users {
                                     if (user.get("id").getAsString().equals(userId)) {
                                         user.addProperty("email", inputEmail);
                                         user.addProperty("password", inputPassword);
+                                        user.addProperty("mailing-list", mailingListSubscription != null);
                                         return user;
                                     } else {
                                         return user;
@@ -317,6 +320,20 @@ public class JsonUsers implements Users {
                 .toString();
         } else {
             return (new JsonArray()).toString();
+        }
+    }
+
+    public String getUserDetails(Request req, Response res) {
+        final var userId = req.queryParams("userId");
+        var users = elementToArray(readJsonFile("user-list.json"));
+        var matchingUser = findInJsonArray(users, user -> user.get("id").getAsString().equals(userId));
+        if (!matchingUser.isPresent()) {
+            return "";
+        } else {
+            var foundUser = matchingUser.get();
+            foundUser.remove("password");
+            foundUser.remove("resetKey");
+            return foundUser.getAsString();
         }
     }
 
@@ -549,8 +566,11 @@ public class JsonUsers implements Users {
         } else {
             try {
                 var users = elementToArray(readJsonFile("user-list.json"));
-                var emails = toStream(users).map(user -> user.get("email").getAsString()).collect(Collectors.toList());
-                sendMail(SMTP_USER, null, null, emails, SMTP_SERVER, SMTP_PORT, SMTP_PASSWORD, inputSubject, inputBody, Mail.CONTENT_TYPE_HTML);
+                var emails = toStream(users)
+                        .filter(user -> user.get("mailing-list").getAsBoolean())
+                        .map(user -> user.get("email").getAsString())
+                        .collect(Collectors.toList());
+                Mail.sendMailingList(SMTP_USER, emails, SMTP_SERVER, SMTP_PORT, SMTP_PASSWORD, inputSubject, inputBody, Mail.CONTENT_TYPE_HTML, Integer.parseInt(SMTP_RECIPIENT_LIMIT));
                 req.session().attribute("flash_message", "Your message has been sent to the mailing list.");
             } catch (Exception e) {
                 System.out.println(e.getMessage());

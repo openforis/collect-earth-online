@@ -8,7 +8,8 @@ CREATE TABLE users (
     email            text NOT NULL UNIQUE,
     password         varchar(72) NOT NULL,
     administrator    boolean DEFAULT FALSE,
-    reset_key        text DEFAULT NULL
+    reset_key        text DEFAULT NULL,
+    mailing_list     boolean DEFAULT TRUE
 );
 
 -- Stores information about institutions

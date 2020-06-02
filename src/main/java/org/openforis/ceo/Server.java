@@ -226,6 +226,7 @@ public class Server implements SparkApplication {
         // Routing Table: Users API
         get("/get-all-users",                         users::getAllUsers);
         get("/get-institution-users",                 users::getInstitutionUsers);
+        get("/get-user-details",                      users::getUserDetails);
         get("/get-user-stats",                        users::getUserStats);
         get("/update-project-user-stats",             users::updateProjectUserStats);
         post("/update-user-institution-role",         users::updateInstitutionRole);
