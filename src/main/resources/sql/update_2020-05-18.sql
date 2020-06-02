@@ -53,6 +53,17 @@ WHERE base_map_source NOT IN (
 	SELECT title FROM imagery
 );
 
+-- update where base_map_source is PlanetGlobalMosaic
+UPDATE projects
+SET imagery_rid = (
+    SELECT imagery_uid
+    FROM imagery
+    WHERE title='PlanetGlobalMosaic'
+        AND institution_rid=3
+    LIMIT 1
+)
+WHERE base_map_source = 'PlanetGlobalMosaic';
+
 -- drop base_map_source
 ALTER TABLE projects
 DROP COLUMN base_map_source CASCADE;
