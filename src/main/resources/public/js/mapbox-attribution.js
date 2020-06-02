@@ -8,7 +8,7 @@ export const mapboxAttributionText =
             height: 33px; \
             width: 107.25px; \
             right: 1rem; \
-            bottom: 2rem; \
+            bottom: 1.5rem; \
             text-indent: -9999px; \
             z-index: 99999; \
             overflow: hidden; \
