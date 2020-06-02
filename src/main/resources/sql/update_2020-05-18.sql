@@ -173,8 +173,6 @@ CREATE FUNCTION update_project(
 
 $$ LANGUAGE SQL;
 
-DROP VIEW project_boundary;
-
 CREATE VIEW project_boundary AS
 SELECT
     project_uid,
