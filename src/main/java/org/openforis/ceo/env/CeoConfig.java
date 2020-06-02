@@ -9,5 +9,6 @@ public class CeoConfig {
     public static String smtpServer = "";
     public static String smtpPort = "";
     public static String smtpPassword = "";
+    public static String smtpRecipientLimit = "";
 
 }

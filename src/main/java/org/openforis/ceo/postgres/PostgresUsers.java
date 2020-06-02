@@ -31,6 +31,7 @@ public class PostgresUsers implements Users {
     private static final String SMTP_SERVER   = CeoConfig.smtpServer;
     private static final String SMTP_PORT     = CeoConfig.smtpPort;
     private static final String SMTP_PASSWORD = CeoConfig.smtpPassword;
+    private static final String SMTP_RECIPIENT_LIMIT = CeoConfig.smtpRecipientLimit;
 
     public Request login(Request req, Response res) {
         var inputEmail =        req.queryParams("email");
@@ -424,7 +425,7 @@ public class PostgresUsers implements Users {
                     while (rs.next()) {
                        emails.add(rs.getString("email"));
                     }
-                    Mail.sendMailingList(SMTP_USER, emails, SMTP_SERVER, SMTP_PORT, SMTP_PASSWORD, inputSubject, inputBody, Mail.CONTENT_TYPE_HTML, 499);
+                    Mail.sendMailingList(SMTP_USER, emails, SMTP_SERVER, SMTP_PORT, SMTP_PASSWORD, inputSubject, inputBody, Mail.CONTENT_TYPE_HTML, Integer.parseInt(SMTP_RECIPIENT_LIMIT));
                     req.session().attribute("flash_message", "Your message has been sent to the mailing list.");
                 }
             } catch (SQLException e) {
