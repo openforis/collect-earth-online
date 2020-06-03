@@ -78,7 +78,8 @@ public class Views {
     }
 
     public static Route account(FreeMarkerEngine freemarker) {
-        Function<Request, String> getAccountId = (req) -> req.queryParams("userId");
+        Function<Request, String> getAccountId = (req) ->
+            req.queryParams("userId") != null ? req.queryParams("userId") : req.session().attribute("userid");
         return makeRoute("Account",
                          freemarker,
                          Map.of("account_id", getAccountId));
