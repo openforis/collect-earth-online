@@ -3,7 +3,7 @@ ALTER TABLE users ADD mailing_list boolean DEFAULT TRUE;
 CREATE OR REPLACE FUNCTION set_mailing_list(_user_uid integer, _enable boolean)
  RETURNS void AS $$
 
-    UPDATE users SET mailing_list = _enable
+    UPDATE users SET mailing_list = _enable WHERE user_uid = _user_rid
 
 $$ LANGUAGE SQL;
 

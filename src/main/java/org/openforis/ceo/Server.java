@@ -309,6 +309,7 @@ public class Server implements SparkApplication {
         CeoConfig.smtpServer    = smtpSettings.get("smtpServer").getAsString();
         CeoConfig.smtpPort      = smtpSettings.get("smtpPort").getAsString();
         CeoConfig.smtpPassword  = smtpSettings.get("smtpPassword").getAsString();
+        CeoConfig.smtpRecipientLimit  = smtpSettings.get("smtpRecipientLimit").getAsString();
 
         // Start the HTTPS Jetty webserver on port 8080
         port(8080);

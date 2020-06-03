@@ -8,7 +8,7 @@ class MailingList extends React.Component {
         super(props);
         this.state = {
             subject: "",
-            body: `<br /><br />--<p><a href="${window.location.origin}/unsubscribe">Unsubscribe</a></p>`,
+            body: `<br /><br />--<p><a href="${window.location.origin}/account">Unsubscribe</a></p>`,
         };
     }
 
