@@ -37,7 +37,7 @@ class Collection extends React.Component {
             storedInterval: null,
             KMLFeatures: null,
             hasGeoDash: false,
-            showMapOrSidebar: "image-analysis-pane",
+            showSidebar: false,
         };
     }
 
@@ -1154,11 +1154,11 @@ class Collection extends React.Component {
         </div>
     );
 
-    showMapOrSidebar = () => {
+    toggleShowSidebar = () => {
         this.setState(prevState => ({
-            showMapOrSidebar: prevState.showMapOrSidebar !== "image-analysis-pane" ? "image-analysis-pane" : "sidebar",
+            showSidebar: !prevState.showSidebar,
         }), () => {
-            window.location = `#${this.state.showMapOrSidebar}`;
+            window.location = this.state.showSidebar ? "#sidebar" : "#image-analysis-pane";
         });
     };
 
@@ -1169,9 +1169,13 @@ class Collection extends React.Component {
         return (
             <Fragment>
                 <ImageAnalysisPane imageryAttribution={this.state.imageryAttribution}/>
-                <div onClick={this.showMapOrSidebar} className="d-xl-none" style={{ position: "absolute", zIndex: 99999, right: "1rem", height: "3rem", width: "3rem", lineHeight: "1rem", backgroundColor: "#31BAB0", borderRadius: ".2rem" }}>
-                    <div style={{ marginLeft: "1rem", marginTop: "1rem", color: "white" }}>
-                        {this.state.showMapOrSidebar === "image-analysis-pane" ? <UnicodeIcon icon="downCaret"/> : <UnicodeIcon icon="upCaret"/>}
+                <div
+                    onClick={this.toggleShowSidebar}
+                    className="d-xl-none btn bg-lightgreen"
+                    style={{ position: "absolute", zIndex: 99999, right: "1rem", lineHeight: "1rem", marginRight: "2rem" }}
+                >
+                    <div style={{ padding: ".5rem", color: "white" }}>
+                        {this.state.showSidebar ? <UnicodeIcon icon="upCaret"/> : <UnicodeIcon icon="downCaret"/> }
                     </div>
                 </div>
                 <SideBar
