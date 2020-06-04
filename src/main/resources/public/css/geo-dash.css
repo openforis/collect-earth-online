@@ -301,6 +301,7 @@ input:checked+.switchslider:before {
     color: white;
     line-height: 26px;
     cursor: default;
+    min-height: 26px;
 }
 input#widgetDualLayer {
     display: inline-block;

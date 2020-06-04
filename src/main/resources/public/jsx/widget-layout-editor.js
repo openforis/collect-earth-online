@@ -1364,7 +1364,7 @@ class BasicLayout extends React.PureComponent {
                         name="graphBandDeg"
                         value={this.state.graphBandDeg}
                         className="form-control"
-                        id="widgetIndicesSelect"
+                        id="graphBandDegSelect"
                         onChange={this.onGraphBandDegChange}
                     >
                         <option label="NDFI" value="NDFI" selected>NDFI</option>

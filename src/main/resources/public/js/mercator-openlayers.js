@@ -29,6 +29,7 @@ import { Circle as CircleStyle, Icon, Fill, Stroke, Style, Text as StyleText, Re
 import { fromLonLat, transform, transformExtent } from "ol/proj";
 import { fromExtent, fromCircle } from "ol/geom/Polygon";
 import { formatDateISO } from "../jsx/utils/dateUtils";
+import { mapboxAttributionText } from "./mapbox-attribution";
 
 /******************************************************************************
 ***
@@ -98,17 +99,13 @@ mercator.getViewRadius = function (mapConfig) {
 // Layer switcher for planet daily maps
 class PlanetLayerSwitcher extends Control {
 
-    constructor(opt_options) {
+    constructor(options) {
 
-        const options = opt_options;
-
-        const layerLists = options.layers;
-
+        const { layers, target } = options;
         const element = document.createElement("div");
-
         super({
             element: element,
-            target: options.target,
+            target: target,
         });
 
         this.hiddenClassName = "ol-unselectable ol-control planet-layer-switcher";
@@ -123,7 +120,7 @@ class PlanetLayerSwitcher extends Control {
         ul.className = "planet-layer-switcher-ul";
         panel.appendChild(ul);
 
-        layerLists.map(layer => this.createLayerList(layer)).reverse().map(li => ul.appendChild(li));
+        layers.map(layer => this.createLayerList(layer)).reverse().map(li => ul.appendChild(li));
     }
 
     setMap = (map) => super.setMap(map);
@@ -142,9 +139,7 @@ class PlanetLayerSwitcher extends Control {
         input.id = layer.get("title");
         input.checked = layer.getVisible();
 
-        input.onchange = function(e) {
-            layer.setVisible(!layer.getVisible());
-        };
+        input.onchange = () => layer.setVisible(!layer.getVisible());
 
         li.appendChild(input);
         li.appendChild(label);
@@ -414,7 +409,8 @@ mercator.createSource = function (sourceConfig, imageryId, attribution, document
                  + sourceConfig.layerName
                  + "/{z}/{x}/{y}.jpg90"
                  + "?access_token=" + sourceConfig.accessToken,
-            attributions: attribution,
+            attributions: mapboxAttributionText,
+            attributionsCollapsible: false,
         });
     } else if (sourceConfig.type === "MapBoxStatic") {
         return new XYZ({
@@ -423,7 +419,8 @@ mercator.createSource = function (sourceConfig, imageryId, attribution, document
                  + sourceConfig.mapStyleId
                  + "/tiles/256/{z}/{x}/{y}"
                  + "?access_token=" + sourceConfig.accessToken,
-            attributions: attribution,
+            attributions:  mapboxAttributionText,
+            attributionsCollapsible: false,
         });
     } else {
         return new OSM();
@@ -487,16 +484,20 @@ mercator.verifyZoomLevel = function (zoomLevel) {
 // [Pure] Predicate
 // FIXME: Build out this function stub to check for all the relevant keys for each valid imagery type
 mercator.verifySourceConfig = function (sourceConfig) {
-    return true;
+    return sourceConfig;
 };
 
 // [Pure] Predicate
 mercator.verifyLayerConfig = function (layerConfig) {
-    const layerKeys = Object.keys(layerConfig);
-    return layerKeys.includes("title")
-        && layerKeys.includes("extent")
-        && layerKeys.includes("sourceConfig")
-        && mercator.verifySourceConfig(layerConfig.sourceConfig);
+    if (layerConfig) {
+        const layerKeys = Object.keys(layerConfig);
+        return layerKeys.includes("title")
+            && layerKeys.includes("extent")
+            && layerKeys.includes("sourceConfig")
+            && mercator.verifySourceConfig(layerConfig.sourceConfig);
+    } else {
+        return false;
+    }
 };
 
 // [Pure] Predicate

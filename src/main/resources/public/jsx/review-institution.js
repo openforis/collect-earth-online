@@ -757,7 +757,7 @@ class NewImagery extends React.Component {
             });
         } else if (imageryOptions[val].includes("Mapbox")) {
             this.setState({
-                newImageryAttribution: "Mapbox (OSM and Mapbox links)",
+                newImageryAttribution: "© Mapbox",
                 newImageryParams: {},
             });
         } else {
