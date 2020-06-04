@@ -1,6 +1,6 @@
 export const mapboxAttributionText =
 "<div class=\"mapbox-attribution-container\"> \
-    <a href=\"http://mapbox.com/about/maps\" \
+    <a href=\"http://www.mapbox.com/about/maps\" \
         class=\"mapbox-wordmark\" \
         target=\"_blank\" \
         style=\"  position: absolute; \
@@ -17,9 +17,9 @@ export const mapboxAttributionText =
             background-position: 0 0; \
             background-size: 107.25px 33px;\" \
     ></a> \
-    © <a href=\"https://www.mapbox.com/about/maps/\">Mapbox</a> \
+    © <a href=\"https://www.mapbox.com/about/maps\">Mapbox</a> \
     © <a href=\"http://www.openstreetmap.org/copyright\">OpenStreetMap</a> \
-    <a href=\"https://www.mapbox.com/map-feedback/\" target=\"_blank\"> \
+    <a href=\"https://www.mapbox.com/map-feedback\" target=\"_blank\"> \
         <strong>Improve this map</strong> \
     </a> \
 </div>";
