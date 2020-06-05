@@ -153,9 +153,10 @@ public class Server implements SparkApplication {
         });
 
         // Block cross traffic for proxy route
-        before("/get-tile", (request, response) -> {
-            // "referer" is spelled wrong, but is the correct name for this header.
-            if (request.headers("referer") == null || !request.headers("referer").contains(request.host())) {
+        before((request, response) -> {
+            if (List.of("/get-tile", "/get-securewatch-dates").contains(request.uri())
+                    // "referer" is spelled wrong, but is the correct name for this header.
+                    && (request.headers("referer") == null || !request.headers("referer").contains(request.host()))) {
                 halt(403, "Forbidden!");
             }
         });
