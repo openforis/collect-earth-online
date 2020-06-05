@@ -125,6 +125,14 @@ public class JsonProjects implements Projects {
         }
     }
 
+    public Integer getFirstPublicImageryId() {
+        var imageries = elementToArray(readJsonFile("imagery-list.json"));
+        var publicImagery = toStream(imageries)
+                .filter(image -> image.get("visibility").getAsString().equals("public"))
+                .findFirst().get();
+        return publicImagery.get("id").getAsInt();
+    }
+
     public String getAllProjects(Request req, Response res) {
         final var userId = req.session().attributes().contains("userid") ? req.session().attribute("userid").toString() : "-1";
         var intUserId = Integer.parseInt(userId.isEmpty() ? "0" : userId);
@@ -771,13 +779,15 @@ public class JsonProjects implements Projects {
         mapJsonFile("project-list.json",
                 project -> {
                     if (project.get("id").getAsString().equals(getOrEmptyString(jsonInputs, "projectId").getAsString())) {
-                        project.addProperty("name",           getOrEmptyString(jsonInputs, "name").getAsString());
-                        project.addProperty("description",    getOrEmptyString(jsonInputs, "description").getAsString());
-                        project.addProperty("privacyLevel",   getOrEmptyString(jsonInputs, "privacyLevel").getAsString());
-                        project.addProperty("baseMapSource",  getOrEmptyString(jsonInputs, "baseMapSource").getAsString());
-                        project.add("projectOptions",         jsonInputs.has("projectOptions")
-                                                                ? jsonInputs.get("projectOptions").getAsJsonObject()
-                                                                : parseJson("{\"showGEEScript\":false}").getAsJsonObject());
+                        project.addProperty("name",          getOrEmptyString(jsonInputs, "name").getAsString());
+                        project.addProperty("description",   getOrEmptyString(jsonInputs, "description").getAsString());
+                        project.addProperty("privacyLevel",  getOrEmptyString(jsonInputs, "privacyLevel").getAsString());
+                        project.addProperty("imageryId",     jsonInputs.has("imageryId")
+                                                                        ? jsonInputs.get("imageryId").getAsInt()
+                                                                        : getFirstPublicImageryId());
+                        project.add("projectOptions",        jsonInputs.has("projectOptions")
+                                                                        ? jsonInputs.get("projectOptions").getAsJsonObject()
+                                                                        : parseJson("{\"showGEEScript\":false}").getAsJsonObject());
                         return project;
                     } else {
                         return project;
@@ -1328,9 +1338,11 @@ public class JsonProjects implements Projects {
 
             var newProject = new JsonObject();
 
-            newProject.addProperty("baseMapSource", jsonInputs.get("baseMapSource").getAsString());
             newProject.addProperty("description", jsonInputs.get("description").getAsString());
             newProject.addProperty("institution", jsonInputs.get("institutionId").getAsInt());
+            newProject.addProperty("imageryId", jsonInputs.has("imageryId")
+                                                ? jsonInputs.get("imageryId").getAsInt()
+                                                : getFirstPublicImageryId());
             newProject.addProperty("lonMin", getOrZero(jsonInputs,"lonMin").getAsDouble());
             newProject.addProperty("latMin", getOrZero(jsonInputs,"latMin").getAsDouble());
             newProject.addProperty("lonMax", getOrZero(jsonInputs,"lonMax").getAsDouble());

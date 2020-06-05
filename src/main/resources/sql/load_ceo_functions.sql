@@ -613,6 +613,18 @@ CREATE OR REPLACE FUNCTION update_imagery(_imagery_uid integer, _institution_rid
 
 $$ LANGUAGE SQL;
 
+-- Returns first public imagery
+CREATE OR REPLACE FUNCTION select_first_public_imagery()
+ RETURNS integer AS $$
+
+    SELECT imagery_uid
+    FROM imagery
+    WHERE visibility = 'public'
+    ORDER BY imagery_uid
+    LIMIT 1
+
+$$ LANGUAGE SQL;
+
 --
 --  WIDGET FUNCTIONS
 --
@@ -677,12 +689,12 @@ $$ LANGUAGE SQL;
 -- Create a project
 CREATE OR REPLACE FUNCTION create_project(
     _institution_rid         integer,
+    _imagery_rid             integer,
     _availability            text,
     _name                    text,
     _description             text,
     _privacy_level           text,
     _boundary                geometry,
-    _base_map_source         text,
     _plot_distribution       text,
     _num_plots               integer,
     _plot_spacing            float,
@@ -700,10 +712,10 @@ CREATE OR REPLACE FUNCTION create_project(
  ) RETURNS integer AS $$
 
     INSERT INTO projects (
-        institution_rid,        availability,
-        name,                   description,
-        privacy_level,          boundary,
-        base_map_source,        plot_distribution,
+        institution_rid,        imagery_rid,
+        availability,           name,
+        description,            privacy_level,
+        boundary,               plot_distribution,
         num_plots,              plot_spacing,
         plot_shape,             plot_size,
         sample_distribution,    samples_per_plot,
@@ -712,10 +724,10 @@ CREATE OR REPLACE FUNCTION create_project(
         classification_times,   token_key,
         options
     ) VALUES (
-        _institution_rid,        _availability,
-        _name,                   _description,
-        _privacy_level,          _boundary,
-        _base_map_source,        _plot_distribution,
+        _institution_rid,       _imagery_rid,
+        _availability,           _name,
+        _description,            _privacy_level,
+        _boundary,               _plot_distribution,
         _num_plots,              _plot_spacing,
         _plot_shape,             _plot_size,
         _sample_distribution,    _samples_per_plot,
@@ -757,7 +769,7 @@ CREATE OR REPLACE FUNCTION update_project(
     _name                    text,
     _description             text,
     _privacy_level           text,
-    _base_map_source         text,
+    _imagery_rid             integer,
     _options                 jsonb
  ) RETURNS void AS $$
 
@@ -765,7 +777,7 @@ CREATE OR REPLACE FUNCTION update_project(
     SET name = _name,
         description = _description,
         privacy_level = _privacy_level,
-        base_map_source = _base_map_source,
+        imagery_rid = _imagery_rid,
         options = _options
     WHERE project_uid = _project_uid
 
@@ -1157,12 +1169,12 @@ CREATE VIEW project_boundary AS
 SELECT
     project_uid,
     institution_rid,
+    imagery_rid,
     availability,
     name,
     description,
     privacy_level,
     ST_AsGeoJSON(boundary),
-    base_map_source,
     plot_distribution,
     num_plots,
     plot_spacing,

@@ -11,7 +11,7 @@ import { encodeFileAsBase64 } from "./utils/fileUtils";
 const blankProject = {
     archived: false,
     availability: "nonexistent",
-    baseMapSource: "",
+    imageryId: -1,
     boundary: null,
     description: "",
     id: 0,
@@ -69,8 +69,9 @@ class Project extends React.Component {
         }
 
         if (this.state.mapConfig
-            && this.state.projectDetails.baseMapSource !== prevState.projectDetails.baseMapSource) {
-            mercator.setVisibleLayer(this.state.mapConfig, this.state.projectDetails.baseMapSource);
+            && this.state.projectDetails.imageryId !== prevState.projectDetails.imageryId) {
+            const baseMap = this.state.imageryList.find(imagery => imagery.id === this.state.projectDetails.imageryId);
+            mercator.setVisibleLayer(this.state.mapConfig, baseMap.title);
         }
 
         if (this.state.mapConfig
@@ -116,11 +117,11 @@ class Project extends React.Component {
                   contentType: "application/json; charset=utf-8",
                   body: JSON.stringify({
                       institutionId: this.props.institutionId,
+                      imageryId:this.state.projectDetails.imageryId,
                       lonMin: this.state.coordinates.lonMin,
                       lonMax: this.state.coordinates.lonMax,
                       latMin: this.state.coordinates.latMin,
                       latMax: this.state.coordinates.latMax,
-                      baseMapSource: this.state.projectDetails.baseMapSource,
                       description: this.state.projectDetails.description,
                       name: this.state.projectDetails.name,
                       projectOptions: this.state.projectOptions,
@@ -238,7 +239,7 @@ class Project extends React.Component {
             alert("A sample SHP (.zip) file is required.");
             return false;
 
-        } else if (!projectDetails.baseMapSource) {
+        } else if (!projectDetails.imageryId > 0) {
             alert("Select a valid Basemap.");
             return false;
 
@@ -262,7 +263,10 @@ class Project extends React.Component {
     setProjectTemplate = (newTemplateId) => {
         if (parseInt(newTemplateId) === 0) {
             this.setState({
-                projectDetails: { ...blankProject, baseMapSource : this.state.imageryList[0].title },
+                projectDetails: {
+                    ...blankProject,
+                    imageryId: this.state.imageryList[0].id
+                },
                 plotList: [],
                 coordinates: {
                     lonMin: "",
@@ -348,7 +352,7 @@ class Project extends React.Component {
                     imageryList: sorted,
                     projectDetails: {
                         ...this.state.projectDetails,
-                        baseMapSource: sorted[0].title,
+                        imageryId: sorted[0].id
                     },
                 });
             })
@@ -479,7 +483,7 @@ function ProjectDesignForm(props) {
             <ProjectAOI
                 coordinates={props.coordinates}
                 inDesignMode
-                baseMapSource={props.projectDetails.baseMapSource}
+                imageryId={props.projectDetails.imageryId}
                 imageryList={props.imageryList}
                 setProjectDetail={props.setProjectDetail}
             />

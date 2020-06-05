@@ -115,12 +115,12 @@ public class PostgresProjects implements Projects {
         try {
             newProject.addProperty("id",                   rs.getInt("project_id"));
             newProject.addProperty("institution",          rs.getInt("institution_id"));
+            newProject.addProperty("imageryId",            rs.getInt("imagery_id"));
             newProject.addProperty("availability",         rs.getString("availability"));
             newProject.addProperty("name",                 rs.getString("name"));
             newProject.addProperty("description",          rs.getString("description"));
             newProject.addProperty("privacyLevel",         rs.getString("privacy_level"));
             newProject.addProperty("boundary",             rs.getString("boundary"));
-            newProject.addProperty("baseMapSource",        rs.getString("base_map_source"));
             newProject.addProperty("plotDistribution",     rs.getString("plot_distribution"));
             newProject.addProperty("numPlots",             rs.getInt("num_plots"));
             newProject.addProperty("plotSpacing",          rs.getDouble("plot_spacing"));
@@ -501,6 +501,23 @@ public class PostgresProjects implements Projects {
         }
     }
 
+    public Integer getFirstPublicImageryId() {
+        try (var conn = connect();
+             var pstmt = conn.prepareStatement("SELECT * FROM select_first_public_imagery()") ;) {
+
+            try (var rs = pstmt.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt("select_first_public_imagery");
+                } else {
+                    return 0;
+                }
+            }
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+            return 0;
+        }
+    }
+
     public String updateProject(Request req, Response res) {
         try (var conn = connect();
              var pstmt = conn.prepareStatement("SELECT * FROM update_project(?,?,?,?,?,?::JSONB)")) {
@@ -510,7 +527,9 @@ public class PostgresProjects implements Projects {
             pstmt.setString(2, getOrEmptyString(jsonInputs, "name").getAsString());
             pstmt.setString(3, getOrEmptyString(jsonInputs, "description").getAsString());
             pstmt.setString(4, getOrEmptyString(jsonInputs, "privacyLevel").getAsString());
-            pstmt.setString(5, getOrEmptyString(jsonInputs, "baseMapSource").getAsString());
+            pstmt.setInt(5,    jsonInputs.has("imageryId")
+                                    ? jsonInputs.get("imageryId").getAsInt()
+                                    : getFirstPublicImageryId());
             pstmt.setString(6, jsonInputs.has("projectOptions")
                                     ? jsonInputs.get("projectOptions").getAsJsonObject().toString()
                                     : "{\"showGEEScript\":false}");
@@ -886,9 +905,11 @@ public class PostgresProjects implements Projects {
 
             var newProject = new JsonObject();
 
-            newProject.addProperty("baseMapSource",      getOrEmptyString(jsonInputs, "baseMapSource").getAsString());
             newProject.addProperty("description",        getOrEmptyString(jsonInputs, "description").getAsString());
             newProject.addProperty("institution",        getOrZero(jsonInputs, "institutionId").getAsInt());
+            newProject.addProperty("imageryId",          jsonInputs.has("imageryId")
+                                                            ? jsonInputs.get("imageryId").getAsInt()
+                                                            : getFirstPublicImageryId());
             newProject.addProperty("lonMin",             getOrZero(jsonInputs, "lonMin").getAsDouble());
             newProject.addProperty("latMin",             getOrZero(jsonInputs, "latMin").getAsDouble());
             newProject.addProperty("lonMax",             getOrZero(jsonInputs, "lonMax").getAsDouble());
@@ -930,19 +951,19 @@ public class PostgresProjects implements Projects {
 
             final var tokenKey = UUID.randomUUID().toString();
 
-            var SQL = "SELECT * FROM create_project(?,?,?,?,?,ST_SetSRID(ST_GeomFromGeoJSON(?), 4326),?,?,?,?,?,?,?,?,?,?::JSONB,?::JSONB,?::date,?::JSONB,?,?::JSONB)";
+            var SQL = "SELECT * FROM create_project(?,?,?,?,?,?,ST_SetSRID(ST_GeomFromGeoJSON(?), 4326),?,?,?,?,?,?,?,?,?::JSONB,?::JSONB,?::date,?::JSONB,?,?::JSONB)";
             try (var conn = connect();
                  var pstmt = conn.prepareStatement(SQL)) {
 
                 pstmt.setInt(1,     newProject.get("institution").getAsInt());
-                pstmt.setString(2,  newProject.get("availability").getAsString());
-                pstmt.setString(3,  newProject.get("name").getAsString());
-                pstmt.setString(4,  newProject.get("description").getAsString());
-                pstmt.setString(5,  newProject.get("privacyLevel").getAsString());
-                pstmt.setString(6,  newProject.get("boundary").getAsString());
-                pstmt.setString(7,  newProject.get("baseMapSource").getAsString());
+                pstmt.setInt(2,     newProject.get("imageryId").getAsInt());
+                pstmt.setString(3,  newProject.get("availability").getAsString());
+                pstmt.setString(4,  newProject.get("name").getAsString());
+                pstmt.setString(5,  newProject.get("description").getAsString());
+                pstmt.setString(6,  newProject.get("privacyLevel").getAsString());
+                pstmt.setString(7,  newProject.get("boundary").getAsString());
                 pstmt.setString(8,  newProject.get("plotDistribution").getAsString());
-                pstmt.setInt(9,     newProject.get("numPlots").getAsInt());
+                pstmt.setInt(9,    newProject.get("numPlots").getAsInt());
                 pstmt.setDouble(10, newProject.get("plotSpacing").getAsDouble());
                 pstmt.setString(11, newProject.get("plotShape").getAsString());
                 pstmt.setDouble(12, newProject.get("plotSize").getAsDouble());
@@ -952,8 +973,8 @@ public class PostgresProjects implements Projects {
                 pstmt.setString(16, newProject.get("sampleValues").getAsJsonArray().toString());
                 pstmt.setString(17, newProject.get("surveyRules").getAsJsonArray().toString());
                 pstmt.setString(18, newProject.get("createdDate").getAsString());
-                pstmt.setString(19, null);  //classification times
-                pstmt.setString(20, tokenKey);  //token key
+                pstmt.setString(19, null);  // classification times
+                pstmt.setString(20, tokenKey);  // token key
                 pstmt.setString(21, newProject.get("projectOptions").getAsJsonObject().toString());
                 try (var rs = pstmt.executeQuery()) {
                     if (rs.next()) {

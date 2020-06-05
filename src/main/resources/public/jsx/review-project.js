@@ -35,25 +35,28 @@ class Project extends React.Component {
             this.getProjectPlots();
         }
 
-        if (this.state.projectDetails.baseMapSource && this.state.imageryList.length > 0
+        if (this.state.projectDetails.imageryId
+                && this.state.imageryList.length > 0
                 && prevState.imageryList.length === 0) {
             this.initProjectMap();
         }
 
-        if (this.state.mapConfig
-            && this.state.projectDetails.baseMapSource !== prevState.projectDetails.baseMapSource) {
-
-            mercator.setVisibleLayer(this.state.mapConfig, this.state.projectDetails.baseMapSource);
+        if (this.state.mapConfig && this.state.projectDetails.imageryId !== prevState.projectDetails.imageryId) {
+            const baseMap = this.state.imageryList.find(imagery => imagery.id === this.state.projectDetails.imageryId);
+            mercator.setVisibleLayer(this.state.mapConfig, baseMap.title);
         }
 
-        if (this.state.mapConfig
-                && this.state.mapConfig !== prevState.mapConfig) {
+        if (this.state.mapConfig && this.state.mapConfig !== prevState.mapConfig) {
             this.showProjectMap();
         }
 
-        if (this.state.mapConfig && this.state.plotList.length > 0
+        if (this.state.mapConfig
+                && this.state.plotList.length > 0
                 && (!prevState.mapConfig || prevState.plotList.length === 0)) {
-            mercator.addPlotOverviewLayers(this.state.mapConfig, this.state.plotList, this.state.projectDetails.plotShape);
+            mercator.addPlotOverviewLayers(
+                this.state.mapConfig, this.state.plotList,
+                this.state.projectDetails.plotShape
+            );
         }
 
     }
@@ -67,7 +70,7 @@ class Project extends React.Component {
                       contentType: "application/json; charset=utf-8",
                       body: JSON.stringify({
                           projectId: this.state.projectDetails.id,
-                          baseMapSource: this.state.projectDetails.baseMapSource,
+                          imageryId: this.state.projectDetails.imageryId,
                           description: this.state.projectDetails.description,
                           name: this.state.projectDetails.name,
                           privacyLevel: this.state.projectDetails.privacyLevel,
@@ -222,7 +225,8 @@ class Project extends React.Component {
     };
 
     showProjectMap = () => {
-        mercator.setVisibleLayer(this.state.mapConfig, this.state.projectDetails.baseMapSource || this.state.imageryList[0].title);
+        const baseMap = this.state.imageryList.find(imagery => imagery.id === this.state.projectDetails.imageryId);
+        mercator.setVisibleLayer(this.state.mapConfig, baseMap.title || this.state.imageryList[0].title);
 
         // // Extract bounding box coordinates from the project boundary and show on the map
         const boundaryExtent = mercator.parseGeoJson(this.state.projectDetails.boundary, false).getExtent();
@@ -466,7 +470,7 @@ function ProjectDesignReview({ projectDetails, coordinates, imageryList, setProj
             />
             <ProjectAOI
                 coordinates={coordinates}
-                baseMapSource={projectDetails.baseMapSource}
+                imageryId={projectDetails.imageryId}
                 imageryList={imageryList}
                 setProjectDetail={setProjectDetail}
             />

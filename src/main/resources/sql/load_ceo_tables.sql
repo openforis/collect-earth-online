@@ -83,7 +83,8 @@ CREATE TABLE projects (
     ts_target_day           integer DEFAULT 215,
     ts_plot_size            integer DEFAULT 1,
     token_key               text DEFAULT NULL,
-    options                 jsonb NOT NULL DEFAULT '{}'::jsonb
+    options                 jsonb NOT NULL DEFAULT '{}'::jsonb,
+    imagery_rid             integer REFERENCES imagery (imagery_uid)
 );
 
 -- Stores information about plot packet
@@ -284,12 +285,12 @@ CREATE TYPE imagery_return AS (
 CREATE TYPE project_return AS (
     project_id              integer,
     institution_id          integer,
+    imagery_id              integer,
     availability            text,
     name                    text,
     description             text,
     privacy_level           text,
     boundary                text,
-    base_map_source         text,
     plot_distribution       text,
     num_plots               integer,
     plot_spacing            float,
