@@ -43,7 +43,7 @@ public class PostgresImagery implements Imagery {
                         : parseJson(rs.getString("extent")).getAsJsonArray());
                     var sourceConfig = parseJson(rs.getString("source_config")).getAsJsonObject();
                     // Return only necessary fields for types we proxy
-                    if (List.of("DigitalGlobe", "EarthWatch", "GeoServer").contains(sourceConfig.get("type").getAsString())) {
+                    if (sourceConfig.get("type").getAsString().equals("GeoServer")) {
                         var cleanSource = new JsonObject();
                         cleanSource.add("type", sourceConfig.get("type"));
                         newImagery.add("sourceConfig", cleanSource);
@@ -52,6 +52,9 @@ public class PostgresImagery implements Imagery {
                         cleanSource.add("type", sourceConfig.get("type"));
                         cleanSource.add("startDate", sourceConfig.get("startDate"));
                         cleanSource.add("endDate", sourceConfig.get("endDate"));
+                        cleanSource.add("featureProfile", sourceConfig.get("featureProfile"));
+                        // FIXME: make securewatch dates function server side
+                        cleanSource.add("connectId", sourceConfig.get("geoserverParams").getAsJsonObject().get("CONNECTID"));
                         newImagery.add("sourceConfig", cleanSource);
                     } else if (sourceConfig.get("type").getAsString().equals("Planet")) {
                         var cleanSource = new JsonObject();
@@ -177,6 +180,7 @@ public class PostgresImagery implements Imagery {
             pstmt.execute();
         } catch (SQLException e) {
             System.out.println(e.getMessage());
+            res.status(409);
         }
 
         return "";

@@ -4,6 +4,7 @@ import { mercator, ceoMapStyles } from "../js/mercator-openlayers.js";
 import { SurveyCollection } from "./components/SurveyCollection";
 import { convertSampleValuesToSurveyQuestions } from "./utils/surveyUtils";
 import { UnicodeIcon } from "./utils/textUtils";
+import { formatDateISO } from "./utils/dateUtils";
 
 class Collection extends React.Component {
     constructor(props) {
@@ -11,7 +12,7 @@ class Collection extends React.Component {
         this.state = {
             collectionStart: 0,
             currentProject: { surveyQuestions: [], institution: "" },
-            currentImagery: { id: "", sourceConfig: {} },
+            currentImagery: { id: "", sourceConfig: {}},
             currentPlot: null,
             imageryAttribution: "",
             imageryList: [],
@@ -21,8 +22,15 @@ class Collection extends React.Component {
             imageryYearPlanet: 2018,
             imageryStartDatePlanetDaily: "",
             imageryEndDatePlanetDaily: "",
-            imageryStartDateSecureWatch: "",
-            imageryEndDateSecureWatch: "",
+            imageryMonthSentinel1: "",
+            imageryYearSentinel1: "",
+            bandCombinationSentinel1: "",
+            imageryMonthSentinel2: "",
+            imageryYearSentinel2: "",
+            bandCombinationSentinel2: "",
+            imagerySecureWatchDate: "",
+            imagerySecureWatchCloudCover: "",
+            imagerySecureWatchAvailableDates: [],
             mapConfig: null,
             nextPlotButtonDisabled: false,
             plotList: [],
@@ -38,10 +46,12 @@ class Collection extends React.Component {
             KMLFeatures: null,
             hasGeoDash: false,
             showSidebar: false,
+            loading: false,
         };
     }
 
     componentDidMount() {
+        window.name = "_ceocollection";
         this.getProjectData();
     }
 
@@ -76,7 +86,11 @@ class Collection extends React.Component {
         // initialize current imagery to project default
         if (this.state.mapConfig && this.state.currentProject
             && this.state.imageryList.length > 0 && !this.state.currentImagery.id) {
-            this.setBaseMapSource(this.getImageryByTitle(this.state.currentProject.baseMapSource).id);
+            if (this.getImageryByTitle(this.state.currentProject.baseMapSource)) {
+                this.setBaseMapSource(this.getImageryByTitle(this.state.currentProject.baseMapSource).id);
+            } else {
+                this.setBaseMapSource(this.state.imageryList[0].id);
+            }
         }
 
         //
@@ -90,6 +104,10 @@ class Collection extends React.Component {
             clearInterval(this.state.storedInterval);
             this.setState({ storedInterval: setInterval(() => this.resetPlotLock, 2.3 * 60 * 1000) });
             if (this.state.currentImagery.sourceConfig.type === "PlanetDaily") this.updatePlanetDailyLayer();
+            if (this.state.currentImagery.sourceConfig.type === "SecureWatch") {
+                this.updateSecureWatchLayer();
+                this.setSecureWatchAvailableDatesOptionDefault();
+            }
         }
 
         // Conditions required for samples to be shown
@@ -102,7 +120,6 @@ class Collection extends React.Component {
                 || this.state.sampleOutlineBlack !== prevState.sampleOutlineBlack
                 || this.state.userSamples !== prevState.userSamples
                 || !prevState.selectedQuestion.visible) {
-
                 this.showPlotSamples();
                 this.highlightSamplesByQuestion();
                 this.createPlotKML();
@@ -122,11 +139,6 @@ class Collection extends React.Component {
             this.updateMapImagery();
         }
 
-        if (this.state.imageryYearDG !== prevState.imageryYearDG
-            || this.state.stackingProfileDG !== prevState.stackingProfileDG) {
-            this.updateDGWMSLayer();
-        }
-
         if (this.state.imageryMonthPlanet !== prevState.imageryMonthPlanet
             || this.state.imageryYearPlanet !== prevState.imageryYearPlanet) {
             this.updatePlanetLayer();
@@ -137,9 +149,16 @@ class Collection extends React.Component {
             this.updatePlanetDailyLayer();
         }
 
-        if (this.state.imageryStartDateSecureWatch !== prevState.imageryStartDateSecureWatch
-            || this.state.imageryEndDateSecureWatch !== prevState.imageryEndDateSecureWatch) {
-            this.updateSecureWatchLayer();
+        if (this.state.imageryMonthSentinel1 !== prevState.imageryMonthSentinel1
+            || this.state.imageryYearSentinel1 !== prevState.imageryYearSentinel1
+            || this.state.bandCombinationSentinel1 !== prevState.bandCombinationSentinel1) {
+            this.updateSentinelLayer("sentinel1");
+        }
+
+        if (this.state.imageryMonthSentinel2 !== prevState.imageryMonthSentinel2
+            || this.state.imageryYearSentinel2 !== prevState.imageryYearSentinel2
+            || this.state.bandCombinationSentinel2 !== prevState.bandCombinationSentinel2) {
+            this.updateSentinelLayer("sentinel2");
         }
     }
 
@@ -199,6 +218,41 @@ class Collection extends React.Component {
             });
     };
 
+    getSecureWatchAvailableDates = () => {
+        const connectId = this.state.currentImagery.sourceConfig.connectId;
+        const geometry = mercator.getViewPolygon(this.state.mapConfig).transform("EPSG:4326", "EPSG:3857");
+        const secureWatchFeatureInfoUrl = "https://securewatch.digitalglobe.com/mapservice/wmsaccess?"
+              + "CONNECTID=" + connectId
+              + "&SERVICE=WMS"
+              + "&VERSION=1.1.1"
+              + "&REQUEST=GetFeatureInfo"
+              + "&CRS=EPSG%3A3857"
+              + "&BBOX=" + geometry.getExtent().join(",")
+              + "&WIDTH=256"
+              + "&HEIGHT=256"
+              + "&LAYERS=DigitalGlobe:ImageryFootprint"
+              + "&QUERY_LAYERS=DigitalGlobe:ImageryFootprint"
+              + "&FEATURE_COUNT=1000"
+              + "&X=0"
+              + "&Y=0"
+              + "&INFO_FORMAT=application/json";
+        fetch(secureWatchFeatureInfoUrl)
+            .then(response => response.ok ? response.json() : Promise.reject(response))
+            .then(data => {
+                this.setState({
+                    imagerySecureWatchAvailableDates: data.features.map(feature => ({
+                        acquisitionDate: feature.properties.acquisitionDate,
+                        cloudCover: feature.properties.cloudCover,
+                        featureId: feature.properties.featureId,
+                    })),
+                });
+            })
+            .catch(response => {
+                console.log(response);
+                alert("Error retrieving available imagery dates. See console for details.");
+            });
+    };
+
     initializeProjectMap = () => {
         const mapConfig = mercator.createMap("image-analysis-pane", [0.0, 0.0], 1, this.state.imageryList, this.props.documentRoot, this.state.currentProject.boundary);
         mercator.addVectorLayer(mapConfig,
@@ -222,30 +276,20 @@ class Collection extends React.Component {
 
     setBaseMapSource = (newBaseMapSource) => {
         const newImagery = this.getImageryById(newBaseMapSource);
-        const newImageryAttribution = (newImagery.title && newImagery.title.includes("DigitalGlobeWMSImagery"))
-            ? newImagery.attribution + " | " + this.state.imageryYearDG + " (" + this.state.stackingProfileDG + ")"
-            : newImagery.sourceConfig.type === "Planet"
-                ? newImagery.attribution + " | " + this.state.imageryYearPlanet + "-" + this.state.imageryMonthPlanet
-                : newImagery.sourceConfig.type === "PlanetDaily"
-                    ? newImagery.attribution + " | " + this.state.imageryStartDatePlanetDaily + " to " + this.state.imageryEndDatePlanetDaily
-                    : newImagery.sourceConfig.type === "SecureWatch"
-                        ? newImagery.attribution
-                          + " | " + (this.state.imageryStartDateSecureWatch || newImagery.sourceConfig.startDate)
-                          + " to " + (this.state.imageryEndDateSecureWatch || newImagery.sourceConfig.endDate)
-                        : newImagery.attribution;
-        if (newImagery.sourceConfig.type === "SecureWatch") {
-            this.setState({
-                currentImagery: newImagery,
-                imageryAttribution: newImageryAttribution,
-                imageryStartDateSecureWatch: (this.state.imageryStartDateSecureWatch || newImagery.sourceConfig.startDate),
-                imageryEndDateSecureWatch: (this.state.imageryEndDateSecureWatch || newImagery.sourceConfig.endDate),
-            });
-        } else {
-            this.setState({
-                currentImagery: newImagery,
-                imageryAttribution: newImageryAttribution,
-            });
-        }
+        const newImageryAttribution =
+            newImagery.sourceConfig.type === "Planet"
+                ? newImagery.attribution
+                    + " | " + this.state.imageryYearPlanet
+                    + "-" + this.state.imageryMonthPlanet
+            : newImagery.sourceConfig.type === "PlanetDaily"
+                ? newImagery.attribution
+                    + " | " + this.state.imageryStartDatePlanetDaily
+                    + " to " + this.state.imageryEndDatePlanetDaily
+            : newImagery.attribution;
+        this.setState({
+            currentImagery: newImagery,
+            imageryAttribution: newImageryAttribution,
+        });
     };
 
     setImageryYearDG = (newImageryYearDG) => {
@@ -291,20 +335,9 @@ class Collection extends React.Component {
         }
     };
 
-    setImageryDateSecureWatch = (eventTarget) => {
-        const { imageryStartDateSecureWatch, imageryEndDateSecureWatch, currentImagery } = this.state;
-        const startDate = (eventTarget.id === "secureWatchStartDate") && eventTarget.value ? eventTarget.value : imageryStartDateSecureWatch;
-        const endDate = (eventTarget.id === "secureWatchEndDate") && eventTarget.value ? eventTarget.value : imageryEndDateSecureWatch;
-        if (new Date(startDate) > new Date(endDate)) {
-            alert("Start date must be smaller than the end date.");
-        } else {
-            const imageryAttribution = this.getImageryByTitle(currentImagery.title).attribution + " | " + startDate + " to " + endDate;
-            this.setState({
-                imageryStartDateSecureWatch: startDate,
-                imageryEndDateSecureWatch: endDate,
-                imageryAttribution: imageryAttribution,
-            });
-        }
+    setSecureWatchAvailableDatesOptionDefault = () => {
+        const dateSelectEl = document.getElementById("securewatch-option-select");
+        dateSelectEl.value = "DEFAULT";
     };
 
     setImageryMonthPlanet = (newImageryMonthPlanet) => {
@@ -333,6 +366,54 @@ class Collection extends React.Component {
         });
     };
 
+    setImageryYearSentinel = (eventTarget) => {
+        const { imageryMonthSentinel1, imageryYearSentinel1, imageryMonthSentinel2, imageryYearSentinel2 } = this.state;
+
+        const newImageryYearSentinel1 = (eventTarget.id === "sentinel1-year") && eventTarget.value ? eventTarget.value : imageryYearSentinel1;
+        const newImageryYearSentinel2 = (eventTarget.id === "sentinel2-year") && eventTarget.value ? eventTarget.value : imageryYearSentinel2;
+
+        const startDate = eventTarget.id === "sentinel1-year"
+            ? newImageryYearSentinel1 + "-" + (imageryMonthSentinel1 > 9 ? "" : "0") + imageryMonthSentinel1 + "-01"
+            : newImageryYearSentinel2 + "-" + (imageryMonthSentinel2 > 9 ? "" : "0") + imageryMonthSentinel2 + "-01";
+        const endDate = eventTarget.id === "sentinel1-year"
+            ? new Date(newImageryYearSentinel1, imageryMonthSentinel1, 0)
+            : new Date(newImageryYearSentinel2, imageryMonthSentinel2, 0);
+
+        this.setState({
+            imageryYearSentinel1: newImageryYearSentinel1,
+            imageryYearSentinel2: newImageryYearSentinel2,
+            imageryAttribution: this.state.currentImagery.attribution + " | " + startDate + " to " + formatDateISO(endDate),
+        });
+    };
+
+    setImageryMonthSentinel = (eventTarget) => {
+        const { imageryMonthSentinel1, imageryYearSentinel1, imageryMonthSentinel2, imageryYearSentinel2 } = this.state;
+
+        const newImageryMonthSentinel1 = (eventTarget.id === "sentinel1-month") && eventTarget.value ? eventTarget.value : imageryMonthSentinel1;
+        const newImageryMonthSentinel2 = (eventTarget.id === "sentinel2-month") && eventTarget.value ? eventTarget.value : imageryMonthSentinel2;
+
+        const startDate = eventTarget.id === "sentinel1-month"
+            ? imageryYearSentinel1 + "-" + (newImageryMonthSentinel1 > 9 ? "" : "0") + newImageryMonthSentinel1 + "-01"
+            : imageryYearSentinel2 + "-" + (newImageryMonthSentinel2 > 9 ? "" : "0") + newImageryMonthSentinel2 + "-01";
+        const endDate = eventTarget.id === "sentinel1-month"
+            ? new Date(imageryYearSentinel1, newImageryMonthSentinel1, 0)
+            : new Date(imageryYearSentinel2, newImageryMonthSentinel2, 0);
+
+        this.setState({
+            imageryMonthSentinel1: newImageryMonthSentinel1,
+            imageryMonthSentinel2: newImageryMonthSentinel2,
+            imageryAttribution: this.state.currentImagery.attribution + " | " + startDate + " to " + formatDateISO(endDate),
+        });
+    };
+
+    setBandCombinationSentinel = (eventTarget) => {
+        const { bandCombinationSentinel1, bandCombinationSentinel2 } = this.state;
+        this.setState({
+            bandCombinationSentinel1: (eventTarget.id === "sentinel1-bandCombination") && eventTarget.value ? eventTarget.value : bandCombinationSentinel1,
+            bandCombinationSentinel2: (eventTarget.id === "sentinel2-bandCombination") && eventTarget.value ? eventTarget.value : bandCombinationSentinel2,
+        });
+    };
+
     updateMapImagery = () => {
         // FIXME, update mercator to take ID instead of name in cases of duplicate names
         mercator.setVisibleLayer(this.state.mapConfig, this.state.currentImagery.title);
@@ -352,17 +433,25 @@ class Collection extends React.Component {
                 imageryStartDatePlanetDaily: "",
                 imageryEndDatePlanetDaily: "",
             });
-            if (this.state.currentImagery.title && this.state.currentImagery.title.includes("DigitalGlobeWMSImagery")) {
-                this.updateDGWMSLayer();
-            } else if (this.state.currentImagery.sourceConfig.type === "Planet") {
+            if (this.state.currentImagery.sourceConfig.type === "Planet") {
                 this.updatePlanetLayer();
             } else if (this.state.currentImagery.sourceConfig.type === "SecureWatch") {
-                const startDate = this.state.currentImagery.sourceConfig.startDate;
-                const endDate = this.state.currentImagery.sourceConfig.endDate;
+                this.setState({ imageryAttribution: this.state.currentImagery.attribution + " | Latest Image Mosaic" });
+                this.updateSecureWatchLayer();
+            } else if (this.state.currentImagery.sourceConfig.type === "Sentinel1"
+                || this.state.currentImagery.sourceConfig.type === "Sentinel2") {
+                const month = parseInt(this.state.currentImagery.sourceConfig.month) || 1;
+                const year = parseInt(this.state.currentImagery.sourceConfig.year) || 2018;
+                const bandCombination = this.state.currentImagery.sourceConfig.bandCombination ||
+                    (this.state.currentImagery.sourceConfig.type === "Sentinel1" ? "VH,VV,VH/VV" : "TrueColor");
+                const startDate = year + "-" + (month > 9 ? "" : "0") + month + "-01";
+                const endDate = new Date(year, month, 0);
+
                 this.setState({
-                    imageryStartDateSecureWatch: startDate,
-                    imageryEndDateSecureWatch: endDate,
-                    imageryAttribution: this.state.currentImagery.attribution + " | " + startDate + " to " + endDate,
+                    [this.state.currentImagery.sourceConfig.type === "Sentinel1" ? "imageryYearSentinel1" : "imageryYearSentinel2"] : year,
+                    [this.state.currentImagery.sourceConfig.type === "Sentinel1" ? "imageryMonthSentinel1" : "imageryMonthSentinel2"] : month,
+                    [this.state.currentImagery.sourceConfig.type === "Sentinel1" ? "bandCombinationSentinel1" : "bandCombinationSentinel2"] : bandCombination,
+                    "imageryAttribution" : this.state.currentImagery.attribution + " | " + startDate + " to " + formatDateISO(endDate),
                 });
             }
         }
@@ -371,17 +460,6 @@ class Collection extends React.Component {
     getImageryByTitle = (imageryTitle) => this.state.imageryList.find(imagery => imagery.title === imageryTitle);
 
     getImageryById = (imageryId) => this.state.imageryList.find(imagery => imagery.id === imageryId);
-
-    updateDGWMSLayer = () => {
-        const { currentImagery, imageryYearDG, stackingProfileDG } = this.state;
-        mercator.updateLayerWmsParams(this.state.mapConfig,
-                                      currentImagery.title,
-                                      {
-                                          COVERAGE_CQL_FILTER: "(acquisitionDate>='" + imageryYearDG + "-01-01')"
-                                              + "AND(acquisitionDate<='" + imageryYearDG + "-12-31')",
-                                          FEATUREPROFILE: stackingProfileDG,
-                                      });
-    };
 
     updatePlanetLayer = () => {
         const { currentImagery, imageryMonthPlanet, imageryYearPlanet } = this.state;
@@ -425,9 +503,12 @@ class Collection extends React.Component {
                                 : visible[0].geom
                                     ? ceoMapStyles.whitePolygon
                                     : ceoMapStyles.whiteCircle);
+        this.highlightSamplesByQuestion();
+        this.setState({ loading: false });
     };
 
     updatePlanetDailyLayer = () => {
+        this.setState({ loading: this.state.currentImagery.sourceConfig.type === "PlanetDaily" });
         mercator.currentMap.getControls().getArray().filter(control => control.element.classList.contains("planet-layer-switcher"))
             .map(control => mercator.currentMap.removeControl(control));
         const { imageryStartDatePlanetDaily, imageryEndDatePlanetDaily, currentPlot } = this.state;
@@ -447,15 +528,47 @@ class Collection extends React.Component {
         }
     };
 
-    updateSecureWatchLayer = () => {
-        const { currentImagery, imageryStartDateSecureWatch, imageryEndDateSecureWatch } = this.state;
-        mercator.updateLayerWmsParams(this.state.mapConfig,
-                                      currentImagery.title,
-                                      {
-                                          COVERAGE_CQL_FILTER: "(acquisitionDate>='" + imageryStartDateSecureWatch + "')"
-                                                             + "AND(acquisitionDate<='" + imageryEndDateSecureWatch + "')",
-                                      });
+    updateSentinelLayer = (type) => {
+        const {
+            currentImagery, imageryMonthSentinel2, imageryYearSentinel2, bandCombinationSentinel2,
+            imageryMonthSentinel1, imageryYearSentinel1, bandCombinationSentinel1,
+        } = this.state;
+        mercator.updateLayerSource(this.state.mapConfig,
+                                   currentImagery.title,
+                                   this.state.currentProject.boundary,
+                                   sourceConfig => {
+                                       sourceConfig.month = (type === "sentinel1") ? imageryMonthSentinel1.toString() : imageryMonthSentinel2.toString();
+                                       sourceConfig.year = (type === "sentinel1") ? imageryYearSentinel1.toString() : imageryYearSentinel2.toString();
+                                       sourceConfig.bandCombination = (type === "sentinel1") ? bandCombinationSentinel1 : bandCombinationSentinel2;
+                                       return sourceConfig;
+                                   },
+                                   this);
     };
+
+    updateSecureWatchLayer = () => {
+        // inserting cql filter to empty out the previously set cql filter
+        mercator.updateLayerWmsParams(this.state.mapConfig, this.state.currentImagery.title, {
+            COVERAGE_CQL_FILTER: "",
+        });
+        // get all available dates for the plot
+        this.getSecureWatchAvailableDates();
+        this.setState({
+            imagerySecureWatchDate: "",
+            imagerySecureWatchCloudCover: "",
+            imageryAttribution: this.state.currentImagery.attribution + " | Latest Image Mosaic",
+        });
+    };
+
+    updateSecureWatchSingleLayer = (eventTarget) => {
+        mercator.updateLayerWmsParams(this.state.mapConfig, this.state.currentImagery.title, {
+            COVERAGE_CQL_FILTER: "featureId='" + eventTarget.value + "'",
+        });
+        this.setState({
+            imagerySecureWatchDate: eventTarget.options[eventTarget.selectedIndex].getAttribute("date"),
+            imagerySecureWatchCloudCover: eventTarget.options[eventTarget.options.selectedIndex].getAttribute("cloud"),
+            imageryAttribution: this.state.currentImagery.attribution + " | " + eventTarget.options[eventTarget.options.selectedIndex].text,
+        });
+    }
 
     getQueryString = (params) => "?" + Object.keys(params)
         .map(k => encodeURIComponent(k) + "=" + encodeURIComponent(params[k]))
@@ -510,6 +623,7 @@ class Collection extends React.Component {
                   getUserPlots: this.state.reviewPlots,
                   plotId: plotId,
                   projectId: this.props.projectId,
+                  institutionId: this.state.currentProject.institution,
                   userId: this.props.userId,
                   userName: this.props.userName,
               }))
@@ -546,6 +660,7 @@ class Collection extends React.Component {
                   getUserPlots: this.state.reviewPlots,
                   plotId: plotId,
                   projectId: this.props.projectId,
+                  institutionId: this.state.currentProject.institution,
                   userId: this.props.userId,
                   userName: this.props.userName,
               }))
@@ -766,18 +881,22 @@ class Collection extends React.Component {
     };
 
     getImageryAttributes = () =>
-        (this.state.currentImagery.title && this.state.currentImagery.title.includes("DigitalGlobeWMSImagery")) ? {
-            imageryYearDG:     this.state.imageryYearDG,
-            stackingProfileDG: this.state.stackingProfileDG,
-        } : (this.state.currentImagery.sourceConfig.type === "Planet") ? {
+        (this.state.currentImagery.sourceConfig.type === "Planet") ? {
             imageryMonthPlanet: this.state.imageryMonthPlanet,
             imageryYearPlanet:  this.state.imageryYearPlanet,
         } : (this.state.currentImagery.sourceConfig.type === "PlanetDaily") ? {
             imageryStartDatePlanetDaily: this.state.imageryStartDatePlanetDaily,
             imageryEndDatePlanetDaily: this.state.imageryEndDatePlanetDaily,
+            imageryDatePlanetDaily: mercator.getTopVisiblePlanetLayerDate(this.state.mapConfig, this.state.currentImagery.title),
         } : (this.state.currentImagery.sourceConfig.type === "SecureWatch") ? {
-            imageryStartDateSecureWatch: this.state.imageryStartDateSecureWatch,
-            imageryEndDateSecureWatch: this.state.imageryEndDateSecureWatch,
+            imagerySecureWatchDate: this.state.imagerySecureWatchDate,
+            imagerySecureWatchCloudCover: this.state.imagerySecureWatchCloudCover ? (parseFloat(this.state.imagerySecureWatchCloudCover) * 100).toFixed(2) : "",
+        } : (this.state.currentImagery.sourceConfig.type === "Sentinel1") ? {
+            sentinel1MosaicYearMonth: this.state.imageryYearSentinel1 + " - " +
+                (this.state.imageryYearSentinel1 > 9 ? "" : "0") + this.state.imageryYearSentinel1,
+        } : (this.state.currentImagery.sourceConfig.type === "Sentinel2") ? {
+            sentinel2MosaicYearMonth: this.state.imageryYearSentinel2 + " - " +
+                (this.state.imageryYearSentinel2 > 9 ? "" : "0") + this.state.imageryYearSentinel2,
         } : {};
 
     getChildQuestions = (currentQuestionId) => {
@@ -1168,14 +1287,20 @@ class Collection extends React.Component {
         const isFlagged = this.state.currentPlot && this.state.currentPlot.flagged;
         return (
             <Fragment>
-                <ImageAnalysisPane imageryAttribution={this.state.imageryAttribution}/>
+                <ImageAnalysisPane
+                    imageryAttribution={this.state.imageryAttribution}
+                    projectId={this.props.projectId}
+                    plotId={plotId}
+                    KMLFeatures={this.state.KMLFeatures}
+                    loader={this.state.loading}
+                />
                 <div
                     onClick={this.toggleShowSidebar}
                     className="d-xl-none btn bg-lightgreen"
-                    style={{ position: "absolute", zIndex: 99999, right: "1rem", lineHeight: "1rem", marginRight: "2rem" }}
+                    style={{ position: "absolute", zIndex: 99999, right: "2rem", lineHeight: "1rem" }}
                 >
                     <div style={{ padding: ".5rem", color: "white" }}>
-                        {this.state.showSidebar ? <UnicodeIcon icon="upCaret"/> : <UnicodeIcon icon="downCaret"/> }
+                        {this.state.showSidebar ? <UnicodeIcon icon="upCaret"/> : <UnicodeIcon icon="downCaret"/>}
                     </div>
                 </div>
                 <SideBar
@@ -1206,6 +1331,8 @@ class Collection extends React.Component {
                         loadingPlots={this.state.plotList.length === 0}
                         KMLFeatures={this.state.KMLFeatures}
                         zoomMapToPlot={() => mercator.zoomMapToLayer(this.state.mapConfig, "currentPlot")}
+                        projectOptions={this.state.currentProject.projectOptions}
+                        mapConfig={this.state.mapConfig}
                     />
                     <ImageryOptions
                         baseMapSource={this.state.currentImagery.id}
@@ -1218,8 +1345,15 @@ class Collection extends React.Component {
                         imageryMonthNamePlanet={this.state.imageryMonthNamePlanet}
                         imageryStartDatePlanetDaily={this.state.imageryStartDatePlanetDaily}
                         imageryEndDatePlanetDaily={this.state.imageryEndDatePlanetDaily}
-                        imageryStartDateSecureWatch={this.state.imageryStartDateSecureWatch}
-                        imageryEndDateSecureWatch={this.state.imageryEndDateSecureWatch}
+                        imageryMonthSentinel1={this.state.imageryMonthSentinel1}
+                        imageryYearSentinel1={this.state.imageryYearSentinel1}
+                        bandCombinationSentinel1={this.state.bandCombinationSentinel1}
+                        imageryMonthSentinel2={this.state.imageryMonthSentinel2}
+                        imageryYearSentinel2={this.state.imageryYearSentinel2}
+                        bandCombinationSentinel2={this.state.bandCombinationSentinel2}
+                        setImageryMonthSentinel={this.setImageryMonthSentinel}
+                        setImageryYearSentinel={this.setImageryYearSentinel}
+                        setBandCombinationSentinel={this.setBandCombinationSentinel}
                         showPlanetDaily={this.state.currentPlot != null}
                         stackingProfileDG={this.state.stackingProfileDG}
                         setBaseMapSource={this.setBaseMapSource}
@@ -1227,7 +1361,8 @@ class Collection extends React.Component {
                         setImageryYearPlanet={this.setImageryYearPlanet}
                         setImageryMonthPlanet={this.setImageryMonthPlanet}
                         setImageryDatePlanetDaily={this.setImageryDatePlanetDaily}
-                        setImageryDateSecureWatch={this.setImageryDateSecureWatch}
+                        imagerySecureWatchAvailableDates={this.state.imagerySecureWatchAvailableDates}
+                        updateSecureWatchSingleLayer={this.updateSecureWatchSingleLayer}
                         setStackingProfileDG={this.setStackingProfileDG}
                         loadingImages={this.state.imageryList.length === 0}
                     />
@@ -1266,13 +1401,27 @@ class Collection extends React.Component {
     }
 }
 
-function ImageAnalysisPane({ imageryAttribution }) {
+function ImageAnalysisPane(props) {
     return (
         // Mercator hooks into image-analysis-pane
         <div id="image-analysis-pane" className="col-xl-9 col-lg-9 col-md-12 pl-0 pr-0 full-height">
+            {props.loader ? <div id="spinner" style={{ top: "45%", zIndex: "5000", visibility: "visible" }}></div> : null }
             <div id="imagery-info" className="row">
-                <p className="col small">{ imageryAttribution }</p>
+                <p className="col small" style={{ transform: "translateY(25%)" }}>{ props.imageryAttribution }</p>
             </div>
+            {props.plotId &&
+                <div id="download-kml" className="row">
+                    <a
+                        className="col"
+                        style={{ color: "white", fontWeight: "bold" }}
+                        href={"data:earth.kml+xml application/vnd.google-earth.kmz, "
+                        + encodeURIComponent(props.KMLFeatures)}
+                        download={"ceo_" + props.projectId + "_" + props.plotId + ".kml"}
+                    >
+                        Download Plot KML
+                    </a>
+                </div>
+            }
         </div>
     );
 }
@@ -1368,6 +1517,7 @@ class PlotNavigation extends React.Component {
         this.state = {
             newPlotInput: "",
             showNav: true,
+            auxWindow: null,
         };
     }
 
@@ -1436,7 +1586,7 @@ class PlotNavigation extends React.Component {
     );
 
     geoButtons = () => (
-        <div className="PlotNavigation__geo-buttons d-flex justify-content-between" id="plot-nav">
+        <div className="PlotNavigation__geo-buttons d-flex justify-content-between my-2" id="plot-nav">
             <input
                 className="btn btn-outline-lightgreen btn-sm col-6 mr-1"
                 type="button"
@@ -1452,15 +1602,20 @@ class PlotNavigation extends React.Component {
         </div>
     );
 
-    kmlButton = () => (
-        <a
+    loadGEEScript = () => {
+        const geometry = mercator.getViewPolygon(this.props.mapConfig);
+        const geoJson = "{\"type\": \"Polygon\", \"coordinates\":" + JSON.stringify(geometry.getCoordinates()) + "}";
+        if (this.state.auxWindow) this.state.auxWindow.close();
+        this.setState({ auxWindow: window.open("https://billyz313.users.earthengine.app/view/ceoplotancillary#geoJson=" + geoJson, "_ceo-plot-ancillary") });
+    };
+
+    geeButton = () => (
+        <input
             className="btn btn-outline-lightgreen btn-sm btn-block my-2"
-            href={"data:earth.kml+xml application/vnd.google-earth.kmz, "
-                + encodeURIComponent(this.props.KMLFeatures)}
-            download={"ceo_" + this.props.projectId + "_" + this.props.plotId + ".kml"}
-        >
-            Download Plot KML
-        </a>
+            type="button"
+            value="Go to GEE Script"
+            onClick={this.loadGEEScript}
+        />
     );
 
     render() {
@@ -1489,7 +1644,9 @@ class PlotNavigation extends React.Component {
                             </div>
                         </div>
                         {props.plotId && this.geoButtons()}
-                        {props.KMLFeatures && props.plotId && this.kmlButton()}
+                        {props.plotId
+                            && props.projectOptions.hasOwnProperty("showGEEScript")
+                            && props.projectOptions.showGEEScript && this.geeButton()}
                     </Fragment>
                 }
             </div>
@@ -1504,36 +1661,6 @@ class ImageryOptions extends React.Component {
             showImg: true,
         };
     }
-
-    digitalGlobeMenus = () => (
-        <div className="DG-Menu my-2">
-            <div className="slidecontainer form-control form-control-sm">
-                <input
-                    type="range"
-                    min="2000"
-                    max="2018"
-                    value={this.props.imageryYearDG}
-                    className="slider"
-                    id="myRange"
-                    onChange={e => this.props.setImageryYearDG(parseInt(e.target.value))}
-                />
-                <p>Year: <span id="demo">{this.props.imageryYearDG}</span></p>
-            </div>
-            <select
-                className="form-control form-control-sm"
-                id="dg-stacking-profile"
-                name="dg-stacking-profile"
-                size="1"
-                value={this.props.stackingProfileDG}
-                onChange={e => this.props.setStackingProfileDG(e.target.value)}
-            >
-                {
-                    ["Accuracy_Profile", "Cloud_Cover_Profile", "Global_Currency_Profile", "MyDG_Color_Consumer_Profile", "MyDG_Consumer_Profile"]
-                        .map(profile => <option key={profile} value={profile}>{profile}</option>)
-                }
-            </select>
-        </div>
-    );
 
     planetMenus = () => (
         <div className="PlanetsMenu my-2">
@@ -1594,33 +1721,129 @@ class ImageryOptions extends React.Component {
     );
 
     secureWatchMenus = () => (
-        <div className="SecureWatchMenu my-2">
-            <label>Start Date</label>
-            <div className="slidecontainer form-control form-control-sm">
-                <input
-                    type="date"
-                    id="secureWatchStartDate"
-                    value={this.props.imageryStartDateSecureWatch}
-                    max={new Date().toJSON().slice(0, 10)}
-                    min="2010-01-01"
-                    style={{ width: "100%" }}
-                    onChange={e => this.props.setImageryDateSecureWatch(e.target)}
-                />
-            </div>
-            <label>End Date</label>
-            <div className="slidecontainer form-control form-control-sm">
-                <input
-                    type="date"
-                    id="secureWatchEndDate"
-                    value={this.props.imageryEndDateSecureWatch}
-                    max={new Date().toJSON().slice(0, 10)}
-                    min="2010-01-01"
-                    style={{ width: "100%" }}
-                    onChange={e => this.props.setImageryDateSecureWatch(e.target)}
-                />
+        <div className="SecureWatchMenu my-2 mb-3">
+            <div className="form-control form-control-sm">
+                <label>Available Layers</label>
+                <select
+                    className="form-control form-control-sm"
+                    onChange={e => this.props.updateSecureWatchSingleLayer(e.target)}
+                    defaultValue={"DEFAULT"}
+                    id="securewatch-option-select"
+                >
+                    <option value="DEFAULT">Latest Image Mosaic</option>
+                    {this.props.imagerySecureWatchAvailableDates.map((obj, uid) =>
+                        <option key={uid} value={obj.featureId} date={obj.acquisitionDate} cloud={obj.cloudCover}>
+                            {obj.acquisitionDate + " (" + (obj.cloudCover * 100).toFixed(2) + "% cloudy)"}
+                        </option>
+                    )}
+                </select>
             </div>
         </div>
     );
+
+    sentinel1Menus = () => {
+        const bandCombinationOptions = [
+            { label: "VH,VV,VH/VV", value: "VH,VV,VH/VV" },
+            { label: "VH,VV,VV/VH", value: "VH,VV,VV/VH" },
+            { label: "VV,VH,VV/VH", value: "VV,VH,VV/VH" },
+            { label: "VV,VH,VH/VV", value: "VV,VH,VH/VV" },
+        ];
+
+        return (
+            <div className="Sentinel1Menu my-2">
+                <div className="slidecontainer form-control form-control-sm">
+                    <input
+                        type="range"
+                        min="2014"
+                        max={new Date().getFullYear()}
+                        value={this.props.imageryYearSentinel1}
+                        className="slider"
+                        id="sentinel1-year"
+                        onChange={e => this.props.setImageryYearSentinel(e.target)}
+                    />
+                    <p>Year: <span>{this.props.imageryYearSentinel1}</span></p>
+                </div>
+                <div className="slidecontainer form-control form-control-sm">
+                    <input
+                        type="range"
+                        min="1"
+                        max="12"
+                        value={this.props.imageryMonthSentinel1}
+                        className="slider"
+                        id="sentinel1-month"
+                        onChange={e => this.props.setImageryMonthSentinel(e.target)}
+                    />
+                    <p>Month: <span id="demo">{this.props.imageryMonthSentinel1}</span></p>
+                </div>
+                <div className="form-control form-control-sm" >
+                    <div className="mb-3">
+                        <label>Band Combination</label>
+                        <select
+                            className="form-control"
+                            id="sentinel1-bandCombination"
+                            onChange={e => this.props.setBandCombinationSentinel(e.target)}
+                            value={this.props.bandCombinationSentinel1}
+                        >
+                            {bandCombinationOptions.map(el => <option value={el.value} key={el.value}>{el.label}</option>)}
+                        </select>
+                    </div>
+                </div>
+            </div>
+        );
+    };
+
+    sentinel2Menus = () => {
+        const bandCombinationOptions = [
+            { label: "True Color", value: "TrueColor" },
+            { label: "False Color Infrared", value: "FalseColorInfrared" },
+            { label: "False Color Urban", value: "FalseColorUrban" },
+            { label: "Agriculture", value: "Agriculture" },
+            { label: "Healthy Vegetation", value: "HealthyVegetation" },
+            { label: "Short Wave Infrared", value: "ShortWaveInfrared" },
+        ];
+
+        return (
+            <div className="Sentinel2Menu my-2">
+                <div className="slidecontainer form-control form-control-sm">
+                    <input
+                        type="range"
+                        min="2015"
+                        max={new Date().getFullYear()}
+                        value={this.props.imageryYearSentinel2}
+                        className="slider"
+                        id="sentinel2-year"
+                        onChange={e => this.props.setImageryYearSentinel(e.target)}
+                    />
+                    <p>Year: <span>{this.props.imageryYearSentinel2}</span></p>
+                </div>
+                <div className="slidecontainer form-control form-control-sm">
+                    <input
+                        type="range"
+                        min="1"
+                        max="12"
+                        value={this.props.imageryMonthSentinel2}
+                        className="slider"
+                        id="sentinel2-month"
+                        onChange={e => this.props.setImageryMonthSentinel(e.target)}
+                    />
+                    <p>Month: <span id="demo">{this.props.imageryMonthSentinel2}</span></p>
+                </div>
+                <div className="form-control form-control-sm" >
+                    <div className="mb-3">
+                        <label>Band Combination</label>
+                        <select
+                            className="form-control"
+                            id="sentinel2-bandCombination"
+                            onChange={e => this.props.setBandCombinationSentinel(e.target)}
+                            value={this.props.bandCombinationSentinel2}
+                        >
+                            {bandCombinationOptions.map(el => <option value={el.value} key={el.value}>{el.label}</option>)}
+                        </select>
+                    </div>
+                </div>
+            </div>
+        );
+    };
 
     render() {
         const { props } = this;
@@ -1655,10 +1878,11 @@ class ImageryOptions extends React.Component {
                                         )
                             }
                         </select>
-                        {props.imageryTitle && props.imageryTitle.includes("DigitalGlobeWMSImagery") && this.digitalGlobeMenus()}
                         {props.imageryType === "Planet" && this.planetMenus()}
                         {props.imageryType === "PlanetDaily" && this.planetDailyMenus()}
                         {props.imageryType === "SecureWatch" && this.secureWatchMenus()}
+                        {props.imageryType === "Sentinel1" && this.sentinel1Menus()}
+                        {props.imageryType === "Sentinel2" && this.sentinel2Menus()}
                     </Fragment>
                 }
             </div>

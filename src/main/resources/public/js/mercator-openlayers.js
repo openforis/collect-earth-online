@@ -18,16 +18,18 @@
 
 import "ol/ol.css";
 import { Feature, Map, Overlay, View } from "ol";
-import { Control, defaults as ControlDefaults, ScaleLine } from "ol/control";
+import { Control, ScaleLine, Attribution, Zoom, Rotate } from "ol/control";
 import { platformModifierKeyOnly } from "ol/events/condition";
 import { Circle, LineString, Point } from "ol/geom";
 import { DragBox, Select } from "ol/interaction";
 import { GeoJSON, KML } from "ol/format";
 import { Tile as TileLayer, Vector as VectorLayer, Group as LayerGroup } from "ol/layer";
-import { BingMaps, Cluster, TileWMS, Vector as VectorSource, XYZ } from "ol/source";
+import { BingMaps, Cluster, TileWMS, Vector as VectorSource, XYZ, OSM } from "ol/source";
 import { Circle as CircleStyle, Icon, Fill, Stroke, Style, Text as StyleText, RegularShape } from "ol/style";
 import { fromLonLat, transform, transformExtent } from "ol/proj";
 import { fromExtent, fromCircle } from "ol/geom/Polygon";
+import { formatDateISO } from "../jsx/utils/dateUtils";
+import { mapboxAttributionText } from "./mapbox-attribution";
 
 /******************************************************************************
 ***
@@ -82,8 +84,7 @@ mercator.getViewExtent = function (mapConfig) {
 // [Pure] Returns the polygon from the current map view
 mercator.getViewPolygon = function (mapConfig) {
     return fromExtent(mercator.getViewExtent(mapConfig));
-}
-
+};
 
 // [Pure] Returns the minimum distance in meters from the view center
 // to the view extent.
@@ -98,17 +99,13 @@ mercator.getViewRadius = function (mapConfig) {
 // Layer switcher for planet daily maps
 class PlanetLayerSwitcher extends Control {
 
-    constructor(opt_options) {
+    constructor(options) {
 
-        const options = opt_options;
-
-        const layerLists = options.layers;
-
+        const { layers, target } = options;
         const element = document.createElement("div");
-
         super({
             element: element,
-            target: options.target,
+            target: target,
         });
 
         this.hiddenClassName = "ol-unselectable ol-control planet-layer-switcher";
@@ -123,11 +120,7 @@ class PlanetLayerSwitcher extends Control {
         ul.className = "planet-layer-switcher-ul";
         panel.appendChild(ul);
 
-        layerLists.map(layer => {
-            const li = this.createLayerList(layer);
-            ul.appendChild(li);
-        });
-
+        layers.map(layer => this.createLayerList(layer)).reverse().map(li => ul.appendChild(li));
     }
 
     setMap = (map) => super.setMap(map);
@@ -146,15 +139,25 @@ class PlanetLayerSwitcher extends Control {
         input.id = layer.get("title");
         input.checked = layer.getVisible();
 
-        input.onchange = function(e) {
-            layer.setVisible(!layer.getVisible());
-        };
+        input.onchange = () => layer.setVisible(!layer.getVisible());
 
         li.appendChild(input);
         li.appendChild(label);
         return li;
     };
 }
+
+//
+mercator.getTopVisiblePlanetLayerDate = (mapConfig, layerTitle) => {
+    const layer = mercator.getLayerByTitle(mapConfig, layerTitle);
+    if (layer && layer instanceof LayerGroup) {
+        const planetLayers = [...layer.getLayers().getArray()];
+        const visibleLayer = planetLayers.reverse().find(planetLayer => planetLayer.getVisible());
+        return visibleLayer ? visibleLayer.get("title") : "NA";
+    } else {
+        return "NA";
+    }
+};
 
 /*****************************************************************************
 ***
@@ -164,22 +167,17 @@ class PlanetLayerSwitcher extends Control {
 
 // [Pure] Returns a new ol.source.* object or null if the sourceConfig
 // is invalid.
-mercator.createSource = function (sourceConfig, imageryId, documentRoot,
+mercator.createSource = function (sourceConfig, imageryId, attribution, documentRoot,
                                   extent = [[-180, -90], [180, -90], [180, 90], [-180, 90], [-180, -90]],
                                   show = false,
                                   callback = null) {
-    if (["DigitalGlobe", "EarthWatch"].includes(sourceConfig.type)) {
-        return new XYZ({
-            url: documentRoot + "/get-tile?imageryId=" + imageryId + "&z={z}&x={x}&y={-y}",
-            attribution: "© DigitalGlobe, Inc",
-        });
-    } else if (sourceConfig.type === "Planet") {
+    if (sourceConfig.type === "Planet") {
         return new XYZ({
             url: documentRoot
                  + "/get-tile?imageryId=" + imageryId
                  + "&z={z}&x={x}&y={y}&tile={0-3}&month=" + sourceConfig.month
                  + "&year=" + sourceConfig.year,
-            attribution: "© Planet Labs, Inc",
+            attributions: attribution,
         });
     } else if (sourceConfig.type === "PlanetDaily") {
         // make ajax call to get layerid then add xyz layer
@@ -195,6 +193,7 @@ mercator.createSource = function (sourceConfig, imageryId, documentRoot,
         const planetLayer = new XYZ({
             // some random tiles to be replaced later
             url: "https://tiles0.planet.com/data/v1/layers/DkTnYnMW_G7i-E6Nj6lb9s7PaG8PG-Hy23Iyug/{z}/{x}/{y}.png",
+            attributions: attribution,
         });
         planetLayer.setProperties({ id: theID });
         console.log("Calling out to /geo-dash/gateway-request with this JSON:\n\n" + JSON.stringify(theJson));
@@ -215,17 +214,24 @@ mercator.createSource = function (sourceConfig, imageryId, documentRoot,
             })
             .then(data => {
                 console.log("Here's the response data:\n\n" + JSON.stringify(data));
-                const planetLayers = data
-                    .filter(d => d.hasOwnProperty("layerID") && d["layerID"] !== "null")
-                    .map(d => new TileLayer({
-                        source: new XYZ({
-                            url: "https://tiles0.planet.com/data/v1/layers/" + d["layerID"] + "/{z}/{x}/{y}.png",
-                        }),
-                        title: d["date"]
-                    }));
-                if (planetLayers.length === 0) {
-                    alert("No usable results found for Planet Daily imagery. Check your access token and/or change the date.");
-                }
+                // arrange in ascending order of dates
+                const sortedData = data
+                    .filter(d => d.hasOwnProperty("layerID") && d["layerID"] !== "null" && d.hasOwnProperty("date"))
+                    .sort((a, b) => {
+                        const dateA = new Date(a.date),
+                            dateB = new Date(b.date);
+                        if (dateA < dateB) return -1;
+                        if (dateA > dateB) return 1;
+                        return 0;
+                    });
+                if (sortedData.length === 0) alert("No usable results found for Planet Daily imagery. Check your access token and/or change the date.");
+                const planetLayers = sortedData.map(d => new TileLayer({
+                    source: new XYZ({
+                        url: "https://tiles0.planet.com/data/v1/layers/" + d["layerID"] + "/{z}/{x}/{y}.png",
+                        attributions: attribution,
+                    }),
+                    title: d["date"],
+                }));
                 const dummyPlanetLayer = mercator.currentMap.getLayers().getArray().find(lyr => theID === lyr.getSource().get("id"));
                 mercator.currentMap.removeLayer(dummyPlanetLayer);
                 const layerGroup = new LayerGroup({
@@ -235,7 +241,7 @@ mercator.createSource = function (sourceConfig, imageryId, documentRoot,
                 });
                 mercator.currentMap.addLayer(layerGroup);
                 if (callback) callback();
-                mercator.currentMap.addControl(new PlanetLayerSwitcher({ layers: layerGroup.getLayersArray() }));
+                mercator.currentMap.addControl(new PlanetLayerSwitcher({ layers: layerGroup.getLayers().getArray() }));
             }).catch(response => {
                 console.log("Error loading Planet Daily imagery: ");
                 console.log(response);
@@ -247,19 +253,83 @@ mercator.createSource = function (sourceConfig, imageryId, documentRoot,
             imagerySet: sourceConfig.imageryId,
             key: sourceConfig.accessToken,
             maxZoom: 19,
+            attributions: attribution,
         });
     } else if (sourceConfig.type === "GeoServer") {
         return new TileWMS({
             serverType: "geoserver",
             url: documentRoot + "/get-tile",
             params: { LAYERS: "none", imageryId: imageryId },
+            attributions: attribution,
         });
     } else if (sourceConfig.type === "SecureWatch") {
         return new TileWMS({
             serverType: "geoserver",
             url: documentRoot + "/get-tile",
             params: { imageryId: imageryId },
+            attributions: attribution,
         });
+    } else if (sourceConfig.type === "Sentinel2" || sourceConfig.type === "Sentinel1") {
+        const bandCombination = sourceConfig.bandCombination;
+        const bands = sourceConfig.type === "Sentinel1" ? bandCombination
+            : bandCombination === "FalseColorInfrared" ? "B8,B4,B3"
+                : bandCombination === "FalseColorUrban" ? "B12,B11,B4"
+                    : bandCombination === "Agriculture" ? "B11,B8,B2"
+                        : bandCombination === "HealthyVegetation" ? "B8,B11,B2"
+                            : bandCombination === "ShortWaveInfrared" ? "B12,B8A,B4"
+                                : "B4,B3,B2";
+
+        const endDate = new Date(sourceConfig.year, sourceConfig.month, 0);
+        const theJson = {
+            path: sourceConfig.type === "Sentinel2" ? "FilteredSentinel" : "FilteredSentinelSAR",
+            bands: bands,
+            min: sourceConfig.min,
+            max: sourceConfig.max,
+            cloudLessThan: sourceConfig.type === "Sentinel2" ? parseInt(sourceConfig.cloudScore) : null,
+            dateFrom: sourceConfig.year + "-" + (sourceConfig.month.length === 1 ? "0" : "") + sourceConfig.month + "-01",
+            dateTo : formatDateISO(endDate),
+        };
+        const theID = Math.random().toString(36).substr(2, 16) + "_" + Math.random().toString(36).substr(2, 9);
+        const geeLayer = new XYZ({
+            url: "https://earthengine.googleapis.com/v1alpha/projects/earthengine-legacy/maps/temp/tiles/{z}/{x}/{y}",
+            id: theID,
+            attributions: attribution,
+        });
+        geeLayer.setProperties({ id: theID });
+        fetch(documentRoot + "/geo-dash/gateway-request", {
+            method: "POST",
+            headers: {
+                "Accept": "application/json",
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify(theJson),
+        })
+            .then(res => {
+                if (res.ok) {
+                    return res.json();
+                } else {
+                    Promise.reject();
+                }
+            })
+            .then(data => {
+                if (data.hasOwnProperty("url")) {
+                    const geeLayer = new XYZ({
+                        url: data.url,
+                        attributions: attribution,
+                    });
+                    mercator.currentMap.getLayers().forEach(function (lyr) {
+                        if (theID && theID === lyr.getSource().get("id")) {
+                            lyr.setSource(geeLayer);
+                        }
+                    });
+                } else {
+                    console.warn("Wrong Data Returned");
+                }
+            }).catch(response => {
+                console.log("Error loading " + sourceConfig.type + " imagery: ");
+                console.log(response);
+            });
+        return geeLayer;
     } else if (sourceConfig.type === "GeeGateway") {
         //get variables and make ajax call to get mapid and token
         //then add xyz layer
@@ -292,6 +362,7 @@ mercator.createSource = function (sourceConfig, imageryId, documentRoot,
         const geeLayer = new XYZ({
             url: "https://earthengine.googleapis.com/map/temp/{z}/{x}/{y}?token=",
             id: theID,
+            attributions: attribution,
         });
         geeLayer.setProperties({ id: theID });
         if (sourceConfig.create) {
@@ -316,6 +387,7 @@ mercator.createSource = function (sourceConfig, imageryId, documentRoot,
                     if (data.hasOwnProperty("mapid")) {
                         const geeLayer = new XYZ({
                             url: "https://earthengine.googleapis.com/map/" + data.mapid + "/{z}/{x}/{y}?token=" + data.token,
+                            attributions: attribution,
                         });
                         mercator.currentMap.getLayers().forEach(function (lyr) {
                             if (theID && theID === lyr.getSource().get("id")) {
@@ -331,9 +403,27 @@ mercator.createSource = function (sourceConfig, imageryId, documentRoot,
                 });
         }
         return geeLayer;
-
+    } else if (sourceConfig.type === "MapBoxRaster") {
+        return new XYZ({
+            url: "https://api.mapbox.com/v4/"
+                 + sourceConfig.layerName
+                 + "/{z}/{x}/{y}.jpg90"
+                 + "?access_token=" + sourceConfig.accessToken,
+            attributions: mapboxAttributionText,
+            attributionsCollapsible: false,
+        });
+    } else if (sourceConfig.type === "MapBoxStatic") {
+        return new XYZ({
+            url: "https://api.mapbox.com/styles/v1/"
+                 + sourceConfig.userName + "/"
+                 + sourceConfig.mapStyleId
+                 + "/tiles/256/{z}/{x}/{y}"
+                 + "?access_token=" + sourceConfig.accessToken,
+            attributions:  mapboxAttributionText,
+            attributionsCollapsible: false,
+        });
     } else {
-        return null;
+        return new OSM();
     }
 };
 
@@ -341,7 +431,15 @@ mercator.createSource = function (sourceConfig, imageryId, documentRoot,
 // layerConfig is invalid.
 mercator.createLayer = function (layerConfig, documentRoot, projectAOI, show = false, callback = null) {
     layerConfig.sourceConfig.create = true;
-    const source = mercator.createSource(layerConfig.sourceConfig, layerConfig.id, documentRoot, projectAOI, show, callback);
+    const source = mercator.createSource(
+        layerConfig.sourceConfig,
+        layerConfig.id,
+        layerConfig.attribution,
+        documentRoot,
+        projectAOI,
+        show,
+        callback
+    );
     if (!source) {
         return null;
     } else if (layerConfig.extent != null) {
@@ -386,16 +484,20 @@ mercator.verifyZoomLevel = function (zoomLevel) {
 // [Pure] Predicate
 // FIXME: Build out this function stub to check for all the relevant keys for each valid imagery type
 mercator.verifySourceConfig = function (sourceConfig) {
-    return true;
+    return sourceConfig;
 };
 
 // [Pure] Predicate
 mercator.verifyLayerConfig = function (layerConfig) {
-    const layerKeys = Object.keys(layerConfig);
-    return layerKeys.includes("title")
-        && layerKeys.includes("extent")
-        && layerKeys.includes("sourceConfig")
-        && mercator.verifySourceConfig(layerConfig.sourceConfig);
+    if (layerConfig) {
+        const layerKeys = Object.keys(layerConfig);
+        return layerKeys.includes("title")
+            && layerKeys.includes("extent")
+            && layerKeys.includes("sourceConfig")
+            && mercator.verifySourceConfig(layerConfig.sourceConfig);
+    } else {
+        return false;
+    }
 };
 
 // [Pure] Predicate
@@ -464,7 +566,7 @@ mercator.createMap = function (divName, centerCoords, zoomLevel, layerConfigs, d
             .map(layerConfig => mercator.createLayer(layerConfig, documentRoot, projectAOI));
 
         // Add a scale line to the default map controls
-        const controls = ControlDefaults().extend([new ScaleLine()]);
+        const controls = [new ScaleLine(), new Attribution({ collapsed: false }), new Zoom(), new Rotate()];
 
         // Create the map view using the passed in centerCoords and zoomLevel
         const view = new View({
@@ -599,7 +701,11 @@ mercator.updateLayerSource = function (mapConfig, layerTitle, projectBoundary, t
         } else {
             // This is a Layer
             console.log("Layer detected.");
-            layer.setSource(mercator.createSource(newSourceConfig, layerConfig.id, mapConfig.documentRoot, projectAOI));
+            layer.setSource(mercator.createSource(newSourceConfig,
+                                                  layerConfig.id,
+                                                  layerConfig.attribution,
+                                                  mapConfig.documentRoot,
+                                                  projectAOI));
         }
     } else if (layerConfig.sourceConfig.type === "PlanetDaily") {
         // since PlanetDaily layer is not created when collection page is loaded
