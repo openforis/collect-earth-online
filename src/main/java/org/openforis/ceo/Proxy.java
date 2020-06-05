@@ -78,8 +78,7 @@ public class Proxy {
         }
     }
 
-    public static HttpServletResponse proxyImagery(Request req, Response res, Imagery imagery) {
-        var url = buildUrl(req, imagery);
+    public static HttpServletResponse executeRequestUrl(Request req, Response res, String url) {
         try {
             var request     = prepareGetRequest(url);
             var response    = request.execute();
@@ -111,5 +110,27 @@ public class Proxy {
             res.body(e.getMessage());
             return res.raw();
         }
+    }
+
+    public static HttpServletResponse proxyImagery(Request req, Response res, Imagery imagery) {
+        var url = buildUrl(req, imagery);
+        return executeRequestUrl(req, res, url);
+    }
+
+    public static HttpServletResponse getSecureWatchDates(Request req, Response res, Imagery imagery) {
+        final var sourceConfig = imagery.getImagerySourceConfig(getQParamNoNull(req, "imageryId"));
+        final var geoserverParams = sourceConfig.get("geoserverParams").getAsJsonObject();
+        final var connectId = geoserverParams.get("CONNECTID").getAsString();
+        final var queryParams = req.queryString().split("&");
+        var parameters = Arrays.stream(queryParams)
+                        .filter(q -> {
+                            // Remove imageryId
+                            final var param = q.split("=")[0];
+                            return !param.equals("imageryId");
+                        })
+                        .collect(Collectors.joining("&"));
+        final var requestParameters = parameters + "&CONNECTID=" + connectId;
+        final var requestUrl = "https://securewatch.digitalglobe.com/mapservice/wmsaccess?" + requestParameters;
+        return executeRequestUrl(req, res, requestUrl);
     }
 }
