@@ -398,12 +398,50 @@ public class PostgresUsers implements Users {
                     pstmt.setInt(2,userId);
                     pstmt.setString(3,role);
                     try (var rs = pstmt.executeQuery()) {
-                        if(rs.next() && rs.getInt("update_institution_user_role") == 0) {
-                            var addPstmt = conn.prepareStatement("SELECT * FROM add_institution_user(?,?,?)");
-                            addPstmt.setInt(1,institutionId);
-                            addPstmt.setInt(2,userId);
-                            addPstmt.setString(3,role);
-                            addPstmt.execute();
+                        if(rs.next()) {
+                            String email, timestamp, institutionName;
+                            email = timestamp = institutionName = "";
+                            // Get info for sending email
+                            try(var pstmt1 = conn.prepareStatement("SELECT * FROM get_user_by_id(?)")) {
+                                pstmt1.setInt(1,userId);
+                                try(var rs1 = pstmt1.executeQuery()) {
+                                    if (rs1.next()) {
+                                        try(var pstmt2 = conn.prepareStatement("SELECT * FROM select_institution_by_id(?)")) {
+                                            pstmt2.setInt(1, institutionId);
+                                            try(var rs2 = pstmt2.executeQuery()) {
+                                                if (rs2.next()) {
+                                                    email = rs1.getString("email").toString();
+                                                    timestamp = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss").format(LocalDateTime.now());
+                                                    institutionName = rs2.getString("name").toString();
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                            if (rs.getInt("update_institution_user_role") == 0) {
+                                // new user added
+                                var addPstmt = conn.prepareStatement("SELECT * FROM add_institution_user(?,?,?)");
+                                addPstmt.setInt(1,institutionId);
+                                addPstmt.setInt(2,userId);
+                                addPstmt.setString(3,role);
+                                addPstmt.execute();
+
+                                // Send notification to the user
+                                var body = "Dear " + email + ",\n\n"
+                                        + "You have been assigned the role of " + role + " for " + institutionName + " on " + timestamp + "!\n\n"
+                                        + "Kind Regards,\n"
+                                        + "  The CEO Team";
+                                sendMail(SMTP_USER, email, SMTP_SERVER, SMTP_PORT, SMTP_PASSWORD, "User Role Added!", body);
+                            } else {
+                                // roles updated
+                                // Send notification to the user
+                                var body = "Dear " + email + ",\n\n"
+                                        + "Your role has been changed to " + role + " for " + institutionName + " on " + timestamp + "!\n\n"
+                                        + "Kind Regards,\n"
+                                        + "  The CEO Team";
+                                sendMail(SMTP_USER, email, SMTP_SERVER, SMTP_PORT, SMTP_PASSWORD, "User Role Changed!", body);
+                            }
                         }
                     }
                 }

@@ -2,7 +2,7 @@ import React, { Fragment } from "react";
 import ReactDOM from "react-dom";
 
 import { FormLayout, SectionBlock, StatsCell, StatsRow } from "./components/FormComponents";
-import { ProjectInfo, ProjectAOI, PlotReview, SampleReview } from "./components/ProjectComponents";
+import { ProjectInfo, ProjectAOI, PlotReview, SampleReview, ProjectOptions } from "./components/ProjectComponents";
 import SurveyCardList from "./components/SurveyCardList";
 import { convertSampleValuesToSurveyQuestions } from "./utils/surveyUtils";
 import { mercator, ceoMapStyles } from "../js/mercator-openlayers.js";
@@ -35,25 +35,28 @@ class Project extends React.Component {
             this.getProjectPlots();
         }
 
-        if (this.state.projectDetails.baseMapSource && this.state.imageryList.length > 0
+        if (this.state.projectDetails.imageryId
+                && this.state.imageryList.length > 0
                 && prevState.imageryList.length === 0) {
             this.initProjectMap();
         }
 
-        if (this.state.mapConfig
-            && this.state.projectDetails.baseMapSource !== prevState.projectDetails.baseMapSource) {
-
-            mercator.setVisibleLayer(this.state.mapConfig, this.state.projectDetails.baseMapSource);
+        if (this.state.mapConfig && this.state.projectDetails.imageryId !== prevState.projectDetails.imageryId) {
+            const baseMap = this.state.imageryList.find(imagery => imagery.id === this.state.projectDetails.imageryId);
+            mercator.setVisibleLayer(this.state.mapConfig, baseMap.title);
         }
 
-        if (this.state.mapConfig
-                && this.state.mapConfig !== prevState.mapConfig) {
+        if (this.state.mapConfig && this.state.mapConfig !== prevState.mapConfig) {
             this.showProjectMap();
         }
 
-        if (this.state.mapConfig && this.state.plotList.length > 0
+        if (this.state.mapConfig
+                && this.state.plotList.length > 0
                 && (!prevState.mapConfig || prevState.plotList.length === 0)) {
-            mercator.addPlotOverviewLayers(this.state.mapConfig, this.state.plotList, this.state.projectDetails.plotShape);
+            mercator.addPlotOverviewLayers(
+                this.state.mapConfig, this.state.plotList,
+                this.state.projectDetails.plotShape
+            );
         }
 
     }
@@ -67,10 +70,11 @@ class Project extends React.Component {
                       contentType: "application/json; charset=utf-8",
                       body: JSON.stringify({
                           projectId: this.state.projectDetails.id,
-                          baseMapSource: this.state.projectDetails.baseMapSource,
+                          imageryId: this.state.projectDetails.imageryId,
                           description: this.state.projectDetails.description,
                           name: this.state.projectDetails.name,
                           privacyLevel: this.state.projectDetails.privacyLevel,
+                          projectOptions: this.state.projectDetails.projectOptions,
                       }),
                   })
                 .then(response => {
@@ -221,7 +225,8 @@ class Project extends React.Component {
     };
 
     showProjectMap = () => {
-        mercator.setVisibleLayer(this.state.mapConfig, this.state.projectDetails.baseMapSource || this.state.imageryList[0].title);
+        const baseMap = this.state.imageryList.find(imagery => imagery.id === this.state.projectDetails.imageryId);
+        mercator.setVisibleLayer(this.state.mapConfig, baseMap.title || this.state.imageryList[0].title);
 
         // // Extract bounding box coordinates from the project boundary and show on the map
         const boundaryExtent = mercator.parseGeoJson(this.state.projectDetails.boundary, false).getExtent();
@@ -254,6 +259,17 @@ class Project extends React.Component {
     setProjectDetail = (key, newValue) =>
         this.setState({ projectDetails: { ...this.state.projectDetails, [key]: newValue }});
 
+    onShowGEEScriptClick = () =>
+        this.setState({
+            projectDetails: {
+                ...this.state.projectDetails,
+                projectOptions: {
+                    ...this.state.projectDetails.projectOptions,
+                    showGEEScript: !this.state.projectDetails.projectOptions.showGEEScript,
+                },
+            },
+        });
+
     projectNotFound = (projectId) => (
         <SectionBlock title="Project Information">
             <h3>Project {projectId} not found.</h3>
@@ -271,6 +287,7 @@ class Project extends React.Component {
                             imageryList={this.state.imageryList}
                             projectDetails={this.state.projectDetails}
                             setProjectDetail={this.setProjectDetail}
+                            onShowGEEScriptClick={this.onShowGEEScriptClick}
                         />
                         <ProjectManagement
                             changeAvailability={this.changeAvailability}
@@ -303,7 +320,7 @@ class ProjectStatsGroup extends React.Component {
         };
     }
 
-    updateShown =() => this.setState({ showStats: !this.state.showStats });
+    updateShown = () => this.setState({ showStats: !this.state.showStats });
 
     render() {
         return (
@@ -331,12 +348,6 @@ class ProjectStats extends React.Component {
 
     componentDidMount() {
         this.getProjectStats();
-    }
-
-    asPercentage(part, total) {
-        return (part && total)
-            ? (100.0 * part / total).toFixed(2)
-            : "0.00";
     }
 
     getProjectStats = () => {
@@ -448,7 +459,7 @@ class ProjectStats extends React.Component {
     }
 }
 
-function ProjectDesignReview({ projectDetails, coordinates, imageryList, setProjectDetail }) {
+function ProjectDesignReview({ projectDetails, coordinates, imageryList, setProjectDetail, onShowGEEScriptClick }) {
     return (
         <div id="project-design-form" className="px-2 pb-2">
             <ProjectInfo
@@ -459,9 +470,13 @@ function ProjectDesignReview({ projectDetails, coordinates, imageryList, setProj
             />
             <ProjectAOI
                 coordinates={coordinates}
-                baseMapSource={projectDetails.baseMapSource}
+                imageryId={projectDetails.imageryId}
                 imageryList={imageryList}
                 setProjectDetail={setProjectDetail}
+            />
+            <ProjectOptions
+                showGEEScript={projectDetails.projectOptions.showGEEScript}
+                onShowGEEScriptClick={onShowGEEScriptClick}
             />
             <PlotReview projectDetails={projectDetails}/>
             <SampleReview projectDetails={projectDetails}/>

@@ -44,8 +44,6 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonArray;
 import java.time.LocalDate;
 import java.io.File;
-import java.io.StringWriter;
-import java.io.PrintWriter;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.nio.file.Files;
@@ -125,6 +123,14 @@ public class JsonProjects implements Projects {
         } else {
             return privacyLevel.equals("public") && availability.equals("published");
         }
+    }
+
+    public Integer getFirstPublicImageryId() {
+        var imageries = elementToArray(readJsonFile("imagery-list.json"));
+        var publicImagery = toStream(imageries)
+                .filter(image -> image.get("visibility").getAsString().equals("public"))
+                .findFirst().get();
+        return publicImagery.get("id").getAsInt();
     }
 
     public String getAllProjects(Request req, Response res) {
@@ -533,6 +539,27 @@ public class JsonProjects implements Projects {
                         plotSummary.add("distribution",
                                 getValueDistribution(samples, getSampleValueTranslations(sampleValueGroups)));
 
+                        final var samplesUsingSecureWatch = filterJsonArray(samples, sample ->
+                                sample.has("imageryAttributes") &&
+                                    sample.get("imageryAttributes").getAsJsonObject().has("imagerySecureWatchDate")
+                        );
+                        plotSummary.addProperty("total_securewatch_dates", samplesUsingSecureWatch.size());
+
+                        var commonSecureWatchDate = toStream(samplesUsingSecureWatch)
+                            .map(sample ->
+                                 sample.get("imageryAttributes")
+                                 .getAsJsonObject()
+                                 .get("imagerySecureWatchDate")
+                                 .getAsString()
+                                 .substring(0, 10))
+                            .collect(Collectors.groupingBy(w -> w, Collectors.counting()))
+                            .entrySet()
+                            .stream()
+                            .max(Comparator.comparing(Map.Entry::getValue))
+                            .get()
+                            .getKey();
+                        plotSummary.addProperty("common_securewatch_date", commonSecureWatchDate);
+
                         if (plotHeaders.size() > 0 && plotData.containsKey(plot.has("plotId")
                                 ? plot.get("plotId").getAsString()
                                 : plot.get("id").getAsString()))
@@ -553,7 +580,7 @@ public class JsonProjects implements Projects {
                         .map(head -> !head.toString().contains("pl_") ? "pl_" + head : head)
                     ).toArray(String[]::new);
 
-            return outputAggregateCsv(res, sampleValueGroups, plotSummaries, projectName,combinedHeaders);
+            return outputAggregateCsv(res, sampleValueGroups, plotSummaries, projectName, combinedHeaders);
 
         } else {
             res.raw().setStatus(SC_NO_CONTENT);
@@ -635,6 +662,18 @@ public class JsonProjects implements Projects {
                                         sampleSummary.addProperty(key, attributes.get(key).getAsString());
                                         if (!optionalHeaders.contains(key)) optionalHeaders.add(key);
                                     });
+                                }
+                            }
+
+                            if (sample.has("imageryAttributes")) {
+                                final var attributeData = sample.get("imageryAttributes").getAsJsonObject();
+                                if (attributeData.has("imagerySecureWatchDate")) {
+                                    sampleSummary.addProperty("imagerySecureWatchDate", attributeData.get("imagerySecureWatchDate").getAsString());
+                                    if (!optionalHeaders.contains("imagerySecureWatchDate")) optionalHeaders.add("imagerySecureWatchDate");
+                                }
+                                if (attributeData.has("imagerySecureWatchCloudCover")) {
+                                    sampleSummary.addProperty("imagerySecureWatchCloudCover", attributeData.get("imagerySecureWatchCloudCover").getAsString());
+                                    if (!optionalHeaders.contains("imagerySecureWatchCloudCover")) optionalHeaders.add("imagerySecureWatchCloudCover");
                                 }
                             }
 
@@ -743,7 +782,12 @@ public class JsonProjects implements Projects {
                         project.addProperty("name",          getOrEmptyString(jsonInputs, "name").getAsString());
                         project.addProperty("description",   getOrEmptyString(jsonInputs, "description").getAsString());
                         project.addProperty("privacyLevel",  getOrEmptyString(jsonInputs, "privacyLevel").getAsString());
-                        project.addProperty("baseMapSource", getOrEmptyString(jsonInputs, "baseMapSource").getAsString());
+                        project.addProperty("imageryId",     jsonInputs.has("imageryId")
+                                                                        ? jsonInputs.get("imageryId").getAsInt()
+                                                                        : getFirstPublicImageryId());
+                        project.add("projectOptions",        jsonInputs.has("projectOptions")
+                                                                        ? jsonInputs.get("projectOptions").getAsJsonObject()
+                                                                        : parseJson("{\"showGEEScript\":false}").getAsJsonObject());
                         return project;
                     } else {
                         return project;
@@ -772,7 +816,7 @@ public class JsonProjects implements Projects {
                     });
             return plotPoints;
         } catch (Exception e) {
-            throw new RuntimeException("Malformed plot CSV. Fields must be LON,LAT,PLOTID.", e);
+            throw new RuntimeException("Malformed plot CSV. Fields must be LON,LAT,PLOTID.\n" + e);
         }
     }
 
@@ -827,7 +871,7 @@ public class JsonProjects implements Projects {
             }
         } catch (Exception e) {
             deleteShapeFileDirectories(projectId);
-            throw new RuntimeException("Malformed plot Shapefile. All features must be of type polygon and include a PLOTID field.", e);
+            throw new RuntimeException("Malformed plot Shapefile. All features must be of type polygon and include a PLOTID field.\n" + e);
         }
     }
 
@@ -1174,6 +1218,7 @@ public class JsonProjects implements Projects {
         var computedSamplesPerPlot =
             sampleDistribution.equals("random") ? samplesPerPlot
             : sampleDistribution.equals("gridded") ? countGriddedSampleSet(plotSize, sampleResolution)
+            : sampleDistribution.equals("center") ? 1
             : sampleDistribution.equals("csv") ? (csvSamplePointsFinal.size() / totalPlots)
             : (shpSampleCentersFinal.size() / totalPlots);
 
@@ -1222,7 +1267,7 @@ public class JsonProjects implements Projects {
                         ? (List.of("random", "gridded", "csv").contains(plotDistribution)
                            ? createRandomSampleSet(plotCenter, plotShape, plotSize, samplesPerPlot)
                            : new Double[][]{plotCenter})
-                        : (sampleDistribution.equals("gridded")
+                        : ((sampleDistribution.equals("gridded") || sampleDistribution.equals("center"))
                            ? (List.of("random", "gridded", "csv").contains(plotDistribution)
                               ? createGriddedSampleSet(plotCenter, plotShape, plotSize, sampleResolution)
                               : new Double[][]{plotCenter})
@@ -1293,9 +1338,11 @@ public class JsonProjects implements Projects {
 
             var newProject = new JsonObject();
 
-            newProject.addProperty("baseMapSource", jsonInputs.get("baseMapSource").getAsString());
             newProject.addProperty("description", jsonInputs.get("description").getAsString());
             newProject.addProperty("institution", jsonInputs.get("institutionId").getAsInt());
+            newProject.addProperty("imageryId", jsonInputs.has("imageryId")
+                                                ? jsonInputs.get("imageryId").getAsInt()
+                                                : getFirstPublicImageryId());
             newProject.addProperty("lonMin", getOrZero(jsonInputs,"lonMin").getAsDouble());
             newProject.addProperty("latMin", getOrZero(jsonInputs,"latMin").getAsDouble());
             newProject.addProperty("lonMax", getOrZero(jsonInputs,"lonMax").getAsDouble());
@@ -1315,6 +1362,9 @@ public class JsonProjects implements Projects {
             newProject.add("surveyRules", jsonInputs.get("surveyRules").getAsJsonArray());
             newProject.addProperty("useTemplatePlots", jsonInputs.get("useTemplatePlots").getAsBoolean());
             newProject.addProperty("useTemplateWidgets", jsonInputs.get("useTemplateWidgets").getAsBoolean());
+            newProject.add("projectOptions", jsonInputs.has("projectOptions")
+                                                ? jsonInputs.get("projectOptions").getAsJsonObject()
+                                                : parseJson("{\"showGEEScript\":false}").getAsJsonObject());
 
             // Add constant values
             newProject.addProperty("availability", "unpublished");

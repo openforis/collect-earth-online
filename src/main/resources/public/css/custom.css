@@ -129,7 +129,7 @@ h4 {font-size: 0.5rem;}
     background-color:#0C4D48!important;
     color:white;
 }
-.bg-darkgreen h1{
+.bg-darkgreen h1,h2{
     padding:1rem;
     color:white;
     margin:0;
@@ -339,8 +339,9 @@ a:hover{
 /*********************************************************************/
 /* HOME PAGE */
 /*********************************************************************/
-#home-map-pane {
-    height: 100%;
+
+#home-map-pane .ol-attribution {
+    position: fixed;
 }
 
 #home #ceo-description {
@@ -406,6 +407,7 @@ a:hover{
     -webkit-box-shadow: 3px -10px 3px rgba(0,0,0,.35);
     box-shadow: 3px 5px 3px rgba(0,0,0,.35);
     border-radius: 5px;
+    max-height: 40vh;
 }
 /* .ol-popup-content .cContent{ */
 .ol-overlay-container .cContent {
@@ -435,7 +437,6 @@ a.ol-popup-closer.close{
 .ol-overlay-container tr{border-top: 1px solid #dee2e6;}
 .ol-overlay-container tr:first-child{border-top: none;margin-top:.3rem;}
 .ol-overlay-container tr:last-child{}
-
 
 /*********************************************************************/
 /* LOGIN PAGE/REGISTER PAGE */
@@ -520,13 +521,26 @@ ul.samplevalue{
     position: absolute;
     top: 0px;
     left: 20%;
-    height: 2rem;
+    height: auto;
     width: 60%;
     padding: 0.25rem;
     text-align: center;
     color: white;
     background-color: rgba(75,75,150,1.0);
     z-index: 100;
+}
+
+#download-kml {
+    position: absolute;
+    left: 40%;
+    bottom: 5px;
+    height: 2rem;
+    padding: 0.25rem;
+    text-align: center;
+    background-color: #31BAB0;
+    z-index: 100;
+    width: 20%;
+    border-radius: 10px;
 }
 /*********************************************************************/
 /* NEW COLLECTION PAGE */
@@ -554,7 +568,7 @@ ul.samplevalue{
 }
 .panel-default > .panel-heading {
     min-height: 45px;
-    background-color: #31BAB0;!important
+    background-color: #31BAB0;
     border-color: #ddd;
     color: white;
 }
@@ -588,7 +602,7 @@ ul.samplevalue{
 /*********************************************************************/
 
 .container-fluid.widgetEditor{
-    width:100%;!important
+    width:100%;
 }
 .active-widget{
     opacity: .5;
@@ -628,4 +642,35 @@ ul.samplevalue{
     .ExpandableImage__previewImg{
         width:100% !important;
     }
+}
+
+/****************************/
+/* Planet Layer Switcher    */
+/****************************/
+
+.planet-layer-switcher {
+    position: absolute;
+    top: 0.5em;
+    right: 0.5em;
+    text-align: left;
+}
+
+.planet-layer-switcher-panel {
+    padding: 0 1em 0 0;
+    margin: 0;
+    border: 4px solid #eee;
+    border-radius: 4px;
+    background-color: white;
+    max-height: 20em;
+    overflow-y: scroll;
+}
+
+.planet-layer-switcher-ul {
+    padding-left: 2em;
+    list-style: none;
+}
+
+.planet-layer-switcher-layer {
+    display: table;
+    margin-left: -18px;
 }

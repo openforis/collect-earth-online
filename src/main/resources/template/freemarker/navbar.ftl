@@ -57,6 +57,7 @@
                 </button>
             </#if>
         </ul>
+    </div>
 </nav>
 <script type="text/javascript">
  function menuControls() {

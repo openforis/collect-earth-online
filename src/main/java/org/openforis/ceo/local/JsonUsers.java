@@ -491,12 +491,23 @@ public class JsonUsers implements Users {
         var institutionId = jsonInputs.get("institutionId").getAsInt();
         var role = jsonInputs.get("role").getAsString();
 
+        // get user email
+        var userEmail = findInJsonArray(elementToArray(readJsonFile("user-list.json")),
+                                        user -> user.get("id") == userId)
+                            .get().get("email").getAsString();
+
         mapJsonFile("institution-list.json",
                     institution -> {
                         if (institution.get("id").getAsInt() == institutionId) {
                             var members = institution.getAsJsonArray("members");
                             var admins = institution.getAsJsonArray("admins");
                             var pending = institution.getAsJsonArray("pending");
+                            var institutionName = institution.get("name").getAsString();
+                            var timestamp = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss").format(LocalDateTime.now());
+                            var body = "Dear " + userEmail + ",\n\n"
+                                    + "You have been assigned the role of " + role + " for " + institutionName + " on " + timestamp + "!\n\n"
+                                    + "Kind Regards,\n"
+                                    + "  The CEO Team";
                             if (role.equals("member")) {
                                 if (!members.contains(userId)) {
                                     members.add(userId);
@@ -507,6 +518,8 @@ public class JsonUsers implements Users {
                                 if (pending.contains(userId)) {
                                     pending.remove(userId);
                                 }
+                                // Send confirmation email to the user
+                                sendMail(SMTP_USER, userEmail, SMTP_SERVER, SMTP_PORT, SMTP_PASSWORD, "User Role Added!", body);
                             } else if (role.equals("admin")) {
                                 if (!members.contains(userId)) {
                                     members.add(userId);
@@ -517,6 +530,8 @@ public class JsonUsers implements Users {
                                 if (pending.contains(userId)) {
                                     pending.remove(userId);
                                 }
+                                // Send confirmation email to the user
+                                sendMail(SMTP_USER, userEmail, SMTP_SERVER, SMTP_PORT, SMTP_PASSWORD, "User Role Added!", body);
                             } else {
                                 members.remove(userId);
                                 admins.remove(userId);
