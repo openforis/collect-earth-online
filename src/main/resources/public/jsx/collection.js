@@ -45,6 +45,7 @@ class Collection extends React.Component {
             storedInterval: null,
             KMLFeatures: null,
             hasGeoDash: false,
+            showSidebar: false,
             loading: false,
         };
     }
@@ -1272,6 +1273,14 @@ class Collection extends React.Component {
         </div>
     );
 
+    toggleShowSidebar = () => {
+        this.setState(prevState => ({
+            showSidebar: !prevState.showSidebar,
+        }), () => {
+            window.location = this.state.showSidebar ? "#sidebar" : "#image-analysis-pane";
+        });
+    };
+
     render() {
         const plotId = this.state.currentPlot
               && (this.state.currentPlot.plotId ? this.state.currentPlot.plotId : this.state.currentPlot.id);
@@ -1285,6 +1294,15 @@ class Collection extends React.Component {
                     KMLFeatures={this.state.KMLFeatures}
                     loader={this.state.loading}
                 />
+                <div
+                    onClick={this.toggleShowSidebar}
+                    className="d-xl-none btn bg-lightgreen"
+                    style={{ position: "absolute", zIndex: 99999, right: "2rem", lineHeight: "1rem" }}
+                >
+                    <div style={{ padding: ".5rem", color: "white" }}>
+                        {this.state.showSidebar ? <UnicodeIcon icon="upCaret"/> : <UnicodeIcon icon="downCaret"/>}
+                    </div>
+                </div>
                 <SideBar
                     projectId={this.props.projectId}
                     plotId={plotId}
