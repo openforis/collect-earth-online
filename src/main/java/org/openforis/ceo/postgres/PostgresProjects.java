@@ -506,11 +506,11 @@ public class PostgresProjects implements Projects {
              var pstmt = conn.prepareStatement("SELECT * FROM select_first_public_imagery()") ;) {
 
             try (var rs = pstmt.executeQuery()) {
-                var imageryId = 0;
                 if (rs.next()) {
-                    imageryId = rs.getInt("select_first_public_imagery");
+                    return rs.getInt("select_first_public_imagery");
+                } else {
+                    return 0;
                 }
-                return imageryId;
             }
         } catch (SQLException e) {
             System.out.println(e.getMessage());

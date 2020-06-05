@@ -55,12 +55,12 @@ CREATE TABLE imagery (
 CREATE TABLE projects (
     project_uid             SERIAL PRIMARY KEY,
     institution_rid         integer NOT NULL REFERENCES institutions (institution_uid) ON DELETE CASCADE ON UPDATE CASCADE,
-    imagery_rid             integer REFERENCES imagery (imagery_uid),
     availability            text,
     name                    text NOT NULL,
     description             text,
     privacy_level           text,
     boundary                geometry(Polygon,4326),
+    base_map_source         text,
     plot_distribution       text,
     num_plots               integer,
     plot_spacing            float,
@@ -83,7 +83,8 @@ CREATE TABLE projects (
     ts_target_day           integer DEFAULT 215,
     ts_plot_size            integer DEFAULT 1,
     token_key               text DEFAULT NULL,
-    options                 jsonb NOT NULL DEFAULT '{}'::jsonb
+    options                 jsonb NOT NULL DEFAULT '{}'::jsonb,
+    imagery_rid             integer REFERENCES imagery (imagery_uid)
 );
 
 -- Stores information about plot packet

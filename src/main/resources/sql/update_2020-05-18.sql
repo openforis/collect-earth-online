@@ -29,44 +29,10 @@ WHERE projects.base_map_source = imagery.title
     AND imagery.visibility = 'private'
     AND projects.institution_rid = imagery.institution_rid;
 
--- projects without base_map_source
+-- all the rest
 UPDATE projects
-SET imagery_rid = (
-    SELECT imagery_uid
-    FROM imagery
-    WHERE visibility = 'public'
-    ORDER BY imagery_uid
-    LIMIT 1
-)
-WHERE base_map_source = '';
-
--- projects where the base_map_source is not available in the imagery table
-UPDATE projects
-SET imagery_rid = (
-    SELECT imagery_uid
-    FROM imagery
-    WHERE visibility = 'public'
-    ORDER BY imagery_uid
-    LIMIT 1
-)
-WHERE base_map_source NOT IN (
-	SELECT title FROM imagery
-);
-
--- update where base_map_source is PlanetGlobalMosaic
-UPDATE projects
-SET imagery_rid = (
-    SELECT imagery_uid
-    FROM imagery
-    WHERE title='PlanetGlobalMosaic'
-        AND institution_rid=3
-    LIMIT 1
-)
-WHERE base_map_source = 'PlanetGlobalMosaic';
-
--- drop base_map_source
-ALTER TABLE projects
-DROP COLUMN base_map_source CASCADE;
+SET imagery_rid = (SELECT select_first_public_imagery())
+WHERE imagery_rid IS NULL;
 
 DROP FUNCTION create_project(
     _institution_rid         integer,
@@ -172,6 +138,8 @@ CREATE FUNCTION update_project(
     WHERE project_uid = _project_uid
 
 $$ LANGUAGE SQL;
+
+DROP VIEW IF EXISTS project_boundary;
 
 CREATE VIEW project_boundary AS
 SELECT
