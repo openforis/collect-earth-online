@@ -120,11 +120,11 @@ public class Proxy {
     public static HttpServletResponse getSecureWatchDates(Request req, Response res, Imagery imagery) {
         return executeRequestUrl(req, res, "https://securewatch.digitalglobe.com/mapservice/wmsaccess?"
                 + Arrays.stream(req.queryString().split("&"))
-                .filter(q -> !q.split("=")[0].equals("imageryId"))
-                .collect(Collectors.joining("&"))
+                    .filter(q -> !q.split("=")[0].equals("imageryId"))
+                    .collect(Collectors.joining("&"))
                 + "&CONNECTID="
                 + imagery.getImagerySourceConfig(getQParamNoNull(req, "imageryId"))
-                .get("geoserverParams").getAsJsonObject()
-                .get("CONNECTID").getAsString());
+                    .get("geoserverParams").getAsJsonObject()
+                    .get("CONNECTID").getAsString());
     }
 }
