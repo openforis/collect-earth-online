@@ -118,19 +118,13 @@ public class Proxy {
     }
 
     public static HttpServletResponse getSecureWatchDates(Request req, Response res, Imagery imagery) {
-        final var sourceConfig = imagery.getImagerySourceConfig(getQParamNoNull(req, "imageryId"));
-        final var geoserverParams = sourceConfig.get("geoserverParams").getAsJsonObject();
-        final var connectId = geoserverParams.get("CONNECTID").getAsString();
-        final var queryParams = req.queryString().split("&");
-        var parameters = Arrays.stream(queryParams)
-                        .filter(q -> {
-                            // Remove imageryId
-                            final var param = q.split("=")[0];
-                            return !param.equals("imageryId");
-                        })
-                        .collect(Collectors.joining("&"));
-        final var requestParameters = parameters + "&CONNECTID=" + connectId;
-        final var requestUrl = "https://securewatch.digitalglobe.com/mapservice/wmsaccess?" + requestParameters;
-        return executeRequestUrl(req, res, requestUrl);
+        return executeRequestUrl(req, res, "https://securewatch.digitalglobe.com/mapservice/wmsaccess?"
+                + Arrays.stream(req.queryString().split("&"))
+                .filter(q -> !q.split("=")[0].equals("imageryId"))
+                .collect(Collectors.joining("&"))
+                + "&CONNECTID="
+                + imagery.getImagerySourceConfig(getQParamNoNull(req, "imageryId"))
+                .get("geoserverParams").getAsJsonObject()
+                .get("CONNECTID").getAsString());
     }
 }
