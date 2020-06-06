@@ -219,11 +219,8 @@ class Collection extends React.Component {
     };
 
     getSecureWatchAvailableDates = () => {
-        const connectId = this.state.currentImagery.sourceConfig.connectId;
         const geometry = mercator.getViewPolygon(this.state.mapConfig).transform("EPSG:4326", "EPSG:3857");
-        const secureWatchFeatureInfoUrl = "https://securewatch.digitalglobe.com/mapservice/wmsaccess?"
-              + "CONNECTID=" + connectId
-              + "&SERVICE=WMS"
+        const secureWatchFeatureInfoUrl = "SERVICE=WMS"
               + "&VERSION=1.1.1"
               + "&REQUEST=GetFeatureInfo"
               + "&CRS=EPSG%3A3857"
@@ -235,8 +232,9 @@ class Collection extends React.Component {
               + "&FEATURE_COUNT=1000"
               + "&X=0"
               + "&Y=0"
-              + "&INFO_FORMAT=application/json";
-        fetch(secureWatchFeatureInfoUrl)
+              + "&INFO_FORMAT=application/json"
+              + "&imageryId=" + this.state.currentImagery.id;
+        fetch(this.props.documentRoot + "/get-securewatch-dates?" + secureWatchFeatureInfoUrl)
             .then(response => response.ok ? response.json() : Promise.reject(response))
             .then(data => {
                 this.setState({

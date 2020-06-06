@@ -153,9 +153,10 @@ public class Server implements SparkApplication {
         });
 
         // Block cross traffic for proxy route
-        before("/get-tile", (request, response) -> {
-            // "referer" is spelled wrong, but is the correct name for this header.
-            if (request.headers("referer") == null || !request.headers("referer").contains(request.host())) {
+        before((request, response) -> {
+            if (List.of("/get-tile", "/get-securewatch-dates").contains(request.uri())
+                    // "referer" is spelled wrong, but is the correct name for this header.
+                    && (request.headers("referer") == null || !request.headers("referer").contains(request.host()))) {
                 halt(403, "Forbidden!");
             }
         });
@@ -184,6 +185,7 @@ public class Server implements SparkApplication {
         get("/support",                               Views.support(freemarker));
         get("/widget-layout-editor",                  Views.widgetLayoutEditor(freemarker));
         get("/get-tile",                              (req, res) -> Proxy.proxyImagery(req, res, imagery));
+        get("/get-securewatch-dates",                 (req, res) -> Proxy.getSecureWatchDates(req, res, imagery));
 
         // Routing Table: HTML pages (with side effects)
         get("/logout",                                (req, res) -> Views.home(freemarker).handle(users.logout(req, res), res));
