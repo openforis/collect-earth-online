@@ -1059,7 +1059,7 @@ CREATE OR REPLACE FUNCTION copy_project_plots_stats(_old_project_uid integer, _n
 
     UPDATE projects
     SET boundary = n.boundary,
-        base_map_source = n.base_map_source,
+        imagery_rid = n.imagery_rid,
         plot_distribution = n.plot_distribution,
         num_plots = n.num_plots,
         plot_spacing = n.plot_spacing,
@@ -1069,7 +1069,7 @@ CREATE OR REPLACE FUNCTION copy_project_plots_stats(_old_project_uid integer, _n
         samples_per_plot = n.samples_per_plot,
         sample_resolution = n.sample_resolution
     FROM (SELECT
-            boundary,             base_map_source,
+            boundary,             imagery_rid,
             plot_distribution,    num_plots,
             plot_spacing,         plot_shape,
             plot_size,            sample_distribution,
@@ -1081,7 +1081,7 @@ CREATE OR REPLACE FUNCTION copy_project_plots_stats(_old_project_uid integer, _n
 
 $$ LANGUAGE SQL;
 
--- Combines individual funtions needed to copy all plot and sample information
+-- Combines individual functions needed to copy all plot and sample information
 CREATE OR REPLACE FUNCTION copy_template_plots(_old_project_uid integer, _new_project_uid integer)
  RETURNS VOID AS $$
 
@@ -2216,7 +2216,7 @@ CREATE OR REPLACE FUNCTION create_project_migration(
     _description             text,
     _privacy_level           text,
     _boundary                geometry,
-    _base_map_source         text,
+    _imagery_rid             integer,
     _plot_distribution       text,
     _num_plots               integer,
     _plot_spacing            float,
@@ -2231,14 +2231,15 @@ CREATE OR REPLACE FUNCTION create_project_migration(
     _created_date            date,
     _published_date          date,
     _closed_date             date,
-    _archived_date           date
+    _archived_date           date,
+    _options                 jsonb
  ) RETURNS integer AS $$
 
     INSERT INTO projects (
         project_uid,             institution_rid,
         availability,            name,
         description,             privacy_level,
-        boundary,                base_map_source,
+        boundary,                imagery_rid,
         plot_distribution,       num_plots,
         plot_spacing,            plot_shape,
         plot_size,               sample_distribution,
@@ -2246,12 +2247,12 @@ CREATE OR REPLACE FUNCTION create_project_migration(
         survey_questions,        survey_rules,
         classification_times,    created_date,
         published_date,          closed_date,
-        archived_date
+        archived_date,           options
     ) VALUES (
         _project_uid,             _institution_rid,
         _availability,            _name,
         _description,             _privacy_level,
-        _boundary,                _base_map_source,
+        _boundary,                _imagery_rid,
         _plot_distribution,       _num_plots,
         _plot_spacing,            _plot_shape,
         _plot_size,               _sample_distribution,
@@ -2259,7 +2260,7 @@ CREATE OR REPLACE FUNCTION create_project_migration(
         _survey_questions,        _survey_rules,
         _classification_times,    _created_date,
         _published_date,          _closed_date,
-        _archived_date
+        _archived_date,           _options
     ) RETURNING project_uid
 
 $$ LANGUAGE SQL;
