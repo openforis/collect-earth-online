@@ -60,7 +60,6 @@ CREATE TABLE projects (
     description             text,
     privacy_level           text,
     boundary                geometry(Polygon,4326),
-    base_map_source         text,
     plot_distribution       text,
     num_plots               integer,
     plot_spacing            float,
