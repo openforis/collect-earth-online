@@ -84,7 +84,7 @@ $$ LANGUAGE SQL;
 DROP FUNCTION copy_project_plots_stats(_old_project_uid integer, _new_project_uid integer);
 
 -- Copy other project fields that may not have been correctly passed from UI
-CREATE copy_project_plots_stats(_old_project_uid integer, _new_project_uid integer)
+CREATE FUNCTION copy_project_plots_stats(_old_project_uid integer, _new_project_uid integer)
  RETURNS void AS $$
 
     UPDATE projects
