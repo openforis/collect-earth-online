@@ -413,8 +413,7 @@ class Collection extends React.Component {
     };
 
     updateMapImagery = () => {
-        // FIXME, update mercator to take ID instead of name in cases of duplicate names
-        mercator.setVisibleLayer(this.state.mapConfig, this.state.currentImagery.title);
+        mercator.setVisibleLayer(this.state.mapConfig, this.state.currentImagery.id);
 
         if (this.state.currentImagery.sourceConfig.type === "PlanetDaily") {
             const startDate = this.state.currentImagery.sourceConfig.startDate || "2019-01-01";
@@ -462,7 +461,7 @@ class Collection extends React.Component {
     updatePlanetLayer = () => {
         const { currentImagery, imageryMonthPlanet, imageryYearPlanet } = this.state;
         mercator.updateLayerSource(this.state.mapConfig,
-                                   currentImagery.title,
+                                   currentImagery.id,
                                    this.state.currentProject.boundary,
                                    sourceConfig => {
                                        sourceConfig.month = imageryMonthPlanet < 10 ? "0" + imageryMonthPlanet : imageryMonthPlanet;
@@ -474,12 +473,12 @@ class Collection extends React.Component {
 
     removeAndAddVector = () => {
         const { mapConfig, currentPlot, currentProject, selectedQuestion: { visible }} = this.state;
-        mercator.removeLayerByTitle(mapConfig, "currentAOI");
+        mercator.removeLayerById(mapConfig, "currentAOI");
         mercator.addVectorLayer(mapConfig,
                                 "currentAOI",
                                 mercator.geometryToVectorSource(mercator.parseGeoJson(currentProject.boundary, true)),
                                 ceoMapStyles.yellowPolygon);
-        mercator.removeLayerByTitle(mapConfig, "currentPlot");
+        mercator.removeLayerById(mapConfig, "currentPlot");
         mercator.addVectorLayer(mapConfig,
                                 "currentPlot",
                                 mercator.geometryToVectorSource(
@@ -490,7 +489,7 @@ class Collection extends React.Component {
                                                                   currentProject.plotShape)
                                 ),
                                 ceoMapStyles.yellowPolygon);
-        mercator.removeLayerByTitle(mapConfig, "currentSamples");
+        mercator.removeLayerById(mapConfig, "currentSamples");
         mercator.addVectorLayer(mapConfig,
                                 "currentSamples",
                                 mercator.samplesToVectorSource(visible),
@@ -514,7 +513,7 @@ class Collection extends React.Component {
         if (imageryStartDatePlanetDaily && imageryEndDatePlanetDaily && currentPlot) {
             const geometry = mercator.getViewPolygon(this.state.mapConfig);
             mercator.updateLayerSource(this.state.mapConfig,
-                                       this.state.currentImagery.title,
+                                       this.state.currentImagery.id,
                                        "{\"type\": \"Polygon\", \"coordinates\":" + JSON.stringify(geometry.getCoordinates()) + "}",
                                        sourceConfig => {
                                            sourceConfig.startDate = imageryStartDatePlanetDaily;
@@ -532,7 +531,7 @@ class Collection extends React.Component {
             imageryMonthSentinel1, imageryYearSentinel1, bandCombinationSentinel1,
         } = this.state;
         mercator.updateLayerSource(this.state.mapConfig,
-                                   currentImagery.title,
+                                   currentImagery.id,
                                    this.state.currentProject.boundary,
                                    sourceConfig => {
                                        sourceConfig.month = (type === "sentinel1") ? imageryMonthSentinel1.toString() : imageryMonthSentinel2.toString();
@@ -545,7 +544,7 @@ class Collection extends React.Component {
 
     updateSecureWatchLayer = () => {
         // inserting cql filter to empty out the previously set cql filter
-        mercator.updateLayerWmsParams(this.state.mapConfig, this.state.currentImagery.title, {
+        mercator.updateLayerWmsParams(this.state.mapConfig, this.state.currentImagery.id, {
             COVERAGE_CQL_FILTER: "",
         });
         // get all available dates for the plot
@@ -558,7 +557,7 @@ class Collection extends React.Component {
     };
 
     updateSecureWatchSingleLayer = (eventTarget) => {
-        mercator.updateLayerWmsParams(this.state.mapConfig, this.state.currentImagery.title, {
+        mercator.updateLayerWmsParams(this.state.mapConfig, this.state.currentImagery.id, {
             COVERAGE_CQL_FILTER: "featureId='" + eventTarget.value + "'",
         });
         this.setState({
@@ -734,9 +733,9 @@ class Collection extends React.Component {
         const { currentPlot, mapConfig, currentProject } = this.state;
 
         mercator.disableSelection(mapConfig);
-        mercator.removeLayerByTitle(mapConfig, "currentPlots");
-        mercator.removeLayerByTitle(mapConfig, "currentPlot");
-        mercator.removeLayerByTitle(mapConfig, "currentSamples");
+        mercator.removeLayerById(mapConfig, "currentPlots");
+        mercator.removeLayerById(mapConfig, "currentPlot");
+        mercator.removeLayerById(mapConfig, "currentSamples");
 
         mercator.addVectorLayer(mapConfig,
                                 "currentPlot",
@@ -755,7 +754,7 @@ class Collection extends React.Component {
     showPlotSamples = () => {
         const { mapConfig, selectedQuestion: { visible }} = this.state;
         mercator.disableSelection(mapConfig);
-        mercator.removeLayerByTitle(mapConfig, "currentSamples");
+        mercator.removeLayerById(mapConfig, "currentSamples");
         mercator.addVectorLayer(mapConfig,
                                 "currentSamples",
                                 mercator.samplesToVectorSource(visible),
@@ -885,7 +884,7 @@ class Collection extends React.Component {
         } : (this.state.currentImagery.sourceConfig.type === "PlanetDaily") ? {
             imageryStartDatePlanetDaily: this.state.imageryStartDatePlanetDaily,
             imageryEndDatePlanetDaily: this.state.imageryEndDatePlanetDaily,
-            imageryDatePlanetDaily: mercator.getTopVisiblePlanetLayerDate(this.state.mapConfig, this.state.currentImagery.title),
+            imageryDatePlanetDaily: mercator.getTopVisiblePlanetLayerDate(this.state.mapConfig, this.state.currentImagery.id),
         } : (this.state.currentImagery.sourceConfig.type === "SecureWatch") ? {
             imagerySecureWatchDate: this.state.imagerySecureWatchDate,
             imagerySecureWatchCloudCover: this.state.imagerySecureWatchCloudCover ? (parseFloat(this.state.imagerySecureWatchCloudCover) * 100).toFixed(2) : "",

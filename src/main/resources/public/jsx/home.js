@@ -111,7 +111,7 @@ class MapPanel extends React.Component {
                 }
             ) || this.props.imagery[0];
             const mapConfig = mercator.createMap("home-map-pane", [70, 15], 2.1, [homePageLayer], this.props.documentRoot);
-            mercator.setVisibleLayer(mapConfig, homePageLayer.title);
+            mercator.setVisibleLayer(mapConfig, homePageLayer.id);
             this.setState({ mapConfig: mapConfig });
         }
         if (this.state.mapConfig && this.props.projects.length > 0
