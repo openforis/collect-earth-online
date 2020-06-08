@@ -376,7 +376,7 @@ class ProjectStats extends React.Component {
         } = this.state;
         const { availability } = this.props;
         const numPlots = flaggedPlots + analyzedPlots + unanalyzedPlots;
-        return (
+        return numPlots ?
             <div className="row mb-3">
                 <div id="project-stats" className="container mx-2">
                     <div className="ProjectStats__dates-table  mb-4">
@@ -455,7 +455,7 @@ class ProjectStats extends React.Component {
                     }
                 </div>
             </div>
-        );
+        : <p>Loading...</p>;
     }
 }
 

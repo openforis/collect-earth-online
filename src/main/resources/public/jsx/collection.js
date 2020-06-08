@@ -86,8 +86,8 @@ class Collection extends React.Component {
         // initialize current imagery to project default
         if (this.state.mapConfig && this.state.currentProject
             && this.state.imageryList.length > 0 && !this.state.currentImagery.id) {
-            if (this.getImageryByTitle(this.state.currentProject.baseMapSource)) {
-                this.setBaseMapSource(this.getImageryByTitle(this.state.currentProject.baseMapSource).id);
+            if (this.getImageryById(this.state.currentProject.imageryId)) {
+                this.setBaseMapSource(this.state.currentProject.imageryId);
             } else {
                 this.setBaseMapSource(this.state.imageryList[0].id);
             }
@@ -291,8 +291,7 @@ class Collection extends React.Component {
     };
 
     setImageryYearDG = (newImageryYearDG) => {
-        const imageryInfo = this.getImageryByTitle(this.state.currentImagery.title);
-        const newImageryAttribution = imageryInfo.attribution + " | " + newImageryYearDG + " (" + this.state.stackingProfileDG + ")";
+        const newImageryAttribution = this.state.currentImagery.attribution + " | " + newImageryYearDG + " (" + this.state.stackingProfileDG + ")";
         this.setState({
             imageryYearDG: newImageryYearDG,
             imageryAttribution: newImageryAttribution,
@@ -300,8 +299,7 @@ class Collection extends React.Component {
     };
 
     setStackingProfileDG = (newStackingProfileDG) => {
-        const imageryInfo = this.getImageryByTitle(this.state.currentImagery.title);
-        const newImageryAttribution = imageryInfo.attribution + " | " + this.state.imageryYearDG + " (" + newStackingProfileDG + ")";
+        const newImageryAttribution = this.state.currentImagery.attribution + " | " + this.state.imageryYearDG + " (" + newStackingProfileDG + ")";
         this.setState({
             stackingProfileDG: newStackingProfileDG,
             imageryAttribution: newImageryAttribution,
@@ -309,8 +307,7 @@ class Collection extends React.Component {
     };
 
     setImageryYearPlanet = (newImageryYearPlanet) => {
-        const imageryInfo = this.getImageryByTitle(this.state.currentImagery.title);
-        const newImageryAttribution = imageryInfo.attribution + " | " + newImageryYearPlanet + "-" + this.state.imageryMonthNamePlanet;
+        const newImageryAttribution = this.state.currentImagery.attribution + " | " + newImageryYearPlanet + "-" + this.state.imageryMonthNamePlanet;
         this.setState({
             imageryYearPlanet: newImageryYearPlanet,
             imageryAttribution: newImageryAttribution,
@@ -324,7 +321,7 @@ class Collection extends React.Component {
         if (new Date(startDate) > new Date(endDate)) {
             alert("Start date must be smaller than the end date.");
         } else {
-            const imageryAttribution = this.getImageryByTitle(currentImagery.title).attribution + " | " + startDate + " to " + endDate;
+            const imageryAttribution = currentImagery.attribution + " | " + startDate + " to " + endDate;
             this.setState({
                 imageryStartDatePlanetDaily: startDate,
                 imageryEndDatePlanetDaily: endDate,
@@ -354,8 +351,7 @@ class Collection extends React.Component {
             12: "December",
         };
         const newImageryMonthName = monthData[parseInt(newImageryMonthPlanet)];
-        const imageryInfo = this.getImageryByTitle(this.state.currentImagery.title);
-        const newImageryAttribution = imageryInfo.attribution + " | " + this.state.imageryYearPlanet + "-" + newImageryMonthName;
+        const newImageryAttribution = this.state.currentImagery.attribution + " | " + this.state.imageryYearPlanet + "-" + newImageryMonthName;
 
         this.setState({
             imageryMonthPlanet: newImageryMonthPlanet,
@@ -454,8 +450,6 @@ class Collection extends React.Component {
             }
         }
     };
-
-    getImageryByTitle = (imageryTitle) => this.state.imageryList.find(imagery => imagery.title === imageryTitle);
 
     getImageryById = (imageryId) => this.state.imageryList.find(imagery => imagery.id === imageryId);
 
