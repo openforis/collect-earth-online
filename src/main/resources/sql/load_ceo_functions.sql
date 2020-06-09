@@ -2568,4 +2568,3 @@ CREATE OR REPLACE FUNCTION update_image_preference(_preference jsonb)
           priority     = excluded.priority
 
 $$ LANGUAGE SQL;
-
