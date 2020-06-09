@@ -1,6 +1,6 @@
 import React from "react";
 import ReactDOM from "react-dom";
-import { mercator } from "../js/mercator-openlayers.js";
+import { mercator } from "../js/mercator.js";
 import { UnicodeIcon } from "./utils/textUtils";
 import { Feature, Map, View } from "ol";
 import { buffer as ExtentBuffer } from "ol/extent";
