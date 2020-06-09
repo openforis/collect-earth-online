@@ -165,13 +165,12 @@ public class PostgresImagery implements Imagery {
         return "";
     }
 
-    // FIXME, make sure imagery is not referenced
-    public String deleteInstitutionImagery(Request req, Response res) {
-        var jsonInputs =    parseJson(req.body()).getAsJsonObject();
-        var imageryId =     jsonInputs.get("imageryId").getAsString();
+    public String archiveInstitutionImagery(Request req, Response res) {
+        var jsonInputs = parseJson(req.body()).getAsJsonObject();
+        var imageryId  = jsonInputs.get("imageryId").getAsString();
 
         try (var conn = connect();
-             var pstmt = conn.prepareStatement("SELECT * FROM delete_imagery(?)")) {
+             var pstmt = conn.prepareStatement("SELECT * FROM archive_imagery(?)")) {
 
             pstmt.setInt(1, Integer.parseInt(imageryId));
             pstmt.execute();

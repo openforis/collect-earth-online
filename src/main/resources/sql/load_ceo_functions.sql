@@ -539,6 +539,19 @@ $$ LANGUAGE SQL;
 --  IMAGERY FUNCTIONS
 --
 
+-- Returns first public imagery
+CREATE OR REPLACE FUNCTION select_first_public_imagery()
+ RETURNS integer AS $$
+
+    SELECT imagery_uid
+    FROM imagery
+    WHERE visibility = 'public'
+        AND archived = FALSE
+    ORDER BY imagery_uid
+    LIMIT 1
+
+$$ LANGUAGE SQL;
+
 -- Adds institution imagery
 CREATE OR REPLACE FUNCTION check_institution_imagery(_institution_rid integer, _title text)
  RETURNS boolean AS $$
@@ -560,12 +573,16 @@ CREATE OR REPLACE FUNCTION add_institution_imagery(_institution_rid integer, _vi
 $$ LANGUAGE SQL;
 
 -- Delete single imagery by id
-CREATE OR REPLACE FUNCTION delete_imagery(_imagery_uid integer)
- RETURNS integer AS $$
+CREATE OR REPLACE FUNCTION archive_imagery(_imagery_uid integer)
+ RETURNS void AS $$
 
-    DELETE FROM imagery
-    WHERE imagery_uid = _imagery_uid
-    RETURNING imagery_uid
+    UPDATE imagery
+    SET archived = true
+    WHERE imagery_uid = _imagery_uid;
+
+    UPDATE projects
+    SET imagery_rid = (SELECT select_first_public_imagery())
+    WHERE imagery_rid = _imagery_uid;
 
 $$ LANGUAGE SQL;
 
@@ -576,6 +593,7 @@ CREATE OR REPLACE FUNCTION select_public_imagery()
     SELECT imagery_uid, institution_rid, visibility, title, attribution, extent, source_config
     FROM imagery
     WHERE visibility = 'public'
+        AND archived = FALSE
 
 $$ LANGUAGE SQL;
 
@@ -587,9 +605,10 @@ CREATE OR REPLACE FUNCTION select_public_imagery_by_institution(_institution_rid
         SELECT * FROM select_public_imagery()
 
         UNION
-        SELECT *
+        SELECT imagery_uid, institution_rid, visibility, title, attribution, extent, source_config
         FROM imagery
         WHERE institution_rid = _institution_rid
+            AND archived = FALSE
     )
 
     SELECT * FROM images
@@ -610,18 +629,6 @@ CREATE OR REPLACE FUNCTION update_imagery(_imagery_uid integer, _institution_rid
         source_config = _source_config
     WHERE imagery_uid = _imagery_uid
     RETURNING imagery_uid
-
-$$ LANGUAGE SQL;
-
--- Returns first public imagery
-CREATE OR REPLACE FUNCTION select_first_public_imagery()
- RETURNS integer AS $$
-
-    SELECT imagery_uid
-    FROM imagery
-    WHERE visibility = 'public'
-    ORDER BY imagery_uid
-    LIMIT 1
 
 $$ LANGUAGE SQL;
 
