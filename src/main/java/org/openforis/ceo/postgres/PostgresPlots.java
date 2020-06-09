@@ -50,7 +50,7 @@ public class PostgresPlots implements Plots {
                     plots.add(buildPlotJson(rs));
                 }
             }
-            return  plots.toString();
+            return plots.toString();
         } catch (SQLException e) {
             System.out.println(e.getMessage());
             return "";
