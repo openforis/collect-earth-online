@@ -668,10 +668,10 @@ mercator.getLayerById = function (mapConfig, layerId) {
 };
 
 // [Pure] Returns the initial layerConfig for the map layer with id === layerId or null if no such layer exists.
-mercator.getLayerConfigById = function (mapConfig, layerId) {
+mercator.getLayerConfigById = function (mapConfig, layerConfigId) {
     return mapConfig.init.layerConfigs.find(
         function (layerConfig) {
-            return layerConfig.id === layerId;
+            return layerConfig.id === layerConfigId;
         }
     );
 };
@@ -1323,49 +1323,9 @@ mercator.getKMLFromFeatures = function (features) {
 *****************************************************************************/
 //
 // FIXME: Move ceoMapStyles out of Mercator.js
-// FIXME: change calls from remove_plot_layer to mercator.removeLayerByTitle(mapConfig, layerTitle)
-// FIXME: change calls from draw_polygon to:
-//        mercator.removeLayerByTitle(mapConfig, "currentAOI");
-//        mercator.addVectorLayer(mapConfig,
-//                                "currentAOI",
-//                                mercator.geometryToVectorSource(mercator.parseGeoJson(polygon, true)),
-//                                ceoMapStyles.yellowPolygon);
-//        mercator.zoomMapToLayer(mapConfig, "currentAOI");
-// FIXME: change calls from polygon_extent to mercator.parseGeoJson(polygon, false).getExtent()
-// FIXME: change calls from get_plot_extent to mercator.getPlotExtent
-// FIXME: change calls from draw_plot to:
-//        mercator.removeLayerByTitle(mapConfig, "currentPlot");
-//        mercator.addVectorLayer(mapConfig,
-//                                "currentPlot",
-//                                mercator.geometryToVectorSource(mercator.getPlotPolygon(center, size, shape)),
-//                                ceoMapStyles.yellowPolygon);
-//        mercator.zoomMapToLayer(mapConfig, "currentPlot");
-// FIXME: change calls from draw_plots to mercator.addPlotOverviewLayers
-// FIXME: for plots shown with draw_plots, change references to their plot_id field to plotId
-// FIXME: change calls from enable_selection to mercator.enableSelection
-// FIXME: change calls from disable_selection to mercator.disableSelection
-// FIXME: change calls from remove_sample_layer to mercator.removeLayerByTitle(mapConfig, "currentSamples");
-// FIXME: change calls from remove_plots_layer to mercator.removeLayerByTitle(mapConfig, "currentPlots");
-// FIXME: change calls from draw_points to:
-//        mercator.disableSelection(mapConfig);
-//        mercator.removeLayerByTitle(mapConfig, "currentSamples");
-//        mercator.addVectorLayer(mapConfig,
-//                                "currentSamples",
-//                                mercator.samplesToVectorSource(samples),
-//                                ceoMapStyles.redPoint);
-//        mercator.enableSelection(mapConfig, "currentSamples");
-//        mercator.zoomMapToLayer(mapConfig, "currentSamples");
-// FIXME: change references for points created with draw_points from sample_id to sampleId
-// FIXME: change calls from get_selected_samples to mercator.getSelectedSamples
-// FIXME: change calls from highlight_sample to mercator.highlightSampleGeometry
-// FIXME: change calls from enable_dragbox_draw to enableDragBoxDraw(mapConfig, displayDragBoxBounds)
-// FIXME: change calls from disable_dragbox_draw to disableDragBoxDraw
-// FIXME: change calls from draw_project_points to:
-//        mercator.removeLayerByTitle(mapConfig, "currentPlots");
-//        mercator.addPlotLayer(mapConfig, plots);
 
 export {
     mercator,
     ceoMapStyles,
-    PlanetLayerSwitcher,
+    PlanetLayerSwitcher, // FIXME, why is the is being exported?
 };
