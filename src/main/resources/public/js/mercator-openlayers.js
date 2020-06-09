@@ -643,8 +643,7 @@ mercator.resetMap = function (mapConfig) {
 ***
 *****************************************************************************/
 
-// [Side Effects] Hides all raster layers in mapConfig except those
-// with title === layerTitle.
+// [Side Effects] Hides all raster layers in mapConfig except those with id === layerId.
 mercator.setVisibleLayer = function (mapConfig, layerId) {
     mapConfig.layers.forEach(
         function (layer) {
@@ -659,8 +658,7 @@ mercator.setVisibleLayer = function (mapConfig, layerId) {
     return mapConfig;
 };
 
-// [Pure] Returns the map layer with title === layerTitle or null if no
-// such layer exists.
+// [Pure] Returns the map layer with id === layerId or null if no such layer exists.
 mercator.getLayerById = function (mapConfig, layerId) {
     return mapConfig.layers.getArray().find(
         function (layer) {
@@ -669,19 +667,18 @@ mercator.getLayerById = function (mapConfig, layerId) {
     );
 };
 
-// [Pure] Returns the initial layerConfig for the map layer with title
-// === layerTitle or null if no such layer exists.
-mercator.getLayerConfigById = function (mapConfig, id) {
+// [Pure] Returns the initial layerConfig for the map layer with id === layerId or null if no such layer exists.
+mercator.getLayerConfigById = function (mapConfig, layerId) {
     return mapConfig.init.layerConfigs.find(
         function (layerConfig) {
-            return layerConfig.id === id;
+            return layerConfig.id === layerId;
         }
     );
 };
 
 // FIXME: This function exposes several leaky abstractions. I need to rethink the createLayer->createSource workflow.
 //
-// [Side Effects] Finds the map layer with title === layerTitle and
+// [Side Effects] Finds the map layer with id === layerId and
 // applies transformer to its initial sourceConfig to create a new
 // source for the layer.
 mercator.updateLayerSource = function (mapConfig, imageryId, projectBoundary, transformer, caller, callback = null) {
@@ -718,15 +715,15 @@ mercator.updateLayerSource = function (mapConfig, imageryId, projectBoundary, tr
     }
 };
 
-// [Side Effects] Finds the map layer with title === layerTitle and
+// [Side Effects] Finds the map layer with id === layerId and
 // appends newParams to its source's WMS params object.
 //
 // Example call:
 // const mapConfig2 = mercator.updateLayerWmsParams(mapConfig,
-//                                                "DigitalGlobeWMSImagery",
-//                                                {COVERAGE_CQL_FILTER: "(acquisitionDate>='" + imageryYear + "-01-01')"
-//                                                                 + "AND(acquisitionDate<='" + imageryYear + "-12-31')",
-//                                                 FEATUREPROFILE: stackingProfile});
+//                                                  "DigitalGlobeWMSImagery",
+//                                                  {COVERAGE_CQL_FILTER: "(acquisitionDate>='" + imageryYear + "-01-01')"
+//                                                                   + "AND(acquisitionDate<='" + imageryYear + "-12-31')",
+//                                                  FEATUREPROFILE: stackingProfile});
 mercator.updateLayerWmsParams = function (mapConfig, layerId, newParams) {
     const layer = mercator.getLayerById(mapConfig, layerId);
     if (layer) {
@@ -872,8 +869,7 @@ mercator.addVectorLayer = function (mapConfig, layerId, vectorSource, style) {
     return mapConfig;
 };
 
-// [Side Effects] Removes the layer with title === layerTitle from
-// mapConfig's map object.
+// [Side Effects] Removes the layer with id === layerId from mapConfig's map object.
 mercator.removeLayerById = function (mapConfig, layerId) {
     const layer = mercator.getLayerById(mapConfig, layerId);
     if (layer) {
@@ -1046,9 +1042,8 @@ mercator.makeDragBoxSelect = function (interactionTitle, layer, featureStyles, s
     dragBox.on("boxend", boxendAction);
     return dragBox;
 };
-// [Side Effects] Adds a click select interaction and a dragBox select
-// interaction to mapConfig's map object associated with the layer
-// with title === layerTitle.
+// [Side Effects] Adds a click select interaction and a dragBox select interaction
+// to mapConfig's map object associated with the layer with id === layerId.
 mercator.enableSelection = function (mapConfig, layerId, setSampleId) {
     const layer = mercator.getLayerById(mapConfig, layerId);
     const featureStyles = {}; // holds saved styles for features selected by either interaction
