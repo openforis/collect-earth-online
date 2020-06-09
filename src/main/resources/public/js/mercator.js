@@ -148,11 +148,12 @@ class PlanetLayerSwitcher extends Control {
 }
 
 //
-mercator.getTopVisiblePlanetLayerDate = (mapConfig, layerTitle) => {
-    const layer = mercator.getLayerByTitle(mapConfig, layerTitle);
+mercator.getTopVisiblePlanetLayerDate = (mapConfig, layerId) => {
+    const layer = mercator.getLayerById(mapConfig, layerId);
     if (layer && layer instanceof LayerGroup) {
         const planetLayers = [...layer.getLayers().getArray()];
         const visibleLayer = planetLayers.reverse().find(planetLayer => planetLayer.getVisible());
+        // returns the string formatted date
         return visibleLayer ? visibleLayer.get("title") : "NA";
     } else {
         return "NA";
@@ -444,14 +445,14 @@ mercator.createLayer = function (layerConfig, documentRoot, projectAOI, show = f
         return null;
     } else if (layerConfig.extent != null) {
         return new TileLayer({
-            title: layerConfig.title,
+            id: layerConfig.id,
             visible: false,
             extent: layerConfig.extent,
             source: source,
         });
     } else {
         return new TileLayer({
-            title: layerConfig.title,
+            id: layerConfig.id,
             visible: false,
             source: source,
         });
@@ -642,15 +643,14 @@ mercator.resetMap = function (mapConfig) {
 ***
 *****************************************************************************/
 
-// [Side Effects] Hides all raster layers in mapConfig except those
-// with title === layerTitle.
-mercator.setVisibleLayer = function (mapConfig, layerTitle) {
+// [Side Effects] Hides all raster layers in mapConfig except those with id === layerId.
+mercator.setVisibleLayer = function (mapConfig, layerId) {
     mapConfig.layers.forEach(
         function (layer) {
             if (layer.getVisible() === true && (layer instanceof TileLayer || layer instanceof LayerGroup)) {
                 layer.setVisible(false);
             }
-            if (layer.get("title") === layerTitle) {
+            if (layer.get("id") === layerId) {
                 layer.setVisible(true);
             }
         }
@@ -658,34 +658,32 @@ mercator.setVisibleLayer = function (mapConfig, layerTitle) {
     return mapConfig;
 };
 
-// [Pure] Returns the map layer with title === layerTitle or null if no
-// such layer exists.
-mercator.getLayerByTitle = function (mapConfig, layerTitle) {
+// [Pure] Returns the map layer with id === layerId or null if no such layer exists.
+mercator.getLayerById = function (mapConfig, layerId) {
     return mapConfig.layers.getArray().find(
         function (layer) {
-            return layer.get("title") === layerTitle;
+            return layer.get("id") === layerId;
         }
     );
 };
 
-// [Pure] Returns the initial layerConfig for the map layer with title
-// === layerTitle or null if no such layer exists.
-mercator.getLayerConfigByTitle = function (mapConfig, layerTitle) {
+// [Pure] Returns the initial layerConfig for the map layer with id === layerId or null if no such layer exists.
+mercator.getLayerConfigById = function (mapConfig, layerConfigId) {
     return mapConfig.init.layerConfigs.find(
         function (layerConfig) {
-            return layerConfig.title === layerTitle;
+            return layerConfig.id === layerConfigId;
         }
     );
 };
 
 // FIXME: This function exposes several leaky abstractions. I need to rethink the createLayer->createSource workflow.
 //
-// [Side Effects] Finds the map layer with title === layerTitle and
+// [Side Effects] Finds the map layer with id === layerId and
 // applies transformer to its initial sourceConfig to create a new
 // source for the layer.
-mercator.updateLayerSource = function (mapConfig, layerTitle, projectBoundary, transformer, caller, callback = null) {
-    const layer = mercator.getLayerByTitle(mapConfig, layerTitle);
-    const layerConfig = mercator.getLayerConfigByTitle(mapConfig, layerTitle);
+mercator.updateLayerSource = function (mapConfig, imageryId, projectBoundary, transformer, caller, callback = null) {
+    const layer = mercator.getLayerById(mapConfig, imageryId);
+    const layerConfig = mercator.getLayerConfigById(mapConfig, imageryId);
     const projectAOI = projectBoundary ? JSON.parse(projectBoundary).coordinates[0] : null;
     const newSourceConfig = transformer.call(caller, layerConfig.sourceConfig);
     if (layer && layerConfig) {
@@ -717,17 +715,17 @@ mercator.updateLayerSource = function (mapConfig, layerTitle, projectBoundary, t
     }
 };
 
-// [Side Effects] Finds the map layer with title === layerTitle and
+// [Side Effects] Finds the map layer with id === layerId and
 // appends newParams to its source's WMS params object.
 //
 // Example call:
 // const mapConfig2 = mercator.updateLayerWmsParams(mapConfig,
-//                                                "DigitalGlobeWMSImagery",
-//                                                {COVERAGE_CQL_FILTER: "(acquisitionDate>='" + imageryYear + "-01-01')"
-//                                                                 + "AND(acquisitionDate<='" + imageryYear + "-12-31')",
-//                                                 FEATUREPROFILE: stackingProfile});
-mercator.updateLayerWmsParams = function (mapConfig, layerTitle, newParams) {
-    const layer = mercator.getLayerByTitle(mapConfig, layerTitle);
+//                                                  "DigitalGlobeWMSImagery",
+//                                                  {COVERAGE_CQL_FILTER: "(acquisitionDate>='" + imageryYear + "-01-01')"
+//                                                                   + "AND(acquisitionDate<='" + imageryYear + "-12-31')",
+//                                                  FEATUREPROFILE: stackingProfile});
+mercator.updateLayerWmsParams = function (mapConfig, layerId, newParams) {
+    const layer = mercator.getLayerById(mapConfig, layerId);
     if (layer) {
         const mergedParams = Object.assign({}, layer.getSource().getParams(), newParams);
         layer.getSource().updateParams(mergedParams);
@@ -748,10 +746,9 @@ mercator.zoomMapToExtent = function (mapConfig, extent, maxZoom) {
     return mapConfig;
 };
 
-// [Side Effects] Zooms the map view to contain the layer with
-// title === layerTitle.
-mercator.zoomMapToLayer = function (mapConfig, layerTitle, maxZoom) {
-    const layer = mercator.getLayerByTitle(mapConfig, layerTitle);
+// [Side Effects] Zooms the map view to contain the layer with id === layerId.
+mercator.zoomMapToLayer = function (mapConfig, layerId, maxZoom) {
+    const layer = mercator.getLayerById(mapConfig, layerId);
     if (layer) {
         mercator.zoomMapToExtent(mapConfig, layer.getSource().getExtent(), maxZoom);
     }
@@ -862,9 +859,9 @@ const ceoMapStyles = {
 *****************************************************************************/
 
 // [Side Effects] Adds a new vector layer to the mapConfig's map object.
-mercator.addVectorLayer = function (mapConfig, layerTitle, vectorSource, style) {
+mercator.addVectorLayer = function (mapConfig, layerId, vectorSource, style) {
     const vectorLayer = new VectorLayer({
-        title: layerTitle,
+        id: layerId,
         source: vectorSource,
         style: style,
     });
@@ -872,10 +869,9 @@ mercator.addVectorLayer = function (mapConfig, layerTitle, vectorSource, style) 
     return mapConfig;
 };
 
-// [Side Effects] Removes the layer with title === layerTitle from
-// mapConfig's map object.
-mercator.removeLayerByTitle = function (mapConfig, layerTitle) {
-    const layer = mercator.getLayerByTitle(mapConfig, layerTitle);
+// [Side Effects] Removes the layer with id === layerId from mapConfig's map object.
+mercator.removeLayerById = function (mapConfig, layerId) {
+    const layer = mercator.getLayerById(mapConfig, layerId);
     if (layer) {
         mapConfig.map.removeLayer(layer);
     }
@@ -1046,11 +1042,10 @@ mercator.makeDragBoxSelect = function (interactionTitle, layer, featureStyles, s
     dragBox.on("boxend", boxendAction);
     return dragBox;
 };
-// [Side Effects] Adds a click select interaction and a dragBox select
-// interaction to mapConfig's map object associated with the layer
-// with title === layerTitle.
-mercator.enableSelection = function (mapConfig, layerTitle, setSampleId) {
-    const layer = mercator.getLayerByTitle(mapConfig, layerTitle);
+// [Side Effects] Adds a click select interaction and a dragBox select interaction
+// to mapConfig's map object associated with the layer with id === layerId.
+mercator.enableSelection = function (mapConfig, layerId, setSampleId) {
+    const layer = mercator.getLayerById(mapConfig, layerId);
     const featureStyles = {}; // holds saved styles for features selected by either interaction
     const clickSelect = mercator.makeClickSelect("clickSelect", layer, featureStyles, setSampleId);
     const selectedFeatures = clickSelect.getFeatures();
@@ -1112,8 +1107,8 @@ mercator.getSelectedSamples = function (mapConfig) {
     }
 };
 
-mercator.getAllFeatures = function (mapConfig, layerTitle) {
-    const layer = mercator.getLayerByTitle(mapConfig, layerTitle);
+mercator.getAllFeatures = function (mapConfig, layerId) {
+    const layer = mercator.getLayerById(mapConfig, layerId);
     if (layer) {
         return layer.getSource().getFeatures();
     } else {
@@ -1167,7 +1162,7 @@ mercator.makeDragBoxDraw = function (interactionTitle, layer, callBack) {
 // "dragBoxLayer".
 mercator.enableDragBoxDraw = function (mapConfig, callBack) {
     const drawLayer = new VectorLayer({
-        title: "dragBoxLayer",
+        id: "dragBoxLayer",
         source: new VectorSource({ features: [] }),
         style: ceoMapStyles.yellowPolygon,
     });
@@ -1181,7 +1176,7 @@ mercator.enableDragBoxDraw = function (mapConfig, callBack) {
 // associated layer from mapConfig's map object.
 mercator.disableDragBoxDraw = function (mapConfig) {
     mercator.removeInteractionByTitle(mapConfig, "dragBoxDraw");
-    mercator.removeLayerByTitle(mapConfig, "dragBoxLayer");
+    mercator.removeLayerById(mapConfig, "dragBoxLayer");
     return mapConfig;
 };
 
@@ -1293,7 +1288,7 @@ mercator.addPlotLayer = function (mapConfig, plots, callBack) {
                                                         mercator.zoomMapToExtent(mapConfig,
                                                                                  mercator.getClusterExtent(feature));
                                                     } else {
-                                                        mercator.removeLayerByTitle(mapConfig, "currentPlots");
+                                                        mercator.removeLayerById(mapConfig, "currentPlots");
                                                         mapConfig.map.un("click", clickHandler);
                                                         callBack.call(null, feature);
                                                     }
@@ -1328,49 +1323,9 @@ mercator.getKMLFromFeatures = function (features) {
 *****************************************************************************/
 //
 // FIXME: Move ceoMapStyles out of Mercator.js
-// FIXME: change calls from remove_plot_layer to mercator.removeLayerByTitle(mapConfig, layerTitle)
-// FIXME: change calls from draw_polygon to:
-//        mercator.removeLayerByTitle(mapConfig, "currentAOI");
-//        mercator.addVectorLayer(mapConfig,
-//                                "currentAOI",
-//                                mercator.geometryToVectorSource(mercator.parseGeoJson(polygon, true)),
-//                                ceoMapStyles.yellowPolygon);
-//        mercator.zoomMapToLayer(mapConfig, "currentAOI");
-// FIXME: change calls from polygon_extent to mercator.parseGeoJson(polygon, false).getExtent()
-// FIXME: change calls from get_plot_extent to mercator.getPlotExtent
-// FIXME: change calls from draw_plot to:
-//        mercator.removeLayerByTitle(mapConfig, "currentPlot");
-//        mercator.addVectorLayer(mapConfig,
-//                                "currentPlot",
-//                                mercator.geometryToVectorSource(mercator.getPlotPolygon(center, size, shape)),
-//                                ceoMapStyles.yellowPolygon);
-//        mercator.zoomMapToLayer(mapConfig, "currentPlot");
-// FIXME: change calls from draw_plots to mercator.addPlotOverviewLayers
-// FIXME: for plots shown with draw_plots, change references to their plot_id field to plotId
-// FIXME: change calls from enable_selection to mercator.enableSelection
-// FIXME: change calls from disable_selection to mercator.disableSelection
-// FIXME: change calls from remove_sample_layer to mercator.removeLayerByTitle(mapConfig, "currentSamples");
-// FIXME: change calls from remove_plots_layer to mercator.removeLayerByTitle(mapConfig, "currentPlots");
-// FIXME: change calls from draw_points to:
-//        mercator.disableSelection(mapConfig);
-//        mercator.removeLayerByTitle(mapConfig, "currentSamples");
-//        mercator.addVectorLayer(mapConfig,
-//                                "currentSamples",
-//                                mercator.samplesToVectorSource(samples),
-//                                ceoMapStyles.redPoint);
-//        mercator.enableSelection(mapConfig, "currentSamples");
-//        mercator.zoomMapToLayer(mapConfig, "currentSamples");
-// FIXME: change references for points created with draw_points from sample_id to sampleId
-// FIXME: change calls from get_selected_samples to mercator.getSelectedSamples
-// FIXME: change calls from highlight_sample to mercator.highlightSampleGeometry
-// FIXME: change calls from enable_dragbox_draw to enableDragBoxDraw(mapConfig, displayDragBoxBounds)
-// FIXME: change calls from disable_dragbox_draw to disableDragBoxDraw
-// FIXME: change calls from draw_project_points to:
-//        mercator.removeLayerByTitle(mapConfig, "currentPlots");
-//        mercator.addPlotLayer(mapConfig, plots);
 
 export {
     mercator,
     ceoMapStyles,
-    PlanetLayerSwitcher,
+    PlanetLayerSwitcher, // FIXME, why is the is being exported?
 };

@@ -1,6 +1,6 @@
 import React, { Fragment } from "react";
 import ReactDOM from "react-dom";
-import { mercator, ceoMapStyles } from "../js/mercator-openlayers.js";
+import { mercator, ceoMapStyles } from "../js/mercator.js";
 import { sortAlphabetically, UnicodeIcon } from "./utils/textUtils";
 
 class Home extends React.Component {
@@ -111,7 +111,7 @@ class MapPanel extends React.Component {
                 }
             ) || this.props.imagery[0];
             const mapConfig = mercator.createMap("home-map-pane", [70, 15], 2.1, [homePageLayer], this.props.documentRoot);
-            mercator.setVisibleLayer(mapConfig, homePageLayer.title);
+            mercator.setVisibleLayer(mapConfig, homePageLayer.id);
             this.setState({ mapConfig: mapConfig });
         }
         if (this.state.mapConfig && this.props.projects.length > 0

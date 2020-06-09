@@ -5,7 +5,7 @@ import { FormLayout, SectionBlock, StatsCell, StatsRow } from "./components/Form
 import { ProjectInfo, ProjectAOI, PlotReview, SampleReview, ProjectOptions } from "./components/ProjectComponents";
 import SurveyCardList from "./components/SurveyCardList";
 import { convertSampleValuesToSurveyQuestions } from "./utils/surveyUtils";
-import { mercator, ceoMapStyles } from "../js/mercator-openlayers.js";
+import { mercator, ceoMapStyles } from "../js/mercator.js";
 
 class Project extends React.Component {
     constructor(props) {
@@ -42,8 +42,8 @@ class Project extends React.Component {
         }
 
         if (this.state.mapConfig && this.state.projectDetails.imageryId !== prevState.projectDetails.imageryId) {
-            const baseMap = this.state.imageryList.find(imagery => imagery.id === this.state.projectDetails.imageryId);
-            mercator.setVisibleLayer(this.state.mapConfig, baseMap.title);
+            mercator.setVisibleLayer(this.state.mapConfig,
+                                     this.state.projectDetails.imageryId || this.state.imageryList[0].id);
         }
 
         if (this.state.mapConfig && this.state.mapConfig !== prevState.mapConfig) {
@@ -225,8 +225,8 @@ class Project extends React.Component {
     };
 
     showProjectMap = () => {
-        const baseMap = this.state.imageryList.find(imagery => imagery.id === this.state.projectDetails.imageryId);
-        mercator.setVisibleLayer(this.state.mapConfig, baseMap.title || this.state.imageryList[0].title);
+        mercator.setVisibleLayer(this.state.mapConfig,
+                                 this.state.projectDetails.imageryId || this.state.imageryList[0].id);
 
         // // Extract bounding box coordinates from the project boundary and show on the map
         const boundaryExtent = mercator.parseGeoJson(this.state.projectDetails.boundary, false).getExtent();
@@ -241,7 +241,7 @@ class Project extends React.Component {
         });
 
         // Display a bounding box with the project's AOI on the map and zoom to it
-        mercator.removeLayerByTitle(this.state.mapConfig, "currentAOI");
+        mercator.removeLayerById(this.state.mapConfig, "currentAOI");
         mercator.addVectorLayer(
             this.state.mapConfig,
             "currentAOI",

@@ -3,7 +3,7 @@ import ReactDOM from "react-dom";
 
 import { FormLayout, SectionBlock } from "./components/FormComponents";
 import { ProjectInfo, ProjectAOI, ProjectOptions, PlotReview, SampleReview } from "./components/ProjectComponents";
-import { mercator, ceoMapStyles } from "../js/mercator-openlayers.js";
+import { mercator, ceoMapStyles } from "../js/mercator.js";
 import { SurveyDesign } from "./components/SurveyDesign";
 import { convertSampleValuesToSurveyQuestions } from "./utils/surveyUtils";
 import { encodeFileAsBase64 } from "./utils/fileUtils";
@@ -70,8 +70,7 @@ class Project extends React.Component {
 
         if (this.state.mapConfig
             && this.state.projectDetails.imageryId !== prevState.projectDetails.imageryId) {
-            const baseMap = this.state.imageryList.find(imagery => imagery.id === this.state.projectDetails.imageryId);
-            mercator.setVisibleLayer(this.state.mapConfig, baseMap.title);
+            mercator.setVisibleLayer(this.state.mapConfig, this.state.projectDetails.imageryId);
         }
 
         if (this.state.mapConfig
@@ -82,7 +81,7 @@ class Project extends React.Component {
             if (this.state.projectDetails.id > 0 && this.state.useTemplatePlots) {
                 this.showTemplateBounds();
             } else {
-                mercator.removeLayerByTitle(this.state.mapConfig, "projectPlots");
+                mercator.removeLayerById(this.state.mapConfig, "projectPlots");
                 this.showDragBoxDraw(this.state.projectDetails.id === 0);
             }
         }
@@ -265,7 +264,7 @@ class Project extends React.Component {
             this.setState({
                 projectDetails: {
                     ...blankProject,
-                    imageryId: this.state.imageryList[0].id
+                    imageryId: this.state.imageryList[0].id,
                 },
                 plotList: [],
                 coordinates: {
@@ -277,7 +276,7 @@ class Project extends React.Component {
                 useTemplatePlots: false,
                 useTemplateWidgets: false,
             });
-            mercator.removeLayerByTitle(this.state.mapConfig, "dragBoxLayer");
+            mercator.removeLayerById(this.state.mapConfig, "dragBoxLayer");
         } else {
             const templateProject = this.state.projectList.find(p => p.id === newTemplateId);
             const newSurveyQuestions = convertSampleValuesToSurveyQuestions(templateProject.sampleValues);
@@ -364,7 +363,7 @@ class Project extends React.Component {
 
     initProjectMap = () => {
         const newMapConfig = mercator.createMap("project-map", [0.0, 0.0], 1, this.state.imageryList, this.props.documentRoot);
-        mercator.setVisibleLayer(newMapConfig, this.state.imageryList[0].title);
+        mercator.setVisibleLayer(newMapConfig, this.state.imageryList[0].id);
         this.setState({ mapConfig: newMapConfig });
     };
 
@@ -381,10 +380,10 @@ class Project extends React.Component {
     };
 
     showDragBoxDraw = (clearBox) => {
-        if (clearBox) mercator.removeLayerByTitle(this.state.mapConfig, "currentAOI");
+        if (clearBox) mercator.removeLayerById(this.state.mapConfig, "currentAOI");
         const displayDragBoxBounds = (dragBox) => {
             const extent = dragBox.getGeometry().clone().transform("EPSG:3857", "EPSG:4326").getExtent();
-            mercator.removeLayerByTitle(this.state.mapConfig, "currentAOI");
+            mercator.removeLayerById(this.state.mapConfig, "currentAOI");
             this.setState({
                 coordinates: {
                     lonMin: extent[0],
@@ -399,7 +398,7 @@ class Project extends React.Component {
 
     showTemplateBounds = () => {
         mercator.disableDragBoxDraw(this.state.mapConfig);
-        mercator.removeLayerByTitle(this.state.mapConfig, "currentAOI");
+        mercator.removeLayerById(this.state.mapConfig, "currentAOI");
         // Extract bounding box coordinates from the project boundary and show on the map
         const boundaryExtent = mercator.parseGeoJson(this.state.projectDetails.boundary, false).getExtent();
         this.setState({
