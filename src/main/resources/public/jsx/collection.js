@@ -291,26 +291,29 @@ class Collection extends React.Component {
     };
 
     setImageryYearDG = (newImageryYearDG) => {
-        const newImageryAttribution = this.state.currentImagery.attribution + " | " + newImageryYearDG + " (" + this.state.stackingProfileDG + ")";
         this.setState({
             imageryYearDG: newImageryYearDG,
-            imageryAttribution: newImageryAttribution,
+            imageryAttribution: this.state.currentImagery.attribution
+                + " | " + newImageryYearDG
+                + " (" + this.state.stackingProfileDG + ")",
         });
     };
 
     setStackingProfileDG = (newStackingProfileDG) => {
-        const newImageryAttribution = this.state.currentImagery.attribution + " | " + this.state.imageryYearDG + " (" + newStackingProfileDG + ")";
         this.setState({
             stackingProfileDG: newStackingProfileDG,
-            imageryAttribution: newImageryAttribution,
+            imageryAttribution: this.state.currentImagery.attribution
+                + " | " + this.state.imageryYearDG
+                + " (" + newStackingProfileDG + ")",
         });
     };
 
     setImageryYearPlanet = (newImageryYearPlanet) => {
-        const newImageryAttribution = this.state.currentImagery.attribution + " | " + newImageryYearPlanet + "-" + this.state.imageryMonthNamePlanet;
         this.setState({
             imageryYearPlanet: newImageryYearPlanet,
-            imageryAttribution: newImageryAttribution,
+            imageryAttribution: this.state.currentImagery.attribution
+                + " | " + newImageryYearPlanet
+                + "-" + this.state.imageryMonthNamePlanet,
         });
     };
 
@@ -321,11 +324,10 @@ class Collection extends React.Component {
         if (new Date(startDate) > new Date(endDate)) {
             alert("Start date must be smaller than the end date.");
         } else {
-            const imageryAttribution = currentImagery.attribution + " | " + startDate + " to " + endDate;
             this.setState({
                 imageryStartDatePlanetDaily: startDate,
                 imageryEndDatePlanetDaily: endDate,
-                imageryAttribution: imageryAttribution,
+                imageryAttribution: currentImagery.attribution + " | " + startDate + " to " + endDate,
             });
         }
     };
@@ -350,13 +352,12 @@ class Collection extends React.Component {
             11: "November",
             12: "December",
         };
-        const newImageryMonthName = monthData[parseInt(newImageryMonthPlanet)];
-        const newImageryAttribution = this.state.currentImagery.attribution + " | " + this.state.imageryYearPlanet + "-" + newImageryMonthName;
 
         this.setState({
             imageryMonthPlanet: newImageryMonthPlanet,
-            imageryMonthNamePlanet: newImageryMonthName,
-            imageryAttribution: newImageryAttribution,
+            imageryMonthNamePlanet: monthData[parseInt(newImageryMonthPlanet)],
+            imageryAttribution: this.state.currentImagery.attribution + " | "
+                + this.state.imageryYearPlanet + "-" + newImageryMonthName,
         });
     };
 
