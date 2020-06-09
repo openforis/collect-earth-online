@@ -294,8 +294,8 @@ class Collection extends React.Component {
         this.setState({
             imageryYearDG: newImageryYearDG,
             imageryAttribution: this.state.currentImagery.attribution
-                + " | " + newImageryYearDG
-                + " (" + this.state.stackingProfileDG + ")",
+                                + " | " + newImageryYearDG
+                                + " (" + this.state.stackingProfileDG + ")",
         });
     };
 
@@ -303,8 +303,8 @@ class Collection extends React.Component {
         this.setState({
             stackingProfileDG: newStackingProfileDG,
             imageryAttribution: this.state.currentImagery.attribution
-                + " | " + this.state.imageryYearDG
-                + " (" + newStackingProfileDG + ")",
+                                + " | " + this.state.imageryYearDG
+                                + " (" + newStackingProfileDG + ")",
         });
     };
 
@@ -312,8 +312,8 @@ class Collection extends React.Component {
         this.setState({
             imageryYearPlanet: newImageryYearPlanet,
             imageryAttribution: this.state.currentImagery.attribution
-                + " | " + newImageryYearPlanet
-                + "-" + this.state.imageryMonthNamePlanet,
+                                + " | " + newImageryYearPlanet
+                                + "-" + this.state.imageryMonthNamePlanet,
         });
     };
 
@@ -352,12 +352,13 @@ class Collection extends React.Component {
             11: "November",
             12: "December",
         };
-
+        const newImageryMonthName = monthData[parseInt(newImageryMonthPlanet)];
         this.setState({
             imageryMonthPlanet: newImageryMonthPlanet,
-            imageryMonthNamePlanet: monthData[parseInt(newImageryMonthPlanet)],
+            imageryMonthNamePlanet: newImageryMonthName,
             imageryAttribution: this.state.currentImagery.attribution + " | "
-                + this.state.imageryYearPlanet + "-" + newImageryMonthName,
+                                + this.state.imageryYearPlanet + "-"
+                                + newImageryMonthName,
         });
     };
 
