@@ -342,7 +342,7 @@ class ImageryList extends React.Component {
 
     deleteImagery = (imageryId) => {
         if (confirm("Do you REALLY want to delete this imagery?")) {
-            fetch(this.props.documentRoot + "/delete-institution-imagery",
+            fetch(this.props.documentRoot + "/archive-institution-imagery",
                   {
                       method: "POST",
                       body: JSON.stringify({

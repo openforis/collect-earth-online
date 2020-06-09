@@ -11,6 +11,6 @@ public interface Imagery {
     JsonObject getImagerySourceConfig(Integer imageryId);
     String addInstitutionImagery(Request req, Response res) throws IOException;
     String addGeoDashImagery(Request req, Response res) throws IOException;
-    String deleteInstitutionImagery(Request req, Response res) throws IOException;
+    String archiveInstitutionImagery(Request req, Response res) throws IOException;
 
 }

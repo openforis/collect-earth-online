@@ -1,9 +1,9 @@
 package org.openforis.ceo.local;
 
 import static org.openforis.ceo.utils.JsonUtils.filterJsonArray;
-import static org.openforis.ceo.utils.JsonUtils.filterJsonFile;
 import static org.openforis.ceo.utils.JsonUtils.findInJsonArray;
 import static org.openforis.ceo.utils.JsonUtils.mapJsonArray;
+import static org.openforis.ceo.utils.JsonUtils.mapJsonFile;
 import static org.openforis.ceo.utils.JsonUtils.getNextId;
 import static org.openforis.ceo.utils.JsonUtils.elementToArray;
 import static org.openforis.ceo.utils.JsonUtils.parseJson;
@@ -11,7 +11,6 @@ import static org.openforis.ceo.utils.JsonUtils.readJsonFile;
 import static org.openforis.ceo.utils.JsonUtils.writeJsonFile;
 
 import com.google.gson.JsonObject;
-import java.util.List;
 import org.openforis.ceo.db_api.Imagery;
 import spark.Request;
 import spark.Response;
@@ -23,10 +22,12 @@ public class JsonImagery implements Imagery {
         var imageryList = elementToArray(readJsonFile("imagery-list.json"));
         var filteredImagery = (institutionId == null || institutionId.isEmpty())
             ? filterJsonArray(imageryList,
-                              imagery -> imagery.get("visibility").getAsString().equals("public"))
-            : filterJsonArray(imageryList,
                               imagery -> imagery.get("visibility").getAsString().equals("public")
-                                           || imagery.get("institution").getAsString().equals(institutionId));
+                                         && imagery.get("archived").getAsBoolean() != true)
+            : filterJsonArray(imageryList,
+                              imagery -> (imagery.get("visibility").getAsString().equals("public")
+                                             || imagery.get("institution").getAsString().equals(institutionId))
+                                          && imagery.get("archived").getAsBoolean() != true);
         return mapJsonArray(filteredImagery,
                             imagery -> {
                                 var sourceConfig = imagery.get("sourceConfig").getAsJsonObject();
@@ -166,15 +167,19 @@ public class JsonImagery implements Imagery {
         }
     }
 
-    public String deleteInstitutionImagery(Request req, Response res) {
+    public String archiveInstitutionImagery(Request req, Response res) {
         var jsonInputs = parseJson(req.body()).getAsJsonObject();
         var imageryId = jsonInputs.get("imageryId").getAsString();
-        var institutionId = jsonInputs.get("institutionId").getAsInt();
 
-        filterJsonFile("imagery-list.json",
-                       imagery -> !imagery.get("id").getAsString().equals(imageryId)
-                                  || imagery.get("institution").getAsInt() != institutionId);
-
+        mapJsonFile("imagery-list.json",
+                    imagery -> {
+                        if (imagery.get("id").getAsString().equals(imageryId)) {
+                            imagery.addProperty("archived", true);
+                            return imagery;
+                        } else {
+                            return imagery;
+                        }
+                    });
         return "";
     }
 
