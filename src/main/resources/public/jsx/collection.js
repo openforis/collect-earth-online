@@ -219,6 +219,7 @@ class Collection extends React.Component {
     };
 
     getSecureWatchAvailableDates = () => {
+        const { currentImagery } = this.state;
         const geometry = mercator.getViewPolygon(this.state.mapConfig).transform("EPSG:4326", "EPSG:3857");
         const secureWatchFeatureInfoUrl = "SERVICE=WMS"
               + "&VERSION=1.1.1"
@@ -233,16 +234,21 @@ class Collection extends React.Component {
               + "&X=0"
               + "&Y=0"
               + "&INFO_FORMAT=application/json"
-              + "&imageryId=" + this.state.currentImagery.id;
+              + "&imageryId=" + currentImagery.id;
         fetch(this.props.documentRoot + "/get-securewatch-dates?" + secureWatchFeatureInfoUrl)
             .then(response => response.ok ? response.json() : Promise.reject(response))
             .then(data => {
                 this.setState({
-                    imagerySecureWatchAvailableDates: data.features.map(feature => ({
-                        acquisitionDate: feature.properties.acquisitionDate,
-                        cloudCover: feature.properties.cloudCover,
-                        featureId: feature.properties.featureId,
-                    })),
+                    imagerySecureWatchAvailableDates: data.features
+                        .filter(feature =>
+                            Date.parse(feature.properties.acquisitionDate) <= Date.parse(currentImagery.sourceConfig.endDate)
+                            && Date.parse(feature.properties.acquisitionDate) >= Date.parse(currentImagery.sourceConfig.startDate)
+                        )
+                        .map(feature => ({
+                            acquisitionDate: feature.properties.acquisitionDate,
+                            cloudCover: feature.properties.cloudCover,
+                            featureId: feature.properties.featureId,
+                        })),
                 });
             })
             .catch(response => {
