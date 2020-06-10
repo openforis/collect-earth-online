@@ -30,25 +30,28 @@ class SurveyCard extends React.Component {
         super(props);
         this.state = {
             showQuestions: true,
-            surveyRules: [],
-            currentRules: [],
         };
     }
 
+    swapId = (val, checkVal, swapVal) =>
+        val === checkVal ? swapVal
+            : val === swapVal ? checkVal
+                : val;
+
     swapQuestionIds = (upOrDown) => {
         const myId = this.props.surveyQuestion.id;
-        const myIndex = this.props.topLevelNodeIds.indexOf(this.props.surveyQuestion.id);
-        const swapId = this.props.topLevelNodeIds[myIndex + upOrDown];
+        const swapId = this.props.topLevelNodeIds[
+            this.props.topLevelNodeIds.indexOf(this.props.surveyQuestion.id) + upOrDown
+        ];
 
-        const newSurveyQuestions = this.props.surveyQuestions
-            .map(sq => ({
-                ...sq,
-                id: sq.id === myId ? swapId
-                    : sq.id === swapId ? myId
-                        : sq.id,
-            }));
-
-        this.props.setSurveyQuestions(newSurveyQuestions);
+        this.props.setSurveyQuestions(
+            this.props.surveyQuestions
+                .map(sq => ({
+                    ...sq,
+                    id: this.swapId(sq.id, myId, swapId),
+                    parentQuestion: this.swapId(sq.parentQuestion, myId, swapId),
+                }))
+        );
     };
 
     render() {
