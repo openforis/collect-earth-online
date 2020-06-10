@@ -7,7 +7,10 @@ const fs = require("fs");
 // Note: make sure both directories don't exist; otherwise the script might not work as expected.
 const outdir = fs.existsSync(path.resolve(__dirname, "target")) ? "target/classes" : "build/resources/main";
 
-module.exports = {
+module.exports = env => ({
+    mode: env.dev ? "development" : "production",
+    devtool: env.dev ? "inline-source-map" : "source-map",
+    watch: env.dev,
     entry: {
         home                  : path.resolve(__dirname, "src/main/resources/public/jsx/home.js"),
         create_institution    : path.resolve(__dirname, "src/main/resources/public/jsx/create-institution.js"),
@@ -69,6 +72,9 @@ module.exports = {
         ],
     },
     plugins: [
+        // new webpack.DefinePlugin({
+        //     ENVIRONMENT: env.dev,
+        // }),
         {
             apply: (compiler) => {
                 compiler.hooks.beforeCompile.tap("BeforeRunPlugin", () => {
@@ -84,7 +90,10 @@ module.exports = {
 
                 compiler.hooks.afterEmit.tap("AfterEmitPlugin", () => {
                     // Build freemarker files based on compiled js file.
+                    console.log("hook");
+                    console.log(fs.readdirSync("./" + outdir + "/public/js"));
                     const compiledJsList = fs.readdirSync("./" + outdir + "/public/js")
+                        .filter(a => !a.endsWith(".map"))
                         .sort(a => a.includes("common") ? -1 : 1) // move common bundle to the top
                         .sort(a => a.includes("~") ? -1 : 1) // move root bundles to the bottom
                         .map(b => "<script type=\"text/javascript\" src=\"${root}/js/" + b + "\"></script>");
@@ -126,4 +135,4 @@ module.exports = {
             },
         },
     },
-};
+});
