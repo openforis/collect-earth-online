@@ -17,6 +17,24 @@ import spark.Response;
 
 public class JsonImagery implements Imagery {
 
+    @Override
+    public String getInstitutionImagery(Request req, Response res) {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public String getProjectImagery(Request req, Response res) {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public String getPublicImagery(Request req, Response res) {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
     public String getAllImagery(Request req, Response res) {
         var institutionId = req.queryParams("institutionId");
         var imageryList = elementToArray(readJsonFile("imagery-list.json"));
