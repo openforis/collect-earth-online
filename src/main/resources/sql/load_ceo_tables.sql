@@ -84,7 +84,8 @@ CREATE TABLE projects (
     ts_plot_size            integer DEFAULT 1,
     token_key               text DEFAULT NULL,
     options                 jsonb NOT NULL DEFAULT '{}'::jsonb,
-    imagery_rid             integer REFERENCES imagery (imagery_uid)
+    imagery_rid             integer REFERENCES imagery (imagery_uid),
+    project_imageries       jsonb NOT NULL DEFAULT '[]'::jsonb
 );
 
 -- Stores information about plot packet
@@ -305,6 +306,7 @@ CREATE TYPE project_return AS (
     valid_boundary          boolean,
     token_key               text,
     options                 jsonb,
+    project_imageries       jsonb,
     editable                boolean
 );
 

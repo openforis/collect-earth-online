@@ -40,6 +40,7 @@ class Project extends React.Component {
                 showGEEScript: false,
             },
             imageryList: [],
+            projectImageries: [],
             mapConfig: null,
             plotList: [],
             coordinates: {
@@ -116,7 +117,10 @@ class Project extends React.Component {
                   contentType: "application/json; charset=utf-8",
                   body: JSON.stringify({
                       institutionId: this.props.institutionId,
-                      imageryId:this.state.projectDetails.imageryId,
+                      imageryId: this.state.projectDetails.imageryId,
+                      projectImageries: this.state.projectImageries.includes(this.state.projectDetails.imageryId)
+                          ? this.state.projectImageries
+                          : [...this.state.projectImageries, this.state.projectDetails.imageryId],
                       lonMin: this.state.coordinates.lonMin,
                       lonMax: this.state.coordinates.lonMax,
                       latMin: this.state.coordinates.latMin,
@@ -427,7 +431,24 @@ class Project extends React.Component {
                                     : ceoMapStyles.yellowSquare);
     };
 
-    onShowGEEScriptClick = () => this.setState({ projectOptions: { ...this.state.projectOptions, showGEEScript: !this.state.projectOptions.showGEEScript }});
+    onShowGEEScriptClick = () =>
+        this.setState({
+            projectOptions: {
+                ...this.state.projectOptions,
+                showGEEScript: !this.state.projectOptions.showGEEScript,
+            },
+        });
+
+    addProjectImagery = (imageryId) =>
+        this.setState({ projectImageries: [...this.state.projectImageries, imageryId] });
+
+    removeProjectImagery = (imageryId) =>
+        this.setState({ projectImageries: this.state.projectImageries.filter(imagery => imagery !== imageryId) });
+
+    addRemoveProjectImagery = (eventTarget) =>
+        eventTarget.checked
+            ? this.addProjectImagery(parseInt(eventTarget.id))
+            : this.removeProjectImagery(parseInt(eventTarget.id));
 
     render() {
         return (
@@ -450,6 +471,8 @@ class Project extends React.Component {
                             useTemplateWidgets={this.state.useTemplateWidgets}
                             showGEEScript={this.state.showGEEScript}
                             onShowGEEScriptClick={this.onShowGEEScriptClick}
+                            projectImageries={this.state.projectImageries}
+                            addRemoveProjectImagery={this.addRemoveProjectImagery}
                         />
                         <ProjectManagement createProject={this.createProject} />
                     </Fragment>
@@ -483,8 +506,14 @@ function ProjectDesignForm(props) {
                 coordinates={props.coordinates}
                 inDesignMode
                 imageryId={props.projectDetails.imageryId}
-                imageryList={props.imageryList}
+                imageryList={props.imageryList.filter(imagery =>
+                    ((props.projectDetails.privacyLevel === "public") || (props.projectDetails.privacyLevel === "users"))
+                        ? imagery.visibility === "public"
+                        : imagery
+                )}
                 setProjectDetail={props.setProjectDetail}
+                projectImageries={props.projectImageries}
+                addRemoveProjectImagery={props.addRemoveProjectImagery}
             />
             <ProjectOptions
                 showGEEScript={props.showGEEScript}

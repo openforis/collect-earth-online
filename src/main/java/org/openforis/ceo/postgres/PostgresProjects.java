@@ -136,6 +136,7 @@ public class PostgresProjects implements Projects {
             newProject.add("sampleValues",                 parseJson(rs.getString("survey_questions")).getAsJsonArray());
             newProject.add("surveyRules",                  parseJson(rs.getString("survey_rules")).getAsJsonArray());
             newProject.add("projectOptions",               parseJson(rs.getString("options")).getAsJsonObject());
+            newProject.add("projectImageries",             parseJson(rs.getString("project_imageries")).getAsJsonArray());
         } catch (SQLException e) {
             System.out.println(e.getMessage());
         }
@@ -520,19 +521,24 @@ public class PostgresProjects implements Projects {
 
     public String updateProject(Request req, Response res) {
         try (var conn = connect();
-             var pstmt = conn.prepareStatement("SELECT * FROM update_project(?,?,?,?,?,?::JSONB)")) {
+             var pstmt = conn.prepareStatement("SELECT * FROM update_project(?,?,?,?,?,?::JSONB,?::JSONB)")) {
 
             final var jsonInputs = parseJson(req.body()).getAsJsonObject();
             pstmt.setInt(1,    Integer.parseInt(getOrEmptyString(jsonInputs, "projectId").getAsString()));
             pstmt.setString(2, getOrEmptyString(jsonInputs, "name").getAsString());
             pstmt.setString(3, getOrEmptyString(jsonInputs, "description").getAsString());
             pstmt.setString(4, getOrEmptyString(jsonInputs, "privacyLevel").getAsString());
-            pstmt.setInt(5,    jsonInputs.has("imageryId")
+            final var imageryId = jsonInputs.has("imageryId")
                                     ? jsonInputs.get("imageryId").getAsInt()
-                                    : getFirstPublicImageryId());
+                                    : getFirstPublicImageryId();
+            pstmt.setInt(5,    imageryId);
             pstmt.setString(6, jsonInputs.has("projectOptions")
                                     ? jsonInputs.get("projectOptions").getAsJsonObject().toString()
                                     : "{\"showGEEScript\":false}");
+            pstmt.setString(7, jsonInputs.has("projectImageries")
+                                    ? jsonInputs.get("projectImageries").getAsJsonArray().toString()
+                                    : parseJson("[" + imageryId + "]").getAsJsonArray().toString());
+
             pstmt.execute();
             return "";
         } catch (SQLException e) {
@@ -907,9 +913,11 @@ public class PostgresProjects implements Projects {
 
             newProject.addProperty("description",        getOrEmptyString(jsonInputs, "description").getAsString());
             newProject.addProperty("institution",        getOrZero(jsonInputs, "institutionId").getAsInt());
-            newProject.addProperty("imageryId",          jsonInputs.has("imageryId")
-                                                            ? jsonInputs.get("imageryId").getAsInt()
-                                                            : getFirstPublicImageryId());
+            final var imageryId = jsonInputs.has("imageryId") ? jsonInputs.get("imageryId").getAsInt() : getFirstPublicImageryId();
+            newProject.addProperty("imageryId",          imageryId);
+            newProject.add("projectImageries",           jsonInputs.has("projectImageries")
+                                                            ? jsonInputs.get("projectImageries").getAsJsonArray()
+                                                            : parseJson("[" + imageryId + "]").getAsJsonArray());
             newProject.addProperty("lonMin",             getOrZero(jsonInputs, "lonMin").getAsDouble());
             newProject.addProperty("latMin",             getOrZero(jsonInputs, "latMin").getAsDouble());
             newProject.addProperty("lonMax",             getOrZero(jsonInputs, "lonMax").getAsDouble());
@@ -951,7 +959,7 @@ public class PostgresProjects implements Projects {
 
             final var tokenKey = UUID.randomUUID().toString();
 
-            var SQL = "SELECT * FROM create_project(?,?,?,?,?,?,ST_SetSRID(ST_GeomFromGeoJSON(?), 4326),?,?,?,?,?,?,?,?,?::JSONB,?::JSONB,?::date,?::JSONB,?,?::JSONB)";
+            var SQL = "SELECT * FROM create_project(?,?,?,?,?,?,ST_SetSRID(ST_GeomFromGeoJSON(?), 4326),?,?,?,?,?,?,?,?,?::JSONB,?::JSONB,?::date,?::JSONB,?,?::JSONB,?::JSONB)";
             try (var conn = connect();
                  var pstmt = conn.prepareStatement(SQL)) {
 
@@ -976,6 +984,7 @@ public class PostgresProjects implements Projects {
                 pstmt.setString(19, null);  // classification times
                 pstmt.setString(20, tokenKey);  // token key
                 pstmt.setString(21, newProject.get("projectOptions").getAsJsonObject().toString());
+                pstmt.setString(22, newProject.get("projectImageries").getAsJsonArray().toString());
                 try (var rs = pstmt.executeQuery()) {
                     if (rs.next()) {
                         newProjectId = rs.getInt("create_project");

@@ -18,15 +18,19 @@ public class PostgresImagery implements Imagery {
 
     public String getAllImagery(Request req, Response res) {
         var institutionId = req.queryParams("institutionId");
+        var projectId = req.queryParams("projectId");
         var hasInstitutionId = !(institutionId == null || institutionId.isEmpty());
+        var hasProjectId = !(projectId == null || projectId.isEmpty());
 
         try (var conn = connect();
-             var pstmt = hasInstitutionId
-                ? conn.prepareStatement("SELECT * FROM select_public_imagery_by_institution(?)")
-                : conn.prepareStatement("SELECT * FROM select_public_imagery()")) {
+             var pstmt = hasInstitutionId ? conn.prepareStatement("SELECT * FROM select_public_imagery_by_institution(?)")
+                     : hasProjectId ? conn.prepareStatement("SELECT * FROM select_project_imagery(?)")
+                     : conn.prepareStatement("SELECT * FROM select_public_imagery()")) {
 
             if (hasInstitutionId) {
                 pstmt.setInt(1, Integer.parseInt(institutionId));
+            } else if (hasProjectId) {
+                pstmt.setInt(1, Integer.parseInt(projectId));
             }
             var imageryArray = new JsonArray();
             try (var rs = pstmt.executeQuery()) {

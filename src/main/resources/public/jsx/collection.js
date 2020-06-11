@@ -208,8 +208,7 @@ class Collection extends React.Component {
         });
 
     getImageryList = () => {
-        const { institution } = this.state.currentProject;
-        fetch(this.props.documentRoot + "/get-all-imagery?institutionId=" + institution)
+        fetch(this.props.documentRoot + "/get-all-imagery?projectId=" + this.props.projectId)
             .then(response => response.ok ? response.json() : Promise.reject(response))
             .then(data => this.setState({ imageryList: data }))
             .catch(response => {
@@ -252,7 +251,14 @@ class Collection extends React.Component {
     };
 
     initializeProjectMap = () => {
-        const mapConfig = mercator.createMap("image-analysis-pane", [0.0, 0.0], 1, this.state.imageryList, this.props.documentRoot, this.state.currentProject.boundary);
+        const mapConfig = mercator.createMap(
+            "image-analysis-pane",
+            [0.0, 0.0],
+            1,
+            this.state.imageryList,
+            this.props.documentRoot,
+            this.state.currentProject.boundary
+        );
         mercator.addVectorLayer(mapConfig,
                                 "currentAOI",
                                 mercator.geometryToVectorSource(mercator.parseGeoJson(this.state.currentProject.boundary, true)),

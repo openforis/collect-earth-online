@@ -96,7 +96,15 @@ export function ProjectInfo({ name, description, privacyLevel, setProjectDetail 
     );
 }
 
-export function ProjectAOI({ coordinates: { latMax, lonMin, lonMax, latMin }, inDesignMode, imageryId, imageryList, setProjectDetail }) {
+export function ProjectAOI({
+    coordinates: { latMax, lonMin, lonMax, latMin },
+    inDesignMode,
+    imageryId,
+    imageryList,
+    setProjectDetail,
+    projectImageries,
+    addRemoveProjectImagery,
+}) {
     return (
         <SectionBlock title="Project AOI">
             <div id="project-aoi">
@@ -160,7 +168,7 @@ export function ProjectAOI({ coordinates: { latMax, lonMin, lonMax, latMin }, in
                 </div>
             </div>
             {imageryList &&
-                <div id="project-imagery">
+                <div id="project-basemap-imagery">
                     <div className="form-group">
                         <h3 htmlFor="base-map-source">Basemap Source</h3>
                         <select
@@ -178,6 +186,28 @@ export function ProjectAOI({ coordinates: { latMax, lonMin, lonMax, latMin }, in
                         </select>
                     </div>
                 </div>
+            }
+            <hr />
+            {imageryList &&
+            <div id="project-imagery">
+                <div className="form-group">
+                    <h3 htmlFor="project-imagery">Project Imageries</h3>
+                    <div className="row mt-3">
+                        { imageryList.map((imagery, uid) =>
+                            <div className="col-md-5 offset-md-1 form-check" key={uid}>
+                                <input
+                                    className="form-check-input"
+                                    id={imagery.id}
+                                    onChange={e => addRemoveProjectImagery(e.target)}
+                                    type="checkbox"
+                                    checked={projectImageries.includes(imagery.id)}
+                                />
+                                <label htmlFor={imagery.id} className="form-check-label">{imagery.title}</label>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            </div>
             }
         </SectionBlock>
     );

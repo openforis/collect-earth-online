@@ -75,6 +75,9 @@ class Project extends React.Component {
                           name: this.state.projectDetails.name,
                           privacyLevel: this.state.projectDetails.privacyLevel,
                           projectOptions: this.state.projectDetails.projectOptions,
+                          projectImageries: this.state.projectDetails.projectImageries.includes(this.state.projectDetails.imageryId)
+                              ? this.state.projectDetails.projectImageries
+                              : [...this.state.projectDetails.projectImageries, this.state.projectDetails.imageryId],
                       }),
                   })
                 .then(response => {
@@ -276,6 +279,28 @@ class Project extends React.Component {
         </SectionBlock>
     );
 
+    addProjectImagery = (imageryId) =>
+        this.setState({
+            projectDetails: {
+                ...this.state.projectDetails,
+                projectImageries: [...this.state.projectDetails.projectImageries, imageryId],
+            },
+        });
+
+    removeProjectImagery = (imageryId) =>
+        this.setState({
+            projectDetails: {
+                ...this.state.projectDetails,
+                projectImageries: this.state.projectDetails.projectImageries.filter(imagery => imagery !== imageryId),
+            },
+        });
+
+    addRemoveProjectImagery = (eventTarget) => {
+        eventTarget.checked
+            ? this.addProjectImagery(parseInt(eventTarget.id))
+            : this.removeProjectImagery(parseInt(eventTarget.id));
+    }
+
     render() {
         return (
             <FormLayout id="project-design" title="Review Project">
@@ -288,6 +313,8 @@ class Project extends React.Component {
                             projectDetails={this.state.projectDetails}
                             setProjectDetail={this.setProjectDetail}
                             onShowGEEScriptClick={this.onShowGEEScriptClick}
+                            projectImageries={this.state.projectDetails.projectImageries}
+                            addRemoveProjectImagery={this.addRemoveProjectImagery}
                         />
                         <ProjectManagement
                             changeAvailability={this.changeAvailability}
@@ -459,7 +486,14 @@ class ProjectStats extends React.Component {
     }
 }
 
-function ProjectDesignReview({ projectDetails, coordinates, imageryList, setProjectDetail, onShowGEEScriptClick }) {
+function ProjectDesignReview({
+    projectDetails,
+    coordinates,
+    imageryList,
+    setProjectDetail,
+    onShowGEEScriptClick,
+    addRemoveProjectImagery,
+}) {
     return (
         <div id="project-design-form" className="px-2 pb-2">
             <ProjectInfo
@@ -473,6 +507,8 @@ function ProjectDesignReview({ projectDetails, coordinates, imageryList, setProj
                 imageryId={projectDetails.imageryId}
                 imageryList={imageryList}
                 setProjectDetail={setProjectDetail}
+                projectImageries={projectDetails.projectImageries}
+                addRemoveProjectImagery={addRemoveProjectImagery}
             />
             <ProjectOptions
                 showGEEScript={projectDetails.projectOptions.showGEEScript}
