@@ -342,7 +342,7 @@ class Project extends React.Component {
 
     getImageryList = () => {
         const { institutionId } = this.props;
-        fetch(this.props.documentRoot + "/get-all-imagery?institutionId=" + institutionId)
+        fetch(this.props.documentRoot + "/get-institution-imagery?institutionId=" + institutionId)
             .then(response => response.ok ? response.json() : Promise.reject(response))
             .then(data => {
                 const sorted = [...data.filter(a => a.title.toLocaleLowerCase().includes("mapbox")),
