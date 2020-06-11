@@ -76,7 +76,7 @@ CREATE OR REPLACE FUNCTION select_partial_table_by_name(_table_name text)
 
 $$ LANGUAGE PLPGSQL;
 
--- Converts unknown colums to a single json colum for processsing in Java
+-- Converts unknown columns to a single json column for processing in Java
 CREATE OR REPLACE FUNCTION select_json_table_by_name(_table_name text)
  RETURNS TABLE (
     ext_id      integer,
@@ -199,6 +199,19 @@ CREATE OR REPLACE FUNCTION get_user(_email text)
     SELECT user_uid, administrator, reset_key
     FROM users
     WHERE email = _email
+
+$$ LANGUAGE SQL;
+
+CREATE OR REPLACE FUNCTION get_user_by_id(_user_rid integer)
+    RETURNS TABLE (
+                      email            text,
+                      administrator    boolean,
+                      reset_key        text
+                  ) AS $$
+
+SELECT email, administrator, reset_key
+FROM users
+WHERE user_uid = _user_rid
 
 $$ LANGUAGE SQL;
 
@@ -613,6 +626,18 @@ CREATE OR REPLACE FUNCTION update_imagery(_imagery_uid integer, _institution_rid
 
 $$ LANGUAGE SQL;
 
+-- Returns first public imagery
+CREATE OR REPLACE FUNCTION select_first_public_imagery()
+ RETURNS integer AS $$
+
+    SELECT imagery_uid
+    FROM imagery
+    WHERE visibility = 'public'
+    ORDER BY imagery_uid
+    LIMIT 1
+
+$$ LANGUAGE SQL;
+
 --
 --  WIDGET FUNCTIONS
 --
@@ -677,12 +702,12 @@ $$ LANGUAGE SQL;
 -- Create a project
 CREATE OR REPLACE FUNCTION create_project(
     _institution_rid         integer,
+    _imagery_rid             integer,
     _availability            text,
     _name                    text,
     _description             text,
     _privacy_level           text,
     _boundary                geometry,
-    _base_map_source         text,
     _plot_distribution       text,
     _num_plots               integer,
     _plot_spacing            float,
@@ -695,31 +720,34 @@ CREATE OR REPLACE FUNCTION create_project(
     _survey_rules            jsonb,
     _created_date            date,
     _classification_times    jsonb,
-    _token_key               text
+    _token_key               text,
+    _options                 jsonb
  ) RETURNS integer AS $$
 
     INSERT INTO projects (
-        institution_rid,        availability,
-        name,                   description,
-        privacy_level,          boundary,
-        base_map_source,        plot_distribution,
+        institution_rid,        imagery_rid,
+        availability,           name,
+        description,            privacy_level,
+        boundary,               plot_distribution,
         num_plots,              plot_spacing,
         plot_shape,             plot_size,
         sample_distribution,    samples_per_plot,
         sample_resolution,      survey_questions,
         survey_rules,           created_date,
-        classification_times,   token_key
+        classification_times,   token_key,
+        options
     ) VALUES (
-        _institution_rid,        _availability,
-        _name,                   _description,
-        _privacy_level,          _boundary,
-        _base_map_source,        _plot_distribution,
+        _institution_rid,       _imagery_rid,
+        _availability,           _name,
+        _description,            _privacy_level,
+        _boundary,               _plot_distribution,
         _num_plots,              _plot_spacing,
         _plot_shape,             _plot_size,
         _sample_distribution,    _samples_per_plot,
         _sample_resolution,      _survey_questions,
         _survey_rules,           _created_date,
-        _classification_times,   _token_key
+        _classification_times,   _token_key,
+        _options
     ) RETURNING project_uid
 
 $$ LANGUAGE SQL;
@@ -754,14 +782,16 @@ CREATE OR REPLACE FUNCTION update_project(
     _name                    text,
     _description             text,
     _privacy_level           text,
-    _base_map_source         text
+    _imagery_rid             integer,
+    _options                 jsonb
  ) RETURNS void AS $$
 
     UPDATE projects
     SET name = _name,
         description = _description,
         privacy_level = _privacy_level,
-        base_map_source = _base_map_source
+        imagery_rid = _imagery_rid,
+        options = _options
     WHERE project_uid = _project_uid
 
 $$ LANGUAGE SQL;
@@ -1042,7 +1072,7 @@ CREATE OR REPLACE FUNCTION copy_project_plots_stats(_old_project_uid integer, _n
 
     UPDATE projects
     SET boundary = n.boundary,
-        base_map_source = n.base_map_source,
+        imagery_rid = n.imagery_rid,
         plot_distribution = n.plot_distribution,
         num_plots = n.num_plots,
         plot_spacing = n.plot_spacing,
@@ -1052,7 +1082,7 @@ CREATE OR REPLACE FUNCTION copy_project_plots_stats(_old_project_uid integer, _n
         samples_per_plot = n.samples_per_plot,
         sample_resolution = n.sample_resolution
     FROM (SELECT
-            boundary,             base_map_source,
+            boundary,             imagery_rid,
             plot_distribution,    num_plots,
             plot_spacing,         plot_shape,
             plot_size,            sample_distribution,
@@ -1064,7 +1094,7 @@ CREATE OR REPLACE FUNCTION copy_project_plots_stats(_old_project_uid integer, _n
 
 $$ LANGUAGE SQL;
 
--- Combines individual funtions needed to copy all plot and sample information
+-- Combines individual functions needed to copy all plot and sample information
 CREATE OR REPLACE FUNCTION copy_template_plots(_old_project_uid integer, _new_project_uid integer)
  RETURNS VOID AS $$
 
@@ -1152,12 +1182,12 @@ CREATE VIEW project_boundary AS
 SELECT
     project_uid,
     institution_rid,
+    imagery_rid,
     availability,
     name,
     description,
     privacy_level,
     ST_AsGeoJSON(boundary),
-    base_map_source,
     plot_distribution,
     num_plots,
     plot_spacing,
@@ -1170,7 +1200,8 @@ SELECT
     survey_rules,
     classification_times,
     valid_boundary(boundary),
-    token_key
+    token_key,
+    options
 FROM projects;
 
 -- Returns a row in projects by id
@@ -1425,7 +1456,8 @@ CREATE OR REPLACE FUNCTION flag_plot(_plot_rid integer, _user_rid integer, _conf
         (user_rid, plot_rid, flagged, confidence, collection_time)
     VALUES
         (_user_rid, _plot_rid, true, _confidence, Now())
-    ON CONFLICT (user_rid, plot_rid) DO UPDATE
+    ON CONFLICT (user_rid, plot_rid) DO
+        UPDATE
         SET flagged = excluded.flagged,
             user_rid = excluded.user_rid,
             confidence = excluded.confidence,
@@ -1556,6 +1588,19 @@ CREATE OR REPLACE FUNCTION select_next_user_plot(_project_rid integer, _plot_uid
 
 $$ LANGUAGE SQL;
 
+-- Returns next user analyzed plot asked by admin
+CREATE OR REPLACE FUNCTION select_next_user_plot_by_admin(_project_rid integer, _plot_uid integer)
+    RETURNS setOf plots_return AS $$
+
+SELECT *
+FROM select_all_project_plots(_project_rid) as spp
+WHERE spp.plotId > _plot_uid
+  AND spp.username != ''
+ORDER BY plotId ASC
+LIMIT 1
+
+$$ LANGUAGE SQL;
+
 -- Returns prev unanalyzed plot
 CREATE OR REPLACE FUNCTION select_prev_unassigned_plot(_project_rid integer, _plot_uid integer)
  RETURNS setOf plots_return AS $$
@@ -1578,6 +1623,18 @@ CREATE OR REPLACE FUNCTION select_prev_user_plot(_project_rid integer, _plot_uid
         AND spp.username = _username
     ORDER BY plotId DESC
     LIMIT 1
+
+$$ LANGUAGE SQL;
+
+-- Returns prev user analyzed plot asked by admin
+CREATE OR REPLACE FUNCTION select_prev_user_plot_by_admin(_project_rid integer, _plot_uid integer)
+    RETURNS setOf plots_return AS $$
+
+SELECT * FROM select_all_project_plots(_project_rid) as spp
+WHERE spp.plotId < _plot_uid
+  AND spp.username != ''
+ORDER BY plotId DESC
+LIMIT 1
 
 $$ LANGUAGE SQL;
 
@@ -1782,7 +1839,8 @@ CREATE OR REPLACE FUNCTION update_user_samples(
     INSERT INTO sample_values
         (user_plot_rid, sample_rid, imagery_rid, imagery_attributes, value)
         (SELECT user_plot_uid, sample_id, imagery_id, imagery_attributes, value FROM plot_samples)
-        ON CONFLICT (user_plot_rid, sample_rid) DO UPDATE
+    ON CONFLICT (user_plot_rid, sample_rid) DO
+        UPDATE
         SET user_plot_rid = excluded.user_plot_rid,
             imagery_rid = excluded.imagery_rid,
             imagery_attributes = excluded.imagery_attributes,
@@ -1799,23 +1857,28 @@ $$ LANGUAGE SQL;
 -- Returns project aggregate data
 CREATE OR REPLACE FUNCTION dump_project_plot_data(_project_uid integer)
  RETURNS TABLE (
-        plot_id              integer,
-        lon                  float,
-        lat                  float,
-        plot_shape           text,
-        plot_size            float,
-        email                text,
-        confidence           integer,
-        flagged              integer,
-        assigned             integer,
-        collection_time      timestamp,
-        analysis_duration    numeric,
-        samples              text,
-        ext_plot_data        jsonb
+        plot_id                     integer,
+        lon                         float,
+        lat                         float,
+        plot_shape                  text,
+        plot_size                   float,
+        email                       text,
+        confidence                  integer,
+        flagged                     integer,
+        assigned                    integer,
+        collection_time             timestamp,
+        analysis_duration           numeric,
+        samples                     text,
+        common_securewatch_date     date,
+        total_securewatch_dates     integer,
+        ext_plot_data               jsonb
  ) AS $$
 
     WITH all_rows AS (
-        SELECT pl.ext_id as pl_ext_id, *
+        SELECT pl.ext_id as pl_ext_id,
+        (CASE WHEN imagery_attributes->>'imagerySecureWatchDate' = '' OR imagery_attributes->'imagerySecureWatchDate' IS NULL THEN NULL
+  			ELSE TO_DATE(imagery_attributes->>'imagerySecureWatchDate', 'YYYY-MM-DD') END) as imagerySecureWatchDate,
+        *
         FROM select_all_project_plots(_project_uid) pl
         INNER JOIN samples s
             ON s.plot_rid = pl.plot_id
@@ -1832,8 +1895,8 @@ CREATE OR REPLACE FUNCTION dump_project_plot_data(_project_uid integer)
             center,
             MAX(username) AS email,
             MAX(confidence) as confidence,
-            cast(SUM(CASE WHEN flagged > 0 THEN 1 ELSE 0 END) as int) as flagged,
-            cast(COUNT(1) - SUM(CASE WHEN flagged > 0 THEN 1 ELSE 0 END) as int) as assigned,
+            MAX(flagged) as flagged,
+            MAX(assigned) as assigned,
             MAX(collection_time) as collection_time,
             MAX(analysis_duration) as analysis_duration,
             format('[%s]', string_agg(
@@ -1843,7 +1906,9 @@ CREATE OR REPLACE FUNCTION dump_project_plot_data(_project_uid integer)
                     format('{"%s":"%s", "%s":%s}', 'id', sample_uid, 'value', "value")
                 END) , ', ')) as samples,
             pl_ext_id,
-            project_id
+            project_id,
+            MAX(imagerySecureWatchDate) as common_securewatch_date,
+            COUNT(imagerySecureWatchDate) as total_securewatch_dates
         FROM all_rows
         GROUP BY plot_id, center, pl_ext_id, project_id
     )
@@ -1859,6 +1924,8 @@ CREATE OR REPLACE FUNCTION dump_project_plot_data(_project_uid integer)
         collection_time::timestamp,
         analysis_duration,
         samples,
+        common_securewatch_date,
+        total_securewatch_dates::integer,
         pfd.rem_data
     FROM projects p
     INNER JOIN plots_agg pa
@@ -2162,7 +2229,7 @@ CREATE OR REPLACE FUNCTION create_project_migration(
     _description             text,
     _privacy_level           text,
     _boundary                geometry,
-    _base_map_source         text,
+    _imagery_rid             integer,
     _plot_distribution       text,
     _num_plots               integer,
     _plot_spacing            float,
@@ -2177,14 +2244,15 @@ CREATE OR REPLACE FUNCTION create_project_migration(
     _created_date            date,
     _published_date          date,
     _closed_date             date,
-    _archived_date           date
+    _archived_date           date,
+    _options                 jsonb
  ) RETURNS integer AS $$
 
     INSERT INTO projects (
         project_uid,             institution_rid,
         availability,            name,
         description,             privacy_level,
-        boundary,                base_map_source,
+        boundary,                imagery_rid,
         plot_distribution,       num_plots,
         plot_spacing,            plot_shape,
         plot_size,               sample_distribution,
@@ -2192,12 +2260,12 @@ CREATE OR REPLACE FUNCTION create_project_migration(
         survey_questions,        survey_rules,
         classification_times,    created_date,
         published_date,          closed_date,
-        archived_date
+        archived_date,           options
     ) VALUES (
         _project_uid,             _institution_rid,
         _availability,            _name,
         _description,             _privacy_level,
-        _boundary,                _base_map_source,
+        _boundary,                _imagery_rid,
         _plot_distribution,       _num_plots,
         _plot_spacing,            _plot_shape,
         _plot_size,               _sample_distribution,
@@ -2205,7 +2273,7 @@ CREATE OR REPLACE FUNCTION create_project_migration(
         _survey_questions,        _survey_rules,
         _classification_times,    _created_date,
         _published_date,          _closed_date,
-        _archived_date
+        _archived_date,           _options
     ) RETURNING project_uid
 
 $$ LANGUAGE SQL;
@@ -2513,4 +2581,3 @@ CREATE OR REPLACE FUNCTION update_image_preference(_preference jsonb)
           priority     = excluded.priority
 
 $$ LANGUAGE SQL;
-

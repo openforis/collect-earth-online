@@ -32,9 +32,19 @@ public class JsonImagery implements Imagery {
                             imagery -> {
                                 var sourceConfig = imagery.get("sourceConfig").getAsJsonObject();
                                 // Return only necessary fields for types we proxy
-                                if (List.of("DigitalGlobe", "EarthWatch", "GeoServer").contains(sourceConfig.get("type").getAsString())) {
+                                if (sourceConfig.get("type").getAsString().equals("GeoServer")) {
                                     var cleanSource = new JsonObject();
                                     cleanSource.add("type", sourceConfig.get("type"));
+                                    imagery.add("sourceConfig", cleanSource);
+                                    return imagery;
+                                } else if (sourceConfig.get("type").getAsString().equals("SecureWatch")) {
+                                    var cleanSource = new JsonObject();
+                                    cleanSource.add("type", sourceConfig.get("type"));
+                                    cleanSource.add("startDate", sourceConfig.get("startDate"));
+                                    cleanSource.add("endDate", sourceConfig.get("endDate"));
+                                    cleanSource.add("featureProfile", sourceConfig.get("featureProfile"));
+                                    // FIXME: make securewatch dates function server side
+                                    cleanSource.add("connectId", sourceConfig.get("geoserverParams").getAsJsonObject().get("CONNECTID"));
                                     imagery.add("sourceConfig", cleanSource);
                                     return imagery;
                                 } else if (sourceConfig.get("type").getAsString().equals("Planet")) {

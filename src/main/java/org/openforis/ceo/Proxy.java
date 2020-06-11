@@ -3,7 +3,6 @@ package org.openforis.ceo;
 import static org.openforis.ceo.utils.RequestUtils.prepareGetRequest;
 
 import com.google.api.client.http.HttpResponseException;
-import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -28,11 +27,7 @@ public class Proxy {
         var sourceConfig = imagery.getImagerySourceConfig(getQParamNoNull(req, "imageryId"));
         var sourceType = sourceConfig.get("type").getAsString();
 
-        if (List.of("EarthWatch", "DigitalGlobe").contains(sourceType)) {
-            var connectId = sourceConfig.get("connectId").getAsString();
-            var baseUrl   = "https://access.maxar.com/earthservice/tmsaccess/tms/1.0.0/DigitalGlobe:ImageryTileService@EPSG:3857@jpg/{z}/{x}/{y}.jpg?connectId=";
-            return baseUrl.replace("{z}", z).replace("{x}", x).replace("{y}", y) + connectId;
-        } else if (sourceType.equals("Planet")) {
+        if (sourceType.equals("Planet")) {
             var apiKey  = sourceConfig.get("accessToken").getAsString();
             var year    = req.queryParamOrDefault("year", "");
             var month   = req.queryParamOrDefault("month", "");
@@ -42,7 +37,7 @@ public class Proxy {
                           + year + "_" + month
                           + "_mosaic/gmap/{z}/{x}/{y}.png?api_key=";
             return baseUrl.replace("{z}", z).replace("{x}", x).replace("{y}", y) + apiKey;
-        } else if (sourceType.equals("GeoServer")) {
+        } else if (List.of("GeoServer", "SecureWatch").contains(sourceType)) {
             final var queryParams     = req.queryString().split("&"); // includes STYLES=
             final var geoserverParams = sourceConfig.get("geoserverParams").getAsJsonObject(); // includes manually input STYLES
             final var geoserverLayers = geoserverParams.get("LAYERS").getAsString();
@@ -53,8 +48,10 @@ public class Proxy {
                 + Stream.concat(Arrays.stream(queryParams)
                                 .filter(q -> {
                                         // Remove imageryId, LAYERS, and any params from the GeoServer Params field
+                                        // also remove the empty featureprofile
                                         final var param = q.split("=")[0];
-                                        return !param.equals("imageryId") && !geoserverParams.keySet().contains(param);
+                                        return !param.equals("imageryId") && !geoserverParams.keySet().contains(param)
+                                                && !q.toUpperCase().equals("FEATUREPROFILE=");
                                     })
                                 .map(q -> {
                                         // If STYLES="", set STYLES="default". If LAYERS has multiple entries, match those in STYLES.
@@ -62,10 +59,12 @@ public class Proxy {
                                             if (geoserverLayers.contains(",")) {
                                                 return "STYLES=" +
                                                     Arrays.stream(geoserverLayers.split(","))
-                                                    .map(layer -> "default")
+                                                    .map(layer -> sourceType == "SecureWatch" ? "default" : "")
                                                     .collect(Collectors.joining(","));
-                                            } else {
+                                            } else if (sourceType == "SecureWatch") {
                                                 return "STYLES=default";
+                                            } else {
+                                                return "STYLES=";
                                             }
                                         } else {
                                             return q;
@@ -79,8 +78,7 @@ public class Proxy {
         }
     }
 
-    public static HttpServletResponse proxyImagery(Request req, Response res, Imagery imagery) {
-        var url = buildUrl(req, imagery);
+    public static HttpServletResponse executeRequestUrl(Request req, Response res, String url) {
         try {
             var request     = prepareGetRequest(url);
             var response    = request.execute();
@@ -112,5 +110,21 @@ public class Proxy {
             res.body(e.getMessage());
             return res.raw();
         }
+    }
+
+    public static HttpServletResponse proxyImagery(Request req, Response res, Imagery imagery) {
+        var url = buildUrl(req, imagery);
+        return executeRequestUrl(req, res, url);
+    }
+
+    public static HttpServletResponse getSecureWatchDates(Request req, Response res, Imagery imagery) {
+        return executeRequestUrl(req, res, "https://securewatch.digitalglobe.com/mapservice/wmsaccess?"
+                + Arrays.stream(req.queryString().split("&"))
+                    .filter(q -> !q.split("=")[0].equals("imageryId"))
+                    .collect(Collectors.joining("&"))
+                + "&CONNECTID="
+                + imagery.getImagerySourceConfig(getQParamNoNull(req, "imageryId"))
+                    .get("geoserverParams").getAsJsonObject()
+                    .get("CONNECTID").getAsString());
     }
 }

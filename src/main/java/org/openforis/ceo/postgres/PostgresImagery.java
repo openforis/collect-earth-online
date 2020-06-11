@@ -43,21 +43,26 @@ public class PostgresImagery implements Imagery {
                         : parseJson(rs.getString("extent")).getAsJsonArray());
                     var sourceConfig = parseJson(rs.getString("source_config")).getAsJsonObject();
                     // Return only necessary fields for types we proxy
-//                    if (List.of("DigitalGlobe", "EarthWatch", "GeoServer").contains(sourceConfig.get("type").getAsString())) {
-//                        var cleanSource = new JsonObject();
-//                        cleanSource.add("type", sourceConfig.get("type"));
-//                        newImagery.add("sourceConfig", cleanSource);
-//                    } else if (sourceConfig.get("type").getAsString().equals("Planet")) {
-//                        var cleanSource = new JsonObject();
-//                        cleanSource.add("type",  sourceConfig.get("type"));
-//                        cleanSource.add("month", sourceConfig.get("month"));
-//                        cleanSource.add("year",  sourceConfig.get("year"));
-//                        newImagery.add("sourceConfig", cleanSource);
-//                    } else {
-//                        newImagery.add("sourceConfig", sourceConfig);
-//                    };
-
-                    newImagery.add("sourceConfig", sourceConfig);
+                    if (sourceConfig.get("type").getAsString().equals("GeoServer")) {
+                        var cleanSource = new JsonObject();
+                        cleanSource.add("type", sourceConfig.get("type"));
+                        newImagery.add("sourceConfig", cleanSource);
+                    } else if (sourceConfig.get("type").getAsString().equals("SecureWatch")) {
+                        var cleanSource = new JsonObject();
+                        cleanSource.add("type", sourceConfig.get("type"));
+                        cleanSource.add("startDate", sourceConfig.get("startDate"));
+                        cleanSource.add("endDate", sourceConfig.get("endDate"));
+                        cleanSource.add("featureProfile", sourceConfig.get("featureProfile"));
+                        newImagery.add("sourceConfig", cleanSource);
+                    } else if (sourceConfig.get("type").getAsString().equals("Planet")) {
+                        var cleanSource = new JsonObject();
+                        cleanSource.add("type",  sourceConfig.get("type"));
+                        cleanSource.add("month", sourceConfig.get("month"));
+                        cleanSource.add("year",  sourceConfig.get("year"));
+                        newImagery.add("sourceConfig", cleanSource);
+                    } else {
+                        newImagery.add("sourceConfig", sourceConfig);
+                    };
                     imageryArray.add(newImagery);
                 }
             }
@@ -201,6 +206,7 @@ public class PostgresImagery implements Imagery {
             pstmt.execute();
         } catch (SQLException e) {
             System.out.println(e.getMessage());
+            res.status(409);
         }
 
         return "";

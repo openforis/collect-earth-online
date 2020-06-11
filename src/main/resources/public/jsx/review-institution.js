@@ -477,13 +477,22 @@ const imageryOptions = [
     {
         type: "BingMaps",
         params: [
-            { key: "imageryId", display: "Imagery Id", type: "select", options: ["Aerial", "AerialWithLabels"] },
+            {
+                key: "imageryId",
+                display: "Imagery Id",
+                type: "select",
+                options: [
+                    { label: "Aerial", value: "Aerial" },
+                    { label: "Aerial with Labels", value: "AerialWithLabels" },
+                ],
+            },
             { key: "accessToken", display: "Access Token" },
         ],
         url: "https://docs.microsoft.com/en-us/bingmaps/getting-started/bing-maps-dev-center-help/getting-a-bing-maps-key",
     },
     {
         type: "Planet",
+        label: "Planet Monthly",
         params: [
             { key: "year", display: "Default Year", type: "number" },
             { key: "month", display: "Default Month", type: "number" },
@@ -493,22 +502,93 @@ const imageryOptions = [
     },
     {
         type: "PlanetDaily",
+        label: "Planet Daily",
         params: [
             { key: "accessToken", display: "Access Token" },
-            { key: "startYear", display: "Start Year", type: "number" },
-            { key: "startMonth", display: "Start Month", type: "number" },
-            { key: "startDay", display: "Start Day", type: "number" },
-            { key: "endYear", display: "End Year", type: "number" },
-            { key: "endMonth", display: "End Month", type: "number" },
-            { key: "endDay", display: "End Day", type: "number" },
+            { key: "startDate", display: "Start Date", type: "date" },
+            { key: "endDate", display: "End Date", type: "date" },
         ],
         url: "https://developers.planet.com/docs/quickstart/getting-started/",
     },
     {
-        type: "EarthWatch",
+        type: "SecureWatch",
         params: [
+            { key: "connectid", display: "Connect ID" },
+        ],
+    },
+    {
+        type: "Sentinel1",
+        label: "Sentinel 1",
+        params: [
+            {
+                key: "year",
+                display: "Default Year",
+                type: "number",
+                options: { min: "2014", max: new Date().getFullYear().toString(), step: "1" },
+            },
+            { key: "month", display: "Default Month", type: "number", options: { min: "1", max: "12", step: "1" }},
+            {
+                key: "bandCombination",
+                display: "Band Combination",
+                type: "select",
+                options: [
+                    { label: "VH,VV,VH/VV", value: "VH,VV,VH/VV" },
+                    { label: "VH,VV,VV/VH", value: "VH,VV,VV/VH" },
+                    { label: "VV,VH,VV/VH", value: "VV,VH,VV/VH" },
+                    { label: "VV,VH,VH/VV", value: "VV,VH,VH/VV" },
+                ],
+            },
+            { key: "min", display: "Min", type: "number", options: { step: "0.01" }},
+            { key: "max", display: "Max", type: "number", options: { step: "0.01" }},
+        ],
+    },
+    {
+        type: "Sentinel2",
+        label: "Sentinel 2",
+        params: [
+            {
+                key: "year",
+                display: "Default Year",
+                type: "number",
+                options: { min: "2015", max: new Date().getFullYear().toString(), step: "1" },
+            },
+            { key: "month", display: "Default Month", type: "number", options: { min: "1", max: "12", step: "1" }},
+            {
+                key: "bandCombination",
+                display: "Band Combination",
+                type: "select",
+                options: [
+                    { label: "True Color", value: "TrueColor" },
+                    { label: "False Color Infrared", value: "FalseColorInfrared" },
+                    { label: "False Color Urban", value: "FalseColorUrban" },
+                    { label: "Agriculture", value: "Agriculture" },
+                    { label: "Healthy Vegetation", value: "HealthyVegetation" },
+                    { label: "Short Wave Infrared", value: "ShortWaveInfrared" },
+                ],
+            },
+            { key: "min", display: "Min", type: "number", options: { step: "0.01" }},
+            { key: "max", display: "Max", type: "number", options: { step: "0.01" }},
+            { key: "cloudScore", display: "Cloud Score", type: "number", options: { min: "0", max: "100", step: "1" }},
+        ],
+    },
+    {
+        type: "MapBoxRaster",
+        label: "Mapbox Raster",
+        params: [
+            { key: "layerName", display: "Layer Name" },
             { key: "accessToken", display: "Access Token" },
         ],
+        url: "https://docs.mapbox.com/help/glossary/raster-tiles-api/",
+    },
+    {
+        type: "MapBoxStatic",
+        label: "Mapbox Static",
+        params: [
+            { key: "userName", display: "User Name" },
+            { key: "mapStyleId", display: "Map Style Id" },
+            { key: "accessToken", display: "Access Token" },
+        ],
+        url: "https://docs.mapbox.com/help/glossary/static-tiles-api/"
     },
 ];
 
@@ -552,19 +632,6 @@ class NewImagery extends React.Component {
         }
     }
 
-    //    Lifecycle Methods    //
-
-    componentDidUpdate(prevProps, prevState) {
-        if (prevState.selectedType !== this.state.selectedType) {
-            // Clear params different to each type.
-            if (imageryOptions[this.state.selectedType].type === "BingMaps") {
-                this.setState({ newImageryParams: { "imageryId": imageryOptions[this.state.selectedType]["params"][0]["options"][0] } });
-            } else {
-                this.setState({ newImageryParams: {} });
-            }
-        }
-    }
-
     //    Remote Calls    //
 
     editCustomImagery = () => {
@@ -605,10 +672,10 @@ class NewImagery extends React.Component {
 
     addCustomImagery = () => {
         const sourceConfig = this.stackParams();
-        const message = this.checkDateField(sourceConfig);
+        const message = this.validateData(sourceConfig);
         if (!this.checkAllParams()) {
             alert("You must fill out all fields.");
-        } else if (["Planet", "PlanetDaily"].includes(sourceConfig.type) && message) {
+        } else if (["Planet", "PlanetDaily", "Sentinel1", "Sentinel2"].includes(sourceConfig.type) && message) {
             alert(message);
         } else if (this.titleIsTaken(this.state.newImageryTitle, this.props.imageryToEdit.id)) {
             alert("The title '" + this.state.newImageryTitle + "' is already taken.");
@@ -616,6 +683,19 @@ class NewImagery extends React.Component {
             // stackParams() will fail if parent is not entered as a JSON string.
             alert("Invalid JSON in JSON field(s).");
         } else {
+            // modify the sourceConfig as needed (for example SecureWatch Imagery)
+            if (sourceConfig.type === "SecureWatch") {
+                sourceConfig["geoserverUrl"] = "https://securewatch.digitalglobe.com/mapservice/wmsaccess";
+                const geoserverParams = {
+                    "VERSION": "1.1.1",
+                    "STYLES": "",
+                    "LAYERS": "DigitalGlobe:Imagery",
+                    "CONNECTID": sourceConfig.connectid,
+                };
+                sourceConfig["geoserverParams"] = geoserverParams;
+                delete sourceConfig.connectid;
+            }
+
             fetch(this.props.documentRoot + "/add-institution-imagery",
                   {
                       method: "POST",
@@ -668,42 +748,37 @@ class NewImagery extends React.Component {
             .every(o => o.required === false
                         || (this.state.newImageryParams[o.key] && this.state.newImageryParams[o.key].length > 0));
 
-    checkDateField = (sourceConfig) => {
-        if (sourceConfig.type === "Planet") {
+    validateData = (sourceConfig) => {
+        if (sourceConfig.type === "Sentinel1" || sourceConfig.type === "Sentinel2") {
+            const year = parseInt(sourceConfig.year);
+            const yearMinimum = sourceConfig.type === "Sentinel1" ? 2014 : 2015;
+            const month = parseInt(sourceConfig.month);
+            const cloudScore = sourceConfig.type === "Sentinel2" ? parseInt(sourceConfig.cloudScore) : null;
+            return (isNaN(year) || year.toString().length !== 4 || year < yearMinimum || year > new Date().getFullYear())
+                ? "Year should be 4 digit number and between " + yearMinimum + " and " + new Date().getFullYear()
+                : (isNaN(month) || month < 1 || month > 12)
+                    ? "Month should be between 1 and 12!"
+                    : (cloudScore && (isNaN(cloudScore) || cloudScore < 0 || cloudScore > 100))
+                        ? "Cloud Score should be between 0 and 100!"
+                        : null;
+        } else if (sourceConfig.type === "Planet") {
             const year = parseInt(sourceConfig.year);
             const month = parseInt(sourceConfig.month);
-            return isNaN(year)                              ? "Please enter the year as a 4 digit number."
-                : (isNaN(month) || month < 1 || month > 12) ? "Month should be between 1 and 12!"
-                : null;
+            return (isNaN(year) || year.toString().length !== 4) ? "Year should be 4 digit number"
+                 : (isNaN(month) || month < 1 || month > 12) ? "Month should be between 1 and 12!"
+                 : null;
         } else if (sourceConfig.type === "PlanetDaily") {
-            const startYear = parseInt(sourceConfig.startYear);
-            const startMonth = parseInt(sourceConfig.startMonth);
-            const startDay = parseInt(sourceConfig.startDay);
-            const endYear = parseInt(sourceConfig.endYear);
-            const endMonth = parseInt(sourceConfig.endMonth);
-            const endDay = parseInt(sourceConfig.endDay);
-            const startDate = new Date(startYear, startMonth - 1, startDay);
-            const endDate = new Date(endYear, endMonth - 1, endDay);
-
-            return (isNaN(startYear) || isNaN(endYear))
-                ? "Please enter the year as a 4 digit number."
-                : (isNaN(startMonth) || startMonth < 1 || startMonth > 12) || (isNaN(endMonth) || endMonth < 1 || endMonth > 12)
-                    ? "Month should be between 1 and 12!"
-                    : (isNaN(startDay) || startDay < 1 || startDay > 31) || (isNaN(endDay) || endDay < 1 || endDay > 31)
-                        ? "Day should be between 1 and 31!"
-                        : (!(Boolean(startDate) && startDate.getDate() === parseInt(sourceConfig.startDay)))
-                            ? "The start date is not valid."
-                            : (!(Boolean(endDate) && endDate.getDate() === parseInt(sourceConfig.endDay)))
-                                ? "The end date is not valid!"
-                                : (startDate > endDate)
-                                    ? "Start date must be smaller than the end date."
-                                    : null;
+            const startDate = sourceConfig.startDate;
+            const endDate = sourceConfig.endDate;
+            return (new Date(startDate) > new Date(endDate)) ? "Start date must be smaller than the end date." : null;
+        } else {
+            return null;
         }
     };
 
     //    Render Functions    //
 
-    formInput = (title, type, value, callback, link = null) => (
+    formInput = (title, type, value, callback, link = null, options = {}) => (
         <div className="mb-3" key={title}>
             <label>{title}</label> {link}
             <input
@@ -712,6 +787,7 @@ class NewImagery extends React.Component {
                 autoComplete="off"
                 onChange={e => callback(e)}
                 value={value || ""}
+                {...options}
             />
         </div>
     );
@@ -733,16 +809,17 @@ class NewImagery extends React.Component {
         (o.type && o.type === "select")
             ? this.formSelect(
                 o.display,
-                this.state.newImageryParams.imageryId,
+                this.state.newImageryParams[o.key],
                 e => this.setState({
                     newImageryParams: {
                         ...this.state.newImageryParams,
                         [o.key]: e.target.value,
-                        imageryId: e.target.value,
                     },
-                    newImageryAttribution: "Bing Maps API: " + e.target.value + " | © Microsoft Corporation",
+                    newImageryAttribution: imageryOptions[this.state.selectedType].type === "BingMaps"
+                        ? "Bing Maps API: " + e.target.value + " | © Microsoft Corporation"
+                        : this.state.newImageryAttribution,
                 }),
-                o.options.map(el => <option value={el} key={el}>{el}</option>),
+                o.options.map(el => <option value={el.value} key={el.value}>{el.label}</option>),
                 (imageryOptions[this.state.selectedType].url && o.key === "accessToken")
                     ? (
                         <a href={imageryOptions[this.state.selectedType].url} target="_blank" rel="noreferrer noopener">
@@ -764,7 +841,8 @@ class NewImagery extends React.Component {
                             Click here for help.
                         </a>
                     )
-                    : null
+                    : null,
+                o.options ? o.options : {}
             )
     );
 
@@ -774,11 +852,32 @@ class NewImagery extends React.Component {
         const val = e.target.value;
         this.setState({ selectedType: val });
         if (imageryOptions[val].type === "BingMaps") {
-            this.setState({ newImageryAttribution: "Bing Maps API: " + imageryOptions[val]["params"][0]["options"][0] + " | © Microsoft Corporation" });
+            this.setState({
+                newImageryAttribution: "Bing Maps API: " + imageryOptions[val]["params"][0]["options"][0] + " | © Microsoft Corporation",
+                newImageryParams: { imageryId: imageryOptions[val]["params"].filter(param => param.key === "imageryId")[0].options[0].value },
+            });
         } else if (imageryOptions[val].type === "Planet" || imageryOptions[val].type === "PlanetDaily") {
-            this.setState({ newImageryAttribution: "Planet Labs Global Mosaic | © Planet Labs, Inc" });
-        } else if (imageryOptions[val].type === "EarthWatch") {
-            this.setState({ newImageryAttribution: "EarthWatch Maps API: Recent Imagery | © Maxar, Inc" });
+            this.setState({
+                newImageryAttribution: "Planet Labs Global Mosaic | © Planet Labs, Inc",
+                newImageryParams: {},
+            });
+        } else if (imageryOptions[val].type === "SecureWatch") {
+            this.setState({
+                newImageryAttribution: "SecureWatch Imagery | © Maxar Technologies Inc.",
+                newImageryParams: {},
+            });
+        } else if (imageryOptions[val].type === "Sentinel1" || imageryOptions[val].type === "Sentinel2") {
+            this.setState({
+                newImageryAttribution: "Google Earth Engine | © Google LLC",
+                newImageryParams: { bandCombination: imageryOptions[val]["params"].filter(param => param.key === "bandCombination")[0].options[0].value },
+            });
+        } else if (imageryOptions[val].type.includes("Mapbox")) {
+            this.setState({
+                newImageryAttribution: "© Mapbox",
+                newImageryParams: {},
+            });
+        } else {
+            this.setState({ newImageryParams: {}});
         }
     };
 
@@ -794,7 +893,7 @@ class NewImagery extends React.Component {
                         value={this.state.selectedType}
                     >
                         {imageryOptions.map((o, i) =>
-                            <option value={i} key={i}>{o.type}</option>
+                            <option value={i} key={i}>{o.label || o.type}</option>
                         )}
                     </select>
                 </div>

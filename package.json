@@ -38,7 +38,11 @@
         },
         {
             "name": "Matt Spencer",
-            "email": "semail@snasa.io"
+            "email": "mspencer@sig-gis.com"
+        },
+        {
+            "name": "Biplov Bhandari",
+            "email": "bbhandari@sig-gis.com"
         }
     ],
     "license": "MIT",

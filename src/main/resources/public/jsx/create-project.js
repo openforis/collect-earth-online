@@ -2,8 +2,8 @@ import React, { Fragment } from "react";
 import ReactDOM from "react-dom";
 
 import { FormLayout, SectionBlock } from "./components/FormComponents";
-import { ProjectInfo, ProjectAOI, PlotReview, SampleReview } from "./components/ProjectComponents";
-import { mercator, ceoMapStyles } from "../js/mercator-openlayers.js";
+import { ProjectInfo, ProjectAOI, ProjectOptions, PlotReview, SampleReview } from "./components/ProjectComponents";
+import { mercator, ceoMapStyles } from "../js/mercator.js";
 import { SurveyDesign } from "./components/SurveyDesign";
 import { convertSampleValuesToSurveyQuestions } from "./utils/surveyUtils";
 import { encodeFileAsBase64 } from "./utils/fileUtils";
@@ -11,7 +11,7 @@ import { encodeFileAsBase64 } from "./utils/fileUtils";
 const blankProject = {
     archived: false,
     availability: "nonexistent",
-    baseMapSource: "",
+    imageryId: -1,
     boundary: null,
     description: "",
     id: 0,
@@ -36,6 +36,9 @@ class Project extends React.Component {
             projectDetails: blankProject,
             useTemplatePlots: false,
             useTemplateWidgets: false,
+            projectOptions: {
+                showGEEScript: false,
+            },
             imageryList: [],
             mapConfig: null,
             plotList: [],
@@ -66,9 +69,8 @@ class Project extends React.Component {
         }
 
         if (this.state.mapConfig
-            && this.state.projectDetails.baseMapSource !== prevState.projectDetails.baseMapSource) {
-
-            mercator.setVisibleLayer(this.state.mapConfig, this.state.projectDetails.baseMapSource);
+            && this.state.projectDetails.imageryId !== prevState.projectDetails.imageryId) {
+            mercator.setVisibleLayer(this.state.mapConfig, this.state.projectDetails.imageryId);
         }
 
         if (this.state.mapConfig
@@ -79,7 +81,7 @@ class Project extends React.Component {
             if (this.state.projectDetails.id > 0 && this.state.useTemplatePlots) {
                 this.showTemplateBounds();
             } else {
-                mercator.removeLayerByTitle(this.state.mapConfig, "projectPlots");
+                mercator.removeLayerById(this.state.mapConfig, "projectPlots");
                 this.showDragBoxDraw(this.state.projectDetails.id === 0);
             }
         }
@@ -114,13 +116,14 @@ class Project extends React.Component {
                   contentType: "application/json; charset=utf-8",
                   body: JSON.stringify({
                       institutionId: this.props.institutionId,
+                      imageryId:this.state.projectDetails.imageryId,
                       lonMin: this.state.coordinates.lonMin,
                       lonMax: this.state.coordinates.lonMax,
                       latMin: this.state.coordinates.latMin,
                       latMax: this.state.coordinates.latMax,
-                      baseMapSource: this.state.projectDetails.baseMapSource,
                       description: this.state.projectDetails.description,
                       name: this.state.projectDetails.name,
+                      projectOptions: this.state.projectOptions,
                       numPlots: this.state.projectDetails.numPlots,
                       plotDistribution: this.state.projectDetails.plotDistribution,
                       plotShape: this.state.projectDetails.plotShape,
@@ -130,7 +133,9 @@ class Project extends React.Component {
                       projectTemplate: this.state.projectDetails.id,
                       sampleDistribution: this.state.projectDetails.sampleDistribution,
                       samplesPerPlot: this.state.projectDetails.samplesPerPlot,
-                      sampleResolution: this.state.projectDetails.sampleResolution,
+                      sampleResolution: this.state.projectDetails.sampleDistribution === "center"
+                            ? 2 * this.state.projectDetails.plotSize
+                            : this.state.projectDetails.sampleResolution,
                       sampleValues: this.state.projectDetails.surveyQuestions,
                       surveyRules: this.state.projectDetails.surveyRules,
                       plotFileName: this.state.projectDetails.plotFileName,
@@ -233,6 +238,22 @@ class Project extends React.Component {
             alert("A sample SHP (.zip) file is required.");
             return false;
 
+        } else if (!projectDetails.imageryId > 0) {
+            alert("Select a valid Basemap.");
+            return false;
+
+        } else if (projectDetails.sampleDistribution === "gridded"
+                    && projectDetails.plotShape === "circle"
+                    && projectDetails.sampleResolution >= projectDetails.plotSize / Math.sqrt(2)) {
+            alert("The sample resolution must be less than plot diameter divided by the square root of 2.");
+            return false;
+
+        } else if (projectDetails.sampleDistribution === "gridded"
+                    && projectDetails.plotShape === "square"
+                    && parseInt(projectDetails.sampleResolution) >= projectDetails.plotSize) {
+            alert("The sample resolution must be less than the plot width.");
+            return false;
+
         } else {
             return true;
         }
@@ -241,7 +262,10 @@ class Project extends React.Component {
     setProjectTemplate = (newTemplateId) => {
         if (parseInt(newTemplateId) === 0) {
             this.setState({
-                projectDetails: blankProject,
+                projectDetails: {
+                    ...blankProject,
+                    imageryId: this.state.imageryList[0].id,
+                },
                 plotList: [],
                 coordinates: {
                     lonMin: "",
@@ -252,6 +276,7 @@ class Project extends React.Component {
                 useTemplatePlots: false,
                 useTemplateWidgets: false,
             });
+            mercator.removeLayerById(this.state.mapConfig, "dragBoxLayer");
         } else {
             const templateProject = this.state.projectList.find(p => p.id === newTemplateId);
             const newSurveyQuestions = convertSampleValuesToSurveyQuestions(templateProject.sampleValues);
@@ -320,11 +345,13 @@ class Project extends React.Component {
         fetch(this.props.documentRoot + "/get-all-imagery?institutionId=" + institutionId)
             .then(response => response.ok ? response.json() : Promise.reject(response))
             .then(data => {
+                const sorted = [...data.filter(a => a.title.toLocaleLowerCase().includes("mapbox")),
+                                ...data.filter(a => !a.title.toLocaleLowerCase().includes("mapbox"))];
                 this.setState({
-                    imageryList: data,
+                    imageryList: sorted,
                     projectDetails: {
                         ...this.state.projectDetails,
-                        baseMapSource: data[0].title,
+                        imageryId: sorted[0].id
                     },
                 });
             })
@@ -336,7 +363,7 @@ class Project extends React.Component {
 
     initProjectMap = () => {
         const newMapConfig = mercator.createMap("project-map", [0.0, 0.0], 1, this.state.imageryList, this.props.documentRoot);
-        mercator.setVisibleLayer(newMapConfig, this.state.imageryList[0].title);
+        mercator.setVisibleLayer(newMapConfig, this.state.imageryList[0].id);
         this.setState({ mapConfig: newMapConfig });
     };
 
@@ -353,10 +380,10 @@ class Project extends React.Component {
     };
 
     showDragBoxDraw = (clearBox) => {
-        if (clearBox) mercator.removeLayerByTitle(this.state.mapConfig, "currentAOI");
+        if (clearBox) mercator.removeLayerById(this.state.mapConfig, "currentAOI");
         const displayDragBoxBounds = (dragBox) => {
             const extent = dragBox.getGeometry().clone().transform("EPSG:3857", "EPSG:4326").getExtent();
-            mercator.removeLayerByTitle(this.state.mapConfig, "currentAOI");
+            mercator.removeLayerById(this.state.mapConfig, "currentAOI");
             this.setState({
                 coordinates: {
                     lonMin: extent[0],
@@ -371,7 +398,7 @@ class Project extends React.Component {
 
     showTemplateBounds = () => {
         mercator.disableDragBoxDraw(this.state.mapConfig);
-        mercator.removeLayerByTitle(this.state.mapConfig, "currentAOI");
+        mercator.removeLayerById(this.state.mapConfig, "currentAOI");
         // Extract bounding box coordinates from the project boundary and show on the map
         const boundaryExtent = mercator.parseGeoJson(this.state.projectDetails.boundary, false).getExtent();
         this.setState({
@@ -400,6 +427,8 @@ class Project extends React.Component {
                                     : ceoMapStyles.yellowSquare);
     };
 
+    onShowGEEScriptClick = () => this.setState({ projectOptions: { ...this.state.projectOptions, showGEEScript: !this.state.projectOptions.showGEEScript }});
+
     render() {
         return (
             <FormLayout id="project-design" title="Create Project">
@@ -419,6 +448,8 @@ class Project extends React.Component {
                             toggleTemplateWidgets={this.toggleTemplateWidgets}
                             useTemplatePlots={this.state.useTemplatePlots}
                             useTemplateWidgets={this.state.useTemplateWidgets}
+                            showGEEScript={this.state.showGEEScript}
+                            onShowGEEScriptClick={this.onShowGEEScriptClick}
                         />
                         <ProjectManagement createProject={this.createProject} />
                     </Fragment>
@@ -451,9 +482,13 @@ function ProjectDesignForm(props) {
             <ProjectAOI
                 coordinates={props.coordinates}
                 inDesignMode
-                baseMapSource={props.projectDetails.baseMapSource}
+                imageryId={props.projectDetails.imageryId}
                 imageryList={props.imageryList}
                 setProjectDetail={props.setProjectDetail}
+            />
+            <ProjectOptions
+                showGEEScript={props.showGEEScript}
+                onShowGEEScriptClick={props.onShowGEEScriptClick}
             />
             {props.useTemplatePlots
             ?
@@ -698,7 +733,7 @@ function PlotDesign ({
                             {plotDistribution === "gridded" &&
                             "Plot centers will be arranged on a grid within the AOI using the plot spacing selected below."}
                             {plotDistribution === "csv" &&
-                            "Specify your own plot centers by uploading a CSV with these fields: LONGITUDE,LATITUDE,PLOTID."}
+                            "Specify your own plot centers by uploading a CSV with these fields: LON,LAT,PLOTID."}
                             {plotDistribution === "shp" &&
                             "Specify your own plot boundaries by uploading a zipped Shapefile (containing SHP, SHX, DBF, and PRJ files) of polygon features. Each feature must have a unique PLOTID field."}
                         </p>
@@ -849,6 +884,24 @@ function SampleDesign ({
                     <input
                         className="form-check-input"
                         type="radio"
+                        id="sample-distribution-center"
+                        name="sample-distribution"
+                        defaultValue="center"
+                        onChange={() => setProjectDetail("sampleDistribution", "center")}
+                        checked={sampleDistribution === "center"}
+                        disabled={plotDistribution === "shp"}
+                    />
+                    <label
+                        className="form-check-label"
+                        htmlFor="sample-distribution-center"
+                    >
+                        Center
+                    </label>
+                </div>
+                <div className="form-check form-check-inline">
+                    <input
+                        className="form-check-input"
+                        type="radio"
                         id="sample-distribution-csv"
                         name="sample-distribution"
                         defaultValue="csv"
@@ -921,8 +974,10 @@ function SampleDesign ({
                         "Sample points will be randomly distributed within the plot boundary."}
                     {sampleDistribution === "gridded" &&
                         "Sample points will be arranged on a grid within the plot boundary using the sample resolution selected below."}
+                    {sampleDistribution === "center" &&
+                        "A Sample point will be placed on the center of the plot."}
                     {sampleDistribution === "csv" &&
-                        "Specify your own sample points by uploading a CSV with these fields: LONGITUDE,LATITUDE,PLOTID,SAMPLEID."}
+                        "Specify your own sample points by uploading a CSV with these fields: LON,LAT,PLOTID,SAMPLEID."}
                     {sampleDistribution === "shp" &&
                         "Specify your own sample shapes by uploading a zipped Shapefile (containing SHP, SHX, DBF, and PRJ files) of polygon features. Each feature must have PLOTID and SAMPLEID fields."}
                 </p>

@@ -1,0 +1,43 @@
+SecureWatch imagery can be added to an institution on the Review
+Institution page. Just enter a Title, ConnectID, Start Date, End Date,
+and Feature Profile. The imagery will then appear on the Collection
+page's imagery dropdown.
+
+NOTE: This imagery will only display results when zoomed in to a plot
+level and will usually show a blank white map on the Collection page
+overview map.
+
+Maxar's SecureWatch imagery is being served up by a GeoServer, so
+GetCapabilities, GetMap, and GetFeatureInfo requests should work as
+usual.
+
+GetCapabilities returns a list of available layers and feature
+profiles for the provided ConnectId.
+
+GetFeatureInfo can be used to retrieve features for all layers within
+the bounding box. For example, this can be used to retrieve all of the
+acquisitionDates for imagery within the current map view.
+
+For GetMap requests, FEATURE_PROFILE and CQL_COVERAGE_FILTER are both
+optional. The following fields can be used in the CQL_COVERAGE_FILTER
+query:
+
+|-----------------+----------+-----------------------------------+-----------------------------------------------------------------------------------------------------------------------------------------------------|
+| Element         | Datatype | Example Value                     | Description                                                                                                                                         |
+|-----------------+----------+-----------------------------------+-----------------------------------------------------------------------------------------------------------------------------------------------------|
+| featureId       | String   | b101db8114077461dc308cc804 5834ba | The Feature ID for the map feature at the given (X,Y) coordinate                                                                                    |
+| acquisitionDate | String   | 2009-05-27 01:20:43.63599         | The GMT of acquisition of the image used to make the product described by the feature.                                                              |
+| formattedDate   | Date     | 2010-05-20 (YYYY-MM-DD)           | The date of production or the date the image was reproduced.                                                                                        |
+| cloudCover      | Float    | 0.0-1.0                           | The cloud cover percentage of the image described by the Feature. Example: To represent 20% cloud cover, specify 0.2.                               |
+| offNadirAngle   | Float    | 0.0-90.0                          | The average off-nadir angle of the image strip described by the Feature.                                                                            |
+| sunElevation    | Float    | 0.0-90                            | The elevation angle of the sun for the image strip described by the Feature.                                                                        |
+| sunAzimuth      | Float    | +/- 180.00                        | The azimuth angle of the sun for the image strip described by the Feature.                                                                          |
+| ageDays         | Integer  | Example: 29                       | The number of days between the acquisitionDate and today.                                                                                           |
+| data_layer      | String   | Country_coverage                  | Represents the layer to which this particular image belongs. See Integration Procedure.                                                             |
+| source          | String   | WV02                              | Represents the source of the image. This value would be one of the following: QB QuickBird, WV01 WorldView1, WV02 WorldView2, Aerial Aerial Imagery |
+| outputMosaic    | Boolean  | TRUE/FALSE                        | Value will be TRUE if the output is a mosaic of more than one source image.                                                                         |
+|-----------------+----------+-----------------------------------+-----------------------------------------------------------------------------------------------------------------------------------------------------|
+
+SecureWatch Online Documentation Reviewed:
+- https://gcs-docs.s3.amazonaws.com/SecureWatch/en-us/Miscellaneous/DevGuides/WMS/WMS_Map.htm?Highlight=wms#WMS
+- https://gcs-docs.s3.amazonaws.com/SecureWatch/en-us/Miscellaneous/DevGuides/WMS/WMS_Query.htm
