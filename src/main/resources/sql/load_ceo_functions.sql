@@ -1895,7 +1895,7 @@ CREATE OR REPLACE FUNCTION dump_project_plot_data(_project_uid integer)
             pl_ext_id,
             project_id,
             imagerySecureWatchDate as grouped_securewatch_date,
-		    COUNT(imagerySecureWatchDate) as grouped_count_securewatch_date
+            COUNT(imagerySecureWatchDate) as grouped_count_securewatch_date
         FROM all_rows
         GROUP BY plot_id, center, pl_ext_id, project_id, imagerySecureWatchDate
     ), plots_agg AS (
