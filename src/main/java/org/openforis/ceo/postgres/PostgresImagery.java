@@ -6,7 +6,6 @@ import static org.openforis.ceo.utils.JsonUtils.parseJson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import java.sql.SQLException;
-import java.util.List;
 import org.openforis.ceo.db_api.Imagery;
 import spark.Request;
 import spark.Response;
