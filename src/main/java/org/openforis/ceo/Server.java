@@ -142,7 +142,7 @@ public class Server implements SparkApplication {
                         "/create-project",
                         "/update-institution",
                         "/add-institution-imagery",
-                        "/delete-institution-imagery")
+                        "/archive-institution-imagery")
                     .contains(request.uri()) && !institutions.isInstAdmin(request)) {
                 halt(403, "Forbidden!");
             }
@@ -234,10 +234,12 @@ public class Server implements SparkApplication {
         post("/update-institution",                   institutions::updateInstitution);
 
         // Routing Table: Imagery API
-        get("/get-all-imagery",                       imagery::getAllImagery);
+        get("/get-institution-imagery",               imagery::getInstitutionImagery);
+        get("/get-project-imagery",                   imagery::getProjectImagery);
+        get("/get-public-imagery",                    imagery::getPublicImagery);
         post("/add-geodash-imagery",                  imagery::addGeoDashImagery);
         post("/add-institution-imagery",              imagery::addInstitutionImagery);
-        post("/delete-institution-imagery",           imagery::deleteInstitutionImagery);
+        post("/archive-institution-imagery",          imagery::archiveInstitutionImagery);
 
         // Routing Table: GeoDash API
         get("/geo-dash/get-by-projid",                geoDash::geodashId);
