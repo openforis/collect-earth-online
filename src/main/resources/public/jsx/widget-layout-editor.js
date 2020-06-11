@@ -58,7 +58,7 @@ class BasicLayout extends React.PureComponent {
                 console.log(response);
                 alert("Error downloading the widget list. See console for details.");
             });
-        fetch(this.props.documentRoot + "/get-all-imagery?institutionId=" + this.state.institutionID)
+        fetch(this.props.documentRoot + "/get-institution-imagery?institutionId=" + this.state.institutionID)
             .then(response => response.ok ? response.json() : Promise.reject(response))
             .then(data => {
                 this.setState({
