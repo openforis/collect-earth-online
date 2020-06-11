@@ -35,6 +35,17 @@ public class PostgresPlots implements Plots {
         return singlePlot;
     }
 
+    private static JsonObject buildPlotCollectionJson(ResultSet rs) {
+        var singlePlot = buildPlotJson(rs);
+        try {
+            singlePlot.addProperty("extraPlot", rs.getString("extra_plot"));
+            singlePlot.addProperty("extraSample", rs.getString("extra_sample"));
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+        }
+        return singlePlot;
+    }
+
     public String getProjectPlots(Request req, Response res) {
         var projectId =     Integer.parseInt(req.queryParams("projectId"));
         var maxPlots =      Integer.parseInt(req.queryParams("max"));
@@ -69,7 +80,7 @@ public class PostgresPlots implements Plots {
             try (var rs = pstmt.executeQuery()) {
                 if (rs.next()) {
                     var plotData = new JsonObject();
-                    plotData = buildPlotJson(rs);
+                    plotData = buildPlotCollectionJson(rs);
                     plotData.add("samples", getSampleJsonArray(plotData.get("id").getAsInt(), projectId));
                     return plotData.toString();
                 } else {
@@ -111,7 +122,7 @@ public class PostgresPlots implements Plots {
         try (var rs = pstmt.executeQuery()) {
             if (rs.next()) {
                 var plotData = new JsonObject();
-                plotData = buildPlotJson(rs);
+                plotData = buildPlotCollectionJson(rs);
                 plotData.add("samples", getSampleJsonArray(plotData.get("id").getAsInt(), projectId));
                 unlockPlots(userId);
                 lockPlot(plotData.get("id").getAsInt(), userId);
