@@ -661,7 +661,7 @@ class MapWidget extends React.Component {
             this.state.mapRef.updateSize();
         }
 
-        if (this.props.mapCenter !== prevProps.mapCenter) {
+        if (this.props.mapCenter) {
             this.centerAndZoomMap(this.props.mapCenter, this.props.mapZoom);
         }
 
@@ -1142,8 +1142,10 @@ class MapWidget extends React.Component {
 
                         if (geoJsonObject.samples) {
                             geoJsonObject.samples.forEach(element => {
-                                const vectorSource = mercator.geometryToVectorSource(mercator.parseGeoJson(element.geom, true));
-                                mercator.addVectorLayer(mapConfig, "geeLayer", vectorSource, style);
+                                if (element.geom) {
+                                    const vectorSource = mercator.geometryToVectorSource(mercator.parseGeoJson(element.geom, true));
+                                    mercator.addVectorLayer(mapConfig, "geeLayer", vectorSource, style);
+                                }
                             });
                         }
                     });
