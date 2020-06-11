@@ -208,8 +208,8 @@ class Collection extends React.Component {
         });
 
     getImageryList = () => {
-        const { id } = this.state.currentProject;
-        fetch(this.props.documentRoot + "/get-project-imagery?projectId=" + id)
+        const { institution } = this.state.currentProject;
+        fetch(this.props.documentRoot + "/get-all-imagery?institutionId=" + institution)
             .then(response => response.ok ? response.json() : Promise.reject(response))
             .then(data => this.setState({ imageryList: data }))
             .catch(response => {

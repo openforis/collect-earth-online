@@ -86,7 +86,7 @@ class ProjectDashboard extends React.Component {
     }
 
     getImageryList(institutionId) {
-        fetch(this.props.documentRoot + "/get-institution-imagery?institutionId=" + institutionId)
+        fetch(this.props.documentRoot + "/get-all-imagery?institutionId=" + institutionId)
             .then(response => {
                 if (response.ok) {
                     return response.json();
