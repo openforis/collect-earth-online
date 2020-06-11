@@ -35,7 +35,7 @@ class Home extends React.Component {
             }
         });
 
-    getImagery = () => fetch(this.props.documentRoot + "/get-public-imagery")
+    getImagery = () => fetch(this.props.documentRoot + "/get-all-imagery")
         .then(response => response.ok ? response.json() : Promise.reject(response))
         .then(data => {
             if (data.length > 0) {
