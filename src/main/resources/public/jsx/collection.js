@@ -1332,6 +1332,13 @@ class Collection extends React.Component {
                         projectOptions={this.state.currentProject.projectOptions}
                         mapConfig={this.state.mapConfig}
                     />
+                    {this.state.currentPlot
+                        ?
+                            <PlotInformation
+                                plot={this.state.currentPlot}
+                            />
+                        : null
+                    }
                     <ImageryOptions
                         baseMapSource={this.state.currentImagery.id}
                         imageryTitle={this.state.currentImagery.title}
@@ -1650,6 +1657,49 @@ class PlotNavigation extends React.Component {
             </div>
         );
     }
+}
+
+class PlotInformation extends React.Component {
+    constructor(props) {
+        super(props);
+        this.state = {
+            showInfo: false,
+        };
+    }
+
+    str2obj(str) {
+        try {
+            return JSON.parse(str);
+        } catch (e) {
+            return null;
+        }
+    }
+
+    render() {
+        const { plot: { extraPlot }} = this.props;
+        const { showInfo } = this.state;
+        const parsedExtraFields = typeof extraPlot === "object" ? extraPlot : this.str2obj(extraPlot);
+        return (
+            <>
+                <CollapsibleTitle
+                    title="Plot Information"
+                    showGroup={showInfo}
+                    toggleShow={() => this.setState(prevState => ({ showInfo: !prevState.showInfo }))}
+                />
+                {this.state.showInfo
+                    ?
+                        parsedExtraFields ?
+                            <ul className="mb-3">
+                                { Object.entries(parsedExtraFields).map(([key, value]) => <li key={key}>{key} - {value}</li> ) }
+                            </ul>
+                        :
+                            <div className="mb-3">There are no extra information for this plot!</div>
+                    : null
+                }
+            </>
+        );
+    }
+
 }
 
 class ImageryOptions extends React.Component {
