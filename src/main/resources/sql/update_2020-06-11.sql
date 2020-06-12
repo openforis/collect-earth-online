@@ -18,3 +18,26 @@ CREATE OR REPLACE FUNCTION archive_institution(_institution_uid integer)
     RETURNING institution_uid;
 
 $$ LANGUAGE SQL;
+
+CREATE OR REPLACE FUNCTION delete_project(_project_uid integer)
+ RETURNS void AS $$
+
+ BEGIN
+    DELETE FROM plots
+    WHERE plot_uid IN (
+        SELECT plot_uid
+        FROM projects
+        INNER JOIN plots
+            ON project_uid = project_rid
+            AND project_uid = _project_uid);
+
+    DELETE FROM projects WHERE project_uid = _project_uid CASCADE;
+
+    EXECUTE
+    'DROP TABLE IF EXISTS ext_tables.project_' || _project_uid || '_plots_csv;'
+    'DROP TABLE IF EXISTS ext_tables.project_' || _project_uid || '_plots_shp;'
+    'DROP TABLE IF EXISTS ext_tables.project_' || _project_uid || '_samples_csv;'
+    'DROP TABLE IF EXISTS ext_tables.project_' || _project_uid || '_samples_shp;';
+ END
+
+$$ LANGUAGE PLPGSQL;
