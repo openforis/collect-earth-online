@@ -509,7 +509,8 @@ function ProjectDesignForm(props) {
                 inDesignMode
                 imageryId={props.projectDetails.imageryId}
                 imageryList={props.imageryList.filter(imagery =>
-                    ((props.projectDetails.privacyLevel === "public") || (props.projectDetails.privacyLevel === "users"))
+                    (props.projectDetails.privacyLevel === "public")
+                        || (props.projectDetails.privacyLevel === "users")
                         ? imagery.visibility === "public"
                         : imagery
                 )}

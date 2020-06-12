@@ -17,7 +17,7 @@ public class PostgresImagery implements Imagery {
         var imageryArray = new JsonArray();
         try {
             while(rs.next()) {
-                //create imagery json to send back
+                // create imagery json to send back
                 var newImagery = new JsonObject();
                 newImagery.addProperty("id",          rs.getInt("imagery_id"));
                 newImagery.addProperty("institution", rs.getInt("institution_id"));

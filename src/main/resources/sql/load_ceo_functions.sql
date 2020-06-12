@@ -646,6 +646,19 @@ CREATE OR REPLACE FUNCTION delete_project_imagery(_project_rid integer)
 
 $$ LANGUAGE SQL;
 
+-- insert into project_imagery table
+CREATE FUNCTION insert_project_imagery(_project_rid integer, _imagery_rid integer)
+
+ RETURNS integer AS $$
+
+    INSERT INTO project_imagery
+        (project_rid, imagery_rid)
+    VALUES
+        (_project_rid, _imagery_rid)
+    RETURNING project_imagery_uid
+
+$$ LANGUAGE  SQL;
+
 --
 --  WIDGET FUNCTIONS
 --
@@ -803,19 +816,6 @@ CREATE OR REPLACE FUNCTION update_project(
     WHERE project_uid = _project_uid
 
 $$ LANGUAGE SQL;
-
--- insert into project_imagery table
-CREATE FUNCTION insert_project_imagery(_project_rid integer, _imagery_rid integer)
-
- RETURNS integer AS $$
-
-    INSERT INTO project_imagery
-        (project_rid, imagery_rid)
-    VALUES
-        (_project_rid, _imagery_rid)
-    RETURNING project_imagery_uid
-
-$$ LANGUAGE  SQL;
 
 -- Update counts after plots are created
 CREATE OR REPLACE FUNCTION update_project_counts(_project_uid integer)
