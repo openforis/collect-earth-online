@@ -19,7 +19,8 @@ CREATE TABLE institutions (
     logo_data          bytea,
     description        text NOT NULL,
     url                text NOT NULL,
-    archived           boolean DEFAULT FALSE
+    archived           boolean DEFAULT FALSE,
+    created_date       date DEFAULT NOW()
 );
 
 -- Stores text values for roles
@@ -49,6 +50,7 @@ CREATE TABLE imagery (
     extent             jsonb,
     source_config      jsonb,
     archived           boolean DEFAULT FALSE
+    created_date       date DEFAULT NOW()
 );
 
 -- Stores information about projects
