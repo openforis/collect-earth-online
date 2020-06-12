@@ -5,74 +5,89 @@ import static org.openforis.ceo.utils.JsonUtils.parseJson;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
+import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.List;
 import org.openforis.ceo.db_api.Imagery;
 import spark.Request;
 import spark.Response;
 
-/**
- * Created by gtondapu on 7/31/2018.
- */
 public class PostgresImagery implements Imagery {
+
+    private JsonArray buildImageryArray(ResultSet rs) {
+        var imageryArray = new JsonArray();
+        try {
+            while(rs.next()) {
+                //create imagery json to send back
+                var newImagery = new JsonObject();
+                newImagery.addProperty("id",          rs.getInt("imagery_id"));
+                newImagery.addProperty("institution", rs.getInt("institution_id"));
+                newImagery.addProperty("visibility",  rs.getString("visibility"));
+                newImagery.addProperty("title",       rs.getString("title"));
+                newImagery.addProperty("attribution", rs.getString("attribution"));
+                newImagery.add("extent", rs.getString("extent") == null || rs.getString("extent").equals("null")
+                        ? null
+                        : parseJson(rs.getString("extent")).getAsJsonArray());
+                var sourceConfig = parseJson(rs.getString("source_config")).getAsJsonObject();
+                // Return only necessary fields for types we proxy
+                if (sourceConfig.get("type").getAsString().equals("GeoServer")) {
+                    var cleanSource = new JsonObject();
+                    cleanSource.add("type", sourceConfig.get("type"));
+                    newImagery.add("sourceConfig", cleanSource);
+                } else if (sourceConfig.get("type").getAsString().equals("SecureWatch")) {
+                    var cleanSource = new JsonObject();
+                    cleanSource.add("type", sourceConfig.get("type"));
+                    cleanSource.add("startDate", sourceConfig.get("startDate"));
+                    cleanSource.add("endDate", sourceConfig.get("endDate"));
+                    cleanSource.add("featureProfile", sourceConfig.get("featureProfile"));
+                    newImagery.add("sourceConfig", cleanSource);
+                } else if (sourceConfig.get("type").getAsString().equals("Planet")) {
+                    var cleanSource = new JsonObject();
+                    cleanSource.add("type",  sourceConfig.get("type"));
+                    cleanSource.add("month", sourceConfig.get("month"));
+                    cleanSource.add("year",  sourceConfig.get("year"));
+                    newImagery.add("sourceConfig", cleanSource);
+                } else {
+                    newImagery.add("sourceConfig", sourceConfig);
+                };
+
+                imageryArray.add(newImagery);
+            }
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+        }
+        return imageryArray;
+    }
 
     public String getAllImagery(Request req, Response res) {
         var institutionId = req.queryParams("institutionId");
-        var projectId = req.queryParams("projectId");
         var hasInstitutionId = !(institutionId == null || institutionId.isEmpty());
-        var hasProjectId = !(projectId == null || projectId.isEmpty());
 
         try (var conn = connect();
-             var pstmt = hasInstitutionId ? conn.prepareStatement("SELECT * FROM select_public_imagery_by_institution(?)")
-                     : hasProjectId ? conn.prepareStatement("SELECT * FROM select_project_imagery(?)")
-                     : conn.prepareStatement("SELECT * FROM select_public_imagery()")) {
+             var pstmt = hasInstitutionId
+                ? conn.prepareStatement("SELECT * FROM select_public_imagery_by_institution(?)")
+                : conn.prepareStatement("SELECT * FROM select_public_imagery()")) {
 
             if (hasInstitutionId) {
                 pstmt.setInt(1, Integer.parseInt(institutionId));
-            } else if (hasProjectId) {
-                pstmt.setInt(1, Integer.parseInt(projectId));
             }
-            var imageryArray = new JsonArray();
             try (var rs = pstmt.executeQuery()) {
-                while(rs.next()) {
-                    //create imagery json to send back
-                    var newImagery = new JsonObject();
-                    newImagery.addProperty("id",          rs.getInt("imagery_id"));
-                    newImagery.addProperty("institution", rs.getInt("institution_id"));
-                    newImagery.addProperty("visibility",  rs.getString("visibility"));
-                    newImagery.addProperty("title",       rs.getString("title"));
-                    newImagery.addProperty("attribution", rs.getString("attribution"));
-                    newImagery.add("extent", rs.getString("extent") == null || rs.getString("extent").equals("null")
-                        ? null
-                        : parseJson(rs.getString("extent")).getAsJsonArray());
-                    var sourceConfig = parseJson(rs.getString("source_config")).getAsJsonObject();
-                    // Return only necessary fields for types we proxy
-                    if (sourceConfig.get("type").getAsString().equals("GeoServer")) {
-                        var cleanSource = new JsonObject();
-                        cleanSource.add("type", sourceConfig.get("type"));
-                        newImagery.add("sourceConfig", cleanSource);
-                    } else if (sourceConfig.get("type").getAsString().equals("SecureWatch")) {
-                        var cleanSource = new JsonObject();
-                        cleanSource.add("type", sourceConfig.get("type"));
-                        cleanSource.add("startDate", sourceConfig.get("startDate"));
-                        cleanSource.add("endDate", sourceConfig.get("endDate"));
-                        cleanSource.add("featureProfile", sourceConfig.get("featureProfile"));
-                        newImagery.add("sourceConfig", cleanSource);
-                    } else if (sourceConfig.get("type").getAsString().equals("Planet")) {
-                        var cleanSource = new JsonObject();
-                        cleanSource.add("type",  sourceConfig.get("type"));
-                        cleanSource.add("month", sourceConfig.get("month"));
-                        cleanSource.add("year",  sourceConfig.get("year"));
-                        newImagery.add("sourceConfig", cleanSource);
-                    } else {
-                        newImagery.add("sourceConfig", sourceConfig);
-                    };
-
-                    imageryArray.add(newImagery);
-                }
+                return buildImageryArray(rs).toString();
             }
-            return imageryArray.toString();
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+            return "";
+        }
+    }
 
+    public String getProjectImagery(Request req, Response res) {
+        final var projectId = req.queryParams("projectId");
+        try (var conn = connect();
+             var pstmt = conn.prepareStatement("SELECT * FROM select_project_imagery(?)")) {
+            pstmt.setInt(1, Integer.parseInt(projectId));
+
+            try (var rs = pstmt.executeQuery()) {
+                return buildImageryArray(rs).toString();
+            }
         } catch (SQLException e) {
             System.out.println(e.getMessage());
             return "";

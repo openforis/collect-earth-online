@@ -11,12 +11,17 @@ import static org.openforis.ceo.utils.JsonUtils.readJsonFile;
 import static org.openforis.ceo.utils.JsonUtils.writeJsonFile;
 
 import com.google.gson.JsonObject;
-import java.util.List;
 import org.openforis.ceo.db_api.Imagery;
 import spark.Request;
 import spark.Response;
 
 public class JsonImagery implements Imagery {
+
+    @Override
+    public String getProjectImagery(Request req, Response res) {
+        // TODO Auto-generated method stub
+        return null;
+    }
 
     public String getAllImagery(Request req, Response res) {
         var institutionId = req.queryParams("institutionId");

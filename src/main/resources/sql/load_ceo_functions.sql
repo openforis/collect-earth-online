@@ -625,17 +625,24 @@ CREATE OR REPLACE FUNCTION select_first_public_imagery()
 $$ LANGUAGE SQL;
 
 -- Returns all imagery associated with a project
-CREATE FUNCTION select_project_imagery(_project_rid integer)
+CREATE OR REPLACE FUNCTION select_project_imagery(_project_rid integer)
  RETURNS setOf imagery_return AS $$
 
     SELECT imagery_uid, institution_rid, visibility, title, attribution, extent, source_config
-    FROM imagery
-    WHERE imagery_uid IN (
-        SELECT jsonb_array_elements(project_imageries)::integer
-        FROM projects
-        WHERE project_uid = _project_rid
-    )
-    ORDER BY visibility DESC, imagery_uid
+    FROM project_imagery pi
+    INNER JOIN imagery
+	    ON pi.imagery_rid = imagery.imagery_uid
+	WHERE project_rid = _project_rid
+	ORDER BY visibility DESC, imagery_uid
+
+$$ LANGUAGE SQL;
+
+-- Deletes all imagery associated with a project
+CREATE OR REPLACE FUNCTION delete_project_imagery(_project_rid integer)
+ RETURNS void AS $$
+
+    DELETE FROM project_imagery
+    WHERE project_rid = _project_rid
 
 $$ LANGUAGE SQL;
 
@@ -722,8 +729,7 @@ CREATE OR REPLACE FUNCTION create_project(
     _created_date            date,
     _classification_times    jsonb,
     _token_key               text,
-    _options                 jsonb,
-    _project_imageries       jsonb
+    _options                 jsonb
  ) RETURNS integer AS $$
 
     INSERT INTO projects (
@@ -737,7 +743,7 @@ CREATE OR REPLACE FUNCTION create_project(
         sample_resolution,      survey_questions,
         survey_rules,           created_date,
         classification_times,   token_key,
-        options,                project_imageries
+        options
     ) VALUES (
         _institution_rid,       _imagery_rid,
         _availability,           _name,
@@ -749,7 +755,7 @@ CREATE OR REPLACE FUNCTION create_project(
         _sample_resolution,      _survey_questions,
         _survey_rules,           _created_date,
         _classification_times,   _token_key,
-        _options,                _project_imageries
+        _options
     ) RETURNING project_uid
 
 $$ LANGUAGE SQL;
@@ -785,8 +791,7 @@ CREATE OR REPLACE FUNCTION update_project(
     _description             text,
     _privacy_level           text,
     _imagery_rid             integer,
-    _options                 jsonb,
-    _project_imageries       jsonb
+    _options                 jsonb
  ) RETURNS void AS $$
 
     UPDATE projects
@@ -794,11 +799,23 @@ CREATE OR REPLACE FUNCTION update_project(
         description = _description,
         privacy_level = _privacy_level,
         imagery_rid = _imagery_rid,
-        options = _options,
-        project_imageries = _project_imageries
+        options = _options
     WHERE project_uid = _project_uid
 
 $$ LANGUAGE SQL;
+
+-- insert into project_imagery table
+CREATE FUNCTION insert_project_imagery(_project_rid integer, _imagery_rid integer)
+
+ RETURNS integer AS $$
+
+    INSERT INTO project_imagery
+        (project_rid, imagery_rid)
+    VALUES
+        (_project_rid, _imagery_rid)
+    RETURNING project_imagery_uid
+
+$$ LANGUAGE  SQL;
 
 -- Update counts after plots are created
 CREATE OR REPLACE FUNCTION update_project_counts(_project_uid integer)
@@ -1205,8 +1222,7 @@ SELECT
     classification_times,
     valid_boundary(boundary),
     token_key,
-    options,
-    project_imageries
+    options
 FROM projects;
 
 -- Returns a row in projects by id

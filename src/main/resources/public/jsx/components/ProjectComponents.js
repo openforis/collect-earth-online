@@ -102,7 +102,7 @@ export function ProjectAOI({
     imageryId,
     imageryList,
     setProjectDetail,
-    projectImageries,
+    projectImageryList,
     addRemoveProjectImagery,
 }) {
     return (
@@ -168,9 +168,9 @@ export function ProjectAOI({
                 </div>
             </div>
             {imageryList &&
-                <div id="project-basemap-imagery">
+                <div id="project-default-imagery">
                     <div className="form-group">
-                        <h3 htmlFor="base-map-source">Basemap Source</h3>
+                        <h3 htmlFor="base-map-source">Default Imagery</h3>
                         <select
                             className="form-control form-control-sm"
                             size="1"
@@ -189,9 +189,9 @@ export function ProjectAOI({
             }
             <hr />
             {imageryList &&
-            <div id="project-imagery">
+            <div id="additional-imagery">
                 <div className="form-group">
-                    <h3 htmlFor="project-imagery">Project Imageries</h3>
+                    <h3 htmlFor="additional-imagery">Additional Imagery</h3>
                     <div className="row mt-3">
                         { imageryList.map((imagery, uid) =>
                             <div className="col-md-5 offset-md-1 form-check" key={uid}>
@@ -200,7 +200,7 @@ export function ProjectAOI({
                                     id={imagery.id}
                                     onChange={e => addRemoveProjectImagery(e.target)}
                                     type="checkbox"
-                                    checked={projectImageries.includes(imagery.id)}
+                                    checked={projectImageryList.includes(imagery.id)}
                                 />
                                 <label htmlFor={imagery.id} className="form-check-label">{imagery.title}</label>
                             </div>

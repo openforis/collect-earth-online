@@ -40,7 +40,7 @@ class Project extends React.Component {
                 showGEEScript: false,
             },
             imageryList: [],
-            projectImageries: [],
+            projectImageryList: [],
             mapConfig: null,
             plotList: [],
             coordinates: {
@@ -118,9 +118,9 @@ class Project extends React.Component {
                   body: JSON.stringify({
                       institutionId: this.props.institutionId,
                       imageryId: this.state.projectDetails.imageryId,
-                      projectImageries: this.state.projectImageries.includes(this.state.projectDetails.imageryId)
-                          ? this.state.projectImageries
-                          : [...this.state.projectImageries, this.state.projectDetails.imageryId],
+                      projectImageryList: this.state.projectImageryList.includes(this.state.projectDetails.imageryId)
+                          ? this.state.projectImageryList
+                          : [...this.state.projectImageryList, this.state.projectDetails.imageryId],
                       lonMin: this.state.coordinates.lonMin,
                       lonMax: this.state.coordinates.lonMax,
                       latMin: this.state.coordinates.latMin,
@@ -440,10 +440,12 @@ class Project extends React.Component {
         });
 
     addProjectImagery = (imageryId) =>
-        this.setState({ projectImageries: [...this.state.projectImageries, imageryId] });
+        this.setState({ projectImageryList: [...this.state.projectImageryList, imageryId] });
 
     removeProjectImagery = (imageryId) =>
-        this.setState({ projectImageries: this.state.projectImageries.filter(imagery => imagery !== imageryId) });
+        this.setState({
+            projectImageryList: this.state.projectImageryList.filter(imagery => imagery !== imageryId),
+        });
 
     addRemoveProjectImagery = (eventTarget) =>
         eventTarget.checked
@@ -471,7 +473,7 @@ class Project extends React.Component {
                             useTemplateWidgets={this.state.useTemplateWidgets}
                             showGEEScript={this.state.showGEEScript}
                             onShowGEEScriptClick={this.onShowGEEScriptClick}
-                            projectImageries={this.state.projectImageries}
+                            projectImageryList={this.state.projectImageryList}
                             addRemoveProjectImagery={this.addRemoveProjectImagery}
                         />
                         <ProjectManagement createProject={this.createProject} />
@@ -512,7 +514,7 @@ function ProjectDesignForm(props) {
                         : imagery
                 )}
                 setProjectDetail={props.setProjectDetail}
-                projectImageries={props.projectImageries}
+                projectImageryList={props.projectImageryList}
                 addRemoveProjectImagery={props.addRemoveProjectImagery}
             />
             <ProjectOptions

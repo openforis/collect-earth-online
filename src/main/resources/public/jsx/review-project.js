@@ -13,6 +13,7 @@ class Project extends React.Component {
         this.state = {
             projectDetails: {},
             imageryList: [],
+            projectImageryList: [],
             mapConfig: null,
             plotList: [],
             coordinates: {
@@ -31,6 +32,7 @@ class Project extends React.Component {
     componentDidUpdate(prevProps, prevState) {
         if (this.state.projectDetails.id
                 && this.state.projectDetails !== prevState.projectDetails) {
+            this.getProjectImageryList();
             this.getImageryList();
             this.getProjectPlots();
         }
@@ -75,9 +77,9 @@ class Project extends React.Component {
                           name: this.state.projectDetails.name,
                           privacyLevel: this.state.projectDetails.privacyLevel,
                           projectOptions: this.state.projectDetails.projectOptions,
-                          projectImageries: this.state.projectDetails.projectImageries.includes(this.state.projectDetails.imageryId)
-                              ? this.state.projectDetails.projectImageries
-                              : [...this.state.projectDetails.projectImageries, this.state.projectDetails.imageryId],
+                          projectImageryList: this.state.projectImageryList.includes(this.state.projectDetails.imageryId)
+                              ? this.state.projectImageryList
+                              : [...this.state.projectImageryList, this.state.projectDetails.imageryId],
                       }),
                   })
                 .then(response => {
@@ -213,6 +215,16 @@ class Project extends React.Component {
             });
     };
 
+    getProjectImageryList = () => {
+        fetch(this.props.documentRoot + "/get-project-imagery?projectId=" + this.props.projectId)
+            .then(response => response.ok ? response.json() : Promise.reject(response))
+            .then(data => this.setState({ projectImageryList: data.map(imagery => imagery.id) }))
+            .catch(response => {
+                console.log(response);
+                alert("Error retrieving the project imagery list. See console for details.");
+            });
+    };
+
     getProjectPlots = () => {
         fetch(this.props.documentRoot + "/get-project-plots?projectId=" + this.props.projectId + "&max=300")
             .then(response => response.ok ? response.json() : Promise.reject(response))
@@ -280,19 +292,11 @@ class Project extends React.Component {
     );
 
     addProjectImagery = (imageryId) =>
-        this.setState({
-            projectDetails: {
-                ...this.state.projectDetails,
-                projectImageries: [...this.state.projectDetails.projectImageries, imageryId],
-            },
-        });
+        this.setState({ projectImageryList: [...this.state.projectImageryList, imageryId] });
 
     removeProjectImagery = (imageryId) =>
         this.setState({
-            projectDetails: {
-                ...this.state.projectDetails,
-                projectImageries: this.state.projectDetails.projectImageries.filter(imagery => imagery !== imageryId),
-            },
+            projectImageryList: this.state.projectImageryList.filter(imagery => imagery !== imageryId),
         });
 
     addRemoveProjectImagery = (eventTarget) => {
@@ -313,7 +317,7 @@ class Project extends React.Component {
                             projectDetails={this.state.projectDetails}
                             setProjectDetail={this.setProjectDetail}
                             onShowGEEScriptClick={this.onShowGEEScriptClick}
-                            projectImageries={this.state.projectDetails.projectImageries}
+                            projectImageryList={this.state.projectImageryList}
                             addRemoveProjectImagery={this.addRemoveProjectImagery}
                         />
                         <ProjectManagement
@@ -492,6 +496,7 @@ function ProjectDesignReview({
     imageryList,
     setProjectDetail,
     onShowGEEScriptClick,
+    projectImageryList,
     addRemoveProjectImagery,
 }) {
     return (
@@ -507,7 +512,7 @@ function ProjectDesignReview({
                 imageryId={projectDetails.imageryId}
                 imageryList={imageryList}
                 setProjectDetail={setProjectDetail}
-                projectImageries={projectDetails.projectImageries}
+                projectImageryList={projectImageryList}
                 addRemoveProjectImagery={addRemoveProjectImagery}
             />
             <ProjectOptions

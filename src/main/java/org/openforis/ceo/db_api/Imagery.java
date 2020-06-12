@@ -8,6 +8,7 @@ import spark.Response;
 public interface Imagery {
 
     String getAllImagery(Request req, Response res) throws IOException;
+    String getProjectImagery(Request req, Response res) throws IOException;
     JsonObject getImagerySourceConfig(Integer imageryId);
     String addInstitutionImagery(Request req, Response res) throws IOException;
     String addGeoDashImagery(Request req, Response res) throws IOException;
