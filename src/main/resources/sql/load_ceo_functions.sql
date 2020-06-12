@@ -378,7 +378,8 @@ CREATE OR REPLACE FUNCTION archive_institution(_institution_uid integer)
     WHERE institution_rid = _institution_uid;
 
     UPDATE institutions
-    SET archived = true
+    SET archived = true,
+        archived_date = NOW()
     WHERE institution_uid = _institution_uid
     RETURNING institution_uid;
 

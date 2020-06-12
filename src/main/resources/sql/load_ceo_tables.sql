@@ -20,7 +20,8 @@ CREATE TABLE institutions (
     description        text NOT NULL,
     url                text NOT NULL,
     archived           boolean DEFAULT FALSE,
-    created_date       date DEFAULT NOW()
+    created_date       date DEFAULT NOW(),
+    archived_date      date
 );
 
 -- Stores text values for roles
