@@ -46,6 +46,8 @@ public class PostgresImagery implements Imagery {
                     if (sourceConfig.get("type").getAsString().equals("GeoServer")) {
                         var cleanSource = new JsonObject();
                         cleanSource.add("type", sourceConfig.get("type"));
+                        cleanSource.add("geoserverUrl", sourceConfig.get("geoserverUrl"));
+                        cleanSource.add("geoserverParams", sourceConfig.get("geoserverParams"));
                         newImagery.add("sourceConfig", cleanSource);
                     } else if (sourceConfig.get("type").getAsString().equals("SecureWatch")) {
                         var cleanSource = new JsonObject();
@@ -53,12 +55,14 @@ public class PostgresImagery implements Imagery {
                         cleanSource.add("startDate", sourceConfig.get("startDate"));
                         cleanSource.add("endDate", sourceConfig.get("endDate"));
                         cleanSource.add("featureProfile", sourceConfig.get("featureProfile"));
+                        cleanSource.add("geoserverParams", sourceConfig.get("geoserverParams"));
                         newImagery.add("sourceConfig", cleanSource);
                     } else if (sourceConfig.get("type").getAsString().equals("Planet")) {
                         var cleanSource = new JsonObject();
                         cleanSource.add("type",  sourceConfig.get("type"));
                         cleanSource.add("month", sourceConfig.get("month"));
                         cleanSource.add("year",  sourceConfig.get("year"));
+                        cleanSource.add("accessToken", sourceConfig.get("accessToken"));
                         newImagery.add("sourceConfig", cleanSource);
                     } else {
                         newImagery.add("sourceConfig", sourceConfig);
