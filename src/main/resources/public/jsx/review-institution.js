@@ -600,10 +600,10 @@ class NewImagery extends React.Component {
             const { sourceConfig } = imageryToEdit;
             const { type, ...imageryParams } = sourceConfig;
             const selectedType = imageryOptions.findIndex((e) => e.type === type);
-            if (type === 'GeoServer') {
+            if (type === "GeoServer") {
                 const { geoserverUrl, geoserverParams } = imageryParams;
                 const { LAYERS, ...cleanGeoserverParams } = geoserverParams;
-                const geoserverImageryParams = {
+                const geoServerImageryParams = {
                     geoserverUrl,
                     LAYERS,
                     geoserverParams: JSON.stringify(cleanGeoserverParams),
@@ -612,7 +612,19 @@ class NewImagery extends React.Component {
                     newImageryTitle: imageryToEdit.title,
                     newImageryAttribution: imageryToEdit.attribution,
                     selectedType: selectedType,
-                    newImageryParams: geoserverImageryParams,
+                    newImageryParams: geoServerImageryParams,
+                };
+            } else if (type === "SecureWatch") {
+                const { geoserverParams } = imageryParams;
+                const { CONNECTID } = geoserverParams;
+                const secureWatchImageryParams = {
+                    connectid: CONNECTID,
+                };
+                this.state = {
+                    newImageryTitle: imageryToEdit.title,
+                    newImageryAttribution: imageryToEdit.attribution,
+                    selectedType: selectedType,
+                    newImageryParams: secureWatchImageryParams,
                 };
             } else {
                 this.state = {
@@ -636,10 +648,10 @@ class NewImagery extends React.Component {
 
     editCustomImagery = () => {
         const sourceConfig = this.stackParams();
-        const message = this.checkDateField(sourceConfig);
+        const message = this.validateData(sourceConfig);
         if (!this.checkAllParams()) {
             alert("You must fill out all fields.");
-        } else if (["Planet", "PlanetDaily"].includes(sourceConfig.type) && message) {
+        } else if (["Planet", "PlanetDaily", "Sentinel1", "Sentinel2"].includes(sourceConfig.type) && message) {
             alert(message);
         } else if (this.titleIsTaken(this.state.newImageryTitle, this.props.imageryToEdit.id)) {
             alert("The title '" + this.state.newImageryTitle + "' is already taken.");
@@ -647,6 +659,19 @@ class NewImagery extends React.Component {
             // stackParams() will fail if parent is not entered as a JSON string.
             alert("Invalid JSON in JSON field(s).");
         } else {
+            // modify the sourceConfig as needed (for example SecureWatch Imagery)
+            if (sourceConfig.type === "SecureWatch") {
+                sourceConfig["geoserverUrl"] = "https://securewatch.digitalglobe.com/mapservice/wmsaccess";
+                const geoserverParams = {
+                    "VERSION": "1.1.1",
+                    "STYLES": "",
+                    "LAYERS": "DigitalGlobe:Imagery",
+                    "CONNECTID": sourceConfig.connectid,
+                };
+                sourceConfig["geoserverParams"] = geoserverParams;
+                delete sourceConfig.connectid;
+            }
+
             fetch(this.props.documentRoot + "/update-institution-imagery",
                   {
                       method: "POST",
@@ -891,6 +916,7 @@ class NewImagery extends React.Component {
                         className="form-control"
                         onChange={this.imageryTypeChangeHandler}
                         value={this.state.selectedType}
+                        disabled={this.props.imageryToEdit !== -1 ? true : null}
                     >
                         {imageryOptions.map((o, i) =>
                             <option value={i} key={i}>{o.label || o.type}</option>
