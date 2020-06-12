@@ -1,6 +1,7 @@
 ALTER TABLE institutions ADD COLUMN created_date date DEFAULT NOW();
 ALTER TABLE institutions ADD COLUMN archived_date date;
 ALTER TABLE imagery ADD COLUMN created_date date DEFAULT NOW();
+ALTER TABLE imagery ADD COLUMN archived_date date;
 
 UPDATE institutions SET archived_date = NOW() WHERE archived = true;
 

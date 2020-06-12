@@ -50,8 +50,9 @@ CREATE TABLE imagery (
     attribution        text NOT NULL,
     extent             jsonb,
     source_config      jsonb,
-    archived           boolean DEFAULT FALSE
-    created_date       date DEFAULT NOW()
+    archived           boolean DEFAULT FALSE,
+    created_date       date DEFAULT NOW(),
+    archived_date      date
 );
 
 -- Stores information about projects
