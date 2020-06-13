@@ -3,6 +3,13 @@ SET source_config = source_config || '{"startDate": "2018-01-01", "endDate": "20
 WHERE source_config->>'type'='SecureWatch'
 	AND (source_config->>'startDate' IS NULL OR source_config->>'endDate' IS NULL);
 
+-- update imagery attributes where imagerySecureWatchDate is present and its value is null
+UPDATE sample_values
+SET imagery_attributes = imagery_attributes || '{"imagerySecureWatchDate": ""}'::jsonb
+WHERE (imagery_attributes->'imagerySecureWatchDate') IS NOT NULL
+    AND imagery_attributes->>'imagerySecureWatchDate' IS NULL;
+
+
 DROP FUNCTION dump_project_plot_data(_project_uid integer);
 
 -- Returns project aggregate data

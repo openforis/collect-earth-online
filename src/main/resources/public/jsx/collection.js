@@ -888,7 +888,7 @@ class Collection extends React.Component {
             imageryEndDatePlanetDaily: this.state.imageryEndDatePlanetDaily,
             imageryDatePlanetDaily: mercator.getTopVisiblePlanetLayerDate(this.state.mapConfig, this.state.currentImagery.id),
         } : (this.state.currentImagery.sourceConfig.type === "SecureWatch") ? {
-            imagerySecureWatchDate: this.state.imagerySecureWatchDate,
+            imagerySecureWatchDate: !this.state.imagerySecureWatchDate ? "" : this.state.imagerySecureWatchDate,
             imagerySecureWatchCloudCover: this.state.imagerySecureWatchCloudCover ? (parseFloat(this.state.imagerySecureWatchCloudCover) * 100).toFixed(2) : "",
         } : (this.state.currentImagery.sourceConfig.type === "Sentinel1") ? {
             sentinel1MosaicYearMonth: this.state.imageryYearSentinel1 + " - " +
