@@ -35,6 +35,8 @@ public class JsonImagery implements Imagery {
                                 if (sourceConfig.get("type").getAsString().equals("GeoServer")) {
                                     var cleanSource = new JsonObject();
                                     cleanSource.add("type", sourceConfig.get("type"));
+                                    cleanSource.add("geoserverUrl", sourceConfig.get("geoserverUrl"));
+                                    cleanSource.add("geoserverParams", sourceConfig.get("geoserverParams"));
                                     imagery.add("sourceConfig", cleanSource);
                                     return imagery;
                                 } else if (sourceConfig.get("type").getAsString().equals("SecureWatch")) {
@@ -44,7 +46,7 @@ public class JsonImagery implements Imagery {
                                     cleanSource.add("endDate", sourceConfig.get("endDate"));
                                     cleanSource.add("featureProfile", sourceConfig.get("featureProfile"));
                                     // FIXME: make securewatch dates function server side
-                                    cleanSource.add("connectId", sourceConfig.get("geoserverParams").getAsJsonObject().get("CONNECTID"));
+                                    cleanSource.add("geoserverParams", sourceConfig.get("geoserverParams"));
                                     imagery.add("sourceConfig", cleanSource);
                                     return imagery;
                                 } else if (sourceConfig.get("type").getAsString().equals("Planet")) {
@@ -52,6 +54,7 @@ public class JsonImagery implements Imagery {
                                     cleanSource.add("type",  sourceConfig.get("type"));
                                     cleanSource.add("month", sourceConfig.get("month"));
                                     cleanSource.add("year",  sourceConfig.get("year"));
+                                    cleanSource.add("accessToken", sourceConfig.get("accessToken"));
                                     imagery.add("sourceConfig", cleanSource);
                                     return imagery;
                                 } else {
