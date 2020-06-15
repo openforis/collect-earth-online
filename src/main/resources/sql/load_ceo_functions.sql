@@ -760,7 +760,7 @@ CREATE OR REPLACE FUNCTION delete_project(_project_uid integer)
             ON project_uid = project_rid
             AND project_uid = _project_uid);
 
-    DELETE FROM projects WHERE project_uid = _project_uid CASCADE;
+    DELETE FROM projects WHERE project_uid = _project_uid;
 
     EXECUTE
     'DROP TABLE IF EXISTS ext_tables.project_' || _project_uid || '_plots_csv;'

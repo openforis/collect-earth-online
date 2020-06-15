@@ -21,7 +21,7 @@ WHERE
     OR (p_age > 365 AND complete < 0.05);
 
 -- Delete archived projects
-DELETE FROM projects
+SELECT delete_project(project_uid)
 WHERE project_uid IN
 (
     SELECT project_uid
