@@ -67,6 +67,7 @@ public class PostgresImagery implements Imagery {
                     } else {
                         newImagery.add("sourceConfig", sourceConfig);
                     };
+
                     imageryArray.add(newImagery);
                 }
             }
