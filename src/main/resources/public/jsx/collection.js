@@ -560,7 +560,7 @@ class Collection extends React.Component {
 
     updateSecureWatchSingleLayer = (eventTarget) => {
         mercator.updateLayerWmsParams(this.state.mapConfig, this.state.currentImagery.id, {
-            COVERAGE_CQL_FILTER: "featureId='" + eventTarget.value + "'",
+            COVERAGE_CQL_FILTER: eventTarget.value === "DEFAULT" ? "" : "featureId='" + eventTarget.value + "'",
         });
         this.setState({
             imagerySecureWatchDate: eventTarget.options[eventTarget.selectedIndex].getAttribute("date"),
