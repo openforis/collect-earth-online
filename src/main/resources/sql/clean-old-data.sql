@@ -22,6 +22,7 @@ WHERE
 
 -- Delete archived projects
 SELECT delete_project(project_uid)
+FROM projects
 WHERE project_uid IN
 (
     SELECT project_uid
@@ -30,19 +31,30 @@ WHERE project_uid IN
             EXTRACT(days from now() - archived_date) as p_age
             FROM projects
         ) a
-    WHERE p_age > 180
-        AND (availability = 'archived' OR archived_date is NULL)
+    WHERE availability = 'archived'
+        AND (p_age > 180 OR archived_date is NULL)
 );
 
 -- Archive empty institutions
 SELECT archive_institution(institution_uid)
-FROM institutions i
-LEFT JOIN projects
-ON institution_rid = institution_uid
-   AND availability <> 'archived'
-GROUP BY institution_uid
-HAVING count(project_uid) = 0;
-
+FROM institutions
+WHERE institution_uid IN
+(
+    SELECT institution_uid
+        FROM (
+            SELECT institution_uid,
+                count(project_uid) p_cnt,
+                EXTRACT(days from now() - i.created_date) as i_age
+            FROM institutions i
+            LEFT JOIN projects
+            ON institution_uid = institution_rid
+                AND availability <> 'archived'
+            GROUP BY institution_uid
+            order by p_cnt desc
+        ) a
+    WHERE (i_age > 180 OR institution_uid < 500)
+        AND p_cnt = 0
+);
 
 -- Delete archived institutions
 DELETE FROM institutions
@@ -55,7 +67,7 @@ WHERE institution_uid IN
             FROM institutions
         ) a
     WHERE i_age > 180
-        AND archived = true
+        AND archived = TRUE
 );
 
 REINDEX DATABASE CEO;
