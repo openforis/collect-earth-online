@@ -69,17 +69,7 @@ mercator.getViewExtent = function (mapConfig) {
 // [Pure] Returns a new ol.source.* object or null if the sourceConfig
 // is invalid.
 mercator1.createSource = function (sourceConfig) {
-    if (sourceConfig.type == "DigitalGlobe") {
-        return new google.maps.ImageMapType({
-            getTileUrl: function (tile, zoom) {
-                var url = 'https://{s}.tiles.mapbox.com/v4/{m}/{z}/{x}/{y}.png?access_token=' + sourceConfig.accessToken;
-                return url.replace('{s}', 'api').replace('{m}', sourceConfig.imageryId).replace('{z}', zoom).replace('{x}', tile.x).replace('{y}', tile.y);
-            },
-            tileSize : new google.maps.Size(256, 256)
-        });
-    } else {
-        return null;
-    }
+    return null;
 };
 
 // [Pure] Returns a new ol.layer.Tile object or null if the
