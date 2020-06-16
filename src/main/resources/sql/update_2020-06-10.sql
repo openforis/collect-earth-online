@@ -27,15 +27,17 @@ CREATE FUNCTION dump_project_plot_data(_project_uid integer)
         collection_time             timestamp,
         analysis_duration           numeric,
         samples                     text,
-        common_securewatch_date     date,
+        common_securewatch_date     text,
         total_securewatch_dates     integer,
         ext_plot_data               jsonb
  ) AS $$
 
     WITH all_rows AS (
         SELECT pl.ext_id as pl_ext_id,
-        (CASE WHEN imagery_attributes->>'imagerySecureWatchDate' = '' OR imagery_attributes->'imagerySecureWatchDate' IS NULL THEN NULL
-  			ELSE TO_DATE(imagery_attributes->>'imagerySecureWatchDate', 'YYYY-MM-DD') END) as imagerySecureWatchDate,
+        (CASE WHEN imagery_attributes->>'imagerySecureWatchDate' = '' THEN 'Latest Mosaic'
+		  	WHEN imagery_attributes-> 'imagerySecureWatchDate' IS NULL THEN NULL
+  			ELSE imagery_attributes->>'imagerySecureWatchDate'
+		 END) as imagerySecureWatchDate,
         *
         FROM select_all_project_plots(_project_uid) pl
         INNER JOIN samples s
@@ -48,7 +50,7 @@ CREATE FUNCTION dump_project_plot_data(_project_uid integer)
         WHERE project_uid = _project_uid
     ), plots_file_data AS (
         SELECT * FROM select_json_table_by_name((SELECT plots_ext_table FROM tablenames))
-    ), _plots_agg AS (
+    ), plots_agg AS (
         SELECT plot_id,
             center,
             MAX(username) AS email,
@@ -65,20 +67,10 @@ CREATE FUNCTION dump_project_plot_data(_project_uid integer)
                 END) , ', ')) as samples,
             pl_ext_id,
             project_id,
-            imagerySecureWatchDate as grouped_securewatch_date,
-            COUNT(imagerySecureWatchDate) as grouped_count_securewatch_date
+            MODE() WITHIN GROUP (ORDER BY imagerySecureWatchDate) as common_securewatch_date,
+            COUNT(DISTINCT(imagerySecureWatchDate)) as total_securewatch_dates
         FROM all_rows
-        GROUP BY plot_id, center, pl_ext_id, project_id, imagerySecureWatchDate
-    ), plots_agg AS (
-	    SELECT *
-	    FROM _plots_agg
-	    INNER JOIN (
-   		    SELECT plot_id AS _plot_id, MAX(grouped_count_securewatch_date) AS max_count
-   		    FROM _plots_agg
-   		    GROUP BY plot_id
-	    ) AS t
-		    ON t._plot_id = _plots_agg.plot_id
-			    AND t.max_count = _plots_agg.grouped_count_securewatch_date
+        GROUP BY plot_id, center, pl_ext_id, project_id
     )
 
     SELECT plot_id,
@@ -93,8 +85,8 @@ CREATE FUNCTION dump_project_plot_data(_project_uid integer)
         collection_time::timestamp,
         analysis_duration,
         samples,
-        grouped_securewatch_date AS common_securewatch_date,
-        grouped_count_securewatch_date::integer AS total_securewatch_dates,
+        common_securewatch_date,
+        total_securewatch_dates::integer,
         pfd.rem_data
     FROM projects p
     INNER JOIN plots_agg pa
