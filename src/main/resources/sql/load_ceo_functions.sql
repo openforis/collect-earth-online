@@ -1545,25 +1545,18 @@ CREATE OR REPLACE FUNCTION select_plot_by_id(_project_rid integer, _plot_uid int
  RETURNS setOf plot_collection_return AS $$
 
     WITH tablenames AS (
-        SELECT plots_ext_table, samples_ext_table
+        SELECT plots_ext_table
         FROM projects
         WHERE project_uid = _project_rid
     ), plots_file_data AS (
         SELECT * FROM select_json_table_by_name((SELECT plots_ext_table FROM tablenames))
-    ), samples_file_data AS (
-        SELECT * FROM select_json_table_by_name((SELECT samples_ext_table FROM tablenames))
     )
 
     SELECT spp.*,
-       pfd.rem_data,
-       sfd.rem_data
+       pfd.rem_data
     FROM select_all_project_plots(_project_rid) as spp
-    INNER JOIN samples s
-        ON s.plot_rid = plot_id
     LEFT JOIN plots_file_data pfd
         ON spp.ext_id = pfd.ext_id
-    LEFT JOIN samples_file_data sfd
-        ON s.ext_id = sfd.ext_id
     WHERE spp.plotId = _plot_uid
 
 $$ LANGUAGE SQL;
@@ -1573,25 +1566,18 @@ CREATE OR REPLACE FUNCTION select_next_unassigned_plot(_project_rid integer, _pl
  RETURNS setOf plot_collection_return AS $$
 
     WITH tablenames AS (
-        SELECT plots_ext_table, samples_ext_table
+        SELECT plots_ext_table
         FROM projects
         WHERE project_uid = _project_rid
     ), plots_file_data AS (
         SELECT * FROM select_json_table_by_name((SELECT plots_ext_table FROM tablenames))
-    ), samples_file_data AS (
-        SELECT * FROM select_json_table_by_name((SELECT samples_ext_table FROM tablenames))
     )
 
     SELECT spp.*,
-       pfd.rem_data,
-       sfd.rem_data
+       pfd.rem_data
     FROM select_all_unlocked_project_plots(_project_rid) as spp
-    INNER JOIN samples s
-        ON s.plot_rid = plot_id
     LEFT JOIN plots_file_data pfd
         ON spp.ext_id = pfd.ext_id
-    LEFT JOIN samples_file_data sfd
-        ON s.ext_id = sfd.ext_id
     WHERE spp.plotId > _plot_uid
         AND flagged = 0
         AND assigned = 0
@@ -1605,25 +1591,18 @@ CREATE OR REPLACE FUNCTION select_next_user_plot(_project_rid integer, _plot_uid
  RETURNS setOf plot_collection_return AS $$
 
     WITH tablenames AS (
-        SELECT plots_ext_table, samples_ext_table
+        SELECT plots_ext_table
         FROM projects
         WHERE project_uid = _project_rid
     ), plots_file_data AS (
         SELECT * FROM select_json_table_by_name((SELECT plots_ext_table FROM tablenames))
-    ), samples_file_data AS (
-        SELECT * FROM select_json_table_by_name((SELECT samples_ext_table FROM tablenames))
     )
 
     SELECT spp.*,
-       pfd.rem_data,
-       sfd.rem_data
+       pfd.rem_data
     FROM select_all_project_plots(_project_rid) as spp
-    INNER JOIN samples s
-        ON s.plot_rid = plot_id
     LEFT JOIN plots_file_data pfd
         ON spp.ext_id = pfd.ext_id
-    LEFT JOIN samples_file_data sfd
-        ON s.ext_id = sfd.ext_id
     WHERE spp.plotId > _plot_uid
         AND spp.username = _username
     ORDER BY plotId ASC
@@ -1636,25 +1615,18 @@ CREATE OR REPLACE FUNCTION select_next_user_plot_by_admin(_project_rid integer, 
     RETURNS setOf plot_collection_return AS $$
 
     WITH tablenames AS (
-        SELECT plots_ext_table, samples_ext_table
+        SELECT plots_ext_table
         FROM projects
         WHERE project_uid = _project_rid
     ), plots_file_data AS (
         SELECT * FROM select_json_table_by_name((SELECT plots_ext_table FROM tablenames))
-    ), samples_file_data AS (
-        SELECT * FROM select_json_table_by_name((SELECT samples_ext_table FROM tablenames))
     )
 
     SELECT spp.*,
-       pfd.rem_data,
-       sfd.rem_data
+       pfd.rem_data
     FROM select_all_project_plots(_project_rid) as spp
-    INNER JOIN samples s
-        ON s.plot_rid = plot_id
     LEFT JOIN plots_file_data pfd
         ON spp.ext_id = pfd.ext_id
-    LEFT JOIN samples_file_data sfd
-        ON s.ext_id = sfd.ext_id
     WHERE spp.plotId > _plot_uid
         AND spp.username != ''
     ORDER BY plotId ASC
@@ -1667,25 +1639,18 @@ CREATE OR REPLACE FUNCTION select_prev_unassigned_plot(_project_rid integer, _pl
  RETURNS setOf plot_collection_return AS $$
 
     WITH tablenames AS (
-        SELECT plots_ext_table, samples_ext_table
+        SELECT plots_ext_table
         FROM projects
         WHERE project_uid = _project_rid
     ), plots_file_data AS (
         SELECT * FROM select_json_table_by_name((SELECT plots_ext_table FROM tablenames))
-    ), samples_file_data AS (
-        SELECT * FROM select_json_table_by_name((SELECT samples_ext_table FROM tablenames))
     )
 
     SELECT spp.*,
-       pfd.rem_data,
-       sfd.rem_data
+       pfd.rem_data
     FROM select_all_unlocked_project_plots(_project_rid) as spp
-    INNER JOIN samples s
-        ON s.plot_rid = plot_id
     LEFT JOIN plots_file_data pfd
         ON spp.ext_id = pfd.ext_id
-    LEFT JOIN samples_file_data sfd
-        ON s.ext_id = sfd.ext_id
     WHERE spp.plotId < _plot_uid
         AND flagged = 0
         AND assigned = 0
@@ -1699,25 +1664,18 @@ CREATE OR REPLACE FUNCTION select_prev_user_plot(_project_rid integer, _plot_uid
  RETURNS setOf plot_collection_return AS $$
 
     WITH tablenames AS (
-        SELECT plots_ext_table, samples_ext_table
+        SELECT plots_ext_table
         FROM projects
         WHERE project_uid = _project_rid
     ), plots_file_data AS (
         SELECT * FROM select_json_table_by_name((SELECT plots_ext_table FROM tablenames))
-    ), samples_file_data AS (
-        SELECT * FROM select_json_table_by_name((SELECT samples_ext_table FROM tablenames))
     )
 
     SELECT spp.*,
-       pfd.rem_data,
-       sfd.rem_data
+       pfd.rem_data
     FROM select_all_project_plots(_project_rid) as spp
-    INNER JOIN samples s
-        ON s.plot_rid = plot_id
     LEFT JOIN plots_file_data pfd
         ON spp.ext_id = pfd.ext_id
-    LEFT JOIN samples_file_data sfd
-        ON s.ext_id = sfd.ext_id
     WHERE spp.plotId < _plot_uid
         AND spp.username = _username
     ORDER BY plotId DESC
@@ -1730,25 +1688,18 @@ CREATE OR REPLACE FUNCTION select_prev_user_plot_by_admin(_project_rid integer, 
     RETURNS setOf plot_collection_return AS $$
 
     WITH tablenames AS (
-        SELECT plots_ext_table, samples_ext_table
+        SELECT plots_ext_table
         FROM projects
         WHERE project_uid = _project_rid
     ), plots_file_data AS (
         SELECT * FROM select_json_table_by_name((SELECT plots_ext_table FROM tablenames))
-    ), samples_file_data AS (
-        SELECT * FROM select_json_table_by_name((SELECT samples_ext_table FROM tablenames))
     )
 
     SELECT spp.*,
-       pfd.rem_data,
-       sfd.rem_data
+       pfd.rem_data
     FROM select_all_project_plots(_project_rid) as spp
-    INNER JOIN samples s
-        ON s.plot_rid = plot_id
     LEFT JOIN plots_file_data pfd
         ON spp.ext_id = pfd.ext_id
-    LEFT JOIN samples_file_data sfd
-        ON s.ext_id = sfd.ext_id
     WHERE spp.plotId < _plot_uid
         AND spp.username != ''
     ORDER BY plotId DESC
@@ -1761,25 +1712,18 @@ CREATE OR REPLACE FUNCTION select_unassigned_plot_by_id(_project_rid integer, _p
  RETURNS setOf plot_collection_return AS $$
 
     WITH tablenames AS (
-        SELECT plots_ext_table, samples_ext_table
+        SELECT plots_ext_table
         FROM projects
         WHERE project_uid = _project_rid
     ), plots_file_data AS (
         SELECT * FROM select_json_table_by_name((SELECT plots_ext_table FROM tablenames))
-    ), samples_file_data AS (
-        SELECT * FROM select_json_table_by_name((SELECT samples_ext_table FROM tablenames))
     )
 
     SELECT spp.*,
-       pfd.rem_data,
-       sfd.rem_data
+       pfd.rem_data
     FROM select_all_unlocked_project_plots(_project_rid) as spp
-    INNER JOIN samples s
-        ON s.plot_rid = plot_id
     LEFT JOIN plots_file_data pfd
         ON spp.ext_id = pfd.ext_id
-    LEFT JOIN samples_file_data sfd
-        ON s.ext_id = sfd.ext_id
     WHERE spp.plotId = _plot_uid
         AND flagged = 0
         AND assigned = 0
@@ -1791,25 +1735,18 @@ CREATE OR REPLACE FUNCTION select_user_plot_by_id(_project_rid integer, _plot_ui
  RETURNS setOf plot_collection_return AS $$
 
     WITH tablenames AS (
-        SELECT plots_ext_table, samples_ext_table
+        SELECT plots_ext_table
         FROM projects
         WHERE project_uid = _project_rid
     ), plots_file_data AS (
         SELECT * FROM select_json_table_by_name((SELECT plots_ext_table FROM tablenames))
-    ), samples_file_data AS (
-        SELECT * FROM select_json_table_by_name((SELECT samples_ext_table FROM tablenames))
     )
 
     SELECT spp.*,
-       pfd.rem_data,
-       sfd.rem_data
+       pfd.rem_data
     FROM select_all_project_plots(_project_rid) as spp
-    INNER JOIN samples s
-        ON s.plot_rid = plot_id
     LEFT JOIN plots_file_data pfd
         ON spp.ext_id = pfd.ext_id
-    LEFT JOIN samples_file_data sfd
-        ON s.ext_id = sfd.ext_id
     WHERE spp.plotId = _plot_uid
         AND spp.username = _username
 
