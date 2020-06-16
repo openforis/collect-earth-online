@@ -68,6 +68,7 @@ public class PostgresUsers implements Users {
         var inputEmail =                    req.queryParams("email");
         var inputPassword =                 req.queryParams("password");
         var inputPasswordConfirmation =     req.queryParams("password-confirmation");
+        var mailingListSubscription =       req.queryParams("mailing-list-subscription");
 
         // Validate input params and assign flash_message if invalid
         if (!isEmail(inputEmail)) {
@@ -79,7 +80,7 @@ public class PostgresUsers implements Users {
         } else {
             try (var conn = connect();
                  var pstmt_user = conn.prepareStatement("SELECT * FROM email_taken(?,-1)");
-                 var pstmt_add = conn.prepareStatement("SELECT * FROM add_user(?,?)")) {
+                 var pstmt_add = conn.prepareStatement("SELECT * FROM add_user(?,?,?)")) {
 
                 pstmt_user.setString(1, inputEmail);
                 try (var rs_user = pstmt_user.executeQuery()) {
@@ -88,6 +89,7 @@ public class PostgresUsers implements Users {
                     } else {
                         pstmt_add.setString(1, inputEmail);
                         pstmt_add.setString(2, inputPassword);
+                        pstmt_add.setBoolean(3, mailingListSubscription != null);
                         try (var rs = pstmt_add.executeQuery()) {
                             if (rs.next()) {
                                 // Assign the username and role session attributes
@@ -176,9 +178,8 @@ public class PostgresUsers implements Users {
                     pstmt_pass.execute();
                     req.session().attribute("flash_message", "The user password has been updated.");
                 }
-                var enableMailingList = mailingListSubscription != null;
                 pstmt_mailing_list.setInt(1, userId);
-                pstmt_mailing_list.setBoolean(2, enableMailingList);
+                pstmt_mailing_list.setBoolean(2, mailingListSubscription != null);
                 pstmt_mailing_list.execute();
                 req.session().attribute("flash_message", "The changes have been updated.");
             } catch (SQLException e) {

@@ -21,6 +21,11 @@
                     <input autocomplete="off" id="password-confirmation" name="password-confirmation"
                            placeholder="Password confirmation" value="" type="password" class="form-control">
                 </div>
+                <div class="form-check mb-3">
+                    <input id="mailing-list-subscription" name="mailing-list-subscription"
+                           type="checkbox" class="form-check-input" />
+                    <label class="form-check-label" for="mailing-list-subscription">Mailing List Subscription</label>
+                </div>
                 <input class="btn bg-lightgreen float-right mb-2" type="submit" value="Register">
             </form>
         </div>

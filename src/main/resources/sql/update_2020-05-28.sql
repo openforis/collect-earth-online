@@ -24,3 +24,13 @@ CREATE OR REPLACE FUNCTION get_all_mailing_list_users()
     SELECT email FROM users WHERE mailing_list = TRUE
 
 $$ LANGUAGE SQL;
+
+-- Adds a new user to the database
+CREATE OR REPLACE FUNCTION add_user(_email text, _password text, _mailing_list boolean)
+ RETURNS integer AS $$
+
+    INSERT INTO users (email, password, mailing_list)
+    VALUES (_email, crypt(_password, gen_salt('bf'), _mailing_list))
+    RETURNING user_uid
+
+$$ LANGUAGE SQL;
