@@ -1,3 +1,28 @@
+-- Clean up any orphaned tables
+DO $$
+ DECLARE
+    _sql text;
+ BEGIN
+    SELECT INTO _sql
+        'DROP TABLE ext_tables.' || table_name
+    FROM (
+        SELECT table_name,
+            (select project_uid FROM projects WHERE plots_ext_table = table_name) as p,
+            (select project_uid FROM projects WHERE samples_ext_table = table_name) as s
+        FROM information_schema.tables
+        WHERE table_schema='ext_tables'
+            AND table_type='BASE TABLE'
+    ) a
+    WHERE p is null and s is null;
+
+    IF _sql IS NOT NULL THEN
+        EXECUTE _sql;
+    ELSE
+        RAISE NOTICE 'No functions found.';
+    END IF;
+ END
+$$  LANGUAGE plpgsql;
+
 -- Archive old projects
 SELECT archive_project(project_uid)
 FROM (
@@ -18,7 +43,7 @@ WHERE
         AND ((availability = 'unpublished' AND complete < 0.05)
             OR (availability = 'closed' AND complete < 0.05)
             OR (availability = 'published' AND complete = 0)))
-    OR (p_age > 365 AND complete < 0.05);
+    OR (p_age > 270 AND complete < 0.05);
 
 -- Delete archived projects
 SELECT delete_project(project_uid)
