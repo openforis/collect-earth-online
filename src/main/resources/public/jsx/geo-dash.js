@@ -1229,7 +1229,7 @@ class GraphWidget extends React.Component {
             if (this.state.graphLoading !== true) {
                 this.setState({
                     graphLoading: this.state.chartData[this.props.degDataType]
-                        && this.state.chartData[this.props.degDataType].data.length <= 0,
+                        && this.state.chartData[this.props.degDataType].data.length === 0,
                 }, this.loadGraph(this.props.widget));
             }
         }
@@ -1247,7 +1247,11 @@ class GraphWidget extends React.Component {
             : "timeSeriesIndex2";
         if (this.state.chartData[this.props.degDataType] && this.state.chartData[this.props.degDataType].data.length > 0) {
             this.setState({
-                graphRef: this.createChart(widget.id, widget.graphBand != null ? widget.graphBand : indexName, this.state.chartData[this.props.degDataType].data, widget.graphBand != null ? widget.graphBand : indexName),
+                graphRef: this.createChart(
+                    widget.id,
+                    widget.graphBand || indexName,
+                    this.state.chartData[this.props.degDataType].data
+                ),
                 graphLoading: false,
             });
         } else {
@@ -1262,7 +1266,7 @@ class GraphWidget extends React.Component {
                 body: JSON.stringify({
                     collectionNameTimeSeries: collectionName,
                     geometry: JSON.parse(this.props.projPairAOI),
-                    indexName: widget.graphBand != null ? widget.graphBand : indexName,
+                    indexName: widget.graphBand || indexName,
                     dateFromTimeSeries: widget.properties[2].trim().length === 10 ? widget.properties[2].trim() : "2000-01-01",
                     dateToTimeSeries: widget.properties[3].trim().length === 10 ? widget.properties[3].trim() : formatDateISO(new Date()),
                     reducer: widget.graphReducer != null ? widget.graphReducer.toLowerCase() : "",
@@ -1283,20 +1287,13 @@ class GraphWidget extends React.Component {
                         if (res.hasOwnProperty("timeseries")) {
                             let chartStorage = {};
                             const pData = [];
-                            let timeseriesData = [];
                             if (res.timeseries.length === 0) {
                                 console.log("no data");
                             } else if (Object.keys(res.timeseries[0][1]).length === 0) {
-                                res.timeseries.forEach(value => {
-                                    if (value[0] !== null) {
-                                        timeseriesData.push([value[0], value[1]]);
-                                    }
-                                });
-                                timeseriesData = timeseriesData.sort(this.sortData);
                                 pData.push({
                                     type: "area",
-                                    name: Object.keys(res.timeseries[0][1])[0],
-                                    data: timeseriesData,
+                                    name: widget.graphBand || indexName,
+                                    data: res.timeseries.filter(v => v[0]).map(v => [v[0], v[1]]).sort((a, b) => a[0] - b[0]),
                                     color: "#31bab0",
                                 });
                             } else {
@@ -1320,7 +1317,7 @@ class GraphWidget extends React.Component {
                                     const cdata = this.convertData(d);
                                     if (widgetType !== "DegradationTool"
                                         || this.props.degDataType !== "sar"
-                                        || this.props.degDataType === "sar" && theKeys[index] === this.state.selectSarGraphBand) {
+                                        || (this.props.degDataType === "sar" && theKeys[index] === this.state.selectSarGraphBand)) {
                                         pData.push({
                                             type: widgetType === "DegradationTool" ? "scatter" : "area",
                                             name: theKeys[index],
@@ -1351,7 +1348,7 @@ class GraphWidget extends React.Component {
                             }
                             this.setState({
                                 graphLoading: false,
-                                graphRef: this.createChart(widget.id, indexName, pData, indexName),
+                                graphRef: this.createChart(widget.id, indexName, pData),
                                 chartData: chartStorage,
                             });
                         } else {
@@ -1363,8 +1360,6 @@ class GraphWidget extends React.Component {
             window.addEventListener("resize", () => this.handleResize());
         }
     };
-
-    sortData = (a, b) => (a[0] < b[0]) ? -1 : (a[0] > b[0]) ? 1 : 0;
 
     multiComparator = (a, b) =>
         (a[0] < b[0]) ? -1 :
@@ -1386,7 +1381,7 @@ class GraphWidget extends React.Component {
         }
     };
 
-    createChart = (wIndex, wText, series, indexName) => {
+    createChart = (wIndex, wText, series) => {
         "use strict";
         return Highcharts.chart("graphcontainer_" + wIndex, {
             chart: {
@@ -1413,7 +1408,7 @@ class GraphWidget extends React.Component {
             },
             plotOptions: {
                 area: {
-                    connectNulls: indexName.toLowerCase() === "custom",
+                    connectNulls: wText.toLowerCase() === "custom",
                     fillColor: {
                         linearGradient: {
                             x1: 0,
@@ -1458,7 +1453,7 @@ class GraphWidget extends React.Component {
     selectSarGraphBand = evt => {
         this.setState({
             selectSarGraphBand: evt.target.value,
-            graphLoading: this.state.chartData[this.props.degDataType] && this.state.chartData[this.props.degDataType].data.length <= 0,
+            graphLoading: this.state.chartData[this.props.degDataType] && this.state.chartData[this.props.degDataType].data.length === 0,
         }, this.loadGraph(this.props.widget));
     };
 
