@@ -47,7 +47,8 @@ CREATE TABLE imagery (
     title              text NOT NULL,
     attribution        text NOT NULL,
     extent             jsonb,
-    source_config      jsonb
+    source_config      jsonb,
+    archived           boolean DEFAULT FALSE
 );
 
 -- Stores information about projects

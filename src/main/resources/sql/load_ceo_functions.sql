@@ -539,6 +539,19 @@ $$ LANGUAGE SQL;
 --  IMAGERY FUNCTIONS
 --
 
+-- Returns first public imagery
+CREATE OR REPLACE FUNCTION select_first_public_imagery()
+ RETURNS integer AS $$
+
+    SELECT imagery_uid
+    FROM imagery
+    WHERE visibility = 'public'
+        AND archived = FALSE
+    ORDER BY imagery_uid
+    LIMIT 1
+
+$$ LANGUAGE SQL;
+
 -- Adds institution imagery
 CREATE OR REPLACE FUNCTION check_institution_imagery(_institution_rid integer, _title text)
  RETURNS boolean AS $$
@@ -560,12 +573,16 @@ CREATE OR REPLACE FUNCTION add_institution_imagery(_institution_rid integer, _vi
 $$ LANGUAGE SQL;
 
 -- Delete single imagery by id
-CREATE OR REPLACE FUNCTION delete_imagery(_imagery_uid integer)
- RETURNS integer AS $$
+CREATE OR REPLACE FUNCTION archive_imagery(_imagery_uid integer)
+ RETURNS void AS $$
 
-    DELETE FROM imagery
-    WHERE imagery_uid = _imagery_uid
-    RETURNING imagery_uid
+    UPDATE imagery
+    SET archived = true
+    WHERE imagery_uid = _imagery_uid;
+
+    UPDATE projects
+    SET imagery_rid = (SELECT select_first_public_imagery())
+    WHERE imagery_rid = _imagery_uid;
 
 $$ LANGUAGE SQL;
 
@@ -576,6 +593,7 @@ CREATE OR REPLACE FUNCTION select_public_imagery()
     SELECT imagery_uid, institution_rid, visibility, title, attribution, extent, source_config
     FROM imagery
     WHERE visibility = 'public'
+        AND archived = FALSE
 
 $$ LANGUAGE SQL;
 
@@ -586,9 +604,10 @@ CREATE OR REPLACE FUNCTION select_public_imagery_by_institution(_institution_rid
     WITH images AS (
         SELECT * FROM select_public_imagery()
         UNION
-        SELECT *
+        SELECT imagery_uid, institution_rid, visibility, title, attribution, extent, source_config
         FROM imagery
         WHERE institution_rid = _institution_rid
+            AND archived = FALSE
     )
 
     SELECT * FROM images
@@ -609,18 +628,6 @@ CREATE OR REPLACE FUNCTION update_imagery(_imagery_uid integer, _institution_rid
         source_config = _source_config
     WHERE imagery_uid = _imagery_uid
     RETURNING imagery_uid
-
-$$ LANGUAGE SQL;
-
--- Returns first public imagery
-CREATE OR REPLACE FUNCTION select_first_public_imagery()
- RETURNS integer AS $$
-
-    SELECT imagery_uid
-    FROM imagery
-    WHERE visibility = 'public'
-    ORDER BY imagery_uid
-    LIMIT 1
 
 $$ LANGUAGE SQL;
 
@@ -1890,15 +1897,17 @@ CREATE OR REPLACE FUNCTION dump_project_plot_data(_project_uid integer)
         collection_time             timestamp,
         analysis_duration           numeric,
         samples                     text,
-        common_securewatch_date     date,
+        common_securewatch_date     text,
         total_securewatch_dates     integer,
         ext_plot_data               jsonb
  ) AS $$
 
     WITH all_rows AS (
         SELECT pl.ext_id as pl_ext_id,
-        (CASE WHEN imagery_attributes->>'imagerySecureWatchDate' = '' OR imagery_attributes->'imagerySecureWatchDate' IS NULL THEN NULL
-  			ELSE TO_DATE(imagery_attributes->>'imagerySecureWatchDate', 'YYYY-MM-DD') END) as imagerySecureWatchDate,
+        (CASE WHEN imagery_attributes->>'imagerySecureWatchDate' = '' THEN 'Latest Mosaic'
+              WHEN imagery_attributes-> 'imagerySecureWatchDate' IS NULL THEN NULL
+              ELSE imagery_attributes->>'imagerySecureWatchDate'
+         END) as imagerySecureWatchDate,
         *
         FROM select_all_project_plots(_project_uid) pl
         INNER JOIN samples s
@@ -1928,11 +1937,12 @@ CREATE OR REPLACE FUNCTION dump_project_plot_data(_project_uid integer)
                 END) , ', ')) as samples,
             pl_ext_id,
             project_id,
-            MAX(imagerySecureWatchDate) as common_securewatch_date,
-            COUNT(imagerySecureWatchDate) as total_securewatch_dates
+            MODE() WITHIN GROUP (ORDER BY imagerySecureWatchDate) as common_securewatch_date,
+            COUNT(DISTINCT(imagerySecureWatchDate)) as total_securewatch_dates
         FROM all_rows
         GROUP BY plot_id, center, pl_ext_id, project_id
     )
+
     SELECT plot_id,
         ST_X(ST_SetSRID(ST_GeomFromGeoJSON(center), 4326)) AS lon,
         ST_Y(ST_SetSRID(ST_GeomFromGeoJSON(center), 4326)) AS lat,
@@ -2031,7 +2041,7 @@ CREATE OR REPLACE FUNCTION is_institution_user_admin(_user_rid integer, _institu
         INNER JOIN roles as r
             ON iu.role_rid = role_uid
         INNER JOIN institutions as i
-			ON institution_rid = institution_uid
+            ON institution_rid = institution_uid
         WHERE iu.user_rid = _user_rid
             AND institution_rid = _institution_rid
             AND title = 'admin'

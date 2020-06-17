@@ -1,5 +1,18 @@
+UPDATE imagery
+SET source_config = source_config || '{"startDate": "2018-01-01", "endDate": "2018-12-31"}'::jsonb
+WHERE source_config->>'type'='SecureWatch'
+	AND (source_config->>'startDate' IS NULL OR source_config->>'endDate' IS NULL);
+
+-- update imagery attributes where imagerySecureWatchDate is present and its value is null
+UPDATE sample_values
+SET imagery_attributes = imagery_attributes || '{"imagerySecureWatchDate": ""}'::jsonb
+WHERE (imagery_attributes->'imagerySecureWatchDate') IS NOT NULL
+    AND imagery_attributes->>'imagerySecureWatchDate' IS NULL;
+
+
 DROP FUNCTION dump_project_plot_data(_project_uid integer);
 
+-- Returns project aggregate data
 CREATE FUNCTION dump_project_plot_data(_project_uid integer)
  RETURNS TABLE (
         plot_id                     integer,
@@ -14,15 +27,17 @@ CREATE FUNCTION dump_project_plot_data(_project_uid integer)
         collection_time             timestamp,
         analysis_duration           numeric,
         samples                     text,
-        common_securewatch_date     date,
+        common_securewatch_date     text,
         total_securewatch_dates     integer,
         ext_plot_data               jsonb
  ) AS $$
 
     WITH all_rows AS (
         SELECT pl.ext_id as pl_ext_id,
-        (CASE WHEN imagery_attributes->>'imagerySecureWatchDate' = '' OR imagery_attributes->'imagerySecureWatchDate' IS NULL THEN NULL
-  			ELSE TO_DATE(imagery_attributes->>'imagerySecureWatchDate', 'YYYY-MM-DD') END) as imagerySecureWatchDate,
+        (CASE WHEN imagery_attributes->>'imagerySecureWatchDate' = '' THEN 'Latest Mosaic'
+		  	WHEN imagery_attributes-> 'imagerySecureWatchDate' IS NULL THEN NULL
+  			ELSE imagery_attributes->>'imagerySecureWatchDate'
+		 END) as imagerySecureWatchDate,
         *
         FROM select_all_project_plots(_project_uid) pl
         INNER JOIN samples s
@@ -52,11 +67,12 @@ CREATE FUNCTION dump_project_plot_data(_project_uid integer)
                 END) , ', ')) as samples,
             pl_ext_id,
             project_id,
-            MAX(imagerySecureWatchDate) as common_securewatch_date,
-            COUNT(imagerySecureWatchDate) as total_securewatch_dates
+            MODE() WITHIN GROUP (ORDER BY imagerySecureWatchDate) as common_securewatch_date,
+            COUNT(DISTINCT(imagerySecureWatchDate)) as total_securewatch_dates
         FROM all_rows
         GROUP BY plot_id, center, pl_ext_id, project_id
     )
+
     SELECT plot_id,
         ST_X(ST_SetSRID(ST_GeomFromGeoJSON(center), 4326)) AS lon,
         ST_Y(ST_SetSRID(ST_GeomFromGeoJSON(center), 4326)) AS lat,

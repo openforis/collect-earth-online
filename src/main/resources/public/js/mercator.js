@@ -24,7 +24,7 @@ import { Circle, LineString, Point } from "ol/geom";
 import { DragBox, Select } from "ol/interaction";
 import { GeoJSON, KML } from "ol/format";
 import { Tile as TileLayer, Vector as VectorLayer, Group as LayerGroup } from "ol/layer";
-import { BingMaps, Cluster, TileWMS, Vector as VectorSource, XYZ, OSM } from "ol/source";
+import { BingMaps, Cluster, TileWMS, Vector as VectorSource, XYZ } from "ol/source";
 import { Circle as CircleStyle, Icon, Fill, Stroke, Style, Text as StyleText, RegularShape } from "ol/style";
 import { fromLonLat, transform, transformExtent } from "ol/proj";
 import { fromExtent, fromCircle } from "ol/geom/Polygon";
@@ -424,7 +424,7 @@ mercator.createSource = function (sourceConfig, imageryId, attribution, document
             attributionsCollapsible: false,
         });
     } else {
-        return new OSM();
+        return new XYZ({ url: "img/source-not-found.png" });
     }
 };
 
