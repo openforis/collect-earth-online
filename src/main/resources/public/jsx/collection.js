@@ -47,6 +47,7 @@ class Collection extends React.Component {
             hasGeoDash: false,
             showSidebar: false,
             loading: false,
+            showQuitModal: false,
         };
     }
 
@@ -1280,6 +1281,11 @@ class Collection extends React.Component {
         });
     };
 
+    toggleQuitModal = () =>
+        this.setState(prevState => ({
+            showQuitModal: !prevState.showQuitModal,
+        }));
+
     render() {
         const plotId = this.state.currentPlot
               && (this.state.currentPlot.plotId ? this.state.currentPlot.plotId : this.state.currentPlot.id);
@@ -1313,6 +1319,7 @@ class Collection extends React.Component {
                     surveyQuestions={this.state.currentProject.surveyQuestions}
                     userName={this.props.userName}
                     isFlagged={isFlagged}
+                    toggleQuitModal={this.toggleQuitModal}
                 >
                     <PlotNavigation
                         plotId={plotId}
@@ -1391,6 +1398,8 @@ class Collection extends React.Component {
                     documentRoot={this.props.documentRoot}
                     userId={this.props.userId}
                     projectId={this.props.projectId}
+                    showQuitModal={this.state.showQuitModal}
+                    toggleQuitModal={this.toggleQuitModal}
                 />
                 {this.state.plotList.length === 0 &&
                 <div id="spinner" style={{ top: "45%", left: "38%" }}></div>
@@ -1482,8 +1491,7 @@ function SideBar(props) {
                         className="btn btn-outline-danger btn-block btn-sm mb-4"
                         type="button"
                         name="collection-quit"
-                        data-toggle="modal"
-                        data-target="#confirmation-quit"
+                        onClick={props.toggleQuitModal}
                     >
                         Quit
                     </button>
@@ -2041,21 +2049,38 @@ class ProjectStats extends React.Component {
 }
 
 // remains hidden, shows a styled menu when the quit button is clicked
-function QuitMenu({ userId, projectId, documentRoot }) {
+function QuitMenu({ userId, projectId, documentRoot, showQuitModal, toggleQuitModal }) {
     return (
         <div
-            className="modal fade"
+            className={showQuitModal ? "modal fade show" : "modal fade hide"}
+            style={showQuitModal ? { display: "block", backgroundColor: "rgba(0, 0, 0, 0.4)" } : { display: "none" }}
             id="confirmation-quit"
             tabIndex="-1"
             role="dialog"
             aria-labelledby="exampleModalCenterTitle"
             aria-hidden="true"
+            onClick={e => {
+                const targetId = e.target.id;
+                const parentElementId = e.target.parentElement.id;
+                targetId
+                    && parentElementId
+                    && targetId !== "exampleModalLongTitle"
+                    && parentElementId !== "quitModalContent"
+                ? toggleQuitModal()
+                : null;
+            }}
+
         >
             <div className="modal-dialog modal-dialog-centered" role="document">
-                <div className="modal-content">
+                <div className="modal-content" id="quitModalContent">
                     <div className="modal-header">
                         <h5 className="modal-title" id="exampleModalLongTitle">Confirmation</h5>
-                        <button type="button" className="close" data-dismiss="modal" aria-label="Close">
+                        <button
+                            type="button"
+                            className="close"
+                            aria-label="Close"
+                            onClick={toggleQuitModal}
+                        >
                             <span aria-hidden="true">&times;</span>
                         </button>
                     </div>
@@ -2063,13 +2088,21 @@ function QuitMenu({ userId, projectId, documentRoot }) {
                         Are you sure you want to stop collecting data?
                     </div>
                     <div className="modal-footer">
-                        <button type="button" className="btn btn-secondary btn-sm" data-dismiss="modal">Close</button>
+                        <button
+                            type="button"
+                            className="btn btn-secondary btn-sm"
+                            onClick={toggleQuitModal}
+                        >
+                            Close
+                        </button>
                         <button
                             type="button"
                             className="btn bg-lightgreen btn-sm"
                             id="quit-button"
                             onClick={() =>
-                                fetch(documentRoot + "/release-plot-locks?userId=" + userId + "&projectId=" + projectId, { method: "POST" })
+                                fetch(documentRoot + "/release-plot-locks?userId=" + userId + "&projectId=" + projectId, {
+                                    method: "POST",
+                                })
                                     .then(() => window.location = documentRoot + "/home")
                             }
                         >
