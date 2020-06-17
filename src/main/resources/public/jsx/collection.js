@@ -1675,12 +1675,12 @@ class PlotInformation extends React.Component {
                 />
                 {this.state.showInfo
                     ?
-                        this.props.extraPlotInfo ?
+                        parsedExtraFields ?
                             <ul className="mb-3">
                                 {Object.entries(parsedExtraFields).map(([key, value]) => <li key={key}>{key} - {value}</li>)}
                             </ul>
                         :
-                            <div className="mb-3">There is no extra information for this plot!</div>
+                            <div className="mb-3">There is no extra information for this plot.</div>
                     : null
                 }
             </>
