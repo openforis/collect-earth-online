@@ -38,7 +38,7 @@ public class PostgresPlots implements Plots {
     private static JsonObject buildPlotCollectionJson(ResultSet rs) {
         var singlePlot = buildPlotJson(rs);
         try {
-            singlePlot.addProperty("extraPlot", rs.getString("extra_plot"));
+            singlePlot.addProperty("extraPlotInfo", rs.getString("extra_plot_info"));
         } catch (SQLException e) {
             System.out.println(e.getMessage());
         }

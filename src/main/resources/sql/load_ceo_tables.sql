@@ -336,5 +336,5 @@ CREATE TYPE plot_collection_return AS (
     plotId               integer,
     geom                 text,
     analysis_duration    numeric,
-    extra_plot           jsonb
+    extra_plot_info      jsonb
 );

@@ -3,7 +3,7 @@ import ReactDOM from "react-dom";
 import { mercator, ceoMapStyles } from "../js/mercator-openlayers.js";
 import { SurveyCollection } from "./components/SurveyCollection";
 import { convertSampleValuesToSurveyQuestions } from "./utils/surveyUtils";
-import { UnicodeIcon } from "./utils/textUtils";
+import { UnicodeIcon, str2obj } from "./utils/textUtils";
 import { formatDateISO } from "./utils/dateUtils";
 
 class Collection extends React.Component {
@@ -1333,10 +1333,7 @@ class Collection extends React.Component {
                         mapConfig={this.state.mapConfig}
                     />
                     {this.state.currentPlot
-                        ?
-                            <PlotInformation
-                                plot={this.state.currentPlot}
-                            />
+                        ? <PlotInformation extraPlotInfo={this.state.currentPlot.extraPlotInfo}/>
                         : null
                     }
                     <ImageryOptions
@@ -1667,33 +1664,23 @@ class PlotInformation extends React.Component {
         };
     }
 
-    str2obj(str) {
-        try {
-            return JSON.parse(str);
-        } catch (e) {
-            return null;
-        }
-    }
-
     render() {
-        const { plot: { extraPlot }} = this.props;
-        const { showInfo } = this.state;
-        const parsedExtraFields = typeof extraPlot === "object" ? extraPlot : this.str2obj(extraPlot);
+        const parsedExtraFields = str2obj(this.props.extraPlotInfo);
         return (
             <>
                 <CollapsibleTitle
                     title="Plot Information"
-                    showGroup={showInfo}
-                    toggleShow={() => this.setState(prevState => ({ showInfo: !prevState.showInfo }))}
+                    showGroup={this.state.showInfo}
+                    toggleShow={() => this.setState({ showInfo: !this.state.showInfo })}
                 />
                 {this.state.showInfo
                     ?
-                        parsedExtraFields ?
+                        this.props.extraPlotInfo ?
                             <ul className="mb-3">
-                                { Object.entries(parsedExtraFields).map(([key, value]) => <li key={key}>{key} - {value}</li> ) }
+                                {Object.entries(parsedExtraFields).map(([key, value]) => <li key={key}>{key} - {value}</li>)}
                             </ul>
                         :
-                            <div className="mb-3">There are no extra information for this plot!</div>
+                            <div className="mb-3">There is no extra information for this plot!</div>
                     : null
                 }
             </>

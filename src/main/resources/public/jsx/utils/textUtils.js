@@ -45,3 +45,11 @@ export function UnicodeIcon({ icon, backgroundColor }) {
         : ""
     );
 }
+
+export function str2obj(str) {
+    try {
+        return JSON.parse(str);
+    } catch (e) {
+        return null;
+    }
+}
