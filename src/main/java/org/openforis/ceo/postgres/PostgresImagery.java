@@ -2,6 +2,7 @@ package org.openforis.ceo.postgres;
 
 import static org.openforis.ceo.utils.DatabaseUtils.connect;
 import static org.openforis.ceo.utils.JsonUtils.parseJson;
+import static org.openforis.ceo.postgres.PostgresInstitutions.isInstAdminQuery;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
@@ -13,7 +14,30 @@ import spark.Response;
 
 public class PostgresImagery implements Imagery {
 
-    private JsonArray buildImageryArray(ResultSet rs) {
+    private JsonObject cleanSource(JsonObject sourceConfig) {
+        if (sourceConfig.get("type").getAsString().equals("GeoServer")) {
+            var cleanSource = new JsonObject();
+            cleanSource.add("type", sourceConfig.get("type"));
+            return cleanSource;
+        } else if (sourceConfig.get("type").getAsString().equals("SecureWatch")) {
+            var cleanSource = new JsonObject();
+            cleanSource.add("type", sourceConfig.get("type"));
+            cleanSource.add("startDate", sourceConfig.get("startDate"));
+            cleanSource.add("endDate", sourceConfig.get("endDate"));
+            cleanSource.add("featureProfile", sourceConfig.get("featureProfile"));
+            return cleanSource;
+        } else if (sourceConfig.get("type").getAsString().equals("Planet")) {
+            var cleanSource = new JsonObject();
+            cleanSource.add("type",  sourceConfig.get("type"));
+            cleanSource.add("month", sourceConfig.get("month"));
+            cleanSource.add("year",  sourceConfig.get("year"));
+            return cleanSource;
+        } else {
+            return sourceConfig;
+        }
+    }
+
+    private JsonArray buildImageryArray(ResultSet rs, Boolean stripConfig) {
         var imageryArray = new JsonArray();
         try {
             while(rs.next()) {
@@ -24,9 +48,10 @@ public class PostgresImagery implements Imagery {
                 newImagery.addProperty("title",       rs.getString("title"));
                 newImagery.addProperty("attribution", rs.getString("attribution"));
                 newImagery.add("extent", rs.getString("extent") == null || rs.getString("extent").equals("null")
-                                ? null
-                                : parseJson(rs.getString("extent")).getAsJsonArray());
-                newImagery.add("sourceConfig", parseJson(rs.getString("source_config")).getAsJsonObject());
+                    ? null
+                    : parseJson(rs.getString("extent")).getAsJsonArray());
+                var sourceConfig = parseJson(rs.getString("source_config")).getAsJsonObject();
+                newImagery.add("sourceConfig", stripConfig ? cleanSource(sourceConfig) : sourceConfig);
                 imageryArray.add(newImagery);
             }
         } catch (SQLException e) {
@@ -36,19 +61,19 @@ public class PostgresImagery implements Imagery {
     }
 
     public String getInstitutionImagery(Request req, Response res) {
-        final var institutionId = req.queryParams("institutionId");
-        final var userId        = req.session().attributes().contains("userid")
-                                    ? req.session().attribute("userid").toString()
-                                    : "-1";
+        final var institutionId = Integer.parseInt(req.queryParams("institutionId"));
+        final var userId        = Integer.parseInt(req.session().attributes().contains("userid")
+                                                    ? req.session().attribute("userid").toString()
+                                                    : "-1");
 
         try (var conn = connect();
             var pstmt = conn.prepareStatement("SELECT * FROM select_imagery_by_institution(?, ?)")) {
 
-            pstmt.setInt(1, Integer.parseInt(institutionId));
-            pstmt.setInt(2, Integer.parseInt(userId));
+            pstmt.setInt(1, institutionId);
+            pstmt.setInt(2, userId);
 
             try (var rs = pstmt.executeQuery()) {
-                return buildImageryArray(rs).toString();
+                return buildImageryArray(rs, isInstAdminQuery(userId, institutionId)).toString();
             }
 
         } catch (SQLException e) {
@@ -69,7 +94,7 @@ public class PostgresImagery implements Imagery {
             pstmt.setInt(2, Integer.parseInt(userId));
 
             try (var rs = pstmt.executeQuery()) {
-                return buildImageryArray(rs).toString();
+                return buildImageryArray(rs, true).toString();
             }
         } catch (SQLException e) {
             System.out.println(e.getMessage());
@@ -82,7 +107,7 @@ public class PostgresImagery implements Imagery {
              var pstmt = conn.prepareStatement("SELECT * FROM select_public_imagery()")) {
 
             try (var rs = pstmt.executeQuery()) {
-                return buildImageryArray(rs).toString();
+                return buildImageryArray(rs, true).toString();
             }
         } catch (SQLException e) {
             System.out.println(e.getMessage());
