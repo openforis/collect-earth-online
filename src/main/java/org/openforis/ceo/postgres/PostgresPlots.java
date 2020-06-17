@@ -38,7 +38,12 @@ public class PostgresPlots implements Plots {
     private static JsonObject buildPlotCollectionJson(ResultSet rs) {
         var singlePlot = buildPlotJson(rs);
         try {
-            singlePlot.addProperty("extraPlotInfo", rs.getString("extra_plot_info"));
+            var extraPlotInfo = parseJson(rs.getString("extra_plot_info")).getAsJsonObject();
+            extraPlotInfo.remove("gid");
+            extraPlotInfo.remove("lat");
+            extraPlotInfo.remove("lon");
+            extraPlotInfo.remove("plotid");
+            singlePlot.addProperty("extraPlotInfo", extraPlotInfo.toString());
         } catch (SQLException e) {
             System.out.println(e.getMessage());
         }
