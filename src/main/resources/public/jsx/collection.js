@@ -1281,10 +1281,7 @@ class Collection extends React.Component {
         });
     };
 
-    toggleQuitModal = () =>
-        this.setState(prevState => ({
-            showQuitModal: !prevState.showQuitModal,
-        }));
+    toggleQuitModal = () => this.setState({ showQuitModal: !this.state.showQuitModal });
 
     render() {
         const plotId = this.state.currentPlot
@@ -2051,27 +2048,24 @@ class ProjectStats extends React.Component {
 // remains hidden, shows a styled menu when the quit button is clicked
 function QuitMenu({ userId, projectId, documentRoot, showQuitModal, toggleQuitModal }) {
     return (
-        <div
-            className={showQuitModal ? "modal fade show" : "modal fade hide"}
-            style={showQuitModal ? { display: "block", backgroundColor: "rgba(0, 0, 0, 0.4)" } : { display: "none" }}
-            id="confirmation-quit"
-            tabIndex="-1"
-            role="dialog"
-            aria-labelledby="exampleModalCenterTitle"
-            aria-hidden="true"
-            onClick={e => {
-                const targetId = e.target.id;
-                const parentElementId = e.target.parentElement.id;
-                targetId
-                    && parentElementId
-                    && targetId !== "exampleModalLongTitle"
-                    && parentElementId !== "quitModalContent"
-                ? toggleQuitModal()
-                : null;
-            }}
-
-        >
-            <div className="modal-dialog modal-dialog-centered" role="document">
+        <Fragment>
+            {showQuitModal ? <div className="modal-backdrop fade show" onClick={toggleQuitModal}></div> : null}
+            <div
+                className={showQuitModal ? "modal fade show" : "modal fade hide"}
+                style={showQuitModal ?
+                    {
+                        display: "block",
+                        width: "25%",
+                        left: "35%",
+                        top: "30%",
+                        height: "fit-content",
+                    } : { display: "none" }}
+                id="confirmation-quit"
+                tabIndex="-1"
+                role="dialog"
+                aria-labelledby="exampleModalCenterTitle"
+                aria-hidden="true"
+            >
                 <div className="modal-content" id="quitModalContent">
                     <div className="modal-header">
                         <h5 className="modal-title" id="exampleModalLongTitle">Confirmation</h5>
@@ -2100,9 +2094,8 @@ function QuitMenu({ userId, projectId, documentRoot, showQuitModal, toggleQuitMo
                             className="btn bg-lightgreen btn-sm"
                             id="quit-button"
                             onClick={() =>
-                                fetch(documentRoot + "/release-plot-locks?userId=" + userId + "&projectId=" + projectId, {
-                                    method: "POST",
-                                })
+                                fetch(documentRoot + "/release-plot-locks?userId=" + userId + "&projectId=" + projectId,
+                                      { method: "POST" })
                                     .then(() => window.location = documentRoot + "/home")
                             }
                         >
@@ -2111,7 +2104,7 @@ function QuitMenu({ userId, projectId, documentRoot, showQuitModal, toggleQuitMo
                     </div>
                 </div>
             </div>
-        </div>
+        </Fragment>
     );
 }
 
