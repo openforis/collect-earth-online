@@ -1155,19 +1155,27 @@ class MapWidget extends React.Component {
         }
     };
 
-    toggleStretch = evt => this.setState({ stretch: evt.target.checked ? 543 : 321 });
+    setStretch = evt => this.setState({ stretch: parseInt(evt.target.value) });
 
     toggleDegDataType = evt => this.props.handleDegDataType(evt.target.checked ? "sar" : "landsat");
 
     getStretchToggle = () => this.props.degDataType === "landsat"
         ? <div className="col-6">
-            <span className="ctrlText font-weight-bold">Band Combination: </span>
-            <span className="ctrlText">321 </span>
-            <label className="switch">
-                <input type="checkbox" onChange={evt => this.toggleStretch(evt)} />
-                <span className="switchslider round"></span>
-            </label>
-            <span className="ctrlText"> 543</span>
+            <span className="ctrlText font-weight-bold">Bands: </span>
+            <select
+                className={"form-control"}
+                style={{
+                    maxWidth: "65%",
+                    display: "inline-block",
+                    fontSize: ".8rem",
+                    height: "30px",
+                }}
+                onChange={evt => this.setStretch(evt)}
+            >
+                <option value={321}>R,G,B</option>
+                <option value={543}>SWIR,NIR,R</option>
+                <option value={453}>NIR,SWIR,R</option>
+            </select>
         </div>
         : <div className="col-6">
             <span className="ctrlText font-weight-bold">Band Combination: </span>
@@ -1203,6 +1211,10 @@ class GraphWidget extends React.Component {
             graphRef: null,
             selectSarGraphBand: "VV",
             graphLoading: true,
+            chartData: {
+                landsat:{ data:[] },
+                sar:{ data:[] },
+            },
         };
     }
 
@@ -1215,7 +1227,10 @@ class GraphWidget extends React.Component {
             && (prevProps.degDataType !== this.props.degDataType
                 || prevState.selectSarGraphBand !== this.state.selectSarGraphBand)) {
             if (this.state.graphLoading !== true) {
-                this.setState({ graphLoading: true }, this.loadGraph(this.props.widget));
+                this.setState({
+                    graphLoading: this.state.chartData[this.props.degDataType]
+                        && this.state.chartData[this.props.degDataType].data.length === 0,
+                }, this.loadGraph(this.props.widget));
             }
         }
         this.handleResize();
@@ -1230,112 +1245,121 @@ class GraphWidget extends React.Component {
             : collectionName.trim() === "timeSeriesAssetForPoint" ? "timeSeriesAssetForPoint"
             : collectionName.trim().length > 0 ? "timeSeriesIndex"
             : "timeSeriesIndex2";
-        fetch(this.props.documentRoot + "/geo-dash/gateway-request", {
-            method: "POST",
-            headers: {
-                "Accept": "application/json",
-                "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-                collectionNameTimeSeries: collectionName,
-                geometry: JSON.parse(this.props.projPairAOI),
-                indexName: widget.graphBand != null ? widget.graphBand : indexName,
-                dateFromTimeSeries: widget.properties[2].trim().length === 10 ? widget.properties[2].trim() : "2000-01-01",
-                dateToTimeSeries: widget.properties[3].trim().length === 10 ? widget.properties[3].trim() : formatDateISO(new Date()),
-                reducer: widget.graphReducer != null ? widget.graphReducer.toLowerCase() : "",
-                scale: 30,
-                path: path,
-                point: centerPoint,
-                start: widget.startDate || "",
-                end: widget.endDate || "",
-                band: widget.graphBand || "",
-                dataType: this.props.degDataType || "",
-            }),
-        })
-            .then(res => res.json())
-            .then(res => {
-                if (res.errMsg) {
-                    console.warn(res.errMsg);
-                } else {
-                    if (res.hasOwnProperty("timeseries")) {
-                        const pData = [];
-                        let timeseriesData = [];
-                        if (res.timeseries.length === 0) {
-                            console.log("no data");
-                        } else if (Object.keys(res.timeseries[0][1]).length === 0) {
-                            res.timeseries.forEach(value => {
-                                if (value[0] !== null) {
-                                    timeseriesData.push([value[0], value[1]]);
-                                }
-                            });
-                            timeseriesData = timeseriesData.sort(this.sortData);
-                            pData.push({
-                                type: "area",
-                                name: Object.keys(res.timeseries[0][1])[0],
-                                data: timeseriesData,
-                                color: "#31bab0",
-                            });
-                        } else {
-                            // this is where degData ends up
-                            const theKeys = Object.keys(res.timeseries[0][1]);
-                            const compiledData = [];
-                            res.timeseries.forEach(d => {
-                                for (let i = 0; i < theKeys.length; i++) {
-                                    const tempData = [];
-                                    const anObject = {};
-                                    anObject[theKeys[i]] = d[1][theKeys[i]];
-                                    tempData.push(d[0]);
-                                    tempData.push(anObject);
-                                    if (compiledData.length - 1 < i) {
-                                        compiledData[i] = [];
+        if (this.state.chartData[this.props.degDataType] && this.state.chartData[this.props.degDataType].data.length > 0) {
+            this.setState({
+                graphRef: this.createChart(
+                    widget.id,
+                    widget.graphBand || indexName,
+                    this.state.chartData[this.props.degDataType].data
+                ),
+                graphLoading: false,
+            });
+        } else {
+            // check if this.props.degDataType is landsat, sar, or ""
+            // if "" fetch is needed else check the new state variable chartData.landsat.data
+            fetch(this.props.documentRoot + "/geo-dash/gateway-request", {
+                method: "POST",
+                headers: {
+                    "Accept": "application/json",
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    collectionNameTimeSeries: collectionName,
+                    geometry: JSON.parse(this.props.projPairAOI),
+                    indexName: widget.graphBand || indexName,
+                    dateFromTimeSeries: widget.properties[2].trim().length === 10 ? widget.properties[2].trim() : "2000-01-01",
+                    dateToTimeSeries: widget.properties[3].trim().length === 10 ? widget.properties[3].trim() : formatDateISO(new Date()),
+                    reducer: widget.graphReducer != null ? widget.graphReducer.toLowerCase() : "",
+                    scale: 30,
+                    path: path,
+                    point: centerPoint,
+                    start: widget.startDate || "",
+                    end: widget.endDate || "",
+                    band: widget.graphBand || "",
+                    dataType: this.props.degDataType || "",
+                }),
+            })
+                .then(res => res.json())
+                .then(res => {
+                    if (res.errMsg) {
+                        console.warn(res.errMsg);
+                    } else {
+                        if (res.hasOwnProperty("timeseries")) {
+                            let chartStorage = {};
+                            const pData = [];
+                            if (res.timeseries.length === 0) {
+                                console.log("no data");
+                            } else if (Object.keys(res.timeseries[0][1]).length === 0) {
+                                pData.push({
+                                    type: "area",
+                                    name: widget.graphBand || indexName,
+                                    data: res.timeseries.filter(v => v[0]).map(v => [v[0], v[1]]).sort((a, b) => a[0] - b[0]),
+                                    color: "#31bab0",
+                                });
+                            } else {
+                                // this is where degData ends up
+                                const theKeys = Object.keys(res.timeseries[0][1]);
+                                const compiledData = [];
+                                res.timeseries.forEach(d => {
+                                    for (let i = 0; i < theKeys.length; i++) {
+                                        const tempData = [];
+                                        const anObject = {};
+                                        anObject[theKeys[i]] = d[1][theKeys[i]];
+                                        tempData.push(d[0]);
+                                        tempData.push(anObject);
+                                        if (compiledData.length - 1 < i) {
+                                            compiledData[i] = [];
+                                        }
+                                        compiledData[i].push(tempData);
                                     }
-                                    compiledData[i].push(tempData);
-                                }
-                            });
-                            compiledData.forEach((d, index) => {
-                                const cdata = this.convertData(d);
-                                if (widgetType !== "DegradationTool"
-                                    || this.props.degDataType !== "sar"
-                                    || this.props.degDataType === "sar" && theKeys[index] === this.state.selectSarGraphBand) {
-                                    pData.push({
-                                        type: widgetType === "DegradationTool" ? "scatter" : "area",
-                                        name: theKeys[index],
-                                        data: this.sortMultiData(cdata),
-                                        valueDecimals: 20,
-                                        connectNulls: widgetType !== "DegradationTool",
-                                        color: "#31bab0",
-                                        allowPointSelect: true,
-                                        point: {
-                                            events: {
-                                                select: e => {
-                                                    this.props.handleSelectDate(formatDateISO(new Date(e.target.x)));
+                                });
+                                compiledData.forEach((d, index) => {
+                                    const cdata = this.convertData(d);
+                                    if (widgetType !== "DegradationTool"
+                                        || this.props.degDataType !== "sar"
+                                        || (this.props.degDataType === "sar" && theKeys[index] === this.state.selectSarGraphBand)) {
+                                        pData.push({
+                                            type: widgetType === "DegradationTool" ? "scatter" : "area",
+                                            name: theKeys[index],
+                                            data: this.sortMultiData(cdata),
+                                            valueDecimals: 20,
+                                            connectNulls: widgetType !== "DegradationTool",
+                                            color: "#31bab0",
+                                            allowPointSelect: true,
+                                            point: {
+                                                events: {
+                                                    select: e => {
+                                                        this.props.handleSelectDate(formatDateISO(new Date(e.target.x)));
+                                                    },
                                                 },
                                             },
-                                        },
-                                        tooltip: {
-                                            pointFormat: "<span style=\"color:{series.color}\">{point.x:%Y-%m-%d}</span>: <b>{point.y:.6f}</b><br/>",
-                                            valueDecimals: 20,
-                                            split: false,
-                                            xDateFormat: "%Y-%m-%d",
-                                        },
-                                    });
-                                }
-                            });
-                        }
-                        this.setState({
-                            graphLoading:false,
-                            graphRef: this.createChart(widget.id, indexName, pData, indexName),
-                        });
-                    } else {
-                        console.warn("Wrong Data Returned");
-                    }
-                }
-            })
-            .catch(error => console.log(error));
-        window.addEventListener("resize", () => this.handleResize());
-    };
+                                            tooltip: {
+                                                pointFormat: "<span style=\"color:{series.color}\">{point.x:%Y-%m-%d}</span>: <b>{point.y:.6f}</b><br/>",
+                                                valueDecimals: 20,
+                                                split: false,
+                                                xDateFormat: "%Y-%m-%d",
+                                            },
+                                        });
+                                    }
+                                });
 
-    sortData = (a, b) => (a[0] < b[0]) ? -1 : (a[0] > b[0]) ? 1 : 0;
+                                chartStorage = this.state.chartData;
+                                chartStorage[this.props.degDataType].data = pData;
+                            }
+                            this.setState({
+                                graphLoading: false,
+                                graphRef: this.createChart(widget.id, indexName, pData),
+                                chartData: chartStorage,
+                            });
+                        } else {
+                            console.warn("Wrong Data Returned");
+                        }
+                    }
+                })
+                .catch(error => console.log(error));
+            window.addEventListener("resize", () => this.handleResize());
+        }
+    };
 
     multiComparator = (a, b) =>
         (a[0] < b[0]) ? -1 :
@@ -1348,7 +1372,7 @@ class GraphWidget extends React.Component {
 
     handleResize = () => {
         try {
-            if (this.state.graphRef) {
+            if (this.state.graphRef && this.state.graphRef.bounds) {
                 const gwidget = document.getElementById("widgetgraph_" + this.props.widget.id);
                 this.state.graphRef.setSize(gwidget.clientWidth, gwidget.clientHeight, true);
             }
@@ -1357,7 +1381,7 @@ class GraphWidget extends React.Component {
         }
     };
 
-    createChart = (wIndex, wText, series, indexName) => {
+    createChart = (wIndex, wText, series) => {
         "use strict";
         return Highcharts.chart("graphcontainer_" + wIndex, {
             chart: {
@@ -1384,7 +1408,7 @@ class GraphWidget extends React.Component {
             },
             plotOptions: {
                 area: {
-                    connectNulls: indexName.toLowerCase() === "custom",
+                    connectNulls: wText.toLowerCase() === "custom",
                     fillColor: {
                         linearGradient: {
                             x1: 0,
@@ -1429,7 +1453,7 @@ class GraphWidget extends React.Component {
     selectSarGraphBand = evt => {
         this.setState({
             selectSarGraphBand: evt.target.value,
-            graphLoading: true,
+            graphLoading: this.state.chartData[this.props.degDataType] && this.state.chartData[this.props.degDataType].data.length === 0,
         }, this.loadGraph(this.props.widget));
     };
 
