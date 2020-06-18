@@ -1677,7 +1677,9 @@ class PlotInformation extends React.Component {
                     ?
                         parsedExtraFields ?
                             <ul className="mb-3">
-                                {Object.entries(parsedExtraFields).map(([key, value]) => <li key={key}>{key} - {value}</li>)}
+                                {Object.entries(parsedExtraFields)
+                                    .filter(([key, value]) => value && !(value instanceof Object))
+                                    .map(([key, value]) => <li key={key}>{key} - {value}</li>)}
                             </ul>
                         :
                             <div className="mb-3">There is no extra information for this plot.</div>
