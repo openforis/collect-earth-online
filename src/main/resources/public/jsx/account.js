@@ -96,7 +96,6 @@ class AccountForm extends React.Component {
         this.state = {
             mailingListSubscription: false,
         };
-        this.getUserDetails = this.getUserDetails.bind(this);
 
     }
 
@@ -104,7 +103,7 @@ class AccountForm extends React.Component {
         this.getUserDetails();
     }
 
-    getUserDetails() {
+    getUserDetails = () => {
         fetch(this.props.documentRoot + "/get-user-details?userId=" + this.props.userId)
             .then(response => response.ok ? response.json() : Promise.reject(response))
             .then(details => this.setState({ mailingListSubscription: details.mailingListSubscription }))
@@ -113,14 +112,9 @@ class AccountForm extends React.Component {
                 alert("No user found with ID " + this.props.userName + ". See console for details.");
                 window.location = this.props.documentRoot + "/home";
             });
-    }
+    };
 
-    toggleMailingListSubsciprion = () => {
-        this.setState({
-            mailingListSubscription: !this.state.mailingListSubscription,
-        });
-        console.log(this.state.mailingListSubscription);
-    }
+    toggleMailingListSubsciprion = () => this.setState({ mailingListSubscription: !this.state.mailingListSubscription });
 
     render() {
         return (
@@ -128,7 +122,7 @@ class AccountForm extends React.Component {
                 {this.props.userId === this.props.accountId ?
                     <Fragment>
                         <h1>{this.props.userName}</h1>
-                        <form action={this.props.documentRoot + "/account?userId=" + this.props.accountId} method="post">
+                        <form action={this.props.documentRoot + "/account"} method="post">
                             <div className="form-group">
                                 <label htmlFor="email">Reset email</label>
                                 <input
