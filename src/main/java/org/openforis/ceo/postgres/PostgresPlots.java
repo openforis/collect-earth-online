@@ -19,6 +19,19 @@ public class PostgresPlots implements Plots {
         var singlePlot = new JsonObject();
         try {
             singlePlot.addProperty("id", rs.getInt("plot_id"));
+            singlePlot.addProperty("center", rs.getString("center"));
+            singlePlot.addProperty("flagged", rs.getInt("flagged") == 0 ? false : true);
+            singlePlot.addProperty("analyses", rs.getInt("assigned"));
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+        }
+        return singlePlot;
+    }
+
+    private static JsonObject buildPlotCollectionJson(ResultSet rs, int projectId) {
+        var singlePlot = new JsonObject();
+        try {
+            singlePlot.addProperty("id", rs.getInt("plot_id"));
             singlePlot.addProperty("projectId", rs.getInt("project_id"));
             singlePlot.addProperty("center", rs.getString("center"));
             singlePlot.addProperty("flagged", rs.getInt("flagged") == 0 ? false : true);
@@ -29,6 +42,13 @@ public class PostgresPlots implements Plots {
             singlePlot.addProperty("analysisDuration", rs.getString("analysis_duration"));
             singlePlot.addProperty("plotId", rs.getString("plotId"));
             singlePlot.addProperty("geom", rs.getString("geom"));
+            var extraPlotInfo = parseJson(rs.getString("extra_plot_info")).getAsJsonObject();
+            extraPlotInfo.remove("gid");
+            extraPlotInfo.remove("lat");
+            extraPlotInfo.remove("lon");
+            extraPlotInfo.remove("plotid");
+            singlePlot.addProperty("extraPlotInfo", extraPlotInfo.toString());
+            singlePlot.add("samples", getSampleJsonArray(singlePlot.get("id").getAsInt(), projectId));
         } catch (SQLException e) {
             System.out.println(e.getMessage());
         }
@@ -69,8 +89,7 @@ public class PostgresPlots implements Plots {
             try (var rs = pstmt.executeQuery()) {
                 if (rs.next()) {
                     var plotData = new JsonObject();
-                    plotData = buildPlotJson(rs);
-                    plotData.add("samples", getSampleJsonArray(plotData.get("id").getAsInt(), projectId));
+                    plotData = buildPlotCollectionJson(rs, projectId);
                     return plotData.toString();
                 } else {
                     return "";
@@ -111,8 +130,7 @@ public class PostgresPlots implements Plots {
         try (var rs = pstmt.executeQuery()) {
             if (rs.next()) {
                 var plotData = new JsonObject();
-                plotData = buildPlotJson(rs);
-                plotData.add("samples", getSampleJsonArray(plotData.get("id").getAsInt(), projectId));
+                plotData = buildPlotCollectionJson(rs, projectId);
                 unlockPlots(userId);
                 lockPlot(plotData.get("id").getAsInt(), userId);
                 return plotData.toString();

@@ -95,6 +95,8 @@ public class JsonPlots implements Plots {
                                     .findFirst();
 
         if (matchingPlot.isPresent()) {
+            // TODO add an object which contains additional information
+            matchingPlot.get().add("extraPlotInfo", new JsonObject());
             unlockLockPlots(projectId, matchingPlot.get().get("id").getAsInt(), userId);
             return matchingPlot.get().toString();
         } else {
