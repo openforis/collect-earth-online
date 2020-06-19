@@ -439,7 +439,7 @@ mercator.createLayer = function (layerConfig, documentRoot, projectAOI, show = f
         documentRoot,
         projectAOI,
         show,
-        callback,
+        callback
     );
     if (!source) {
         return null;

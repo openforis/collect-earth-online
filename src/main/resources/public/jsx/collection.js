@@ -266,14 +266,12 @@ class Collection extends React.Component {
     };
 
     initializeProjectMap = () => {
-        const mapConfig = mercator.createMap(
-            "image-analysis-pane",
-            [0.0, 0.0],
-            1,
-            this.state.imageryList,
-            this.props.documentRoot,
-            this.state.currentProject.boundary
-        );
+        const mapConfig = mercator.createMap("image-analysis-pane",
+                                             [0.0, 0.0],
+                                             1,
+                                             this.state.imageryList,
+                                             this.props.documentRoot,
+                                             this.state.currentProject.boundary);
         mercator.addVectorLayer(mapConfig,
                                 "currentAOI",
                                 mercator.geometryToVectorSource(mercator.parseGeoJson(this.state.currentProject.boundary,
@@ -565,7 +563,7 @@ class Collection extends React.Component {
 
     sendNullSecureWatchLayer = () =>
         mercator.updateLayerWmsParams(this.state.mapConfig, this.state.currentImagery.id, {
-            COVERAGE_CQL_FILTER: "featureId='" + null + "'",
+            COVERAGE_CQL_FILTER: "featureId='null'",
         });
 
     updateSecureWatchSingleLayer = (featureId, imagerySecureWatchDate, imagerySecureWatchCloudCover) => {
@@ -1759,7 +1757,7 @@ class ImageryOptions extends React.Component {
                         id="securewatch-option-select"
                         disabled
                     >
-                        <option value="DEFAULT">No Layer Available</option>
+                        <option>No Layer Available</option>
                     </select>
                 }
             </div>
