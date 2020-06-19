@@ -171,8 +171,7 @@ mercator.getTopVisiblePlanetLayerDate = (mapConfig, layerId) => {
 mercator.createSource = function (sourceConfig, imageryId, attribution, documentRoot,
                                   extent = [[-180, -90], [180, -90], [180, 90], [-180, 90], [-180, -90]],
                                   show = false,
-                                  callback = null,
-                                  extraParams = {}) {
+                                  callback = null) {
     if (sourceConfig.type === "Planet") {
         return new XYZ({
             url: documentRoot
@@ -265,14 +264,10 @@ mercator.createSource = function (sourceConfig, imageryId, attribution, document
             attributions: attribution,
         });
     } else if (sourceConfig.type === "SecureWatch") {
-        const params = {
-            imageryId : imageryId,
-            ...extraParams,
-        };
         return new TileWMS({
             serverType: "geoserver",
             url: documentRoot + "/get-tile",
-            params: params,
+            params: { imageryId: imageryId },
             attributions: attribution,
         });
     } else if (sourceConfig.type === "Sentinel2" || sourceConfig.type === "Sentinel1") {
@@ -435,10 +430,7 @@ mercator.createSource = function (sourceConfig, imageryId, attribution, document
 
 // [Pure] Returns a new TileLayer object or null if the
 // layerConfig is invalid.
-mercator.createLayer = function (layerConfig, documentRoot, projectAOI,
-                                 show = false,
-                                 callback = null,
-                                 extraParams = {}) {
+mercator.createLayer = function (layerConfig, documentRoot, projectAOI, show = false, callback = null) {
     layerConfig.sourceConfig.create = true;
     const source = mercator.createSource(
         layerConfig.sourceConfig,
@@ -448,7 +440,6 @@ mercator.createLayer = function (layerConfig, documentRoot, projectAOI,
         projectAOI,
         show,
         callback,
-        extraParams,
     );
     if (!source) {
         return null;
@@ -466,12 +457,6 @@ mercator.createLayer = function (layerConfig, documentRoot, projectAOI,
             source: source,
         });
     }
-};
-
-// Adds a new layer to the map.
-mercator.addLayerToMap = function (mapConfig, layer) {
-    mapConfig.map.addLayer(layer);
-    return mapConfig;
 };
 
 /*****************************************************************************
