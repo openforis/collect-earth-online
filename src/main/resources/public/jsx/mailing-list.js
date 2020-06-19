@@ -1,4 +1,4 @@
-import React from "react";
+import React from "react"; 
 import ReactDOM from "react-dom";
 import CKEditor from "@ckeditor/ckeditor5-react";
 import ClassicEditor from "@ckeditor/ckeditor5-build-classic";
@@ -49,7 +49,15 @@ class MailingList extends React.Component {
                                 <form action="${root}/mailing-list" method="post">
                                     <div className="form-group">
                                         <label forHtml="subject">Subject</label>
-                                        <input autoComplete="off" id="subject" name="subject" placeholder="Subject" type="text" className="form-control" onChange={this.onChangeSubject} />
+                                        <input
+                                            autoComplete="off"
+                                            id="subject"
+                                            name="subject"
+                                            placeholder="Subject"
+                                            type="text"
+                                            className="form-control"
+                                            onChange={this.onChangeSubject}
+                                        />
                                     </div>
                                     <div className="form-group">
                                         <label forHtml="body">Body</label>
@@ -59,7 +67,13 @@ class MailingList extends React.Component {
                                             onChange={this.onChangeBody}
                                         />
                                     </div>
-                                    <button type="button" className="btn btn-outline-lightgreen btn-block" onClick={this.submitEmail}>Send to All CEO Users</button>
+                                    <button
+                                        type="button"
+                                        className="btn btn-outline-lightgreen btn-block"
+                                        onClick={this.submitEmail}
+                                    >
+                                        Send to All CEO Users
+                                    </button>
                                 </form>
                             </div>
                         </div>
@@ -73,9 +87,7 @@ class MailingList extends React.Component {
 
 export function renderMailingListPage(args) {
     ReactDOM.render(
-        <MailingList
-            documentRoot={args.documentRoot}
-        />,
+        <MailingList documentRoot={args.documentRoot}/>,
         document.getElementById("mailing-list")
     );
 }

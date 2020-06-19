@@ -95,13 +95,8 @@ public class Mail {
             // Set Subject: header field
             message.setSubject(subject);
 
-            if (contentType == null || contentType.equals(Mail.CONTENT_TYPE_TEXT)) {
-                // Now set the actual message
-                message.setText(body);
-            } else if (contentType.equals(Mail.CONTENT_TYPE_HTML)) {
-                // Send the actual HTML message, as big as you like
-                message.setContent(body, "text/html");
-            }
+            // Set Content
+            message.setContent(body, contentType != null && contentType.equals(Mail.CONTENT_TYPE_HTML) ? Mail.CONTENT_TYPE_HTML : Mail.CONTENT_TYPE_TEXT);
 
             // Send message
             Transport.send(message);

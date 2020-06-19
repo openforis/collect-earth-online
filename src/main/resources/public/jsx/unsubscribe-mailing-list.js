@@ -16,9 +16,7 @@ class UnsubscribeMailingList extends React.Component {
 
 export function renderUnsubscribeMailingListPage(args) {
     ReactDOM.render(
-        <UnsubscribeMailingList
-            documentRoot={args.documentRoot}
-        />,
+        <UnsubscribeMailingList documentRoot={args.documentRoot}/>,
         document.getElementById("unsubscribe-mailing-list")
     );
 }
