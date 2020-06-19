@@ -3,7 +3,7 @@ import ReactDOM from "react-dom";
 import { mercator, ceoMapStyles } from "../js/mercator.js";
 import { SurveyCollection } from "./components/SurveyCollection";
 import { convertSampleValuesToSurveyQuestions } from "./utils/surveyUtils";
-import { UnicodeIcon, str2obj } from "./utils/textUtils";
+import { UnicodeIcon } from "./utils/textUtils";
 import { formatDateISO } from "./utils/dateUtils";
 
 class Collection extends React.Component {
@@ -1666,7 +1666,8 @@ class PlotInformation extends React.Component {
     }
 
     render() {
-        const parsedExtraFields = str2obj(this.props.extraPlotInfo);
+        const hasExtraInfo = Object.values(this.props.extraPlotInfo)
+            .filter(value => value && !(value instanceof Object)).length > 0;
         return (
             <>
                 <CollapsibleTitle
@@ -1675,10 +1676,10 @@ class PlotInformation extends React.Component {
                     toggleShow={() => this.setState({ showInfo: !this.state.showInfo })}
                 />
                 {this.state.showInfo
-                    ?
-                        parsedExtraFields ?
+                    ? hasExtraInfo
+                        ?
                             <ul className="mb-3">
-                                {Object.entries(parsedExtraFields)
+                                {Object.entries(this.props.extraPlotInfo)
                                     .filter(([key, value]) => value && !(value instanceof Object))
                                     .map(([key, value]) => <li key={key}>{key} - {value}</li>)}
                             </ul>
