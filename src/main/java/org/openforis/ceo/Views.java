@@ -180,6 +180,10 @@ public class Views {
         return makeRoute("Mailing-List", freemarker);
     }
 
+    public static Route unsubscribeMailingList(FreeMarkerEngine freemarker) {
+        return makeRoute("Unsubscribe-Mailing-List", freemarker);
+    }
+
     public static Route pageNotFound(FreeMarkerEngine freemarker) {
         return makeRoute("Page-Not-Found", freemarker);
     }

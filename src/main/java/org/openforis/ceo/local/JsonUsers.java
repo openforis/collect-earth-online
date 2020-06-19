@@ -181,7 +181,7 @@ public class JsonUsers implements Users {
                                     if (user.get("id").getAsString().equals(userId)) {
                                         user.addProperty("email", inputEmail.isEmpty() ? foundUser.get("email").getAsString() : inputEmail);
                                         user.addProperty("password", inputPassword.isEmpty() ? foundUser.get("password").getAsString() : inputPassword);
-                                        user.addProperty("mailing-list", mailingListSubscription != null);
+                                        user.addProperty("on-mailing-list", mailingListSubscription != null);
                                         return user;
                                     } else {
                                         return user;
@@ -332,7 +332,7 @@ public class JsonUsers implements Users {
         } else {
             var foundUser = matchingUser.get();
             var userDetailsObject = new JsonObject();
-            userDetailsObject.addProperty("mailingListSubscription", foundUser.get("mailing-list").getAsBoolean());
+            userDetailsObject.addProperty("mailingListSubscription", foundUser.get("on-mailing-list").getAsBoolean());
             return userDetailsObject.toString();
         }
     }
