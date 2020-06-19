@@ -571,7 +571,7 @@ public class JsonUsers implements Users {
         return "";
     }
 
-    public Request sendMailingList(Request req, Response res) {
+    public String submitEmailForMailingList(Request req, Response res) {
         var inputSubject = req.queryParams("subject");
         var inputBody = req.queryParams("body");
 
@@ -591,7 +591,7 @@ public class JsonUsers implements Users {
                 req.session().attribute("flash_message", "There was an issue sending to the mailing list. Please check the server logs.");
             }
         }
-        return req;
+        return "";
     }
 
 }

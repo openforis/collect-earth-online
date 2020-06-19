@@ -99,8 +99,7 @@ public class Server implements SparkApplication {
                 redirectAuth(request, response, userId);
             }
             // Check for mailing list permission pages and redirect
-            if (request.uri().equals("/mailing-list") && request.requestMethod().equals("GET") // mailing-list can be a get (page) or post (api)
-                && userId != 1) {
+            if (List.of("/mailing-list", "/send-mailing-list").contains(request.uri()) && userId != 1) {
                 redirectAuth(request, response, userId);
             }
 
@@ -304,12 +303,12 @@ public class Server implements SparkApplication {
         }
 
         // Load the SMTP settings for sending reset password emails
-        var smtpSettings        = readJsonFile("mail-config.json").getAsJsonObject();
-        CeoConfig.baseUrl       = smtpSettings.get("baseUrl").getAsString();
-        CeoConfig.smtpUser      = smtpSettings.get("smtpUser").getAsString();
-        CeoConfig.smtpServer    = smtpSettings.get("smtpServer").getAsString();
-        CeoConfig.smtpPort      = smtpSettings.get("smtpPort").getAsString();
-        CeoConfig.smtpPassword  = smtpSettings.get("smtpPassword").getAsString();
+        var smtpSettings              = readJsonFile("mail-config.json").getAsJsonObject();
+        CeoConfig.baseUrl             = smtpSettings.get("baseUrl").getAsString();
+        CeoConfig.smtpUser            = smtpSettings.get("smtpUser").getAsString();
+        CeoConfig.smtpServer          = smtpSettings.get("smtpServer").getAsString();
+        CeoConfig.smtpPort            = smtpSettings.get("smtpPort").getAsString();
+        CeoConfig.smtpPassword        = smtpSettings.get("smtpPassword").getAsString();
         CeoConfig.smtpRecipientLimit  = smtpSettings.get("smtpRecipientLimit").getAsString();
 
         // Start the HTTPS Jetty webserver on port 8080

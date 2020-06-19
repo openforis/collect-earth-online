@@ -474,7 +474,7 @@ public class PostgresUsers implements Users {
         }
     }
 
-    public Request sendMailingList(Request req, Response res) {
+    public String submitEmailForMailingList(Request req, Response res) {
         var jsonInputs = parseJson(req.body()).getAsJsonObject();
         var inputSubject = jsonInputs.get("subject").getAsString();
         var inputBody = jsonInputs.get("body").getAsString();
@@ -498,7 +498,7 @@ public class PostgresUsers implements Users {
                 req.session().attribute("flash_message", "There was an issue sending to the mailing list. Please check the server logs.");
             }
         }
-        return req;
+        return "";
     }
 
 }

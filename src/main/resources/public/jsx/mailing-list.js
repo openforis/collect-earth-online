@@ -8,11 +8,11 @@ class MailingList extends React.Component {
         super(props);
         this.state = {
             subject: "",
-            body: `<br /><br />--<p><a href="${window.location.origin}/account">Unsubscribe</a></p>`,
+            body: `<br /><br />--<p><a href="${window.location.origin}/unsubscribe-mailing-list">Unsubscribe</a></p>`,
         };
     }
 
-    submit = () => {
+    submitEmail = () => {
         if (confirm("Are you sure you want to send to this mailing list?")) {
             const { subject, body } = this.state;
             fetch(this.props.documentRoot + "/mailing-list", {
@@ -23,19 +23,11 @@ class MailingList extends React.Component {
                 }),
             });
         }
-    }
+    };
 
-    onChangeSubject = (event) => {
-        this.setState({
-            subject: event.target.value,
-        });
-    }
+    onChangeSubject = (event) => this.setState({ subject: event.target.value });
 
-    onChangeBody = (event, editor) => {
-        this.setState({
-            body: editor.getData(),
-        });
-    }
+    onChangeBody = (event, editor) => this.setState({ body: editor.getData() });
 
     render() {
         return (
@@ -49,18 +41,18 @@ class MailingList extends React.Component {
                             <div className="col">
                                 <form action="${root}/mailing-list" method="post">
                                     <div className="form-group">
-                                        <label for="subject">Subject</label>
+                                        <label forHtml="subject">Subject</label>
                                         <input autoComplete="off" id="subject" name="subject" placeholder="Subject" type="text" className="form-control" onChange={this.onChangeSubject} />
                                     </div>
                                     <div className="form-group">
-                                        <label for="body">Body</label>
+                                        <label forHtml="body">Body</label>
                                         <CKEditor
                                             editor={ClassicEditor}
                                             data={this.state.body}
                                             onChange={this.onChangeBody}
                                         />
                                     </div>
-                                    <button type="button" className="btn btn-outline-lightgreen btn-block" onClick={this.submit}>Send to All CEO Users</button>
+                                    <button type="button" className="btn btn-outline-lightgreen btn-block" onClick={this.submitEmail}>Send to All CEO Users</button>
                                 </form>
                             </div>
                         </div>

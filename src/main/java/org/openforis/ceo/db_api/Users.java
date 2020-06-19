@@ -20,6 +20,6 @@ public interface Users {
     Map<Integer, String> getInstitutionRoles(int userId);
     String updateInstitutionRole(Request req, Response res);
     String requestInstitutionMembership(Request req, Response res);
-    Request sendMailingList(Request req, Response res);
+    String submitEmailForMailingList(Request req, Response res);
 
 }
