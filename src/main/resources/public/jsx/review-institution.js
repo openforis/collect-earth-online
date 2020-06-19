@@ -8,7 +8,7 @@ import {
     AccordionItemButton,
     AccordionItemPanel,
     AccordionItemState,
-} from 'react-accessible-accordion';
+} from "react-accessible-accordion";
 
 import InstitutionEditor from "./components/InstitutionEditor";
 import { sortAlphabetically, capitalizeFirst, UnicodeIcon } from "./utils/textUtils";
@@ -113,20 +113,20 @@ class ReviewInstitution extends React.Component {
                                                         {this.state.usersCount}
                                                     </span>
                                                     <span className="float-right">
-                                                        { expanded ? '▼' : '▶' }
+                                                        { expanded ? "▼" : "▶" }
                                                     </span>
                                                 </AccordionItemButton>
                                             </AccordionItemHeading>
                                             <AccordionItemPanel>
-                                            {this.props.userId > 0 &&
-                                                <UserList
-                                                    documentRoot={this.props.documentRoot}
-                                                    institutionId={this.props.institutionId}
-                                                    isAdmin={this.state.isAdmin}
-                                                    setUsersCount={this.setUsersCount}
-                                                    userId={this.props.userId}
-                                                />
-                                            }
+                                                {this.props.userId > 0 &&
+                                                    <UserList
+                                                        documentRoot={this.props.documentRoot}
+                                                        institutionId={this.props.institutionId}
+                                                        isAdmin={this.state.isAdmin}
+                                                        setUsersCount={this.setUsersCount}
+                                                        userId={this.props.userId}
+                                                    />
+                                                }
                                             </AccordionItemPanel>
                                         </React.Fragment>
                                     )}
