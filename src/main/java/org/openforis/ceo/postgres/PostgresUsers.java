@@ -14,8 +14,8 @@ import java.time.format.DateTimeFormatter;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import org.openforis.ceo.db_api.Users;
@@ -26,11 +26,11 @@ import spark.Response;
 
 public class PostgresUsers implements Users {
 
-    private static final String BASE_URL      = CeoConfig.baseUrl;
-    private static final String SMTP_USER     = CeoConfig.smtpUser;
-    private static final String SMTP_SERVER   = CeoConfig.smtpServer;
-    private static final String SMTP_PORT     = CeoConfig.smtpPort;
-    private static final String SMTP_PASSWORD = CeoConfig.smtpPassword;
+    private static final String BASE_URL             = CeoConfig.baseUrl;
+    private static final String SMTP_USER            = CeoConfig.smtpUser;
+    private static final String SMTP_SERVER          = CeoConfig.smtpServer;
+    private static final String SMTP_PORT            = CeoConfig.smtpPort;
+    private static final String SMTP_PASSWORD        = CeoConfig.smtpPassword;
     private static final String SMTP_RECIPIENT_LIMIT = CeoConfig.smtpRecipientLimit;
 
     public Request login(Request req, Response res) {
@@ -433,7 +433,7 @@ public class PostgresUsers implements Users {
                                         + "You have been assigned the role of " + role + " for " + institutionName + " on " + timestamp + "!\n\n"
                                         + "Kind Regards,\n"
                                         + "  The CEO Team";
-                                sendMail(SMTP_USER, email, SMTP_SERVER, SMTP_PORT, SMTP_PASSWORD, "User Role Added!", body);
+                                sendMail(SMTP_USER, Collections.singleton(email), null, null, SMTP_SERVER, SMTP_PORT, SMTP_PASSWORD, "User Role Added!", body, null);
                             } else {
                                 // roles updated
                                 // Send notification to the user
@@ -441,7 +441,7 @@ public class PostgresUsers implements Users {
                                         + "Your role has been changed to " + role + " for " + institutionName + " on " + timestamp + "!\n\n"
                                         + "Kind Regards,\n"
                                         + "  The CEO Team";
-                                sendMail(SMTP_USER, email, SMTP_SERVER, SMTP_PORT, SMTP_PASSWORD, "User Role Changed!", body);
+                                sendMail(SMTP_USER, Collections.singleton(email), null, null, SMTP_SERVER, SMTP_PORT, SMTP_PASSWORD, "User Role Changed!", body, null);
                             }
                         }
                     }

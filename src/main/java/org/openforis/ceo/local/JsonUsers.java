@@ -23,7 +23,7 @@ import java.nio.file.Paths;
 import java.time.format.DateTimeFormatter;
 import java.time.LocalDateTime;
 import java.util.Arrays;
-import java.util.List;
+import java.util.Collections;
 import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -35,11 +35,11 @@ import spark.Response;
 
 public class JsonUsers implements Users {
 
-    private static final String BASE_URL      = CeoConfig.baseUrl;
-    private static final String SMTP_USER     = CeoConfig.smtpUser;
-    private static final String SMTP_SERVER   = CeoConfig.smtpServer;
-    private static final String SMTP_PORT     = CeoConfig.smtpPort;
-    private static final String SMTP_PASSWORD = CeoConfig.smtpPassword;
+    private static final String BASE_URL             = CeoConfig.baseUrl;
+    private static final String SMTP_USER            = CeoConfig.smtpUser;
+    private static final String SMTP_SERVER          = CeoConfig.smtpServer;
+    private static final String SMTP_PORT            = CeoConfig.smtpPort;
+    private static final String SMTP_PASSWORD        = CeoConfig.smtpPassword;
     private static final String SMTP_RECIPIENT_LIMIT = CeoConfig.smtpRecipientLimit;
 
     public Request login(Request req, Response res) {
@@ -519,7 +519,7 @@ public class JsonUsers implements Users {
                                     pending.remove(userId);
                                 }
                                 // Send confirmation email to the user
-                                sendMail(SMTP_USER, userEmail, SMTP_SERVER, SMTP_PORT, SMTP_PASSWORD, "User Role Added!", body);
+                                sendMail(SMTP_USER, Collections.singleton(userEmail), null, null, userEmail, SMTP_SERVER, SMTP_PORT, SMTP_PASSWORD, "User Role Added!", body);
                             } else if (role.equals("admin")) {
                                 if (!members.contains(userId)) {
                                     members.add(userId);
@@ -531,7 +531,7 @@ public class JsonUsers implements Users {
                                     pending.remove(userId);
                                 }
                                 // Send confirmation email to the user
-                                sendMail(SMTP_USER, userEmail, SMTP_SERVER, SMTP_PORT, SMTP_PASSWORD, "User Role Added!", body);
+                                sendMail(SMTP_USER, Collections.singleton(userEmail), null, null, userEmail, SMTP_SERVER, SMTP_PORT, SMTP_PASSWORD, "User Role Added!", body);
                             } else {
                                 members.remove(userId);
                                 admins.remove(userId);

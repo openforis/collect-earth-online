@@ -30,7 +30,7 @@ public class Mail {
         return Pattern.matches(emailPattern, email);
     }
 
-    private static Address[] fromStringListToAddressArray(List<String> listString) {
+    private static Address[] fromStringListToAddressArray(Collection<String> listString) {
         return listString.stream()
             .map(email -> {
                 try {
@@ -44,7 +44,7 @@ public class Mail {
             .toArray(new Address[0]);
     }
 
-    public static void sendMail(String from, List<String> to, List<String> cc, List<String> bcc, String smtpServer, String smtpPort,
+    public static void sendMail(String from, Collection<String> to, Collection<String> cc, Collection<String> bcc, String smtpServer, String smtpPort,
                                 String smtpPassword, String subject, String body, String contentType) {
         try {
             // Get system properties
