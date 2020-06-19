@@ -1,15 +1,6 @@
 import React, { Fragment } from "react";
 import ReactDOM from "react-dom";
 
-import {
-    Accordion,
-    AccordionItem,
-    AccordionItemHeading,
-    AccordionItemButton,
-    AccordionItemPanel,
-    AccordionItemState,
-} from "react-accessible-accordion";
-
 import InstitutionEditor from "./components/InstitutionEditor";
 import { sortAlphabetically, capitalizeFirst, UnicodeIcon } from "./utils/textUtils";
 
@@ -21,6 +12,8 @@ class ReviewInstitution extends React.Component {
             usersCount: 0,
             projectList: [],
             isAdmin: false,
+            showImagery: false,
+            showUsers: false,
         };
     }
 
@@ -74,65 +67,45 @@ class ReviewInstitution extends React.Component {
                         />
                     </div>
                     <div className="col-lg-6 col-xs-12">
-                        <Accordion className="accordion" allowZeroExpanded="true">
-                            <AccordionItem>
-                                <AccordionItemState>
-                                    {({ expanded }) => (
-                                        <React.Fragment>
-                                            <AccordionItemHeading>
-                                                <AccordionItemButton>
-                                                    Imagery
-                                                    <span className="badge badge-pill badge-light ml-2">
-                                                        {this.state.imageryCount}
-                                                    </span>
-                                                    <span className="float-right">
-                                                        { expanded ? '▼' : '▶' }
-                                                    </span>
-                                                </AccordionItemButton>
-                                            </AccordionItemHeading>
-                                            <AccordionItemPanel>
-                                                <ImageryList
-                                                    documentRoot={this.props.documentRoot}
-                                                    isAdmin={this.state.isAdmin}
-                                                    institutionId={this.props.institutionId}
-                                                    setImageryCount={this.setImageryCount}
-                                                />
-                                            </AccordionItemPanel>
-                                        </React.Fragment>
-                                    )}
-                                </AccordionItemState>
-                            </AccordionItem>
-                            <AccordionItem>
-                                <AccordionItemState>
-                                    {({ expanded }) => (
-                                        <React.Fragment>
-                                            <AccordionItemHeading>
-                                                <AccordionItemButton>
-                                                    Users
-                                                    <span className="badge badge-pill badge-light ml-2">
-                                                        {this.state.usersCount}
-                                                    </span>
-                                                    <span className="float-right">
-                                                        { expanded ? "▼" : "▶" }
-                                                    </span>
-                                                </AccordionItemButton>
-                                            </AccordionItemHeading>
-                                            <AccordionItemPanel>
-                                                {this.props.userId > 0 &&
-                                                    <UserList
-                                                        documentRoot={this.props.documentRoot}
-                                                        institutionId={this.props.institutionId}
-                                                        isAdmin={this.state.isAdmin}
-                                                        setUsersCount={this.setUsersCount}
-                                                        userId={this.props.userId}
-                                                    />
-                                                }
-                                            </AccordionItemPanel>
-                                        </React.Fragment>
-                                    )}
-                                </AccordionItemState>
-                            </AccordionItem>
-                        </Accordion>
+                        <div onClick={() => this.setState({ showImagery: !this.state.showImagery })}>
+                            <h2 className="header">
+                                Imagery
+                                <span className="badge badge-pill badge-light ml-2">
+                                    {this.state.imageryCount}
+                                </span>
+                                <span className="float-right">
+                                    { this.state.showImagery ? "▼" : "▶" }
+                                </span>
+                            </h2>
+                        </div>
+                        <ImageryList
+                            documentRoot={this.props.documentRoot}
+                            isAdmin={this.state.isAdmin}
+                            institutionId={this.props.institutionId}
+                            setImageryCount={this.setImageryCount}
+                            isHidden={this.state.showImagery}
+                        />
+                        <div onClick={() => this.setState({ showUsers: !this.state.showUsers })}>
+                            <h2 className="header">
+                                Users
+                                <span className="badge badge-pill badge-light ml-2">
+                                    {this.state.usersCount}
+                                </span>
+                                <span className="float-right">
+                                    { this.state.showUsers ? "▼" : "▶" }
+                                </span>
+                            </h2>
+                        </div>
+                        {this.props.userId > 0 &&
+                            <UserList
+                                documentRoot={this.props.documentRoot}
+                                institutionId={this.props.institutionId}
+                                isAdmin={this.state.isAdmin}
+                                setUsersCount={this.setUsersCount}
+                                userId={this.props.userId}
+                                isHidden={this.state.showUsers}
+                            />
+                        }
                     </div>
                 </div>
             </div>
@@ -419,46 +392,49 @@ class ImageryList extends React.Component {
     toggleEditMode = () => this.setState({ editMode: !this.state.editMode });
 
     render() {
-        return this.state.imageryList.length === 0
-            ? <h3>Loading imagery...</h3>
-            : this.state.editMode
-                ?
-                    <NewImagery
-                        documentRoot={this.props.documentRoot}
-                        getImageryList={this.getImageryList}
-                        institutionId={this.props.institutionId}
-                        toggleEditMode={this.toggleEditMode}
-                        imageryToEdit={this.state.imageryToEdit}
-                        imageryList={this.state.imageryList}
-                    />
-                :
-                    <Fragment>
-                        {this.props.isAdmin &&
-                        <div className="row">
-                            <div className="col-lg-12 mb-1">
-                                <button
-                                    type="button"
-                                    id="add-imagery-button"
-                                    className="btn btn-sm btn-block btn-outline-yellow py-2 font-weight-bold"
-                                    onClick={this.addImagery}
-                                >
-                                    <UnicodeIcon icon="add" backgroundColor="#f1c00f"/>Add New Imagery
-                                </button>
-
-                            </div>
-                        </div>
-                        }
-                        {this.state.imageryList.map((imageryItem, uid) =>
-                            <Imagery
-                                key={uid}
-                                title={imageryItem.title}
-                                isAdmin={this.props.isAdmin}
-                                isInstitutionImage={this.props.institutionId === imageryItem.institution}
-                                editImagery={() => this.editImagery(imageryItem.id)}
-                                deleteImagery={() => this.deleteImagery(imageryItem.id)}
+        return this.props.isHidden
+            ?
+                this.state.imageryList.length === 0
+                    ? <h3>Loading imagery...</h3>
+                    : this.state.editMode
+                        ?
+                            <NewImagery
+                                documentRoot={this.props.documentRoot}
+                                getImageryList={this.getImageryList}
+                                institutionId={this.props.institutionId}
+                                toggleEditMode={this.toggleEditMode}
+                                imageryToEdit={this.state.imageryToEdit}
+                                imageryList={this.state.imageryList}
                             />
-                        )}
-                    </Fragment>;
+                        :
+                            <Fragment>
+                                {this.props.isAdmin &&
+                                <div className="row">
+                                    <div className="col-lg-12 mb-1">
+                                        <button
+                                            type="button"
+                                            id="add-imagery-button"
+                                            className="btn btn-sm btn-block btn-outline-yellow py-2 font-weight-bold"
+                                            onClick={this.addImagery}
+                                        >
+                                            <UnicodeIcon icon="add" backgroundColor="#f1c00f"/>Add New Imagery
+                                        </button>
+
+                                    </div>
+                                </div>
+                                }
+                                {this.state.imageryList.map((imageryItem, uid) =>
+                                    <Imagery
+                                        key={uid}
+                                        title={imageryItem.title}
+                                        isAdmin={this.props.isAdmin}
+                                        isInstitutionImage={this.props.institutionId === imageryItem.institution}
+                                        editImagery={() => this.editImagery(imageryItem.id)}
+                                        deleteImagery={() => this.deleteImagery(imageryItem.id)}
+                                    />
+                                )}
+                            </Fragment>
+            : null;
     }
 }
 
@@ -1190,35 +1166,36 @@ class UserList extends React.Component {
     findUserByEmail = (userEmail) => this.state.activeUserList.find(au => au.email === userEmail);
 
     render() {
-        return (
-            <Fragment>
-                <NewUserButtons
-                    currentIsInstitutionMember={this.currentIsInstitutionMember()}
-                    requestMembership={this.requestMembership}
-                    isAdmin={this.props.isAdmin}
-                    isActiveUser={this.isActiveUser}
-                    isInstitutionMember={this.isInstitutionMember}
-                    findUserByEmail={this.findUserByEmail}
-                    updateUserInstitutionRole={this.updateUserInstitutionRole}
-                    userId={this.props.userId}
-                />
-                {this.props.userId > 0 &&
-                    this.state.institutionUserList
-                        .filter(iu => this.props.isAdmin || iu.institutionRole !== "pending")
-                        .sort((a, b) => sortAlphabetically(a.email, b.email))
-                        .sort((a, b) => sortAlphabetically(a.institutionRole, b.institutionRole))
-                        .map((iu, uid) =>
-                            <User
-                                key={uid}
-                                documentRoot={this.props.documentRoot}
-                                user={iu}
-                                isAdmin={this.props.isAdmin}
-                                updateUserInstitutionRole={this.updateUserInstitutionRole}
-                            />
-                        )
-                }
-            </Fragment>
-        );
+        return this.props.isHidden
+            ?
+                <Fragment>
+                    <NewUserButtons
+                        currentIsInstitutionMember={this.currentIsInstitutionMember()}
+                        requestMembership={this.requestMembership}
+                        isAdmin={this.props.isAdmin}
+                        isActiveUser={this.isActiveUser}
+                        isInstitutionMember={this.isInstitutionMember}
+                        findUserByEmail={this.findUserByEmail}
+                        updateUserInstitutionRole={this.updateUserInstitutionRole}
+                        userId={this.props.userId}
+                    />
+                    {this.props.userId > 0 &&
+                        this.state.institutionUserList
+                            .filter(iu => this.props.isAdmin || iu.institutionRole !== "pending")
+                            .sort((a, b) => sortAlphabetically(a.email, b.email))
+                            .sort((a, b) => sortAlphabetically(a.institutionRole, b.institutionRole))
+                            .map((iu, uid) =>
+                                <User
+                                    key={uid}
+                                    documentRoot={this.props.documentRoot}
+                                    user={iu}
+                                    isAdmin={this.props.isAdmin}
+                                    updateUserInstitutionRole={this.updateUserInstitutionRole}
+                                />
+                            )
+                    }
+                </Fragment>
+            : null;
     }
 }
 
