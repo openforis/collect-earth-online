@@ -5,7 +5,8 @@ import static org.openforis.ceo.postgres.PostgresInstitutions.getInstitutionById
 import static org.openforis.ceo.utils.JsonUtils.parseJson;
 import static org.openforis.ceo.utils.Mail.isEmail;
 import static org.openforis.ceo.utils.Mail.sendMail;
-import static org.openforis.ceo.utils.Mail.sendMailingList;
+import static org.openforis.ceo.utils.Mail.sendToMailingList;
+import static org.openforis.ceo.utils.Mail.CONTENT_TYPE_HTML;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
@@ -20,7 +21,6 @@ import java.util.Map;
 import java.util.UUID;
 import org.openforis.ceo.db_api.Users;
 import org.openforis.ceo.env.CeoConfig;
-import org.openforis.ceo.utils.Mail;
 import spark.Request;
 import spark.Response;
 
@@ -490,7 +490,7 @@ public class PostgresUsers implements Users {
                     while (rs.next()) {
                        emails.add(rs.getString("email"));
                     }
-                    Mail.sendMailingList(SMTP_USER, emails, SMTP_SERVER, SMTP_PORT, SMTP_PASSWORD, inputSubject, inputBody, Mail.CONTENT_TYPE_HTML, Integer.parseInt(SMTP_RECIPIENT_LIMIT));
+                    sendToMailingList(SMTP_USER, emails, SMTP_SERVER, SMTP_PORT, SMTP_PASSWORD, inputSubject, inputBody, CONTENT_TYPE_HTML, Integer.parseInt(SMTP_RECIPIENT_LIMIT));
                     req.session().attribute("flash_message", "Your message has been sent to the mailing list.");
                 }
             } catch (SQLException e) {

@@ -111,15 +111,17 @@ public class Mail {
         }
     }
 
-    public static void sendMailingList(String from, List<String> bcc, String smtpServer, String smtpPort, String smtpPassword, String subject, String body, String contentType, int chunkSize) {
-        final AtomicInteger counter = new AtomicInteger();
+    public static void sendToMailingList(String from, List<String> bcc, String smtpServer, String smtpPort,
+                                         String smtpPassword, String subject, String body, String contentType, int chunkSize) {
+        final var counter = new AtomicInteger();
         if (bcc.size() > 0) {
-            final Collection<List<String>> chunkedBcc = bcc.stream()
-                    .collect(Collectors.groupingBy(it -> counter.getAndIncrement() / chunkSize))
-                    .values();
-            chunkedBcc.forEach(chunkBcc -> {
-                sendMail(from, null, null, chunkBcc, smtpServer, smtpPort, smtpPassword, subject, body, contentType);
-            });
+            bcc.stream()
+                .collect(Collectors.groupingBy(it -> counter.getAndIncrement() / chunkSize))
+                .values()
+                .forEach(chunkBcc -> {
+                    sendMail(from, null, null, chunkBcc, smtpServer, smtpPort, smtpPassword, subject, body, contentType);
+                }
+            );
         }
     }
 

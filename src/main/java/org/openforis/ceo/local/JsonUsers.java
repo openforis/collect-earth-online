@@ -12,6 +12,8 @@ import static org.openforis.ceo.utils.JsonUtils.toStream;
 import static org.openforis.ceo.utils.JsonUtils.writeJsonFile;
 import static org.openforis.ceo.utils.Mail.isEmail;
 import static org.openforis.ceo.utils.Mail.sendMail;
+import static org.openforis.ceo.utils.Mail.sendToMailingList;
+import static org.openforis.ceo.utils.Mail.CONTENT_TYPE_HTML;
 import static org.openforis.ceo.utils.ProjectUtils.getOrZero;
 import static org.openforis.ceo.utils.ProjectUtils.getOrEmptyString;
 import static org.openforis.ceo.utils.ProjectUtils.collectTimeIgnoreString;
@@ -29,7 +31,6 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 import org.openforis.ceo.db_api.Users;
 import org.openforis.ceo.env.CeoConfig;
-import org.openforis.ceo.utils.Mail;
 import spark.Request;
 import spark.Response;
 
@@ -584,7 +585,7 @@ public class JsonUsers implements Users {
                         .filter(user -> user.get("mailing-list").getAsBoolean())
                         .map(user -> user.get("email").getAsString())
                         .collect(Collectors.toList());
-                Mail.sendMailingList(SMTP_USER, emails, SMTP_SERVER, SMTP_PORT, SMTP_PASSWORD, inputSubject, inputBody, Mail.CONTENT_TYPE_HTML, Integer.parseInt(SMTP_RECIPIENT_LIMIT));
+                sendToMailingList(SMTP_USER, emails, SMTP_SERVER, SMTP_PORT, SMTP_PASSWORD, inputSubject, inputBody, CONTENT_TYPE_HTML, Integer.parseInt(SMTP_RECIPIENT_LIMIT));
                 req.session().attribute("flash_message", "Your message has been sent to the mailing list.");
             } catch (Exception e) {
                 System.out.println(e.getMessage());
