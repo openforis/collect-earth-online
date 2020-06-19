@@ -198,7 +198,6 @@ public class Server implements SparkApplication {
         post("/register",                             (req, res) -> Views.register(freemarker).handle(users.register(req, res), res));
         post("/password",                             (req, res) -> Views.password(freemarker).handle(users.getPasswordResetKey(req, res), res));
         post("/password-reset",                       (req, res) -> Views.passwordReset(freemarker).handle(users.resetPassword(req, res), res));
-        post("/mailing-list",                         (req, res) -> Views.mailingList(freemarker).handle(users.sendMailingList(req, res), res));
 
         // Routing Table: Projects API
         get("/dump-project-aggregate-data",           projects::dumpProjectAggregateData);
@@ -231,6 +230,7 @@ public class Server implements SparkApplication {
         get("/update-project-user-stats",             users::updateProjectUserStats);
         post("/update-user-institution-role",         users::updateInstitutionRole);
         post("/request-institution-membership",       users::requestInstitutionMembership);
+        post("/send-mailing-list",                    users::submitEmailForMailingList);
 
         // Routing Table: Institutions API
         get("/get-all-institutions",                  institutions::getAllInstitutions);

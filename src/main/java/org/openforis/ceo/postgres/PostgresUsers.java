@@ -491,11 +491,13 @@ public class PostgresUsers implements Users {
                        emails.add(rs.getString("email"));
                     }
                     sendToMailingList(SMTP_USER, emails, SMTP_SERVER, SMTP_PORT, SMTP_PASSWORD, inputSubject, inputBody, CONTENT_TYPE_HTML, Integer.parseInt(SMTP_RECIPIENT_LIMIT));
-                    req.session().attribute("flash_message", "Your message has been sent to the mailing list.");
+                } catch (Exception e) {
+                    System.out.println(e.getMessage());
+                    throw new RuntimeException("There was an issue sending to the mailing list. Please check the server logs.");
                 }
             } catch (SQLException e) {
                 System.out.println(e.getMessage());
-                req.session().attribute("flash_message", "There was an issue sending to the mailing list. Please check the server logs.");
+                throw new RuntimeException("There was an issue sending to the mailing list. Please check the server logs.");
             }
         }
         return "";

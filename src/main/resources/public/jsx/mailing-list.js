@@ -15,13 +15,20 @@ class MailingList extends React.Component {
     submitEmail = () => {
         if (confirm("Are you sure you want to send to this mailing list?")) {
             const { subject, body } = this.state;
-            fetch(this.props.documentRoot + "/mailing-list", {
+            fetch(this.props.documentRoot + "/send-mailing-list", {
                 method: "POST",
                 body: JSON.stringify({
                     subject,
                     body,
                 }),
-            });
+            })
+                .then(response => response.ok ? response.json() : Promise.reject(response))
+                .then(() => {
+                    alert("Your message has been sent to the mailing list.\n\n");
+                })
+                .catch(() => {
+                    alert("There was an issue sending to the mailing list.\n\n");
+                });
         }
     };
 
