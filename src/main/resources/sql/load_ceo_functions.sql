@@ -1977,8 +1977,8 @@ CREATE OR REPLACE FUNCTION dump_project_plot_data(_project_uid integer)
 
     WITH all_rows AS (
         SELECT pl.ext_id as pl_ext_id,
-        (CASE WHEN imagery_attributes->>'imagerySecureWatchDate' = '' THEN 'Latest Mosaic'
-              WHEN imagery_attributes-> 'imagerySecureWatchDate' IS NULL THEN NULL
+        (CASE WHEN imagery_attributes->>'imagerySecureWatchDate' = ''
+                OR imagery_attributes->'imagerySecureWatchDate' IS NULL THEN NULL
               ELSE imagery_attributes->>'imagerySecureWatchDate'
          END) as imagerySecureWatchDate,
         *

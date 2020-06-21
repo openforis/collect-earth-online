@@ -104,10 +104,7 @@ class Collection extends React.Component {
             clearInterval(this.state.storedInterval);
             this.setState({ storedInterval: setInterval(() => this.resetPlotLock, 2.3 * 60 * 1000) });
             if (this.state.currentImagery.sourceConfig.type === "PlanetDaily") this.updatePlanetDailyLayer();
-            if (this.state.currentImagery.sourceConfig.type === "SecureWatch") {
-                this.updateSecureWatchLayer();
-                this.setSecureWatchAvailableDatesOptionDefault();
-            }
+            if (this.state.currentImagery.sourceConfig.type === "SecureWatch") this.getSecureWatchAvailableDates();
         }
 
         // Conditions required for samples to be shown
@@ -249,6 +246,16 @@ class Collection extends React.Component {
                             cloudCover: feature.properties.cloudCover,
                             featureId: feature.properties.featureId,
                         })),
+                }, () => {
+                    if (this.state.imagerySecureWatchAvailableDates.length === 0) {
+                        this.updateSecureWatchSingleLayer(null, "", "");
+                    } else {
+                        this.updateSecureWatchSingleLayer(
+                            this.state.imagerySecureWatchAvailableDates[0].featureId,
+                            this.state.imagerySecureWatchAvailableDates[0].acquisitionDate,
+                            this.state.imagerySecureWatchAvailableDates[0].cloudCover,
+                        );
+                    }
                 });
             })
             .catch(response => {
@@ -258,10 +265,16 @@ class Collection extends React.Component {
     };
 
     initializeProjectMap = () => {
-        const mapConfig = mercator.createMap("image-analysis-pane", [0.0, 0.0], 1, this.state.imageryList, this.props.documentRoot, this.state.currentProject.boundary);
+        const mapConfig = mercator.createMap("image-analysis-pane",
+                                             [0.0, 0.0],
+                                             1,
+                                             this.state.imageryList,
+                                             this.props.documentRoot,
+                                             this.state.currentProject.boundary);
         mercator.addVectorLayer(mapConfig,
                                 "currentAOI",
-                                mercator.geometryToVectorSource(mercator.parseGeoJson(this.state.currentProject.boundary, true)),
+                                mercator.geometryToVectorSource(mercator.parseGeoJson(this.state.currentProject.boundary,
+                                                                                      true)),
                                 ceoMapStyles.yellowPolygon);
         mercator.zoomMapToLayer(mapConfig, "currentAOI");
         this.setState({ mapConfig: mapConfig });
@@ -336,11 +349,6 @@ class Collection extends React.Component {
                 imageryAttribution: currentImagery.attribution + " | " + startDate + " to " + endDate,
             });
         }
-    };
-
-    setSecureWatchAvailableDatesOptionDefault = () => {
-        const dateSelectEl = document.getElementById("securewatch-option-select");
-        dateSelectEl.value = "DEFAULT";
     };
 
     setImageryMonthPlanet = (newImageryMonthPlanet) => {
@@ -437,8 +445,7 @@ class Collection extends React.Component {
             if (this.state.currentImagery.sourceConfig.type === "Planet") {
                 this.updatePlanetLayer();
             } else if (this.state.currentImagery.sourceConfig.type === "SecureWatch") {
-                this.setState({ imageryAttribution: this.state.currentImagery.attribution + " | Latest Image Mosaic" });
-                this.updateSecureWatchLayer();
+                this.getSecureWatchAvailableDates();
             } else if (this.state.currentImagery.sourceConfig.type === "Sentinel1"
                 || this.state.currentImagery.sourceConfig.type === "Sentinel2") {
                 const month = parseInt(this.state.currentImagery.sourceConfig.month) || 1;
@@ -544,30 +551,26 @@ class Collection extends React.Component {
                                    this);
     };
 
-    updateSecureWatchLayer = () => {
-        // inserting cql filter to empty out the previously set cql filter
+    updateSecureWatchSingleLayer = (featureId, imagerySecureWatchDate, imagerySecureWatchCloudCover) => {
         mercator.updateLayerWmsParams(this.state.mapConfig, this.state.currentImagery.id, {
-            COVERAGE_CQL_FILTER: "",
-        });
-        // get all available dates for the plot
-        this.getSecureWatchAvailableDates();
-        this.setState({
-            imagerySecureWatchDate: "",
-            imagerySecureWatchCloudCover: "",
-            imageryAttribution: this.state.currentImagery.attribution + " | Latest Image Mosaic",
-        });
-    };
-
-    updateSecureWatchSingleLayer = (eventTarget) => {
-        mercator.updateLayerWmsParams(this.state.mapConfig, this.state.currentImagery.id, {
-            COVERAGE_CQL_FILTER: eventTarget.value === "DEFAULT" ? "" : "featureId='" + eventTarget.value + "'",
+            COVERAGE_CQL_FILTER: "featureId='" + featureId + "'",
         });
         this.setState({
-            imagerySecureWatchDate: eventTarget.options[eventTarget.selectedIndex].getAttribute("date"),
-            imagerySecureWatchCloudCover: eventTarget.options[eventTarget.options.selectedIndex].getAttribute("cloud"),
-            imageryAttribution: this.state.currentImagery.attribution + " | " + eventTarget.options[eventTarget.options.selectedIndex].text,
+            imagerySecureWatchDate: imagerySecureWatchDate,
+            imagerySecureWatchCloudCover: imagerySecureWatchCloudCover,
+            imageryAttribution: featureId
+                ? this.state.currentImagery.attribution + " | "
+                    + imagerySecureWatchDate + " (" + (imagerySecureWatchCloudCover * 100).toFixed(2) + "% cloudy)"
+                : "No available layers",
         });
     }
+
+    onChangeSecureWatchSingleLayer = (eventTarget) =>
+        this.updateSecureWatchSingleLayer(
+            eventTarget.value,
+            eventTarget.options[eventTarget.selectedIndex].getAttribute("date"),
+            eventTarget.options[eventTarget.options.selectedIndex].getAttribute("cloud")
+        );
 
     getQueryString = (params) => "?" + Object.keys(params)
         .map(k => encodeURIComponent(k) + "=" + encodeURIComponent(params[k]))
@@ -1365,7 +1368,7 @@ class Collection extends React.Component {
                         setImageryMonthPlanet={this.setImageryMonthPlanet}
                         setImageryDatePlanetDaily={this.setImageryDatePlanetDaily}
                         imagerySecureWatchAvailableDates={this.state.imagerySecureWatchAvailableDates}
-                        updateSecureWatchSingleLayer={this.updateSecureWatchSingleLayer}
+                        onChangeSecureWatchSingleLayer={this.onChangeSecureWatchSingleLayer}
                         setStackingProfileDG={this.setStackingProfileDG}
                         loadingImages={this.state.imageryList.length === 0}
                     />
@@ -1763,19 +1766,26 @@ class ImageryOptions extends React.Component {
         <div className="SecureWatchMenu my-2 mb-3">
             <div className="form-control form-control-sm">
                 <label>Available Layers</label>
-                <select
-                    className="form-control form-control-sm"
-                    onChange={e => this.props.updateSecureWatchSingleLayer(e.target)}
-                    defaultValue={"DEFAULT"}
-                    id="securewatch-option-select"
-                >
-                    <option value="DEFAULT">Latest Image Mosaic</option>
-                    {this.props.imagerySecureWatchAvailableDates.map((obj, uid) =>
-                        <option key={uid} value={obj.featureId} date={obj.acquisitionDate} cloud={obj.cloudCover}>
-                            {obj.acquisitionDate + " (" + (obj.cloudCover * 100).toFixed(2) + "% cloudy)"}
-                        </option>
-                    )}
-                </select>
+                {this.props.imagerySecureWatchAvailableDates.length > 0 ?
+                    <select
+                        className="form-control form-control-sm"
+                        onChange={e => this.props.onChangeSecureWatchSingleLayer(e.target)}
+                        id="securewatch-option-select"
+                    >
+                        {this.props.imagerySecureWatchAvailableDates.map((obj, uid) =>
+                            <option key={uid} value={obj.featureId} date={obj.acquisitionDate} cloud={obj.cloudCover}>
+                                {obj.acquisitionDate + " (" + (obj.cloudCover * 100).toFixed(2) + "% cloudy)"}
+                            </option>
+                        )}
+                    </select> :
+                    <select
+                        className="form-control form-control-sm"
+                        id="securewatch-option-select"
+                        disabled
+                    >
+                        <option>No available layers</option>
+                    </select>
+                }
             </div>
         </div>
     );
