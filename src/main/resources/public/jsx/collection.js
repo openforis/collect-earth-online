@@ -569,8 +569,8 @@ class Collection extends React.Component {
         this.updateSecureWatchSingleLayer(
             eventTarget.value,
             eventTarget.options[eventTarget.selectedIndex].getAttribute("date"),
-            eventTarget.options[eventTarget.options.selectedIndex].getAttribute("cloud"));
-
+            eventTarget.options[eventTarget.options.selectedIndex].getAttribute("cloud")
+        );
 
     getQueryString = (params) => "?" + Object.keys(params)
         .map(k => encodeURIComponent(k) + "=" + encodeURIComponent(params[k]))
