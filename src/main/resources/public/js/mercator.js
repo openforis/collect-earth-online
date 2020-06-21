@@ -81,9 +81,14 @@ mercator.getViewExtent = function (mapConfig) {
     return transformExtent(extent, "EPSG:3857", "EPSG:4326");
 };
 
+// [Pure] Returns a polygon from the extent.
+mercator.polygonFromExtent = function (extent) {
+    return fromExtent(extent);
+};
+
 // [Pure] Returns the polygon from the current map view
 mercator.getViewPolygon = function (mapConfig) {
-    return fromExtent(mercator.getViewExtent(mapConfig));
+    return mercator.polygonFromExtent(mercator.getViewExtent(mapConfig));
 };
 
 // [Pure] Returns the minimum distance in meters from the view center
@@ -911,10 +916,10 @@ mercator.getPlotPolygon = function (center, size, shape) {
     if (shape === "circle") {
         return new Circle([centerX, centerY], radius);
     } else {
-        return fromExtent([centerX - radius,
-                           centerY - radius,
-                           centerX + radius,
-                           centerY + radius]);
+        return mercator.polygonFromExtent([centerX - radius,
+                                           centerY - radius,
+                                           centerX + radius,
+                                           centerY + radius]);
     }
 };
 

@@ -1331,7 +1331,8 @@ class Collection extends React.Component {
                         KMLFeatures={this.state.KMLFeatures}
                         zoomMapToPlot={() => mercator.zoomMapToLayer(this.state.mapConfig, "currentPlot")}
                         projectOptions={this.state.currentProject.projectOptions}
-                        mapConfig={this.state.mapConfig}
+                        currentPlot={this.state.currentPlot}
+                        currentProject={this.state.currentProject}
                     />
                     {this.state.currentPlot
                         ? <PlotInformation extraPlotInfo={this.state.currentPlot.extraPlotInfo}/>
@@ -1606,7 +1607,10 @@ class PlotNavigation extends React.Component {
     );
 
     loadGEEScript = () => {
-        const geometry = mercator.getViewPolygon(this.props.mapConfig);
+        const plotExtent = mercator.getPlotExtent(this.props.currentPlot.center,
+                                                  this.props.currentProject.plotSize,
+                                                  this.props.currentProject.plotShape);
+        const geometry = mercator.polygonFromExtent(plotExtent);
         const geoJson = "{\"type\": \"Polygon\", \"coordinates\":" + JSON.stringify(geometry.getCoordinates()) + "}";
         if (this.state.auxWindow) this.state.auxWindow.close();
         this.setState({ auxWindow: window.open("https://billyz313.users.earthengine.app/view/ceoplotancillary#geoJson=" + geoJson, "_ceo-plot-ancillary") });
