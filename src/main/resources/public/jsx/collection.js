@@ -104,10 +104,7 @@ class Collection extends React.Component {
             clearInterval(this.state.storedInterval);
             this.setState({ storedInterval: setInterval(() => this.resetPlotLock, 2.3 * 60 * 1000) });
             if (this.state.currentImagery.sourceConfig.type === "PlanetDaily") this.updatePlanetDailyLayer();
-            if (this.state.currentImagery.sourceConfig.type === "SecureWatch") {
-                this.resetSecureWatchLayer();
-                this.getSecureWatchAvailableDates();
-            }
+            if (this.state.currentImagery.sourceConfig.type === "SecureWatch") this.getSecureWatchAvailableDates();
         }
 
         // Conditions required for samples to be shown
@@ -250,13 +247,15 @@ class Collection extends React.Component {
                             featureId: feature.properties.featureId,
                         })),
                 }, () => {
-                    this.state.imagerySecureWatchAvailableDates.length === 0
-                        ? this.sendNullSecureWatchLayer()
-                        : this.updateSecureWatchSingleLayer(
+                    if (this.state.imagerySecureWatchAvailableDates.length === 0) {
+                        this.updateSecureWatchSingleLayer(null, "", "");
+                    } else {
+                        this.updateSecureWatchSingleLayer(
                             this.state.imagerySecureWatchAvailableDates[0].featureId,
                             this.state.imagerySecureWatchAvailableDates[0].acquisitionDate,
                             this.state.imagerySecureWatchAvailableDates[0].cloudCover,
                         );
+                    }
                 });
             })
             .catch(response => {
@@ -446,7 +445,6 @@ class Collection extends React.Component {
             if (this.state.currentImagery.sourceConfig.type === "Planet") {
                 this.updatePlanetLayer();
             } else if (this.state.currentImagery.sourceConfig.type === "SecureWatch") {
-                this.resetSecureWatchLayer();
                 this.getSecureWatchAvailableDates();
             } else if (this.state.currentImagery.sourceConfig.type === "Sentinel1"
                 || this.state.currentImagery.sourceConfig.type === "Sentinel2") {
@@ -553,19 +551,6 @@ class Collection extends React.Component {
                                    this);
     };
 
-    resetSecureWatchLayer = () => {
-        this.setState({
-            imagerySecureWatchDate: "",
-            imagerySecureWatchCloudCover: "",
-            imageryAttribution: this.state.currentImagery.attribution,
-        });
-    };
-
-    sendNullSecureWatchLayer = () =>
-        mercator.updateLayerWmsParams(this.state.mapConfig, this.state.currentImagery.id, {
-            COVERAGE_CQL_FILTER: "featureId='null'",
-        });
-
     updateSecureWatchSingleLayer = (featureId, imagerySecureWatchDate, imagerySecureWatchCloudCover) => {
         mercator.updateLayerWmsParams(this.state.mapConfig, this.state.currentImagery.id, {
             COVERAGE_CQL_FILTER: "featureId='" + featureId + "'",
@@ -573,8 +558,10 @@ class Collection extends React.Component {
         this.setState({
             imagerySecureWatchDate: imagerySecureWatchDate,
             imagerySecureWatchCloudCover: imagerySecureWatchCloudCover,
-            imageryAttribution: this.state.currentImagery.attribution + " | "
-                + imagerySecureWatchDate + " (" + (imagerySecureWatchCloudCover * 100).toFixed(2) + "% cloudy)",
+            imageryAttribution: featureId
+                ? this.state.currentImagery.attribution + " | "
+                    + imagerySecureWatchDate + " (" + (imagerySecureWatchCloudCover * 100).toFixed(2) + "% cloudy)"
+                : "No available layers",
         });
     }
 
@@ -582,8 +569,7 @@ class Collection extends React.Component {
         this.updateSecureWatchSingleLayer(
             eventTarget.value,
             eventTarget.options[eventTarget.selectedIndex].getAttribute("date"),
-            eventTarget.options[eventTarget.options.selectedIndex].getAttribute("cloud"),
-        );
+            eventTarget.options[eventTarget.options.selectedIndex].getAttribute("cloud"));
 
 
     getQueryString = (params) => "?" + Object.keys(params)
@@ -1757,7 +1743,7 @@ class ImageryOptions extends React.Component {
                         id="securewatch-option-select"
                         disabled
                     >
-                        <option>No Layer Available</option>
+                        <option>No available layers</option>
                     </select>
                 }
             </div>
