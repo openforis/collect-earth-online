@@ -504,7 +504,30 @@ public class PostgresUsers implements Users {
     }
 
     public String unsubscribeFromMailingList(Request req, Response res) {
-        // TODO Auto-generated method stub
+        var jsonInputs = parseJson(req.body()).getAsJsonObject();
+        var inputEmail = jsonInputs.get("email").getAsString();
+
+        try (var conn = connect();
+             var pstmt_user = conn.prepareStatement("SELECT * FROM get_user(?)")) {
+
+            pstmt_user.setString(1, inputEmail);
+            var rs_user = pstmt_user.executeQuery();
+            if (rs_user.next()) {
+                var userId = rs_user.getInt("user_id");
+
+                try (var pstmt_mailing_list = conn.prepareStatement("SELECT * FROM set_mailing_list(?,?)")) {
+                    pstmt_mailing_list.setInt(1, userId);
+                    pstmt_mailing_list.setBoolean(2, false);
+                    pstmt_mailing_list.execute();
+                } catch (Exception e) {
+                    System.out.println(e.getMessage());
+                    throw new RuntimeException(e);
+                }
+            }
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
+            throw new RuntimeException(e);
+        }
         return "";
     }
 
