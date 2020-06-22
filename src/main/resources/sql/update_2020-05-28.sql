@@ -3,16 +3,16 @@ ALTER TABLE users ADD on_mailing_list boolean DEFAULT NULL;
 CREATE OR REPLACE FUNCTION set_mailing_list(_user_uid integer, _on_mailing_list boolean)
  RETURNS void AS $$
 
-    UPDATE users SET on_mailing_list = _on_mailing_list WHERE user_uid = _user_rid
+    UPDATE users SET on_mailing_list = _on_mailing_list WHERE user_uid = _user_uid
 
 $$ LANGUAGE SQL;
 
-CREATE OR REPLACE FUNCTION get_user_details(_user_rid integer)
+CREATE OR REPLACE FUNCTION get_user_details(_user_uid integer)
  RETURNS TABLE (
     mailing_list    boolean
  ) AS $$
 
-    SELECT _on_mailing_list FROM users WHERE user_uid = _user_rid
+    SELECT on_mailing_list FROM users WHERE user_uid = _user_uid
 
 $$ LANGUAGE SQL;
 
@@ -30,7 +30,7 @@ CREATE OR REPLACE FUNCTION add_user(_email text, _password text, _on_mailing_lis
  RETURNS integer AS $$
 
     INSERT INTO users (email, password, on_mailing_list)
-    VALUES (_email, crypt(_password, gen_salt('bf'), _on_mailing_list))
+    VALUES (_email, crypt(_password, gen_salt('bf')), _on_mailing_list)
     RETURNING user_uid
 
 $$ LANGUAGE SQL;
