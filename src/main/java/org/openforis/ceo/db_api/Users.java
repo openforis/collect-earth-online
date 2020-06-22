@@ -21,5 +21,6 @@ public interface Users {
     String updateInstitutionRole(Request req, Response res);
     String requestInstitutionMembership(Request req, Response res);
     String submitEmailForMailingList(Request req, Response res);
+    String unsubscribeFromMailingList(Request req, Response res);
 
 }

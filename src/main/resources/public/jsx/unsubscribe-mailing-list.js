@@ -4,11 +4,64 @@ import ReactDOM from "react-dom";
 class UnsubscribeMailingList extends React.Component {
     constructor(props) {
         super(props);
+        this.state = {
+            email: "",
+        };
     }
+
+    onChangeEmail = (event) => {
+        this.setState({ email: event.target.value });
+    };
+
+    submitUnsubscribe = () => {
+        if (confirm("Are you sure you want to unsubscribe from mailing list?")) {
+            const { email } = this.state;
+            alert(email);
+            fetch(this.props.documentRoot + "/unsubscribe-mailing-list", {
+                method: "POST",
+                body: JSON.stringify({
+                    email,
+                }),
+            })
+                .then(response => response.ok ? response.json() : Promise.reject(response))
+                .then(() => {
+                    alert("XXX.\n\n");
+                })
+                .catch(() => {
+                    alert("XXX.\n\n");
+                });
+        }
+    };
 
     render() {
         return (
-            <>TEST</>
+            <div className="container absolute-center">
+                <div className="row justify-content-center">
+                    <div className="col-lg-4 col-md-6 col-sm-10 pb-3" id="login">
+                        <form action="${root}/login" method="post">
+                            <h2 className="header">Unsubscribe from Mailing List</h2>
+                            <div className="form-group">
+                                <label htmlFor="email">Email address</label>
+                                <input
+                                    id="email"
+                                    name="email"
+                                    placeholder="Enter email"
+                                    type="email"
+                                    className="form-control"
+                                    onChange={this.onChangeEmail}
+                                />
+                            </div>
+                            <button
+                                type="button"
+                                className="btn bg-lightgreen float-right mb-2"
+                                onClick={this.submitUnsubscribe}
+                            >
+                                Unsubscribe
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
         );
     }
 

@@ -594,4 +594,9 @@ public class JsonUsers implements Users {
         return "";
     }
 
+    public String unsubscribeFromMailingList(Request req, Response res) {
+        // TODO Auto-generated method stub
+        return "";
+    }
+
 }

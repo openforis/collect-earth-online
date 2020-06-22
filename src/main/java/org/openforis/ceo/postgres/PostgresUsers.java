@@ -503,4 +503,9 @@ public class PostgresUsers implements Users {
         return "";
     }
 
+    public String unsubscribeFromMailingList(Request req, Response res) {
+        // TODO Auto-generated method stub
+        return "";
+    }
+
 }

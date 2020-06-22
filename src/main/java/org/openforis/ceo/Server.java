@@ -231,6 +231,7 @@ public class Server implements SparkApplication {
         post("/update-user-institution-role",         users::updateInstitutionRole);
         post("/request-institution-membership",       users::requestInstitutionMembership);
         post("/send-mailing-list",                    users::submitEmailForMailingList);
+        post("/unsubscribe-mailing-list",             users::unsubscribeFromMailingList);
 
         // Routing Table: Institutions API
         get("/get-all-institutions",                  institutions::getAllInstitutions);
