@@ -24,7 +24,6 @@ public class PostgresImagery implements Imagery {
             cleanSource.add("type", sourceConfig.get("type"));
             cleanSource.add("startDate", sourceConfig.get("startDate"));
             cleanSource.add("endDate", sourceConfig.get("endDate"));
-            cleanSource.add("featureProfile", sourceConfig.get("featureProfile"));
             return cleanSource;
         } else if (sourceConfig.get("type").getAsString().equals("Planet")) {
             var cleanSource = new JsonObject();
@@ -73,7 +72,7 @@ public class PostgresImagery implements Imagery {
             pstmt.setInt(2, userId);
 
             try (var rs = pstmt.executeQuery()) {
-                return buildImageryArray(rs, isInstAdminQuery(userId, institutionId)).toString();
+                return buildImageryArray(rs, !isInstAdminQuery(userId, institutionId)).toString();
             }
 
         } catch (SQLException e) {
