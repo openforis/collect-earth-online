@@ -16,19 +16,18 @@ class UnsubscribeMailingList extends React.Component {
     submitUnsubscribe = () => {
         if (confirm("Are you sure you want to unsubscribe from mailing list?")) {
             const { email } = this.state;
-            alert(email);
             fetch(this.props.documentRoot + "/unsubscribe-mailing-list", {
                 method: "POST",
                 body: JSON.stringify({
                     email,
                 }),
             })
-                .then(response => response.ok ? response.json() : Promise.reject(response))
                 .then(() => {
-                    alert("XXX.\n\n");
+                    this.setState({ email: "" });
+                    alert("Your email has been subscribed from mailing list..\n\n");
                 })
                 .catch(() => {
-                    alert("XXX.\n\n");
+                    alert("There was an issue subscribing from mailing list..\n\n");
                 });
         }
     };
@@ -47,6 +46,7 @@ class UnsubscribeMailingList extends React.Component {
                                     name="email"
                                     placeholder="Enter email"
                                     type="email"
+                                    value={this.state.email}
                                     className="form-control"
                                     onChange={this.onChangeEmail}
                                 />
