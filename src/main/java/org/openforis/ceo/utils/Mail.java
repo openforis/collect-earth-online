@@ -1,5 +1,6 @@
 package org.openforis.ceo.utils;
 
+import java.nio.file.Paths;
 import java.util.Collection;
 import java.util.List;
 import java.util.Properties;
@@ -112,7 +113,8 @@ public class Mail {
                                          String smtpPassword, String subject, String body, String contentType, int chunkSize) {
         final var counter = new AtomicInteger();
         if (bcc.size() > 0) {
-            var newBody = body + "<br /><br />--<p><a href=\"" + BASE_URL + "/unsubscribe-mailing-list\">Unsubscribe</a></p>";
+            var unsubscribeUrl = Paths.get(BASE_URL, "unsubscribe-mailing-list");
+            var newBody = body + "<br /><br />--<p><a href=\"" + unsubscribeUrl + "\">Unsubscribe</a></p>";
             bcc.stream()
                 .collect(Collectors.groupingBy(it -> counter.getAndIncrement() / chunkSize))
                 .values()
