@@ -488,7 +488,8 @@ class Collection extends React.Component {
                                         ? mercator.parseGeoJson(currentPlot.geom, true)
                                         : mercator.getPlotPolygon(currentPlot.center,
                                                                   currentProject.plotSize,
-                                                                  currentProject.plotShape)
+                                                                  currentProject.plotShape,
+                                                                  true)
                                 ),
                                 ceoMapStyles.yellowPolygon);
         mercator.removeLayerById(mapConfig, "currentSamples");
@@ -746,7 +747,8 @@ class Collection extends React.Component {
                                         ? mercator.parseGeoJson(currentPlot.geom, true)
                                         : mercator.getPlotPolygon(currentPlot.center,
                                                                   currentProject.plotSize,
-                                                                  currentProject.plotShape)
+                                                                  currentProject.plotShape,
+                                                                  true)
                                 ),
                                 ceoMapStyles.yellowPolygon);
 
@@ -1607,13 +1609,22 @@ class PlotNavigation extends React.Component {
     );
 
     loadGEEScript = () => {
-        const plotExtent = mercator.getPlotExtent(this.props.currentPlot.center,
-                                                  this.props.currentProject.plotSize,
-                                                  this.props.currentProject.plotShape);
-        const geometry = mercator.polygonFromExtent(plotExtent);
-        const geoJson = "{\"type\": \"Polygon\", \"coordinates\":" + JSON.stringify(geometry.getCoordinates()) + "}";
+        const geometry = this.props.currentPlot.geom
+            ? mercator.parseGeoJson(this.props.currentPlot.geom, false)
+            : mercator.getPlotPolygon(this.props.currentPlot.center,
+                                      this.props.currentProject.plotSize,
+                                      this.props.currentProject.plotShape,
+                                      false);
+        const urlParams = this.props.currentPlot.geom
+            ? "geoJson={\"type\": \"Polygon\", \"coordinates\":" + JSON.stringify(geometry.getCoordinates()) + "}"
+            : this.props.currentProject.plotShape === "circle"
+                ? "center=" + geometry.getCenter() + ";radius=" + this.props.currentProject.plotSize / 2
+                : "geoJson={\"type\": \"Polygon\", \"coordinates\":" + JSON.stringify(geometry.getCoordinates()) + "}";
         if (this.state.auxWindow) this.state.auxWindow.close();
-        this.setState({ auxWindow: window.open("https://billyz313.users.earthengine.app/view/ceoplotancillary#geoJson=" + geoJson, "_ceo-plot-ancillary") });
+        this.setState({
+            auxWindow: window.open("https://billyz313.users.earthengine.app/view/ceoplotancillary#" + urlParams,
+                                   "_ceo-plot-ancillary"),
+        });
     };
 
     geeButton = () => (

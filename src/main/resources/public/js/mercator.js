@@ -81,14 +81,9 @@ mercator.getViewExtent = function (mapConfig) {
     return transformExtent(extent, "EPSG:3857", "EPSG:4326");
 };
 
-// [Pure] Returns a polygon from the extent.
-mercator.polygonFromExtent = function (extent) {
-    return fromExtent(extent);
-};
-
 // [Pure] Returns the polygon from the current map view
 mercator.getViewPolygon = function (mapConfig) {
-    return mercator.polygonFromExtent(mercator.getViewExtent(mapConfig));
+    return fromExtent(mercator.getViewExtent(mapConfig));
 };
 
 // [Pure] Returns the minimum distance in meters from the view center
@@ -908,26 +903,19 @@ mercator.geometryToVectorSource = function (geometry) {
 
 // [Pure] Returns a polygon geometry matching the passed in
 // parameters.
-mercator.getPlotPolygon = function (center, size, shape) {
+mercator.getPlotPolygon = function (center, size, shape, reprojectToMap) {
     const coords = mercator.parseGeoJson(center, true).getCoordinates();
     const centerX = coords[0];
     const centerY = coords[1];
     const radius = size / 2;
-    if (shape === "circle") {
-        return new Circle([centerX, centerY], radius);
-    } else {
-        return mercator.polygonFromExtent([centerX - radius,
-                                           centerY - radius,
-                                           centerX + radius,
-                                           centerY + radius]);
-    }
-};
-
-// [Pure] Returns a bounding box for the plot in Web Mercator as [llx,
-// lly, urx, ury].
-mercator.getPlotExtent = function (center, size, shape) {
-    const geometry = mercator.getPlotPolygon(center, size, shape);
-    return transformExtent(geometry.getExtent(), "EPSG:3857", "EPSG:4326");
+    return shape === "circle"
+        ? reprojectToMap
+            ? new Circle([centerX, centerY], radius)
+            : new Circle([centerX, centerY], radius).transform("EPSG:3857", "EPSG:4326")
+        : reprojectToMap
+            ? fromExtent([centerX - radius, centerY - radius, centerX + radius, centerY + radius])
+            : fromExtent([centerX - radius, centerY - radius, centerX + radius, centerY + radius])
+                .transform("EPSG:3857", "EPSG:4326");
 };
 
 // [Pure] Returns a new vector source containing the passed in plots.
