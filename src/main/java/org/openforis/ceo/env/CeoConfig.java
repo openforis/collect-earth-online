@@ -10,5 +10,6 @@ public class CeoConfig {
     public static String smtpPort = "";
     public static String smtpPassword = "";
     public static String smtpRecipientLimit = "";
+    public static String mailingListInterval = "";
 
 }

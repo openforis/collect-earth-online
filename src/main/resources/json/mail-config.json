@@ -3,4 +3,5 @@
  "smtpServer": "smtp.gmail.com",
  "smtpPort": "587",
  "smtpPassword": "",
- "smtpRecipientLimit": "499"}
+ "smtpRecipientLimit": "499",
+ "mailingListInterval": "600"}

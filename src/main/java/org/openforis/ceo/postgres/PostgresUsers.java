@@ -12,6 +12,7 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import java.sql.SQLException;
 import java.time.format.DateTimeFormatter;
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -26,12 +27,14 @@ import spark.Response;
 
 public class PostgresUsers implements Users {
 
-    private static final String BASE_URL             = CeoConfig.baseUrl;
-    private static final String SMTP_USER            = CeoConfig.smtpUser;
-    private static final String SMTP_SERVER          = CeoConfig.smtpServer;
-    private static final String SMTP_PORT            = CeoConfig.smtpPort;
-    private static final String SMTP_PASSWORD        = CeoConfig.smtpPassword;
-    private static final String SMTP_RECIPIENT_LIMIT = CeoConfig.smtpRecipientLimit;
+    private static final String BASE_URL              = CeoConfig.baseUrl;
+    private static final String SMTP_USER             = CeoConfig.smtpUser;
+    private static final String SMTP_SERVER           = CeoConfig.smtpServer;
+    private static final String SMTP_PORT             = CeoConfig.smtpPort;
+    private static final String SMTP_PASSWORD         = CeoConfig.smtpPassword;
+    private static final String SMTP_RECIPIENT_LIMIT  = CeoConfig.smtpRecipientLimit;
+    private static final String MAILING_LIST_INTERVAL = CeoConfig.mailingListInterval;
+    private static LocalDateTime mailingListLastSent  = LocalDateTime.now();
 
     public Request login(Request req, Response res) {
         var inputEmail =        req.queryParams("email");
@@ -504,6 +507,9 @@ public class PostgresUsers implements Users {
     }
 
     public String unsubscribeFromMailingList(Request req, Response res) {
+        Duration duration = Duration.between(LocalDateTime.now(), mailingListLastSent);
+        if (duration.toSeconds() < Integer.parseInt(MAILING_LIST_INTERVAL)) throw new RuntimeException();
+
         var jsonInputs = parseJson(req.body()).getAsJsonObject();
         var inputEmail = jsonInputs.get("email").getAsString();
 
@@ -528,6 +534,7 @@ public class PostgresUsers implements Users {
             System.out.println(e.getMessage());
             throw new RuntimeException(e);
         }
+        mailingListLastSent = LocalDateTime.now();
         return "";
     }
 
