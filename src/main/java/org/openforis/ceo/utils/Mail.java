@@ -16,11 +16,13 @@ import javax.mail.internet.AddressException;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
 
+import org.openforis.ceo.env.CeoConfig;
+
 public class Mail {
 
     public static final String CONTENT_TYPE_TEXT = "text/plain";
-
     public static final String CONTENT_TYPE_HTML = "text/html";
+    private static final String BASE_URL         = CeoConfig.baseUrl;
 
     public static boolean isEmail(String email) {
         var emailPattern = "(?i)[a-z0-9!#$%&'*+/=?^_`{|}~-]+" +
@@ -110,11 +112,12 @@ public class Mail {
                                          String smtpPassword, String subject, String body, String contentType, int chunkSize) {
         final var counter = new AtomicInteger();
         if (bcc.size() > 0) {
+            var newBody = body + "<br /><br />--<p><a href=\"" + BASE_URL + "/unsubscribe-mailing-list\">Unsubscribe</a></p>";
             bcc.stream()
                 .collect(Collectors.groupingBy(it -> counter.getAndIncrement() / chunkSize))
                 .values()
                 .forEach(chunkBcc -> {
-                    sendMail(from, null, null, chunkBcc, smtpServer, smtpPort, smtpPassword, subject, body, contentType);
+                    sendMail(from, null, null, chunkBcc, smtpServer, smtpPort, smtpPassword, subject, newBody, contentType);
                 }
             );
         }

@@ -6,7 +6,7 @@ import ClassicEditor from "@ckeditor/ckeditor5-build-classic";
 class MailingList extends React.Component {
     constructor(props) {
         super(props);
-        this.defaultBody = `<br /><br />--<p><a href="${window.location.origin}/unsubscribe-mailing-list">Unsubscribe</a></p>`;
+        this.defaultBody = "";
         this.state = {
             subject: "",
             body: this.defaultBody,
@@ -23,6 +23,7 @@ class MailingList extends React.Component {
                     body,
                 }),
             })
+                .then(response => response.ok ? response.text() : Promise.reject(response))
                 .then(() => {
                     this.setState({ subject: "", body: this.defaultBody });
                     alert("Your message has been sent to the mailing list.\n\n");

@@ -478,6 +478,9 @@ public class PostgresUsers implements Users {
     }
 
     public String submitEmailForMailingList(Request req, Response res) {
+        Duration duration = Duration.between(mailingListLastSent, LocalDateTime.now());
+        if (duration.toSeconds() < Integer.parseInt(MAILING_LIST_INTERVAL)) throw new RuntimeException();
+
         var jsonInputs = parseJson(req.body()).getAsJsonObject();
         var inputSubject = jsonInputs.get("subject").getAsString();
         var inputBody = jsonInputs.get("body").getAsString();
@@ -503,13 +506,11 @@ public class PostgresUsers implements Users {
                 throw new RuntimeException("There was an issue sending to the mailing list. Please check the server logs.");
             }
         }
+        mailingListLastSent = LocalDateTime.now();
         return "";
     }
 
     public String unsubscribeFromMailingList(Request req, Response res) {
-        Duration duration = Duration.between(LocalDateTime.now(), mailingListLastSent);
-        if (duration.toSeconds() < Integer.parseInt(MAILING_LIST_INTERVAL)) throw new RuntimeException();
-
         var jsonInputs = parseJson(req.body()).getAsJsonObject();
         var inputEmail = jsonInputs.get("email").getAsString();
 
@@ -534,7 +535,6 @@ public class PostgresUsers implements Users {
             System.out.println(e.getMessage());
             throw new RuntimeException(e);
         }
-        mailingListLastSent = LocalDateTime.now();
         return "";
     }
 
