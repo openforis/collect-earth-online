@@ -901,21 +901,26 @@ mercator.geometryToVectorSource = function (geometry) {
     });
 };
 
+mercator.geometryToGeoJSON = function (geometry, dataProjection, featureProjection = null) {
+    const format = new GeoJSON;
+    return format.writeGeometry(
+        geometry,
+        {
+            dataProjection: dataProjection,
+            featureProjection: featureProjection || dataProjection,
+        });
+};
+
 // [Pure] Returns a polygon geometry matching the passed in
 // parameters.
-mercator.getPlotPolygon = function (center, size, shape, reprojectToMap) {
+mercator.getPlotPolygon = function (center, size, shape) {
     const coords = mercator.parseGeoJson(center, true).getCoordinates();
     const centerX = coords[0];
     const centerY = coords[1];
     const radius = size / 2;
     return shape === "circle"
-        ? reprojectToMap
-            ? new Circle([centerX, centerY], radius)
-            : new Circle([centerX, centerY], radius).transform("EPSG:3857", "EPSG:4326")
-        : reprojectToMap
-            ? fromExtent([centerX - radius, centerY - radius, centerX + radius, centerY + radius])
-            : fromExtent([centerX - radius, centerY - radius, centerX + radius, centerY + radius])
-                .transform("EPSG:3857", "EPSG:4326");
+        ? new Circle([centerX, centerY], radius)
+        : fromExtent([centerX - radius, centerY - radius, centerX + radius, centerY + radius]);
 };
 
 // [Pure] Returns a new vector source containing the passed in plots.
