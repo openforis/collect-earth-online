@@ -330,7 +330,7 @@ class ImageryList extends React.Component {
     //    Remote Calls    //
 
     getImageryList = () => {
-        fetch(this.props.documentRoot + "/get-all-imagery?institutionId=" + this.props.institutionId)
+        fetch(this.props.documentRoot + "/get-institution-imagery?institutionId=" + this.props.institutionId)
             .then(response => response.ok ? response.json() : Promise.reject(response))
             .then(data => this.setState({ imageryList: data }))
             .catch(response => {
