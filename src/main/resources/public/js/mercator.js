@@ -338,7 +338,6 @@ mercator.createSource = function (sourceConfig, imageryId, attribution, document
         };
         return mercator.__sendGEERequest(theJson, sourceConfig, attribution, documentRoot);
     } else if (sourceConfig.type === "GEEImage") {
-        console.log("GEEIMAGE");
         const theJson = {
             path: "image",
             imageName: sourceConfig.imageId,
