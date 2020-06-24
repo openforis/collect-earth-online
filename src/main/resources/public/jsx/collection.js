@@ -32,6 +32,9 @@ class Collection extends React.Component {
             imagerySecureWatchCloudCover: "",
             imagerySecureWatchAvailableDates: [],
             geeImageryVisParams: "",
+            geeImageCollectionStartDate: "",
+            geeImageCollectionEndDate: "",
+            geeImageCollectionVisParams: "",
             mapConfig: null,
             nextPlotButtonDisabled: false,
             plotList: [],
@@ -427,6 +430,25 @@ class Collection extends React.Component {
 
     setGEEImageryVisParams = (newVisParams) => this.setState({ geeImageryVisParams: newVisParams });
 
+    setGEEImageCollectionVisParams = (newVisParams) => this.setState({ geeImageCollectionVisParams: newVisParams });
+
+    setGEEImageCollectionDate = (eventTarget) => {
+        const startDate = (eventTarget.id === "geeImageCollectionStartDate")
+            ? eventTarget.value
+            : this.state.geeImageCollectionStartDate;
+        const endDate = (eventTarget.id === "geeImageCollectionEndDate")
+            ? eventTarget.value
+            : this.state.geeImageCollectionEndDate;
+        if (new Date(startDate) > new Date(endDate)) {
+            alert("Start date must be smaller than the end date.");
+        } else {
+            this.setState({
+                geeImageCollectionStartDate: startDate,
+                geeImageCollectionEndDate: endDate,
+            });
+        }
+    };
+
     updateMapImagery = () => {
         mercator.setVisibleLayer(this.state.mapConfig, this.state.currentImagery.id);
 
@@ -466,6 +488,12 @@ class Collection extends React.Component {
                 });
             } else if (this.state.currentImagery.sourceConfig.type === "GEEImage") {
                 this.setState({ geeImageryVisParams: this.state.currentImagery.sourceConfig.imageVisParams });
+            } else if (this.state.currentImagery.sourceConfig.type === "GEEImageCollection") {
+                this.setState({
+                    geeImageCollectionVisParams: this.state.currentImagery.sourceConfig.collectionVisParams,
+                    geeImageCollectionStartDate: this.state.currentImagery.sourceConfig.startDate,
+                    geeImageCollectionEndDate: this.state.currentImagery.sourceConfig.endDate,
+                });
             }
         }
     };
@@ -584,6 +612,20 @@ class Collection extends React.Component {
             this.state.currentProject.boundary,
             sourceConfig => {
                 sourceConfig.imageVisParams = this.state.geeImageryVisParams;
+                return sourceConfig;
+            },
+            this
+        );
+
+    updateGEEImageCollection = () =>
+        mercator.updateLayerSource(
+            this.state.mapConfig,
+            this.state.currentImagery.id,
+            this.state.currentProject.boundary,
+            sourceConfig => {
+                sourceConfig.collectionVisParams = this.state.geeImageCollectionVisParams;
+                sourceConfig.startDate = this.state.geeImageCollectionStartDate;
+                sourceConfig.endDate = this.state.geeImageCollectionEndDate;
                 return sourceConfig;
             },
             this
@@ -1389,6 +1431,12 @@ class Collection extends React.Component {
                         geeImageryVisParams={this.state.geeImageryVisParams}
                         setGEEImageryVisParams={this.setGEEImageryVisParams}
                         updateGEEImagery={this.updateGEEImagery}
+                        geeImageCollectionVisParams={this.state.geeImageCollectionVisParams}
+                        geeImageCollectionStartDate={this.state.geeImageCollectionStartDate}
+                        geeImageCollectionEndDate={this.state.geeImageCollectionEndDate}
+                        setGEEImageCollectionVisParams={this.setGEEImageCollectionVisParams}
+                        setGEEImageCollectionDate={this.setGEEImageCollectionDate}
+                        updateGEEImageCollection={this.updateGEEImageCollection}
                         setStackingProfileDG={this.setStackingProfileDG}
                         loadingImages={this.state.imageryList.length === 0}
                     />
@@ -1917,6 +1965,7 @@ class ImageryOptions extends React.Component {
     GEEImageMenus = () => (
         <div className="GEEImageMenu my-2">
             <div className="form-control form-control-sm">
+                <label>Visualization Parameters</label>
                 <textarea
                     className="form-control"
                     id="geeImageVisParams"
@@ -1931,6 +1980,53 @@ class ImageryOptions extends React.Component {
                     className="btn bg-lightgreen btn-sm btn-block"
                     id="update-gee-image-button"
                     onClick={this.props.updateGEEImagery}
+                >
+                    Update Image
+                </button>
+            </div>
+        </div>
+    );
+
+    GEEImageCollectionMenus = () => (
+        <div className="GEEImageCollectionMenu my-2">
+            <div className="form-control form-control-sm">
+                <label>Start Date</label>
+                <div className="slidecontainer form-control form-control-sm">
+                    <input
+                        type="date"
+                        id="geeImageCollectionStartDate"
+                        value={this.props.geeImageCollectionStartDate}
+                        max={new Date().toJSON().slice(0, 10)}
+                        style={{ width: "100%" }}
+                        onChange={e => this.props.setGEEImageCollectionDate(e.target)}
+                    />
+                </div>
+                <label>End Date</label>
+                <div className="slidecontainer form-control form-control-sm">
+                    <input
+                        type="date"
+                        id="geeImageCollectionEndDate"
+                        value={this.props.geeImageCollectionEndDate}
+                        max={new Date().toJSON().slice(0, 10)}
+                        style={{ width: "100%" }}
+                        onChange={e => this.props.setGEEImageCollectionDate(e.target)}
+                    />
+                </div>
+                <label>Visualization Parameters</label>
+                <textarea
+                    className="form-control"
+                    id="geeImageCollectionVisParams"
+                    value={this.props.geeImageCollectionVisParams}
+                    onChange={e => this.props.setGEEImageCollectionVisParams(e.target.value)}
+                >
+                    {this.props.geeImageCollectionVisParams}
+                </textarea>
+                <br />
+                <button
+                    type="button"
+                    className="btn bg-lightgreen btn-sm btn-block"
+                    id="update-gee-image-button"
+                    onClick={this.props.updateGEEImageCollection}
                 >
                     Update Image
                 </button>
@@ -1977,6 +2073,7 @@ class ImageryOptions extends React.Component {
                         {props.imageryType === "Sentinel1" && this.sentinel1Menus()}
                         {props.imageryType === "Sentinel2" && this.sentinel2Menus()}
                         {props.imageryType === "GEEImage" && this.GEEImageMenus()}
+                        {props.imageryType === "GEEImageCollection" && this.GEEImageCollectionMenus()}
                     </Fragment>
                 }
             </div>

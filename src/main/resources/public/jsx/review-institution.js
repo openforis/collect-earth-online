@@ -540,14 +540,43 @@ const imageryOptions = [
         params: [
             {
                 key: "imageId",
-                display: "Image Asset ID",
+                display: "Asset ID",
                 options: { placeholder: "USDA/NAIP/DOQQ/n_4207309_se_18_1_20090525" },
             },
             {
                 key: "imageVisParams",
-                display: "Image Visualization Parameters (JSON format)",
+                display: "Visualization Parameters (JSON format)",
                 type: "textarea",
                 options: { placeholder: "{\"bands\": [\"R\", \"G\", \"B\"], \"min\": 90, \"max\": 210}" },
+            },
+        ],
+    },
+    {
+        type: "GEEImageCollection",
+        label: "GEE ImageCollection Asset",
+        params: [
+            {
+                key: "collectionId",
+                display: "Asset ID",
+                options: { placeholder: "LANDSAT/LC08/C01/T1_SR" },
+            },
+            {
+                key: "startDate",
+                display: "Start Date",
+                type: "date",
+                options: { max: new Date().toJSON().split("T")[0] },
+            },
+            {
+                key: "endDate",
+                display: "End Date",
+                type: "date",
+                options: { max: new Date().toJSON().split("T")[0] },
+            },
+            {
+                key: "collectionVisParams",
+                display: "Visualization Parameters (JSON format)",
+                type: "textarea",
+                options: { placeholder: "{\"bands\": [\"B4\", \"B3\", \"B2\"], \"min\": 0, \"max\": 2000}" },
             },
         ],
     },

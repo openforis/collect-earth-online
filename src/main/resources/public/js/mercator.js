@@ -344,6 +344,15 @@ mercator.createSource = function (sourceConfig, imageryId, attribution, document
             visParams: sourceConfig.imageVisParams,
         };
         return mercator.__sendGEERequest(theJson, sourceConfig, attribution, documentRoot);
+    } else if (sourceConfig.type === "GEEImageCollection") {
+        const theJson = {
+            path: "meanImageByMosaicCollection",
+            collectionName: sourceConfig.collectionId,
+            visParams: sourceConfig.collectionVisParams,
+            dateFrom: sourceConfig.startDate,
+            dateTo: sourceConfig.endDate,
+        };
+        return mercator.__sendGEERequest(theJson, sourceConfig, attribution, documentRoot);
     } else if (sourceConfig.type === "GeeGateway") {
         //get variables and make ajax call to get mapid and token
         //then add xyz layer
