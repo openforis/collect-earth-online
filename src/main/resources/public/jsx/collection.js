@@ -244,7 +244,10 @@ class Collection extends React.Component {
                             return { features: [] };
                         }
                     })
-                    .catch(() => ({ features: [] }))
+                    .catch(() => {
+                        alert("It is likely that your connect key is invalid or expired. See console for more details.");
+                        return { features: [] };
+                    })
                     .then(data => {
                         this.setState({
                             imagerySecureWatchAvailableDates: data.features
