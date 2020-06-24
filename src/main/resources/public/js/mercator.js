@@ -341,14 +341,14 @@ mercator.createSource = function (sourceConfig, imageryId, attribution, document
         const theJson = {
             path: "image",
             imageName: sourceConfig.imageId,
-            visParams: sourceConfig.imageVisParams,
+            visParams: JSON.parse(sourceConfig.imageVisParams),
         };
         return mercator.__sendGEERequest(theJson, sourceConfig, attribution, documentRoot);
     } else if (sourceConfig.type === "GEEImageCollection") {
         const theJson = {
             path: "meanImageByMosaicCollection",
             collectionName: sourceConfig.collectionId,
-            visParams: sourceConfig.collectionVisParams,
+            visParams: JSON.parse(sourceConfig.collectionVisParams),
             dateFrom: sourceConfig.startDate,
             dateTo: sourceConfig.endDate,
         };

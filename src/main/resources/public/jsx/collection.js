@@ -161,6 +161,11 @@ class Collection extends React.Component {
             || this.state.bandCombinationSentinel2 !== prevState.bandCombinationSentinel2) {
             this.updateSentinelLayer("sentinel2");
         }
+
+        if (this.state.geeImageCollectionStartDate !== prevState.geeImageCollectionStartDate
+            || this.state.geeImageCollectionEndDate !== prevState.geeImageCollectionEndDate) {
+            this.updateGEEImageCollection();
+        }
     }
 
     getProjectData = () => {
