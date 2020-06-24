@@ -245,7 +245,7 @@ class Collection extends React.Component {
                         }
                     })
                     .catch(() => {
-                        alert("It is likely that your connect key is invalid or expired. See console for more details.");
+                        alert("It is likely that your connect key is expired. See console for more details.");
                         return { features: [] };
                     })
                     .then(data => {
