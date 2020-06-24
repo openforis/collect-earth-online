@@ -1809,7 +1809,7 @@ class ImageryOptions extends React.Component {
                     type="date"
                     id="planetDailyStartDate"
                     value={this.props.imageryStartDatePlanetDaily}
-                    max={new Date().toJSON().slice(0, 10)}
+                    max={new Date().toJSON().split("T")[0]}
                     min="2010-01-01"
                     style={{ width: "100%" }}
                     onChange={e => this.props.setImageryDatePlanetDaily(e.target)}
@@ -1821,7 +1821,7 @@ class ImageryOptions extends React.Component {
                     type="date"
                     id="planetDailyEndDate"
                     value={this.props.imageryEndDatePlanetDaily}
-                    max={new Date().toJSON().slice(0, 10)}
+                    max={new Date().toJSON().split("T")[0]}
                     min="2010-01-01"
                     style={{ width: "100%" }}
                     onChange={e => this.props.setImageryDatePlanetDaily(e.target)}
@@ -1996,7 +1996,7 @@ class ImageryOptions extends React.Component {
                         type="date"
                         id="geeImageCollectionStartDate"
                         value={this.props.geeImageCollectionStartDate}
-                        max={new Date().toJSON().slice(0, 10)}
+                        max={new Date().toJSON().split("T")[0]}
                         style={{ width: "100%" }}
                         onChange={e => this.props.setGEEImageCollectionDate(e.target)}
                     />
@@ -2007,7 +2007,7 @@ class ImageryOptions extends React.Component {
                         type="date"
                         id="geeImageCollectionEndDate"
                         value={this.props.geeImageCollectionEndDate}
-                        max={new Date().toJSON().slice(0, 10)}
+                        max={new Date().toJSON().split("T")[0]}
                         style={{ width: "100%" }}
                         onChange={e => this.props.setGEEImageCollectionDate(e.target)}
                     />
