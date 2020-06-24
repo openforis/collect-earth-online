@@ -237,8 +237,8 @@ class Collection extends React.Component {
             () => {
                 fetch(this.props.documentRoot + "/get-securewatch-dates?" + secureWatchFeatureInfoUrl)
                     .then(response => {
-                        if (response.ok) { // if no layers are found, the response is XML.
-                            return response.json();
+                        if (response.ok) {
+                            return response.json(); // if no layers are found, the response is XML. This will fail.
                         } else {
                             alert("Error retrieving SecureWatch dates. See console for details.");
                             return { features: [] };
@@ -271,7 +271,7 @@ class Collection extends React.Component {
                     })
                     .catch(response => {
                         console.log(response);
-                        alert("Error retrieving SecureWatch dates. See console for details.");
+                        alert("Error processing SecureWatch dates. See console for details.");
                     });
             }
         );
