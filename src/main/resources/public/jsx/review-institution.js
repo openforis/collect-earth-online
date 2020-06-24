@@ -535,6 +535,23 @@ const imageryOptions = [
         ],
     },
     {
+        type: "GEEImage",
+        label: "GEE Image Asset",
+        params: [
+            {
+                key: "imageId",
+                display: "Image Asset ID",
+                options: { placeholder: "USDA/NAIP/DOQQ/n_4207309_se_18_1_20090525" },
+            },
+            {
+                key: "imageVisParams",
+                display: "Image Visualization Parameters (JSON format)",
+                type: "textarea",
+                options: { placeholder: "{\"bands\": [\"R\", \"G\", \"B\"], \"min\": 90, \"max\": 210}" },
+            },
+        ],
+    },
+    {
         type: "MapBoxRaster",
         label: "Mapbox Raster",
         params: [
@@ -675,7 +692,18 @@ class NewImagery extends React.Component {
     //    Render Functions    //
 
     formInput = (title, type, value, callback, link = null, options = {}) => (
-        <div className="mb-3" key={title}>
+        (type === "textarea")
+        ? <div className="mb-3" key={title}>
+            <label>{title}</label> {link}
+            <textarea
+                className="form-control"
+                onChange={e => callback(e)}
+                value={value || ""}
+                {...options}
+            >
+            </textarea>
+        </div>
+        : <div className="mb-3" key={title}>
             <label>{title}</label> {link}
             <input
                 className="form-control"
@@ -770,6 +798,11 @@ class NewImagery extends React.Component {
         } else if (imageryOptions[val].type.includes("Mapbox")) {
             this.setState({
                 newImageryAttribution: "© Mapbox",
+                newImageryParams: {},
+            });
+        } else if (imageryOptions[val].type.includes("GEE")) {
+            this.setState({
+                newImageryAttribution: "Google Earth Engine | © Google LLC",
                 newImageryParams: {},
             });
         } else {

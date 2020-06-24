@@ -31,6 +31,7 @@ class Collection extends React.Component {
             imagerySecureWatchDate: "",
             imagerySecureWatchCloudCover: "",
             imagerySecureWatchAvailableDates: [],
+            geeImageryVisParams: "",
             mapConfig: null,
             nextPlotButtonDisabled: false,
             plotList: [],
@@ -424,6 +425,8 @@ class Collection extends React.Component {
         });
     };
 
+    setGEEImageryVisParams = (newVisParams) => this.setState({ geeImageryVisParams: newVisParams });
+
     updateMapImagery = () => {
         mercator.setVisibleLayer(this.state.mapConfig, this.state.currentImagery.id);
 
@@ -461,6 +464,8 @@ class Collection extends React.Component {
                     [this.state.currentImagery.sourceConfig.type === "Sentinel1" ? "bandCombinationSentinel1" : "bandCombinationSentinel2"] : bandCombination,
                     "imageryAttribution" : this.state.currentImagery.attribution + " | " + startDate + " to " + formatDateISO(endDate),
                 });
+            } else if (this.state.currentImagery.sourceConfig.type === "GEEImage") {
+                this.setState({ geeImageryVisParams: this.state.currentImagery.sourceConfig.imageVisParams });
             }
         }
     };
@@ -570,6 +575,18 @@ class Collection extends React.Component {
             eventTarget.value,
             eventTarget.options[eventTarget.selectedIndex].getAttribute("date"),
             eventTarget.options[eventTarget.options.selectedIndex].getAttribute("cloud")
+        );
+
+    updateGEEImagery = () =>
+        mercator.updateLayerSource(
+            this.state.mapConfig,
+            this.state.currentImagery.id,
+            this.state.currentProject.boundary,
+            sourceConfig => {
+                sourceConfig.imageVisParams = this.state.geeImageryVisParams;
+                return sourceConfig;
+            },
+            this
         );
 
     getQueryString = (params) => "?" + Object.keys(params)
@@ -1369,6 +1386,9 @@ class Collection extends React.Component {
                         setImageryDatePlanetDaily={this.setImageryDatePlanetDaily}
                         imagerySecureWatchAvailableDates={this.state.imagerySecureWatchAvailableDates}
                         onChangeSecureWatchSingleLayer={this.onChangeSecureWatchSingleLayer}
+                        geeImageryVisParams={this.state.geeImageryVisParams}
+                        setGEEImageryVisParams={this.setGEEImageryVisParams}
+                        updateGEEImagery={this.updateGEEImagery}
                         setStackingProfileDG={this.setStackingProfileDG}
                         loadingImages={this.state.imageryList.length === 0}
                     />
@@ -1894,6 +1914,30 @@ class ImageryOptions extends React.Component {
         );
     };
 
+    GEEImageMenus = () => (
+        <div className="GEEImageMenu my-2">
+            <div className="form-control form-control-sm">
+                <textarea
+                    className="form-control"
+                    id="geeImageVisParams"
+                    value={this.props.geeImageryVisParams}
+                    onChange={e => this.props.setGEEImageryVisParams(e.target.value)}
+                >
+                    {this.props.geeImageryVisParams}
+                </textarea>
+                <br />
+                <button
+                    type="button"
+                    className="btn bg-lightgreen btn-sm btn-block"
+                    id="update-gee-image-button"
+                    onClick={this.props.updateGEEImagery}
+                >
+                    Update Image
+                </button>
+            </div>
+        </div>
+    );
+
     render() {
         const { props } = this;
         return (
@@ -1932,6 +1976,7 @@ class ImageryOptions extends React.Component {
                         {props.imageryType === "SecureWatch" && this.secureWatchMenus()}
                         {props.imageryType === "Sentinel1" && this.sentinel1Menus()}
                         {props.imageryType === "Sentinel2" && this.sentinel2Menus()}
+                        {props.imageryType === "GEEImage" && this.GEEImageMenus()}
                     </Fragment>
                 }
             </div>
