@@ -1619,7 +1619,8 @@ class PlotNavigation extends React.Component {
                     this.props.currentProject.plotShape
                 ),
                 "EPSG:4326",
-                "EPSG:3857"
+                "EPSG:3857",
+                5
             );
         if (this.state.auxWindow) this.state.auxWindow.close();
         this.setState({

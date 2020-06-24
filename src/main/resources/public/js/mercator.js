@@ -901,13 +901,14 @@ mercator.geometryToVectorSource = function (geometry) {
     });
 };
 
-mercator.geometryToGeoJSON = function (geometry, dataProjection, featureProjection = null) {
+mercator.geometryToGeoJSON = function (geometry, dataProjection, featureProjection = null, decimals = 10) {
     const format = new GeoJSON;
     return format.writeGeometry(
         geometry,
         {
             dataProjection: dataProjection,
             featureProjection: featureProjection || dataProjection,
+            decimals: decimals,
         });
 };
 
