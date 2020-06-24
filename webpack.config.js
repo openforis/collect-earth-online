@@ -72,9 +72,6 @@ module.exports = env => ({
         ],
     },
     plugins: [
-        // new webpack.DefinePlugin({
-        //     ENVIRONMENT: env.dev,
-        // }),
         {
             apply: (compiler) => {
                 compiler.hooks.beforeCompile.tap("BeforeRunPlugin", () => {
@@ -90,8 +87,6 @@ module.exports = env => ({
 
                 compiler.hooks.afterEmit.tap("AfterEmitPlugin", () => {
                     // Build freemarker files based on compiled js file.
-                    console.log("hook");
-                    console.log(fs.readdirSync("./" + outdir + "/public/js"));
                     const compiledJsList = fs.readdirSync("./" + outdir + "/public/js")
                         .filter(a => !a.endsWith(".map"))
                         .sort(a => a.includes("common") ? -1 : 1) // move common bundle to the top
