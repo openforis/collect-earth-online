@@ -1392,7 +1392,8 @@ class Collection extends React.Component {
                         KMLFeatures={this.state.KMLFeatures}
                         zoomMapToPlot={() => mercator.zoomMapToLayer(this.state.mapConfig, "currentPlot")}
                         projectOptions={this.state.currentProject.projectOptions}
-                        mapConfig={this.state.mapConfig}
+                        currentPlot={this.state.currentPlot}
+                        currentProject={this.state.currentProject}
                     />
                     {this.state.currentPlot
                         ? <PlotInformation extraPlotInfo={this.state.currentPlot.extraPlotInfo}/>
@@ -1677,10 +1678,26 @@ class PlotNavigation extends React.Component {
     );
 
     loadGEEScript = () => {
-        const geometry = mercator.getViewPolygon(this.props.mapConfig);
-        const geoJson = "{\"type\": \"Polygon\", \"coordinates\":" + JSON.stringify(geometry.getCoordinates()) + "}";
+        const urlParams = this.props.currentPlot.geom ? "geoJson=" + this.props.currentPlot.geom
+            : this.props.currentProject.plotShape === "circle"
+                    ? "center=["
+                    + mercator.parseGeoJson(this.props.currentPlot.center).getCoordinates()
+                    + "];radius=" + this.props.currentProject.plotSize / 2
+            : "geoJson=" + mercator.geometryToGeoJSON(
+                mercator.getPlotPolygon(
+                    this.props.currentPlot.center,
+                    this.props.currentProject.plotSize,
+                    this.props.currentProject.plotShape
+                ),
+                "EPSG:4326",
+                "EPSG:3857",
+                5
+            );
         if (this.state.auxWindow) this.state.auxWindow.close();
-        this.setState({ auxWindow: window.open("https://billyz313.users.earthengine.app/view/ceoplotancillary#geoJson=" + geoJson, "_ceo-plot-ancillary") });
+        this.setState({
+            auxWindow: window.open("https://billyz313.users.earthengine.app/view/ceoplotancillary#" + urlParams,
+                                   "_ceo-plot-ancillary"),
+        });
     };
 
     geeButton = () => (
