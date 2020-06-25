@@ -20,16 +20,7 @@ import spark.Response;
  */
 public class PostgresInstitutions implements Institutions {
 
-    public Boolean isInstAdmin(Request req) {
-        final var userId = Integer.parseInt(req.session().attributes().contains("userid") ? req.session().attribute("userid").toString() : "-1");
-        final var qInstitutionId = req.queryParams("institutionId");
-        final var jInstitutionId = getBodyParam(req.body(), "institutionId", null);
-
-        final var institutionId =
-            qInstitutionId != null ? Integer.parseInt(qInstitutionId)
-            : jInstitutionId != null ? Integer.parseInt(jInstitutionId)
-            : 0;
-
+    public static Boolean isInstAdminQuery(Integer userId, Integer institutionId) {
         try (var conn = connect();
              var pstmt = conn.prepareStatement("SELECT * FROM is_institution_user_admin(?, ?)")) {
 
@@ -43,6 +34,19 @@ public class PostgresInstitutions implements Institutions {
             System.out.println(e.getMessage());
             return false;
         }
+    }
+
+    public Boolean isInstAdmin(Request req) {
+        final var userId = Integer.parseInt(req.session().attributes().contains("userid") ? req.session().attribute("userid").toString() : "-1");
+        final var qInstitutionId = req.queryParams("institutionId");
+        final var jInstitutionId = getBodyParam(req.body(), "institutionId", null);
+
+        final var institutionId =
+            qInstitutionId != null ? Integer.parseInt(qInstitutionId)
+            : jInstitutionId != null ? Integer.parseInt(jInstitutionId)
+            : 0;
+
+        return isInstAdminQuery(userId, institutionId);
     }
 
     private static JsonObject buildInstitutionJson(ResultSet rs) {

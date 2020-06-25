@@ -46,10 +46,10 @@ class GeoDashHelp extends React.Component {
                                     <li>
                                         {lngObject.ic_data_info_configure}
                                         <ol style={{ listStyleType: "lower-roman" }}>
-                                            <li>{"Landsat 5 - B1, B2, B3, B4, B5, B6, B7"}</li>
-                                            <li>{"Landsat 7 - B1, B2, B3, B4, B5, B6_VCID_1, B6_VCID_2, B7, B8"}</li>
-                                            <li>{"Landsat 8 - B1, B2, B3, B4, B5, B6, B7, B8, B9, B10, B11"}</li>
-                                            <li>{"Sentinel 2 - B1, B2, B3, B4, B5, B6, B7, B8, B8a, B9, B10, B11, B12"}</li>
+                                            <li>{"Landsat 5 - B1, B2, B3, B4, B5, B6, B7 - Sample parameters: bands: 'B4,B5,B3', min: '0.05,0.01,0.07', max: '0.45,0.5,0.4', cloudLessThan: 90"}</li>
+                                            <li>{"Landsat 7 - B1, B2, B3, B4, B5, B6_VCID_1, B6_VCID_2, B7, B8 - Sample parameters: bands: 'B4,B5,B3', min: '0.03,0.01,0.05', max: '0.45,0.5,0.4', cloudLessThan: 90"}</li>
+                                            <li>{"Landsat 8 - B1, B2, B3, B4, B5, B6, B7, B8, B9, B10, B11 - Sample parameters: bands: 'B5,B6,B4', min: '0.03,0.01,0.04', max: '0.45,0.5,0.32', cloudLessThan: 90"}</li>
+                                            <li>{"Sentinel 2 - B1, B2, B3, B4, B5, B6, B7, B8, B8a, B9, B10, B11, B12 - Sample parameters: bands: 'B8,B4,B3', min: '900,450,800', max: '5200,3000,2000', cloudLessThan: 10"}</li>
                                         </ol>
                                     </li>
                                     <li>
@@ -213,6 +213,18 @@ class GeoDashHelp extends React.Component {
                             <li>{lngObject.give_title}</li>
                             <li>{lngObject.enter_image_collection_asset + "users/ValeriaContessa/Indonesia_2000"}</li>
                             <li>{lngObject.enter_image_asset_params + "{\"bands\":\"B4,B5,B3\",\"min\":\"10,0,10\",\"max\":\"120,90,70\"}"}</li>
+                            <li>{lngObject.click_create}</li>
+                            <li>{lngObject.reposition}</li>
+                        </ol>
+                    </CollapsibleSectionBlock>
+                    <CollapsibleSectionBlock title={lngObject.add_degradation_widget}>
+                        {this.expandableImageWrapper("/img/create_degradation_widget.gif")}
+                        <ol>
+                            <li>{lngObject.select_degradation}</li>
+                            <li>{lngObject.choose_basemap}</li>
+                            <li>{lngObject.give_title}</li>
+                            <li>{lngObject.select_band_to_graph}</li>
+                            <li>{lngObject.select_date_range}{lngObject.for_data2}</li>
                             <li>{lngObject.click_create}</li>
                             <li>{lngObject.reposition}</li>
                         </ol>

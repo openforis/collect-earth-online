@@ -597,8 +597,8 @@ CREATE OR REPLACE FUNCTION select_public_imagery()
 
 $$ LANGUAGE SQL;
 
--- Returns all rows in imagery associated with institution_rid or having visibility = "public"
-CREATE OR REPLACE FUNCTION select_public_imagery_by_institution(_institution_rid integer)
+-- Returns all rows in imagery associated with institution_rid
+CREATE OR REPLACE FUNCTION select_imagery_by_institution(_institution_rid integer, _user_rid integer)
  RETURNS setOf imagery_return AS $$
 
     WITH images AS (
@@ -609,10 +609,34 @@ CREATE OR REPLACE FUNCTION select_public_imagery_by_institution(_institution_rid
         FROM imagery
         WHERE institution_rid = _institution_rid
             AND archived = FALSE
+            AND (visibility = 'public'
+                OR (SELECT count(*) > 0
+                    FROM get_all_users_by_institution_id(_institution_rid)
+                    WHERE user_id = _user_rid)
+                OR _user_rid = 1)
     )
 
     SELECT * FROM images
-    ORDER BY visibility DESC, imagery_id
+    ORDER BY visibility DESC, title
+
+$$ LANGUAGE SQL;
+
+-- Returns all rows in imagery associated with institution_rid
+CREATE OR REPLACE FUNCTION select_imagery_by_project(_project_rid integer, _user_rid integer)
+ RETURNS setOf imagery_return AS $$
+
+    SELECT imagery_uid, p.institution_rid, visibility, title, attribution, extent, source_config
+    FROM imagery i, projects p
+    WHERE i.institution_rid = p.institution_rid
+        AND project_uid = _project_rid
+        AND archived = FALSE
+        AND (visibility = 'public'
+            OR (SELECT count(*) > 0
+                FROM get_all_users_by_institution_id(p.institution_rid)
+                WHERE user_id = _user_rid)
+            OR _user_rid = 1)
+
+    ORDER BY title
 
 $$ LANGUAGE SQL;
 
@@ -1549,18 +1573,42 @@ $$ LANGUAGE SQL;
 
 -- Returns next plot by id
 CREATE OR REPLACE FUNCTION select_plot_by_id(_project_rid integer, _plot_uid integer)
- RETURNS setOf plots_return AS $$
+ RETURNS setOf plot_collection_return AS $$
 
-    SELECT * FROM select_all_project_plots(_project_rid) as spp
+    WITH tablenames AS (
+        SELECT plots_ext_table
+        FROM projects
+        WHERE project_uid = _project_rid
+    ), plots_file_data AS (
+        SELECT * FROM select_json_table_by_name((SELECT plots_ext_table FROM tablenames))
+    )
+
+    SELECT spp.*,
+       pfd.rem_data
+    FROM select_all_project_plots(_project_rid) as spp
+    LEFT JOIN plots_file_data pfd
+        ON spp.ext_id = pfd.ext_id
     WHERE spp.plotId = _plot_uid
 
 $$ LANGUAGE SQL;
 
 -- Returns next unanalyzed plot
 CREATE OR REPLACE FUNCTION select_next_unassigned_plot(_project_rid integer, _plot_uid integer)
- RETURNS setOf plots_return AS $$
+ RETURNS setOf plot_collection_return AS $$
 
-    SELECT * FROM select_all_unlocked_project_plots(_project_rid) as spp
+    WITH tablenames AS (
+        SELECT plots_ext_table
+        FROM projects
+        WHERE project_uid = _project_rid
+    ), plots_file_data AS (
+        SELECT * FROM select_json_table_by_name((SELECT plots_ext_table FROM tablenames))
+    )
+
+    SELECT spp.*,
+       pfd.rem_data
+    FROM select_all_unlocked_project_plots(_project_rid) as spp
+    LEFT JOIN plots_file_data pfd
+        ON spp.ext_id = pfd.ext_id
     WHERE spp.plotId > _plot_uid
         AND flagged = 0
         AND assigned = 0
@@ -1571,10 +1619,21 @@ $$ LANGUAGE SQL;
 
 -- Returns next user analyzed plot
 CREATE OR REPLACE FUNCTION select_next_user_plot(_project_rid integer, _plot_uid integer, _username text)
- RETURNS setOf plots_return AS $$
+ RETURNS setOf plot_collection_return AS $$
 
-    SELECT *
+    WITH tablenames AS (
+        SELECT plots_ext_table
+        FROM projects
+        WHERE project_uid = _project_rid
+    ), plots_file_data AS (
+        SELECT * FROM select_json_table_by_name((SELECT plots_ext_table FROM tablenames))
+    )
+
+    SELECT spp.*,
+       pfd.rem_data
     FROM select_all_project_plots(_project_rid) as spp
+    LEFT JOIN plots_file_data pfd
+        ON spp.ext_id = pfd.ext_id
     WHERE spp.plotId > _plot_uid
         AND spp.username = _username
     ORDER BY plotId ASC
@@ -1584,22 +1643,45 @@ $$ LANGUAGE SQL;
 
 -- Returns next user analyzed plot asked by admin
 CREATE OR REPLACE FUNCTION select_next_user_plot_by_admin(_project_rid integer, _plot_uid integer)
-    RETURNS setOf plots_return AS $$
+    RETURNS setOf plot_collection_return AS $$
 
-SELECT *
-FROM select_all_project_plots(_project_rid) as spp
-WHERE spp.plotId > _plot_uid
-  AND spp.username != ''
-ORDER BY plotId ASC
-LIMIT 1
+    WITH tablenames AS (
+        SELECT plots_ext_table
+        FROM projects
+        WHERE project_uid = _project_rid
+    ), plots_file_data AS (
+        SELECT * FROM select_json_table_by_name((SELECT plots_ext_table FROM tablenames))
+    )
+
+    SELECT spp.*,
+       pfd.rem_data
+    FROM select_all_project_plots(_project_rid) as spp
+    LEFT JOIN plots_file_data pfd
+        ON spp.ext_id = pfd.ext_id
+    WHERE spp.plotId > _plot_uid
+        AND spp.username != ''
+    ORDER BY plotId ASC
+    LIMIT 1
 
 $$ LANGUAGE SQL;
 
 -- Returns prev unanalyzed plot
 CREATE OR REPLACE FUNCTION select_prev_unassigned_plot(_project_rid integer, _plot_uid integer)
- RETURNS setOf plots_return AS $$
+ RETURNS setOf plot_collection_return AS $$
 
-    SELECT * FROM select_all_unlocked_project_plots(_project_rid) as spp
+    WITH tablenames AS (
+        SELECT plots_ext_table
+        FROM projects
+        WHERE project_uid = _project_rid
+    ), plots_file_data AS (
+        SELECT * FROM select_json_table_by_name((SELECT plots_ext_table FROM tablenames))
+    )
+
+    SELECT spp.*,
+       pfd.rem_data
+    FROM select_all_unlocked_project_plots(_project_rid) as spp
+    LEFT JOIN plots_file_data pfd
+        ON spp.ext_id = pfd.ext_id
     WHERE spp.plotId < _plot_uid
         AND flagged = 0
         AND assigned = 0
@@ -1610,9 +1692,21 @@ $$ LANGUAGE SQL;
 
 -- Returns prev user analyzed plot
 CREATE OR REPLACE FUNCTION select_prev_user_plot(_project_rid integer, _plot_uid integer, _username text)
- RETURNS setOf plots_return AS $$
+ RETURNS setOf plot_collection_return AS $$
 
-    SELECT * FROM select_all_project_plots(_project_rid) as spp
+    WITH tablenames AS (
+        SELECT plots_ext_table
+        FROM projects
+        WHERE project_uid = _project_rid
+    ), plots_file_data AS (
+        SELECT * FROM select_json_table_by_name((SELECT plots_ext_table FROM tablenames))
+    )
+
+    SELECT spp.*,
+       pfd.rem_data
+    FROM select_all_project_plots(_project_rid) as spp
+    LEFT JOIN plots_file_data pfd
+        ON spp.ext_id = pfd.ext_id
     WHERE spp.plotId < _plot_uid
         AND spp.username = _username
     ORDER BY plotId DESC
@@ -1622,21 +1716,45 @@ $$ LANGUAGE SQL;
 
 -- Returns prev user analyzed plot asked by admin
 CREATE OR REPLACE FUNCTION select_prev_user_plot_by_admin(_project_rid integer, _plot_uid integer)
-    RETURNS setOf plots_return AS $$
+    RETURNS setOf plot_collection_return AS $$
 
-SELECT * FROM select_all_project_plots(_project_rid) as spp
-WHERE spp.plotId < _plot_uid
-  AND spp.username != ''
-ORDER BY plotId DESC
-LIMIT 1
+    WITH tablenames AS (
+        SELECT plots_ext_table
+        FROM projects
+        WHERE project_uid = _project_rid
+    ), plots_file_data AS (
+        SELECT * FROM select_json_table_by_name((SELECT plots_ext_table FROM tablenames))
+    )
+
+    SELECT spp.*,
+       pfd.rem_data
+    FROM select_all_project_plots(_project_rid) as spp
+    LEFT JOIN plots_file_data pfd
+        ON spp.ext_id = pfd.ext_id
+    WHERE spp.plotId < _plot_uid
+        AND spp.username != ''
+    ORDER BY plotId DESC
+    LIMIT 1
 
 $$ LANGUAGE SQL;
 
 -- Returns unanalyzed plots by plot id
 CREATE OR REPLACE FUNCTION select_unassigned_plot_by_id(_project_rid integer, _plot_uid integer)
- RETURNS setOf plots_return AS $$
+ RETURNS setOf plot_collection_return AS $$
 
-    SELECT * FROM select_all_unlocked_project_plots(_project_rid) as spp
+    WITH tablenames AS (
+        SELECT plots_ext_table
+        FROM projects
+        WHERE project_uid = _project_rid
+    ), plots_file_data AS (
+        SELECT * FROM select_json_table_by_name((SELECT plots_ext_table FROM tablenames))
+    )
+
+    SELECT spp.*,
+       pfd.rem_data
+    FROM select_all_unlocked_project_plots(_project_rid) as spp
+    LEFT JOIN plots_file_data pfd
+        ON spp.ext_id = pfd.ext_id
     WHERE spp.plotId = _plot_uid
         AND flagged = 0
         AND assigned = 0
@@ -1645,13 +1763,26 @@ $$ LANGUAGE SQL;
 
 -- Returns user analyzed plots by plot id
 CREATE OR REPLACE FUNCTION select_user_plot_by_id(_project_rid integer, _plot_uid integer, _username text)
- RETURNS setOf plots_return AS $$
+ RETURNS setOf plot_collection_return AS $$
 
-    SELECT * FROM select_all_project_plots(_project_rid) as spp
+    WITH tablenames AS (
+        SELECT plots_ext_table
+        FROM projects
+        WHERE project_uid = _project_rid
+    ), plots_file_data AS (
+        SELECT * FROM select_json_table_by_name((SELECT plots_ext_table FROM tablenames))
+    )
+
+    SELECT spp.*,
+       pfd.rem_data
+    FROM select_all_project_plots(_project_rid) as spp
+    LEFT JOIN plots_file_data pfd
+        ON spp.ext_id = pfd.ext_id
     WHERE spp.plotId = _plot_uid
         AND spp.username = _username
 
 $$ LANGUAGE SQL;
+
 
 -- Lock plot to user
 CREATE OR REPLACE FUNCTION lock_plot(_plot_rid integer, _user_rid integer, _lock_end timestamp)
@@ -1870,8 +2001,8 @@ CREATE OR REPLACE FUNCTION dump_project_plot_data(_project_uid integer)
 
     WITH all_rows AS (
         SELECT pl.ext_id as pl_ext_id,
-        (CASE WHEN imagery_attributes->>'imagerySecureWatchDate' = '' THEN 'Latest Mosaic'
-              WHEN imagery_attributes-> 'imagerySecureWatchDate' IS NULL THEN NULL
+        (CASE WHEN imagery_attributes->>'imagerySecureWatchDate' = ''
+                OR imagery_attributes->'imagerySecureWatchDate' IS NULL THEN NULL
               ELSE imagery_attributes->>'imagerySecureWatchDate'
          END) as imagerySecureWatchDate,
         *
