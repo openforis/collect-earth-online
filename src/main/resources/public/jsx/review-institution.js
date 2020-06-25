@@ -535,6 +535,52 @@ const imageryOptions = [
         ],
     },
     {
+        type: "GEEImage",
+        label: "GEE Image Asset",
+        params: [
+            {
+                key: "imageId",
+                display: "Asset ID",
+                options: { placeholder: "USDA/NAIP/DOQQ/n_4207309_se_18_1_20090525" },
+            },
+            {
+                key: "imageVisParams",
+                display: "Visualization Parameters (JSON format)",
+                type: "textarea",
+                options: { placeholder: "{\"bands\": [\"R\", \"G\", \"B\"], \"min\": 90, \"max\": 210}" },
+            },
+        ],
+    },
+    {
+        type: "GEEImageCollection",
+        label: "GEE ImageCollection Asset",
+        params: [
+            {
+                key: "collectionId",
+                display: "Asset ID",
+                options: { placeholder: "LANDSAT/LC08/C01/T1_SR" },
+            },
+            {
+                key: "startDate",
+                display: "Start Date",
+                type: "date",
+                options: { max: new Date().toJSON().split("T")[0] },
+            },
+            {
+                key: "endDate",
+                display: "End Date",
+                type: "date",
+                options: { max: new Date().toJSON().split("T")[0] },
+            },
+            {
+                key: "collectionVisParams",
+                display: "Visualization Parameters (JSON format)",
+                type: "textarea",
+                options: { placeholder: "{\"bands\": [\"B4\", \"B3\", \"B2\"], \"min\": 0, \"max\": 2000}" },
+            },
+        ],
+    },
+    {
         type: "MapBoxRaster",
         label: "Mapbox Raster",
         params: [
@@ -701,8 +747,21 @@ class NewImagery extends React.Component {
         </div>
     );
 
+    formTextArea = (title, value, callback, link = null, options = {}) => (
+        <div className="mb-3" key={title}>
+            <label>{title}</label> {link}
+            <textarea
+                className="form-control"
+                onChange={e => callback(e)}
+                value={value || ""}
+                {...options}
+            >
+            </textarea>
+        </div>
+    );
+
     formTemplate = (o) => (
-        (o.type && o.type === "select")
+        o.type === "select"
             ? this.formSelect(
                 o.display,
                 this.state.newImageryParams[o.key],
@@ -724,9 +783,9 @@ class NewImagery extends React.Component {
                     )
                     : null
             )
-            : this.formInput(
+        : o.type === "textarea"
+            ? this.formTextArea(
                 o.display,
-                o.type || "text",
                 this.state.newImageryParams[o.key],
                 e => this.setState({
                     newImageryParams: { ...this.state.newImageryParams, [o.key]: e.target.value },
@@ -740,6 +799,22 @@ class NewImagery extends React.Component {
                     : null,
                 o.options ? o.options : {}
             )
+        : this.formInput(
+            o.display,
+            o.type || "text",
+            this.state.newImageryParams[o.key],
+            e => this.setState({
+                newImageryParams: { ...this.state.newImageryParams, [o.key]: e.target.value },
+            }),
+            (imageryOptions[this.state.selectedType].url && o.key === "accessToken")
+                ? (
+                    <a href={imageryOptions[this.state.selectedType].url} target="_blank" rel="noreferrer noopener">
+                        Click here for help.
+                    </a>
+                )
+                : null,
+            o.options ? o.options : {}
+        )
     );
 
     // Imagery Type Change Handler //
@@ -770,6 +845,11 @@ class NewImagery extends React.Component {
         } else if (imageryOptions[val].type.includes("Mapbox")) {
             this.setState({
                 newImageryAttribution: "© Mapbox",
+                newImageryParams: {},
+            });
+        } else if (imageryOptions[val].type.includes("GEE")) {
+            this.setState({
+                newImageryAttribution: "Google Earth Engine | © Google LLC",
                 newImageryParams: {},
             });
         } else {

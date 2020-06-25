@@ -31,6 +31,10 @@ class Collection extends React.Component {
             imagerySecureWatchDate: "",
             imagerySecureWatchCloudCover: "",
             imagerySecureWatchAvailableDates: [],
+            geeImageryVisParams: "",
+            geeImageCollectionStartDate: "",
+            geeImageCollectionEndDate: "",
+            geeImageCollectionVisParams: "",
             mapConfig: null,
             nextPlotButtonDisabled: false,
             plotList: [],
@@ -424,6 +428,14 @@ class Collection extends React.Component {
         });
     };
 
+    setGEEImageryVisParams = (newVisParams) => this.setState({ geeImageryVisParams: newVisParams });
+
+    setGEEImageCollectionVisParams = (newVisParams) => this.setState({ geeImageCollectionVisParams: newVisParams });
+
+    setGEEImageCollectionStartDate = (newDate) => this.setState({ geeImageCollectionStartDate: newDate });
+
+    setGEEImageCollectionEndDate = (newDate) => this.setState({ geeImageCollectionEndDate: newDate });
+
     updateMapImagery = () => {
         mercator.setVisibleLayer(this.state.mapConfig, this.state.currentImagery.id);
 
@@ -461,6 +473,14 @@ class Collection extends React.Component {
                     [this.state.currentImagery.sourceConfig.type === "Sentinel1" ? "bandCombinationSentinel1" : "bandCombinationSentinel2"] : bandCombination,
                     "imageryAttribution" : this.state.currentImagery.attribution + " | " + startDate + " to " + formatDateISO(endDate),
                 });
+            } else if (this.state.currentImagery.sourceConfig.type === "GEEImage") {
+                this.setState({ geeImageryVisParams: this.state.currentImagery.sourceConfig.imageVisParams });
+            } else if (this.state.currentImagery.sourceConfig.type === "GEEImageCollection") {
+                this.setState({
+                    geeImageCollectionVisParams: this.state.currentImagery.sourceConfig.collectionVisParams,
+                    geeImageCollectionStartDate: this.state.currentImagery.sourceConfig.startDate,
+                    geeImageCollectionEndDate: this.state.currentImagery.sourceConfig.endDate,
+                });
             }
         }
     };
@@ -472,11 +492,11 @@ class Collection extends React.Component {
         mercator.updateLayerSource(this.state.mapConfig,
                                    currentImagery.id,
                                    this.state.currentProject.boundary,
-                                   sourceConfig => {
-                                       sourceConfig.month = imageryMonthPlanet < 10 ? "0" + imageryMonthPlanet : imageryMonthPlanet;
-                                       sourceConfig.year = imageryYearPlanet;
-                                       return sourceConfig;
-                                   },
+                                   sourceConfig => ({
+                                       ...sourceConfig,
+                                       month: imageryMonthPlanet < 10 ? "0" + imageryMonthPlanet : imageryMonthPlanet,
+                                       year: imageryYearPlanet,
+                                   }),
                                    this);
     };
 
@@ -520,15 +540,17 @@ class Collection extends React.Component {
         const { imageryStartDatePlanetDaily, imageryEndDatePlanetDaily, currentPlot } = this.state;
         // check so that the function is not called before the state is propagated
         if (imageryStartDatePlanetDaily && imageryEndDatePlanetDaily && currentPlot) {
-            const geometry = mercator.getViewPolygon(this.state.mapConfig);
             mercator.updateLayerSource(this.state.mapConfig,
                                        this.state.currentImagery.id,
-                                       "{\"type\": \"Polygon\", \"coordinates\":" + JSON.stringify(geometry.getCoordinates()) + "}",
-                                       sourceConfig => {
-                                           sourceConfig.startDate = imageryStartDatePlanetDaily;
-                                           sourceConfig.endDate = imageryEndDatePlanetDaily;
-                                           return sourceConfig;
-                                       },
+                                       mercator.geometryToGeoJSON(
+                                           mercator.getViewPolygon(this.state.mapConfig),
+                                           "EPSG:4326"
+                                       ),
+                                       sourceConfig => ({
+                                           ...sourceConfig,
+                                           startDate: imageryStartDatePlanetDaily,
+                                           endDate: imageryEndDatePlanetDaily,
+                                       }),
                                        this,
                                        this.removeAndAddVector);
         }
@@ -542,12 +564,18 @@ class Collection extends React.Component {
         mercator.updateLayerSource(this.state.mapConfig,
                                    currentImagery.id,
                                    this.state.currentProject.boundary,
-                                   sourceConfig => {
-                                       sourceConfig.month = (type === "sentinel1") ? imageryMonthSentinel1.toString() : imageryMonthSentinel2.toString();
-                                       sourceConfig.year = (type === "sentinel1") ? imageryYearSentinel1.toString() : imageryYearSentinel2.toString();
-                                       sourceConfig.bandCombination = (type === "sentinel1") ? bandCombinationSentinel1 : bandCombinationSentinel2;
-                                       return sourceConfig;
-                                   },
+                                   sourceConfig => ({
+                                       ...sourceConfig,
+                                       month: (type === "sentinel1")
+                                           ? imageryMonthSentinel1.toString()
+                                           : imageryMonthSentinel2.toString(),
+                                       year: (type === "sentinel1")
+                                           ? imageryYearSentinel1.toString()
+                                           : imageryYearSentinel2.toString(),
+                                       bandCombination: (type === "sentinel1")
+                                           ? bandCombinationSentinel1
+                                           : bandCombinationSentinel2,
+                                   }),
                                    this);
     };
 
@@ -571,6 +599,38 @@ class Collection extends React.Component {
             eventTarget.options[eventTarget.selectedIndex].getAttribute("date"),
             eventTarget.options[eventTarget.options.selectedIndex].getAttribute("cloud")
         );
+
+    updateGEEImagery = () =>
+        mercator.updateLayerSource(
+            this.state.mapConfig,
+            this.state.currentImagery.id,
+            this.state.currentProject.boundary,
+            sourceConfig => ({
+                ...sourceConfig,
+                imageVisParams: this.state.geeImageryVisParams,
+            }),
+            this
+        );
+
+    updateGEEImageCollection = () =>{
+        const { geeImageCollectionStartDate, geeImageCollectionEndDate } = this.state;
+        if (new Date(geeImageCollectionStartDate) > new Date(geeImageCollectionEndDate)) {
+            alert("Start date must be smaller than the end date.");
+        } else {
+            mercator.updateLayerSource(
+                this.state.mapConfig,
+                this.state.currentImagery.id,
+                this.state.currentProject.boundary,
+                sourceConfig => ({
+                    ...sourceConfig,
+                    collectionVisParams: this.state.geeImageCollectionVisParams,
+                    startDate: this.state.geeImageCollectionStartDate,
+                    endDate: this.state.geeImageCollectionEndDate,
+                }),
+                this
+            );
+        }
+    };
 
     getQueryString = (params) => "?" + Object.keys(params)
         .map(k => encodeURIComponent(k) + "=" + encodeURIComponent(params[k]))
@@ -1370,6 +1430,16 @@ class Collection extends React.Component {
                         setImageryDatePlanetDaily={this.setImageryDatePlanetDaily}
                         imagerySecureWatchAvailableDates={this.state.imagerySecureWatchAvailableDates}
                         onChangeSecureWatchSingleLayer={this.onChangeSecureWatchSingleLayer}
+                        geeImageryVisParams={this.state.geeImageryVisParams}
+                        setGEEImageryVisParams={this.setGEEImageryVisParams}
+                        updateGEEImagery={this.updateGEEImagery}
+                        geeImageCollectionVisParams={this.state.geeImageCollectionVisParams}
+                        geeImageCollectionStartDate={this.state.geeImageCollectionStartDate}
+                        geeImageCollectionEndDate={this.state.geeImageCollectionEndDate}
+                        setGEEImageCollectionVisParams={this.setGEEImageCollectionVisParams}
+                        setGEEImageCollectionStartDate={this.setGEEImageCollectionStartDate}
+                        setGEEImageCollectionEndDate={this.setGEEImageCollectionEndDate}
+                        updateGEEImageCollection={this.updateGEEImageCollection}
                         setStackingProfileDG={this.setStackingProfileDG}
                         loadingImages={this.state.imageryList.length === 0}
                     />
@@ -1758,7 +1828,7 @@ class ImageryOptions extends React.Component {
                     type="date"
                     id="planetDailyStartDate"
                     value={this.props.imageryStartDatePlanetDaily}
-                    max={new Date().toJSON().slice(0, 10)}
+                    max={new Date().toJSON().split("T")[0]}
                     min="2010-01-01"
                     style={{ width: "100%" }}
                     onChange={e => this.props.setImageryDatePlanetDaily(e.target)}
@@ -1770,7 +1840,7 @@ class ImageryOptions extends React.Component {
                     type="date"
                     id="planetDailyEndDate"
                     value={this.props.imageryEndDatePlanetDaily}
-                    max={new Date().toJSON().slice(0, 10)}
+                    max={new Date().toJSON().split("T")[0]}
                     min="2010-01-01"
                     style={{ width: "100%" }}
                     onChange={e => this.props.setImageryDatePlanetDaily(e.target)}
@@ -1911,6 +1981,78 @@ class ImageryOptions extends React.Component {
         );
     };
 
+    GEEImageMenus = () => (
+        <div className="GEEImageMenu my-2">
+            <div className="form-control form-control-sm">
+                <label>Visualization Parameters</label>
+                <textarea
+                    className="form-control"
+                    id="geeImageVisParams"
+                    value={this.props.geeImageryVisParams}
+                    onChange={e => this.props.setGEEImageryVisParams(e.target.value)}
+                >
+                    {this.props.geeImageryVisParams}
+                </textarea>
+                <br />
+                <button
+                    type="button"
+                    className="btn bg-lightgreen btn-sm btn-block"
+                    id="update-gee-image-button"
+                    onClick={this.props.updateGEEImagery}
+                >
+                    Update Image
+                </button>
+            </div>
+        </div>
+    );
+
+    GEEImageCollectionMenus = () => (
+        <div className="GEEImageCollectionMenu my-2">
+            <div className="form-control form-control-sm">
+                <label>Start Date</label>
+                <div className="slidecontainer form-control form-control-sm">
+                    <input
+                        type="date"
+                        id="geeImageCollectionStartDate"
+                        value={this.props.geeImageCollectionStartDate}
+                        max={new Date().toJSON().split("T")[0]}
+                        style={{ width: "100%" }}
+                        onChange={e => this.props.setGEEImageCollectionStartDate(e.target.value)}
+                    />
+                </div>
+                <label>End Date</label>
+                <div className="slidecontainer form-control form-control-sm">
+                    <input
+                        type="date"
+                        id="geeImageCollectionEndDate"
+                        value={this.props.geeImageCollectionEndDate}
+                        max={new Date().toJSON().split("T")[0]}
+                        style={{ width: "100%" }}
+                        onChange={e => this.props.setGEEImageCollectionEndDate(e.target.value)}
+                    />
+                </div>
+                <label>Visualization Parameters</label>
+                <textarea
+                    className="form-control"
+                    id="geeImageCollectionVisParams"
+                    value={this.props.geeImageCollectionVisParams}
+                    onChange={e => this.props.setGEEImageCollectionVisParams(e.target.value)}
+                >
+                    {this.props.geeImageCollectionVisParams}
+                </textarea>
+                <br />
+                <button
+                    type="button"
+                    className="btn bg-lightgreen btn-sm btn-block"
+                    id="update-gee-image-button"
+                    onClick={this.props.updateGEEImageCollection}
+                >
+                    Update Image
+                </button>
+            </div>
+        </div>
+    );
+
     render() {
         const { props } = this;
         return (
@@ -1949,6 +2091,8 @@ class ImageryOptions extends React.Component {
                         {props.imageryType === "SecureWatch" && this.secureWatchMenus()}
                         {props.imageryType === "Sentinel1" && this.sentinel1Menus()}
                         {props.imageryType === "Sentinel2" && this.sentinel2Menus()}
+                        {props.imageryType === "GEEImage" && this.GEEImageMenus()}
+                        {props.imageryType === "GEEImageCollection" && this.GEEImageCollectionMenus()}
                     </Fragment>
                 }
             </div>
