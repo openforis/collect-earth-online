@@ -761,7 +761,7 @@ class NewImagery extends React.Component {
     );
 
     formTemplate = (o) => (
-        (o.type && o.type === "select")
+        o.type === "select"
             ? this.formSelect(
                 o.display,
                 this.state.newImageryParams[o.key],
@@ -783,25 +783,9 @@ class NewImagery extends React.Component {
                     )
                     : null
             )
-            : (o.type && o.type === "textarea")
-                ? this.formTextArea(
-                    o.display,
-                    this.state.newImageryParams[o.key],
-                    e => this.setState({
-                        newImageryParams: { ...this.state.newImageryParams, [o.key]: e.target.value },
-                    }),
-                    (imageryOptions[this.state.selectedType].url && o.key === "accessToken")
-                        ? (
-                            <a href={imageryOptions[this.state.selectedType].url} target="_blank" rel="noreferrer noopener">
-                                Click here for help.
-                            </a>
-                        )
-                        : null,
-                    o.options ? o.options : {}
-                )
-            : this.formInput(
+        : o.type === "textarea"
+            ? this.formTextArea(
                 o.display,
-                o.type || "text",
                 this.state.newImageryParams[o.key],
                 e => this.setState({
                     newImageryParams: { ...this.state.newImageryParams, [o.key]: e.target.value },
@@ -815,6 +799,22 @@ class NewImagery extends React.Component {
                     : null,
                 o.options ? o.options : {}
             )
+        : this.formInput(
+            o.display,
+            o.type || "text",
+            this.state.newImageryParams[o.key],
+            e => this.setState({
+                newImageryParams: { ...this.state.newImageryParams, [o.key]: e.target.value },
+            }),
+            (imageryOptions[this.state.selectedType].url && o.key === "accessToken")
+                ? (
+                    <a href={imageryOptions[this.state.selectedType].url} target="_blank" rel="noreferrer noopener">
+                        Click here for help.
+                    </a>
+                )
+                : null,
+            o.options ? o.options : {}
+        )
     );
 
     // Imagery Type Change Handler //
