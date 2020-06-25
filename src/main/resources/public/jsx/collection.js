@@ -161,11 +161,6 @@ class Collection extends React.Component {
             || this.state.bandCombinationSentinel2 !== prevState.bandCombinationSentinel2) {
             this.updateSentinelLayer("sentinel2");
         }
-
-        if (this.state.geeImageCollectionStartDate !== prevState.geeImageCollectionStartDate
-            || this.state.geeImageCollectionEndDate !== prevState.geeImageCollectionEndDate) {
-            this.updateGEEImageCollection();
-        }
     }
 
     getProjectData = () => {
@@ -437,22 +432,9 @@ class Collection extends React.Component {
 
     setGEEImageCollectionVisParams = (newVisParams) => this.setState({ geeImageCollectionVisParams: newVisParams });
 
-    setGEEImageCollectionDate = (eventTarget) => {
-        const startDate = (eventTarget.id === "geeImageCollectionStartDate")
-            ? eventTarget.value
-            : this.state.geeImageCollectionStartDate;
-        const endDate = (eventTarget.id === "geeImageCollectionEndDate")
-            ? eventTarget.value
-            : this.state.geeImageCollectionEndDate;
-        if (new Date(startDate) > new Date(endDate)) {
-            alert("Start date must be smaller than the end date.");
-        } else {
-            this.setState({
-                geeImageCollectionStartDate: startDate,
-                geeImageCollectionEndDate: endDate,
-            });
-        }
-    };
+    setGEEImageCollectionStartDate = (newDate) => this.setState({ geeImageCollectionStartDate: newDate });
+
+    setGEEImageCollectionEndDate = (newDate) => this.setState({ geeImageCollectionEndDate: newDate });
 
     updateMapImagery = () => {
         mercator.setVisibleLayer(this.state.mapConfig, this.state.currentImagery.id);
@@ -510,11 +492,11 @@ class Collection extends React.Component {
         mercator.updateLayerSource(this.state.mapConfig,
                                    currentImagery.id,
                                    this.state.currentProject.boundary,
-                                   sourceConfig => {
-                                       sourceConfig.month = imageryMonthPlanet < 10 ? "0" + imageryMonthPlanet : imageryMonthPlanet;
-                                       sourceConfig.year = imageryYearPlanet;
-                                       return sourceConfig;
-                                   },
+                                   sourceConfig => ({
+                                       ...sourceConfig,
+                                       month: imageryMonthPlanet < 10 ? "0" + imageryMonthPlanet : imageryMonthPlanet,
+                                       year: imageryYearPlanet,
+                                   }),
                                    this);
     };
 
@@ -562,11 +544,11 @@ class Collection extends React.Component {
             mercator.updateLayerSource(this.state.mapConfig,
                                        this.state.currentImagery.id,
                                        "{\"type\": \"Polygon\", \"coordinates\":" + JSON.stringify(geometry.getCoordinates()) + "}",
-                                       sourceConfig => {
-                                           sourceConfig.startDate = imageryStartDatePlanetDaily;
-                                           sourceConfig.endDate = imageryEndDatePlanetDaily;
-                                           return sourceConfig;
-                                       },
+                                       sourceConfig => ({
+                                           ...sourceConfig,
+                                           startDate: imageryStartDatePlanetDaily,
+                                           endDate: imageryEndDatePlanetDaily,
+                                       }),
                                        this,
                                        this.removeAndAddVector);
         }
@@ -580,12 +562,18 @@ class Collection extends React.Component {
         mercator.updateLayerSource(this.state.mapConfig,
                                    currentImagery.id,
                                    this.state.currentProject.boundary,
-                                   sourceConfig => {
-                                       sourceConfig.month = (type === "sentinel1") ? imageryMonthSentinel1.toString() : imageryMonthSentinel2.toString();
-                                       sourceConfig.year = (type === "sentinel1") ? imageryYearSentinel1.toString() : imageryYearSentinel2.toString();
-                                       sourceConfig.bandCombination = (type === "sentinel1") ? bandCombinationSentinel1 : bandCombinationSentinel2;
-                                       return sourceConfig;
-                                   },
+                                   sourceConfig => ({
+                                       ...sourceConfig,
+                                       month: (type === "sentinel1")
+                                           ? imageryMonthSentinel1.toString()
+                                           : imageryMonthSentinel2.toString(),
+                                       year: (type === "sentinel1")
+                                           ? imageryYearSentinel1.toString()
+                                           : imageryYearSentinel2.toString(),
+                                       bandCombination: (type === "sentinel1")
+                                           ? bandCombinationSentinel1
+                                           : bandCombinationSentinel2,
+                                   }),
                                    this);
     };
 
@@ -615,26 +603,32 @@ class Collection extends React.Component {
             this.state.mapConfig,
             this.state.currentImagery.id,
             this.state.currentProject.boundary,
-            sourceConfig => {
-                sourceConfig.imageVisParams = this.state.geeImageryVisParams;
-                return sourceConfig;
-            },
+            sourceConfig => ({
+                ...sourceConfig,
+                imageVisParams: this.state.geeImageryVisParams,
+            }),
             this
         );
 
-    updateGEEImageCollection = () =>
-        mercator.updateLayerSource(
-            this.state.mapConfig,
-            this.state.currentImagery.id,
-            this.state.currentProject.boundary,
-            sourceConfig => {
-                sourceConfig.collectionVisParams = this.state.geeImageCollectionVisParams;
-                sourceConfig.startDate = this.state.geeImageCollectionStartDate;
-                sourceConfig.endDate = this.state.geeImageCollectionEndDate;
-                return sourceConfig;
-            },
-            this
-        );
+    updateGEEImageCollection = () =>{
+        const { geeImageCollectionStartDate, geeImageCollectionEndDate } = this.state;
+        if (new Date(geeImageCollectionStartDate) > new Date(geeImageCollectionEndDate)) {
+            alert("Start date must be smaller than the end date.");
+        } else {
+            mercator.updateLayerSource(
+                this.state.mapConfig,
+                this.state.currentImagery.id,
+                this.state.currentProject.boundary,
+                sourceConfig => ({
+                    ...sourceConfig,
+                    collectionVisParams: this.state.geeImageCollectionVisParams,
+                    startDate: this.state.geeImageCollectionStartDate,
+                    endDate: this.state.geeImageCollectionEndDate,
+                }),
+                this
+            );
+        }
+    };
 
     getQueryString = (params) => "?" + Object.keys(params)
         .map(k => encodeURIComponent(k) + "=" + encodeURIComponent(params[k]))
@@ -1440,7 +1434,8 @@ class Collection extends React.Component {
                         geeImageCollectionStartDate={this.state.geeImageCollectionStartDate}
                         geeImageCollectionEndDate={this.state.geeImageCollectionEndDate}
                         setGEEImageCollectionVisParams={this.setGEEImageCollectionVisParams}
-                        setGEEImageCollectionDate={this.setGEEImageCollectionDate}
+                        setGEEImageCollectionStartDate={this.setGEEImageCollectionStartDate}
+                        setGEEImageCollectionEndDate={this.setGEEImageCollectionEndDate}
                         updateGEEImageCollection={this.updateGEEImageCollection}
                         setStackingProfileDG={this.setStackingProfileDG}
                         loadingImages={this.state.imageryList.length === 0}
@@ -2003,7 +1998,7 @@ class ImageryOptions extends React.Component {
                         value={this.props.geeImageCollectionStartDate}
                         max={new Date().toJSON().split("T")[0]}
                         style={{ width: "100%" }}
-                        onChange={e => this.props.setGEEImageCollectionDate(e.target)}
+                        onChange={e => this.props.setGEEImageCollectionStartDate(e.target.value)}
                     />
                 </div>
                 <label>End Date</label>
@@ -2014,7 +2009,7 @@ class ImageryOptions extends React.Component {
                         value={this.props.geeImageCollectionEndDate}
                         max={new Date().toJSON().split("T")[0]}
                         style={{ width: "100%" }}
-                        onChange={e => this.props.setGEEImageCollectionDate(e.target)}
+                        onChange={e => this.props.setGEEImageCollectionEndDate(e.target.value)}
                     />
                 </div>
                 <label>Visualization Parameters</label>

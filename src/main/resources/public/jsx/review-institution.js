@@ -721,18 +721,7 @@ class NewImagery extends React.Component {
     //    Render Functions    //
 
     formInput = (title, type, value, callback, link = null, options = {}) => (
-        (type === "textarea")
-        ? <div className="mb-3" key={title}>
-            <label>{title}</label> {link}
-            <textarea
-                className="form-control"
-                onChange={e => callback(e)}
-                value={value || ""}
-                {...options}
-            >
-            </textarea>
-        </div>
-        : <div className="mb-3" key={title}>
+        <div className="mb-3" key={title}>
             <label>{title}</label> {link}
             <input
                 className="form-control"
@@ -755,6 +744,19 @@ class NewImagery extends React.Component {
             >
                 {options}
             </select>
+        </div>
+    );
+
+    formTextArea = (title, value, callback, link = null, options = {}) => (
+        <div className="mb-3" key={title}>
+            <label>{title}</label> {link}
+            <textarea
+                className="form-control"
+                onChange={e => callback(e)}
+                value={value || ""}
+                {...options}
+            >
+            </textarea>
         </div>
     );
 
@@ -781,6 +783,22 @@ class NewImagery extends React.Component {
                     )
                     : null
             )
+            : (o.type && o.type === "textarea")
+                ? this.formTextArea(
+                    o.display,
+                    this.state.newImageryParams[o.key],
+                    e => this.setState({
+                        newImageryParams: { ...this.state.newImageryParams, [o.key]: e.target.value },
+                    }),
+                    (imageryOptions[this.state.selectedType].url && o.key === "accessToken")
+                        ? (
+                            <a href={imageryOptions[this.state.selectedType].url} target="_blank" rel="noreferrer noopener">
+                                Click here for help.
+                            </a>
+                        )
+                        : null,
+                    o.options ? o.options : {}
+                )
             : this.formInput(
                 o.display,
                 o.type || "text",
