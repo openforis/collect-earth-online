@@ -156,7 +156,7 @@ public class PostgresUsers implements Users {
                             pstmt_email.setString(2, inputEmail);
                             pstmt_email.execute();
                             req.session().attribute("username", inputEmail);
-                            req.session().attribute("flash_message", "The user emial has been updated.");
+                            req.session().attribute("flash_message", "The user email has been updated.");
                         } else {
                             req.session().attribute("flash_message", "Account " + inputEmail + " already exists.");
                         }

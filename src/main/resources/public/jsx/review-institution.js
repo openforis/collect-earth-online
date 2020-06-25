@@ -343,7 +343,7 @@ class ImageryList extends React.Component {
     //    Remote Calls    //
 
     getImageryList = () => {
-        fetch(this.props.documentRoot + "/get-all-imagery?institutionId=" + this.props.institutionId)
+        fetch(this.props.documentRoot + "/get-institution-imagery?institutionId=" + this.props.institutionId)
             .then(response => response.ok ? response.json() : Promise.reject(response))
             .then(data => this.setState({ imageryList: data }))
             .catch(response => {
@@ -366,7 +366,7 @@ class ImageryList extends React.Component {
 
     deleteImagery = (imageryId) => {
         if (confirm("Do you REALLY want to delete this imagery?")) {
-            fetch(this.props.documentRoot + "/delete-institution-imagery",
+            fetch(this.props.documentRoot + "/archive-institution-imagery",
                   {
                       method: "POST",
                       body: JSON.stringify({
@@ -490,6 +490,18 @@ const imageryOptions = [
         type: "SecureWatch",
         params: [
             { key: "connectid", display: "Connect ID" },
+            {
+                key: "startDate",
+                display: "Start Date",
+                type: "date",
+                options: { max: new Date().toJSON().split("T")[0] },
+            },
+            {
+                key: "endDate",
+                display: "End Date",
+                type: "date",
+                options: { max: new Date().toJSON().split("T")[0] },
+            },
         ],
     },
     {
@@ -545,6 +557,52 @@ const imageryOptions = [
             { key: "min", display: "Min", type: "number", options: { step: "0.01" }},
             { key: "max", display: "Max", type: "number", options: { step: "0.01" }},
             { key: "cloudScore", display: "Cloud Score", type: "number", options: { min: "0", max: "100", step: "1" }},
+        ],
+    },
+    {
+        type: "GEEImage",
+        label: "GEE Image Asset",
+        params: [
+            {
+                key: "imageId",
+                display: "Asset ID",
+                options: { placeholder: "USDA/NAIP/DOQQ/n_4207309_se_18_1_20090525" },
+            },
+            {
+                key: "imageVisParams",
+                display: "Visualization Parameters (JSON format)",
+                type: "textarea",
+                options: { placeholder: "{\"bands\": [\"R\", \"G\", \"B\"], \"min\": 90, \"max\": 210}" },
+            },
+        ],
+    },
+    {
+        type: "GEEImageCollection",
+        label: "GEE ImageCollection Asset",
+        params: [
+            {
+                key: "collectionId",
+                display: "Asset ID",
+                options: { placeholder: "LANDSAT/LC08/C01/T1_SR" },
+            },
+            {
+                key: "startDate",
+                display: "Start Date",
+                type: "date",
+                options: { max: new Date().toJSON().split("T")[0] },
+            },
+            {
+                key: "endDate",
+                display: "End Date",
+                type: "date",
+                options: { max: new Date().toJSON().split("T")[0] },
+            },
+            {
+                key: "collectionVisParams",
+                display: "Visualization Parameters (JSON format)",
+                type: "textarea",
+                options: { placeholder: "{\"bands\": [\"B4\", \"B3\", \"B2\"], \"min\": 0, \"max\": 2000}" },
+            },
         ],
     },
     {
@@ -676,7 +734,7 @@ class NewImagery extends React.Component {
         const message = this.validateData(sourceConfig);
         if (!this.checkAllParams()) {
             alert("You must fill out all fields.");
-        } else if (["Planet", "PlanetDaily", "Sentinel1", "Sentinel2"].includes(sourceConfig.type) && message) {
+        } else if (["Planet", "PlanetDaily", "SecureWatch", "Sentinel1", "Sentinel2"].includes(sourceConfig.type) && message) {
             alert(message);
         } else if (this.titleIsTaken(this.state.newImageryTitle, this.props.imageryToEdit.id)) {
             alert("The title '" + this.state.newImageryTitle + "' is already taken.");
@@ -768,10 +826,10 @@ class NewImagery extends React.Component {
             return (isNaN(year) || year.toString().length !== 4) ? "Year should be 4 digit number"
                  : (isNaN(month) || month < 1 || month > 12) ? "Month should be between 1 and 12!"
                  : null;
-        } else if (sourceConfig.type === "PlanetDaily") {
-            const startDate = sourceConfig.startDate;
-            const endDate = sourceConfig.endDate;
-            return (new Date(startDate) > new Date(endDate)) ? "Start date must be smaller than the end date." : null;
+        } else if (sourceConfig.startDate
+            && sourceConfig.endDate
+            && (new Date(sourceConfig.startDate) > new Date(sourceConfig.endDate))) {
+            return "Start date must be smaller than the end date.";
         } else {
             return null;
         }
@@ -806,8 +864,21 @@ class NewImagery extends React.Component {
         </div>
     );
 
+    formTextArea = (title, value, callback, link = null, options = {}) => (
+        <div className="mb-3" key={title}>
+            <label>{title}</label> {link}
+            <textarea
+                className="form-control"
+                onChange={e => callback(e)}
+                value={value || ""}
+                {...options}
+            >
+            </textarea>
+        </div>
+    );
+
     formTemplate = (o) => (
-        (o.type && o.type === "select")
+        o.type === "select"
             ? this.formSelect(
                 o.display,
                 this.state.newImageryParams[o.key],
@@ -829,9 +900,9 @@ class NewImagery extends React.Component {
                     )
                     : null
             )
-            : this.formInput(
+        : o.type === "textarea"
+            ? this.formTextArea(
                 o.display,
-                o.type || "text",
                 this.state.newImageryParams[o.key],
                 e => this.setState({
                     newImageryParams: { ...this.state.newImageryParams, [o.key]: e.target.value },
@@ -845,6 +916,22 @@ class NewImagery extends React.Component {
                     : null,
                 o.options ? o.options : {}
             )
+        : this.formInput(
+            o.display,
+            o.type || "text",
+            this.state.newImageryParams[o.key],
+            e => this.setState({
+                newImageryParams: { ...this.state.newImageryParams, [o.key]: e.target.value },
+            }),
+            (imageryOptions[this.state.selectedType].url && o.key === "accessToken")
+                ? (
+                    <a href={imageryOptions[this.state.selectedType].url} target="_blank" rel="noreferrer noopener">
+                        Click here for help.
+                    </a>
+                )
+                : null,
+            o.options ? o.options : {}
+        )
     );
 
     // Imagery Type Change Handler //
@@ -875,6 +962,11 @@ class NewImagery extends React.Component {
         } else if (imageryOptions[val].type.includes("Mapbox")) {
             this.setState({
                 newImageryAttribution: "© Mapbox",
+                newImageryParams: {},
+            });
+        } else if (imageryOptions[val].type.includes("GEE")) {
+            this.setState({
+                newImageryAttribution: "Google Earth Engine | © Google LLC",
                 newImageryParams: {},
             });
         } else {

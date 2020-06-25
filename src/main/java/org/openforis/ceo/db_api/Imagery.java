@@ -7,11 +7,13 @@ import spark.Response;
 
 public interface Imagery {
 
-    String getAllImagery(Request req, Response res) throws IOException;
+    String getInstitutionImagery(Request req, Response res) throws IOException;
+    String getProjectImagery(Request req, Response res) throws IOException;
+    String getPublicImagery(Request req, Response res) throws IOException;
     JsonObject getImagerySourceConfig(Integer imageryId);
     String addInstitutionImagery(Request req, Response res) throws IOException;
     String addGeoDashImagery(Request req, Response res) throws IOException;
-    String deleteInstitutionImagery(Request req, Response res) throws IOException;
+    String archiveInstitutionImagery(Request req, Response res) throws IOException;
     String updateInstitutionImagery(Request req, Response res) throws IOException;
 
 }

@@ -24,7 +24,7 @@ import { Circle, LineString, Point } from "ol/geom";
 import { DragBox, Select } from "ol/interaction";
 import { GeoJSON, KML } from "ol/format";
 import { Tile as TileLayer, Vector as VectorLayer, Group as LayerGroup } from "ol/layer";
-import { BingMaps, Cluster, TileWMS, Vector as VectorSource, XYZ, OSM } from "ol/source";
+import { BingMaps, Cluster, TileWMS, Vector as VectorSource, XYZ } from "ol/source";
 import { Circle as CircleStyle, Icon, Fill, Stroke, Style, Text as StyleText, RegularShape } from "ol/style";
 import { fromLonLat, transform, transformExtent } from "ol/proj";
 import { fromExtent, fromCircle } from "ol/geom/Polygon";
@@ -165,6 +165,52 @@ mercator.getTopVisiblePlanetLayerDate = (mapConfig, layerId) => {
 *** Create map source and layer objects from JSON descriptions
 ***
 *****************************************************************************/
+// Helper function
+mercator.__sendGEERequest = function (theJson, sourceConfig, attribution, documentRoot) {
+    const theID = Math.random().toString(36).substr(2, 16)
+        + "_" + Math.random().toString(36).substr(2, 9);
+    const geeLayer = new XYZ({
+        url: "https://earthengine.googleapis.com/v1alpha/projects/earthengine-legacy/maps/temp/tiles/{z}/{x}/{y}",
+        id: theID,
+        attributions: attribution,
+    });
+    geeLayer.setProperties({ id: theID });
+    fetch(documentRoot + "/geo-dash/gateway-request", {
+        method: "POST",
+        headers: {
+            "Accept": "application/json",
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify(theJson),
+    })
+        .then(res => {
+            if (res.ok) {
+                return res.json();
+            } else {
+                Promise.reject();
+            }
+        })
+        .then(data => {
+            if (data.hasOwnProperty("url")) {
+                const geeLayer = new XYZ({
+                    url: data.url,
+                    attributions: attribution,
+                });
+                mercator.currentMap.getLayers().forEach(function (lyr) {
+                    if (theID && theID === lyr.getSource().get("id")) {
+                        lyr.setSource(geeLayer);
+                    }
+                });
+            } else {
+                console.warn("Wrong Data Returned");
+            }
+        }).catch(response => {
+            console.log("Error loading " + sourceConfig.type + " imagery: ");
+            console.log(response);
+        });
+    return geeLayer;
+};
+
 
 // [Pure] Returns a new ol.source.* object or null if the sourceConfig
 // is invalid.
@@ -290,47 +336,23 @@ mercator.createSource = function (sourceConfig, imageryId, attribution, document
             dateFrom: sourceConfig.year + "-" + (sourceConfig.month.length === 1 ? "0" : "") + sourceConfig.month + "-01",
             dateTo : formatDateISO(endDate),
         };
-        const theID = Math.random().toString(36).substr(2, 16) + "_" + Math.random().toString(36).substr(2, 9);
-        const geeLayer = new XYZ({
-            url: "https://earthengine.googleapis.com/v1alpha/projects/earthengine-legacy/maps/temp/tiles/{z}/{x}/{y}",
-            id: theID,
-            attributions: attribution,
-        });
-        geeLayer.setProperties({ id: theID });
-        fetch(documentRoot + "/geo-dash/gateway-request", {
-            method: "POST",
-            headers: {
-                "Accept": "application/json",
-                "Content-Type": "application/json",
-            },
-            body: JSON.stringify(theJson),
-        })
-            .then(res => {
-                if (res.ok) {
-                    return res.json();
-                } else {
-                    Promise.reject();
-                }
-            })
-            .then(data => {
-                if (data.hasOwnProperty("url")) {
-                    const geeLayer = new XYZ({
-                        url: data.url,
-                        attributions: attribution,
-                    });
-                    mercator.currentMap.getLayers().forEach(function (lyr) {
-                        if (theID && theID === lyr.getSource().get("id")) {
-                            lyr.setSource(geeLayer);
-                        }
-                    });
-                } else {
-                    console.warn("Wrong Data Returned");
-                }
-            }).catch(response => {
-                console.log("Error loading " + sourceConfig.type + " imagery: ");
-                console.log(response);
-            });
-        return geeLayer;
+        return mercator.__sendGEERequest(theJson, sourceConfig, attribution, documentRoot);
+    } else if (sourceConfig.type === "GEEImage") {
+        const theJson = {
+            path: "image",
+            imageName: sourceConfig.imageId,
+            visParams: JSON.parse(sourceConfig.imageVisParams),
+        };
+        return mercator.__sendGEERequest(theJson, sourceConfig, attribution, documentRoot);
+    } else if (sourceConfig.type === "GEEImageCollection") {
+        const theJson = {
+            path: "meanImageByMosaicCollection",
+            collectionName: sourceConfig.collectionId,
+            visParams: JSON.parse(sourceConfig.collectionVisParams),
+            dateFrom: sourceConfig.startDate,
+            dateTo: sourceConfig.endDate,
+        };
+        return mercator.__sendGEERequest(theJson, sourceConfig, attribution, documentRoot);
     } else if (sourceConfig.type === "GeeGateway") {
         //get variables and make ajax call to get mapid and token
         //then add xyz layer
@@ -424,7 +446,7 @@ mercator.createSource = function (sourceConfig, imageryId, attribution, document
             attributionsCollapsible: false,
         });
     } else {
-        return new OSM();
+        return new XYZ({ url: "img/source-not-found.png" });
     }
 };
 
@@ -901,6 +923,17 @@ mercator.geometryToVectorSource = function (geometry) {
     });
 };
 
+mercator.geometryToGeoJSON = function (geometry, dataProjection, featureProjection = null, decimals = 10) {
+    const format = new GeoJSON;
+    return format.writeGeometry(
+        geometry,
+        {
+            dataProjection: dataProjection,
+            featureProjection: featureProjection || dataProjection,
+            decimals: decimals,
+        });
+};
+
 // [Pure] Returns a polygon geometry matching the passed in
 // parameters.
 mercator.getPlotPolygon = function (center, size, shape) {
@@ -908,21 +941,9 @@ mercator.getPlotPolygon = function (center, size, shape) {
     const centerX = coords[0];
     const centerY = coords[1];
     const radius = size / 2;
-    if (shape === "circle") {
-        return new Circle([centerX, centerY], radius);
-    } else {
-        return fromExtent([centerX - radius,
-                           centerY - radius,
-                           centerX + radius,
-                           centerY + radius]);
-    }
-};
-
-// [Pure] Returns a bounding box for the plot in Web Mercator as [llx,
-// lly, urx, ury].
-mercator.getPlotExtent = function (center, size, shape) {
-    const geometry = mercator.getPlotPolygon(center, size, shape);
-    return transformExtent(geometry.getExtent(), "EPSG:3857", "EPSG:4326");
+    return shape === "circle"
+        ? new Circle([centerX, centerY], radius)
+        : fromExtent([centerX - radius, centerY - radius, centerX + radius, centerY + radius]);
 };
 
 // [Pure] Returns a new vector source containing the passed in plots.
