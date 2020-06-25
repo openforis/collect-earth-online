@@ -245,7 +245,7 @@ class Collection extends React.Component {
                         }
                     })
                     .catch(() => {
-                        alert("It is likely that your connect key is expired. See console for more details.");
+                        alert("It is likely that your Connect ID is expired. See console for more details.");
                         return { features: [] };
                     })
                     .then(data => {
@@ -253,7 +253,7 @@ class Collection extends React.Component {
                             imagerySecureWatchAvailableDates: data.features
                                 .filter(feature =>
                                     Date.parse(feature.properties.acquisitionDate) <= Date.parse(currentImagery.sourceConfig.endDate)
-                            && Date.parse(feature.properties.acquisitionDate) >= Date.parse(currentImagery.sourceConfig.startDate)
+                                        && Date.parse(feature.properties.acquisitionDate) >= Date.parse(currentImagery.sourceConfig.startDate)
                                 )
                                 .map(feature => ({
                                     acquisitionDate: feature.properties.acquisitionDate,
