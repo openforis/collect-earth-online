@@ -2263,7 +2263,11 @@ function QuitMenu({ userId, projectId, documentRoot, toggleQuitModal }) {
             id="quitModal"
             onClick={toggleQuitModal}
         >
-            <div className="modal-dialog modal-dialog-centered" role="document">
+            <div
+                className="modal-dialog modal-dialog-centered"
+                role="document"
+                onClick={e => e.stopPropagation()}
+            >
                 <div className="modal-content" id="quitModalContent">
                     <div className="modal-header">
                         <h5 className="modal-title" id="quitModalTitle">Confirmation</h5>
