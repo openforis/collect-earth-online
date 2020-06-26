@@ -74,6 +74,7 @@ public class PostgresImagery implements Imagery {
             try (var rs = pstmt.executeQuery()) {
                 return buildImageryArray(rs, !isInstAdminQuery(userId, institutionId)).toString();
             }
+
         } catch (SQLException e) {
             System.out.println(e.getMessage());
             return "";
@@ -83,8 +84,8 @@ public class PostgresImagery implements Imagery {
     public String getProjectImagery(Request req, Response res) {
         final var projectId = req.queryParams("projectId");
         final var userId    = req.session().attributes().contains("userid")
-                ? req.session().attribute("userid").toString()
-                : "-1";
+                                ? req.session().attribute("userid").toString()
+                                : "-1";
         try (var conn = connect();
              var pstmt = conn.prepareStatement("SELECT * FROM select_imagery_by_project(?, ?)")) {
 
@@ -94,7 +95,6 @@ public class PostgresImagery implements Imagery {
             try (var rs = pstmt.executeQuery()) {
                 return buildImageryArray(rs, true).toString();
             }
-
         } catch (SQLException e) {
             System.out.println(e.getMessage());
             return "";

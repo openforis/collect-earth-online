@@ -40,3 +40,24 @@ CREATE FUNCTION delete_project_imagery(_project_rid integer)
     WHERE project_rid = _project_rid
 
 $$ LANGUAGE SQL;
+
+DROP FUNCTION select_imagery_by_project(_project_rid integer, _user_rid integer);
+
+CREATE FUNCTION select_imagery_by_project(_project_rid integer, _user_rid integer)
+ RETURNS setOf imagery_return AS $$
+
+    SELECT DISTINCT imagery_uid, p.institution_rid, visibility, title, attribution, extent, source_config
+    FROM imagery i, projects p, project_imagery pi
+    WHERE i.institution_rid = p.institution_rid
+        AND project_rid = _project_rid
+        AND pi.imagery_rid = i.imagery_uid
+        AND i.archived = FALSE
+        AND (i.visibility = 'public'
+            OR (SELECT count(*) > 0
+                FROM get_all_users_by_institution_id(p.institution_rid)
+                WHERE user_id = _user_rid)
+            OR _user_rid = 1)
+
+    ORDER BY title
+
+$$ LANGUAGE SQL;
