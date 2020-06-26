@@ -4,11 +4,11 @@ DO $$
     _sql text;
  BEGIN
     SELECT INTO _sql
-        'DROP TABLE ext_tables.' || table_name
+        string_agg(format('DROP TABLE ext_tables.%s;', table_name), E'\n')
     FROM (
         SELECT table_name,
-            (select project_uid FROM projects WHERE plots_ext_table = table_name) as p,
-            (select project_uid FROM projects WHERE samples_ext_table = table_name) as s
+            (SELECT project_uid FROM projects WHERE plots_ext_table = table_name) as p,
+            (SELECT project_uid FROM projects WHERE samples_ext_table = table_name) as s
         FROM information_schema.tables
         WHERE table_schema='ext_tables'
             AND table_type='BASE TABLE'
@@ -18,7 +18,7 @@ DO $$
     IF _sql IS NOT NULL THEN
         EXECUTE _sql;
     ELSE
-        RAISE NOTICE 'No functions found.';
+        RAISE NOTICE 'No orphaned tables found.';
     END IF;
  END
 $$  LANGUAGE plpgsql;
@@ -27,10 +27,10 @@ $$  LANGUAGE plpgsql;
 SELECT archive_project(project_uid)
 FROM (
     SELECT project_uid, availability,
-    EXTRACT(days FROM now() - created_date) as p_age,
-    CASE WHEN COUNT(DISTINCT(user_plot_uid)) = 0 THEN 0
-        ELSE COUNT(DISTINCT(user_plot_uid)) / COUNT(DISTINCT(plot_uid))
-        END as complete
+        EXTRACT(days FROM now() - created_date) as p_age,
+        CASE WHEN COUNT(DISTINCT(user_plot_uid)) = 0 THEN 0
+            ELSE COUNT(DISTINCT(user_plot_uid)) / COUNT(DISTINCT(plot_uid))
+            END as complete
     FROM projects
     LEFT JOIN plots
         ON project_uid = project_rid
@@ -48,8 +48,10 @@ WHERE (p_age > 180
 
 SELECT delete_project(project_uid)
 FROM (
-    SELECT project_uid, availability, archived_date,
-    EXTRACT(days from now() - archived_date) as p_age
+    SELECT project_uid,
+        availability,
+        archived_date,
+        EXTRACT(days from now() - archived_date) as p_age
     FROM projects
 ) a
 WHERE availability = 'archived'
@@ -66,7 +68,7 @@ FROM (
     ON institution_uid = institution_rid
         AND availability <> 'archived'
     GROUP BY institution_uid
-    order by p_cnt desc
+    ORDER BY p_cnt desc
 ) a
 WHERE (i_age > 180 OR institution_uid < 500)
     AND p_cnt = 0;
@@ -76,14 +78,16 @@ DELETE FROM institutions
 WHERE institution_uid IN
 (
     SELECT institution_uid
-        FROM (
-            SELECT institution_uid, archived, archived_date,
+    FROM (
+        SELECT institution_uid,
+            archived,
+            archived_date,
             EXTRACT(days from now() - archived_date) as i_age
-            FROM institutions
-        ) a
+        FROM institutions
+    ) a
     WHERE i_age > 180
         AND archived = TRUE
 );
 
-REINDEX DATABASE CEO;
+REINDEX DATABASE ceo;
 VACUUM FULL;

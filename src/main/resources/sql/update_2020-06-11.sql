@@ -4,6 +4,7 @@ ALTER TABLE imagery ADD COLUMN created_date date DEFAULT NOW();
 ALTER TABLE imagery ADD COLUMN archived_date date;
 
 UPDATE institutions SET archived_date = NOW() WHERE archived = true;
+UPDATE imagery SET archived_date = NOW() WHERE archived = true;
 
 CREATE OR REPLACE FUNCTION archive_institution(_institution_uid integer)
  RETURNS integer AS $$

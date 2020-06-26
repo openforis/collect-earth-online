@@ -747,7 +747,7 @@ CREATE OR REPLACE FUNCTION create_project(
 
 $$ LANGUAGE SQL;
 
--- Delete project plots and external files but keep project entry as archived
+-- Delete project and external file
 CREATE OR REPLACE FUNCTION delete_project(_project_uid integer)
  RETURNS void AS $$
 
