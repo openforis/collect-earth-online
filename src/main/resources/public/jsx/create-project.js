@@ -110,7 +110,17 @@ class Project extends React.Component {
         }
     };
 
-    createProjectApi = () =>
+    imageryIsPublic = (imageryId) => {
+        const imagery = this.state.imageryList.filter(imagery => imagery.id === imageryId)[0];
+        return imagery.visibility === "public";
+    };
+
+    createProjectApi = () => {
+        const projectImageryList = (this.state.projectDetails.privacyLevel === "public"
+                || this.state.projectDetails.privacyLevel === "users")
+            ? this.state.projectImageryList.filter(imageryId => this.imageryIsPublic(imageryId))
+            : this.state.projectImageryList;
+
         fetch(this.props.documentRoot + "/create-project",
               {
                   method: "POST",
@@ -118,9 +128,9 @@ class Project extends React.Component {
                   body: JSON.stringify({
                       institutionId: this.props.institutionId,
                       imageryId: this.state.projectDetails.imageryId,
-                      projectImageryList: this.state.projectImageryList.includes(this.state.projectDetails.imageryId)
-                          ? this.state.projectImageryList
-                          : [...this.state.projectImageryList, this.state.projectDetails.imageryId],
+                      projectImageryList: projectImageryList.includes(this.state.projectDetails.imageryId)
+                          ? projectImageryList
+                          : [...projectImageryList, this.state.projectDetails.imageryId],
                       lonMin: this.state.coordinates.lonMin,
                       lonMax: this.state.coordinates.lonMax,
                       latMin: this.state.coordinates.latMin,
@@ -165,6 +175,7 @@ class Project extends React.Component {
                 alert("Error creating project.\n\n" + message);
                 this.setState({ showModal: false });
             });
+    }
 
     validateProject = () => {
         const { projectDetails } = this.state;

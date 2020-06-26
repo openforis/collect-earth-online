@@ -63,9 +63,17 @@ class Project extends React.Component {
 
     }
 
+    imageryIsPublic = (imageryId) => {
+        const imagery = this.state.imageryList.filter(imagery => imagery.id === imageryId)[0];
+        return imagery.visibility === "public";
+    };
+
     updateProject = () => {
         if (this.validateProject() && confirm("Do you REALLY want to update this project?")) {
-
+            const projectImageryList = (this.state.projectDetails.privacyLevel === "public"
+                    || this.state.projectDetails.privacyLevel === "users")
+                ? this.state.projectImageryList.filter(imageryId => this.imageryIsPublic(imageryId))
+                : this.state.projectImageryList;
             fetch(this.props.documentRoot + "/update-project",
                   {
                       method: "POST",
@@ -77,9 +85,9 @@ class Project extends React.Component {
                           name: this.state.projectDetails.name,
                           privacyLevel: this.state.projectDetails.privacyLevel,
                           projectOptions: this.state.projectDetails.projectOptions,
-                          projectImageryList: this.state.projectImageryList.includes(this.state.projectDetails.imageryId)
-                              ? this.state.projectImageryList
-                              : [...this.state.projectImageryList, this.state.projectDetails.imageryId],
+                          projectImageryList: projectImageryList.includes(this.state.projectDetails.imageryId)
+                              ? projectImageryList
+                              : [...projectImageryList, this.state.projectDetails.imageryId],
                       }),
                   })
                 .then(response => {
@@ -510,7 +518,12 @@ function ProjectDesignReview({
             <ProjectAOI
                 coordinates={coordinates}
                 imageryId={projectDetails.imageryId}
-                imageryList={imageryList}
+                imageryList={imageryList.filter(imagery =>
+                    (projectDetails.privacyLevel === "public")
+                    || (projectDetails.privacyLevel === "users")
+                        ? imagery.visibility === "public"
+                        : imagery
+                )}
                 setProjectDetail={setProjectDetail}
                 projectImageryList={projectImageryList}
                 addRemoveProjectImagery={addRemoveProjectImagery}
