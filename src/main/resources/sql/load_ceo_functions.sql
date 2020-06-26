@@ -378,7 +378,8 @@ CREATE OR REPLACE FUNCTION archive_institution(_institution_uid integer)
     WHERE institution_rid = _institution_uid;
 
     UPDATE institutions
-    SET archived = true
+    SET archived = true,
+        archived_date = NOW()
     WHERE institution_uid = _institution_uid
     RETURNING institution_uid;
 
@@ -770,7 +771,7 @@ CREATE OR REPLACE FUNCTION create_project(
 
 $$ LANGUAGE SQL;
 
--- Delete project plots and external files but keep project entry as archived
+-- Delete project and external file
 CREATE OR REPLACE FUNCTION delete_project(_project_uid integer)
  RETURNS void AS $$
 
@@ -783,7 +784,7 @@ CREATE OR REPLACE FUNCTION delete_project(_project_uid integer)
             ON project_uid = project_rid
             AND project_uid = _project_uid);
 
-    UPDATE projects SET availability='archived' WHERE project_uid = _project_uid;
+    DELETE FROM projects WHERE project_uid = _project_uid;
 
     EXECUTE
     'DROP TABLE IF EXISTS ext_tables.project_' || _project_uid || '_plots_csv;'
