@@ -1160,40 +1160,43 @@ class MapWidget extends React.Component {
     toggleDegDataType = evt => this.props.handleDegDataType(evt.target.checked ? "sar" : "landsat");
 
     getStretchToggle = () => this.props.degDataType === "landsat"
-        ? <div className="col-6">
-            <span className="ctrlText font-weight-bold">Bands: </span>
-            <select
-                className={"form-control"}
-                style={{
-                    maxWidth: "65%",
-                    display: "inline-block",
-                    fontSize: ".8rem",
-                    height: "30px",
-                }}
-                onChange={evt => this.setStretch(evt)}
-            >
-                <option value={321}>R,G,B</option>
-                <option value={543}>SWIR,NIR,R</option>
-                <option value={453}>NIR,SWIR,R</option>
-            </select>
-        </div>
+        ?
+            <div className="col-6">
+                <span className="ctrlText font-weight-bold">Bands: </span>
+                <select
+                    className={"form-control"}
+                    style={{
+                        maxWidth: "65%",
+                        display: "inline-block",
+                        fontSize: ".8rem",
+                        height: "30px",
+                    }}
+                    onChange={evt => this.setStretch(evt)}
+                >
+                    <option value={321}>R,G,B</option>
+                    <option value={543}>SWIR,NIR,R</option>
+                    <option value={453}>NIR,SWIR,R</option>
+                </select>
+            </div>
         : this.props.isDegradation
-        ? <div className="col-6">
-            <span className="ctrlText font-weight-bold">Band Combination: </span>
-            <span className="ctrlText">VV, VH, VV/VH </span>
-        </div>
+            ?
+                <div className="col-6">
+                    <span className="ctrlText font-weight-bold">Band Combination: </span>
+                    <span className="ctrlText">VV, VH, VV/VH </span>
+                </div>
         : "";
 
     getDegDataTypeToggle = () => this.props.isDegradation
-        ? <div className="col-6">
-            <span className="ctrlText font-weight-bold">Data: </span>
-            <span className="ctrlText">LANDSAT </span>
-            <label className="switch">
-                <input type="checkbox" onChange={evt => this.toggleDegDataType(evt)}/>
-                <span className="switchslider round"/>
-            </label>
-            <span className="ctrlText"> SAR</span>
-        </div>
+        ?
+            <div className="col-6">
+                <span className="ctrlText font-weight-bold">Data: </span>
+                <span className="ctrlText">LANDSAT </span>
+                <label className="switch">
+                    <input type="checkbox" onChange={evt => this.toggleDegDataType(evt)}/>
+                    <span className="switchslider round"/>
+                </label>
+                <span className="ctrlText"> SAR</span>
+            </div>
         : "";
 
     render() {
