@@ -188,6 +188,7 @@ def insert_projects():
                     if not ("published_date" in project): project["published_date"]=None
                     if not ("closed_date" in project): project["closed_date"]=None
                     if not ("archived_date" in project): project["archived_date"]=None
+                    if not ("projectOptions" in project): project["projectOptions"]=None
 
                     cur.execute("select * from create_project_migration(%s, %s, %s::text, %s::text, %s::text, %s::text, "
                     + "ST_SetSRID(ST_GeomFromGeoJSON(%s), 4326), %s, %s::text, %s, %s, %s::text, %s, %s::text, "
@@ -198,7 +199,7 @@ def insert_projects():
                     project["plotSpacing"], project["plotShape"], project["plotSize"], project["sampleDistribution"],
                     project["samplesPerPlot"], project["sampleResolution"], json.dumps(project["sampleValues"]),
                     json.dumps(project["surveyRules"]),None, project["created_date"], project["published_date"],
-                    project["closed_date"], project["archived_date"], project["projectOptions"]))
+                    project["closed_date"], project["archived_date"], json.dumps(project["projectOptions"])))
 
                     project_id = project["id"]
                     for dash in dashArr:

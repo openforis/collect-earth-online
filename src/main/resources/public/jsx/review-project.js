@@ -206,7 +206,7 @@ class Project extends React.Component {
     };
 
     getImageryList = () => {
-        fetch(this.props.documentRoot + "/get-all-imagery?institutionId=" + this.state.projectDetails.institution)
+        fetch(this.props.documentRoot + "/get-institution-imagery?institutionId=" + this.state.projectDetails.institution)
             .then(response => response.ok ? response.json() : Promise.reject(response))
             .then(data => this.setState({ imageryList: data }))
             .catch(response => {

@@ -17,51 +17,19 @@ import spark.Response;
 
 public class JsonImagery implements Imagery {
 
-    @Override
+    public String getInstitutionImagery(Request req, Response res) {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
     public String getProjectImagery(Request req, Response res) {
         // TODO Auto-generated method stub
         return null;
     }
 
-    public String getAllImagery(Request req, Response res) {
-        var institutionId = req.queryParams("institutionId");
-        var imageryList = elementToArray(readJsonFile("imagery-list.json"));
-        var filteredImagery = (institutionId == null || institutionId.isEmpty())
-            ? filterJsonArray(imageryList,
-                              imagery -> imagery.get("visibility").getAsString().equals("public")
-                                         && imagery.get("archived").getAsBoolean() != true)
-            : filterJsonArray(imageryList,
-                              imagery -> (imagery.get("visibility").getAsString().equals("public")
-                                             || imagery.get("institution").getAsString().equals(institutionId))
-                                          && imagery.get("archived").getAsBoolean() != true);
-        return mapJsonArray(filteredImagery,
-                            imagery -> {
-                                var sourceConfig = imagery.get("sourceConfig").getAsJsonObject();
-                                // Return only necessary fields for types we proxy
-                                if (sourceConfig.get("type").getAsString().equals("GeoServer")) {
-                                    var cleanSource = new JsonObject();
-                                    cleanSource.add("type", sourceConfig.get("type"));
-                                    imagery.add("sourceConfig", cleanSource);
-                                    return imagery;
-                                } else if (sourceConfig.get("type").getAsString().equals("SecureWatch")) {
-                                    var cleanSource = new JsonObject();
-                                    cleanSource.add("type", sourceConfig.get("type"));
-                                    cleanSource.add("startDate", sourceConfig.get("startDate"));
-                                    cleanSource.add("endDate", sourceConfig.get("endDate"));
-                                    cleanSource.add("featureProfile", sourceConfig.get("featureProfile"));
-                                    imagery.add("sourceConfig", cleanSource);
-                                    return imagery;
-                                } else if (sourceConfig.get("type").getAsString().equals("Planet")) {
-                                    var cleanSource = new JsonObject();
-                                    cleanSource.add("type",  sourceConfig.get("type"));
-                                    cleanSource.add("month", sourceConfig.get("month"));
-                                    cleanSource.add("year",  sourceConfig.get("year"));
-                                    imagery.add("sourceConfig", cleanSource);
-                                    return imagery;
-                                } else {
-                                    return imagery;
-                                }
-                            }).toString();
+    public String getPublicImagery(Request req, Response res) {
+        // TODO Auto-generated method stub
+        return null;
     }
 
     public JsonObject getImagerySourceConfig(Integer imageryId) {

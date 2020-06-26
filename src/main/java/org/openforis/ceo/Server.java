@@ -234,8 +234,9 @@ public class Server implements SparkApplication {
         post("/update-institution",                   institutions::updateInstitution);
 
         // Routing Table: Imagery API
-        get("/get-all-imagery",                       imagery::getAllImagery);
+        get("/get-institution-imagery",               imagery::getInstitutionImagery);
         get("/get-project-imagery",                   imagery::getProjectImagery);
+        get("/get-public-imagery",                    imagery::getPublicImagery);
         post("/add-geodash-imagery",                  imagery::addGeoDashImagery);
         post("/add-institution-imagery",              imagery::addInstitutionImagery);
         post("/archive-institution-imagery",          imagery::archiveInstitutionImagery);
