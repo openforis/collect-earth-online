@@ -1177,20 +1177,24 @@ class MapWidget extends React.Component {
                 <option value={453}>NIR,SWIR,R</option>
             </select>
         </div>
-        : <div className="col-6">
+        : this.props.isDegradation
+        ? <div className="col-6">
             <span className="ctrlText font-weight-bold">Band Combination: </span>
             <span className="ctrlText">VV, VH, VV/VH </span>
-        </div>;
+        </div>
+        : "";
 
-    getDegDataTypeToggle = () => <div className="col-6">
-        <span className="ctrlText font-weight-bold">Data: </span>
-        <span className="ctrlText">LANDSAT </span>
-        <label className="switch">
-            <input type="checkbox" onChange={evt => this.toggleDegDataType(evt)}/>
-            <span className="switchslider round"/>
-        </label>
-        <span className="ctrlText"> SAR</span>
-    </div>;
+    getDegDataTypeToggle = () => this.props.isDegradation
+        ? <div className="col-6">
+            <span className="ctrlText font-weight-bold">Data: </span>
+            <span className="ctrlText">LANDSAT </span>
+            <label className="switch">
+                <input type="checkbox" onChange={evt => this.toggleDegDataType(evt)}/>
+                <span className="switchslider round"/>
+            </label>
+            <span className="ctrlText"> SAR</span>
+        </div>
+        : "";
 
     render() {
         return <React.Fragment>
