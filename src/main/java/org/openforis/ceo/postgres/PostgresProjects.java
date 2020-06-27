@@ -518,6 +518,22 @@ public class PostgresProjects implements Projects {
         }
     }
 
+    private void insertProjectImagery(Integer projectId, JsonArray projectImageryIds) {
+        try (var conn = connect()) {
+            projectImageryIds.forEach(projectImageryId -> {
+                try (var pstmt = conn.prepareStatement("SELECT * FROM insert_project_imagery(?,?)")) {
+                    pstmt.setInt(1, projectId);
+                    pstmt.setInt(2, projectImageryId.getAsInt());
+                    pstmt.execute();
+                } catch (SQLException e) {
+                    System.out.println(e.getMessage());
+                }
+            });
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+        }
+    }
+
     public String updateProject(Request req, Response res) {
         try (var conn = connect();
              var pstmt = conn.prepareStatement("SELECT * FROM update_project(?,?,?,?,?,?::JSONB)")) {
@@ -535,35 +551,16 @@ public class PostgresProjects implements Projects {
             pstmt.setString(6, jsonInputs.has("projectOptions")
                                     ? jsonInputs.get("projectOptions").getAsJsonObject().toString()
                                     : "{\"showGEEScript\":false}");
+            pstmt.execute();
 
-            try (var rs = pstmt.executeQuery()) {
-                if (rs.next()) {
-                    try (var pstmt2 = conn.prepareStatement("SELECT * FROM delete_project_imagery(?)")) {
-                        pstmt2.setInt(1, projectId);
-                        try (var rs2 = pstmt2.executeQuery()) {
-                            if (rs2.next()) {
-                                final var projectImageryList = jsonInputs.has("projectImageryList")
-                                        ? jsonInputs.get("projectImageryList").getAsJsonArray()
-                                        : parseJson("[" + imageryId + "]").getAsJsonArray();
-                                projectImageryList
-                                    .forEach(projectImageryId -> {
-                                        try (var pstmtProjectImagery = conn.prepareStatement("SELECT * FROM insert_project_imagery(?,?)")) {
-                                            pstmtProjectImagery.setInt(1, projectId);
-                                            pstmtProjectImagery.setInt(2, projectImageryId.getAsInt());
-                                            pstmtProjectImagery.execute();
-                                        } catch (SQLException e) {
-                                            System.out.println(e.getMessage());
-                                        }
-                                    });
-                            }
-                        } catch (SQLException e) {
-                            System.out.println(e.getMessage());
-                        }
-                    } catch (SQLException e) {
-                        System.out.println(e.getMessage());
-                    }
-                }
-            }
+            var pstmt2 = conn.prepareStatement("SELECT * FROM delete_project_imagery(?)");
+            pstmt2.setInt(1, projectId);
+            pstmt2.execute();
+
+            final var projectImageryIds = jsonInputs.has("projectImageryList")
+                    ? jsonInputs.get("projectImageryList").getAsJsonArray()
+                    : parseJson("[" + imageryId + "]").getAsJsonArray();
+            insertProjectImagery(projectId, projectImageryIds);
             return "";
         } catch (SQLException e) {
             System.out.println(e.getMessage());
@@ -1014,16 +1011,8 @@ public class PostgresProjects implements Projects {
                         newProject.addProperty("id", newProjectId);
 
                         // insert project images
-                        newProject.get("projectImageryList").getAsJsonArray()
-                            .forEach(projectImageryId -> {
-                                try (var pstmtProjectImagery = conn.prepareStatement("SELECT * FROM insert_project_imagery(?,?)")) {
-                                    pstmtProjectImagery.setInt(1, newProject.get("id").getAsInt());
-                                    pstmtProjectImagery.setInt(2, projectImageryId.getAsInt());
-                                    pstmtProjectImagery.execute();
-                                } catch (SQLException e) {
-                                    System.out.println(e.getMessage());
-                                }
-                            });
+                        insertProjectImagery(newProject.get("id").getAsInt(),
+                                             newProject.get("projectImageryList").getAsJsonArray());
 
                         if (newProject.get("projectTemplate").getAsInt() > 0
                                 && newProject.get("useTemplateWidgets").getAsBoolean()) {

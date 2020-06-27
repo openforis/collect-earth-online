@@ -110,17 +110,7 @@ class Project extends React.Component {
         }
     };
 
-    imageryIsPublic = (imageryId) => {
-        const imagery = this.state.imageryList.filter(imagery => imagery.id === imageryId)[0];
-        return imagery.visibility === "public";
-    };
-
-    createProjectApi = () => {
-        const projectImageryList = (this.state.projectDetails.privacyLevel === "public"
-                || this.state.projectDetails.privacyLevel === "users")
-            ? this.state.projectImageryList.filter(imageryId => this.imageryIsPublic(imageryId))
-            : this.state.projectImageryList;
-
+    createProjectApi = () =>
         fetch(this.props.documentRoot + "/create-project",
               {
                   method: "POST",
@@ -128,9 +118,7 @@ class Project extends React.Component {
                   body: JSON.stringify({
                       institutionId: this.props.institutionId,
                       imageryId: this.state.projectDetails.imageryId,
-                      projectImageryList: projectImageryList.includes(this.state.projectDetails.imageryId)
-                          ? projectImageryList
-                          : [...projectImageryList, this.state.projectDetails.imageryId],
+                      projectImageryList: this.state.projectImageryList,
                       lonMin: this.state.coordinates.lonMin,
                       lonMax: this.state.coordinates.lonMax,
                       latMin: this.state.coordinates.latMin,
@@ -175,7 +163,6 @@ class Project extends React.Component {
                 alert("Error creating project.\n\n" + message);
                 this.setState({ showModal: false });
             });
-    }
 
     validateProject = () => {
         const { projectDetails } = this.state;
@@ -450,18 +437,16 @@ class Project extends React.Component {
             },
         });
 
-    addProjectImagery = (imageryId) =>
-        this.setState({ projectImageryList: [...this.state.projectImageryList, imageryId] });
+    setProjectImageryList = (newProjectImageryList) =>
+        this.setState({ projectImageryList: newProjectImageryList });
 
-    removeProjectImagery = (imageryId) =>
-        this.setState({
-            projectImageryList: this.state.projectImageryList.filter(imagery => imagery !== imageryId),
-        });
-
-    addRemoveProjectImagery = (eventTarget) =>
-        eventTarget.checked
-            ? this.addProjectImagery(parseInt(eventTarget.id))
-            : this.removeProjectImagery(parseInt(eventTarget.id));
+    addRemoveProjectImagery= (imageryId, addImagery) => {
+        if (addImagery) {
+            this.setProjectImageryList([...this.state.projectImageryList, imageryId]);
+        } else {
+            this.setProjectImageryList(this.state.projectImageryList.filter(imagery => imagery !== imageryId));
+        }
+    };
 
     render() {
         return (
@@ -519,12 +504,7 @@ function ProjectDesignForm(props) {
                 coordinates={props.coordinates}
                 inDesignMode
                 imageryId={props.projectDetails.imageryId}
-                imageryList={props.imageryList.filter(imagery =>
-                    (props.projectDetails.privacyLevel === "public")
-                        || (props.projectDetails.privacyLevel === "users")
-                        ? imagery.visibility === "public"
-                        : imagery
-                )}
+                imageryList={props.imageryList}
                 setProjectDetail={props.setProjectDetail}
                 projectImageryList={props.projectImageryList}
                 addRemoveProjectImagery={props.addRemoveProjectImagery}
