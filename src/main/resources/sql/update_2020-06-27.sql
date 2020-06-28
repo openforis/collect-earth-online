@@ -3,7 +3,8 @@
 CREATE TABLE project_imagery (
     project_imagery_uid        SERIAL PRIMARY KEY,
     project_rid                integer REFERENCES projects(project_uid) ON DELETE CASCADE ON UPDATE CASCADE,
-    imagery_rid                integer REFERENCES imagery (imagery_uid) ON DELETE CASCADE ON UPDATE CASCADE
+    imagery_rid                integer REFERENCES imagery (imagery_uid) ON DELETE CASCADE ON UPDATE CASCADE,
+    CONSTRAINT per_project_per_imagery UNIQUE(project_rid, imagery_rid)
 );
 
 -- insert into project_imagery table
@@ -33,12 +34,12 @@ DROP FUNCTION select_imagery_by_project(_project_rid integer, _user_rid integer)
 CREATE FUNCTION select_imagery_by_project(_project_rid integer, _user_rid integer)
  RETURNS setOf imagery_return AS $$
 
-    SELECT DISTINCT imagery_uid, p.institution_rid, visibility, title, attribution, extent, source_config
+    SELECT imagery_uid, p.institution_rid, visibility, title, attribution, extent, source_config
     FROM imagery i, projects p, project_imagery pi
     WHERE i.institution_rid = p.institution_rid
         AND project_uid = _project_rid
-        AND pi.project_rid = _project_rid
-        AND (pi.imagery_rid = imagery_uid OR p.imagery_rid = imagery_uid)
+        AND pi.project_rid = p.project_uid
+        AND (pi.imagery_rid = i.imagery_uid OR p.imagery_rid = i.imagery_uid)
         AND archived = FALSE
         AND (visibility = 'public'
             OR (SELECT count(*) > 0

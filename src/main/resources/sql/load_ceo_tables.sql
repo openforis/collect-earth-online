@@ -92,7 +92,8 @@ CREATE TABLE projects (
 CREATE TABLE project_imagery (
     project_imagery_uid        SERIAL PRIMARY KEY,
     project_rid                integer REFERENCES projects(project_uid) ON DELETE CASCADE ON UPDATE CASCADE,
-    imagery_rid                integer REFERENCES imagery (imagery_uid) ON DELETE CASCADE ON UPDATE CASCADE
+    imagery_rid                integer REFERENCES imagery (imagery_uid) ON DELETE CASCADE ON UPDATE CASCADE,
+    CONSTRAINT per_project_per_imagery UNIQUE(project_rid, imagery_rid)
 );
 
 -- Stores information about plot packet

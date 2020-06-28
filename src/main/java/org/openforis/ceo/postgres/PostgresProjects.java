@@ -518,17 +518,18 @@ public class PostgresProjects implements Projects {
         }
     }
 
-    private void insertProjectImagery(Integer projectId, JsonArray projectImageryIds) {
+    private void insertProjectImagery(Integer projectId, JsonObject jsonInputs) {
         try (var conn = connect()) {
-            projectImageryIds.forEach(projectImageryId -> {
-                try (var pstmt = conn.prepareStatement("SELECT * FROM insert_project_imagery(?,?)")) {
-                    pstmt.setInt(1, projectId);
-                    pstmt.setInt(2, projectImageryId.getAsInt());
-                    pstmt.execute();
-                } catch (SQLException e) {
-                    System.out.println(e.getMessage());
-                }
-            });
+            jsonInputs.get("projectImageryList").getAsJsonArray()
+                    .forEach(projectImageryId -> {
+                        try (var pstmt = conn.prepareStatement("SELECT * FROM insert_project_imagery(?,?)")) {
+                            pstmt.setInt(1, projectId);
+                            pstmt.setInt(2, projectImageryId.getAsInt());
+                            pstmt.execute();
+                        } catch (SQLException e) {
+                            System.out.println(e.getMessage());
+                        }
+                    });
         } catch (SQLException e) {
             System.out.println(e.getMessage());
         }
@@ -544,10 +545,9 @@ public class PostgresProjects implements Projects {
             pstmt.setString(2, getOrEmptyString(jsonInputs, "name").getAsString());
             pstmt.setString(3, getOrEmptyString(jsonInputs, "description").getAsString());
             pstmt.setString(4, getOrEmptyString(jsonInputs, "privacyLevel").getAsString());
-            final var imageryId = jsonInputs.has("imageryId")
+            pstmt.setInt(5,    jsonInputs.has("imageryId")
                                     ? jsonInputs.get("imageryId").getAsInt()
-                                    : getFirstPublicImageryId();
-            pstmt.setInt(5,    imageryId);
+                                    : getFirstPublicImageryId());
             pstmt.setString(6, jsonInputs.has("projectOptions")
                                     ? jsonInputs.get("projectOptions").getAsJsonObject().toString()
                                     : "{\"showGEEScript\":false}");
@@ -556,11 +556,7 @@ public class PostgresProjects implements Projects {
             var pstmt2 = conn.prepareStatement("SELECT * FROM delete_project_imagery(?)");
             pstmt2.setInt(1, projectId);
             pstmt2.execute();
-
-            final var projectImageryIds = jsonInputs.has("projectImageryList")
-                    ? jsonInputs.get("projectImageryList").getAsJsonArray()
-                    : parseJson("[" + imageryId + "]").getAsJsonArray();
-            insertProjectImagery(projectId, projectImageryIds);
+            insertProjectImagery(projectId, jsonInputs);
             return "";
         } catch (SQLException e) {
             System.out.println(e.getMessage());
@@ -934,11 +930,9 @@ public class PostgresProjects implements Projects {
 
             newProject.addProperty("description",        getOrEmptyString(jsonInputs, "description").getAsString());
             newProject.addProperty("institution",        getOrZero(jsonInputs, "institutionId").getAsInt());
-            final var imageryId = jsonInputs.has("imageryId") ? jsonInputs.get("imageryId").getAsInt() : getFirstPublicImageryId();
-            newProject.addProperty("imageryId",          imageryId);
-            newProject.add("projectImageryList",           jsonInputs.has("projectImageryList")
-                                                            ? jsonInputs.get("projectImageryList").getAsJsonArray()
-                                                            : parseJson("[" + imageryId + "]").getAsJsonArray());
+            newProject.addProperty("imageryId",          jsonInputs.has("imageryId")
+                                                                    ? jsonInputs.get("imageryId").getAsInt()
+                                                                    : getFirstPublicImageryId());
             newProject.addProperty("lonMin",             getOrZero(jsonInputs, "lonMin").getAsDouble());
             newProject.addProperty("latMin",             getOrZero(jsonInputs, "latMin").getAsDouble());
             newProject.addProperty("lonMax",             getOrZero(jsonInputs, "lonMax").getAsDouble());
@@ -959,8 +953,8 @@ public class PostgresProjects implements Projects {
             newProject.addProperty("useTemplatePlots",   getOrFalse(jsonInputs, "useTemplatePlots").getAsBoolean());
             newProject.addProperty("useTemplateWidgets", getOrFalse(jsonInputs, "useTemplateWidgets").getAsBoolean());
             newProject.add("projectOptions",             jsonInputs.has("projectOptions")
-                                                            ? jsonInputs.get("projectOptions").getAsJsonObject()
-                                                            : parseJson("{\"showGEEScript\":false}").getAsJsonObject());
+                                                                    ? jsonInputs.get("projectOptions").getAsJsonObject()
+                                                                    : parseJson("{\"showGEEScript\":false}").getAsJsonObject());
 
             // file part properties
             newProject.addProperty("plotFileName",       getOrEmptyString(jsonInputs, "plotFileName").getAsString());
@@ -1011,8 +1005,7 @@ public class PostgresProjects implements Projects {
                         newProject.addProperty("id", newProjectId);
 
                         // insert project images
-                        insertProjectImagery(newProject.get("id").getAsInt(),
-                                             newProject.get("projectImageryList").getAsJsonArray());
+                        insertProjectImagery(newProject.get("id").getAsInt(), jsonInputs);
 
                         if (newProject.get("projectTemplate").getAsInt() > 0
                                 && newProject.get("useTemplateWidgets").getAsBoolean()) {

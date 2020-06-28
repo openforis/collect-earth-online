@@ -171,8 +171,8 @@ export function ProjectAOI({
                 </div>
             </div>
             {imageryList
-                ? <div id="project-default-imagery">
-                    <div className="form-group">
+                ? <div id="project-imagery">
+                    <div className="form-group" id="project-default-imagery">
                         <h3 htmlFor="project-default-imagery">Default Imagery</h3>
                         <select
                             className="form-control form-control-sm"
@@ -188,49 +188,29 @@ export function ProjectAOI({
                             }
                         </select>
                     </div>
-                </div>
-                : <div id="project-default-imagery">
-                    <div className="form-group">
-                        <h3 htmlFor="project-default-imagery">Default Imagery</h3>
-                        <p>Loading Imagery...</p>
-                    </div>
-                </div>
-            }
-            <hr />
-            {imageryList
-                ? <div id="additional-imagery">
-                    <div className="form-group">
+                    <hr />
+                    <div className="form-group" id="additional-imagery">
                         <h3 htmlFor="additional-imagery">Additional Imagery</h3>
                         <div className="row mt-3">
                             {imageryList.map((imagery, uid) =>
                                 <div className="col-md-5 offset-md-1 form-check" key={uid}>
-                                    {imagery.id === imageryId
-                                    ?
-                                        <input
-                                            className="form-check-input"
-                                            id={imagery.id}
-                                            type="checkbox"
-                                            checked
-                                            disabled
-                                        />
-                                    :
-                                        <input
-                                            className="form-check-input"
-                                            id={imagery.id}
-                                            onChange={e => addRemoveProjectImagery(imagery.id, e.target.checked)}
-                                            type="checkbox"
-                                            checked={projectImageryList.includes(imagery.id)}
-                                        />
-                                    }
+                                    <input
+                                        className="form-check-input"
+                                        id={imagery.id}
+                                        onChange={e => addRemoveProjectImagery(imagery.id, e.target.checked)}
+                                        type="checkbox"
+                                        disabled={imagery.id === imageryId}
+                                        checked={projectImageryList.includes(imagery.id) || imagery.id === imageryId}
+                                    />
                                     <label htmlFor={imagery.id} className="form-check-label">{imagery.title}</label>
                                 </div>
                             )}
                         </div>
                     </div>
                 </div>
-                : <div id="additional-imagery">
+                : <div id="project-loading-imagery">
                     <div className="form-group">
-                        <h3 htmlFor="additional-imagery">Additional Imagery</h3>
+                        <h3 htmlFor="project-loading-imagery">Default Imagery</h3>
                         <p>Loading Imagery...</p>
                     </div>
                 </div>
