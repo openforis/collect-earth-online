@@ -553,10 +553,13 @@ public class PostgresProjects implements Projects {
                                     : "{\"showGEEScript\":false}");
             pstmt.execute();
 
-            var pstmt2 = conn.prepareStatement("SELECT * FROM delete_project_imagery(?)");
-            pstmt2.setInt(1, projectId);
-            pstmt2.execute();
-            insertProjectImagery(projectId, jsonInputs);
+            if (jsonInputs.has("projectImageryList")) {
+                // deletes and insert project images
+                var pstmt2 = conn.prepareStatement("SELECT * FROM delete_project_imagery(?)");
+                pstmt2.setInt(1, projectId);
+                pstmt2.execute();
+                insertProjectImagery(projectId, jsonInputs);
+            }
             return "";
         } catch (SQLException e) {
             System.out.println(e.getMessage());
@@ -1004,8 +1007,10 @@ public class PostgresProjects implements Projects {
                         newProjectId = rs.getInt("create_project");
                         newProject.addProperty("id", newProjectId);
 
-                        // insert project images
-                        insertProjectImagery(newProject.get("id").getAsInt(), jsonInputs);
+                        if (jsonInputs.has("projectImageryList")) {
+                            // insert project images
+                            insertProjectImagery(newProject.get("id").getAsInt(), jsonInputs);
+                        }
 
                         if (newProject.get("projectTemplate").getAsInt() > 0
                                 && newProject.get("useTemplateWidgets").getAsBoolean()) {

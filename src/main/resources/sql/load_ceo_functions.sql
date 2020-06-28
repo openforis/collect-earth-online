@@ -606,8 +606,8 @@ CREATE OR REPLACE FUNCTION select_imagery_by_institution(_institution_rid intege
 
     WITH images AS (
         SELECT * FROM select_public_imagery()
-        UNION
 
+        UNION
         SELECT imagery_uid, institution_rid, visibility, title, attribution, extent, source_config
         FROM imagery
         WHERE institution_rid = _institution_rid
@@ -628,7 +628,7 @@ $$ LANGUAGE SQL;
 CREATE OR REPLACE FUNCTION select_imagery_by_project(_project_rid integer, _user_rid integer)
  RETURNS setOf imagery_return AS $$
 
-    SELECT imagery_uid, p.institution_rid, visibility, title, attribution, extent, source_config
+    SELECT DISTINCT imagery_uid, p.institution_rid, visibility, title, attribution, extent, source_config
     FROM imagery i, projects p, project_imagery pi
     WHERE i.institution_rid = p.institution_rid
         AND project_uid = _project_rid

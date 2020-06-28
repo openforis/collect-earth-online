@@ -291,14 +291,6 @@ class Project extends React.Component {
     setProjectImageryList = (newProjectImageryList) =>
         this.setState({ projectImageryList: newProjectImageryList });
 
-    addRemoveProjectImagery= (imageryId, addImagery) => {
-        if (addImagery) {
-            this.setProjectImageryList([...this.state.projectImageryList, imageryId]);
-        } else {
-            this.setProjectImageryList(this.state.projectImageryList.filter(imagery => imagery !== imageryId));
-        }
-    };
-
     render() {
         return (
             <FormLayout id="project-design" title="Review Project">
@@ -312,7 +304,7 @@ class Project extends React.Component {
                             setProjectDetail={this.setProjectDetail}
                             onShowGEEScriptClick={this.onShowGEEScriptClick}
                             projectImageryList={this.state.projectImageryList}
-                            addRemoveProjectImagery={this.addRemoveProjectImagery}
+                            setProjectImageryList={this.setProjectImageryList}
                         />
                         <ProjectManagement
                             changeAvailability={this.changeAvailability}
@@ -491,7 +483,7 @@ function ProjectDesignReview({
     setProjectDetail,
     onShowGEEScriptClick,
     projectImageryList,
-    addRemoveProjectImagery,
+    setProjectImageryList,
 }) {
     return (
         <div id="project-design-form" className="px-2 pb-2">
@@ -507,7 +499,7 @@ function ProjectDesignReview({
                 imageryList={imageryList}
                 setProjectDetail={setProjectDetail}
                 projectImageryList={projectImageryList}
-                addRemoveProjectImagery={addRemoveProjectImagery}
+                setProjectImageryList={setProjectImageryList}
             />
             <ProjectOptions
                 showGEEScript={projectDetails.projectOptions.showGEEScript}

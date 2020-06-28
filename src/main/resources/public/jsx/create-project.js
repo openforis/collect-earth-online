@@ -440,14 +440,6 @@ class Project extends React.Component {
     setProjectImageryList = (newProjectImageryList) =>
         this.setState({ projectImageryList: newProjectImageryList });
 
-    addRemoveProjectImagery= (imageryId, addImagery) => {
-        if (addImagery) {
-            this.setProjectImageryList([...this.state.projectImageryList, imageryId]);
-        } else {
-            this.setProjectImageryList(this.state.projectImageryList.filter(imagery => imagery !== imageryId));
-        }
-    };
-
     render() {
         return (
             <FormLayout id="project-design" title="Create Project">
@@ -470,7 +462,7 @@ class Project extends React.Component {
                             showGEEScript={this.state.showGEEScript}
                             onShowGEEScriptClick={this.onShowGEEScriptClick}
                             projectImageryList={this.state.projectImageryList}
-                            addRemoveProjectImagery={this.addRemoveProjectImagery}
+                            setProjectImageryList={this.setProjectImageryList}
                         />
                         <ProjectManagement createProject={this.createProject} />
                     </Fragment>
@@ -507,7 +499,7 @@ function ProjectDesignForm(props) {
                 imageryList={props.imageryList}
                 setProjectDetail={props.setProjectDetail}
                 projectImageryList={props.projectImageryList}
-                addRemoveProjectImagery={props.addRemoveProjectImagery}
+                setProjectImageryList={props.setProjectImageryList}
             />
             <ProjectOptions
                 showGEEScript={props.showGEEScript}

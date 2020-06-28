@@ -34,7 +34,7 @@ DROP FUNCTION select_imagery_by_project(_project_rid integer, _user_rid integer)
 CREATE FUNCTION select_imagery_by_project(_project_rid integer, _user_rid integer)
  RETURNS setOf imagery_return AS $$
 
-    SELECT imagery_uid, p.institution_rid, visibility, title, attribution, extent, source_config
+    SELECT DISTINCT imagery_uid, p.institution_rid, visibility, title, attribution, extent, source_config
     FROM imagery i, projects p, project_imagery pi
     WHERE i.institution_rid = p.institution_rid
         AND project_uid = _project_rid

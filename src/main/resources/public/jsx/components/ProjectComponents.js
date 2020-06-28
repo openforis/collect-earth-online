@@ -103,7 +103,7 @@ export function ProjectAOI({
     imageryList,
     setProjectDetail,
     projectImageryList,
-    addRemoveProjectImagery,
+    setProjectImageryList,
 }) {
     return (
         <SectionBlock title="Project AOI">
@@ -197,7 +197,13 @@ export function ProjectAOI({
                                     <input
                                         className="form-check-input"
                                         id={imagery.id}
-                                        onChange={e => addRemoveProjectImagery(imagery.id, e.target.checked)}
+                                        onChange={e => {
+                                            if (e.target.checked) {
+                                                setProjectImageryList([...projectImageryList, imagery.id]);
+                                            } else {
+                                                setProjectImageryList(projectImageryList.filter(img => img !== imagery.id));
+                                            }
+                                        }}
                                         type="checkbox"
                                         disabled={imagery.id === imageryId}
                                         checked={projectImageryList.includes(imagery.id) || imagery.id === imageryId}
