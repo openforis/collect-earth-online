@@ -11,6 +11,7 @@ import { OSM, Vector, XYZ } from "ol/source";
 import { Style, Stroke } from "ol/style";
 import { getArea as sphereGetArea } from "ol/sphere";
 import { formatDateISO } from "./utils/dateUtils";
+import { getGatewayPath } from "./utils/geodashUtils";
 
 class Geodash extends React.Component {
     constructor(props) {
@@ -372,7 +373,8 @@ class Widget extends React.Component {
     isMapWidget = widget => this.imageCollectionList.includes(widget.properties[0])
         || (widget.dualImageCollection)
         || (widget.ImageAsset && widget.ImageAsset.length > 0)
-        || (widget.ImageCollectionAsset && widget.ImageCollectionAsset.length > 0);
+        || (widget.ImageCollectionAsset && widget.ImageCollectionAsset.length > 0)
+        || (widget.featureCollection && widget.featureCollection.length > 0);
 
     render() {
         const { widget } = this.props;
@@ -550,7 +552,7 @@ class MapWidget extends React.Component {
             shortWidget.ImageAsset = firstImage.imageAsset;
             shortWidget.ImageCollectionAsset = firstImage.ImageCollectionAsset;
             url = this.props.documentRoot + "/geo-dash/gateway-request";
-            path = this.getGatewayPath(shortWidget, collectionName);
+            path = getGatewayPath(shortWidget, collectionName);
             shortWidget.visParams = firstImage.visParams;
             shortWidget.min = firstImage.min != null ? firstImage.min : "";
             shortWidget.max = firstImage.max != null ? firstImage.max : "";
@@ -578,7 +580,7 @@ class MapWidget extends React.Component {
             shortWidget2.ImageAsset = secondImage.imageAsset;
             shortWidget2.ImageCollectionAsset = secondImage.ImageCollectionAsset;
             dualImageObject.url = this.props.documentRoot + "/geo-dash/gateway-request";
-            dualImageObject. path = this.getGatewayPath(shortWidget2, dualImageObject.collectionName);
+            dualImageObject. path = getGatewayPath(shortWidget2, dualImageObject.collectionName);
             shortWidget2.visParams = secondImage.visParams;
             shortWidget2.min = secondImage.min != null ? secondImage.min : "";
             shortWidget2.max = secondImage.max != null ? secondImage.max : "";
@@ -621,8 +623,11 @@ class MapWidget extends React.Component {
                 widget.ImageAsset = "USGS/SRTMGL1_003";
             }
             url = this.props.documentRoot + "/geo-dash/gateway-request";
-            path = this.getGatewayPath(widget, collectionName);
+            path = getGatewayPath(widget, collectionName);
             postObject.visParams = this.getImageParams(widget);
+            postObject.featureCollection = widget.featureCollection;
+            postObject.matchID = this.props.getParameterByName("plotId");
+            postObject.field = widget.field;
 
             if (postObject.visParams.cloudLessThan) {
                 postObject.bands = postObject.visParams.bands;
@@ -661,7 +666,7 @@ class MapWidget extends React.Component {
             this.state.mapRef.updateSize();
         }
 
-        if (this.props.mapCenter) {
+        if (this.props.mapCenter !== prevProps.mapCenter || this.props.mapZoom !== prevProps.mapZoom) {
             this.centerAndZoomMap(this.props.mapCenter, this.props.mapZoom);
         }
 
@@ -823,21 +828,6 @@ class MapWidget extends React.Component {
                 : mercator.createSource(basemap.sourceConfig, basemap.id, this.props.documentRoot),
         });
 
-    getGatewayPath = (widget, collectionName) => {
-        const fts = {
-            "LANDSAT5": "Landsat5Filtered",
-            "LANDSAT7": "Landsat7Filtered",
-            "LANDSAT8": "Landsat8Filtered",
-            "Sentinel2": "FilteredSentinel",
-        };
-        return (widget.filterType && widget.filterType.length > 0) ? fts[widget.filterType]
-            : (widget.ImageAsset && widget.ImageAsset.length > 0) ? "image"
-                : (widget.ImageCollectionAsset && widget.ImageCollectionAsset.length > 0) ? "ImageCollectionAsset"
-                    : (widget.properties && "ImageCollectionCustom" === widget.properties[0]) ? "meanImageByMosaicCollections"
-                        : (collectionName.trim().length > 0) ? "cloudMaskImageByMosaicCollection"
-                            : "ImageCollectionbyIndex";
-    };
-
     getImageParams = widget => {
         if (widget.visParams) {
             if (typeof widget.visParams === "string") {
@@ -849,6 +839,8 @@ class MapWidget extends React.Component {
             } else {
                 return widget.visParams;
             }
+        } else if (widget.type === "polygonCompare") {
+            return {};
         } else {
             return {
                 min: (widget.min && widget.min > 0) ? widget.min : null,
@@ -896,8 +888,9 @@ class MapWidget extends React.Component {
     };
 
     centerAndZoomMap = (center, zoom) => {
-        this.state.mapRef.getView().setCenter(center);
-        this.state.mapRef.getView().setZoom(zoom);
+        const map = this.state.mapRef;
+        map.getView().setCenter(center);
+        map.getView().setZoom(zoom);
     };
 
     getInstitutionBaseMap = basemap => !basemap

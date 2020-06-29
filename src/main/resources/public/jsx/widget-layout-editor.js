@@ -3,6 +3,7 @@ import ReactDOM from "react-dom";
 import _ from "lodash";
 import RGL, { WidthProvider } from "react-grid-layout";
 const ReactGridLayout = WidthProvider(RGL);
+import { getGatewayPath } from "./utils/geodashUtils";
 
 class BasicLayout extends React.PureComponent {
     constructor(props) {
@@ -21,6 +22,8 @@ class BasicLayout extends React.PureComponent {
             selectedDataType: "-1",
             widgetTitle: "",
             imageCollection: "",
+            featureCollection: "",
+            matchField: "",
             graphBand: "",
             graphBandDeg: "NDFI",
             graphReducer: "Min",
@@ -81,21 +84,6 @@ class BasicLayout extends React.PureComponent {
                 ? decodeURIComponent(results[2].replace(/\+/g, " "))
                 : ""
             : null;
-    };
-
-    getGatewayPath = (widget, collectionName) => {
-        const fts = {
-            "LANDSAT5": "Landsat5Filtered",
-            "LANDSAT7": "Landsat7Filtered",
-            "LANDSAT8": "Landsat8Filtered",
-            "Sentinel2": "FilteredSentinel",
-        };
-        return (widget.filterType && widget.filterType.length > 0) ? fts[widget.filterType]
-            : (widget.ImageAsset && widget.ImageAsset.length > 0) ? "image"
-            : (widget.ImageCollectionAsset && widget.ImageCollectionAsset.length > 0) ? "ImageCollectionAsset"
-            : (widget.properties && "ImageCollectionCustom" === widget.properties[0]) ? "meanImageByMosaicCollections"
-            : (collectionName.trim().length > 0) ? "cloudMaskImageByMosaicCollection"
-            : "ImageCollectionbyIndex";
     };
 
     getImageByType = (which) =>
@@ -272,7 +260,7 @@ class BasicLayout extends React.PureComponent {
                 visParams: img.visParams,
                 ImageAsset: ImageAsset,
                 ImageCollectionAsset: ImageCollectionAsset,
-                path:this.getGatewayPath(img),
+                path:getGatewayPath(img),
             },
         };
         if (img.ImageAsset && img.ImageAsset.length > 0) {
@@ -296,6 +284,8 @@ class BasicLayout extends React.PureComponent {
             selectedDataType: "-1",
             widgetTitle: "",
             imageCollection: event.target.value === "ImageElevation" ? "USGS/SRTMGL1_003" : "",
+            featureCollection: "",
+            matchField: "",
             graphBand: "",
             graphBandDeg: "NDFI",
             graphReducer: "Min",
@@ -388,6 +378,8 @@ class BasicLayout extends React.PureComponent {
             selectedDataType: "-1",
             widgetTitle: "",
             imageCollection: "",
+            featureCollection: "",
+            matchField: "",
             graphBand: "",
             graphBandDeg: "NDFI",
             graphReducer: "Min",
@@ -574,6 +566,13 @@ class BasicLayout extends React.PureComponent {
             widget.endDate = this.state.endDate;
             widget.graphBand = this.state.graphBandDeg === "" ? "NDFI" : this.state.graphBandDeg;
             widget.baseMap = this.state.widgetBaseMap;
+        } else if (this.state.selectedWidgetType === "polygonCompare") {
+            widget.type = "polygonCompare";
+            widget.properties = ["featureCollection", "", "", "", ""];
+            widget.featureCollection = this.state.featureCollection;
+            widget.visParams = this.state.visParams;
+            widget.field = this.state.matchField;
+            widget.baseMap = this.state.widgetBaseMap;
         } else {
             const wType = this.state.selectedWidgetType === "TimeSeries" ? this.state.selectedDataType.toLowerCase() + this.state.selectedWidgetType
                 : this.state.selectedWidgetType === "ImageCollection" ? this.state.selectedWidgetType + this.state.selectedDataType
@@ -646,6 +645,8 @@ class BasicLayout extends React.PureComponent {
                         selectedDataType: "-1",
                         widgetTitle: "",
                         imageCollection: "",
+                        featureCollection: "",
+                        matchField: "",
                         graphBand: "",
                         graphBandDeg: "NDFI",
                         graphReducer: "Min",
@@ -686,6 +687,17 @@ class BasicLayout extends React.PureComponent {
             availableBands: "",
         });
         this.getBandsFromGateway(false);
+    };
+
+    onFeatureCollectionChange = event => {
+        this.setState({ featureCollection: event.target.value });
+    };
+
+    onmatchFieldChange = event => {
+        this.setState({
+            matchField: event.target.value,
+            formReady: true,
+        });
     };
 
     onGraphBandChange = event => {
@@ -969,6 +981,7 @@ class BasicLayout extends React.PureComponent {
                                                 <option label="Image Collection Asset" value="imageCollectionAsset">Image Collection Asset</option>
                                                 <option label="SRTM Digital Elevation Data 30m" value="ImageElevation">SRTM Digital Elevation Data 30m</option>
                                                 <option label="Degradation Tool" value="DegradationTool">Degradation Tool</option>
+                                                <option label="Polygon Compare" value="polygonCompare">Polygon Compare</option>
                                             </select>
                                         </div>
                                         {this.getBaseMapSelector()}
@@ -1051,7 +1064,13 @@ class BasicLayout extends React.PureComponent {
     </React.Fragment>;
 
     getBaseMapSelector = () => {
-        if (["ImageCollection", "DualImageCollection", "imageAsset", "imageCollectionAsset", "ImageElevation", "DegradationTool"].includes(this.state.selectedWidgetType)) {
+        if (["ImageCollection",
+             "DualImageCollection",
+             "imageAsset",
+             "imageCollectionAsset",
+             "ImageElevation",
+             "DegradationTool",
+             "polygonCompare"].includes(this.state.selectedWidgetType)) {
             return <React.Fragment>
                 <label htmlFor="widgetIndicesSelect">Basemap</label>
                 <select
@@ -1168,6 +1187,8 @@ class BasicLayout extends React.PureComponent {
 
                 </React.Fragment>;
             }
+        } else if (this.state.selectedWidgetType === "polygonCompare") {
+            return "";
         } else {
             return <React.Fragment>
                 <label htmlFor="widgetIndicesSelect">Data</label>
@@ -1346,6 +1367,36 @@ class BasicLayout extends React.PureComponent {
         if (this.state.selectedWidgetType === "ImageElevation") {
             return <React.Fragment>
                 {this.getTitleBlock()}
+                {this.getImageParamsBlock()}
+            </React.Fragment>;
+        }
+        if (this.state.selectedWidgetType === "polygonCompare") {
+            return <React.Fragment>
+                {this.getTitleBlock()}
+                <div className="form-group">
+                    <label htmlFor="featureCollection">GEE Feature Collection Asset</label>
+                    <input
+                        type="text"
+                        name="featureCollection"
+                        id="featureCollection"
+                        placeholder={"users/username/collectionName"}
+                        value={this.state.featureCollection}
+                        className="form-control"
+                        onChange={this.onFeatureCollectionChange}
+                    />
+                </div>
+                <div className="form-group">
+                    <label htmlFor="matchField">Field to match PLOTID</label>
+                    <input
+                        type="text"
+                        name="matchField"
+                        id="matchField"
+                        placeholder={"OBJECTID"}
+                        value={this.state.matchField}
+                        className="form-control"
+                        onChange={this.onmatchFieldChange}
+                    />
+                </div>
                 {this.getImageParamsBlock()}
             </React.Fragment>;
         }
