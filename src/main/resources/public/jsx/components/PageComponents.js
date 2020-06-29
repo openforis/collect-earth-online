@@ -29,7 +29,6 @@ export function NavigationBar ({ userName, userId, children }) {
                                 <a className="nav-link" href={"/" + page.toLowerCase()}>{page}</a>
                             </li>
                         )}
-                        {console.log(userName)}
                         {!loggedOut &&
                             <li className={"nav-item" + ("/account" === uri && " active")}>
                                 <a className="nav-link" href={"/account?userId=" + userId}>Account</a>
