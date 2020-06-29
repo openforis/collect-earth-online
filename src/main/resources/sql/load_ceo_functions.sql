@@ -629,16 +629,19 @@ CREATE OR REPLACE FUNCTION select_imagery_by_project(_project_rid integer, _user
  RETURNS setOf imagery_return AS $$
 
     SELECT DISTINCT imagery_uid, p.institution_rid, visibility, title, attribution, extent, source_config
-    FROM imagery i, projects p, project_imagery pi
-    WHERE i.institution_rid = p.institution_rid
-        AND project_uid = _project_rid
-        AND pi.project_rid = p.project_uid
-        AND (pi.imagery_rid = i.imagery_uid OR p.imagery_rid = i.imagery_uid)
+    FROM projects p
+    LEFT JOIN project_imagery pi
+        ON pi.project_rid = p.project_uid
+    INNER JOIN imagery i
+        ON pi.imagery_rid = i.imagery_uid
+            OR p.imagery_rid = i.imagery_uid
+    WHERE project_uid = _project_rid
         AND archived = FALSE
         AND (visibility = 'public'
-            OR (SELECT count(*) > 0
+            OR (i.institution_rid = p.institution_rid
+                    AND (SELECT count(*) > 0
                 FROM get_all_users_by_institution_id(p.institution_rid)
-                WHERE user_id = _user_rid)
+                WHERE user_id = _user_rid))
             OR _user_rid = 1)
 
     ORDER BY title
