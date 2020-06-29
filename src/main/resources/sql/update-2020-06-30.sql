@@ -14,4 +14,5 @@ CREATE OR REPLACE FUNCTION select_imagery_by_project(_project_rid integer, _user
             OR _user_rid = 1)
 
     ORDER BY title
+
 $$ LANGUAGE SQL;
