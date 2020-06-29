@@ -1,6 +1,8 @@
 import React from "react";
 import ReactDOM from "react-dom";
 
+import { NavigationBar } from "./components/PageComponents";
+
 class InstitutionDashboard extends React.Component {
     constructor(props) {
         super(props);
@@ -52,7 +54,7 @@ class InstitutionDashboard extends React.Component {
 
     render() {
         return (
-            <React.Fragment>
+            <div className="row justify-content-center">
                 <div className="bg-darkgreen mb-3 no-container-margin" style={{ width: "100%", margin: "0 10px 0 10px" }}>
                     <h1>Institution Dashboard</h1>
                 </div>
@@ -73,7 +75,7 @@ class InstitutionDashboard extends React.Component {
                         <ProjectList details={this.state.details}/>
                     </tbody>
                 </table>
-            </React.Fragment>
+            </div>
         );
     }
 }
@@ -95,11 +97,13 @@ function ProjectList(props) {
 
 export function renderInstitutionDashboardPage(args) {
     ReactDOM.render(
-        <InstitutionDashboard
-            documentRoot={args.documentRoot}
-            userId={args.userId}
-            institutionId={args.institutionId}
-        />,
+        <NavigationBar userName={args.userName} userId={args.userId}>
+            <InstitutionDashboard
+                documentRoot=""
+                userId={args.userId}
+                institutionId={args.institutionId}
+            />
+        </NavigationBar>,
         document.getElementById("institution-dashboard")
     );
 }

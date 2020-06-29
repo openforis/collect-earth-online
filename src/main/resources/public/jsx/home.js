@@ -1,5 +1,6 @@
 import React, { Fragment } from "react";
 import ReactDOM from "react-dom";
+import { NavigationBar } from "./components/PageComponents";
 import { mercator, ceoMapStyles } from "../js/mercator.js";
 import { sortAlphabetically, UnicodeIcon } from "./utils/textUtils";
 
@@ -660,11 +661,13 @@ class ProjectPopup extends React.Component {
 
 export function renderHomePage(args) {
     ReactDOM.render(
-        <Home
-            documentRoot={args.documentRoot}
-            userId={args.userId === "" ? -1 : parseInt(args.userId)}
-            userRole={args.userRole}
-        />,
+        <NavigationBar userName={args.userName} userId={args.userId}>
+            <Home
+                documentRoot=""
+                userId={args.userId === "" ? -1 : parseInt(args.userId)}
+                userRole={args.userRole}
+            />
+        </NavigationBar>,
         document.getElementById("home")
     );
 }

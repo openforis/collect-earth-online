@@ -1,5 +1,4 @@
 <#include "header.ftl">
-<#include "navbar.ftl">
 <#include "start-content.ftl">
 <#if project_id == "">
     <#assign project_id = "0">
@@ -11,7 +10,7 @@
     <#assign project_stats_visibility = "visible">
     <#assign project_template_visibility = "d-none">
 </#if>
-<div id="project-dashboard" class="row justify-content-center"></div>
+<div id="project-dashboard"></div>
 
 <!-- Auto Inserted Bundles -->
 
@@ -20,7 +19,7 @@
 <script type="text/javascript">
     window.onload = function () {
         project_dashboard.renderProjectDashboardPage({
-            documentRoot:                "${root}",
+            userName:                    "${username}",
             userId:                      "${userid}",
             projectId:                   "${project_id}",
             project_stats_visibility:    "${project_stats_visibility}",
