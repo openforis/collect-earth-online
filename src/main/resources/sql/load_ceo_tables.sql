@@ -20,7 +20,9 @@ CREATE TABLE institutions (
     logo_data          bytea,
     description        text NOT NULL,
     url                text NOT NULL,
-    archived           boolean DEFAULT FALSE
+    archived           boolean DEFAULT FALSE,
+    created_date       date DEFAULT NOW(),
+    archived_date      date
 );
 
 -- Stores text values for roles
@@ -48,7 +50,10 @@ CREATE TABLE imagery (
     title              text NOT NULL,
     attribution        text NOT NULL,
     extent             jsonb,
-    source_config      jsonb
+    source_config      jsonb,
+    archived           boolean DEFAULT FALSE,
+    created_date       date DEFAULT NOW(),
+    archived_date      date
 );
 
 -- Stores information about projects
@@ -61,7 +66,6 @@ CREATE TABLE projects (
     description             text,
     privacy_level           text,
     boundary                geometry(Polygon,4326),
-    base_map_source         text,
     plot_distribution       text,
     num_plots               integer,
     plot_spacing            float,
@@ -322,4 +326,20 @@ CREATE TYPE plots_return AS (
     plotId               integer,
     geom                 text,
     analysis_duration    numeric
- );
+);
+
+CREATE TYPE plot_collection_return AS (
+    plot_id              integer,
+    project_id           integer,
+    center               text,
+    flagged              integer,
+    assigned             integer,
+    username             text,
+    confidence           integer,
+    collection_time      timestamp,
+    ext_id               integer,
+    plotId               integer,
+    geom                 text,
+    analysis_duration    numeric,
+    extra_plot_info      jsonb
+);

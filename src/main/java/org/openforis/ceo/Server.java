@@ -146,7 +146,7 @@ public class Server implements SparkApplication {
                         "/create-project",
                         "/update-institution",
                         "/add-institution-imagery",
-                        "/delete-institution-imagery")
+                        "/archive-institution-imagery")
                     .contains(request.uri()) && !institutions.isInstAdmin(request)) {
                 halt(403, "Forbidden!");
             }
@@ -157,9 +157,10 @@ public class Server implements SparkApplication {
         });
 
         // Block cross traffic for proxy route
-        before("/get-tile", (request, response) -> {
-            // "referer" is spelled wrong, but is the correct name for this header.
-            if (request.headers("referer") == null || !request.headers("referer").contains(request.host())) {
+        before((request, response) -> {
+            if (List.of("/get-tile", "/get-securewatch-dates").contains(request.uri())
+                    // "referer" is spelled wrong, but is the correct name for this header.
+                    && (request.headers("referer") == null || !request.headers("referer").contains(request.host()))) {
                 halt(403, "Forbidden!");
             }
         });
@@ -188,6 +189,7 @@ public class Server implements SparkApplication {
         get("/support",                               Views.support(freemarker));
         get("/widget-layout-editor",                  Views.widgetLayoutEditor(freemarker));
         get("/get-tile",                              (req, res) -> Proxy.proxyImagery(req, res, imagery));
+        get("/get-securewatch-dates",                 (req, res) -> Proxy.getSecureWatchDates(req, res, imagery));
         get("/mailing-list",                          Views.mailingList(freemarker));
         get("/unsubscribe-mailing-list",              Views.unsubscribeMailingList(freemarker));
 
@@ -241,10 +243,12 @@ public class Server implements SparkApplication {
         post("/update-institution",                   institutions::updateInstitution);
 
         // Routing Table: Imagery API
-        get("/get-all-imagery",                       imagery::getAllImagery);
+        get("/get-institution-imagery",               imagery::getInstitutionImagery);
+        get("/get-project-imagery",                   imagery::getProjectImagery);
+        get("/get-public-imagery",                    imagery::getPublicImagery);
         post("/add-geodash-imagery",                  imagery::addGeoDashImagery);
         post("/add-institution-imagery",              imagery::addInstitutionImagery);
-        post("/delete-institution-imagery",           imagery::deleteInstitutionImagery);
+        post("/archive-institution-imagery",          imagery::archiveInstitutionImagery);
 
         // Routing Table: GeoDash API
         get("/geo-dash/get-by-projid",                geoDash::geodashId);

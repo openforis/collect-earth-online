@@ -2,75 +2,112 @@ package org.openforis.ceo.postgres;
 
 import static org.openforis.ceo.utils.DatabaseUtils.connect;
 import static org.openforis.ceo.utils.JsonUtils.parseJson;
+import static org.openforis.ceo.postgres.PostgresInstitutions.isInstAdminQuery;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
+import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.List;
 import org.openforis.ceo.db_api.Imagery;
 import spark.Request;
 import spark.Response;
 
-/**
- * Created by gtondapu on 7/31/2018.
- */
 public class PostgresImagery implements Imagery {
 
-    public String getAllImagery(Request req, Response res) {
-        var institutionId = req.queryParams("institutionId");
-        var hasInstitutionId = !(institutionId == null || institutionId.isEmpty());
+    private JsonObject cleanSource(JsonObject sourceConfig) {
+        if (sourceConfig.get("type").getAsString().equals("GeoServer")) {
+            var cleanSource = new JsonObject();
+            cleanSource.add("type", sourceConfig.get("type"));
+            return cleanSource;
+        } else if (sourceConfig.get("type").getAsString().equals("SecureWatch")) {
+            var cleanSource = new JsonObject();
+            cleanSource.add("type", sourceConfig.get("type"));
+            cleanSource.add("startDate", sourceConfig.get("startDate"));
+            cleanSource.add("endDate", sourceConfig.get("endDate"));
+            return cleanSource;
+        } else if (sourceConfig.get("type").getAsString().equals("Planet")) {
+            var cleanSource = new JsonObject();
+            cleanSource.add("type",  sourceConfig.get("type"));
+            cleanSource.add("month", sourceConfig.get("month"));
+            cleanSource.add("year",  sourceConfig.get("year"));
+            return cleanSource;
+        } else {
+            return sourceConfig;
+        }
+    }
+
+    private JsonArray buildImageryArray(ResultSet rs, Boolean stripConfig) {
+        var imageryArray = new JsonArray();
+        try {
+            while(rs.next()) {
+                var newImagery = new JsonObject();
+                newImagery.addProperty("id",          rs.getInt("imagery_id"));
+                newImagery.addProperty("institution", rs.getInt("institution_id"));
+                newImagery.addProperty("visibility",  rs.getString("visibility"));
+                newImagery.addProperty("title",       rs.getString("title"));
+                newImagery.addProperty("attribution", rs.getString("attribution"));
+                newImagery.add("extent", rs.getString("extent") == null || rs.getString("extent").equals("null")
+                    ? null
+                    : parseJson(rs.getString("extent")).getAsJsonArray());
+                var sourceConfig = parseJson(rs.getString("source_config")).getAsJsonObject();
+                newImagery.add("sourceConfig", stripConfig ? cleanSource(sourceConfig) : sourceConfig);
+                imageryArray.add(newImagery);
+            }
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+        }
+        return imageryArray;
+    }
+
+    public String getInstitutionImagery(Request req, Response res) {
+        final var institutionId = Integer.parseInt(req.queryParams("institutionId"));
+        final var userId        = Integer.parseInt(req.session().attributes().contains("userid")
+                                                    ? req.session().attribute("userid").toString()
+                                                    : "-1");
 
         try (var conn = connect();
-             var pstmt = hasInstitutionId
-                ? conn.prepareStatement("SELECT * FROM select_public_imagery_by_institution(?)")
-                : conn.prepareStatement("SELECT * FROM select_public_imagery()")) {
+            var pstmt = conn.prepareStatement("SELECT * FROM select_imagery_by_institution(?, ?)")) {
 
-            if (hasInstitutionId) {
-                pstmt.setInt(1, Integer.parseInt(institutionId));
-            }
-            var imageryArray = new JsonArray();
+            pstmt.setInt(1, institutionId);
+            pstmt.setInt(2, userId);
+
             try (var rs = pstmt.executeQuery()) {
-                while(rs.next()) {
-                    //create imagery json to send back
-                    var newImagery = new JsonObject();
-                    newImagery.addProperty("id",          rs.getInt("imagery_id"));
-                    newImagery.addProperty("institution", rs.getInt("institution_id"));
-                    newImagery.addProperty("visibility",  rs.getString("visibility"));
-                    newImagery.addProperty("title",       rs.getString("title"));
-                    newImagery.addProperty("attribution", rs.getString("attribution"));
-                    newImagery.add("extent", rs.getString("extent") == null || rs.getString("extent").equals("null")
-                        ? null
-                        : parseJson(rs.getString("extent")).getAsJsonArray());
-                    var sourceConfig = parseJson(rs.getString("source_config")).getAsJsonObject();
-                    // Return only necessary fields for types we proxy
-                    if (sourceConfig.get("type").getAsString().equals("GeoServer")) {
-                        var cleanSource = new JsonObject();
-                        cleanSource.add("type", sourceConfig.get("type"));
-                        newImagery.add("sourceConfig", cleanSource);
-                    } else if (sourceConfig.get("type").getAsString().equals("SecureWatch")) {
-                        var cleanSource = new JsonObject();
-                        cleanSource.add("type", sourceConfig.get("type"));
-                        cleanSource.add("startDate", sourceConfig.get("startDate"));
-                        cleanSource.add("endDate", sourceConfig.get("endDate"));
-                        cleanSource.add("featureProfile", sourceConfig.get("featureProfile"));
-                        // FIXME: make securewatch dates function server side
-                        cleanSource.add("connectId", sourceConfig.get("geoserverParams").getAsJsonObject().get("CONNECTID"));
-                        newImagery.add("sourceConfig", cleanSource);
-                    } else if (sourceConfig.get("type").getAsString().equals("Planet")) {
-                        var cleanSource = new JsonObject();
-                        cleanSource.add("type",  sourceConfig.get("type"));
-                        cleanSource.add("month", sourceConfig.get("month"));
-                        cleanSource.add("year",  sourceConfig.get("year"));
-                        newImagery.add("sourceConfig", cleanSource);
-                    } else {
-                        newImagery.add("sourceConfig", sourceConfig);
-                    };
-
-                    imageryArray.add(newImagery);
-                }
+                return buildImageryArray(rs, !isInstAdminQuery(userId, institutionId)).toString();
             }
-            return imageryArray.toString();
 
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+            return "";
+        }
+    }
+
+    public String getProjectImagery(Request req, Response res) {
+        final var projectId = req.queryParams("projectId");
+        final var userId    = req.session().attributes().contains("userid")
+                                ? req.session().attribute("userid").toString()
+                                : "-1";
+        try (var conn = connect();
+             var pstmt = conn.prepareStatement("SELECT * FROM select_imagery_by_project(?, ?)")) {
+
+            pstmt.setInt(1, Integer.parseInt(projectId));
+            pstmt.setInt(2, Integer.parseInt(userId));
+
+            try (var rs = pstmt.executeQuery()) {
+                return buildImageryArray(rs, true).toString();
+            }
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+            return "";
+        }
+    }
+
+    public String getPublicImagery(Request req, Response res) {
+        try (var conn = connect();
+             var pstmt = conn.prepareStatement("SELECT * FROM select_public_imagery()")) {
+
+            try (var rs = pstmt.executeQuery()) {
+                return buildImageryArray(rs, true).toString();
+            }
         } catch (SQLException e) {
             System.out.println(e.getMessage());
             return "";
@@ -168,13 +205,12 @@ public class PostgresImagery implements Imagery {
         return "";
     }
 
-    // FIXME, make sure imagery is not referenced
-    public String deleteInstitutionImagery(Request req, Response res) {
-        var jsonInputs =    parseJson(req.body()).getAsJsonObject();
-        var imageryId =     jsonInputs.get("imageryId").getAsString();
+    public String archiveInstitutionImagery(Request req, Response res) {
+        var jsonInputs = parseJson(req.body()).getAsJsonObject();
+        var imageryId  = jsonInputs.get("imageryId").getAsString();
 
         try (var conn = connect();
-             var pstmt = conn.prepareStatement("SELECT * FROM delete_imagery(?)")) {
+             var pstmt = conn.prepareStatement("SELECT * FROM archive_imagery(?)")) {
 
             pstmt.setInt(1, Integer.parseInt(imageryId));
             pstmt.execute();

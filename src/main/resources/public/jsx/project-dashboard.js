@@ -1,6 +1,6 @@
 import React from "react";
 import ReactDOM from "react-dom";
-import { mercator, ceoMapStyles } from "../js/mercator-openlayers.js";
+import { mercator, ceoMapStyles } from "../js/mercator.js";
 
 import { convertSampleValuesToSurveyQuestions } from "./utils/surveyUtils";
 
@@ -86,7 +86,7 @@ class ProjectDashboard extends React.Component {
     }
 
     getImageryList(institutionId) {
-        fetch(this.props.documentRoot + "/get-all-imagery?institutionId=" + institutionId)
+        fetch(this.props.documentRoot + "/get-institution-imagery?institutionId=" + institutionId)
             .then(response => {
                 if (response.ok) {
                     return response.json();
@@ -117,8 +117,12 @@ class ProjectDashboard extends React.Component {
 
     showProjectMap() {
         // Initialize the basemap
-        const mapConfig = mercator.createMap("project-map", [0.0, 0.0], 1, this.state.imageryList, this.props.documentRoot);
-        mercator.setVisibleLayer(mapConfig, this.state.projectDetails.baseMapSource);
+        const mapConfig = mercator.createMap("project-map",
+                                             [0.0, 0.0],
+                                             1,
+                                             this.state.imageryList,
+                                             this.props.documentRoot);
+        mercator.setVisibleLayer(mapConfig, this.state.projectDetails.imageryId);
         // Display a bounding box with the project's AOI on the map and zoom to it
         mercator.addVectorLayer(mapConfig,
                                 "currentAOI",

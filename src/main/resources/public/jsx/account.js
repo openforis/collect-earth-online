@@ -4,19 +4,21 @@ import ReactDOM from "react-dom";
 import { FormLayout, SectionBlock, StatsCell, StatsRow } from "./components/FormComponents";
 
 function Account(props) {
+    const sameAsUser = props.userId === props.accountId;
     return (
-        <FormLayout title="Your account!" className="px-2 pb-2">
+        <FormLayout title={sameAsUser ? "Your account" : "User " + props.accountId} className="px-2 pb-2">
             <UserStats
-                userId={props.userId}
                 documentRoot={props.documentRoot}
-                userName={props.userName}
-            />
-            <AccountForm
-                documentRoot={props.documentRoot}
-                userId={props.userId}
                 accountId={props.accountId}
                 userName={props.userName}
             />
+            {sameAsUser &&
+                <AccountForm
+                    documentRoot={props.documentRoot}
+                    accountId={props.accountId}
+                    userName={props.userName}
+                />
+            }
         </FormLayout>
     );
 }
@@ -27,24 +29,22 @@ class UserStats extends React.Component {
         this.state = {
             stats: {},
         };
-        this.getUserStats = this.getUserStats.bind(this);
-
     }
 
     componentDidMount() {
         this.getUserStats();
     }
 
-    getUserStats() {
-        fetch(this.props.documentRoot + "/get-user-stats?userId=" + this.props.userId)
+    getUserStats = () => {
+        fetch(this.props.documentRoot + "/get-user-stats?userId=" + this.props.accountId)
             .then(response => response.ok ? response.json() : Promise.reject(response))
             .then(stats => this.setState({ stats: stats }))
             .catch(response => {
                 console.log(response);
-                alert("No user found with ID " + this.props.userName + ". See console for details.");
+                alert("No user found with ID " + this.props.accountId);
                 window.location = this.props.documentRoot + "/home";
             });
-    }
+    };
 
     render () {
         const { totalProjects, totalPlots, averageTime, perProject } = this.state.stats;
@@ -107,11 +107,7 @@ class AccountForm extends React.Component {
         fetch(this.props.documentRoot + "/get-user-details?userId=" + this.props.userId)
             .then(response => response.ok ? response.json() : Promise.reject(response))
             .then(details => this.setState({ mailingListSubscription: details.mailingListSubscription }))
-            .catch(response => {
-                console.log(response);
-                alert("No user found with ID " + this.props.userName + ". See console for details.");
-                window.location = this.props.documentRoot + "/home";
-            });
+            .catch(response => console.log(response));
     };
 
     toggleMailingListSubsciprion = () => this.setState({ mailingListSubscription: !this.state.mailingListSubscription });
@@ -119,85 +115,81 @@ class AccountForm extends React.Component {
     render() {
         return (
             <SectionBlock title="Account Settings">
-                {this.props.userId === this.props.accountId ?
-                    <Fragment>
-                        <h1>{this.props.userName}</h1>
-                        <form action={this.props.documentRoot + "/account"} method="post">
-                            <div className="form-group">
-                                <label htmlFor="email">Reset email</label>
-                                <input
-                                    autoComplete="off"
-                                    id="email"
-                                    name="email"
-                                    placeholder="New email"
-                                    defaultValue=""
-                                    type="email"
-                                    className="form-control"
-                                />
-                            </div>
-                            <div className="form-group">
-                                <label htmlFor="password">Reset password</label>
-                                <div className="form-row">
-                                    <div className="col">
-                                        <input
-                                            autoComplete="off"
-                                            id="password"
-                                            name="password"
-                                            placeholder="New password"
-                                            defaultValue=""
-                                            type="password"
-                                            className="form-control mb-1"
-                                        />
-                                    </div>
-                                    <div className="col">
-                                        <input
-                                            autoComplete="off"
-                                            id="password-confirmation"
-                                            name="password-confirmation"
-                                            placeholder="New password confirmation"
-                                            defaultValue=""
-                                            type="password"
-                                            className="form-control"
-                                        />
-                                    </div>
+                <Fragment>
+                    <h1>{this.props.userName}</h1>
+                    <form action={this.props.documentRoot + "/account"} method="post">
+                        <div className="form-group">
+                            <label htmlFor="email">Reset email</label>
+                            <input
+                                autoComplete="off"
+                                id="email"
+                                name="email"
+                                placeholder="New email"
+                                defaultValue=""
+                                type="email"
+                                className="form-control"
+                            />
+                        </div>
+                        <div className="form-group">
+                            <label htmlFor="password">Reset password</label>
+                            <div className="form-row">
+                                <div className="col">
+                                    <input
+                                        autoComplete="off"
+                                        id="password"
+                                        name="password"
+                                        placeholder="New password"
+                                        defaultValue=""
+                                        type="password"
+                                        className="form-control mb-1"
+                                    />
+                                </div>
+                                <div className="col">
+                                    <input
+                                        autoComplete="off"
+                                        id="password-confirmation"
+                                        name="password-confirmation"
+                                        placeholder="New password confirmation"
+                                        defaultValue=""
+                                        type="password"
+                                        className="form-control"
+                                    />
                                 </div>
                             </div>
-                            <div className="form-check mb-3">
-                                <input
-                                    name="mailing-list-subscription"
-                                    id="mailing-list-subscription"
-                                    type="checkbox"
-                                    className="form-check-input"
-                                    checked={this.state.mailingListSubscription}
-                                    onChange={this.toggleMailingListSubsciprion}
-                                />
-                                <label className="form-check-label" htmlFor="mailing-list-subscription">
-                                    Mailing List Subscription
-                                </label>
-                            </div>
-                            <div className="form-group">
-                                <label htmlFor = "current-password">Verify your identity</label>
-                                <input
-                                    autoComplete=" off"
-                                    id="current-password"
-                                    name="current-password"
-                                    placeholder="Current password"
-                                    defaultValue=""
-                                    type="password"
-                                    className="form-control"
-                                />
-                            </div>
+                        </div>
+                        <div className="form-check mb-3">
                             <input
-                                className="btn btn-outline-lightgreen btn-block"
-                                name="update-account"
-                                defaultValue="Update account settings"
-                                type="submit"
+                                name="mailing-list-subscription"
+                                id="mailing-list-subscription"
+                                type="checkbox"
+                                className="form-check-input"
+                                checked={this.state.mailingListSubscription}
+                                onChange={this.toggleMailingListSubsciprion}
                             />
-                        </form>
-                    </Fragment>
-                :
-                    <h1>{this.props.userName}</h1>
-                }
+                            <label className="form-check-label" htmlFor="mailing-list-subscription">
+                                Mailing List Subscription
+                            </label>
+                        </div>
+                        <div className="form-group">
+                            <label htmlFor = "current-password">Verify your identity</label>
+                            <input
+                                autoComplete=" off"
+                                id="current-password"
+                                name="current-password"
+                                placeholder="Current password"
+                                defaultValue=""
+                                type="password"
+                                className="form-control"
+                            />
+                        </div>
+                        <input
+                            className="btn btn-outline-lightgreen btn-block"
+                            name="update-account"
+                            defaultValue="Update account settings"
+                            type="submit"
+                        />
+                    </form>
+                </Fragment>
             </SectionBlock>
         );
     }

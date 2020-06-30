@@ -78,8 +78,7 @@ public class Proxy {
         }
     }
 
-    public static HttpServletResponse proxyImagery(Request req, Response res, Imagery imagery) {
-        var url = buildUrl(req, imagery);
+    public static HttpServletResponse executeRequestUrl(Request req, Response res, String url) {
         try {
             var request     = prepareGetRequest(url);
             var response    = request.execute();
@@ -111,5 +110,21 @@ public class Proxy {
             res.body(e.getMessage());
             return res.raw();
         }
+    }
+
+    public static HttpServletResponse proxyImagery(Request req, Response res, Imagery imagery) {
+        var url = buildUrl(req, imagery);
+        return executeRequestUrl(req, res, url);
+    }
+
+    public static HttpServletResponse getSecureWatchDates(Request req, Response res, Imagery imagery) {
+        return executeRequestUrl(req, res, "https://securewatch.digitalglobe.com/mapservice/wmsaccess?"
+                + Arrays.stream(req.queryString().split("&"))
+                    .filter(q -> !q.split("=")[0].equals("imageryId"))
+                    .collect(Collectors.joining("&"))
+                + "&CONNECTID="
+                + imagery.getImagerySourceConfig(getQParamNoNull(req, "imageryId"))
+                    .get("geoserverParams").getAsJsonObject()
+                    .get("CONNECTID").getAsString());
     }
 }

@@ -88,8 +88,8 @@
         "build-db-tables": "psql -h localhost -U ceo -d ceo -a -f ./src/main/resources/sql/load_ceo_tables.sql --echo-errors",
         "build-db-functions": "psql -h localhost -U ceo -d ceo -a -f ./src/main/resources/sql/load_ceo_functions.sql --echo-errors",
         "build-db-all": "psql -h localhost -U postgres -a -f ./src/main/resources/sql/create_ceo_db.sql --echo-errors && npm run build-db-tables && npm run build-db-functions",
-        "webpack-dev": "webpack --config webpack.dev.js",
-        "webpack-prod": "webpack --config webpack.prod.js",
+        "webpack-dev": "webpack --config webpack.config.js --env.dev",
+        "webpack-prod": "webpack --config webpack.config.js --env.prod",
         "server-json": "mvn compile exec:java -Dexec.args=JSON",
         "server-pg": "mvn compile exec:java -Dexec.args=POSTGRES"
     }

@@ -23,8 +23,6 @@
             <h2 class="header">New to CEO?</h2>
             <input class="btn bg-lightgreen float-right mb-0" type="button" value="Register" name="register"
                    onclick="window.location='${root}/register'">
-            <div class="registerdiv">
-            </div>
         </div>
     </div>
 </div>
