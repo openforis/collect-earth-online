@@ -399,10 +399,10 @@ class ImageryList extends React.Component {
 
     //    Helper Functions    //
 
-    titleIsTaken = (newTitle, idToExclude) => this.props.imageryList.some(i => i.title === newTitle && i.id !== idToExclude);
+    titleIsTaken = (newTitle, idToExclude) => this.state.imageryList.some(i => i.title === newTitle && i.id !== idToExclude);
 
     render() {
-        return this.props.isHidden
+        return this.props.showImagery
             ?
                 this.state.imageryList.length === 0
                     ? <h3>Loading imagery...</h3>
@@ -641,7 +641,7 @@ class NewImagery extends React.Component {
     constructor(props) {
         super(props);
         const { imageryToEdit } = props;
-        if (imageryToEdit !== -1) {
+        if (imageryToEdit.id !== -1) {
             const { sourceConfig } = imageryToEdit;
             const { type, ...imageryParams } = sourceConfig;
             const selectedType = imageryOptions.findIndex((e) => e.type === type);
@@ -1262,7 +1262,7 @@ class UserList extends React.Component {
     findUserByEmail = (userEmail) => this.state.activeUserList.find(au => au.email === userEmail);
 
     render() {
-        return this.props.showImagery
+        return this.props.showUsers
             ?
                 <Fragment>
                     <NewUserButtons
