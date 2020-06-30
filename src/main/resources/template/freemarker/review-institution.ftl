@@ -1,5 +1,4 @@
 <#include "header.ftl">
-<#include "navbar.ftl">
 <#include "start-content.ftl">
 <div id="institution"></div>
 
@@ -10,7 +9,7 @@
 <script type="text/javascript">
     window.onload = function () {
         review_institution.renderReviewInstitutionPage({
-            documentRoot:     "${root}",
+            userName:         "${username}",
             userId:           "${userid}",
             institutionId:    "${institution_id}",
         });

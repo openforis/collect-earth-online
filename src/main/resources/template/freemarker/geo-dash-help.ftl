@@ -1,5 +1,4 @@
 <#include "header.ftl">
-<#include "navbar.ftl">
 <#include "start-content.ftl">
 
 <!-- Auto Inserted Bundles -->
@@ -11,8 +10,9 @@
     <script type="text/javascript">
         window.onload = function () {
             geo_dash_help.renderGeodashHelpPage({
-                documentRoot: "${root}",
-                browserLanguage: "${browserLanguage}"
+                userName:           "${username}"
+                userId:             "${userid}",
+                browserLanguage:    "${browserLanguage}"
             });
         };
     </script>
