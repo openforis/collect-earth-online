@@ -1,5 +1,4 @@
 <#include "header.ftl">
-<#include "navbar.ftl">
 <#include "start-content.ftl">
 <div id="login"></div>
 
@@ -10,7 +9,9 @@
 <script type="text/javascript">
     window.onload = function () {
         login.renderLoginPage({
-            returnurl: "${returnurl}"
+            userId:       "${userid}",
+            userName:     "${username}",
+            returnurl:    "${returnurl}"
         });
     };
 </script>

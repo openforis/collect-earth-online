@@ -1,5 +1,6 @@
 import React from "react";
 import ReactDOM from "react-dom";
+import { NavigationBar } from "./components/PageComponents";
 import { GetQueryString } from "./utils/textUtils";
 
 class Login extends React.Component {
@@ -90,9 +91,11 @@ class Login extends React.Component {
 
 export function renderLoginPage(args) {
     ReactDOM.render(
-        <Login
-            returnurl={args.returnurl}
-        />,
+        <NavigationBar userName={args.userName} userId={args.userId}>
+            <Login
+                returnurl={args.returnurl}
+            />
+        </NavigationBar>,
         document.getElementById("login")
     );
 }
