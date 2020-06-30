@@ -260,7 +260,7 @@ class BasicLayout extends React.PureComponent {
                 visParams: img.visParams,
                 ImageAsset: ImageAsset,
                 ImageCollectionAsset: ImageCollectionAsset,
-                path:getGatewayPath(img),
+                path: getGatewayPath(img),
             },
         };
         if (img.ImageAsset && img.ImageAsset.length > 0) {
@@ -693,7 +693,7 @@ class BasicLayout extends React.PureComponent {
         this.setState({ featureCollection: event.target.value });
     };
 
-    onmatchFieldChange = event => {
+    onMatchFieldChange = event => {
         this.setState({
             matchField: event.target.value,
             formReady: true,
@@ -1379,7 +1379,7 @@ class BasicLayout extends React.PureComponent {
                         type="text"
                         name="featureCollection"
                         id="featureCollection"
-                        placeholder={"users/username/collectionName"}
+                        placeholder="users/username/collectionName"
                         value={this.state.featureCollection}
                         className="form-control"
                         onChange={this.onFeatureCollectionChange}
@@ -1391,10 +1391,10 @@ class BasicLayout extends React.PureComponent {
                         type="text"
                         name="matchField"
                         id="matchField"
-                        placeholder={"OBJECTID"}
+                        placeholder="OBJECTID"
                         value={this.state.matchField}
                         className="form-control"
-                        onChange={this.onmatchFieldChange}
+                        onChange={this.onMatchFieldChange}
                     />
                 </div>
                 {this.getImageParamsBlock()}
