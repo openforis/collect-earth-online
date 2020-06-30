@@ -660,10 +660,12 @@ class NewImagery extends React.Component {
                     newImageryParams: geoServerImageryParams,
                 };
             } else if (type === "SecureWatch") {
-                const { geoserverParams } = imageryParams;
+                const { geoserverParams, startDate, endDate } = imageryParams;
                 const { CONNECTID } = geoserverParams;
                 const secureWatchImageryParams = {
                     connectid: CONNECTID,
+                    startDate,
+                    endDate,
                 };
                 this.state = {
                     newImageryTitle: imageryToEdit.title,
