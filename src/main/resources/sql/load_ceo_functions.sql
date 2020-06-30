@@ -585,6 +585,9 @@ CREATE OR REPLACE FUNCTION archive_imagery(_imagery_uid integer)
     SET imagery_rid = (SELECT select_first_public_imagery())
     WHERE imagery_rid = _imagery_uid;
 
+    DELETE FROM project_imagery
+    WHERE imagery_rid = _imagery_uid;
+
 $$ LANGUAGE SQL;
 
 -- Returns all rows in imagery for which visibility = "public"
@@ -626,15 +629,20 @@ $$ LANGUAGE SQL;
 CREATE OR REPLACE FUNCTION select_imagery_by_project(_project_rid integer, _user_rid integer)
  RETURNS setOf imagery_return AS $$
 
-    SELECT imagery_uid, p.institution_rid, visibility, title, attribution, extent, source_config
-    FROM imagery i, projects p
-    WHERE i.institution_rid = p.institution_rid
-        AND project_uid = _project_rid
+    SELECT DISTINCT imagery_uid, p.institution_rid, visibility, title, attribution, extent, source_config
+    FROM projects p
+    LEFT JOIN project_imagery pi
+        ON pi.project_rid = p.project_uid
+    INNER JOIN imagery i
+        ON pi.imagery_rid = i.imagery_uid
+            OR p.imagery_rid = i.imagery_uid
+    WHERE project_uid = _project_rid
         AND archived = FALSE
         AND (visibility = 'public'
-            OR (SELECT count(*) > 0
-                FROM get_all_users_by_institution_id(p.institution_rid)
-                WHERE user_id = _user_rid)
+            OR (i.institution_rid = p.institution_rid
+                AND (SELECT count(*) > 0
+                        FROM get_all_users_by_institution_id(p.institution_rid)
+                        WHERE user_id = _user_rid))
             OR _user_rid = 1)
 
     ORDER BY title
@@ -656,6 +664,28 @@ CREATE OR REPLACE FUNCTION update_imagery(_imagery_uid integer, _institution_rid
     RETURNING imagery_uid
 
 $$ LANGUAGE SQL;
+
+-- Deletes all imagery associated with a project
+CREATE OR REPLACE FUNCTION delete_project_imagery(_project_rid integer)
+ RETURNS void AS $$
+
+    DELETE FROM project_imagery
+    WHERE project_rid = _project_rid
+
+$$ LANGUAGE SQL;
+
+-- insert into project_imagery table
+CREATE FUNCTION insert_project_imagery(_project_rid integer, _imagery_rid integer)
+
+ RETURNS integer AS $$
+
+    INSERT INTO project_imagery
+        (project_rid, imagery_rid)
+    VALUES
+        (_project_rid, _imagery_rid)
+    RETURNING project_imagery_uid
+
+$$ LANGUAGE  SQL;
 
 --
 --  WIDGET FUNCTIONS

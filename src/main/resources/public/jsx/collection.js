@@ -1,6 +1,7 @@
 import React, { Fragment } from "react";
 import ReactDOM from "react-dom";
 import { mercator, ceoMapStyles } from "../js/mercator.js";
+import { NavigationBar } from "./components/PageComponents";
 import { SurveyCollection } from "./components/SurveyCollection";
 import { convertSampleValuesToSurveyQuestions } from "./utils/surveyUtils";
 import { UnicodeIcon } from "./utils/textUtils";
@@ -1368,7 +1369,7 @@ class Collection extends React.Component {
               && (this.state.currentPlot.plotId ? this.state.currentPlot.plotId : this.state.currentPlot.id);
         const isFlagged = this.state.currentPlot && this.state.currentPlot.flagged;
         return (
-            <Fragment>
+            <div className="row" style={{ height: "-webkit-fill-available" }}>
                 <ImageAnalysisPane
                     imageryAttribution={this.state.imageryAttribution}
                     projectId={this.props.projectId}
@@ -1494,7 +1495,7 @@ class Collection extends React.Component {
                 {this.state.plotList.length === 0 &&
                     <div id="spinner" style={{ top: "45%", left: "38%" }}/>
                 }
-            </Fragment>
+            </div>
         );
     }
 }
@@ -2338,12 +2339,14 @@ function QuitMenu({ userId, projectId, documentRoot, toggleQuitModal }) {
 
 export function renderCollectionPage(args) {
     ReactDOM.render(
-        <Collection
-            documentRoot={args.documentRoot}
-            userId={args.userId === "" ? -1 : parseInt(args.userId)}
-            userName={args.userName}
-            projectId={args.projectId}
-        />,
+        <NavigationBar userName={args.userName} userId={args.userId}>
+            <Collection
+                documentRoot=""
+                userId={args.userId === "" ? -1 : parseInt(args.userId)}
+                userName={args.userName}
+                projectId={args.projectId}
+            />
+        </NavigationBar>,
         document.getElementById("collection")
     );
 }

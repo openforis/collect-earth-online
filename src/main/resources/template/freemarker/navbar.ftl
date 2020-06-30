@@ -48,19 +48,3 @@
         </ul>
     </div>
 </nav>
-<script type="text/javascript">
- function menuControls() {
-     var x = document.getElementById("myTopnav");
-     if (x.className === "topnav") {
-         x.className += " responsive";
-     } else {
-         x.className = "topnav";
-     }
-     var ml = document.getElementById("mobileLogin");
-     if (ml.className === "mobileLogin") {
-         ml.className += " responsive";
-     } else {
-         ml.className = "mobileLogin";
-     }
- }
-</script>

@@ -2,6 +2,7 @@ import React, { Fragment } from "react";
 import ReactDOM from "react-dom";
 
 import { FormLayout, SectionBlock, StatsCell, StatsRow } from "./components/FormComponents";
+import { NavigationBar } from "./components/PageComponents";
 import { ProjectInfo, ProjectAOI, PlotReview, SampleReview, ProjectOptions } from "./components/ProjectComponents";
 import SurveyCardList from "./components/SurveyCardList";
 import { convertSampleValuesToSurveyQuestions } from "./utils/surveyUtils";
@@ -13,6 +14,7 @@ class Project extends React.Component {
         this.state = {
             projectDetails: {},
             imageryList: [],
+            projectImageryList: [],
             mapConfig: null,
             plotList: [],
             coordinates: {
@@ -31,6 +33,7 @@ class Project extends React.Component {
     componentDidUpdate(prevProps, prevState) {
         if (this.state.projectDetails.id
                 && this.state.projectDetails !== prevState.projectDetails) {
+            this.getProjectImageryList();
             this.getImageryList();
             this.getProjectPlots();
         }
@@ -63,7 +66,6 @@ class Project extends React.Component {
 
     updateProject = () => {
         if (this.validateProject() && confirm("Do you REALLY want to update this project?")) {
-
             fetch(this.props.documentRoot + "/update-project",
                   {
                       method: "POST",
@@ -75,6 +77,7 @@ class Project extends React.Component {
                           name: this.state.projectDetails.name,
                           privacyLevel: this.state.projectDetails.privacyLevel,
                           projectOptions: this.state.projectDetails.projectOptions,
+                          projectImageryList: this.state.projectImageryList,
                       }),
                   })
                 .then(response => {
@@ -210,6 +213,16 @@ class Project extends React.Component {
             });
     };
 
+    getProjectImageryList = () => {
+        fetch(this.props.documentRoot + "/get-project-imagery?projectId=" + this.props.projectId)
+            .then(response => response.ok ? response.json() : Promise.reject(response))
+            .then(data => this.setState({ projectImageryList: data.map(imagery => imagery.id) }))
+            .catch(response => {
+                console.log(response);
+                alert("Error retrieving the project imagery list. See console for details.");
+            });
+    };
+
     getProjectPlots = () => {
         fetch(this.props.documentRoot + "/get-project-plots?projectId=" + this.props.projectId + "&max=300")
             .then(response => response.ok ? response.json() : Promise.reject(response))
@@ -276,6 +289,9 @@ class Project extends React.Component {
         </SectionBlock>
     );
 
+    setProjectImageryList = (newProjectImageryList) =>
+        this.setState({ projectImageryList: newProjectImageryList });
+
     render() {
         return (
             <FormLayout id="project-design" title="Review Project">
@@ -288,6 +304,8 @@ class Project extends React.Component {
                             projectDetails={this.state.projectDetails}
                             setProjectDetail={this.setProjectDetail}
                             onShowGEEScriptClick={this.onShowGEEScriptClick}
+                            projectImageryList={this.state.projectImageryList}
+                            setProjectImageryList={this.setProjectImageryList}
                         />
                         <ProjectManagement
                             changeAvailability={this.changeAvailability}
@@ -459,7 +477,15 @@ class ProjectStats extends React.Component {
     }
 }
 
-function ProjectDesignReview({ projectDetails, coordinates, imageryList, setProjectDetail, onShowGEEScriptClick }) {
+function ProjectDesignReview({
+    projectDetails,
+    coordinates,
+    imageryList,
+    setProjectDetail,
+    onShowGEEScriptClick,
+    projectImageryList,
+    setProjectImageryList,
+}) {
     return (
         <div id="project-design-form" className="px-2 pb-2">
             <ProjectInfo
@@ -473,6 +499,8 @@ function ProjectDesignReview({ projectDetails, coordinates, imageryList, setProj
                 imageryId={projectDetails.imageryId}
                 imageryList={imageryList}
                 setProjectDetail={setProjectDetail}
+                projectImageryList={projectImageryList}
+                setProjectImageryList={setProjectImageryList}
             />
             <ProjectOptions
                 showGEEScript={projectDetails.projectOptions.showGEEScript}
@@ -622,7 +650,13 @@ function ProjectManagement(props) {
 
 export function renderReviewProjectPage(args) {
     ReactDOM.render(
-        <Project documentRoot={args.documentRoot} userId={args.userId} projectId={args.projectId}/>,
+        <NavigationBar userName={args.userName} userId={args.userId}>
+            <Project
+                documentRoot=""
+                userId={args.userId}
+                projectId={args.projectId}
+            />
+        </NavigationBar>,
         document.getElementById("project")
     );
 }

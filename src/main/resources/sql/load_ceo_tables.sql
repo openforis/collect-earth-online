@@ -91,6 +91,15 @@ CREATE TABLE projects (
     imagery_rid             integer REFERENCES imagery (imagery_uid)
 );
 
+-- Stores project imagery
+-- 1 project -> many imagery
+CREATE TABLE project_imagery (
+    project_imagery_uid        SERIAL PRIMARY KEY,
+    project_rid                integer REFERENCES projects(project_uid) ON DELETE CASCADE ON UPDATE CASCADE,
+    imagery_rid                integer REFERENCES imagery (imagery_uid) ON DELETE CASCADE ON UPDATE CASCADE,
+    CONSTRAINT per_project_per_imagery UNIQUE(project_rid, imagery_rid)
+);
+
 -- Stores information about plot packet
 CREATE TABLE packets (
     packet_uid    serial PRIMARY KEY,
