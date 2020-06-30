@@ -2,6 +2,7 @@ import React, { Fragment } from "react";
 import ReactDOM from "react-dom";
 
 import { FormLayout, SectionBlock, StatsCell, StatsRow } from "./components/FormComponents";
+import { NavigationBar } from "./components/PageComponents";
 import { ProjectInfo, ProjectAOI, PlotReview, SampleReview, ProjectOptions } from "./components/ProjectComponents";
 import SurveyCardList from "./components/SurveyCardList";
 import { convertSampleValuesToSurveyQuestions } from "./utils/surveyUtils";
@@ -649,7 +650,13 @@ function ProjectManagement(props) {
 
 export function renderReviewProjectPage(args) {
     ReactDOM.render(
-        <Project documentRoot={args.documentRoot} userId={args.userId} projectId={args.projectId}/>,
+        <NavigationBar userName={args.userName} userId={args.userId}>
+            <Project
+                documentRoot=""
+                userId={args.userId}
+                projectId={args.projectId}
+            />
+        </NavigationBar>,
         document.getElementById("project")
     );
 }

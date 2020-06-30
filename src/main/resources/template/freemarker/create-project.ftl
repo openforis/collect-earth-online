@@ -1,5 +1,4 @@
 <#include "header.ftl">
-<#include "navbar.ftl">
 <#include "start-content.ftl">
 <#if institution_id == "">
     <#assign institution_id = "0">
@@ -11,13 +10,13 @@
 <!-- End Auto Inserted Bundles -->
 
 <script type="text/javascript">
- window.onload = function () {
-     create_project.renderCreateProjectPage({
-         documentRoot:                "${root}",
-         userId:                      "${userid}",
-         institutionId:               "${institution_id}",
-     });
- };
+    window.onload = function () {
+        create_project.renderCreateProjectPage({
+            userName:         "${username}",
+            userId:           "${userid}",
+            institutionId:    "${institution_id}",
+        });
+    };
 </script>
 <#include "end-content.ftl">
 <#include "footer.ftl">

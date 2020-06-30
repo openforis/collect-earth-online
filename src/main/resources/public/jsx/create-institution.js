@@ -1,6 +1,7 @@
 import React from "react";
 import ReactDOM from "react-dom";
 import InstitutionEditor from "./components/InstitutionEditor";
+import { NavigationBar } from "./components/PageComponents";
 
 class CreateInstitution extends React.Component {
     constructor(props) {
@@ -98,10 +99,12 @@ class CreateInstitution extends React.Component {
 
 export function renderCreateInstitutionPage(args) {
     ReactDOM.render(
-        <CreateInstitution
-            documentRoot={args.documentRoot}
-            userId={args.userId === "" ? -1 : parseInt(args.userId)}
-        />,
+        <NavigationBar userName={args.userName} userId={args.userId}>
+            <CreateInstitution
+                documentRoot=""
+                userId={args.userId === "" ? -1 : parseInt(args.userId)}
+            />
+        </NavigationBar>,
         document.getElementById("institution")
     );
 }

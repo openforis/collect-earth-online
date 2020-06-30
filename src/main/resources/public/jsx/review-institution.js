@@ -2,6 +2,7 @@ import React, { Fragment } from "react";
 import ReactDOM from "react-dom";
 
 import InstitutionEditor from "./components/InstitutionEditor";
+import { NavigationBar } from "./components/PageComponents";
 import { sortAlphabetically, capitalizeFirst, UnicodeIcon } from "./utils/textUtils";
 
 class ReviewInstitution extends React.Component {
@@ -1261,11 +1262,13 @@ class NewUserButtons extends React.Component {
 
 export function renderReviewInstitutionPage(args) {
     ReactDOM.render(
-        <ReviewInstitution
-            documentRoot={args.documentRoot}
-            userId={args.userId === "" ? -1 : parseInt(args.userId)}
-            institutionId={args.institutionId === "" ? -1 : parseInt(args.institutionId)}
-        />,
+        <NavigationBar userName={args.userName} userId={args.userId}>
+            <ReviewInstitution
+                documentRoot=""
+                userId={args.userId === "" ? -1 : parseInt(args.userId)}
+                institutionId={args.institutionId === "" ? -1 : parseInt(args.institutionId)}
+            />
+        </NavigationBar>,
         document.getElementById("institution")
     );
 }

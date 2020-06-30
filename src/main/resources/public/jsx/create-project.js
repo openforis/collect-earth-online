@@ -2,6 +2,7 @@ import React, { Fragment } from "react";
 import ReactDOM from "react-dom";
 
 import { FormLayout, SectionBlock } from "./components/FormComponents";
+import { NavigationBar } from "./components/PageComponents";
 import { ProjectInfo, ProjectAOI, ProjectOptions, PlotReview, SampleReview } from "./components/ProjectComponents";
 import { mercator, ceoMapStyles } from "../js/mercator.js";
 import { SurveyDesign } from "./components/SurveyDesign";
@@ -1063,11 +1064,13 @@ function LoadingModal() {
 
 export function renderCreateProjectPage(args) {
     ReactDOM.render(
-        <Project
-            documentRoot={args.documentRoot}
-            userId={args.userId}
-            institutionId={args.institutionId}
-        />,
+        <NavigationBar userName={args.userName} userId={args.userId}>
+            <Project
+                documentRoot=""
+                userId={args.userId}
+                institutionId={args.institutionId}
+            />
+        </NavigationBar>,
         document.getElementById("project")
     );
 }

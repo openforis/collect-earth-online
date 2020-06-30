@@ -378,7 +378,8 @@ CREATE OR REPLACE FUNCTION archive_institution(_institution_uid integer)
     WHERE institution_rid = _institution_uid;
 
     UPDATE institutions
-    SET archived = true
+    SET archived = true,
+        archived_date = NOW()
     WHERE institution_uid = _institution_uid
     RETURNING institution_uid;
 
@@ -628,20 +629,15 @@ $$ LANGUAGE SQL;
 CREATE OR REPLACE FUNCTION select_imagery_by_project(_project_rid integer, _user_rid integer)
  RETURNS setOf imagery_return AS $$
 
-    SELECT DISTINCT imagery_uid, p.institution_rid, visibility, title, attribution, extent, source_config
-    FROM projects p
-    LEFT JOIN project_imagery pi
-        ON pi.project_rid = p.project_uid
-    INNER JOIN imagery i
-        ON pi.imagery_rid = i.imagery_uid
-            OR p.imagery_rid = i.imagery_uid
+    SELECT imagery_uid, p.institution_rid, visibility, title, attribution, extent, source_config
+    FROM imagery i, projects p
     WHERE project_uid = _project_rid
         AND archived = FALSE
         AND (visibility = 'public'
             OR (i.institution_rid = p.institution_rid
-                    AND (SELECT count(*) > 0
-                FROM get_all_users_by_institution_id(p.institution_rid)
-                WHERE user_id = _user_rid))
+                AND (SELECT count(*) > 0
+                    FROM get_all_users_by_institution_id(p.institution_rid)
+                    WHERE user_id = _user_rid))
             OR _user_rid = 1)
 
     ORDER BY title
@@ -800,7 +796,7 @@ CREATE OR REPLACE FUNCTION create_project(
 
 $$ LANGUAGE SQL;
 
--- Delete project plots and external files but keep project entry as archived
+-- Delete project and external file
 CREATE OR REPLACE FUNCTION delete_project(_project_uid integer)
  RETURNS void AS $$
 
@@ -813,7 +809,7 @@ CREATE OR REPLACE FUNCTION delete_project(_project_uid integer)
             ON project_uid = project_rid
             AND project_uid = _project_uid);
 
-    UPDATE projects SET availability='archived' WHERE project_uid = _project_uid;
+    DELETE FROM projects WHERE project_uid = _project_uid;
 
     EXECUTE
     'DROP TABLE IF EXISTS ext_tables.project_' || _project_uid || '_plots_csv;'
