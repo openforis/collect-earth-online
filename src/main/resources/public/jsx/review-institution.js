@@ -696,15 +696,7 @@ class NewImagery extends React.Component {
             alert("You must fill out all fields.");
         } else {
             const sourceConfig = this.stackParams();
-            const message = this.validateData(sourceConfig);
-            if (["Planet", "PlanetDaily", "Sentinel1", "Sentinel2"].includes(sourceConfig.type) && message) {
-                alert(message);
-            } else if (this.props.titleIsTaken(this.state.newImageryTitle, this.props.imageryToEdit.id)) {
-                alert("The title '" + this.state.newImageryTitle + "' is already taken.");
-            } else if (Object.keys(sourceConfig).length === 0) {
-                // stackParams() will fail if parent is not entered as a JSON string.
-                alert("Invalid JSON in JSON field(s).");
-            } else {
+            if (this.validateImageryParams(sourceConfig)) {
                 // modify the sourceConfig as needed (for example SecureWatch Imagery)
                 const fixedSourceConfig = this.sourceConfigFixes(sourceConfig);
                 fetch(this.props.documentRoot + "/update-institution-imagery",
@@ -736,15 +728,7 @@ class NewImagery extends React.Component {
             alert("You must fill out all fields.");
         } else {
             const sourceConfig = this.stackParams();
-            const message = this.validateData(sourceConfig);
-            if (["Planet", "PlanetDaily", "SecureWatch", "Sentinel1", "Sentinel2"].includes(sourceConfig.type) && message) {
-                alert(message);
-            } else if (this.props.titleIsTaken(this.state.newImageryTitle, this.props.imageryToEdit.id)) {
-                alert("The title '" + this.state.newImageryTitle + "' is already taken.");
-            } else if (Object.keys(sourceConfig).length === 0) {
-                // stackParams() will fail if parent is not entered as a JSON string.
-                alert("Invalid JSON in JSON field(s).");
-            } else {
+            if (this.validateImageryParams(sourceConfig)) {
                 // modify the sourceConfig as needed (for example SecureWatch Imagery)
                 const fixedSourceConfig = this.sourceConfigFixes(sourceConfig);
                 fetch(this.props.documentRoot + "/add-institution-imagery",
@@ -824,6 +808,22 @@ class NewImagery extends React.Component {
         }
     };
 
+    validateImageryParams = (sourceConfig) => {
+        let isValid = false;
+        const message = this.validateData(sourceConfig);
+        if (["Planet", "PlanetDaily", "SecureWatch", "Sentinel1", "Sentinel2"].includes(sourceConfig.type) && message) {
+            alert(message);
+        } else if (this.props.titleIsTaken(this.state.newImageryTitle, this.props.imageryToEdit.id)) {
+            alert("The title '" + this.state.newImageryTitle + "' is already taken.");
+        } else if (Object.keys(sourceConfig).length === 0) {
+            // stackParams() will fail if parent is not entered as a JSON string.
+            alert("Invalid JSON in JSON field(s).");
+        } else {
+            isValid = true;
+        }
+        return isValid;
+    };
+
     sourceConfigFixes = (sourceConfig) => {
         if (sourceConfig.type === "SecureWatch") {
             sourceConfig["geoserverUrl"] = "https://securewatch.digitalglobe.com/mapservice/wmsaccess";
@@ -837,7 +837,7 @@ class NewImagery extends React.Component {
             delete sourceConfig.connectid;
         }
         return sourceConfig;
-    }
+    };
 
     //    Render Functions    //
 
