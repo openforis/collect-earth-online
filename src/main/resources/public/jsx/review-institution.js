@@ -83,7 +83,7 @@ class ReviewInstitution extends React.Component {
                             isAdmin={this.state.isAdmin}
                             institutionId={this.props.institutionId}
                             setImageryCount={this.setImageryCount}
-                            isHidden={this.state.showImagery}
+                            showImagery={this.state.showImagery}
                         />
                         <div onClick={() => this.setState({ showUsers: !this.state.showUsers })}>
                             <h2 className="header">
@@ -103,7 +103,7 @@ class ReviewInstitution extends React.Component {
                                 isAdmin={this.state.isAdmin}
                                 setUsersCount={this.setUsersCount}
                                 userId={this.props.userId}
-                                isHidden={this.state.showUsers}
+                                showUsers={this.state.showUsers}
                             />
                         }
                     </div>
@@ -323,7 +323,9 @@ class ImageryList extends React.Component {
         super(props);
         this.state = {
             editMode: false,
-            imageryToEdit: -1,
+            imageryToEdit: {
+                id: -1,
+            },
             imageryList: [],
         };
     }
@@ -354,7 +356,11 @@ class ImageryList extends React.Component {
     };
 
     addImagery = () => {
-        this.setState({ imageryToEdit: -1 });
+        this.setState({
+            imageryToEdit: {
+                id: -1,
+            },
+        });
         this.toggleEditMode();
     }
 
@@ -391,6 +397,10 @@ class ImageryList extends React.Component {
 
     toggleEditMode = () => this.setState({ editMode: !this.state.editMode });
 
+    //    Helper Functions    //
+
+    titleIsTaken = (newTitle, idToExclude) => this.props.imageryList.some(i => i.title === newTitle && i.id !== idToExclude);
+
     render() {
         return this.props.isHidden
             ?
@@ -405,6 +415,7 @@ class ImageryList extends React.Component {
                                 toggleEditMode={this.toggleEditMode}
                                 imageryToEdit={this.state.imageryToEdit}
                                 imageryList={this.state.imageryList}
+                                titleIsTaken={this.titleIsTaken}
                             />
                         :
                             <Fragment>
@@ -681,105 +692,103 @@ class NewImagery extends React.Component {
     //    Remote Calls    //
 
     editCustomImagery = () => {
-        const sourceConfig = this.stackParams();
-        const message = this.validateData(sourceConfig);
         if (!this.checkAllParams()) {
             alert("You must fill out all fields.");
-        } else if (["Planet", "PlanetDaily", "Sentinel1", "Sentinel2"].includes(sourceConfig.type) && message) {
-            alert(message);
-        } else if (this.titleIsTaken(this.state.newImageryTitle, this.props.imageryToEdit.id)) {
-            alert("The title '" + this.state.newImageryTitle + "' is already taken.");
-        } else if (Object.keys(sourceConfig).length === 0) {
-            // stackParams() will fail if parent is not entered as a JSON string.
-            alert("Invalid JSON in JSON field(s).");
         } else {
-            // modify the sourceConfig as needed (for example SecureWatch Imagery)
-            if (sourceConfig.type === "SecureWatch") {
-                sourceConfig["geoserverUrl"] = "https://securewatch.digitalglobe.com/mapservice/wmsaccess";
-                const geoserverParams = {
-                    "VERSION": "1.1.1",
-                    "STYLES": "",
-                    "LAYERS": "DigitalGlobe:Imagery",
-                    "CONNECTID": sourceConfig.connectid,
-                };
-                sourceConfig["geoserverParams"] = geoserverParams;
-                delete sourceConfig.connectid;
-            }
-
-            fetch(this.props.documentRoot + "/update-institution-imagery",
-                  {
-                      method: "POST",
-                      body: JSON.stringify({
-                          institutionId: this.props.institutionId,
-                          imageryId: this.props.imageryToEdit.id,
-                          imageryTitle: this.state.newImageryTitle,
-                          imageryAttribution: this.state.newImageryAttribution,
-                          sourceConfig: sourceConfig,
-                      }),
-                  }
-            ).then(response => {
-                if (response.ok) {
-                    this.props.getImageryList();
-                    this.props.toggleEditMode();
-                } else {
-                    console.log(response);
-                    alert("Error updating imagery. See console for details.");
+            const sourceConfig = this.stackParams();
+            const message = this.validateData(sourceConfig);
+            if (["Planet", "PlanetDaily", "Sentinel1", "Sentinel2"].includes(sourceConfig.type) && message) {
+                alert(message);
+            } else if (this.props.titleIsTaken(this.state.newImageryTitle, this.props.imageryToEdit.id)) {
+                alert("The title '" + this.state.newImageryTitle + "' is already taken.");
+            } else if (Object.keys(sourceConfig).length === 0) {
+                // stackParams() will fail if parent is not entered as a JSON string.
+                alert("Invalid JSON in JSON field(s).");
+            } else {
+                // modify the sourceConfig as needed (for example SecureWatch Imagery)
+                if (sourceConfig.type === "SecureWatch") {
+                    sourceConfig["geoserverUrl"] = "https://securewatch.digitalglobe.com/mapservice/wmsaccess";
+                    const geoserverParams = {
+                        "VERSION": "1.1.1",
+                        "STYLES": "",
+                        "LAYERS": "DigitalGlobe:Imagery",
+                        "CONNECTID": sourceConfig.connectid,
+                    };
+                    sourceConfig["geoserverParams"] = geoserverParams;
+                    delete sourceConfig.connectid;
                 }
-            });
+                fetch(this.props.documentRoot + "/update-institution-imagery",
+                      {
+                          method: "POST",
+                          body: JSON.stringify({
+                              institutionId: this.props.institutionId,
+                              imageryId: this.props.imageryToEdit.id,
+                              imageryTitle: this.state.newImageryTitle,
+                              imageryAttribution: this.state.newImageryAttribution,
+                              sourceConfig: sourceConfig,
+                          }),
+                      }
+                ).then(response => {
+                    if (response.ok) {
+                        this.props.getImageryList();
+                        this.props.toggleEditMode();
+                    } else {
+                        console.log(response);
+                        alert("Error updating imagery. See console for details.");
+                    }
+                });
+            }
         }
     };
 
     addCustomImagery = () => {
-        const sourceConfig = this.stackParams();
-        const message = this.validateData(sourceConfig);
         if (!this.checkAllParams()) {
             alert("You must fill out all fields.");
-        } else if (["Planet", "PlanetDaily", "SecureWatch", "Sentinel1", "Sentinel2"].includes(sourceConfig.type) && message) {
-            alert(message);
-        } else if (this.titleIsTaken(this.state.newImageryTitle, this.props.imageryToEdit.id)) {
-            alert("The title '" + this.state.newImageryTitle + "' is already taken.");
-        } else if (Object.keys(sourceConfig).length === 0) {
-            // stackParams() will fail if parent is not entered as a JSON string.
-            alert("Invalid JSON in JSON field(s).");
         } else {
-            // modify the sourceConfig as needed (for example SecureWatch Imagery)
-            if (sourceConfig.type === "SecureWatch") {
-                sourceConfig["geoserverUrl"] = "https://securewatch.digitalglobe.com/mapservice/wmsaccess";
-                const geoserverParams = {
-                    "VERSION": "1.1.1",
-                    "STYLES": "",
-                    "LAYERS": "DigitalGlobe:Imagery",
-                    "CONNECTID": sourceConfig.connectid,
-                };
-                sourceConfig["geoserverParams"] = geoserverParams;
-                delete sourceConfig.connectid;
-            }
-
-            fetch(this.props.documentRoot + "/add-institution-imagery",
-                  {
-                      method: "POST",
-                      body: JSON.stringify({
-                          institutionId: this.props.institutionId,
-                          imageryTitle: this.state.newImageryTitle,
-                          imageryAttribution: this.state.newImageryAttribution,
-                          sourceConfig: sourceConfig,
-                      }),
-                  }
-            ).then(response => {
-                if (response.ok) {
-                    this.props.getImageryList();
-                    this.props.toggleEditMode();
-                } else {
-                    console.log(response);
-                    alert("Error adding imagery. See console for details.");
+            const sourceConfig = this.stackParams();
+            const message = this.validateData(sourceConfig);
+            if (["Planet", "PlanetDaily", "SecureWatch", "Sentinel1", "Sentinel2"].includes(sourceConfig.type) && message) {
+                alert(message);
+            } else if (this.props.titleIsTaken(this.state.newImageryTitle, this.props.imageryToEdit.id)) {
+                alert("The title '" + this.state.newImageryTitle + "' is already taken.");
+            } else if (Object.keys(sourceConfig).length === 0) {
+                // stackParams() will fail if parent is not entered as a JSON string.
+                alert("Invalid JSON in JSON field(s).");
+            } else {
+                // modify the sourceConfig as needed (for example SecureWatch Imagery)
+                if (sourceConfig.type === "SecureWatch") {
+                    sourceConfig["geoserverUrl"] = "https://securewatch.digitalglobe.com/mapservice/wmsaccess";
+                    const geoserverParams = {
+                        "VERSION": "1.1.1",
+                        "STYLES": "",
+                        "LAYERS": "DigitalGlobe:Imagery",
+                        "CONNECTID": sourceConfig.connectid,
+                    };
+                    sourceConfig["geoserverParams"] = geoserverParams;
+                    delete sourceConfig.connectid;
                 }
-            });
+                fetch(this.props.documentRoot + "/add-institution-imagery",
+                      {
+                          method: "POST",
+                          body: JSON.stringify({
+                              institutionId: this.props.institutionId,
+                              imageryTitle: this.state.newImageryTitle,
+                              imageryAttribution: this.state.newImageryAttribution,
+                              sourceConfig: sourceConfig,
+                          }),
+                      }
+                ).then(response => {
+                    if (response.ok) {
+                        this.props.getImageryList();
+                        this.props.toggleEditMode();
+                    } else {
+                        console.log(response);
+                        alert("Error adding imagery. See console for details.");
+                    }
+                });
+            }
         }
     };
-
-    //    Helper Functions    //
-
-    titleIsTaken = (newTitle, idToExclude) => this.props.imageryList.some(i => i.title === newTitle && i.id !== idToExclude);
 
     stackParams = () => {
         try {
@@ -984,7 +993,7 @@ class NewImagery extends React.Component {
                         className="form-control"
                         onChange={this.imageryTypeChangeHandler}
                         value={this.state.selectedType}
-                        disabled={this.props.imageryToEdit !== -1 ? true : null}
+                        disabled={this.props.imageryToEdit.id !== -1}
                     >
                         {imageryOptions.map((o, i) =>
                             <option value={i} key={i}>{o.label || o.type}</option>
@@ -997,7 +1006,7 @@ class NewImagery extends React.Component {
                 {imageryOptions[this.state.selectedType].params.map(o => this.formTemplate(o))}
                 {/* Action buttons for save and quit */}
                 <div className="btn-group-vertical btn-block">
-                    {this.props.imageryToEdit !== -1
+                    {this.props.imageryToEdit.id !== -1
                     ?
                         <button
                             type="button"
@@ -1258,7 +1267,7 @@ class UserList extends React.Component {
     findUserByEmail = (userEmail) => this.state.activeUserList.find(au => au.email === userEmail);
 
     render() {
-        return this.props.isHidden
+        return this.props.showImagery
             ?
                 <Fragment>
                     <NewUserButtons
