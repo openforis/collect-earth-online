@@ -10,8 +10,7 @@
 <script type="text/javascript">
     window.onload = function () {
         login.renderLoginPage({
-            documentRoot: "${root}",
-            returnurl:    "${returnurl}"
+            returnurl: "${returnurl}"
         });
     };
 </script>

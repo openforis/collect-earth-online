@@ -1,5 +1,6 @@
 import React from "react";
 import ReactDOM from "react-dom";
+import { GetQueryString } from "./utils/textUtils";
 
 class Login extends React.Component {
     constructor(props) {
@@ -10,29 +11,24 @@ class Login extends React.Component {
         };
     }
 
-    getQueryString = (params) => Object.keys(params)
-        .map(k => encodeURIComponent(k) + "=" + encodeURIComponent(params[k]))
-        .join("&");
-
-    submit = (e) => {
+    requestLogin = (e) => {
         e.preventDefault();
         const params = {
             email: this.state.email,
             password: this.state.password,
         };
-        fetch(this.props.documentRoot + "/login",
+        fetch("/login",
               {
                   method: "POST",
                   headers: new Headers({
                       "Content-Type": "application/x-www-form-urlencoded",
                   }),
-                  body: this.getQueryString(params),
+                  body: GetQueryString(params),
               })
             .then(response => Promise.all([response.ok, response.text()]))
             .then(data => {
                 if (data[0] && data[1] === "") {
-                    const redirectUrl = this.props.returnurl !== "" ? this.props.returnurl : this.props.returnurl + "/home";
-                    window.location = this.props.documentRoot + redirectUrl;
+                    window.location = this.props.returnurl === "" ? "/home" : this.props.returnurl;
                     return Promise.resolve();
                 } else {
                     return Promise.reject(data[1]);
@@ -44,8 +40,9 @@ class Login extends React.Component {
             });
     };
 
-    setEmail = (e) => this.setState({ email: e.target.value });
-    setPassword = (e) => this.setState({ password: e.target.value });
+    setEmail = (newEmail) => this.setState({ email: newEmail });
+
+    setPassword = (newPassword) => this.setState({ password: newPassword });
 
     render() {
         return (
@@ -53,17 +50,17 @@ class Login extends React.Component {
                 <div className="card">
                     <div className="card-header">Sign into your account</div>
                     <div className="card-body">
-                        <form onSubmit={this.submit}>
+                        <form onSubmit={this.requestLogin}>
                             <div className="form-group">
                                 <label htmlFor="email">Email address</label>
-                                <input name="email" placeholder="Enter email" type="email" className="form-control" onChange={this.setEmail} />
+                                <input name="email" placeholder="Enter email" type="email" className="form-control" onChange={(e) => this.setEmail(e.target.value)} />
                             </div>
                             <div className="form-group">
                                 <label htmlFor="password">Password</label>
-                                <input name="password" placeholder="Password" type="password" className="form-control" onChange={this.setPassword} />
+                                <input name="password" placeholder="Password" type="password" className="form-control" onChange={(e) => this.setPassword(e.target.value)} />
                             </div>
                             <div className="d-flex justify-content-between align-items-center">
-                                <a href={this.props.documentRoot + "/password"}>Forgot your password?</a>
+                                <a href={"/password"}>Forgot your password?</a>
                                 <button className="btn bg-lightgreen" type="submit">Login</button>
                             </div>
                         </form>
@@ -76,7 +73,7 @@ class Login extends React.Component {
                                 type="button"
                                 value="Register"
                                 name="register"
-                                onClick={() => window.location = this.props.documentRoot + "/register"}
+                                onClick={() => window.location = "/register"}
                             />
                         </div>
                     </div>
@@ -89,7 +86,6 @@ class Login extends React.Component {
 export function renderLoginPage(args) {
     ReactDOM.render(
         <Login
-            documentRoot={args.documentRoot}
             returnurl={args.returnurl}
         />,
         document.getElementById("login")
