@@ -71,22 +71,9 @@ class ReviewInstitution extends React.Component {
                 <div className="row justify-content-center">
                     <div className="col-lg-7 col-xs-12 align-items-center mb-5">
                         <div className="row">
-                            {this.headerTab(
-                                "Projects",
-                                this.state.projectList.length,
-                                0
-                            )}
-                            {this.headerTab(
-                                "Imagery",
-                                this.state.imageryCount,
-                                1
-                            )}
-                            {this.headerTab(
-                                "Users",
-                                this.state.usersCount,
-                                2,
-                                this.props.userId < 0
-                            )}
+                            {this.headerTab("Projects", this.state.projectList.length, 0)}
+                            {this.headerTab("Imagery", this.state.imageryCount, 1)}
+                            {this.headerTab("Users", this.state.usersCount, 2, this.props.userId < 0)}
                         </div>
                         <ProjectList
                             documentRoot={this.props.documentRoot}
@@ -329,10 +316,7 @@ class ImageryList extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
-            editMode: false,
-            imageryToEdit: {
-                id: -1,
-            },
+            imageryToEdit: null,
             imageryList: [],
         };
     }
@@ -362,20 +346,12 @@ class ImageryList extends React.Component {
             });
     };
 
-    selectAddImagery = () => {
-        this.setState({
-            imageryToEdit: {
-                id: -1,
-            },
-        });
-        this.toggleEditMode();
-    }
+    selectAddImagery = () => this.setState({ imageryToEdit: { id: -1 }});
 
     selectEditImagery = (imageryId) => {
         const imagery = this.state.imageryList.find(i => i.id === imageryId);
         if (imageryOptions.find(io => io.type === imagery.sourceConfig.type)) {
             this.setState({ imageryToEdit: imagery });
-            this.toggleEditMode();
         } else {
             alert("This imagery type is no longer supported and connot be edited.");
         }
@@ -406,7 +382,7 @@ class ImageryList extends React.Component {
 
     //    State Modifications    //
 
-    toggleEditMode = () => this.setState({ editMode: !this.state.editMode });
+    hideEditMode = () => this.setState({ imageryToEdit: null });
 
     //    Helper Functions    //
 
@@ -416,13 +392,13 @@ class ImageryList extends React.Component {
         return this.props.isVisible && (
             this.state.imageryList.length === 0
                 ? <h3>Loading imagery...</h3>
-                : this.state.editMode
+                : this.state.imageryToEdit
                     ?
                         <NewImagery
                             documentRoot={this.props.documentRoot}
                             getImageryList={this.getImageryList}
                             institutionId={this.props.institutionId}
-                            toggleEditMode={this.toggleEditMode}
+                            hideEditMode={this.hideEditMode}
                             imageryToEdit={this.state.imageryToEdit}
                             titleIsTaken={this.titleIsTaken}
                         />
@@ -507,9 +483,19 @@ class NewImagery extends React.Component {
 
     //    Remote Calls    //
 
-    uploadCustomImagery = (isNew = true) => {
+    uploadCustomImagery = (isNew) => {
         const sourceConfig = this.stackParams();
-        if (this.validateImageryParams(sourceConfig)) {
+        const message = this.validateData(sourceConfig);
+        if (!this.checkAllParamsFilled()) {
+            alert("You must fill out all fields.");
+        } else if (message) {
+            alert(message);
+        } else if (this.props.titleIsTaken(this.state.newImageryTitle, this.props.imageryToEdit.id)) {
+            alert("The title '" + this.state.newImageryTitle + "' is already taken.");
+        } else if (Object.keys(sourceConfig).length === 0) {
+            // stackParams() will fail if parent is not entered as a JSON string.
+            alert("Invalid JSON in JSON field(s).");
+        } else {
             fetch(isNew ? "/add-institution-imagery" : "/update-institution-imagery",
                   {
                       method: "POST",
@@ -518,13 +504,13 @@ class NewImagery extends React.Component {
                           imageryId: this.props.imageryToEdit.id,
                           imageryTitle: this.state.newImageryTitle,
                           imageryAttribution: this.state.newImageryAttribution,
-                          sourceConfig: this.buildSecureWatch(sourceConfig),
+                          sourceConfig: this.buildSecureWatch(sourceConfig), // TODO define SecureWatch so stack params works correctly.
                       }),
                   }
             ).then(response => {
                 if (response.ok) {
                     this.props.getImageryList();
-                    this.props.toggleEditMode();
+                    this.props.hideEditMode();
                 } else {
                     console.log(response);
                     alert("Error updating imagery. See console for details.");
@@ -532,6 +518,8 @@ class NewImagery extends React.Component {
             });
         }
     };
+
+    //    Helper Functions    //
 
     stackParams = () => {
         try {
@@ -601,26 +589,6 @@ class NewImagery extends React.Component {
             return "Start date must be smaller than the end date.";
         } else {
             return null;
-        }
-    };
-
-    validateImageryParams = (sourceConfig) => {
-        const message = this.validateData(sourceConfig);
-        if (!this.checkAllParamsFilled()) {
-            alert("You must fill out all fields.");
-            return false;
-        } else if (message) {
-            alert(message);
-            return false;
-        } else if (this.props.titleIsTaken(this.state.newImageryTitle, this.props.imageryToEdit.id)) {
-            alert("The title '" + this.state.newImageryTitle + "' is already taken.");
-            return false;
-        } else if (Object.keys(sourceConfig).length === 0) {
-            // stackParams() will fail if parent is not entered as a JSON string.
-            alert("Invalid JSON in JSON field(s).");
-            return false;
-        } else {
-            return true;
         }
     };
 
@@ -754,6 +722,7 @@ class NewImagery extends React.Component {
     };
 
     render() {
+        const isNewImagery = this.props.imageryToEdit.id === -1;
         return (
             <div className="mb-2 p-2 border rounded">
                 {/* Selection for imagery type */}
@@ -763,7 +732,7 @@ class NewImagery extends React.Component {
                         className="form-control"
                         onChange={this.imageryTypeChangeHandler}
                         value={this.state.selectedType}
-                        disabled={this.props.imageryToEdit.id !== -1}
+                        disabled={!isNewImagery}
                     >
                         {imageryOptions.map((o, i) =>
                             <option value={i} key={i}>{o.label || o.type}</option>
@@ -772,7 +741,7 @@ class NewImagery extends React.Component {
                 </div>
                 {/* Add fields. Include same for all and unique to selected type. */}
                 {this.formInput("Title", "text", this.state.newImageryTitle, e => this.setState({ newImageryTitle: e.target.value }))}
-                {/* This should be generalized into the imageryOPtions */}
+                {/* This should be generalized into the imageryOptions */}
                 {imageryOptions[this.state.selectedType].type === "GeoServer"
                     && this.formInput(
                         "Attribution",
@@ -783,30 +752,21 @@ class NewImagery extends React.Component {
                 {imageryOptions[this.state.selectedType].params.map(o => this.formTemplate(o))}
                 {/* Action buttons for save and quit */}
                 <div className="btn-group-vertical btn-block">
-                    {this.props.imageryToEdit.id !== -1
-                    ?
-                        <button
-                            type="button"
-                            id="add-imagery-button"
-                            className="btn btn-sm btn-block btn-outline-yellow btn-group py-2 font-weight-bold"
-                            onClick={() => this.uploadCustomImagery(false)}
-                        >
-                            <UnicodeIcon icon="edit" backgroundColor="#f1c00f"/> Save Imagery Changes
-                        </button>
-                    :
-                        <button
-                            type="button"
-                            id="add-imagery-button"
-                            className="btn btn-sm btn-block btn-outline-yellow btn-group py-2 font-weight-bold"
-                            onClick={this.uploadCustomImagery}
-                        >
-                            <UnicodeIcon icon="add" backgroundColor="#f1c00f"/> Add New Imagery
-                        </button>
-                    }
+                    <button
+                        type="button"
+                        id="add-imagery-button"
+                        className="btn btn-sm btn-block btn-outline-yellow btn-group py-2 font-weight-bold"
+                        onClick={() => this.uploadCustomImagery(isNewImagery)}
+                    >
+                        {isNewImagery
+                            ? <><UnicodeIcon icon="add" backgroundColor="#f1c00f"/>Add New Imagery</>
+                            : <><UnicodeIcon icon="edit" backgroundColor="#f1c00f"/>Save Imagery Changes</>
+                        }
+                    </button>
                     <button
                         type="button"
                         className="btn btn-sm btn-block btn-outline-danger btn-group py-2 font-weight-bold"
-                        onClick={this.props.toggleEditMode}
+                        onClick={this.props.hideEditMode}
                     >
                         <UnicodeIcon icon="noAction"/>Discard
                     </button>
@@ -857,9 +817,9 @@ function Imagery({ isAdmin, title, selectEditImagery, deleteImagery, isInstituti
 }
 
 function ProjectList({ isAdmin, isLoggedIn, institutionId, projectList, documentRoot, isVisible }) {
-    return isVisible &&
-    <Fragment>
-        {isAdmin &&
+    return (
+        <div style={!isVisible ? { display: "none" } : {}}>
+            {isAdmin &&
             <div className="row mb-1">
                 <div className="col">
                     <button
@@ -872,17 +832,20 @@ function ProjectList({ isAdmin, isLoggedIn, institutionId, projectList, document
                     </button>
                 </div>
             </div>
-        }
-        {projectList.map((project, uid) =>
-            <Project
-                isAdmin={isAdmin}
-                isLoggedIn={isLoggedIn}
-                key={uid}
-                documentRoot={documentRoot}
-                project={project}
-            />
-        )}
-    </Fragment>;
+            }
+            {projectList.length === 0
+                ? <h3>Loading projects...</h3>
+                : projectList.map((project, uid) =>
+                    <Project
+                        isAdmin={isAdmin}
+                        isLoggedIn={isLoggedIn}
+                        key={uid}
+                        documentRoot={documentRoot}
+                        project={project}
+                    />
+                )}
+        </div>
+    );
 }
 
 class Project extends React.Component {
