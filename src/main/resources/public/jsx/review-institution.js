@@ -390,36 +390,36 @@ class ImageryList extends React.Component {
 
     render() {
         return this.props.isVisible && (
-            this.state.imageryList.length === 0
-                ? <h3>Loading imagery...</h3>
-                : this.state.imageryToEdit
-                    ?
-                        <NewImagery
-                            documentRoot={this.props.documentRoot}
-                            getImageryList={this.getImageryList}
-                            institutionId={this.props.institutionId}
-                            hideEditMode={this.hideEditMode}
-                            imageryToEdit={this.state.imageryToEdit}
-                            titleIsTaken={this.titleIsTaken}
-                        />
-                    :
-                        <Fragment>
-                            {this.props.isAdmin &&
-                                <div className="row">
-                                    <div className="col-lg-12 mb-1">
-                                        <button
-                                            type="button"
-                                            id="add-imagery-button"
-                                            className="btn btn-sm btn-block btn-outline-yellow py-2 font-weight-bold"
-                                            onClick={this.selectAddImagery}
-                                        >
-                                            <UnicodeIcon icon="add" backgroundColor="#f1c00f"/>Add New Imagery
-                                        </button>
+            this.state.imageryToEdit
+                ?
+                    <NewImagery
+                        documentRoot={this.props.documentRoot}
+                        getImageryList={this.getImageryList}
+                        institutionId={this.props.institutionId}
+                        hideEditMode={this.hideEditMode}
+                        imageryToEdit={this.state.imageryToEdit}
+                        titleIsTaken={this.titleIsTaken}
+                    />
+                :
+                    <Fragment>
+                        {this.props.isAdmin &&
+                            <div className="row">
+                                <div className="col-lg-12 mb-1">
+                                    <button
+                                        type="button"
+                                        id="add-imagery-button"
+                                        className="btn btn-sm btn-block btn-outline-yellow py-2 font-weight-bold"
+                                        onClick={this.selectAddImagery}
+                                    >
+                                        <UnicodeIcon icon="add" backgroundColor="#f1c00f"/>Add New Imagery
+                                    </button>
 
-                                    </div>
                                 </div>
-                            }
-                            {this.state.imageryList.map((imageryItem, uid) =>
+                            </div>
+                        }
+                        {this.state.imageryList.length === 0
+                            ? <h3>Loading imagery...</h3>
+                            : this.state.imageryList.map((imageryItem, uid) =>
                                 <Imagery
                                     key={uid}
                                     title={imageryItem.title}
@@ -428,8 +428,9 @@ class ImageryList extends React.Component {
                                     selectEditImagery={() => this.selectEditImagery(imageryItem.id)}
                                     deleteImagery={() => this.deleteImagery(imageryItem.id)}
                                 />
-                            )}
-                        </Fragment>
+                            )
+                        }
+                    </Fragment>
         );
     }
 }
@@ -513,7 +514,7 @@ class NewImagery extends React.Component {
                     this.props.hideEditMode();
                 } else {
                     console.log(response);
-                    alert("Error updating imagery. See console for details.");
+                    alert("Error uploading imagery data. See console for details.");
                 }
             });
         }
