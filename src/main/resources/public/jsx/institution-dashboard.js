@@ -1,6 +1,5 @@
 import React from "react";
 import ReactDOM from "react-dom";
-
 import { NavigationBar } from "./components/PageComponents";
 
 class InstitutionDashboard extends React.Component {

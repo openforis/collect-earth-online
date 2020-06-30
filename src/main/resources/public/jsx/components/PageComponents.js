@@ -41,7 +41,7 @@ export function NavigationBar ({ userName, userId, children }) {
                                 <button
                                     type="button"
                                     className="btn bg-lightgreen btn-sm"
-                                    onClick={() => window.location = "/login?returnurl=" + fullUri}
+                                    onClick={() => window.location = "/login?returnurl=" + encodeURIComponent(fullUri)}
                                 >
                                     Login/Register
                                 </button>
