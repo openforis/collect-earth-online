@@ -41,12 +41,12 @@ class ReviewInstitution extends React.Component {
     setIsAdmin = (isAdmin) => this.setState({ isAdmin: isAdmin });
 
     headerTab = (name, count, index, disabled = false) =>
-        <div className="col-lg-4 col-xs-12" style={{ cursor: disabled ? "not-allowed" : "pointer" }}>
+        <div className="col-lg-4 col-xs-12">
             <div
                 className={disabled ? "disabled-group" : ""}
                 onClick={() => this.setState({ selectedTab: index })}
             >
-                <h2 className="header" style={{ borderRadius: "5px" }}>
+                <h2 className="header" style={{ borderRadius: "5px", cursor: disabled ? "not-allowed" : "pointer" }}>
                     {name}
                     <span className="badge badge-pill badge-light ml-2">
                         {count}
