@@ -41,6 +41,7 @@ class Project extends React.Component {
                 showGEEScript: false,
             },
             imageryList: [],
+            projectImageryList: [],
             mapConfig: null,
             plotList: [],
             coordinates: {
@@ -117,7 +118,8 @@ class Project extends React.Component {
                   contentType: "application/json; charset=utf-8",
                   body: JSON.stringify({
                       institutionId: this.props.institutionId,
-                      imageryId:this.state.projectDetails.imageryId,
+                      imageryId: this.state.projectDetails.imageryId,
+                      projectImageryList: this.state.projectImageryList,
                       lonMin: this.state.coordinates.lonMin,
                       lonMax: this.state.coordinates.lonMax,
                       latMin: this.state.coordinates.latMin,
@@ -428,7 +430,16 @@ class Project extends React.Component {
                                     : ceoMapStyles.yellowSquare);
     };
 
-    onShowGEEScriptClick = () => this.setState({ projectOptions: { ...this.state.projectOptions, showGEEScript: !this.state.projectOptions.showGEEScript }});
+    onShowGEEScriptClick = () =>
+        this.setState({
+            projectOptions: {
+                ...this.state.projectOptions,
+                showGEEScript: !this.state.projectOptions.showGEEScript,
+            },
+        });
+
+    setProjectImageryList = (newProjectImageryList) =>
+        this.setState({ projectImageryList: newProjectImageryList });
 
     render() {
         return (
@@ -451,6 +462,8 @@ class Project extends React.Component {
                             useTemplateWidgets={this.state.useTemplateWidgets}
                             showGEEScript={this.state.showGEEScript}
                             onShowGEEScriptClick={this.onShowGEEScriptClick}
+                            projectImageryList={this.state.projectImageryList}
+                            setProjectImageryList={this.setProjectImageryList}
                         />
                         <ProjectManagement createProject={this.createProject} />
                     </Fragment>
@@ -486,6 +499,8 @@ function ProjectDesignForm(props) {
                 imageryId={props.projectDetails.imageryId}
                 imageryList={props.imageryList}
                 setProjectDetail={props.setProjectDetail}
+                projectImageryList={props.projectImageryList}
+                setProjectImageryList={props.setProjectImageryList}
             />
             <ProjectOptions
                 showGEEScript={props.showGEEScript}
