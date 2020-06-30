@@ -706,17 +706,7 @@ class NewImagery extends React.Component {
                 alert("Invalid JSON in JSON field(s).");
             } else {
                 // modify the sourceConfig as needed (for example SecureWatch Imagery)
-                if (sourceConfig.type === "SecureWatch") {
-                    sourceConfig["geoserverUrl"] = "https://securewatch.digitalglobe.com/mapservice/wmsaccess";
-                    const geoserverParams = {
-                        "VERSION": "1.1.1",
-                        "STYLES": "",
-                        "LAYERS": "DigitalGlobe:Imagery",
-                        "CONNECTID": sourceConfig.connectid,
-                    };
-                    sourceConfig["geoserverParams"] = geoserverParams;
-                    delete sourceConfig.connectid;
-                }
+                const fixedSourceConfig = this.sourceConfigFixes(sourceConfig);
                 fetch(this.props.documentRoot + "/update-institution-imagery",
                       {
                           method: "POST",
@@ -725,7 +715,7 @@ class NewImagery extends React.Component {
                               imageryId: this.props.imageryToEdit.id,
                               imageryTitle: this.state.newImageryTitle,
                               imageryAttribution: this.state.newImageryAttribution,
-                              sourceConfig: sourceConfig,
+                              sourceConfig: fixedSourceConfig,
                           }),
                       }
                 ).then(response => {
@@ -756,17 +746,7 @@ class NewImagery extends React.Component {
                 alert("Invalid JSON in JSON field(s).");
             } else {
                 // modify the sourceConfig as needed (for example SecureWatch Imagery)
-                if (sourceConfig.type === "SecureWatch") {
-                    sourceConfig["geoserverUrl"] = "https://securewatch.digitalglobe.com/mapservice/wmsaccess";
-                    const geoserverParams = {
-                        "VERSION": "1.1.1",
-                        "STYLES": "",
-                        "LAYERS": "DigitalGlobe:Imagery",
-                        "CONNECTID": sourceConfig.connectid,
-                    };
-                    sourceConfig["geoserverParams"] = geoserverParams;
-                    delete sourceConfig.connectid;
-                }
+                const fixedSourceConfig = this.sourceConfigFixes(sourceConfig);
                 fetch(this.props.documentRoot + "/add-institution-imagery",
                       {
                           method: "POST",
@@ -774,7 +754,7 @@ class NewImagery extends React.Component {
                               institutionId: this.props.institutionId,
                               imageryTitle: this.state.newImageryTitle,
                               imageryAttribution: this.state.newImageryAttribution,
-                              sourceConfig: sourceConfig,
+                              sourceConfig: fixedSourceConfig,
                           }),
                       }
                 ).then(response => {
@@ -843,6 +823,21 @@ class NewImagery extends React.Component {
             return null;
         }
     };
+
+    sourceConfigFixes = (sourceConfig) => {
+        if (sourceConfig.type === "SecureWatch") {
+            sourceConfig["geoserverUrl"] = "https://securewatch.digitalglobe.com/mapservice/wmsaccess";
+            const geoserverParams = {
+                "VERSION": "1.1.1",
+                "STYLES": "",
+                "LAYERS": "DigitalGlobe:Imagery",
+                "CONNECTID": sourceConfig.connectid,
+            };
+            sourceConfig["geoserverParams"] = geoserverParams;
+            delete sourceConfig.connectid;
+        }
+        return sourceConfig;
+    }
 
     //    Render Functions    //
 
