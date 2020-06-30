@@ -478,7 +478,7 @@ h2.header{
 .modal-footer{
     min-height: 71px;
 }
-.card {
+#login .card {
     width: 25rem;
     margin-top: 1rem;
     margin-bottom: 1rem;
@@ -486,7 +486,7 @@ h2.header{
     border-color: #31BAB0;
 }
 
-.card .card-header {
+#login .card .card-header {
     color: white;
     background-color: #31BAB0;
     text-align: center;

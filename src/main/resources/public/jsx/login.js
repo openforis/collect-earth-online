@@ -11,12 +11,12 @@ class Login extends React.Component {
         };
     }
 
-    requestLogin = (e) => {
-        e.preventDefault();
+    requestLogin = () => {
         const params = {
             email: this.state.email,
             password: this.state.password,
         };
+        console.log(params);
         fetch("/login",
               {
                   method: "POST",
@@ -50,7 +50,12 @@ class Login extends React.Component {
                 <div className="card">
                     <div className="card-header">Sign into your account</div>
                     <div className="card-body">
-                        <form onSubmit={this.requestLogin}>
+                        <form
+                            onSubmit={(e) => {
+                                e.preventDefault();
+                                this.requestLogin();
+                            }}
+                        >
                             <div className="form-group">
                                 <label htmlFor="email">Email address</label>
                                 <input name="email" placeholder="Enter email" type="email" className="form-control" onChange={(e) => this.setEmail(e.target.value)} />
