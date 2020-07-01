@@ -20,11 +20,7 @@ class Register extends React.Component {
                   headers: {
                       "Content-Type": "application/x-www-form-urlencoded",
                   },
-                  body: getQueryString({
-                      email: this.state.email,
-                      password: this.state.password,
-                      passwordConfirmation: this.state.passwordConfirmation,
-                  }),
+                  body: getQueryString(this.state),
               })
             .then(response => Promise.all([response.ok, response.text()]))
             .then(data => {
@@ -57,11 +53,11 @@ class Register extends React.Component {
                                 <label htmlFor="email">Email address</label>
                                 <input
                                     id="email"
+                                    className="form-control"
                                     autoComplete="off"
                                     placeholder="Email"
                                     value={this.state.email}
                                     type="email"
-                                    className="form-control"
                                     onChange={e => this.setState({ email: e.target.value })}
                                 />
                             </div>
@@ -69,11 +65,11 @@ class Register extends React.Component {
                                 <label htmlFor="password">Enter your password</label>
                                 <input
                                     id="password"
+                                    className="form-control"
                                     autoComplete="off"
                                     placeholder="Password"
                                     value={this.state.password}
                                     type="password"
-                                    className="form-control"
                                     onChange={e => this.setState({ password: e.target.value })}
                                 />
                             </div>
@@ -81,11 +77,11 @@ class Register extends React.Component {
                                 <label htmlFor="password-confirmation">Confirm your password</label>
                                 <input
                                     id="password-confirmation"
+                                    className="form-control"
                                     autoComplete="off"
                                     placeholder="Password confirmation"
                                     value={this.state.passwordConfirmation}
                                     type="password"
-                                    className="form-control"
                                     onChange={e => this.setState({ passwordConfirmation: e.target.value })}
                                 />
                             </div>

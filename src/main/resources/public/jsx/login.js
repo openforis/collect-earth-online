@@ -17,10 +17,7 @@ class Login extends React.Component {
               {
                   method: "POST",
                   headers: { "Content-Type": "application/x-www-form-urlencoded" },
-                  body: getQueryString({
-                      email: this.state.email,
-                      password: this.state.password,
-                  }),
+                  body: getQueryString(this.state),
               })
             .then(response => Promise.all([response.ok, response.text()]))
             .then(data => {
@@ -52,9 +49,10 @@ class Login extends React.Component {
                                 <label htmlFor="email">Email address</label>
                                 <input
                                     id="email"
+                                    className="form-control"
                                     placeholder="Enter email"
                                     type="email"
-                                    className="form-control"
+                                    value={this.state.email}
                                     onChange={e => this.setState({ email: e.target.value })}
                                 />
                             </div>
@@ -65,6 +63,7 @@ class Login extends React.Component {
                                     placeholder="Password"
                                     type="password"
                                     className="form-control"
+                                    value={this.state.password}
                                     onChange={e => this.setState({ password: e.target.value })}
                                 />
                             </div>
