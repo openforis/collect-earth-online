@@ -42,6 +42,7 @@ public class PostgresUsers implements Users {
                     req.session().attribute("userid", rs.getString("user_id"));
                     req.session().attribute("username", inputEmail);
                     req.session().attribute("role", rs.getBoolean("administrator") ? "admin" : "user");
+                    return "";
                 } else {
                     return "Invalid email/password combination.";
                 }
@@ -49,10 +50,8 @@ public class PostgresUsers implements Users {
 
         } catch (SQLException e) {
             System.out.println(e.getMessage());
-            return "Invalid email/password combination.";
+            return "There was an server side issue logging in.";
         }
-
-        return "";
     }
 
     public Request register(Request req, Response res) {
