@@ -22,6 +22,7 @@ module.exports = env => ({
         home                  : path.resolve(__dirname, "src/main/resources/public/jsx/home.js"),
         institution_dashboard : path.resolve(__dirname, "src/main/resources/public/jsx/institution-dashboard.js"),
         login                 : path.resolve(__dirname, "src/main/resources/public/jsx/login.js"),
+        page_not_found        : path.resolve(__dirname, "src/main/resources/public/jsx/page-not-found.js"),
         password_reset        : path.resolve(__dirname, "src/main/resources/public/jsx/password-reset.js"),
         password_request      : path.resolve(__dirname, "src/main/resources/public/jsx/password-request.js"),
         project_dashboard     : path.resolve(__dirname, "src/main/resources/public/jsx/project-dashboard.js"),

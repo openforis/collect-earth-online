@@ -1,18 +1,18 @@
 <#include "header.ftl">
-<#include "navbar.ftl">
 <#include "start-content.ftl">
-<div class="container absolute-center">
-    <section id="page-not-found" class="row justify-content-center">
-        <div class="col-sm-6">
-            <h1 class="display-1 text-danger">&#x20E0;</h1>
-            <h2 class="text-danger">Page Not Found</h2>
-            <p class="error-message">
-                There's no page at the address you requested. If you entered
-                it by hand, check for typos. If you followed a link or a
-                bookmark, it may need to be updated.
-            </p>
-        </div>
-    </section>
-</div>
+<div id="page-not-found"></div>
+
+<!-- Auto Inserted Bundles -->
+
+<!-- End Auto Inserted Bundles -->
+
+<script type="text/javascript">
+ window.onload = function () {
+     page_not_found.renderPageNotFoundPage({
+         userId:      "${userid}",
+         userName:    "${username}"
+     });
+ };
+</script>
 <#include "end-content.ftl">
 <#include "footer.ftl">
