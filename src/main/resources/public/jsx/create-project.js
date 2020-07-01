@@ -167,8 +167,6 @@ class Project extends React.Component {
 
     validateProject = () => {
         const { projectDetails, imageryList, projectImageryList } = this.state;
-        const projectImages = projectImageryList.includes(projectDetails.imageryId)
-            ? projectImageryList : [...projectImageryList, projectDetails.imageryId];
 
         // FIXME Disable for now until we can add a type specifically meant to have 1 or 0 answers
         // const minAnswers = (componentType) => (componentType || "").toLowerCase() === "input" ? 1 : 2;
@@ -188,9 +186,10 @@ class Project extends React.Component {
             alert("All survey questions must contain at least one answer.");
             return false;
 
-        } else if ((projectDetails.privacyLevel === "public" || projectDetails.privacyLevel === "users")
-            && (!(imageryList.some(imagery => projectImages.includes(imagery.id) && imagery.visibility === "public")))) {
-            alert("Public/Users project requires at least one public imagery.");
+        } else if (["public", "users"].includes(projectDetails.privacyLevel)
+            && [...projectImageryList, projectDetails.imageryId]
+                .every(id => imageryList.some(il => il.id === id && il.visibility === "private"))) {
+            alert("Projects with privacy level of " + projectDetails.privacyLevel + " require at least one public imagery.");
             return false;
         } else {
             return true;

@@ -123,7 +123,7 @@ export function ProjectAOI({
                     disabled={imagery.id === imageryId}
                     checked={projectImageryList.includes(imagery.id) || imagery.id === imageryId}
                 />
-                <label htmlFor={imagery.id} className="form-check-label">* {imagery.title}</label>
+                <label htmlFor={imagery.id} className="form-check-label">{imagery.title}</label>
             </div>
         );
     return (
@@ -207,7 +207,7 @@ export function ProjectAOI({
                                 {
                                     imageryList.filter(layerConfig => layerConfig.sourceConfig.type !== "PlanetDaily")
                                         .map((imagery, uid) =>
-                                            <option key={uid} value={imagery.id}>* {imagery.title}</option>
+                                            <option key={uid} value={imagery.id}>{imagery.title}</option>
                                         )
                                 }
                             </select>
@@ -218,13 +218,13 @@ export function ProjectAOI({
                                 {createImageryRow(imageryList.filter(imagery => imagery.visibility === "public"))}
                             </div>
                             <br />
-                            <h3 htmlFor="additional-private-imagery">Institution Private Imagery</h3>
+                            <h3 htmlFor="additional-private-imagery">* Institution Private Imagery</h3>
                             <div className="row mt-3" id="additional-private-imagery">
                                 {createImageryRow(imageryList.filter(imagery => imagery.visibility === "private"))}
                             </div>
                         </div>
                         <p id="project-imagery-text" className="font-italic ml-2 small">
-                            * Institution imagery will only be visible to institution members, no matter the project visibility settings.
+                            * Institution imagery will only be visible to institution members, no matter the project privacy level.
                         </p>
                     </div>
                 :
