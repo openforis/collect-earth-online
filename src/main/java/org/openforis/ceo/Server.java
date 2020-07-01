@@ -142,6 +142,7 @@ public class Server implements SparkApplication {
                         "/create-project",
                         "/update-institution",
                         "/add-institution-imagery",
+                        "/update-institution-imagery",
                         "/archive-institution-imagery")
                     .contains(request.uri()) && !institutions.isInstAdmin(request)) {
                 halt(403, "Forbidden!");
@@ -241,6 +242,7 @@ public class Server implements SparkApplication {
         get("/get-public-imagery",                    imagery::getPublicImagery);
         post("/add-geodash-imagery",                  imagery::addGeoDashImagery);
         post("/add-institution-imagery",              imagery::addInstitutionImagery);
+        post("/update-institution-imagery",           imagery::updateInstitutionImagery);
         post("/archive-institution-imagery",          imagery::archiveInstitutionImagery);
 
         // Routing Table: GeoDash API
