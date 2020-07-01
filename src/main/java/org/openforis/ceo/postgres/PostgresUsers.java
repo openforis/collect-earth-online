@@ -27,10 +27,9 @@ public class PostgresUsers implements Users {
     private static final String SMTP_PORT     = CeoConfig.smtpPort;
     private static final String SMTP_PASSWORD = CeoConfig.smtpPassword;
 
-    public Request login(Request req, Response res) {
+    public String login(Request req, Response res) {
         var inputEmail =        req.queryParams("email");
         var inputPassword =     req.queryParams("password");
-        var inputReturnURL =    req.queryParams("returnurl");
 
         try (var conn = connect();
              var pstmt = conn.prepareStatement("SELECT * FROM check_login(?,?)")) {
@@ -43,19 +42,17 @@ public class PostgresUsers implements Users {
                     req.session().attribute("userid", rs.getString("user_id"));
                     req.session().attribute("username", inputEmail);
                     req.session().attribute("role", rs.getBoolean("administrator") ? "admin" : "user");
-                    res.redirect((inputReturnURL == null || inputReturnURL.isEmpty())
-                                    ? CeoConfig.documentRoot + "/home"
-                                    : inputReturnURL);
                 } else {
-                    req.session().attribute("flash_message", "Invalid email/password combination.");
+                    return "Invalid email/password combination.";
                 }
             }
 
         } catch (SQLException e) {
             System.out.println(e.getMessage());
+            return "Invalid email/password combination.";
         }
 
-        return req;
+        return "";
     }
 
     public Request register(Request req, Response res) {
