@@ -92,9 +92,14 @@ class Project extends React.Component {
     };
 
     validateProject = () => {
-        const { projectDetails } = this.state;
+        const { projectDetails, imageryList, projectImageryList } = this.state;
         if (projectDetails.name === "" || projectDetails.description === "") {
             alert("A project must contain a name and description.");
+            return false;
+        } else if (["public", "users"].includes(projectDetails.privacyLevel)
+            && [...projectImageryList, projectDetails.imageryId]
+                .every(id => imageryList.some(il => il.id === id && il.visibility === "private"))) {
+            alert("Projects with privacy level of " + projectDetails.privacyLevel + " require at least one public imagery.");
             return false;
         } else {
             return true;
