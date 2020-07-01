@@ -8,7 +8,7 @@ export const imageryOptions = [
             { key: "LAYERS", display: "GeoServer Layer Name", parent: "geoserverParams" },
             {
                 key: "geoserverParams",
-                display: "GeoServer Params (as JSON object)",
+                display: "Additional GeoServer Params (as JSON object)", // TODO, add {} around params if missing
                 required: false,
                 type: "textarea",
             },

@@ -52,7 +52,7 @@ class ReviewInstitution extends React.Component {
                         {count}
                     </span>
                     <span className="float-right">
-                        {index === this.state.selectedTab && "▼"}
+                        {index === this.state.selectedTab && "\u25BC"}
                     </span>
                 </h2>
             </div>
@@ -635,7 +635,7 @@ class NewImagery extends React.Component {
         </div>
     );
 
-    linkBuilder = (url, key) => url && key === "accessToken"
+    accessTokenLink = (url, key) => url && key === "accessToken"
         ? (
             <a href={imageryOptions[this.state.selectedType].url} target="_blank" rel="noreferrer noopener">
                 Click here for help.
@@ -657,7 +657,7 @@ class NewImagery extends React.Component {
                         : this.state.newImageryAttribution,
                 }),
                 o.options.map(el => <option value={el.value} key={el.value}>{el.label}</option>),
-                this.linkBuilder(imageryOptions[this.state.selectedType].url, o.key)
+                this.accessTokenLink(imageryOptions[this.state.selectedType].url, o.key)
             )
         : o.type === "textarea"
             ? this.formTextArea(
@@ -666,7 +666,7 @@ class NewImagery extends React.Component {
                 e => this.setState({
                     newImageryParams: { ...this.state.newImageryParams, [o.key]: e.target.value },
                 }),
-                this.linkBuilder(imageryOptions[this.state.selectedType].url, o.key),
+                this.accessTokenLink(imageryOptions[this.state.selectedType].url, o.key),
                 o.options ? o.options : {}
             )
         : this.formInput(
@@ -676,7 +676,7 @@ class NewImagery extends React.Component {
             e => this.setState({
                 newImageryParams: { ...this.state.newImageryParams, [o.key]: e.target.value },
             }),
-            this.linkBuilder(imageryOptions[this.state.selectedType].url, o.key),
+            this.accessTokenLink(imageryOptions[this.state.selectedType].url, o.key),
             o.options ? o.options : {}
         )
     );
