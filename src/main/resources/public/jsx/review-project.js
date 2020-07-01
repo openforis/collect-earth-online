@@ -92,9 +92,15 @@ class Project extends React.Component {
     };
 
     validateProject = () => {
-        const { projectDetails } = this.state;
+        const { projectDetails, imageryList, projectImageryList } = this.state;
+        const projectImages = projectImageryList.includes(projectDetails.imageryId)
+            ? projectImageryList : [...projectImageryList, projectDetails.imageryId];
         if (projectDetails.name === "" || projectDetails.description === "") {
             alert("A project must contain a name and description.");
+            return false;
+        } else if ((projectDetails.privacyLevel === "public" || projectDetails.privacyLevel === "users")
+            && (!(imageryList.some(imagery => projectImages.includes(imagery.id) && imagery.visibility === "public")))) {
+            alert("Public/Users project requires at least one public imagery.");
             return false;
         } else {
             return true;

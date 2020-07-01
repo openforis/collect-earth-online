@@ -90,6 +90,11 @@ export function ProjectInfo({ name, description, privacyLevel, setProjectDetail 
                             Private: <i>Group Admins</i>
                         </label>
                     </div>
+                    <p id="privacy-level-text" className="font-italic ml-2 small">
+                        {(privacyLevel === "public" || privacyLevel === "users") &&
+                        "- Public imagery will be visible to all users, and institution imagery will only be available" +
+                        "to the users in this institution."}
+                    </p>
                 </div>
             </div>
         </SectionBlock>
@@ -171,6 +176,7 @@ export function ProjectAOI({
                     </div>
                 </div>
             </div>
+            <hr />
             {imageryList
                 ?
                     <div id="project-imagery">
@@ -185,12 +191,11 @@ export function ProjectAOI({
                                 {
                                     imageryList.filter(layerConfig => layerConfig.sourceConfig.type !== "PlanetDaily")
                                         .map((imagery, uid) =>
-                                            <option key={uid} value={imagery.id}>{imagery.title}</option>
+                                            <option key={uid} value={imagery.id}>* {imagery.title}</option>
                                         )
                                 }
                             </select>
                         </div>
-                        <hr />
                         <div className="form-group" id="additional-imagery">
                             <h3 htmlFor="additional-imagery">Additional Imagery</h3>
                             <div className="row mt-3">
@@ -206,11 +211,14 @@ export function ProjectAOI({
                                             disabled={imagery.id === imageryId}
                                             checked={projectImageryList.includes(imagery.id) || imagery.id === imageryId}
                                         />
-                                        <label htmlFor={imagery.id} className="form-check-label">{imagery.title}</label>
+                                        <label htmlFor={imagery.id} className="form-check-label">* {imagery.title}</label>
                                     </div>
                                 )}
                             </div>
                         </div>
+                        <p id="project-imagery-text" className="font-italic ml-2 small">
+                            * Institution imagery will only be visible to institution members, no matter the project visibility settings.
+                        </p>
                     </div>
                 :
                     <div id="project-loading-imagery">
