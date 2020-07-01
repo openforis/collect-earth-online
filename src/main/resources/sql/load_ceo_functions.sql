@@ -318,7 +318,7 @@ $$ LANGUAGE SQL;
 
 CREATE OR REPLACE FUNCTION get_user_details(_user_uid integer)
  RETURNS TABLE (
-    mailing_list    boolean
+    on_mailing_list    boolean
  ) AS $$
 
     SELECT on_mailing_list FROM users WHERE user_uid = _user_uid

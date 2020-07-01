@@ -1,5 +1,6 @@
 import React from "react";
 import ReactDOM from "react-dom";
+import { NavigationBar } from "./components/PageComponents";
 
 class UnsubscribeMailingList extends React.Component {
     constructor(props) {
@@ -16,19 +17,22 @@ class UnsubscribeMailingList extends React.Component {
     submitUnsubscribe = () => {
         if (confirm("Are you sure you want to unsubscribe from mailing list?")) {
             const { email } = this.state;
-            fetch(this.props.documentRoot + "/unsubscribe-mailing-list", {
+            fetch("/unsubscribe-mailing-list", {
                 method: "POST",
                 body: JSON.stringify({
                     email,
                 }),
             })
-                .then(response => response.ok ? response.text() : Promise.reject(response))
-                .then(() => {
-                    this.setState({ email: "" });
-                    alert("Your email has been subscribed from mailing list..\n\n");
+                .then(response => {
+                    if (response.ok) {
+                        this.setState({ email: "" });
+                        alert("Your email has been subscribed from mailing list.\n\n");
+                    } else {
+                        Promise.reject(response);
+                    }
                 })
                 .catch(() => {
-                    alert("There was an issue subscribing from mailing list..\n\n");
+                    alert("There was an issue subscribing from mailing list.\n\n");
                 });
         }
     };
@@ -70,7 +74,9 @@ class UnsubscribeMailingList extends React.Component {
 
 export function renderUnsubscribeMailingListPage(args) {
     ReactDOM.render(
-        <UnsubscribeMailingList documentRoot={args.documentRoot}/>,
+        <NavigationBar userName={args.userName} userId={args.userId}>
+            <UnsubscribeMailingList />
+        </NavigationBar>,
         document.getElementById("unsubscribe-mailing-list")
     );
 }

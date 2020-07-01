@@ -1,4 +1,4 @@
-ALTER TABLE users ADD on_mailing_list boolean DEFAULT NULL;
+ALTER TABLE users ADD COLUMN on_mailing_list boolean DEFAULT NULL;
 
 CREATE OR REPLACE FUNCTION set_mailing_list(_user_uid integer, _on_mailing_list boolean)
  RETURNS void AS $$
@@ -9,7 +9,7 @@ $$ LANGUAGE SQL;
 
 CREATE OR REPLACE FUNCTION get_user_details(_user_uid integer)
  RETURNS TABLE (
-    mailing_list    boolean
+    on_mailing_list    boolean
  ) AS $$
 
     SELECT on_mailing_list FROM users WHERE user_uid = _user_uid

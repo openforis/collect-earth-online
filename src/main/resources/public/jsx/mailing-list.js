@@ -1,22 +1,22 @@
 import React from "react"; 
 import ReactDOM from "react-dom";
+import { NavigationBar } from "./components/PageComponents";
 import CKEditor from "@ckeditor/ckeditor5-react";
 import ClassicEditor from "@ckeditor/ckeditor5-build-classic";
 
 class MailingList extends React.Component {
     constructor(props) {
         super(props);
-        this.defaultBody = "";
         this.state = {
             subject: "",
-            body: this.defaultBody,
+            body: "",
         };
     }
 
     submitEmail = () => {
         if (confirm("Are you sure you want to send to this mailing list?")) {
             const { subject, body } = this.state;
-            fetch(this.props.documentRoot + "/send-mailing-list", {
+            fetch("/send-mailing-list", {
                 method: "POST",
                 body: JSON.stringify({
                     subject,
@@ -83,12 +83,13 @@ class MailingList extends React.Component {
             </section>
         );
     }
-
 }
 
 export function renderMailingListPage(args) {
     ReactDOM.render(
-        <MailingList documentRoot={args.documentRoot} />,
+        <NavigationBar userName={args.userName} userId={args.userId}>
+            <MailingList />
+        </NavigationBar>,
         document.getElementById("mailing-list")
     );
 }

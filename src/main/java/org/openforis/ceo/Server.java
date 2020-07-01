@@ -98,8 +98,8 @@ public class Server implements SparkApplication {
                 && !institutions.isInstAdmin(request)) {
                 redirectAuth(request, response, userId);
             }
-            // Check for mailing list permission pages and redirect
-            if (List.of("/mailing-list", "/send-mailing-list").contains(request.uri()) && userId != 1) {
+            // Check for application admin permission pages and redirect
+            if (List.of("/mailing-list").contains(request.uri()) && userId != 1) {
                 redirectAuth(request, response, userId);
             }
 
@@ -148,6 +148,11 @@ public class Server implements SparkApplication {
                         "/add-institution-imagery",
                         "/archive-institution-imagery")
                     .contains(request.uri()) && !institutions.isInstAdmin(request)) {
+                halt(403, "Forbidden!");
+            }
+            // Check for application admin permission on API routes and block
+            if (List.of("/send-mailing-list")
+                    .contains(request.uri()) && userId != 1) {
                 halt(403, "Forbidden!");
             }
 

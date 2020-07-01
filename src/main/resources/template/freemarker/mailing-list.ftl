@@ -1,8 +1,6 @@
 <#include "header.ftl">
-<#include "navbar.ftl">
 <#include "start-content.ftl">
-
-<div id="mailing-list" class="row justify-content-center"></div>
+<div id="mailing-list"></div>
 
 <!-- Auto Inserted Bundles -->
 
@@ -11,10 +9,11 @@
 <script type="text/javascript">
     window.onload = function () {
         mailing_list.renderMailingListPage({
-            documentRoot:  "${root}",
+            userId:       "${userid}",
+            accountId:    "${account_id}",
+            userName:     "${username}"
         });
     };
 </script>
-
 <#include "end-content.ftl">
 <#include "footer.ftl">

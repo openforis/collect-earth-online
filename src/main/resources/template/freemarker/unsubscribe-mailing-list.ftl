@@ -1,8 +1,6 @@
 <#include "header.ftl">
-<#include "navbar.ftl">
 <#include "start-content.ftl">
-
-<div id="unsubscribe-mailing-list" class="row justify-content-center"></div>
+<div id="unsubscribe-mailing-list"></div>
 
 <!-- Auto Inserted Bundles -->
 
@@ -11,7 +9,9 @@
 <script type="text/javascript">
     window.onload = function () {
         unsubscribe_mailing_list.renderUnsubscribeMailingListPage({
-            documentRoot:  "${root}",
+            userName:     "${username}",
+            userId:       "${userid}",
+            projectId:    "${project_id}"
         });
     };
 </script>
