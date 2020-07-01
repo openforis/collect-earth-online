@@ -177,7 +177,7 @@ public class Server implements SparkApplication {
         get("/home",                                  Views.home(freemarker));
         get("/institution-dashboard",                 Views.institutionDashboard(freemarker));
         get("/login",                                 Views.login(freemarker));
-        get("/password",                              Views.password(freemarker));
+        get("/password-request",                      Views.passwordRequest(freemarker));
         get("/password-reset",                        Views.passwordReset(freemarker));
         get("/project-dashboard",                     Views.projectDashboard(freemarker));
         get("/register",                              Views.register(freemarker));
@@ -191,12 +191,12 @@ public class Server implements SparkApplication {
         // Routing Table: HTML pages (with side effects)
         get("/logout",                                (req, res) -> Views.home(freemarker).handle(users.logout(req, res), res));
         post("/account",                              (req, res) -> Views.account(freemarker).handle(users.updateAccount(req, res), res));
-        post("/password",                             (req, res) -> Views.password(freemarker).handle(users.getPasswordResetKey(req, res), res));
 
         // Routing Table: Application API
         post("/login",                                users::login);
         post("/register",                             users::register);
         post("/password-reset",                       users::resetPassword);
+        post("/password-request",                     users::getPasswordResetKey);
 
         // Routing Table: Projects API
         get("/dump-project-aggregate-data",           projects::dumpProjectAggregateData);

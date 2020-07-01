@@ -27,6 +27,7 @@ module.exports = env => ({
         login                 : path.resolve(__dirname, "src/main/resources/public/jsx/login.js"),
         register              : path.resolve(__dirname, "src/main/resources/public/jsx/register.js"),
         password_reset        : path.resolve(__dirname, "src/main/resources/public/jsx/password-reset.js"),
+        password_request      : path.resolve(__dirname, "src/main/resources/public/jsx/password-request.js"),
     },
     output: {
         path: path.resolve(__dirname, outdir + "/public/js"),

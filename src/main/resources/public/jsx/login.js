@@ -68,7 +68,7 @@ class Login extends React.Component {
                                 />
                             </div>
                             <div className="d-flex justify-content-between align-items-center">
-                                <a href={"/password"}>Forgot your password?</a>
+                                <a href={"/password-request"}>Forgot your password?</a>
                                 <button className="btn bg-lightgreen" type="submit">Login</button>
                             </div>
                         </form>

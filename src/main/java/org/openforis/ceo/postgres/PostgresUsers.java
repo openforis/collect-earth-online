@@ -169,7 +169,7 @@ public class PostgresUsers implements Users {
         return req;
     }
 
-    public Request getPasswordResetKey(Request req, Response res) {
+    public String getPasswordResetKey(Request req, Response res) {
         var inputEmail = req.queryParams("email");
 
         try (var conn = connect();
@@ -193,22 +193,21 @@ public class PostgresUsers implements Users {
                                 + "&password-reset-key="
                                 + resetKey;
                             sendMail(SMTP_USER, inputEmail, SMTP_SERVER, SMTP_PORT, SMTP_PASSWORD, "Password reset on CEO", body);
-                            req.session().attribute("flash_message", "The reset key has been sent to your email.");
+                            return "";
                         } else {
-                            req.session().attribute("flash_message", "Failed to create a reset key.  Please try again later");
+                            return "Failed to create a reset key. Please try again later";
                         }
                     }
                 } catch (Exception e) {
-                    req.session().attribute("flash_message", "An error occurred. Please try again later.");
+                    return "An error occurred. Please try again later.";
                 }
             } else {
-                req.session().attribute("flash_message", "There is no user with that email address.");
+                return "There is no user with that email address.";
             }
         } catch (SQLException e) {
             System.out.println(e.getMessage());
-            req.session().attribute("flash_message", "There was an issue resetting your password.  Please check the console.");
+            return "There was an issue resetting your password. Please check the console.";
         }
-        return req;
     }
 
     public String resetPassword(Request req, Response res) {

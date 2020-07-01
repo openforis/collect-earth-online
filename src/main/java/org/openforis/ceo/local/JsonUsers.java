@@ -176,13 +176,12 @@ public class JsonUsers implements Users {
         }
     }
 
-    public Request getPasswordResetKey(Request req, Response res) {
+    public String getPasswordResetKey(Request req, Response res) {
         var inputEmail = req.queryParams("email");
         var users = elementToArray(readJsonFile("user-list.json"));
         var matchingUser = findInJsonArray(users, user -> user.get("email").getAsString().equals(inputEmail));
         if (!matchingUser.isPresent()) {
-            req.session().attribute("flash_message", "There is no user with that email address.");
-            return req;
+            return "There is no user with that email address.";
         } else {
             try {
                 var resetKey = UUID.randomUUID().toString();
@@ -204,11 +203,9 @@ public class JsonUsers implements Users {
                     + "&password-reset-key="
                     + resetKey;
                 sendMail(SMTP_USER, inputEmail, SMTP_SERVER, SMTP_PORT, SMTP_PASSWORD, "Password reset on CEO", body);
-                req.session().attribute("flash_message", "The reset key has been sent to your email.");
-                return req;
+                return "";
             } catch (Exception e) {
-                req.session().attribute("flash_message", "An error occurred. Please try again later.");
-                return req;
+                return "An error occurred. Please try again later.";
             }
         }
     }
