@@ -66,27 +66,23 @@ public class JsonUsers implements Users {
         }
     }
 
-    public synchronized Request register(Request req, Response res) {
+    public synchronized String register(Request req, Response res) {
         var inputEmail = req.queryParams("email");
         var inputPassword = req.queryParams("password");
-        var inputPasswordConfirmation = req.queryParams("password-confirmation");
+        var inputPasswordConfirmation = req.queryParams("passwordConfirmation");
 
         // Validate input params and assign flash_message if invalid
         if (!isEmail(inputEmail)) {
-            req.session().attribute("flash_message", inputEmail + " is not a valid email address.");
-            return req;
+            return inputEmail + " is not a valid email address.";
         } else if (inputPassword.length() < 8) {
-            req.session().attribute("flash_message", "Password must be at least 8 characters.");
-            return req;
+            return "Password must be at least 8 characters.";
         } else if (!inputPassword.equals(inputPasswordConfirmation)) {
-            req.session().attribute("flash_message", "Password and Password confirmation do not match.");
-            return req;
+            return "Password and Password confirmation do not match.";
         } else {
             var users = elementToArray(readJsonFile("user-list.json"));
             var matchingUser = findInJsonArray(users, user -> user.get("email").getAsString().equals(inputEmail));
             if (matchingUser.isPresent()) {
-                req.session().attribute("flash_message", "Account " + inputEmail + " already exists.");
-                return req;
+                return "An account with the email " + inputEmail + " already exists.";
             } else {
                 // Add a new user to user-list.json
                 var newUserId = getNextId(users);
@@ -118,9 +114,7 @@ public class JsonUsers implements Users {
                     + "  The CEO Team";
                 sendMail(SMTP_USER, inputEmail, SMTP_SERVER, SMTP_PORT, SMTP_PASSWORD, "Welcome to CEO!", body);
 
-                // Redirect to the Home page
-                res.redirect(CeoConfig.documentRoot + "/home");
-                return req;
+                return "";
             }
         }
     }

@@ -7,7 +7,7 @@ import spark.Response;
 public interface Users {
 
     String login(Request req, Response res);
-    Request register(Request req, Response res);
+    String register(Request req, Response res);
     Request logout(Request req, Response res);
     Request updateAccount(Request req, Response res);
     Request getPasswordResetKey(Request req, Response res);

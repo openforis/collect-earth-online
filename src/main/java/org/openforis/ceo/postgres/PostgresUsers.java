@@ -54,18 +54,18 @@ public class PostgresUsers implements Users {
         }
     }
 
-    public Request register(Request req, Response res) {
+    public String register(Request req, Response res) {
         var inputEmail =                    req.queryParams("email");
         var inputPassword =                 req.queryParams("password");
-        var inputPasswordConfirmation =     req.queryParams("password-confirmation");
+        var inputPasswordConfirmation =     req.queryParams("passwordConfirmation");
 
         // Validate input params and assign flash_message if invalid
         if (!isEmail(inputEmail)) {
-            req.session().attribute("flash_message", inputEmail + " is not a valid email address.");
+            return "Account " + inputEmail + " already exists.";
         } else if (inputPassword.length() < 8) {
-            req.session().attribute("flash_message", "Password must be at least 8 characters.");
+            return "Password must be at least 8 characters.";
         } else if (!inputPassword.equals(inputPasswordConfirmation)) {
-            req.session().attribute("flash_message", "Password and Password confirmation do not match.");
+            return "Password and Password confirmation do not match.";
         } else {
             try (var conn = connect();
                  var pstmt_user = conn.prepareStatement("SELECT * FROM email_taken(?,-1)");
@@ -95,19 +95,16 @@ public class PostgresUsers implements Users {
                                     + "Kind Regards,\n"
                                     + "  The CEO Team";
                                 sendMail(SMTP_USER, inputEmail, SMTP_SERVER, SMTP_PORT, SMTP_PASSWORD, "Welcome to CEO!", body);
-
-                                // Redirect to the Home page
-                                res.redirect(CeoConfig.documentRoot + "/home");
                             }
                         }
                     }
                 }
+                return "";
             } catch (SQLException e) {
                 System.out.println(e.getMessage());
-                req.session().attribute("flash_message", "There was an issue registering a new account.  Please check the console.");
+                return "There was an server side issue registering a new account.";
             }
         }
-        return req;
     }
 
     public Request logout(Request req, Response res) {
