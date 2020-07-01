@@ -485,7 +485,7 @@ class NewImagery extends React.Component {
     //    Remote Calls    //
 
     uploadCustomImagery = (isNew) => {
-        const sourceConfig = this.stackParams();
+        const sourceConfig = this.buildSecureWatch(this.stackParams()); // TODO define SecureWatch so stack params works correctly.
         const message = this.validateData(sourceConfig);
         if (!this.checkAllParamsFilled()) {
             alert("You must fill out all fields.");
@@ -505,7 +505,7 @@ class NewImagery extends React.Component {
                           imageryId: this.props.imageryToEdit.id,
                           imageryTitle: this.state.newImageryTitle,
                           imageryAttribution: this.state.newImageryAttribution,
-                          sourceConfig: this.buildSecureWatch(sourceConfig), // TODO define SecureWatch so stack params works correctly.
+                          sourceConfig: sourceConfig,
                       }),
                   }
             ).then(response => {
@@ -541,7 +541,7 @@ class NewImagery extends React.Component {
         }
     };
 
-    // TODO this shouldnt be needed if SecureWatch is defined correctly in imageryOptions
+    // TODO this shouldn't be needed if SecureWatch is defined correctly in imageryOptions
     buildSecureWatch = (sourceConfig) => {
         if (sourceConfig.type === "SecureWatch") {
             sourceConfig["geoserverUrl"] = "https://securewatch.digitalglobe.com/mapservice/wmsaccess";
@@ -553,6 +553,7 @@ class NewImagery extends React.Component {
             };
             sourceConfig["geoserverParams"] = geoserverParams;
             delete sourceConfig.connectid;
+            return sourceConfig;
         } else {
             return sourceConfig;
         }
