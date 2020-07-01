@@ -4,7 +4,7 @@ import { mercator, ceoMapStyles } from "../js/mercator.js";
 import { NavigationBar } from "./components/PageComponents";
 import { SurveyCollection } from "./components/SurveyCollection";
 import { convertSampleValuesToSurveyQuestions } from "./utils/surveyUtils";
-import { UnicodeIcon, GetQueryString } from "./utils/textUtils";
+import { UnicodeIcon, getQueryString } from "./utils/textUtils";
 import { formatDateISO } from "./utils/dateUtils";
 
 class Collection extends React.Component {
@@ -662,7 +662,7 @@ class Collection extends React.Component {
 
     getPlotData = (plotId) => {
         fetch(this.props.documentRoot + "/get-plot-by-id?"
-              + GetQueryString({
+              + getQueryString({
                   getUserPlots: this.state.reviewPlots,
                   plotId: plotId,
                   projectId: this.props.projectId,
@@ -696,7 +696,7 @@ class Collection extends React.Component {
 
     getNextPlotData = (plotId) => {
         fetch(this.props.documentRoot + "/get-next-plot?"
-              + GetQueryString({
+              + getQueryString({
                   getUserPlots: this.state.reviewPlots,
                   plotId: plotId,
                   projectId: this.props.projectId,
@@ -733,7 +733,7 @@ class Collection extends React.Component {
 
     getPrevPlotData = (plotId) => {
         fetch(this.props.documentRoot + "/get-prev-plot?"
-              + GetQueryString({
+              + getQueryString({
                   getUserPlots: this.state.reviewPlots,
                   plotId: plotId,
                   projectId: this.props.projectId,

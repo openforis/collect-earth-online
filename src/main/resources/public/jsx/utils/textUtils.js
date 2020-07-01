@@ -46,6 +46,6 @@ export function UnicodeIcon({ icon, backgroundColor }) {
     );
 }
 
-export function GetQueryString(params) {
+export function getQueryString(params) {
     return Object.keys(params).map(k => encodeURIComponent(k) + "=" + encodeURIComponent(params[k])).join("&");
 }

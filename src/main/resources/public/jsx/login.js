@@ -1,7 +1,7 @@
 import React from "react";
 import ReactDOM from "react-dom";
 import { NavigationBar } from "./components/PageComponents";
-import { GetQueryString } from "./utils/textUtils";
+import { getQueryString } from "./utils/textUtils";
 
 class Login extends React.Component {
     constructor(props) {
@@ -23,7 +23,7 @@ class Login extends React.Component {
                   headers: new Headers({
                       "Content-Type": "application/x-www-form-urlencoded",
                   }),
-                  body: GetQueryString(params),
+                  body: getQueryString(params),
               })
             .then(response => Promise.all([response.ok, response.text()]))
             .then(data => {
