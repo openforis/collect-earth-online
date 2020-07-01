@@ -17,7 +17,6 @@ class Login extends React.Component {
             email: this.state.email,
             password: this.state.password,
         };
-        console.log(params);
         fetch("/login",
               {
                   method: "POST",
@@ -30,7 +29,6 @@ class Login extends React.Component {
             .then(data => {
                 if (data[0] && data[1] === "") {
                     window.location = this.props.returnurl === "" ? "/home" : this.props.returnurl;
-                    return Promise.resolve();
                 } else {
                     return Promise.reject(data[1]);
                 }
@@ -48,22 +46,22 @@ class Login extends React.Component {
     render() {
         return (
             <div className="d-flex justify-content-center">
-                <div className="card">
-                    <div className="card-header">Sign into your account</div>
+                <div className="card card-lightgreen">
+                    <div className="card-header card-header-lightgreen">Sign into your account</div>
                     <div className="card-body">
                         <form
-                            onSubmit={(e) => {
+                            onSubmit={e => {
                                 e.preventDefault();
                                 this.requestLogin();
                             }}
                         >
                             <div className="form-group">
                                 <label htmlFor="email">Email address</label>
-                                <input name="email" placeholder="Enter email" type="email" className="form-control" onChange={(e) => this.setEmail(e.target.value)} />
+                                <input name="email" placeholder="Enter email" type="email" className="form-control" onChange={e => this.setEmail(e.target.value)} />
                             </div>
                             <div className="form-group">
                                 <label htmlFor="password">Password</label>
-                                <input name="password" placeholder="Password" type="password" className="form-control" onChange={(e) => this.setPassword(e.target.value)} />
+                                <input name="password" placeholder="Password" type="password" className="form-control" onChange={e => this.setPassword(e.target.value)} />
                             </div>
                             <div className="d-flex justify-content-between align-items-center">
                                 <a href={"/password"}>Forgot your password?</a>
@@ -71,7 +69,7 @@ class Login extends React.Component {
                             </div>
                         </form>
                     </div>
-                    <div className="card-header card-footer">New to CEO?</div>
+                    <div className="card-header-lightgreen card-footer">New to CEO?</div>
                     <div className="card-body">
                         <div className="d-flex justify-content-end">
                             <input

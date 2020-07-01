@@ -250,6 +250,23 @@ a:hover{
     color:#279B93;
     text-decoration:none;
 }
+/* Cards */
+/*************/
+.card-lightgreen {
+    width: 25rem;
+    margin-top: 1rem;
+    margin-bottom: 1rem;
+    font-size: 1rem;
+    border-color: #31BAB0;
+}
+.card-header-lightgreen {
+    color: white;
+    background-color: #31BAB0;
+    text-align: center;
+    font-family: -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif,"Apple Color Emoji","Segoe UI Emoji","Segoe UI Symbol";
+    font-size: 1.1rem;
+    font-weight: 500;
+}
 /*****************/
 /* Flash Message */
 /*****************/
@@ -477,22 +494,6 @@ h2.header{
 }
 .modal-footer{
     min-height: 71px;
-}
-#login .card {
-    width: 25rem;
-    margin-top: 1rem;
-    margin-bottom: 1rem;
-    font-size: 1rem;
-    border-color: #31BAB0;
-}
-
-#login .card .card-header {
-    color: white;
-    background-color: #31BAB0;
-    text-align: center;
-    font-family: -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif,"Apple Color Emoji","Segoe UI Emoji","Segoe UI Symbol";
-    font-size: 1.1rem;
-    font-weight: 500;
 }
 /*********************************************************************/
 /* PROJECT PAGE */

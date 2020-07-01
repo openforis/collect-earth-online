@@ -4,7 +4,7 @@ import { mercator, ceoMapStyles } from "../js/mercator.js";
 import { NavigationBar } from "./components/PageComponents";
 import { SurveyCollection } from "./components/SurveyCollection";
 import { convertSampleValuesToSurveyQuestions } from "./utils/surveyUtils";
-import { UnicodeIcon } from "./utils/textUtils";
+import { UnicodeIcon, GetQueryString } from "./utils/textUtils";
 import { formatDateISO } from "./utils/dateUtils";
 
 class Collection extends React.Component {
@@ -651,10 +651,6 @@ class Collection extends React.Component {
         }
     };
 
-    getQueryString = (params) => "?" + Object.keys(params)
-        .map(k => encodeURIComponent(k) + "=" + encodeURIComponent(params[k]))
-        .join("&");
-
     plotHasSamples = (plotData) => {
         if (plotData.samples.length === 0) {
             alert("This plot has no samples. Please flag the plot.");
@@ -665,8 +661,8 @@ class Collection extends React.Component {
     };
 
     getPlotData = (plotId) => {
-        fetch(this.props.documentRoot + "/get-plot-by-id"
-              + this.getQueryString({
+        fetch(this.props.documentRoot + "/get-plot-by-id?"
+              + GetQueryString({
                   getUserPlots: this.state.reviewPlots,
                   plotId: plotId,
                   projectId: this.props.projectId,
@@ -699,8 +695,8 @@ class Collection extends React.Component {
     };
 
     getNextPlotData = (plotId) => {
-        fetch(this.props.documentRoot + "/get-next-plot"
-              + this.getQueryString({
+        fetch(this.props.documentRoot + "/get-next-plot?"
+              + GetQueryString({
                   getUserPlots: this.state.reviewPlots,
                   plotId: plotId,
                   projectId: this.props.projectId,
@@ -736,8 +732,8 @@ class Collection extends React.Component {
     };
 
     getPrevPlotData = (plotId) => {
-        fetch(this.props.documentRoot + "/get-prev-plot"
-              + this.getQueryString({
+        fetch(this.props.documentRoot + "/get-prev-plot?"
+              + GetQueryString({
                   getUserPlots: this.state.reviewPlots,
                   plotId: plotId,
                   projectId: this.props.projectId,
