@@ -2,6 +2,7 @@ import React, { Fragment } from "react";
 import ReactDOM from "react-dom";
 
 import { FormLayout, SectionBlock, StatsCell, StatsRow } from "./components/FormComponents";
+import { NavigationBar } from "./components/PageComponents";
 
 function Account(props) {
     const sameAsUser = props.userId === props.accountId;
@@ -197,7 +198,14 @@ class AccountForm extends React.Component {
 
 export function renderAccountPage(args) {
     ReactDOM.render(
-        <Account documentRoot={args.documentRoot} userId={args.userId} accountId={args.accountId} userName={args.userName}/>,
+        <NavigationBar userName={args.userName} userId={args.userId}>
+            <Account
+                documentRoot=""
+                userId={args.userId}
+                accountId={args.accountId}
+                userName={args.userName}
+            />
+        </NavigationBar>,
         document.getElementById("account")
     );
 }

@@ -518,12 +518,30 @@ public class PostgresProjects implements Projects {
         }
     }
 
+    private void insertProjectImagery(Integer projectId, JsonObject jsonInputs) {
+        try (var conn = connect()) {
+            jsonInputs.get("projectImageryList").getAsJsonArray()
+                    .forEach(projectImageryId -> {
+                        try (var pstmt = conn.prepareStatement("SELECT * FROM insert_project_imagery(?,?)")) {
+                            pstmt.setInt(1, projectId);
+                            pstmt.setInt(2, projectImageryId.getAsInt());
+                            pstmt.execute();
+                        } catch (SQLException e) {
+                            System.out.println(e.getMessage());
+                        }
+                    });
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+        }
+    }
+
     public String updateProject(Request req, Response res) {
         try (var conn = connect();
              var pstmt = conn.prepareStatement("SELECT * FROM update_project(?,?,?,?,?,?::JSONB)")) {
 
             final var jsonInputs = parseJson(req.body()).getAsJsonObject();
-            pstmt.setInt(1,    Integer.parseInt(getOrEmptyString(jsonInputs, "projectId").getAsString()));
+            final var projectId = Integer.parseInt(getOrEmptyString(jsonInputs, "projectId").getAsString());
+            pstmt.setInt(1,    projectId);
             pstmt.setString(2, getOrEmptyString(jsonInputs, "name").getAsString());
             pstmt.setString(3, getOrEmptyString(jsonInputs, "description").getAsString());
             pstmt.setString(4, getOrEmptyString(jsonInputs, "privacyLevel").getAsString());
@@ -534,6 +552,14 @@ public class PostgresProjects implements Projects {
                                     ? jsonInputs.get("projectOptions").getAsJsonObject().toString()
                                     : "{\"showGEEScript\":false}");
             pstmt.execute();
+
+            if (jsonInputs.has("projectImageryList")) {
+                // deletes and insert project images
+                var pstmt2 = conn.prepareStatement("SELECT * FROM delete_project_imagery(?)");
+                pstmt2.setInt(1, projectId);
+                pstmt2.execute();
+                insertProjectImagery(projectId, jsonInputs);
+            }
             return "";
         } catch (SQLException e) {
             System.out.println(e.getMessage());
@@ -890,7 +916,7 @@ public class PostgresProjects implements Projects {
 
                 try (var pstmtSamples = conn.prepareStatement(SqlSamples)) {
                     pstmtSamples.setInt(1, newPlotId);
-                    pstmtSamples.setString(2,makeGeoJsonPoint(sampleCenter[0], sampleCenter[1]).toString());
+                    pstmtSamples.setString(2, makeGeoJsonPoint(sampleCenter[0], sampleCenter[1]).toString());
                     pstmtSamples.execute();
                 } catch (SQLException e) {
                     System.out.println(e.getMessage());
@@ -908,8 +934,8 @@ public class PostgresProjects implements Projects {
             newProject.addProperty("description",        getOrEmptyString(jsonInputs, "description").getAsString());
             newProject.addProperty("institution",        getOrZero(jsonInputs, "institutionId").getAsInt());
             newProject.addProperty("imageryId",          jsonInputs.has("imageryId")
-                                                            ? jsonInputs.get("imageryId").getAsInt()
-                                                            : getFirstPublicImageryId());
+                                                                    ? jsonInputs.get("imageryId").getAsInt()
+                                                                    : getFirstPublicImageryId());
             newProject.addProperty("lonMin",             getOrZero(jsonInputs, "lonMin").getAsDouble());
             newProject.addProperty("latMin",             getOrZero(jsonInputs, "latMin").getAsDouble());
             newProject.addProperty("lonMax",             getOrZero(jsonInputs, "lonMax").getAsDouble());
@@ -930,8 +956,8 @@ public class PostgresProjects implements Projects {
             newProject.addProperty("useTemplatePlots",   getOrFalse(jsonInputs, "useTemplatePlots").getAsBoolean());
             newProject.addProperty("useTemplateWidgets", getOrFalse(jsonInputs, "useTemplateWidgets").getAsBoolean());
             newProject.add("projectOptions",             jsonInputs.has("projectOptions")
-                                                            ? jsonInputs.get("projectOptions").getAsJsonObject()
-                                                            : parseJson("{\"showGEEScript\":false}").getAsJsonObject());
+                                                                    ? jsonInputs.get("projectOptions").getAsJsonObject()
+                                                                    : parseJson("{\"showGEEScript\":false}").getAsJsonObject());
 
             // file part properties
             newProject.addProperty("plotFileName",       getOrEmptyString(jsonInputs, "plotFileName").getAsString());
@@ -980,6 +1006,11 @@ public class PostgresProjects implements Projects {
                     if (rs.next()) {
                         newProjectId = rs.getInt("create_project");
                         newProject.addProperty("id", newProjectId);
+
+                        if (jsonInputs.has("projectImageryList")) {
+                            // insert project images
+                            insertProjectImagery(newProject.get("id").getAsInt(), jsonInputs);
+                        }
 
                         if (newProject.get("projectTemplate").getAsInt() > 0
                                 && newProject.get("useTemplateWidgets").getAsBoolean()) {

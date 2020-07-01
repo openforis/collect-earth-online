@@ -96,12 +96,24 @@ export function ProjectInfo({ name, description, privacyLevel, setProjectDetail 
     );
 }
 
-export function ProjectAOI({ coordinates: { latMax, lonMin, lonMax, latMin }, inDesignMode, imageryId, imageryList, setProjectDetail }) {
+export function ProjectAOI({
+    coordinates: { latMax, lonMin, lonMax, latMin },
+    inDesignMode,
+    imageryId,
+    imageryList,
+    setProjectDetail,
+    projectImageryList,
+    setProjectImageryList,
+}) {
     return (
         <SectionBlock title="Project AOI">
             <div id="project-aoi">
                 <div id="project-map"></div>
-                {inDesignMode && <div className="col small text-center mb-2">Hold CTRL and click-and-drag a bounding box on the map</div>}
+                {inDesignMode &&
+                    <div className="col small text-center mb-2">
+                        Hold CTRL and click-and-drag a bounding box on the map
+                    </div>
+                }
                 <div className="form-group mx-4">
                     <div className="row">
                         <div className="col-md-6 offset-md-3">
@@ -159,25 +171,54 @@ export function ProjectAOI({ coordinates: { latMax, lonMin, lonMax, latMin }, in
                     </div>
                 </div>
             </div>
-            {imageryList &&
-                <div id="project-imagery">
-                    <div className="form-group">
-                        <h3 htmlFor="base-map-source">Basemap Source</h3>
-                        <select
-                            className="form-control form-control-sm"
-                            size="1"
-                            value={imageryId || -1}
-                            onChange={e => setProjectDetail("imageryId", parseInt(e.target.value))}
-                        >
-                            {
-                                imageryList.filter(layerConfig => layerConfig.sourceConfig.type !== "PlanetDaily")
-                                    .map((imagery, uid) =>
-                                        <option key={uid} value={imagery.id}>{imagery.title}</option>
-                                    )
-                            }
-                        </select>
+            {imageryList
+                ?
+                    <div id="project-imagery">
+                        <div className="form-group" id="project-default-imagery">
+                            <h3 htmlFor="project-default-imagery">Default Imagery</h3>
+                            <select
+                                className="form-control form-control-sm"
+                                size="1"
+                                value={imageryId || -1}
+                                onChange={e => setProjectDetail("imageryId", parseInt(e.target.value))}
+                            >
+                                {
+                                    imageryList.filter(layerConfig => layerConfig.sourceConfig.type !== "PlanetDaily")
+                                        .map((imagery, uid) =>
+                                            <option key={uid} value={imagery.id}>{imagery.title}</option>
+                                        )
+                                }
+                            </select>
+                        </div>
+                        <hr />
+                        <div className="form-group" id="additional-imagery">
+                            <h3 htmlFor="additional-imagery">Additional Imagery</h3>
+                            <div className="row mt-3">
+                                {imageryList.map((imagery, uid) =>
+                                    <div className="col-md-5 offset-md-1 form-check" key={uid}>
+                                        <input
+                                            className="form-check-input"
+                                            id={imagery.id}
+                                            onChange={e => setProjectImageryList(e.target.checked
+                                                            ? [...projectImageryList, imagery.id]
+                                                            : projectImageryList.filter(img => img !== imagery.id))}
+                                            type="checkbox"
+                                            disabled={imagery.id === imageryId}
+                                            checked={projectImageryList.includes(imagery.id) || imagery.id === imageryId}
+                                        />
+                                        <label htmlFor={imagery.id} className="form-check-label">{imagery.title}</label>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
                     </div>
-                </div>
+                :
+                    <div id="project-loading-imagery">
+                        <div className="form-group">
+                            <h3 htmlFor="project-loading-imagery">Default Imagery</h3>
+                            <p>Loading Imagery...</p>
+                        </div>
+                    </div>
             }
         </SectionBlock>
     );

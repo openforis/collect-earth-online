@@ -1,7 +1,7 @@
 import React from "react";
 import ReactDOM from "react-dom";
 import { mercator, ceoMapStyles } from "../js/mercator.js";
-
+import { NavigationBar } from "./components/PageComponents";
 import { convertSampleValuesToSurveyQuestions } from "./utils/surveyUtils";
 
 class ProjectDashboard extends React.Component {
@@ -135,25 +135,26 @@ class ProjectDashboard extends React.Component {
 
     render() {
         return (
-            <div
-                id="project-design"
-                className="col-xl-6 col-lg-8 border bg-lightgray mb-5"
-                style={{ display: "contents" }}
-            >
-                <div className="bg-darkgreen mb-3 no-container-margin" style={{ width: "100%", margin: "0 10px 0 10px" }}>
-                    <h1>Project Dashboard</h1>
-                </div>
-                <div style={{ display: "inline-flex", width: "100%", margin: "0 10px 0 10px" }}>
-                    <div className="bg-lightgray" style={{ margin: "20px", width: "70%" }}>
-                        <ProjectAOI/>
+            <div className="row justify-content-center">
+                <div
+                    id="project-design"
+                    className="col-xl-6 col-lg-8 border bg-lightgray mb-5"
+                    style={{ display: "contents" }}
+                >
+                    <div className="bg-darkgreen mb-3 no-container-margin" style={{ width: "100%", margin: "0 10px 0 10px" }}>
+                        <h1>Project Dashboard</h1>
                     </div>
-                    <div className="bg-lightgray" style={{ margin: "20px", width: "30%" }}>
-                        <ProjectStats
-                            project={this.state}
-                            project_stats_visibility={this.props.project_stats_visibility}
-                        />
+                    <div style={{ display: "inline-flex", width: "100%", margin: "0 10px 0 10px" }}>
+                        <div className="bg-lightgray" style={{ margin: "20px", width: "70%" }}>
+                            <ProjectAOI/>
+                        </div>
+                        <div className="bg-lightgray" style={{ margin: "20px", width: "30%" }}>
+                            <ProjectStats
+                                project={this.state}
+                                project_stats_visibility={this.props.project_stats_visibility}
+                            />
+                        </div>
                     </div>
-
                 </div>
             </div>
         );
@@ -219,13 +220,15 @@ function ProjectAOI() {
 
 export function renderProjectDashboardPage(args) {
     ReactDOM.render(
-        <ProjectDashboard
-            documentRoot={args.documentRoot}
-            userId={args.userId}
-            projectId={args.projectId}
-            project_stats_visibility={args.project_stats_visibility}
-            project_template_visibility={args.project_template_visibility}
-        />,
+        <NavigationBar userName={args.userName} userId={args.userId}>
+            <ProjectDashboard
+                documentRoot=""
+                userId={args.userId}
+                projectId={args.projectId}
+                project_stats_visibility={args.project_stats_visibility}
+                project_template_visibility={args.project_template_visibility}
+            />
+        </NavigationBar>,
         document.getElementById("project-dashboard")
     );
 }

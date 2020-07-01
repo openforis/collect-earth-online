@@ -1,6 +1,7 @@
 import React from "react";
 import ReactDOM from "react-dom";
 import { CollapsibleSectionBlock, ExpandableImage } from "./components/FormComponents";
+import { NavigationBar } from "./components/PageComponents";
 
 class GeoDashHelp extends React.Component {
     constructor(props) {
@@ -275,7 +276,9 @@ class GeoDashHelp extends React.Component {
 
 export function renderGeodashHelpPage(args) {
     ReactDOM.render(
-        <GeoDashHelp documentRoot={args.documentRoot} browserLanguage={args.browserLanguage}/>,
+        <NavigationBar userName={args.userName} userId={args.userId}>
+            <GeoDashHelp documentRoot="" browserLanguage={args.browserLanguage}/>
+        </NavigationBar>,
         document.getElementById("dashHolder")
     );
 }
