@@ -9,8 +9,8 @@
 <script type="text/javascript">
  window.onload = function () {
      about.renderAboutPage({
-         userId:       "${userid}",
-         userName:     "${username}"
+         userId:      "${userid}",
+         userName:    "${username}"
      });
  };
 </script>

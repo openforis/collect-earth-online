@@ -28,6 +28,7 @@ module.exports = env => ({
         register              : path.resolve(__dirname, "src/main/resources/public/jsx/register.js"),
         review_institution    : path.resolve(__dirname, "src/main/resources/public/jsx/review-institution.js"),
         review_project        : path.resolve(__dirname, "src/main/resources/public/jsx/review-project.js"),
+        support               : path.resolve(__dirname, "src/main/resources/public/jsx/support.js"),
         widget_layout_editor  : path.resolve(__dirname, "src/main/resources/public/jsx/widget-layout-editor.js"),
     },
     output: {
