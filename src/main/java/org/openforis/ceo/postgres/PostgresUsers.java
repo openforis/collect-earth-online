@@ -211,17 +211,17 @@ public class PostgresUsers implements Users {
         return req;
     }
 
-    public Request resetPassword(Request req, Response res) {
+    public String resetPassword(Request req, Response res) {
         var inputEmail =                    req.queryParams("email");
-        var inputResetKey =                 req.queryParams("password-reset-key");
+        var inputResetKey =                 req.queryParams("passwordResetKey");
         var inputPassword =                 req.queryParams("password");
-        var inputPasswordConfirmation =     req.queryParams("password-confirmation");
+        var inputPasswordConfirmation =     req.queryParams("passwordConfirmation");
 
         // Validate input params and assign flash_message if invalid
         if (inputPassword.length() < 8) {
-            req.session().attribute("flash_message", "Password must be at least 8 characters.");
+            return "Password must be at least 8 characters.";
         } else if (!inputPassword.equals(inputPasswordConfirmation)) {
-            req.session().attribute("flash_message", "Password and Password confirmation do not match.");
+            return "Password and Password confirmation do not match.";
         } else {
             try (var conn = connect();
                  var pstmt_user = conn.prepareStatement("SELECT * FROM get_user(?)");
@@ -234,21 +234,19 @@ public class PostgresUsers implements Users {
                             pstmt_pass.setString(1, inputEmail);
                             pstmt_pass.setString(2, inputPassword);
                             pstmt_pass.execute();
-                            req.session().attribute("flash_message", "Your password has been changed.");
+                            return "";
                         } else {
-                            req.session().attribute("flash_message", "Invalid reset key for user " + inputEmail + ".");
+                            return "Invalid reset key for user " + inputEmail + ".";
                         }
                     } else {
-                        req.session().attribute("flash_message", "There is no user with that email address.");
+                        return "There is no user with that email address.";
                     }
                 }
             } catch (SQLException e) {
                 System.out.println(e.getMessage());
-                req.session().attribute("flash_message", "There was an issue resetting your password.  Please check the console.");
+                return "There was an issue resetting your password. Please check the console.";
             }
         }
-
-        return req;
     }
 
     public String getAllUsers(Request req, Response res) {

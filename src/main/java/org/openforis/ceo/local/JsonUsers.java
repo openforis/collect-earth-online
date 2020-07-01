@@ -213,7 +213,7 @@ public class JsonUsers implements Users {
         }
     }
 
-    public Request resetPassword(Request req, Response res) {
+    public String resetPassword(Request req, Response res) {
         var inputEmail = req.queryParams("email");
         var inputResetKey = req.queryParams("password-reset-key");
         var inputPassword = req.queryParams("password");
@@ -221,22 +221,18 @@ public class JsonUsers implements Users {
 
         // Validate input params and assign flash_message if invalid
         if (inputPassword.length() < 8) {
-            req.session().attribute("flash_message", "Password must be at least 8 characters.");
-            return req;
+            return "Password must be at least 8 characters.";
         } else if (!inputPassword.equals(inputPasswordConfirmation)) {
-            req.session().attribute("flash_message", "Password and Password confirmation do not match.");
-            return req;
+            return "Password and Password confirmation do not match.";
         } else {
             var users = elementToArray(readJsonFile("user-list.json"));
             var matchingUser = findInJsonArray(users, user -> user.get("email").getAsString().equals(inputEmail));
             if (!matchingUser.isPresent()) {
-                req.session().attribute("flash_message", "There is no user with that email address.");
-                return req;
+                return "There is no user with that email address.";
             } else {
                 var foundUser = matchingUser.get();
                 if (!foundUser.get("resetKey").getAsString().equals(inputResetKey)) {
-                    req.session().attribute("flash_message", "Invalid reset key for user " + inputEmail + ".");
-                    return req;
+                    return "Invalid reset key for user " + inputEmail + ".";
                 } else {
                     mapJsonFile("user-list.json",
                                 user -> {
@@ -248,8 +244,7 @@ public class JsonUsers implements Users {
                                         return user;
                                     }
                                 });
-                    req.session().attribute("flash_message", "Your password has been changed.");
-                    return req;
+                    return "";
                 }
             }
         }

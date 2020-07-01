@@ -26,6 +26,7 @@ module.exports = env => ({
         geo_dash_help         : path.resolve(__dirname, "src/main/resources/public/jsx/geo-dash-help.js"),
         login                 : path.resolve(__dirname, "src/main/resources/public/jsx/login.js"),
         register              : path.resolve(__dirname, "src/main/resources/public/jsx/register.js"),
+        password_reset        : path.resolve(__dirname, "src/main/resources/public/jsx/password-reset.js"),
     },
     output: {
         path: path.resolve(__dirname, outdir + "/public/js"),

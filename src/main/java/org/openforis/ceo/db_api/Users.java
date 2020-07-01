@@ -11,7 +11,7 @@ public interface Users {
     Request logout(Request req, Response res);
     Request updateAccount(Request req, Response res);
     Request getPasswordResetKey(Request req, Response res);
-    Request resetPassword(Request req, Response res);
+    String resetPassword(Request req, Response res);
     String getAllUsers(Request req, Response res);
     String getInstitutionUsers(Request req, Response res);
     String getUserStats(Request req, Response res);
