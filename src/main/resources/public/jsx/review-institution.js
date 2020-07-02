@@ -562,22 +562,22 @@ class NewImagery extends React.Component {
     isValidJson = (str) => {
         try {
             JSON.parse(str);
+            return true;
         } catch (e) {
             return false;
         }
-        return true;
     }
 
     checkJSONParams = () => this.state.newImageryTitle.length > 0
         && this.state.newImageryAttribution.length > 0
         && imageryOptions[this.state.selectedType].params
             .every(o => o.type !== "JSON"
-                        || (this.isValidJson(this.state.newImageryParams[o.key])));
+                        || this.isValidJson(this.state.newImageryParams[o.key]));
 
     checkAllParamsFilled = () => this.state.newImageryTitle.length > 0
         && this.state.newImageryAttribution.length > 0
         && imageryOptions[this.state.selectedType].params
-            .every(o => o.required === false
+            .every(o => !o.required
                         || (this.state.newImageryParams[o.key] && this.state.newImageryParams[o.key].length > 0));
 
     // TODO make all of these generic by adding min / max values to imageryOptions and checking against those.
