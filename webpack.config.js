@@ -126,7 +126,7 @@ module.exports = env => ({
                 commons: {
                     name: "common~chunk",
                     chunks: "all",
-                    minChunks: 10, // 10 will make this chunk items for all the pages
+                    minChunks: 5, // smaller number puts more into the common chunk
                 },
             },
         },
