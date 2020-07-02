@@ -302,6 +302,9 @@ class Project extends React.Component {
                 },
                 useTemplatePlots: false,
                 useTemplateWidgets: false,
+                projectOptions: {
+                    showGEEScript: false,
+                },
             });
             mercator.removeLayerById(this.state.mapConfig, "dragBoxLayer");
         } else {
@@ -316,6 +319,7 @@ class Project extends React.Component {
                     surveyRules: templateProject.surveyRules || [],
                     privacyLevel: "institution",
                 },
+                projectOptions: templateProject.projectOptions,
                 plotList: [],
                 useTemplatePlots: true,
                 useTemplateWidgets: true,
@@ -485,7 +489,7 @@ class Project extends React.Component {
                             toggleTemplateWidgets={this.toggleTemplateWidgets}
                             useTemplatePlots={this.state.useTemplatePlots}
                             useTemplateWidgets={this.state.useTemplateWidgets}
-                            showGEEScript={this.state.showGEEScript}
+                            showGEEScript={this.state.projectOptions.showGEEScript}
                             onShowGEEScriptClick={this.onShowGEEScriptClick}
                             projectImageryList={this.state.projectImageryList}
                             setProjectImageryList={this.setProjectImageryList}
