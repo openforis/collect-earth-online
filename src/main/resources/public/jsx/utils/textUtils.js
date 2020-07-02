@@ -23,7 +23,7 @@ export function UnicodeIcon({ icon, backgroundColor }) {
         : icon === "rightArrow" ? "\u27A1"
         : icon === "edit" ? "\u270D"
         : icon === "trash" ? <span style={{ fontWeight: "normal" }}>{"\uD83D\uDDD1"}</span>
-        : icon === "noAction" ? <span className="mx-2">{"\u20E0"}</span>
+        : icon === "noAction" ? <span className="ml-2 mr-3">{"\u20E0"}</span>
         : icon === "magnify" ? "\uD83D\uDD0D"
         : icon === "info" ? "\u24D8"
         : icon === "save" ? "\uD83D\uDCBE"
@@ -44,4 +44,8 @@ export function UnicodeIcon({ icon, backgroundColor }) {
             </span>
         : ""
     );
+}
+
+export function getQueryString(params) {
+    return Object.keys(params).map(k => encodeURIComponent(k) + "=" + encodeURIComponent(params[k])).join("&");
 }

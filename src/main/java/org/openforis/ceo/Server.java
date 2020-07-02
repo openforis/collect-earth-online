@@ -149,6 +149,7 @@ public class Server implements SparkApplication {
                         "/create-project",
                         "/update-institution",
                         "/add-institution-imagery",
+                        "/update-institution-imagery",
                         "/archive-institution-imagery")
                     .contains(request.uri()) && !institutions.isInstAdmin(request)) {
                 halt(403, "Forbidden!");
@@ -204,10 +205,12 @@ public class Server implements SparkApplication {
         // Routing Table: HTML pages (with side effects)
         get("/logout",                                (req, res) -> Views.home(freemarker).handle(users.logout(req, res), res));
         post("/account",                              (req, res) -> Views.account(freemarker).handle(users.updateAccount(req, res), res));
-        post("/login",                                (req, res) -> Views.login(freemarker).handle(users.login(req, res), res));
         post("/register",                             (req, res) -> Views.register(freemarker).handle(users.register(req, res), res));
         post("/password",                             (req, res) -> Views.password(freemarker).handle(users.getPasswordResetKey(req, res), res));
         post("/password-reset",                       (req, res) -> Views.passwordReset(freemarker).handle(users.resetPassword(req, res), res));
+
+        // Routing Table: Application API
+        post("/login",                                users::login);
 
         // Routing Table: Projects API
         get("/dump-project-aggregate-data",           projects::dumpProjectAggregateData);
@@ -256,6 +259,7 @@ public class Server implements SparkApplication {
         get("/get-public-imagery",                    imagery::getPublicImagery);
         post("/add-geodash-imagery",                  imagery::addGeoDashImagery);
         post("/add-institution-imagery",              imagery::addInstitutionImagery);
+        post("/update-institution-imagery",           imagery::updateInstitutionImagery);
         post("/archive-institution-imagery",          imagery::archiveInstitutionImagery);
 
         // Routing Table: GeoDash API

@@ -43,20 +43,15 @@ public class JsonUsers implements Users {
     private static final String SMTP_PASSWORD        = CeoConfig.smtpPassword;
     private static final String SMTP_RECIPIENT_LIMIT = CeoConfig.smtpRecipientLimit;
 
-    public Request login(Request req, Response res) {
+    public String login(Request req, Response res) {
         var inputEmail = req.queryParams("email");
         var inputPassword = req.queryParams("password");
-        var inputReturnURL = req.queryParams("returnurl");
-        var returnURL = (inputReturnURL == null || inputReturnURL.isEmpty())
-            ? CeoConfig.documentRoot + "/home"
-            : inputReturnURL;
 
         // Check if email exists
         var users = elementToArray(readJsonFile("user-list.json"));
         var matchingUser = findInJsonArray(users, user -> user.get("email").getAsString().equals(inputEmail));
         if (!matchingUser.isPresent()) {
-            req.session().attribute("flash_message", "No account with email " + inputEmail + " exists.");
-            return req;
+            return "No account with email " + inputEmail + " exists.";
         } else {
             // Check if password matches
             var user = matchingUser.get();
@@ -65,15 +60,13 @@ public class JsonUsers implements Users {
             var storedRole = user.get("role").getAsString();
             if (!inputPassword.equals(storedPassword)) {
                 // Authentication failed
-                req.session().attribute("flash_message", "Invalid email/password combination.");
-                return req;
+                return ("Invalid email/password combination.");
             } else {
                 // Authentication successful
                 req.session().attribute("userid", storedId);
                 req.session().attribute("username", inputEmail);
                 req.session().attribute("role", storedRole);
-                res.redirect(returnURL);
-                return req;
+                return "";
             }
         }
     }

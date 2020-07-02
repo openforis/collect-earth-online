@@ -159,6 +159,35 @@ public class PostgresImagery implements Imagery {
         return "";
     }
 
+    public String updateInstitutionImagery(Request req, Response res) {
+        try {
+            var jsonInputs            = parseJson(req.body()).getAsJsonObject();
+            var imageryId             = jsonInputs.get("imageryId").getAsInt();
+            var imageryTitle          = jsonInputs.get("imageryTitle").getAsString();
+            var imageryAttribution    = jsonInputs.get("imageryAttribution").getAsString();
+            var sourceConfig          = jsonInputs.get("sourceConfig").getAsJsonObject();
+
+            try (var conn = connect();
+                var pstmt = conn.prepareStatement(
+                    "SELECT * FROM update_institution_imagery(?, ?, ?, ?::JSONB)")) {
+
+                pstmt.setInt(1, imageryId);
+                pstmt.setString(2, imageryTitle);
+                pstmt.setString(3, imageryAttribution);
+                pstmt.setString(4, sourceConfig.toString());
+                pstmt.execute();
+
+            } catch (SQLException e) {
+                System.out.println(e.getMessage());
+            }
+
+        } catch (Exception e) {
+            // Indicate that an error occurred with imagery creation
+            throw new RuntimeException(e);
+        }
+        return "";
+    }
+
     public String addGeoDashImagery(Request req, Response res) {
         try {
             var jsonInputs         = parseJson(req.body()).getAsJsonObject();

@@ -24,6 +24,7 @@ module.exports = env => ({
         geo_dash                 : path.resolve(__dirname, "src/main/resources/public/jsx/geo-dash.js"),
         widget_layout_editor     : path.resolve(__dirname, "src/main/resources/public/jsx/widget-layout-editor.js"),
         geo_dash_help            : path.resolve(__dirname, "src/main/resources/public/jsx/geo-dash-help.js"),
+        login                    : path.resolve(__dirname, "src/main/resources/public/jsx/login.js"),
         mailing_list             : path.resolve(__dirname, "src/main/resources/public/jsx/mailing-list.js"),
         unsubscribe_mailing_list : path.resolve(__dirname, "src/main/resources/public/jsx/unsubscribe-mailing-list.js"),
     },
@@ -127,7 +128,7 @@ module.exports = env => ({
                 commons: {
                     name: "common~chunk",
                     chunks: "all",
-                    minChunks: 10, // 10 will make this chunk items for all the pages
+                    minChunks: 5, // smaller number puts more into the common chunk
                 },
             },
         },

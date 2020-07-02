@@ -6,7 +6,7 @@ import spark.Response;
 
 public interface Users {
 
-    Request login(Request req, Response res);
+    String login(Request req, Response res);
     Request register(Request req, Response res);
     Request logout(Request req, Response res);
     Request updateAccount(Request req, Response res);

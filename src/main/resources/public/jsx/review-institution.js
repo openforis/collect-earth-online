@@ -4,6 +4,7 @@ import ReactDOM from "react-dom";
 import InstitutionEditor from "./components/InstitutionEditor";
 import { NavigationBar } from "./components/PageComponents";
 import { sortAlphabetically, capitalizeFirst, UnicodeIcon } from "./utils/textUtils";
+import { imageryOptions } from "./imagery/imageryOptions";
 
 class ReviewInstitution extends React.Component {
     constructor(props) {
@@ -13,6 +14,7 @@ class ReviewInstitution extends React.Component {
             usersCount: 0,
             projectList: [],
             isAdmin: false,
+            selectedTab: 0,
         };
     }
 
@@ -39,6 +41,24 @@ class ReviewInstitution extends React.Component {
 
     setIsAdmin = (isAdmin) => this.setState({ isAdmin: isAdmin });
 
+    headerTab = (name, count, index, disabled = false) =>
+        <div className="col-lg-4 col-xs-12">
+            <div
+                className={disabled ? "disabled-group" : ""}
+                onClick={() => this.setState({ selectedTab: index })}
+            >
+                <h2 className="header" style={{ borderRadius: "5px", cursor: disabled ? "not-allowed" : "pointer" }}>
+                    {name}
+                    <span className="badge badge-pill badge-light ml-2">
+                        {count}
+                    </span>
+                    <span className="float-right">
+                        {index === this.state.selectedTab && "\u25BC"}
+                    </span>
+                </h2>
+            </div>
+        </div>;
+
     render() {
         return (
             <div className="ReviewInstitution">
@@ -49,43 +69,28 @@ class ReviewInstitution extends React.Component {
                     setIsAdmin={this.setIsAdmin}
                     userId={this.props.userId}
                 />
-                <div className="row">
-                    <div className="col-lg-3 col-xs-12">
-                        <h2 className="header">
-                            Imagery
-                            <span className="badge badge-pill badge-light ml-2">
-                                {this.state.imageryCount}
-                            </span>
-                        </h2>
-                        <ImageryList
-                            documentRoot={this.props.documentRoot}
-                            isAdmin={this.state.isAdmin}
-                            institutionId={this.props.institutionId}
-                            setImageryCount={this.setImageryCount}
-                        />
-                    </div>
-                    <div className="col-lg-5 col-xs-12">
-                        <h2 className="header">
-                            Projects
-                            <span className="badge badge-pill badge-light ml-2">
-                                {this.state.projectList.length}
-                            </span>
-                        </h2>
+                <div className="row justify-content-center">
+                    <div className="col-lg-7 col-xs-12 align-items-center mb-5">
+                        <div className="row">
+                            {this.headerTab("Projects", this.state.projectList.length, 0)}
+                            {this.headerTab("Imagery", this.state.imageryCount, 1)}
+                            {this.headerTab("Users", this.state.usersCount, 2, this.props.userId < 0)}
+                        </div>
                         <ProjectList
                             documentRoot={this.props.documentRoot}
                             isAdmin={this.state.isAdmin}
                             institutionId={this.props.institutionId}
                             projectList={this.state.projectList}
                             isLoggedIn={this.props.userId > 0}
+                            isVisible={this.state.selectedTab === 0}
                         />
-                    </div>
-                    <div className="col-lg-4 col-xs-12">
-                        <h2 className="header">
-                            Users
-                            <span className="badge badge-pill badge-light ml-2">
-                                {this.state.usersCount}
-                            </span>
-                        </h2>
+                        <ImageryList
+                            documentRoot={this.props.documentRoot}
+                            isAdmin={this.state.isAdmin}
+                            institutionId={this.props.institutionId}
+                            setImageryCount={this.setImageryCount}
+                            isVisible={this.state.selectedTab === 1}
+                        />
                         {this.props.userId > 0 &&
                             <UserList
                                 documentRoot={this.props.documentRoot}
@@ -93,6 +98,7 @@ class ReviewInstitution extends React.Component {
                                 isAdmin={this.state.isAdmin}
                                 setUsersCount={this.setUsersCount}
                                 userId={this.props.userId}
+                                isVisible={this.state.selectedTab === 2}
                             />
                         }
                     </div>
@@ -311,8 +317,8 @@ class ImageryList extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
-            editMode: false,
-            imageryList:[],
+            imageryToEdit: null,
+            imageryList: [],
         };
     }
 
@@ -341,6 +347,17 @@ class ImageryList extends React.Component {
             });
     };
 
+    selectAddImagery = () => this.setState({ imageryToEdit: { id: -1 }});
+
+    selectEditImagery = (imageryId) => {
+        const imagery = this.state.imageryList.find(i => i.id === imageryId);
+        if (imageryOptions.find(io => io.type === imagery.sourceConfig.type)) {
+            this.setState({ imageryToEdit: imagery });
+        } else {
+            alert("This imagery type is no longer supported and connot be edited.");
+        }
+    };
+
     deleteImagery = (imageryId) => {
         if (confirm("Do you REALLY want to delete this imagery?")) {
             fetch(this.props.documentRoot + "/archive-institution-imagery",
@@ -366,241 +383,58 @@ class ImageryList extends React.Component {
 
     //    State Modifications    //
 
-    toggleEditMode = () => this.setState({ editMode: !this.state.editMode });
+    hideEditMode = () => this.setState({ imageryToEdit: null });
 
     //    Helper Functions    //
 
-    titleIsTaken = (newTitle) => this.state.imageryList.some(i => i.title === newTitle);
+    titleIsTaken = (newTitle, idToExclude) => this.state.imageryList.some(i => i.title === newTitle && i.id !== idToExclude);
 
     render() {
-        return this.state.imageryList.length === 0
-            ? <h3>Loading imagery...</h3>
-            : this.state.editMode
+        return this.props.isVisible && (
+            this.state.imageryToEdit
                 ?
                     <NewImagery
                         documentRoot={this.props.documentRoot}
                         getImageryList={this.getImageryList}
                         institutionId={this.props.institutionId}
+                        hideEditMode={this.hideEditMode}
+                        imageryToEdit={this.state.imageryToEdit}
                         titleIsTaken={this.titleIsTaken}
-                        toggleEditMode={this.toggleEditMode}
                     />
                 :
                     <Fragment>
                         {this.props.isAdmin &&
-                        <div className="row">
-                            <div className="col-lg-12 mb-1">
-                                <button
-                                    type="button"
-                                    id="add-imagery-button"
-                                    className="btn btn-sm btn-block btn-outline-yellow py-2 font-weight-bold"
-                                    onClick={this.toggleEditMode}
-                                >
-                                    <UnicodeIcon icon="add" backgroundColor="#f1c00f"/>Add New Imagery
-                                </button>
+                            <div className="row">
+                                <div className="col-lg-12 mb-1">
+                                    <button
+                                        type="button"
+                                        id="add-imagery-button"
+                                        className="btn btn-sm btn-block btn-outline-yellow py-2 font-weight-bold"
+                                        onClick={this.selectAddImagery}
+                                    >
+                                        <UnicodeIcon icon="add" backgroundColor="#f1c00f"/>Add New Imagery
+                                    </button>
 
+                                </div>
                             </div>
-                        </div>
                         }
-                        {this.state.imageryList.map((imageryItem, uid) =>
-                            <Imagery
-                                key={uid}
-                                title={imageryItem.title}
-                                isAdmin={this.props.isAdmin}
-                                isInstitutionImage={this.props.institutionId === imageryItem.institution}
-                                deleteImagery={() => this.deleteImagery(imageryItem.id)}
-                            />
-                        )}
-                    </Fragment>;
+                        {this.state.imageryList.length === 0
+                            ? <h3>Loading imagery...</h3>
+                            : this.state.imageryList.map((imageryItem, uid) =>
+                                <Imagery
+                                    key={uid}
+                                    title={imageryItem.title}
+                                    isAdmin={this.props.isAdmin}
+                                    isInstitutionImage={this.props.institutionId === imageryItem.institution}
+                                    selectEditImagery={() => this.selectEditImagery(imageryItem.id)}
+                                    deleteImagery={() => this.deleteImagery(imageryItem.id)}
+                                />
+                            )
+                        }
+                    </Fragment>
+        );
     }
 }
-
-const imageryOptions = [
-    // Default type is text, default parent is none, a referenced parent must be entered as a json string
-    // Parameters can be defined one level deep. {paramParent: {paramChild: "", fields: "", fromJsonStr: ""}}
-    {
-        type: "GeoServer",
-        params: [
-            { key: "geoserverUrl", display: "GeoServer URL" },
-            { key: "LAYERS", display: "GeoServer Layer Name", parent: "geoserverParams" },
-            { key: "geoserverParams", display: "GeoServer Params (as JSON object)", required: false },
-        ],
-        // FIXME, add url if help document is created.
-    },
-    {
-        type: "BingMaps",
-        params: [
-            {
-                key: "imageryId",
-                display: "Imagery Id",
-                type: "select",
-                options: [
-                    { label: "Aerial", value: "Aerial" },
-                    { label: "Aerial with Labels", value: "AerialWithLabels" },
-                ],
-            },
-            { key: "accessToken", display: "Access Token" },
-        ],
-        url: "https://docs.microsoft.com/en-us/bingmaps/getting-started/bing-maps-dev-center-help/getting-a-bing-maps-key",
-    },
-    {
-        type: "Planet",
-        label: "Planet Monthly",
-        params: [
-            { key: "year", display: "Default Year", type: "number" },
-            { key: "month", display: "Default Month", type: "number" },
-            { key: "accessToken", display: "Access Token" },
-        ],
-        url: "https://developers.planet.com/docs/quickstart/getting-started/",
-    },
-    {
-        type: "PlanetDaily",
-        label: "Planet Daily",
-        params: [
-            { key: "accessToken", display: "Access Token" },
-            { key: "startDate", display: "Start Date", type: "date" },
-            { key: "endDate", display: "End Date", type: "date" },
-        ],
-        url: "https://developers.planet.com/docs/quickstart/getting-started/",
-    },
-    {
-        type: "SecureWatch",
-        params: [
-            { key: "connectid", display: "Connect ID" },
-            {
-                key: "startDate",
-                display: "Start Date",
-                type: "date",
-                options: { max: new Date().toJSON().split("T")[0] },
-            },
-            {
-                key: "endDate",
-                display: "End Date",
-                type: "date",
-                options: { max: new Date().toJSON().split("T")[0] },
-            },
-        ],
-    },
-    {
-        type: "Sentinel1",
-        label: "Sentinel 1",
-        params: [
-            {
-                key: "year",
-                display: "Default Year",
-                type: "number",
-                options: { min: "2014", max: new Date().getFullYear().toString(), step: "1" },
-            },
-            { key: "month", display: "Default Month", type: "number", options: { min: "1", max: "12", step: "1" }},
-            {
-                key: "bandCombination",
-                display: "Band Combination",
-                type: "select",
-                options: [
-                    { label: "VH,VV,VH/VV", value: "VH,VV,VH/VV" },
-                    { label: "VH,VV,VV/VH", value: "VH,VV,VV/VH" },
-                    { label: "VV,VH,VV/VH", value: "VV,VH,VV/VH" },
-                    { label: "VV,VH,VH/VV", value: "VV,VH,VH/VV" },
-                ],
-            },
-            { key: "min", display: "Min", type: "number", options: { step: "0.01" }},
-            { key: "max", display: "Max", type: "number", options: { step: "0.01" }},
-        ],
-    },
-    {
-        type: "Sentinel2",
-        label: "Sentinel 2",
-        params: [
-            {
-                key: "year",
-                display: "Default Year",
-                type: "number",
-                options: { min: "2015", max: new Date().getFullYear().toString(), step: "1" },
-            },
-            { key: "month", display: "Default Month", type: "number", options: { min: "1", max: "12", step: "1" }},
-            {
-                key: "bandCombination",
-                display: "Band Combination",
-                type: "select",
-                options: [
-                    { label: "True Color", value: "TrueColor" },
-                    { label: "False Color Infrared", value: "FalseColorInfrared" },
-                    { label: "False Color Urban", value: "FalseColorUrban" },
-                    { label: "Agriculture", value: "Agriculture" },
-                    { label: "Healthy Vegetation", value: "HealthyVegetation" },
-                    { label: "Short Wave Infrared", value: "ShortWaveInfrared" },
-                ],
-            },
-            { key: "min", display: "Min", type: "number", options: { step: "0.01" }},
-            { key: "max", display: "Max", type: "number", options: { step: "0.01" }},
-            { key: "cloudScore", display: "Cloud Score", type: "number", options: { min: "0", max: "100", step: "1" }},
-        ],
-    },
-    {
-        type: "GEEImage",
-        label: "GEE Image Asset",
-        params: [
-            {
-                key: "imageId",
-                display: "Asset ID",
-                options: { placeholder: "USDA/NAIP/DOQQ/n_4207309_se_18_1_20090525" },
-            },
-            {
-                key: "imageVisParams",
-                display: "Visualization Parameters (JSON format)",
-                type: "textarea",
-                options: { placeholder: "{\"bands\": [\"R\", \"G\", \"B\"], \"min\": 90, \"max\": 210}" },
-            },
-        ],
-    },
-    {
-        type: "GEEImageCollection",
-        label: "GEE ImageCollection Asset",
-        params: [
-            {
-                key: "collectionId",
-                display: "Asset ID",
-                options: { placeholder: "LANDSAT/LC08/C01/T1_SR" },
-            },
-            {
-                key: "startDate",
-                display: "Start Date",
-                type: "date",
-                options: { max: new Date().toJSON().split("T")[0] },
-            },
-            {
-                key: "endDate",
-                display: "End Date",
-                type: "date",
-                options: { max: new Date().toJSON().split("T")[0] },
-            },
-            {
-                key: "collectionVisParams",
-                display: "Visualization Parameters (JSON format)",
-                type: "textarea",
-                options: { placeholder: "{\"bands\": [\"B4\", \"B3\", \"B2\"], \"min\": 0, \"max\": 2000}" },
-            },
-        ],
-    },
-    {
-        type: "MapBoxRaster",
-        label: "Mapbox Raster",
-        params: [
-            { key: "layerName", display: "Layer Name" },
-            { key: "accessToken", display: "Access Token" },
-        ],
-        url: "https://docs.mapbox.com/help/glossary/raster-tiles-api/",
-    },
-    {
-        type: "MapBoxStatic",
-        label: "Mapbox Static",
-        params: [
-            { key: "userName", display: "User Name" },
-            { key: "mapStyleId", display: "Map Style Id" },
-            { key: "accessToken", display: "Access Token" },
-        ],
-        url: "https://docs.mapbox.com/help/glossary/static-tiles-api/"
-    },
-];
 
 class NewImagery extends React.Component {
     constructor(props) {
@@ -613,39 +447,63 @@ class NewImagery extends React.Component {
         };
     }
 
+    componentDidMount() {
+        const { imageryToEdit } = this.props;
+        if (imageryToEdit.id !== -1) {
+            const { type, ...imageryParams } = imageryToEdit.sourceConfig;
+            const selectedType = imageryOptions.findIndex(io => io.type === type);
+            this.setState({
+                newImageryTitle: imageryToEdit.title,
+                newImageryAttribution: imageryToEdit.attribution,
+                selectedType: selectedType,
+                newImageryParams: this.getImageryParams(type, imageryParams),
+            });
+        }
+    }
+
+    getImageryParams = (type, imageryParams) => {
+        // TODO, this should be made generic based on parent / child relationship
+        // SecureWatch is not defined in imageryOptions in a way that will facilitate this.
+        if (type === "GeoServer") {
+            const { geoserverUrl, geoserverParams: { LAYERS, ...cleanGeoserverParams }} = imageryParams;
+            return {
+                geoserverUrl,
+                LAYERS,
+                geoserverParams: JSON.stringify(cleanGeoserverParams),
+            };
+        } else if (type === "SecureWatch") {
+            const { geoserverParams: { CONNECTID }, startDate, endDate } = imageryParams;
+            return {
+                connectid: CONNECTID,
+                startDate,
+                endDate,
+            };
+        } else {
+            return imageryParams;
+        }
+    }
+
     //    Remote Calls    //
 
-    addCustomImagery = () => {
-        const sourceConfig = this.stackParams();
+    uploadCustomImagery = (isNew) => {
+        const sourceConfig = this.buildSecureWatch(this.stackParams()); // TODO define SecureWatch so stack params works correctly.
         const message = this.validateData(sourceConfig);
-        if (!this.checkAllParams()) {
+        if (!this.checkAllParamsFilled()) {
             alert("You must fill out all fields.");
-        } else if (["Planet", "PlanetDaily", "SecureWatch", "Sentinel1", "Sentinel2"].includes(sourceConfig.type) && message) {
+        } else if (message) {
             alert(message);
-        } else if (this.props.titleIsTaken(this.state.newImageryTitle)) {
+        } else if (this.props.titleIsTaken(this.state.newImageryTitle, this.props.imageryToEdit.id)) {
             alert("The title '" + this.state.newImageryTitle + "' is already taken.");
         } else if (Object.keys(sourceConfig).length === 0) {
             // stackParams() will fail if parent is not entered as a JSON string.
             alert("Invalid JSON in JSON field(s).");
         } else {
-            // modify the sourceConfig as needed (for example SecureWatch Imagery)
-            if (sourceConfig.type === "SecureWatch") {
-                sourceConfig["geoserverUrl"] = "https://securewatch.digitalglobe.com/mapservice/wmsaccess";
-                const geoserverParams = {
-                    "VERSION": "1.1.1",
-                    "STYLES": "",
-                    "LAYERS": "DigitalGlobe:Imagery",
-                    "CONNECTID": sourceConfig.connectid,
-                };
-                sourceConfig["geoserverParams"] = geoserverParams;
-                delete sourceConfig.connectid;
-            }
-
-            fetch(this.props.documentRoot + "/add-institution-imagery",
+            fetch(isNew ? "/add-institution-imagery" : "/update-institution-imagery",
                   {
                       method: "POST",
                       body: JSON.stringify({
                           institutionId: this.props.institutionId,
+                          imageryId: this.props.imageryToEdit.id,
                           imageryTitle: this.state.newImageryTitle,
                           imageryAttribution: this.state.newImageryAttribution,
                           sourceConfig: sourceConfig,
@@ -654,10 +512,10 @@ class NewImagery extends React.Component {
             ).then(response => {
                 if (response.ok) {
                     this.props.getImageryList();
-                    this.props.toggleEditMode();
+                    this.props.hideEditMode();
                 } else {
                     console.log(response);
-                    alert("Error adding imagery. See console for details.");
+                    alert("Error uploading imagery data. See console for details.");
                 }
             });
         }
@@ -679,18 +537,36 @@ class NewImagery extends React.Component {
                         return { ...a, [c]: this.state.newImageryParams[c] };
                     }
                 }, { type: imageryOptions[this.state.selectedType].type });
-
         } catch (e) {
             return {};
         }
     };
 
-    checkAllParams = () => this.state.newImageryTitle.length > 0
+    // TODO this shouldn't be needed if SecureWatch is defined correctly in imageryOptions
+    buildSecureWatch = (sourceConfig) => {
+        if (sourceConfig.type === "SecureWatch") {
+            sourceConfig["geoserverUrl"] = "https://securewatch.digitalglobe.com/mapservice/wmsaccess";
+            const geoserverParams = {
+                "VERSION": "1.1.1",
+                "STYLES": "",
+                "LAYERS": "DigitalGlobe:Imagery",
+                "CONNECTID": sourceConfig.connectid,
+            };
+            sourceConfig["geoserverParams"] = geoserverParams;
+            delete sourceConfig.connectid;
+            return sourceConfig;
+        } else {
+            return sourceConfig;
+        }
+    };
+
+    checkAllParamsFilled = () => this.state.newImageryTitle.length > 0
         && this.state.newImageryAttribution.length > 0
         && imageryOptions[this.state.selectedType].params
             .every(o => o.required === false
                         || (this.state.newImageryParams[o.key] && this.state.newImageryParams[o.key].length > 0));
 
+    // TODO make all of these generic by adding min / max values to imageryOptions and checking against those.
     validateData = (sourceConfig) => {
         if (sourceConfig.type === "Sentinel1" || sourceConfig.type === "Sentinel2") {
             const year = parseInt(sourceConfig.year);
@@ -761,6 +637,13 @@ class NewImagery extends React.Component {
         </div>
     );
 
+    accessTokenLink = (url, key) => url && key === "accessToken"
+        ? (
+            <a href={imageryOptions[this.state.selectedType].url} target="_blank" rel="noreferrer noopener">
+                Click here for help.
+            </a>
+        ) : null;
+
     formTemplate = (o) => (
         o.type === "select"
             ? this.formSelect(
@@ -776,13 +659,7 @@ class NewImagery extends React.Component {
                         : this.state.newImageryAttribution,
                 }),
                 o.options.map(el => <option value={el.value} key={el.value}>{el.label}</option>),
-                (imageryOptions[this.state.selectedType].url && o.key === "accessToken")
-                    ? (
-                        <a href={imageryOptions[this.state.selectedType].url} target="_blank" rel="noreferrer noopener">
-                            Click here for help.
-                        </a>
-                    )
-                    : null
+                this.accessTokenLink(imageryOptions[this.state.selectedType].url, o.key)
             )
         : o.type === "textarea"
             ? this.formTextArea(
@@ -791,13 +668,7 @@ class NewImagery extends React.Component {
                 e => this.setState({
                     newImageryParams: { ...this.state.newImageryParams, [o.key]: e.target.value },
                 }),
-                (imageryOptions[this.state.selectedType].url && o.key === "accessToken")
-                    ? (
-                        <a href={imageryOptions[this.state.selectedType].url} target="_blank" rel="noreferrer noopener">
-                            Click here for help.
-                        </a>
-                    )
-                    : null,
+                this.accessTokenLink(imageryOptions[this.state.selectedType].url, o.key),
                 o.options ? o.options : {}
             )
         : this.formInput(
@@ -807,19 +678,14 @@ class NewImagery extends React.Component {
             e => this.setState({
                 newImageryParams: { ...this.state.newImageryParams, [o.key]: e.target.value },
             }),
-            (imageryOptions[this.state.selectedType].url && o.key === "accessToken")
-                ? (
-                    <a href={imageryOptions[this.state.selectedType].url} target="_blank" rel="noreferrer noopener">
-                        Click here for help.
-                    </a>
-                )
-                : null,
+            this.accessTokenLink(imageryOptions[this.state.selectedType].url, o.key),
             o.options ? o.options : {}
         )
     );
 
     // Imagery Type Change Handler //
 
+    // TODO, this can be generalized back into imageryOptions
     imageryTypeChangeHandler = (e) => {
         const val = e.target.value;
         this.setState({ selectedType: val });
@@ -854,11 +720,12 @@ class NewImagery extends React.Component {
                 newImageryParams: {},
             });
         } else {
-            this.setState({ newImageryParams: {}});
+            this.setState({ newImageryAttribution: "", newImageryParams: {}});
         }
     };
 
     render() {
+        const isNewImagery = this.props.imageryToEdit.id === -1;
         return (
             <div className="mb-2 p-2 border rounded">
                 {/* Selection for imagery type */}
@@ -868,6 +735,7 @@ class NewImagery extends React.Component {
                         className="form-control"
                         onChange={this.imageryTypeChangeHandler}
                         value={this.state.selectedType}
+                        disabled={!isNewImagery}
                     >
                         {imageryOptions.map((o, i) =>
                             <option value={i} key={i}>{o.label || o.type}</option>
@@ -876,7 +744,14 @@ class NewImagery extends React.Component {
                 </div>
                 {/* Add fields. Include same for all and unique to selected type. */}
                 {this.formInput("Title", "text", this.state.newImageryTitle, e => this.setState({ newImageryTitle: e.target.value }))}
-                {imageryOptions[this.state.selectedType].type === "GeoServer" && this.formInput("Attribution", "text", this.state.newImageryAttribution, e => this.setState({ newImageryAttribution: e.target.value }))}
+                {/* This should be generalized into the imageryOptions */}
+                {imageryOptions[this.state.selectedType].type === "GeoServer"
+                    && this.formInput(
+                        "Attribution",
+                        "text",
+                        this.state.newImageryAttribution,
+                        e => this.setState({ newImageryAttribution: e.target.value }))
+                }
                 {imageryOptions[this.state.selectedType].params.map(o => this.formTemplate(o))}
                 {/* Action buttons for save and quit */}
                 <div className="btn-group-vertical btn-block">
@@ -884,16 +759,19 @@ class NewImagery extends React.Component {
                         type="button"
                         id="add-imagery-button"
                         className="btn btn-sm btn-block btn-outline-yellow btn-group py-2 font-weight-bold"
-                        onClick={this.addCustomImagery}
+                        onClick={() => this.uploadCustomImagery(isNewImagery)}
                     >
-                        <UnicodeIcon icon="add" backgroundColor="#f1c00f"/>Add New Imagery
+                        {isNewImagery
+                            ? <><UnicodeIcon icon="add" backgroundColor="#f1c00f"/>Add New Imagery</>
+                            : <><UnicodeIcon icon="edit" backgroundColor="#f1c00f"/>Save Imagery Changes</>
+                        }
                     </button>
                     <button
                         type="button"
                         className="btn btn-sm btn-block btn-outline-danger btn-group py-2 font-weight-bold"
-                        onClick={this.props.toggleEditMode}
+                        onClick={this.props.hideEditMode}
                     >
-                        <UnicodeIcon icon="noAction"/> Discard
+                        <UnicodeIcon icon="noAction"/>Discard
                     </button>
                 </div>
             </div>
@@ -901,7 +779,7 @@ class NewImagery extends React.Component {
     }
 }
 
-function Imagery({ isAdmin, title, deleteImagery, isInstitutionImage }) {
+function Imagery({ isAdmin, title, selectEditImagery, deleteImagery, isInstitutionImage }) {
     return (
         <div className="row mb-1">
             <div className="col overflow-hidden">
@@ -914,24 +792,37 @@ function Imagery({ isAdmin, title, deleteImagery, isInstitutionImage }) {
                 </button>
             </div>
             {(isAdmin && isInstitutionImage) &&
-            <div className="pr-3">
-                <button
-                    className="btn btn-outline-danger btn-sm btn-block px-3"
-                    id="delete-imagery"
-                    type="button"
-                    onClick={deleteImagery}
-                >
-                    <UnicodeIcon icon="trash"/>
-                </button>
-            </div>
+            <>
+                <div className="pr-3">
+                    <button
+                        className="btn btn-outline-yellow btn-sm btn-block px-3"
+                        id="edit-imagery"
+                        type="button"
+                        onClick={selectEditImagery}
+                    >
+                        <UnicodeIcon icon="edit"/>
+                    </button>
+                </div>
+                <div className="pr-3">
+                    <button
+                        className="btn btn-outline-danger btn-sm btn-block px-3"
+                        id="delete-imagery"
+                        type="button"
+                        onClick={deleteImagery}
+                    >
+                        <UnicodeIcon icon="trash"/>
+                    </button>
+                </div>
+            </>
             }
         </div>
     );
 }
 
-function ProjectList({ isAdmin, isLoggedIn, institutionId, projectList, documentRoot }) {
-    return <Fragment>
-        {isAdmin &&
+function ProjectList({ isAdmin, isLoggedIn, institutionId, projectList, documentRoot, isVisible }) {
+    return (
+        <div style={!isVisible ? { display: "none" } : {}}>
+            {isAdmin &&
             <div className="row mb-1">
                 <div className="col">
                     <button
@@ -944,17 +835,20 @@ function ProjectList({ isAdmin, isLoggedIn, institutionId, projectList, document
                     </button>
                 </div>
             </div>
-        }
-        {projectList.map((project, uid) =>
-            <Project
-                isAdmin={isAdmin}
-                isLoggedIn={isLoggedIn}
-                key={uid}
-                documentRoot={documentRoot}
-                project={project}
-            />
-        )}
-    </Fragment>;
+            }
+            {projectList.length === 0
+                ? <h3>Loading projects...</h3>
+                : projectList.map((project, uid) =>
+                    <Project
+                        isAdmin={isAdmin}
+                        isLoggedIn={isLoggedIn}
+                        key={uid}
+                        documentRoot={documentRoot}
+                        project={project}
+                    />
+                )}
+        </div>
+    );
 }
 
 class Project extends React.Component {
@@ -1117,7 +1011,7 @@ class UserList extends React.Component {
     findUserByEmail = (userEmail) => this.state.activeUserList.find(au => au.email === userEmail);
 
     render() {
-        return (
+        return this.props.isVisible &&
             <Fragment>
                 <NewUserButtons
                     currentIsInstitutionMember={this.currentIsInstitutionMember()}
@@ -1144,8 +1038,7 @@ class UserList extends React.Component {
                             />
                         )
                 }
-            </Fragment>
-        );
+            </Fragment>;
     }
 }
 

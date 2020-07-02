@@ -90,6 +90,32 @@ public class JsonImagery implements Imagery {
         }
     }
 
+    public synchronized String updateInstitutionImagery(Request req, Response res) {
+        try {
+            var jsonInputs            = parseJson(req.body()).getAsJsonObject();
+            var imageryId             = jsonInputs.get("imageryId").getAsInt();
+            var imageryTitle          = jsonInputs.get("imageryTitle").getAsString();
+            var imageryAttribution    = jsonInputs.get("imageryAttribution").getAsString();
+            var sourceConfig          = jsonInputs.get("sourceConfig").getAsJsonObject();
+
+            mapJsonFile("imagery-list.json", imagery -> {
+                if (imagery.get("id").getAsInt() == imageryId) {
+                    imagery.addProperty("title", imageryTitle);
+                    imagery.addProperty("attribution", imageryAttribution);
+                    imagery.add("sourceConfig", sourceConfig);
+                    return imagery;
+                } else {
+                    return imagery;
+                }
+            });
+
+            return "";
+        } catch (Exception e) {
+            // Indicate that an error occurred with imagery update
+            throw new RuntimeException(e);
+        }
+    }
+
     public String addGeoDashImagery(Request req, Response res) {
         try {
             var jsonInputs         = parseJson(req.body()).getAsJsonObject();
