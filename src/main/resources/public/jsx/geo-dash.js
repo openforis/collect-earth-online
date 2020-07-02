@@ -2,6 +2,9 @@ import React from "react";
 import ReactDOM from "react-dom";
 import { mercator } from "../js/mercator.js";
 import { UnicodeIcon } from "./utils/textUtils";
+import { formatDateISO } from "./utils/dateUtils";
+import { getGatewayPath } from "./utils/geodashUtils";
+import { GeoDashNavigationBar } from "./components/PageComponents";
 import { Feature, Map, View } from "ol";
 import { buffer as ExtentBuffer } from "ol/extent";
 import { Circle, Polygon, Point } from "ol/geom";
@@ -10,8 +13,6 @@ import { transform as projTransform } from "ol/proj";
 import { OSM, Vector, XYZ } from "ol/source";
 import { Style, Stroke } from "ol/style";
 import { getArea as sphereGetArea } from "ol/sphere";
-import { formatDateISO } from "./utils/dateUtils";
-import { getGatewayPath } from "./utils/geodashUtils";
 
 class Geodash extends React.Component {
     constructor(props) {
@@ -136,23 +137,25 @@ class Geodash extends React.Component {
 
     render() {
         return (
-            <Widgets
-                widgets={this.state.widgets}
-                projAOI={this.state.projAOI}
-                projPairAOI={this.state.projPairAOI}
-                onFullScreen={this.handleFullScreen}
-                onSliderChange={this.handleSliderChange}
-                onSwipeChange={this.handleSwipeChange}
-                callbackComplete={this.state.callbackComplete}
-                getParameterByName={this.getParameterByName}
-                documentRoot={this.props.documentRoot}
-                mapCenter={this.state.mapCenter}
-                mapZoom={this.state.mapZoom}
-                setCenterAndZoom={this.setCenterAndZoom}
-                imageryList={this.state.imageryList}
-                resetCenterAndZoom={this.resetCenterAndZoom}
-                initCenter={this.mapCenter}
-            />
+            <div className="container-fluid">
+                <Widgets
+                    widgets={this.state.widgets}
+                    projAOI={this.state.projAOI}
+                    projPairAOI={this.state.projPairAOI}
+                    onFullScreen={this.handleFullScreen}
+                    onSliderChange={this.handleSliderChange}
+                    onSwipeChange={this.handleSwipeChange}
+                    callbackComplete={this.state.callbackComplete}
+                    getParameterByName={this.getParameterByName}
+                    documentRoot={this.props.documentRoot}
+                    mapCenter={this.state.mapCenter}
+                    mapZoom={this.state.mapZoom}
+                    setCenterAndZoom={this.setCenterAndZoom}
+                    imageryList={this.state.imageryList}
+                    resetCenterAndZoom={this.resetCenterAndZoom}
+                    initCenter={this.mapCenter}
+                />
+            </div>
         );
     }
 }
@@ -1636,9 +1639,12 @@ class StatsWidget extends React.Component {
     }
 }
 
-export function renderGeodashPage(documentRoot) {
+export function renderGeodashPage(args) {
     ReactDOM.render(
-        <Geodash documentRoot={documentRoot}/>,
-        document.getElementById("dashHolder")
+        <GeoDashNavigationBar
+            userName={args.userName}
+            page={() => <Geodash documentRoot=""/>}
+        />,
+        document.getElementById("geo-dash")
     );
 }
