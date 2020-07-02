@@ -23,10 +23,13 @@ class MailingList extends React.Component {
                     body,
                 }),
             })
-                .then(response => response.ok ? response.text() : Promise.reject(response))
-                .then(() => {
-                    this.setState({ subject: "", body: this.defaultBody });
-                    alert("Your message has been sent to the mailing list.\n\n");
+                .then(response => {
+                    if (response.ok) {
+                        this.setState({ subject: "", body: "" });
+                        alert("Your message has been sent to the mailing list.\n\n");
+                    } else {
+                        Promise.reject(response);
+                    }
                 })
                 .catch(() => {
                     alert("There was an issue sending to the mailing list.\n\n");
@@ -34,9 +37,9 @@ class MailingList extends React.Component {
         }
     };
 
-    onChangeSubject = (event) => this.setState({ subject: event.target.value });
+    onChangeSubject = (newSubject) => this.setState({ subject: newSubject });
 
-    onChangeBody = (event, editor) => this.setState({ body: editor.getData() });
+    onChangeBody = (newBody) => this.setState({ body: newBody });
 
     render() {
         return (
@@ -58,7 +61,7 @@ class MailingList extends React.Component {
                                         type="text"
                                         value={this.state.subject}
                                         className="form-control"
-                                        onChange={this.onChangeSubject}
+                                        onChange={e => this.onChangeSubject(e.target.value)}
                                     />
                                 </div>
                                 <div className="form-group">
@@ -66,7 +69,7 @@ class MailingList extends React.Component {
                                     <CKEditor
                                         editor={ClassicEditor}
                                         data={this.state.body}
-                                        onChange={this.onChangeBody}
+                                        onChange={(e, editor) => this.onChangeBody(editor.getData())}
                                     />
                                 </div>
                                 <button

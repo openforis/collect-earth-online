@@ -109,6 +109,7 @@ public class Server implements SparkApplication {
             if (List.of("/get-all-users",
                         "/get-institution-users",
                         "/update-project-user-stats",
+                        "/get-user-details",
                         "/get-user-stats",
                         "/request-institution-membership",
                         "/create-institution")

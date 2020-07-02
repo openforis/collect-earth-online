@@ -111,7 +111,7 @@ public class Mail {
 
     public static void sendToMailingList(String from, List<String> bcc, String smtpServer, String smtpPort,
                                          String smtpPassword, String subject, String body, String contentType, int chunkSize) {
-        final var counter = new AtomicInteger();
+        var counter = new AtomicInteger();
         if (bcc.size() > 0) {
             var unsubscribeUrl = Paths.get(BASE_URL, "unsubscribe-mailing-list");
             var newBody = body + "<br /><br />--<p><a href=\"" + unsubscribeUrl + "\">Unsubscribe</a></p>";

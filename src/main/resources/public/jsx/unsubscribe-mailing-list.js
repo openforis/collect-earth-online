@@ -10,9 +10,7 @@ class UnsubscribeMailingList extends React.Component {
         };
     }
 
-    onChangeEmail = (event) => {
-        this.setState({ email: event.target.value });
-    };
+    onChangeEmail = (newEmail) => this.setState({ email: newEmail });
 
     submitUnsubscribe = () => {
         if (confirm("Are you sure you want to unsubscribe from mailing list?")) {
@@ -42,7 +40,12 @@ class UnsubscribeMailingList extends React.Component {
             <div className="container absolute-center">
                 <div className="row justify-content-center">
                     <div className="col-lg-4 col-md-6 col-sm-10 pb-3" id="login">
-                        <form action="${root}/login" method="post">
+                        <form
+                            onSubmit={e => {
+                                e.preventDefault();
+                                this.submitUnsubscribe();
+                            }}
+                        >
                             <h2 className="header">Unsubscribe from Mailing List</h2>
                             <div className="form-group">
                                 <label htmlFor="email">Email address</label>
@@ -53,23 +56,16 @@ class UnsubscribeMailingList extends React.Component {
                                     type="email"
                                     value={this.state.email}
                                     className="form-control"
-                                    onChange={this.onChangeEmail}
+                                    onChange={e => this.onChangeEmail(e.target.value)}
                                 />
                             </div>
-                            <button
-                                type="button"
-                                className="btn bg-lightgreen float-right mb-2"
-                                onClick={this.submitUnsubscribe}
-                            >
-                                Unsubscribe
-                            </button>
+                            <button className="btn bg-lightgreen float-right mb-2" type="submit">Unsubscribe</button>
                         </form>
                     </div>
                 </div>
             </div>
         );
     }
-
 }
 
 export function renderUnsubscribeMailingListPage(args) {
