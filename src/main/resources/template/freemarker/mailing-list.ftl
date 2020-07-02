@@ -10,7 +10,6 @@
     window.onload = function () {
         mailing_list.renderMailingListPage({
             userId:       "${userid}",
-            accountId:    "${account_id}",
             userName:     "${username}"
         });
     };

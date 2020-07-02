@@ -65,7 +65,7 @@ class MailingList extends React.Component {
                                     />
                                 </div>
                                 <div className="form-group">
-                                    <label forHtml="body">Body</label>
+                                    <label htmlFor="body">Body</label>
                                     <CKEditor
                                         editor={ClassicEditor}
                                         data={this.state.body}

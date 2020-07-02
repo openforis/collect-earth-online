@@ -16,7 +16,6 @@ import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -436,7 +435,7 @@ public class PostgresUsers implements Users {
                                         + "You have been assigned the role of " + role + " for " + institutionName + " on " + timestamp + "!\n\n"
                                         + "Kind Regards,\n"
                                         + "  The CEO Team";
-                                sendMail(SMTP_USER, Collections.singleton(email), null, null, SMTP_SERVER, SMTP_PORT, SMTP_PASSWORD, "User Role Added!", body, null);
+                                sendMail(SMTP_USER, Arrays.asList(email), null, null, SMTP_SERVER, SMTP_PORT, SMTP_PASSWORD, "User Role Added!", body, null);
                             } else {
                                 // roles updated
                                 // Send notification to the user
@@ -444,7 +443,7 @@ public class PostgresUsers implements Users {
                                         + "Your role has been changed to " + role + " for " + institutionName + " on " + timestamp + "!\n\n"
                                         + "Kind Regards,\n"
                                         + "  The CEO Team";
-                                sendMail(SMTP_USER, Collections.singleton(email), null, null, SMTP_SERVER, SMTP_PORT, SMTP_PASSWORD, "User Role Changed!", body, null);
+                                sendMail(SMTP_USER, Arrays.asList(email), null, null, SMTP_SERVER, SMTP_PORT, SMTP_PASSWORD, "User Role Changed!", body, null);
                             }
                         }
                     }
@@ -491,8 +490,8 @@ public class PostgresUsers implements Users {
             try (var conn = connect();
                  var pstmt = conn.prepareStatement("SELECT * FROM get_all_mailing_list_users()")) {
 
-                var emails = new ArrayList<String>();
                 try (var rs = pstmt.executeQuery()) {
+                    var emails = new ArrayList<String>();
                     while (rs.next()) {
                        emails.add(rs.getString("email"));
                     }
