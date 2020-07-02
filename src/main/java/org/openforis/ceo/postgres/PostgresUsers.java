@@ -21,6 +21,8 @@ import java.util.Map;
 import java.util.UUID;
 import org.openforis.ceo.db_api.Users;
 import org.openforis.ceo.env.CeoConfig;
+import org.openforis.ceo.utils.SessionUtils;
+
 import spark.Request;
 import spark.Response;
 
@@ -131,7 +133,7 @@ public class PostgresUsers implements Users {
     }
 
     public Request updateAccount(Request req, Response res) {
-        final var userId =                        Integer.parseInt(req.session().attribute("userid"));
+        final var userId =                        Integer.parseInt(SessionUtils.getSessionUserId(req));
         final var storedEmail =                   (String) req.session().attribute("username");
         final var inputEmail =                    req.queryParams("email");
         final var inputPassword =                 req.queryParams("password");

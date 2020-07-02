@@ -31,6 +31,8 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 import org.openforis.ceo.db_api.Users;
 import org.openforis.ceo.env.CeoConfig;
+import org.openforis.ceo.utils.SessionUtils;
+
 import spark.Request;
 import spark.Response;
 
@@ -141,7 +143,7 @@ public class JsonUsers implements Users {
 
     // FIXME back port postgres checks that allow user to change only one part
     public Request updateAccount(Request req, Response res) {
-        var userId = (String) req.session().attribute("userid");
+        var userId = SessionUtils.getSessionUserId(req);
         var inputEmail = req.queryParams("email");
         var inputPassword = req.queryParams("password");
         var inputPasswordConfirmation = req.queryParams("password-confirmation");
