@@ -91,12 +91,11 @@ export class GeoDashNavigationBar extends React.Component {
         const { userName, page } = this.props;
         const uri = window.location.pathname;
 
-        console.log(page)
         return (
             <>
                 <nav
                     className="navbar navbar-expand-lg navbar-light fixed-top pt-0 pb-0"
-                    style={{backgroundColor: "white"}}
+                    style={{ backgroundColor: "white" }}
                     id="geodash-nav"
                 >
                     <div className="container-fluid">
@@ -117,7 +116,7 @@ export class GeoDashNavigationBar extends React.Component {
                         <div className="collapse navbar-collapse" id="navbarSupportedContent">
                             <ul id="login-info" className="navbar-nav mr-auto">
                                 <li className="nav-item my-auto">
-                                    <h1>GEO-DASH 2</h1>
+                                    <h1>GEO-DASH</h1>
                                 </li>
                             </ul>
                             <ul className="navbar-nav mr-0">
