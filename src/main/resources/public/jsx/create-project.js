@@ -268,6 +268,23 @@ class Project extends React.Component {
         }
     };
 
+    getProjectImageryList = (projectId) => {
+        fetch("/get-project-imagery?projectId=" + projectId)
+            .then(response => response.ok ? response.json() : Promise.reject(response))
+            .then(data => {
+                const institutionImageryIds = this.state.imageryList.map(imagery => imagery.id);
+                this.setState({
+                    projectImageryList: data
+                        .filter(projectImagery => institutionImageryIds.includes(projectImagery.id))
+                        .map(imagery => imagery.id),
+                });
+            })
+            .catch(response => {
+                console.log(response);
+                alert("Error retrieving the project imagery list. See console for details.");
+            });
+    };
+
     setProjectTemplate = (newTemplateId) => {
         if (parseInt(newTemplateId) === 0) {
             this.setState({
@@ -275,6 +292,7 @@ class Project extends React.Component {
                     ...blankProject,
                     imageryId: this.state.imageryList[0].id,
                 },
+                projectImageryList: [],
                 plotList: [],
                 coordinates: {
                     lonMin: "",
@@ -288,6 +306,7 @@ class Project extends React.Component {
             mercator.removeLayerById(this.state.mapConfig, "dragBoxLayer");
         } else {
             const templateProject = this.state.projectList.find(p => p.id === newTemplateId);
+            this.getProjectImageryList(templateProject.id);
             const newSurveyQuestions = convertSampleValuesToSurveyQuestions(templateProject.sampleValues);
 
             this.setState({
@@ -360,7 +379,7 @@ class Project extends React.Component {
                     imageryList: sorted,
                     projectDetails: {
                         ...this.state.projectDetails,
-                        imageryId: sorted[0].id
+                        imageryId: sorted[0].id,
                     },
                 });
             })
