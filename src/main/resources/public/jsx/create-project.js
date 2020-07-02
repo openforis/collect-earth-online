@@ -269,19 +269,19 @@ class Project extends React.Component {
     };
 
     getProjectImageryList = (projectId) => {
-        fetch(this.props.documentRoot + "/get-project-imagery?projectId=" + projectId)
+        fetch("/get-project-imagery?projectId=" + projectId)
             .then(response => response.ok ? response.json() : Promise.reject(response))
             .then(data => {
                 const institutionImageryIds = this.state.imageryList.map(imagery => imagery.id);
                 this.setState({
                     projectImageryList: data
-                        .filter(projectImagery => institutionImageryIds.includes(projectImagery.id))
-                        .map(imagery => imagery.id),
+                        .map(imagery => imagery.id)
+                        .filter(projectImagery => institutionImageryIds.includes(projectImagery.id)),
                 });
             })
             .catch(response => {
-                console.log(response);
-                alert("Error retrieving the project imagery list. See console for details.");
+                this.setProjectImageryList([]);
+                console.log("Error retrieving the project imagery list: ", response);
             });
     };
 
