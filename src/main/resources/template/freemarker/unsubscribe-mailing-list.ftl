@@ -10,8 +10,7 @@
     window.onload = function () {
         unsubscribe_mailing_list.renderUnsubscribeMailingListPage({
             userName:     "${username}",
-            userId:       "${userid}",
-            projectId:    "${project_id}"
+            userId:       "${userid}"
         });
     };
 </script>

@@ -70,7 +70,7 @@ public class PostgresUsers implements Users {
         var inputEmail =                    req.queryParams("email");
         var inputPassword =                 req.queryParams("password");
         var inputPasswordConfirmation =     req.queryParams("password-confirmation");
-        var mailingListSubscription =       req.queryParams("mailing-list-subscription");
+        var onMailingList =                 req.queryParams("on-mailing-list");
 
         // Validate input params and assign flash_message if invalid
         if (!isEmail(inputEmail)) {
@@ -91,7 +91,7 @@ public class PostgresUsers implements Users {
                     } else {
                         pstmt_add.setString(1, inputEmail);
                         pstmt_add.setString(2, inputPassword);
-                        pstmt_add.setBoolean(3, mailingListSubscription != null);
+                        pstmt_add.setBoolean(3, onMailingList != null);
                         try (var rs = pstmt_add.executeQuery()) {
                             if (rs.next()) {
                                 // Assign the username and role session attributes
@@ -139,7 +139,7 @@ public class PostgresUsers implements Users {
         final var inputEmail =                    req.queryParams("email");
         final var inputPassword =                 req.queryParams("password");
         final var inputPasswordConfirmation =     req.queryParams("password-confirmation");
-        final var mailingListSubscription =       req.queryParams("mailing-list-subscription");
+        final var onMailingList =                 req.queryParams("on-mailing-list");
         final var inputCurrentPassword =          req.queryParams("current-password");
 
         // Validate input params and assign flash_message if invalid
@@ -181,7 +181,7 @@ public class PostgresUsers implements Users {
                     req.session().attribute("flash_message", "The user password has been updated.");
                 }
                 pstmt_mailing_list.setInt(1, userId);
-                pstmt_mailing_list.setBoolean(2, mailingListSubscription != null);
+                pstmt_mailing_list.setBoolean(2, onMailingList != null);
                 pstmt_mailing_list.execute();
                 req.session().attribute("flash_message", "The changes have been updated.");
             } catch (SQLException e) {
@@ -330,7 +330,7 @@ public class PostgresUsers implements Users {
             try (var rs = pstmt.executeQuery()) {
                 var userJson = new JsonObject();
                 if (rs.next()) {
-                    userJson.addProperty("mailingListSubscription", rs.getBoolean("mailing_list"));
+                    userJson.addProperty("onMailingList", rs.getBoolean("on_mailing_list"));
                 }
                 return userJson.toString();
             }
@@ -515,22 +515,26 @@ public class PostgresUsers implements Users {
 
         try (var conn = connect();
              var pstmt_user = conn.prepareStatement("SELECT * FROM get_user(?)")) {
+             var pstmt_mailing_list = conn.prepareStatement("SELECT * FROM set_mailing_list(?,?)");
 
-            pstmt_user.setString(1, inputEmail);
-            var rs_user = pstmt_user.executeQuery();
-            if (rs_user.next()) {
-                var userId = rs_user.getInt("user_id");
+           pstmt_user.setString(1, inputEmail);
+           try (var rs_user = pstmt_user.executeQuery()) {
+               if (rs_user.next()) {
+                   pstmt_mailing_list.setInt(1, rs_user.getInt("user_id"));
+                   pstmt_mailing_list.setBoolean(2, false);
+                   pstmt_mailing_list.execute();
 
-                try (var pstmt_mailing_list = conn.prepareStatement("SELECT * FROM set_mailing_list(?,?)")) {
-                    pstmt_mailing_list.setInt(1, userId);
-                    pstmt_mailing_list.setBoolean(2, false);
-                    pstmt_mailing_list.execute();
-                } catch (Exception e) {
-                    System.out.println(e.getMessage());
-                    throw new RuntimeException(e);
+                   // Send confirmation email to the user
+                   var body = "Dear " + inputEmail + ",\n\n"
+                       + "We've just received your request to unsubscribe from our mailing list.\n\n"
+                       + "Since now you will not receive any newsletter from us.\n\n"
+                       + "If you want you can subscribe to our newsletter from you account page.\n\n"
+                       + "Kind Regards,\n"
+                       + "  The CEO Team";
+                   sendMail(SMTP_USER, Arrays.asList(inputEmail), null, null, SMTP_SERVER, SMTP_PORT, SMTP_PASSWORD, "CEO Mailing List: Unsubscribe Successful from CEO mailing list!", body, null);
                 }
             }
-        } catch (Exception e) {
+        } catch (SQLException e) {
             System.out.println(e.getMessage());
             throw new RuntimeException(e);
         }

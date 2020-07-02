@@ -24,13 +24,13 @@ class UnsubscribeMailingList extends React.Component {
                 .then(response => {
                     if (response.ok) {
                         this.setState({ email: "" });
-                        alert("Your email has been subscribed from mailing list.\n\n");
+                        alert("Your email has been unsubscribed from mailing list.\n\n");
                     } else {
                         Promise.reject(response);
                     }
                 })
                 .catch(() => {
-                    alert("There was an issue subscribing from mailing list.\n\n");
+                    alert("There was an issue unsubscribing from mailing list.\n\n");
                 });
         }
     };

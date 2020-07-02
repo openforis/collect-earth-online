@@ -95,9 +95,8 @@ class AccountForm extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
-            mailingListSubscription: false,
+            onMailingList: false,
         };
-
     }
 
     componentDidMount() {
@@ -105,13 +104,13 @@ class AccountForm extends React.Component {
     }
 
     getUserDetails = () => {
-        fetch(this.props.documentRoot + "/get-user-details?userId=" + this.props.userId)
+        fetch(this.props.documentRoot + "/get-user-details?userId=" + this.props.accountId)
             .then(response => response.ok ? response.json() : Promise.reject(response))
-            .then(details => this.setState({ mailingListSubscription: details.mailingListSubscription }))
+            .then(details => this.setState({ onMailingList: details.onMailingList }))
             .catch(response => console.log(response));
     };
 
-    toggleMailingListSubsciprion = () => this.setState({ mailingListSubscription: !this.state.mailingListSubscription });
+    toggleOnMailingList = () => this.setState({ onMailingList: !this.state.onMailingList });
 
     render() {
         return (
@@ -160,14 +159,14 @@ class AccountForm extends React.Component {
                         </div>
                         <div className="form-check mb-3">
                             <input
-                                name="mailing-list-subscription"
-                                id="mailing-list-subscription"
+                                name="on-mailing-list"
+                                id="on-mailing-list"
                                 type="checkbox"
                                 className="form-check-input"
-                                checked={this.state.mailingListSubscription}
-                                onChange={this.toggleMailingListSubsciprion}
+                                checked={this.state.onMailingList}
+                                onChange={this.toggleOnMailingList}
                             />
-                            <label className="form-check-label" htmlFor="mailing-list-subscription">
+                            <label className="form-check-label" htmlFor="on-mailing-list">
                                 Mailing List Subscription
                             </label>
                         </div>
