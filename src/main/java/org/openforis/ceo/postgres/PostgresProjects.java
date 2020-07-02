@@ -45,13 +45,15 @@ import java.util.stream.Stream;
 import java.util.UUID;
 import javax.servlet.http.HttpServletResponse;
 import org.openforis.ceo.db_api.Projects;
+import org.openforis.ceo.utils.SessionUtils;
+
 import spark.Request;
 import spark.Response;
 
 public class PostgresProjects implements Projects {
 
     private Boolean checkAuthCommon(Request req, String queryFn) {
-        final var userId = Integer.parseInt(req.session().attributes().contains("userid") ? req.session().attribute("userid").toString() : "-1");
+        final var userId = Integer.parseInt(SessionUtils.getSessionUserId(req));
         final var qProjectId = req.queryParams("projectId");
         final var jProjectId = getBodyParam(req.body(), "projectId", null);
         final var qTokenKey = req.queryParams("tokenKey");
@@ -158,7 +160,7 @@ public class PostgresProjects implements Projects {
     }
 
     public String getAllProjects(Request req, Response res) {
-        final var userId =        req.session().attributes().contains("userid") ? req.session().attribute("userid").toString() : "-1";
+        final var userId =        SessionUtils.getSessionUserId(req);
         final var institutionId = req.queryParams("institutionId");
 
         try (var conn = connect()) {

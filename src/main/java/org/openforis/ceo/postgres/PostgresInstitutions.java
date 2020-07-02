@@ -12,6 +12,8 @@ import java.util.Date;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import org.openforis.ceo.db_api.Institutions;
+import org.openforis.ceo.utils.SessionUtils;
+
 import spark.Request;
 import spark.Response;
 
@@ -37,7 +39,7 @@ public class PostgresInstitutions implements Institutions {
     }
 
     public Boolean isInstAdmin(Request req) {
-        final var userId = Integer.parseInt(req.session().attributes().contains("userid") ? req.session().attribute("userid").toString() : "-1");
+        final var userId = Integer.parseInt(SessionUtils.getSessionUserId(req));
         final var qInstitutionId = req.queryParams("institutionId");
         final var jInstitutionId = getBodyParam(req.body(), "institutionId", null);
 

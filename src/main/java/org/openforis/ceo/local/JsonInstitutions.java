@@ -18,6 +18,8 @@ import java.time.LocalDate;
 import java.util.Date;
 import java.util.Optional;
 import org.openforis.ceo.db_api.Institutions;
+import org.openforis.ceo.utils.SessionUtils;
+
 import spark.Request;
 import spark.Response;
 
@@ -36,7 +38,7 @@ public class JsonInstitutions implements Institutions {
     }
 
     public Boolean isInstAdmin(Request req) {
-        final var userId = req.session().attributes().contains("userid") ? req.session().attribute("userid").toString() : "-1";
+        final var userId = SessionUtils.getSessionUserId(req);
         final var qInstitutionId = req.queryParams("institutionId");
         final var jInstitutionId = getBodyParam(req.body(), "institutionId", null);
 

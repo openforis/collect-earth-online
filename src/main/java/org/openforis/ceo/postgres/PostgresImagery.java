@@ -9,6 +9,8 @@ import com.google.gson.JsonObject;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import org.openforis.ceo.db_api.Imagery;
+import org.openforis.ceo.utils.SessionUtils;
+
 import spark.Request;
 import spark.Response;
 
@@ -61,9 +63,7 @@ public class PostgresImagery implements Imagery {
 
     public String getInstitutionImagery(Request req, Response res) {
         final var institutionId = Integer.parseInt(req.queryParams("institutionId"));
-        final var userId        = Integer.parseInt(req.session().attributes().contains("userid")
-                                                    ? req.session().attribute("userid").toString()
-                                                    : "-1");
+        final var userId        = Integer.parseInt(SessionUtils.getSessionUserId(req));
 
         try (var conn = connect();
             var pstmt = conn.prepareStatement("SELECT * FROM select_imagery_by_institution(?, ?)")) {
@@ -83,14 +83,13 @@ public class PostgresImagery implements Imagery {
 
     public String getProjectImagery(Request req, Response res) {
         final var projectId = req.queryParams("projectId");
-        final var userId    = req.session().attributes().contains("userid")
-                                ? req.session().attribute("userid").toString()
-                                : "-1";
+        final var userId    = Integer.parseInt(SessionUtils.getSessionUserId(req));
+
         try (var conn = connect();
              var pstmt = conn.prepareStatement("SELECT * FROM select_imagery_by_project(?, ?)")) {
 
             pstmt.setInt(1, Integer.parseInt(projectId));
-            pstmt.setInt(2, Integer.parseInt(userId));
+            pstmt.setInt(2, userId);
 
             try (var rs = pstmt.executeQuery()) {
                 return buildImageryArray(rs, true).toString();

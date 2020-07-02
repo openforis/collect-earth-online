@@ -37,6 +37,8 @@ import org.openforis.ceo.postgres.PostgresInstitutions;
 import org.openforis.ceo.postgres.PostgresPlots;
 import org.openforis.ceo.postgres.PostgresProjects;
 import org.openforis.ceo.postgres.PostgresUsers;
+import org.openforis.ceo.utils.SessionUtils;
+
 import spark.Request;
 import spark.Response;
 import spark.servlet.SparkApplication;
@@ -74,7 +76,7 @@ public class Server implements SparkApplication {
 
         // Take query param for flash message and add to session attributes
         before((request, response) -> {
-            final var userId = Integer.parseInt(request.session().attributes().contains("userid") ? request.session().attribute("userid").toString() : "-1");
+            final var userId = Integer.parseInt(SessionUtils.getSessionUserId(request));
 
             /// Page Authentication ///
 
