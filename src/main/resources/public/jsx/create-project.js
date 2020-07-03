@@ -276,7 +276,7 @@ class Project extends React.Component {
                 this.setState({
                     projectImageryList: data
                         .map(imagery => imagery.id)
-                        .filter(projectImagery => institutionImageryIds.includes(projectImagery.id)),
+                        .filter(imageryId => institutionImageryIds.includes(imageryId)),
                 });
             })
             .catch(response => {
