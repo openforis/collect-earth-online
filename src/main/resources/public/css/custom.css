@@ -132,7 +132,7 @@ h4 {font-size: 0.5rem;}
     background-color:#0C4D48!important;
     color:white;
 }
-.bg-darkgreen h1,h2{
+.bg-darkgreen h1,.bg-darkgreen h2{
     padding:1rem;
     color:white;
     margin:0;

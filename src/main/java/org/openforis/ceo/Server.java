@@ -194,7 +194,7 @@ public class Server implements SparkApplication {
         // TODO make this a API route after merging in the Mailing list changes.
         post("/account",                              (req, res) -> Views.account(freemarker).handle(users.updateAccount(req, res), res));
 
-        // Routing Table: Acount API
+        // Routing Table: Account API
         post("/account",                              users::updateAccount);
         post("/login",                                users::login);
         post("/register",                             users::register);

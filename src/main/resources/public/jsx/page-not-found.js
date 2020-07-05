@@ -11,7 +11,7 @@ function NotFound() {
                     <h1 className="display-1 text-danger">&#x20E0;</h1>
                     <h2 className="text-danger">Page Not Found</h2>
                     <p className="error-message">
-                        There &apos s no page at the address you requested. If you entered
+                        There&apos;s no page at the address you requested. If you entered
                         it by hand, check for typos. If you followed a link or a
                         bookmark, it may need to be updated.
                     </p>
@@ -22,11 +22,11 @@ function NotFound() {
 }
 
 
-export function renderNotFoundPage(args) {
+export function renderPageNotFoundPage(args) {
     ReactDOM.render(
         <NavigationBar userName={args.userName} userId={args.userId}>
             <NotFound/>
         </NavigationBar>,
-        document.getElementById("not-found")
+        document.getElementById("page-not-found")
     );
 }
