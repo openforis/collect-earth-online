@@ -5,6 +5,6 @@ export function formatDateISO(date) {
     return [
         date.getFullYear(),
         (month > 9 ? "" : "0") + month,
-        (day > 9 ? "" : "0") + day
+        (day > 9 ? "" : "0") + day,
     ].join("-");
 }

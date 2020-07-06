@@ -268,6 +268,23 @@ class Project extends React.Component {
         }
     };
 
+    getProjectImageryList = (projectId) => {
+        fetch("/get-project-imagery?projectId=" + projectId)
+            .then(response => response.ok ? response.json() : Promise.reject(response))
+            .then(data => {
+                const institutionImageryIds = this.state.imageryList.map(imagery => imagery.id);
+                this.setState({
+                    projectImageryList: data
+                        .map(imagery => imagery.id)
+                        .filter(imageryId => institutionImageryIds.includes(imageryId)),
+                });
+            })
+            .catch(response => {
+                this.setProjectImageryList([]);
+                console.log("Error retrieving the project imagery list: ", response);
+            });
+    };
+
     setProjectTemplate = (newTemplateId) => {
         if (parseInt(newTemplateId) === 0) {
             this.setState({
@@ -275,6 +292,7 @@ class Project extends React.Component {
                     ...blankProject,
                     imageryId: this.state.imageryList[0].id,
                 },
+                projectImageryList: [],
                 plotList: [],
                 coordinates: {
                     lonMin: "",
@@ -284,10 +302,14 @@ class Project extends React.Component {
                 },
                 useTemplatePlots: false,
                 useTemplateWidgets: false,
+                projectOptions: {
+                    showGEEScript: false,
+                },
             });
             mercator.removeLayerById(this.state.mapConfig, "dragBoxLayer");
         } else {
             const templateProject = this.state.projectList.find(p => p.id === newTemplateId);
+            this.getProjectImageryList(templateProject.id);
             const newSurveyQuestions = convertSampleValuesToSurveyQuestions(templateProject.sampleValues);
 
             this.setState({
@@ -297,6 +319,7 @@ class Project extends React.Component {
                     surveyRules: templateProject.surveyRules || [],
                     privacyLevel: "institution",
                 },
+                projectOptions: templateProject.projectOptions,
                 plotList: [],
                 useTemplatePlots: true,
                 useTemplateWidgets: true,
@@ -360,7 +383,7 @@ class Project extends React.Component {
                     imageryList: sorted,
                     projectDetails: {
                         ...this.state.projectDetails,
-                        imageryId: sorted[0].id
+                        imageryId: sorted[0].id,
                     },
                 });
             })
@@ -466,7 +489,7 @@ class Project extends React.Component {
                             toggleTemplateWidgets={this.toggleTemplateWidgets}
                             useTemplatePlots={this.state.useTemplatePlots}
                             useTemplateWidgets={this.state.useTemplateWidgets}
-                            showGEEScript={this.state.showGEEScript}
+                            showGEEScript={this.state.projectOptions.showGEEScript}
                             onShowGEEScriptClick={this.onShowGEEScriptClick}
                             projectImageryList={this.state.projectImageryList}
                             setProjectImageryList={this.setProjectImageryList}
