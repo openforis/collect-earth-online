@@ -229,7 +229,7 @@ public class PostgresUsers implements Users {
                 pstmt_user.setString(1, inputEmail);
                 try (var rs_user = pstmt_user.executeQuery()) {
                     if (rs_user.next()) {
-                        if (rs_user.getString("reset_key").equals(inputResetKey)) {
+                        if (rs_user.getString("reset_key") != null && rs_user.getString("reset_key").equals(inputResetKey)) {
                             pstmt_pass.setString(1, inputEmail);
                             pstmt_pass.setString(2, inputPassword);
                             pstmt_pass.execute();
