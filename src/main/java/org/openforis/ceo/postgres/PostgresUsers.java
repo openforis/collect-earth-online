@@ -61,7 +61,7 @@ public class PostgresUsers implements Users {
 
         // Validate input params and assign flash_message if invalid
         if (!isEmail(inputEmail)) {
-            return "Account " + inputEmail + " already exists.";
+            return inputEmail + " is not a valid email address.";
         } else if (inputPassword.length() < 8) {
             return "Password must be at least 8 characters.";
         } else if (!inputPassword.equals(inputPasswordConfirmation)) {
@@ -74,7 +74,7 @@ public class PostgresUsers implements Users {
                 pstmt_user.setString(1, inputEmail);
                 try (var rs_user = pstmt_user.executeQuery()) {
                     if (rs_user.next() && rs_user.getBoolean("email_taken")) {
-                        req.session().attribute("flash_message", "Account " + inputEmail + " already exists.");
+                        return "Account " + inputEmail + " already exists.";
                     } else {
                         pstmt_add.setString(1, inputEmail);
                         pstmt_add.setString(2, inputPassword);
