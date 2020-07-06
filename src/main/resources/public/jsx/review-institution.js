@@ -577,7 +577,7 @@ class NewImagery extends React.Component {
     checkAllParamsFilled = () => this.state.newImageryTitle.length > 0
         && this.state.newImageryAttribution.length > 0
         && imageryOptions[this.state.selectedType].params
-            .every(o => !o.required
+            .every(o => o.required === false
                         || (this.state.newImageryParams[o.key] && this.state.newImageryParams[o.key].length > 0));
 
     // TODO make all of these generic by adding min / max values to imageryOptions and checking against those.
