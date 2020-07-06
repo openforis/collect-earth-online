@@ -461,9 +461,6 @@ a.ol-popup-closer.close{
 /*********************************************************************/
 /* LOGIN PAGE/REGISTER PAGE */
 /*********************************************************************/
-#password-form{
-    border:solid 1px #31BAB0;
-}
 h2.header{
     color:white;
     background:#31BAB0;

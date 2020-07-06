@@ -3,7 +3,6 @@ import ReactDOM from "react-dom";
 import { NavigationBar } from "./components/PageComponents";
 
 function Support() {
-
     return (
         <section id="support" className="container">
             <div className="row"></div>

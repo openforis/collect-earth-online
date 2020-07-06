@@ -4,7 +4,8 @@ function LogOutButton({ userName, uri }) {
     const fullUri = uri + window.location.search;
     const loggedOut = !userName || userName === "" || userName === "guest";
 
-    const logout = () => fetch("/logout").then(() => window.location = "/home");
+    const logout = () => fetch("/logout", { method: "POST" })
+        .then(() => window.location = "/home");
 
     return loggedOut
         ?
@@ -34,12 +35,6 @@ function LogOutButton({ userName, uri }) {
 export function NavigationBar ({ userName, userId, children }) {
     const uri = window.location.pathname;
     const loggedOut = !userName || userName === "" || userName === "guest";
-
-    const logout = () => {
-        fetch("/logout").then(() => {
-            window.location = "/home";
-        });
-    };
 
     return (
         <>

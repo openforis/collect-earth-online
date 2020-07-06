@@ -7,12 +7,12 @@
 <!-- End Auto Inserted Bundles -->
 
 <script type="text/javascript">
- window.onload = function () {
-     about.renderAboutPage({
-         userId:      "${userid}",
-         userName:    "${username}"
-     });
- };
+    window.onload = function () {
+        about.renderAboutPage({
+            userId:      "${userid}",
+            userName:    "${username}"
+        });
+    };
 </script>
 <#include "end-content.ftl">
 <#include "footer.ftl">

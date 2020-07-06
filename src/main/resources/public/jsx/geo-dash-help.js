@@ -282,6 +282,6 @@ export function renderGeodashHelpPage(args) {
         <NavigationBar userName={args.userName} userId={args.userId}>
             <GeoDashHelp documentRoot="" browserLanguage={args.browserLanguage}/>
         </NavigationBar>,
-        document.getElementById("dashHolder")
+        document.getElementById("geo-dash-help")
     );
 }

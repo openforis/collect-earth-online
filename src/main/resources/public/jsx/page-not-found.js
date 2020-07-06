@@ -1,9 +1,8 @@
 import React from "react";
 import ReactDOM from "react-dom";
-import { NavigationBar} from "./components/PageComponents";
+import { NavigationBar } from "./components/PageComponents";
 
 function NotFound() {
-
     return (
         <div className="container absolute-center">
             <section id="page-not-found" className="row justify-content-center">

@@ -194,10 +194,10 @@ public class Server implements SparkApplication {
         // Routing Table: Account API
         post("/account",                              users::updateAccount);
         post("/login",                                users::login);
+        post("/logout",                               users::logout);
         post("/register",                             users::register);
         post("/password-reset",                       users::resetPassword);
         post("/password-request",                     users::getPasswordResetKey);
-        get("/logout",                                users::logout);
 
         // Routing Table: Projects API
         get("/dump-project-aggregate-data",           projects::dumpProjectAggregateData);

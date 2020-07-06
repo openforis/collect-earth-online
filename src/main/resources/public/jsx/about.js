@@ -3,7 +3,6 @@ import ReactDOM from "react-dom";
 import { NavigationBar, LogoBanner } from "./components/PageComponents";
 
 function About() {
-
     return (
         <section id="about" className="container">
             <div className="col-xl-8 offset-xl-2 col-lg-10 justify-content-center">
@@ -53,7 +52,9 @@ function About() {
                         href="http://www.openforis.org/tools/sepal.html"
                         target="_blank"
                         rel="noreferrer noopener"
-                    > OpenForis-SEPAL </a>
+                    >
+                        OpenForis-SEPAL
+                    </a>
                     for more information about SEPAL.
                 </p>
                 <LogoBanner/>
