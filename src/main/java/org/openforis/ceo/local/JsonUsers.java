@@ -119,13 +119,12 @@ public class JsonUsers implements Users {
         }
     }
 
-    public Request logout(Request req, Response res) {
+    public String logout(Request req, Response res) {
         req.session().removeAttribute("userid");
         req.session().removeAttribute("username");
         req.session().removeAttribute("role");
 
-        res.redirect(CeoConfig.documentRoot + "/home");
-        return req;
+        return "";
     }
 
     // FIXME back port postgres checks that allow user to change only one part

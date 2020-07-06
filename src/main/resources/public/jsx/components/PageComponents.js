@@ -5,6 +5,12 @@ export function NavigationBar({ userName, userId, children }) {
     const fullUri = uri + window.location.search;
     const loggedOut = !userName || userName === "" || userName === "guest";
 
+    const logout = () => {
+        fetch("/logout").then(() => {
+            window.location = "/home";
+        });
+    };
+
     return (
         <>
             <nav className="navbar navbar-expand-lg navbar-light fixed-top py-0" style={{ backgroundColor: "white" }} id="main-nav">
@@ -54,7 +60,7 @@ export function NavigationBar({ userName, userId, children }) {
                                     <button
                                         type="button"
                                         className="btn btn-outline-danger btn-sm"
-                                        onClick={() => window.location = "/logout"}
+                                        onClick={logout}
                                     >
                                         Logout
                                     </button>

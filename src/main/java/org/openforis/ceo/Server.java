@@ -188,9 +188,6 @@ public class Server implements SparkApplication {
         get("/get-tile",                              (req, res) -> Proxy.proxyImagery(req, res, imagery));
         get("/get-securewatch-dates",                 (req, res) -> Proxy.getSecureWatchDates(req, res, imagery));
 
-        // Routing Table: HTML pages (with side effects)
-        get("/logout",                                (req, res) -> Views.home(freemarker).handle(users.logout(req, res), res));
-
         // TODO make this a API route after merging in the Mailing list changes.
         post("/account",                              (req, res) -> Views.account(freemarker).handle(users.updateAccount(req, res), res));
 
@@ -200,6 +197,7 @@ public class Server implements SparkApplication {
         post("/register",                             users::register);
         post("/password-reset",                       users::resetPassword);
         post("/password-request",                     users::getPasswordResetKey);
+        get("/logout",                                users::logout);
 
         // Routing Table: Projects API
         get("/dump-project-aggregate-data",           projects::dumpProjectAggregateData);

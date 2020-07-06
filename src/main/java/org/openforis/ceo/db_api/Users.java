@@ -8,7 +8,7 @@ public interface Users {
 
     String login(Request req, Response res);
     String register(Request req, Response res);
-    Request logout(Request req, Response res);
+    String logout(Request req, Response res);
     Request updateAccount(Request req, Response res);
     String getPasswordResetKey(Request req, Response res);
     String resetPassword(Request req, Response res);
