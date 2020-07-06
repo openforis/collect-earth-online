@@ -73,27 +73,23 @@ public class JsonUsers implements Users {
         }
     }
 
-    public synchronized Request register(Request req, Response res) {
+    public synchronized String register(Request req, Response res) {
         var inputEmail = req.queryParams("email");
         var inputPassword = req.queryParams("password");
-        var inputPasswordConfirmation = req.queryParams("password-confirmation");
+        var inputPasswordConfirmation = req.queryParams("passwordConfirmation");
 
         // Validate input params and assign flash_message if invalid
         if (!isEmail(inputEmail)) {
-            req.session().attribute("flash_message", inputEmail + " is not a valid email address.");
-            return req;
+            return inputEmail + " is not a valid email address.";
         } else if (inputPassword.length() < 8) {
-            req.session().attribute("flash_message", "Password must be at least 8 characters.");
-            return req;
+            return "Password must be at least 8 characters.";
         } else if (!inputPassword.equals(inputPasswordConfirmation)) {
-            req.session().attribute("flash_message", "Password and Password confirmation do not match.");
-            return req;
+            return "Password and Password confirmation do not match.";
         } else {
             var users = elementToArray(readJsonFile("user-list.json"));
             var matchingUser = findInJsonArray(users, user -> user.get("email").getAsString().equals(inputEmail));
             if (matchingUser.isPresent()) {
-                req.session().attribute("flash_message", "Account " + inputEmail + " already exists.");
-                return req;
+                return "An account with the email " + inputEmail + " already exists.";
             } else {
                 // Add a new user to user-list.json
                 var newUserId = getNextId(users);
@@ -125,20 +121,17 @@ public class JsonUsers implements Users {
                     + "  The CEO Team";
                 sendMail(SMTP_USER, Arrays.asList(inputEmail), null, null, SMTP_SERVER, SMTP_PORT, SMTP_PASSWORD, "Welcome to CEO!", body, null);
 
-                // Redirect to the Home page
-                res.redirect(CeoConfig.documentRoot + "/home");
-                return req;
+                return "";
             }
         }
     }
 
-    public Request logout(Request req, Response res) {
+    public String logout(Request req, Response res) {
         req.session().removeAttribute("userid");
         req.session().removeAttribute("username");
         req.session().removeAttribute("role");
 
-        res.redirect(CeoConfig.documentRoot + "/home");
-        return req;
+        return "";
     }
 
     // FIXME back port postgres checks that allow user to change only one part
@@ -190,13 +183,12 @@ public class JsonUsers implements Users {
         return req;
     }
 
-    public Request getPasswordResetKey(Request req, Response res) {
+    public String getPasswordResetKey(Request req, Response res) {
         var inputEmail = req.queryParams("email");
         var users = elementToArray(readJsonFile("user-list.json"));
         var matchingUser = findInJsonArray(users, user -> user.get("email").getAsString().equals(inputEmail));
         if (!matchingUser.isPresent()) {
-            req.session().attribute("flash_message", "There is no user with that email address.");
-            return req;
+            return "There is no user with that email address.";
         } else {
             try {
                 var resetKey = UUID.randomUUID().toString();
@@ -218,16 +210,14 @@ public class JsonUsers implements Users {
                     + "&password-reset-key="
                     + resetKey;
                 sendMail(SMTP_USER, Arrays.asList(inputEmail), null, null, SMTP_SERVER, SMTP_PORT, SMTP_PASSWORD, "Password reset on CEO", body, null);
-                req.session().attribute("flash_message", "The reset key has been sent to your email.");
-                return req;
+                return "";
             } catch (Exception e) {
-                req.session().attribute("flash_message", "An error occurred. Please try again later.");
-                return req;
+                return "An error occurred. Please try again later.";
             }
         }
     }
 
-    public Request resetPassword(Request req, Response res) {
+    public String resetPassword(Request req, Response res) {
         var inputEmail = req.queryParams("email");
         var inputResetKey = req.queryParams("password-reset-key");
         var inputPassword = req.queryParams("password");
@@ -235,22 +225,18 @@ public class JsonUsers implements Users {
 
         // Validate input params and assign flash_message if invalid
         if (inputPassword.length() < 8) {
-            req.session().attribute("flash_message", "Password must be at least 8 characters.");
-            return req;
+            return "Password must be at least 8 characters.";
         } else if (!inputPassword.equals(inputPasswordConfirmation)) {
-            req.session().attribute("flash_message", "Password and Password confirmation do not match.");
-            return req;
+            return "Password and Password confirmation do not match.";
         } else {
             var users = elementToArray(readJsonFile("user-list.json"));
             var matchingUser = findInJsonArray(users, user -> user.get("email").getAsString().equals(inputEmail));
             if (!matchingUser.isPresent()) {
-                req.session().attribute("flash_message", "There is no user with that email address.");
-                return req;
+                return "There is no user with that email address.";
             } else {
                 var foundUser = matchingUser.get();
                 if (!foundUser.get("resetKey").getAsString().equals(inputResetKey)) {
-                    req.session().attribute("flash_message", "Invalid reset key for user " + inputEmail + ".");
-                    return req;
+                    return "Invalid reset key for user " + inputEmail + ".";
                 } else {
                     mapJsonFile("user-list.json",
                                 user -> {
@@ -262,8 +248,7 @@ public class JsonUsers implements Users {
                                         return user;
                                     }
                                 });
-                    req.session().attribute("flash_message", "Your password has been changed.");
-                    return req;
+                    return "";
                 }
             }
         }

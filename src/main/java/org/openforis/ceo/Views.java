@@ -142,8 +142,8 @@ public class Views {
         return makeRoute("Register", freemarker);
     }
 
-    public static Route password(FreeMarkerEngine freemarker) {
-        return makeRoute("Password", freemarker);
+    public static Route passwordRequest(FreeMarkerEngine freemarker) {
+        return makeRoute("Password-Request", freemarker);
     }
 
     public static Route passwordReset(FreeMarkerEngine freemarker) {

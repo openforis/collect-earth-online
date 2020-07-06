@@ -487,16 +487,15 @@ class NewImagery extends React.Component {
 
     uploadCustomImagery = (isNew) => {
         const sourceConfig = this.buildSecureWatch(this.stackParams()); // TODO define SecureWatch so stack params works correctly.
-        const message = this.validateData(sourceConfig);
+        const message = this.validateData(sourceConfig); // TODO this should really be done on unstacked params.
         if (!this.checkAllParamsFilled()) {
             alert("You must fill out all fields.");
+        } else if (!this.checkJSONParams() || Object.keys(sourceConfig).length === 0) { // TODO we may no longer need to check for .length if checkJSONParams works
+            alert("Invalid JSON in JSON field(s).");
         } else if (message) {
             alert(message);
         } else if (this.props.titleIsTaken(this.state.newImageryTitle, this.props.imageryToEdit.id)) {
             alert("The title '" + this.state.newImageryTitle + "' is already taken.");
-        } else if (Object.keys(sourceConfig).length === 0) {
-            // stackParams() will fail if parent is not entered as a JSON string.
-            alert("Invalid JSON in JSON field(s).");
         } else {
             fetch(isNew ? "/add-institution-imagery" : "/update-institution-imagery",
                   {
@@ -559,6 +558,21 @@ class NewImagery extends React.Component {
             return sourceConfig;
         }
     };
+
+    isValidJson = (str) => {
+        try {
+            JSON.parse(str);
+            return true;
+        } catch (e) {
+            return false;
+        }
+    }
+
+    checkJSONParams = () => this.state.newImageryTitle.length > 0
+        && this.state.newImageryAttribution.length > 0
+        && imageryOptions[this.state.selectedType].params
+            .every(o => o.type !== "JSON"
+                        || this.isValidJson(this.state.newImageryParams[o.key]));
 
     checkAllParamsFilled = () => this.state.newImageryTitle.length > 0
         && this.state.newImageryAttribution.length > 0
@@ -661,7 +675,7 @@ class NewImagery extends React.Component {
                 o.options.map(el => <option value={el.value} key={el.value}>{el.label}</option>),
                 this.accessTokenLink(imageryOptions[this.state.selectedType].url, o.key)
             )
-        : o.type === "textarea"
+        : ["textarea", "JSON"].includes(o.type)
             ? this.formTextArea(
                 o.display,
                 this.state.newImageryParams[o.key],
