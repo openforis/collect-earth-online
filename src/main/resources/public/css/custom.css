@@ -132,7 +132,7 @@ h4 {font-size: 0.5rem;}
     background-color:#0C4D48!important;
     color:white;
 }
-.bg-darkgreen h1,h2{
+.bg-darkgreen h1,.bg-darkgreen h2{
     padding:1rem;
     color:white;
     margin:0;
@@ -461,10 +461,6 @@ a.ol-popup-closer.close{
 /*********************************************************************/
 /* LOGIN PAGE/REGISTER PAGE */
 /*********************************************************************/
-#register-form, #password-form{
-    border:solid 1px #31BAB0;
-
-}
 h2.header{
     color:white;
     background:#31BAB0;

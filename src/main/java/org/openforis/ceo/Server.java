@@ -177,7 +177,7 @@ public class Server implements SparkApplication {
         get("/home",                                  Views.home(freemarker));
         get("/institution-dashboard",                 Views.institutionDashboard(freemarker));
         get("/login",                                 Views.login(freemarker));
-        get("/password",                              Views.password(freemarker));
+        get("/password-request",                      Views.passwordRequest(freemarker));
         get("/password-reset",                        Views.passwordReset(freemarker));
         get("/project-dashboard",                     Views.projectDashboard(freemarker));
         get("/register",                              Views.register(freemarker));
@@ -188,15 +188,16 @@ public class Server implements SparkApplication {
         get("/get-tile",                              (req, res) -> Proxy.proxyImagery(req, res, imagery));
         get("/get-securewatch-dates",                 (req, res) -> Proxy.getSecureWatchDates(req, res, imagery));
 
-        // Routing Table: HTML pages (with side effects)
-        get("/logout",                                (req, res) -> Views.home(freemarker).handle(users.logout(req, res), res));
+        // TODO make this a API route after merging in the Mailing list changes.
         post("/account",                              (req, res) -> Views.account(freemarker).handle(users.updateAccount(req, res), res));
-        post("/register",                             (req, res) -> Views.register(freemarker).handle(users.register(req, res), res));
-        post("/password",                             (req, res) -> Views.password(freemarker).handle(users.getPasswordResetKey(req, res), res));
-        post("/password-reset",                       (req, res) -> Views.passwordReset(freemarker).handle(users.resetPassword(req, res), res));
 
-        // Routing Table: Application API
+        // Routing Table: Account API
+        post("/account",                              users::updateAccount);
         post("/login",                                users::login);
+        post("/logout",                               users::logout);
+        post("/register",                             users::register);
+        post("/password-reset",                       users::resetPassword);
+        post("/password-request",                     users::getPasswordResetKey);
 
         // Routing Table: Projects API
         get("/dump-project-aggregate-data",           projects::dumpProjectAggregateData);

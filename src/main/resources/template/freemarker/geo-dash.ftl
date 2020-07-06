@@ -8,9 +8,9 @@
 <!-- End Auto Inserted Bundles -->
 
 <script type="text/javascript">
- window.onload = function () {
-     geo_dash.renderGeodashPage({userName: "${username}"});
- };
+    window.onload = function () {
+        geo_dash.renderGeodashPage({userName: "${username}"});
+    };
 </script>
 <#include "end-content.ftl">
 <#include "footer.ftl">
