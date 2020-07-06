@@ -4,8 +4,9 @@ import _ from "lodash";
 import RGL, { WidthProvider } from "react-grid-layout";
 const ReactGridLayout = WidthProvider(RGL);
 import { getGatewayPath } from "./utils/geodashUtils";
+import { GeoDashNavigationBar } from "./components/PageComponents";
 
-class BasicLayout extends React.PureComponent {
+class WidgetLayoutEditor extends React.PureComponent {
     constructor(props) {
         super(props);
         this.state = {
@@ -15,8 +16,6 @@ class BasicLayout extends React.PureComponent {
             selectedProjectId: 0,
             projectList: [],
             projectFilter:"",
-            addDialog: false,
-            copyDialog: false,
             addCustomImagery: false,
             selectedWidgetType: "-1",
             selectedDataType: "-1",
@@ -369,12 +368,11 @@ class BasicLayout extends React.PureComponent {
     };
 
     onCancelNewWidget = () => {
+        this.props.closeDialogs();
         this.setState({
             selectedWidgetType: "-1",
             addCustomImagery: false,
             selectedDataTypeDual: "-1",
-            addDialog: false,
-            copyDialog: false,
             selectedDataType: "-1",
             widgetTitle: "",
             imageCollection: "",
@@ -635,13 +633,12 @@ class BasicLayout extends React.PureComponent {
               })
             .then(response => {
                 if (response.ok) {
+                    this.props.closeDialogs();
                     this.setState({
                         widgets: [...this.state.widgets, widget],
                         addCustomImagery: false,
                         selectedWidgetType: "-1",
                         selectedDataTypeDual: "-1",
-                        addDialog: false,
-                        copyDialog: false,
                         selectedDataType: "-1",
                         widgetTitle: "",
                         imageCollection: "",
@@ -949,7 +946,7 @@ class BasicLayout extends React.PureComponent {
             });
     };
 
-    getNewWidgetForm = () => this.state.addDialog === true
+    getNewWidgetForm = () => this.props.addDialog
             ? (
                 <React.Fragment>
                     <div className="modal fade show" style={{ display: "block" }}>
@@ -997,7 +994,7 @@ class BasicLayout extends React.PureComponent {
                     </div>
                     <div className="modal-backdrop fade show"> </div>
                 </React.Fragment>
-            ) : this.state.copyDialog === true
+            ) : this.props.copyDialog
                 ? (
                     <React.Fragment>
                         <div className="modal fade show" style={{ display: "block" }}>
@@ -1935,38 +1932,11 @@ class BasicLayout extends React.PureComponent {
         }
     };
 
-    onAddItem = () => {
-        this.setState({ addDialog : true });
-    };
-
-    openCopyWidgetsDialog = () => {
-        this.setState({ copyDialog: true });
-    };
-
     render() {
         const { layout } = this.state;
         return (
             <React.Fragment>
-                <button
-                    type="button"
-                    id="addWidget"
-                    onClick={this.onAddItem}
-                    className="btn btn-outline-lightgreen btn-sm"
-                    style={{ display: "none" }}
-                >
-                    Add Widget
-                </button>
-                <button
-                    type="button"
-                    id="copyWidgets"
-                    onClick={this.openCopyWidgetsDialog}
-                    className="btn btn-outline-lightgreen btn-sm"
-                    style={{ display: "none" }}
-                >
-                    Copy Layout
-                </button>
                 <ReactGridLayout
-                    {...this.props} // FIXME, the only prop left is documentRoot, ill bet the ReactGridLayout does not need that.
                     isDraggable
                     isResizable
                     className={"layout"}
@@ -1985,9 +1955,20 @@ class BasicLayout extends React.PureComponent {
     }
 }
 
-export function renderWidgetEditorPage(documentRoot) {
+export function renderWidgetEditorPage(args) {
     ReactDOM.render(
-        <BasicLayout documentRoot={documentRoot}/>,
+        <GeoDashNavigationBar
+            userName={args.userName}
+            page={(addDialog, copyDialog, closeDialogs) =>
+                <WidgetLayoutEditor
+                    documentRoot=""
+                    addDialog={addDialog}
+                    copyDialog={copyDialog}
+                    closeDialogs={closeDialogs}
+                />
+            }
+        />
+        ,
         document.getElementById("content")
     );
 }

@@ -10,7 +10,7 @@
 <script type="text/javascript">
     window.onload = function () {
         geo_dash_help.renderGeodashHelpPage({
-            userName:           "${username}"
+            userName:           "${username}",
             userId:             "${userid}",
             browserLanguage:    "${browserLanguage}"
         });
