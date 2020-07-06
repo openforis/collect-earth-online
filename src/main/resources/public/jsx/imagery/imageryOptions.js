@@ -10,7 +10,7 @@ export const imageryOptions = [
                 key: "geoserverParams",
                 display: "Additional GeoServer Params (as JSON object)", // TODO, add {} around params if missing
                 required: false,
-                type: "textarea",
+                type: "JSON",
             },
         ],
         // FIXME, add url if help document is created.
@@ -136,7 +136,7 @@ export const imageryOptions = [
             {
                 key: "imageVisParams",
                 display: "Visualization Parameters (JSON format)",
-                type: "textarea",
+                type: "JSON",
                 options: { placeholder: "{\"bands\": [\"R\", \"G\", \"B\"], \"min\": 90, \"max\": 210}" },
             },
         ],
@@ -165,7 +165,7 @@ export const imageryOptions = [
             {
                 key: "collectionVisParams",
                 display: "Visualization Parameters (JSON format)",
-                type: "textarea",
+                type: "JSON",
                 options: { placeholder: "{\"bands\": [\"B4\", \"B3\", \"B2\"], \"min\": 0, \"max\": 2000}" },
             },
         ],
