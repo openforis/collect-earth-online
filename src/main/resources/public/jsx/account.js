@@ -10,13 +10,11 @@ function Account(props) {
     return (
         <FormLayout title={sameAsUser ? "Your account" : "User " + props.accountId} className="px-2 pb-2">
             <UserStats
-                documentRoot={props.documentRoot}
                 accountId={props.accountId}
                 userName={props.userName}
             />
             {sameAsUser &&
                 <AccountForm
-                    documentRoot={props.documentRoot}
                     accountId={props.accountId}
                     userName={props.userName}
                 />
@@ -38,13 +36,13 @@ class UserStats extends React.Component {
     }
 
     getUserStats = () => {
-        fetch(this.props.documentRoot + "/get-user-stats?userId=" + this.props.accountId)
+        fetch("/get-user-stats?userId=" + this.props.accountId)
             .then(response => response.ok ? response.json() : Promise.reject(response))
             .then(stats => this.setState({ stats: stats }))
             .catch(response => {
                 console.log(response);
                 alert("No user found with ID " + this.props.accountId);
-                window.location = this.props.documentRoot + "/home";
+                window.location = "/home";
             });
     };
 
@@ -227,7 +225,6 @@ export function renderAccountPage(args) {
     ReactDOM.render(
         <NavigationBar userName={args.userName} userId={args.userId}>
             <Account
-                documentRoot=""
                 userId={args.userId}
                 accountId={args.accountId}
                 userName={args.userName}
