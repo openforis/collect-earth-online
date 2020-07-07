@@ -154,7 +154,7 @@ public class Server implements SparkApplication {
                 halt(403, "Forbidden!");
             }
             // Check for application admin permission on API routes and block
-            if (List.of("/send-mailing-list")
+            if (List.of("/send-to-mailing-list")
                     .contains(request.uri()) && userId != 1) {
                 halt(403, "Forbidden!");
             }
@@ -240,7 +240,7 @@ public class Server implements SparkApplication {
         get("/update-project-user-stats",             users::updateProjectUserStats);
         post("/update-user-institution-role",         users::updateInstitutionRole);
         post("/request-institution-membership",       users::requestInstitutionMembership);
-        post("/send-mailing-list",                    users::submitEmailForMailingList);
+        post("/send-to-mailing-list",                 users::submitEmailForMailingList);
         post("/unsubscribe-mailing-list",             users::unsubscribeFromMailingList);
 
         // Routing Table: Institutions API

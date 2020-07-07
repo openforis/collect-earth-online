@@ -194,7 +194,7 @@ class AccountForm extends React.Component {
                                 onChange={() => this.setState({ onMailingList: !this.state.onMailingList })}
                             />
                             <label className="form-check-label" htmlFor="on-mailing-list">
-                                Mailing List Subscription
+                                Subscribe to Mailing List
                             </label>
                         </div>
                         <div className="form-group">

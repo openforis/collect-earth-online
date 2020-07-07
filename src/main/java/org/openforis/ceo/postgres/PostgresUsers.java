@@ -131,7 +131,7 @@ public class PostgresUsers implements Users {
         final var inputEmail                = req.queryParams("email");
         final var inputPassword             = req.queryParams("password");
         final var inputPasswordConfirmation = req.queryParams("passwordConfirmation");
-        final var onMailingList             = req.queryParams("onMilingList");
+        final var onMailingList             = req.queryParams("onMailingList");
         final var inputCurrentPassword      = req.queryParams("currentPassword");
 
         if (inputCurrentPassword.length() == 0) {
@@ -463,16 +463,18 @@ public class PostgresUsers implements Users {
     }
 
     public String submitEmailForMailingList(Request req, Response res) {
-        Duration duration = Duration.between(mailingListLastSent, LocalDateTime.now());
-        if (duration.toSeconds() < Integer.parseInt(MAILING_LIST_INTERVAL)) throw new RuntimeException();
-
+        var remainingTime = Duration.between(mailingListLastSent, LocalDateTime.now()).toSeconds()
+                            - Integer.parseInt(MAILING_LIST_INTERVAL);
         var jsonInputs = parseJson(req.body()).getAsJsonObject();
         var inputSubject = jsonInputs.get("subject").getAsString();
         var inputBody = jsonInputs.get("body").getAsString();
 
-        if (inputSubject == null || inputSubject.isEmpty() || inputBody == null || inputBody.isEmpty()) {
-            throw new RuntimeException("Subject and Body are mandatory fields.");
+        if (remainingTime < 0) {
+            return "You must wait " + remainingTime + " more seconds before sending another message.";
+        } else if (inputSubject == null || inputSubject.isEmpty() || inputBody == null || inputBody.isEmpty()) {
+            return "Subject and Body are mandatory fields.";
         } else {
+            mailingListLastSent = LocalDateTime.now();
             try (var conn = connect();
                  var pstmt = conn.prepareStatement("SELECT * FROM get_all_mailing_list_users()")) {
 
@@ -482,17 +484,16 @@ public class PostgresUsers implements Users {
                        emails.add(rs.getString("email"));
                     }
                     sendToMailingList(SMTP_USER, emails, SMTP_SERVER, SMTP_PORT, SMTP_PASSWORD, inputSubject, inputBody, CONTENT_TYPE_HTML, Integer.parseInt(SMTP_RECIPIENT_LIMIT));
+                    return "";
                 } catch (Exception e) {
                     System.out.println(e.getMessage());
-                    throw new RuntimeException("There was an issue sending to the mailing list. Please check the server logs.");
+                    return "There was an issue sending to the mailing list. Please check the server logs.";
                 }
             } catch (SQLException e) {
                 System.out.println(e.getMessage());
-                throw new RuntimeException("There was an issue sending to the mailing list. Please check the server logs.");
+                return "There was an issue sending to the mailing list. Please check the server logs.";
             }
         }
-        mailingListLastSent = LocalDateTime.now();
-        return "";
     }
 
     public String unsubscribeFromMailingList(Request req, Response res) {
@@ -518,13 +519,14 @@ public class PostgresUsers implements Users {
                        + "Kind Regards,\n"
                        + "  The CEO Team";
                    sendMail(SMTP_USER, Arrays.asList(inputEmail), null, null, SMTP_SERVER, SMTP_PORT, SMTP_PASSWORD, "CEO Mailing List: Unsubscribe Successful from CEO mailing list!", body, null);
+                   return "";
                 }
+                return "There was a SQL error unsubscribing.";
             }
         } catch (SQLException e) {
             System.out.println(e.getMessage());
-            throw new RuntimeException(e);
+            return "There was a unknown error unsubscribing.";
         }
-        return "";
     }
 
 }

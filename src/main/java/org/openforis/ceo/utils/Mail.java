@@ -109,6 +109,7 @@ public class Mail {
         }
     }
 
+    // TODO, there is no way to pick up errors from here.
     public static void sendToMailingList(String from, List<String> bcc, String smtpServer, String smtpPort,
                                          String smtpPassword, String subject, String body, String contentType, int chunkSize) {
         var counter = new AtomicInteger();

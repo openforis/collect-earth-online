@@ -10,7 +10,7 @@ class Register extends React.Component {
             email: "",
             password: "",
             passwordConfirmation: "",
-            onMailingList: false,
+            onMailingList: true,
         };
     }
 
