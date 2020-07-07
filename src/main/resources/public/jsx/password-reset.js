@@ -36,7 +36,7 @@ class PasswordReset extends React.Component {
                     alert(data[1]);
                 }
             })
-            .catch(message => console.log(message));
+            .catch(err => console.log(err));
     };
 
     render() {

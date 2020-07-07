@@ -10,7 +10,6 @@ import com.google.gson.JsonObject;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import org.openforis.ceo.db_api.Imagery;
-
 import spark.Request;
 import spark.Response;
 

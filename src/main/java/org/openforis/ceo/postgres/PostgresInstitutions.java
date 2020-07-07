@@ -13,7 +13,6 @@ import java.util.Date;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import org.openforis.ceo.db_api.Institutions;
-
 import spark.Request;
 import spark.Response;
 

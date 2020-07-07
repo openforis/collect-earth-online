@@ -63,7 +63,6 @@ import java.util.stream.Stream;
 import java.util.UUID;
 import javax.servlet.http.HttpServletResponse;
 import org.openforis.ceo.db_api.Projects;
-
 import spark.Request;
 import spark.Response;
 

@@ -22,7 +22,6 @@ import java.util.Map;
 import java.util.UUID;
 import org.openforis.ceo.db_api.Users;
 import org.openforis.ceo.env.CeoConfig;
-
 import spark.Request;
 import spark.Response;
 
@@ -70,7 +69,6 @@ public class PostgresUsers implements Users {
         var inputPasswordConfirmation =     req.queryParams("passwordConfirmation");
         var onMailingList =                 req.queryParams("onMailingList");
 
-        // Validate input params and assign flash_message if invalid
         if (!isEmail(inputEmail)) {
             return inputEmail + " is not a valid email address.";
         } else if (inputPassword.length() < 8) {
@@ -89,7 +87,7 @@ public class PostgresUsers implements Users {
                     } else {
                         pstmt_add.setString(1, inputEmail);
                         pstmt_add.setString(2, inputPassword);
-                        pstmt_add.setBoolean(3, onMailingList != null);
+                        pstmt_add.setBoolean(3, onMailingList != null && Boolean.parseBoolean(onMailingList));
                         try (var rs = pstmt_add.executeQuery()) {
                             if (rs.next()) {
                                 // Assign the username and role session attributes
@@ -127,7 +125,7 @@ public class PostgresUsers implements Users {
         return "";
     }
 
-    public Request updateAccount(Request req, Response res) {
+    public String updateAccount(Request req, Response res) {
         final var userId                    = getSessionUserId(req);
         final var storedEmail               = (String) req.session().attribute("username");
         final var inputEmail                = req.queryParams("email");
@@ -136,23 +134,22 @@ public class PostgresUsers implements Users {
         final var onMailingList             = req.queryParams("onMilingList");
         final var inputCurrentPassword      = req.queryParams("currentPassword");
 
-        // Validate input params and assign flash_message if invalid
         if (inputCurrentPassword.length() == 0) {
-            req.session().attribute("flash_message", "Current Password required");
+            return "Current Password required";
         // let user change email without changing password
         } else if (inputEmail.length() > 0 && !isEmail(inputEmail)) {
-            req.session().attribute("flash_message", inputEmail + " is not a valid email address.");
+            return inputEmail + " is not a valid email address.";
         // let user change email without changing password
         } else if (inputPassword.length() > 0 && inputPassword.length() < 8) {
-            req.session().attribute("flash_message", "New Password must be at least 8 characters.");
+            return "New Password must be at least 8 characters.";
         } else if (!inputPassword.equals(inputPasswordConfirmation)) {
-            req.session().attribute("flash_message", "New Password and Password confirmation do not match.");
+            return "New Password and Password confirmation do not match.";
         } else {
             try (var conn = connect();
-                 var pstmt_user = conn.prepareStatement("SELECT * FROM email_taken(?,?)");
+                 var pstmt_user  = conn.prepareStatement("SELECT * FROM email_taken(?,?)");
                  var pstmt_email = conn.prepareStatement("SELECT * FROM set_user_email(?,?)");
-                 var pstmt_pass = conn.prepareStatement("SELECT * FROM update_password(?,?)");
-                 var pstmt_mailing_list = conn.prepareStatement("SELECT * FROM set_mailing_list(?,?)")) {
+                 var pstmt_pass  = conn.prepareStatement("SELECT * FROM update_password(?,?)");
+                 var pstmt_ml    = conn.prepareStatement("SELECT * FROM set_mailing_list(?,?)")) {
                 if (inputEmail.length() > 0 && !storedEmail.equals(inputEmail)) {
                     pstmt_user.setString(1, inputEmail);
                     pstmt_user.setInt(2, userId);
@@ -162,9 +159,9 @@ public class PostgresUsers implements Users {
                             pstmt_email.setString(2, inputEmail);
                             pstmt_email.execute();
                             req.session().attribute("username", inputEmail);
-                            req.session().attribute("flash_message", "The user email has been updated.");
+                            return "";
                         } else {
-                            req.session().attribute("flash_message", "Account " + inputEmail + " already exists.");
+                            return "An account with the email " + inputEmail + " already exists.";
                         }
                     }
                 }
@@ -172,18 +169,16 @@ public class PostgresUsers implements Users {
                     pstmt_pass.setString(1, storedEmail);
                     pstmt_pass.setString(2, inputPassword);
                     pstmt_pass.execute();
-                    req.session().attribute("flash_message", "The user password has been updated.");
                 }
-                pstmt_mailing_list.setInt(1, userId);
-                pstmt_mailing_list.setBoolean(2, onMailingList != null);
-                pstmt_mailing_list.execute();
-                req.session().attribute("flash_message", "The changes have been updated.");
+                pstmt_ml.setInt(1, userId);
+                pstmt_ml.setBoolean(2, onMailingList != null && Boolean.parseBoolean(onMailingList));
+                pstmt_ml.execute();
+                return "";
             } catch (SQLException e) {
                 System.out.println(e.getMessage());
-                req.session().attribute("flash_message", "There was an issue updating your account.  Please check the console.");
+                return "There was an issue updating your account.  Please check the console.";
             }
         }
-        return req;
     }
 
     public String getPasswordResetKey(Request req, Response res) {
@@ -233,7 +228,6 @@ public class PostgresUsers implements Users {
         var inputPassword =                 req.queryParams("password");
         var inputPasswordConfirmation =     req.queryParams("passwordConfirmation");
 
-        // Validate input params and assign flash_message if invalid
         if (inputPassword.length() < 8) {
             return "Password must be at least 8 characters.";
         } else if (!inputPassword.equals(inputPasswordConfirmation)) {
@@ -318,11 +312,13 @@ public class PostgresUsers implements Users {
 
             pstmt.setInt(1, getSessionUserId(req));
             try (var rs = pstmt.executeQuery()) {
-                var userJson = new JsonObject();
                 if (rs.next()) {
+                    var userJson = new JsonObject();
                     userJson.addProperty("onMailingList", rs.getBoolean("on_mailing_list"));
+                    return userJson.toString();
+                } else {
+                    return "";
                 }
-                return userJson.toString();
             }
         } catch (SQLException e) {
             System.out.println(e.getMessage());
@@ -475,7 +471,7 @@ public class PostgresUsers implements Users {
         var inputBody = jsonInputs.get("body").getAsString();
 
         if (inputSubject == null || inputSubject.isEmpty() || inputBody == null || inputBody.isEmpty()) {
-            req.session().attribute("flash_message", "Subject and Body are mandatory fields.");
+            throw new RuntimeException("Subject and Body are mandatory fields.");
         } else {
             try (var conn = connect();
                  var pstmt = conn.prepareStatement("SELECT * FROM get_all_mailing_list_users()")) {

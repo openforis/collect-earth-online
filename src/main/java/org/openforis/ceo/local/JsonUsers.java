@@ -32,7 +32,6 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 import org.openforis.ceo.db_api.Users;
 import org.openforis.ceo.env.CeoConfig;
-
 import spark.Request;
 import spark.Response;
 
@@ -78,7 +77,6 @@ public class JsonUsers implements Users {
         var inputPassword = req.queryParams("password");
         var inputPasswordConfirmation = req.queryParams("passwordConfirmation");
 
-        // Validate input params and assign flash_message if invalid
         if (!isEmail(inputEmail)) {
             return inputEmail + " is not a valid email address.";
         } else if (inputPassword.length() < 8) {
@@ -134,8 +132,7 @@ public class JsonUsers implements Users {
         return "";
     }
 
-    // FIXME back port postgres checks that allow user to change only one part
-    public Request updateAccount(Request req, Response res) {
+    public String updateAccount(Request req, Response res) {
         var userId = getSessionUserId(req);
         var inputEmail = req.queryParams("email");
         var inputPassword = req.queryParams("password");
@@ -143,26 +140,25 @@ public class JsonUsers implements Users {
         var mailingListSubscription = req.queryParams("onMailingList");
         var inputCurrentPassword = req.queryParams("currentPassword");
 
-        // Validate input params and assign flash_message if invalid
         if (inputCurrentPassword.length() == 0) {
-            req.session().attribute("flash_message", "Current Password required");
+            return "Current Password required";
         // let user change email without changing password
         } else if (inputEmail.length() > 0 && !isEmail(inputEmail)) {
-            req.session().attribute("flash_message", inputEmail + " is not a valid email address.");
+            return inputEmail + " is not a valid email address.";
         // let user change email without changing password
         } else if (inputPassword.length() > 0 && inputPassword.length() < 8) {
-            req.session().attribute("flash_message", "New Password must be at least 8 characters.");
+            return "New Password must be at least 8 characters.";
         } else if (!inputPassword.equals(inputPasswordConfirmation)) {
-            req.session().attribute("flash_message", "New Password and Password confirmation do not match.");
+            return "New Password and Password confirmation do not match.";
         } else {
             var users = elementToArray(readJsonFile("user-list.json"));
             var matchingUser = findInJsonArray(users, user -> user.get("id").getAsString().equals(userId));
             if (!matchingUser.isPresent()) {
-                req.session().attribute("flash_message", "The requested user account does not exist.");
+                return "The requested user account does not exist.";
             } else {
                 var foundUser = matchingUser.get();
                 if (!foundUser.get("password").getAsString().equals(inputCurrentPassword)) {
-                    req.session().attribute("flash_message", "Invalid password.");
+                    return "Invalid password.";
                 } else {
                     mapJsonFile("user-list.json",
                                 user -> {
@@ -176,11 +172,10 @@ public class JsonUsers implements Users {
                                     }
                                 });
                     req.session().attribute("username", inputEmail);
-                    req.session().attribute("flash_message", "The user has been updated.");
+                    return "";
                 }
             }
         }
-        return req;
     }
 
     public String getPasswordResetKey(Request req, Response res) {
@@ -223,7 +218,6 @@ public class JsonUsers implements Users {
         var inputPassword = req.queryParams("password");
         var inputPasswordConfirmation = req.queryParams("password-confirmation");
 
-        // Validate input params and assign flash_message if invalid
         if (inputPassword.length() < 8) {
             return "Password must be at least 8 characters.";
         } else if (!inputPassword.equals(inputPasswordConfirmation)) {
@@ -557,7 +551,7 @@ public class JsonUsers implements Users {
         var inputBody = req.queryParams("body");
 
         if (inputSubject == null || inputSubject.isEmpty() || inputBody == null || inputBody.isEmpty()) {
-            req.session().attribute("flash_message", "Subject and Body are mandatory fields.");
+            throw new RuntimeException("Subject and Body are mandatory fields.");
         } else {
             try {
                 var users = elementToArray(readJsonFile("user-list.json"));

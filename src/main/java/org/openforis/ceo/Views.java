@@ -7,7 +7,6 @@ import java.util.function.Function;
 import java.util.stream.Stream;
 import java.util.stream.Collectors;
 import org.openforis.ceo.env.CeoConfig;
-
 import spark.ModelAndView;
 import spark.Request;
 import spark.Route;

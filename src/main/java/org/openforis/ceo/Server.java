@@ -38,7 +38,6 @@ import org.openforis.ceo.postgres.PostgresInstitutions;
 import org.openforis.ceo.postgres.PostgresPlots;
 import org.openforis.ceo.postgres.PostgresProjects;
 import org.openforis.ceo.postgres.PostgresUsers;
-
 import spark.Request;
 import spark.Response;
 import spark.servlet.SparkApplication;

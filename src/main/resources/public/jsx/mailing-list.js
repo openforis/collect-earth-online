@@ -1,4 +1,4 @@
-import React from "react"; 
+import React from "react";
 import ReactDOM from "react-dom";
 import { NavigationBar } from "./components/PageComponents";
 import CKEditor from "@ckeditor/ckeditor5-react";
@@ -26,14 +26,12 @@ class MailingList extends React.Component {
                 .then(response => {
                     if (response.ok) {
                         this.setState({ subject: "", body: "" });
-                        alert("Your message has been sent to the mailing list.\n\n");
+                        alert("Your message has been sent to the mailing list.");
                     } else {
-                        Promise.reject(response);
+                        alert("There was an issue sending to the mailing list.");
                     }
                 })
-                .catch(() => {
-                    alert("There was an issue sending to the mailing list.\n\n");
-                });
+                .catch(err => console.log(err));
         }
     };
 
@@ -50,13 +48,12 @@ class MailingList extends React.Component {
                                 <div className="form-group">
                                     <label htmlFor="subject">Subject</label>
                                     <input
-                                        autoComplete="off"
                                         id="subject"
-                                        name="subject"
+                                        className="form-control"
+                                        autoComplete="off"
                                         placeholder="Subject"
                                         type="text"
                                         value={this.state.subject}
-                                        className="form-control"
                                         onChange={e => this.setState({ subject: e.target.value })}
                                     />
                                 </div>

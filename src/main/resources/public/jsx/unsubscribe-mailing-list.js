@@ -27,7 +27,7 @@ class UnsubscribeMailingList extends React.Component {
                         alert("There was an issue unsubscribing from mailing list.");
                     }
                 })
-                .catch(message => console.log(message));
+                .catch(err => console.log(err));
         }
     };
 

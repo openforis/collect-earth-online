@@ -30,7 +30,6 @@ import static org.openforis.ceo.utils.SessionUtils.getSessionUserId;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
-
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.sql.PreparedStatement;
@@ -46,7 +45,6 @@ import java.util.stream.Stream;
 import java.util.UUID;
 import javax.servlet.http.HttpServletResponse;
 import org.openforis.ceo.db_api.Projects;
-
 import spark.Request;
 import spark.Response;
 
@@ -160,7 +158,7 @@ public class PostgresProjects implements Projects {
     }
 
     public String getAllProjects(Request req, Response res) {
-        final var userId =        getSessionUserId(req);
+        final var userId        = getSessionUserId(req);
         final var institutionId = req.queryParams("institutionId");
 
         try (var conn = connect()) {

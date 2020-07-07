@@ -115,7 +115,7 @@ class AccountForm extends React.Component {
             .catch(response => console.log(response));
     };
 
-    updateDetails = () => {
+    updateAccount = () => {
         fetch("/account",
               {
                   method: "POST",
@@ -126,12 +126,12 @@ class AccountForm extends React.Component {
             .then(data => {
                 if (data[0] && data[1] === "") {
                     alert("Your account details have been updated.");
-                    this.getUserDetails();
                 } else {
                     alert(data[1]);
                 }
             })
-            .catch(message => console.log(message));
+            .catch(err => console.log(err))
+            .finally(this.getUserDetails);
     };
 
     render() {
@@ -139,7 +139,12 @@ class AccountForm extends React.Component {
             <SectionBlock title="Account Settings">
                 <Fragment>
                     <h1>{this.props.userName}</h1>
-                    <form action={this.props.documentRoot + "/account"} method="post">
+                    <form
+                        onSubmit={e => {
+                            e.preventDefault();
+                            this.updateAccount();
+                        }}
+                    >
                         <div className="form-group">
                             <label htmlFor="email">Reset email</label>
                             <input
