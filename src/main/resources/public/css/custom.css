@@ -695,5 +695,5 @@ ul.samplevalue{
 /* Mailing List  */
 /*****************/
 .ck-editor__editable {
-    min-height: 500px;
+    min-height: 200px;
 }
