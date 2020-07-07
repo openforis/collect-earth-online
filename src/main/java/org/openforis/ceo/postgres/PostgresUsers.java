@@ -68,7 +68,7 @@ public class PostgresUsers implements Users {
         var inputEmail =                    req.queryParams("email");
         var inputPassword =                 req.queryParams("password");
         var inputPasswordConfirmation =     req.queryParams("passwordConfirmation");
-        var onMailingList =                 req.queryParams("on-mailing-list");
+        var onMailingList =                 req.queryParams("onMailingList");
 
         // Validate input params and assign flash_message if invalid
         if (!isEmail(inputEmail)) {
