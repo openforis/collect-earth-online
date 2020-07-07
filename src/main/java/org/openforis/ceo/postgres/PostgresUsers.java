@@ -146,34 +146,43 @@ public class PostgresUsers implements Users {
             return "New Password and Password confirmation do not match.";
         } else {
             try (var conn = connect();
+                 var pstmt_login = conn.prepareStatement("SELECT * FROM check_login(?,?)");
                  var pstmt_user  = conn.prepareStatement("SELECT * FROM email_taken(?,?)");
                  var pstmt_email = conn.prepareStatement("SELECT * FROM set_user_email(?,?)");
                  var pstmt_pass  = conn.prepareStatement("SELECT * FROM update_password(?,?)");
                  var pstmt_ml    = conn.prepareStatement("SELECT * FROM set_mailing_list(?,?)")) {
-                if (inputEmail.length() > 0 && !storedEmail.equals(inputEmail)) {
-                    pstmt_user.setString(1, inputEmail);
-                    pstmt_user.setInt(2, userId);
-                    try (var rs_user = pstmt_user.executeQuery()) {
-                        if(rs_user.next() && !rs_user.getBoolean("email_taken")) {
-                            pstmt_email.setString(1, storedEmail);
-                            pstmt_email.setString(2, inputEmail);
-                            pstmt_email.execute();
-                            req.session().attribute("username", inputEmail);
-                            return "";
-                        } else {
-                            return "An account with the email " + inputEmail + " already exists.";
+                pstmt_login.setString(1, storedEmail);
+                pstmt_login.setString(2, inputCurrentPassword);
+                try (var rs_login = pstmt_login.executeQuery()) {
+                    if(rs_login.next()) {
+                        if (inputEmail.length() > 0 && !storedEmail.equals(inputEmail)) {
+                            pstmt_user.setString(1, inputEmail);
+                            pstmt_user.setInt(2, userId);
+                            try (var rs_user = pstmt_user.executeQuery()) {
+                                if(rs_user.next() && !rs_user.getBoolean("email_taken")) {
+                                    pstmt_email.setString(1, storedEmail);
+                                    pstmt_email.setString(2, inputEmail);
+                                    pstmt_email.execute();
+                                    req.session().attribute("username", inputEmail);
+                                    return "";
+                                } else {
+                                    return "An account with the email " + inputEmail + " already exists.";
+                                }
+                            }
                         }
+                        if (inputPassword.length() > 0) {
+                            pstmt_pass.setString(1, storedEmail);
+                            pstmt_pass.setString(2, inputPassword);
+                            pstmt_pass.execute();
+                        }
+                        pstmt_ml.setInt(1, userId);
+                        pstmt_ml.setBoolean(2, onMailingList != null && Boolean.parseBoolean(onMailingList));
+                        pstmt_ml.execute();
+                        return "";
+                    } else {
+                        return "Invalid current password.";
                     }
                 }
-                if (inputPassword.length() > 0) {
-                    pstmt_pass.setString(1, storedEmail);
-                    pstmt_pass.setString(2, inputPassword);
-                    pstmt_pass.execute();
-                }
-                pstmt_ml.setInt(1, userId);
-                pstmt_ml.setBoolean(2, onMailingList != null && Boolean.parseBoolean(onMailingList));
-                pstmt_ml.execute();
-                return "";
             } catch (SQLException e) {
                 System.out.println(e.getMessage());
                 return "There was an issue updating your account.  Please check the console.";

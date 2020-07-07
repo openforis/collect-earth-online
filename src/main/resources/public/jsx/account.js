@@ -125,13 +125,14 @@ class AccountForm extends React.Component {
             .then(response => Promise.all([response.ok, response.text()]))
             .then(data => {
                 if (data[0] && data[1] === "") {
+                    this.setState({ email: "", password: "", passwordConfirmation: "", currentPassword: "" });
+                    this.getUserDetails();
                     alert("Your account details have been updated.");
                 } else {
                     alert(data[1]);
                 }
             })
-            .catch(err => console.log(err))
-            .finally(this.getUserDetails);
+            .catch(err => console.log(err));
     };
 
     render() {
