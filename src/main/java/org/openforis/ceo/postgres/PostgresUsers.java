@@ -7,6 +7,7 @@ import static org.openforis.ceo.utils.Mail.isEmail;
 import static org.openforis.ceo.utils.Mail.sendMail;
 import static org.openforis.ceo.utils.Mail.sendToMailingList;
 import static org.openforis.ceo.utils.Mail.CONTENT_TYPE_HTML;
+import static org.openforis.ceo.utils.SessionUtils.getSessionUserId;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
@@ -21,7 +22,6 @@ import java.util.Map;
 import java.util.UUID;
 import org.openforis.ceo.db_api.Users;
 import org.openforis.ceo.env.CeoConfig;
-import org.openforis.ceo.utils.SessionUtils;
 
 import spark.Request;
 import spark.Response;
@@ -128,7 +128,7 @@ public class PostgresUsers implements Users {
     }
 
     public Request updateAccount(Request req, Response res) {
-        final var userId =                        Integer.parseInt(SessionUtils.getSessionUserId(req));
+        final var userId =                        Integer.parseInt(getSessionUserId(req));
         final var storedEmail =                   (String) req.session().attribute("username");
         final var inputEmail =                    req.queryParams("email");
         final var inputPassword =                 req.queryParams("password");
@@ -313,7 +313,7 @@ public class PostgresUsers implements Users {
     }
 
     public String getUserDetails(Request req, Response res) {
-        final var userId = SessionUtils.getSessionUserId(req);
+        final var userId = getSessionUserId(req);
         try (var conn = connect();
              var pstmt = conn.prepareStatement("SELECT * FROM get_user_details(?)");) {
 

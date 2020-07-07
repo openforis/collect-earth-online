@@ -11,6 +11,7 @@ import static org.openforis.ceo.utils.JsonUtils.parseJson;
 import static org.openforis.ceo.utils.JsonUtils.readJsonFile;
 import static org.openforis.ceo.utils.JsonUtils.writeJsonFile;
 import static org.openforis.ceo.utils.PartUtils.writeFilePartBase64;
+import static org.openforis.ceo.utils.SessionUtils.getSessionUserId;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
@@ -18,7 +19,6 @@ import java.time.LocalDate;
 import java.util.Date;
 import java.util.Optional;
 import org.openforis.ceo.db_api.Institutions;
-import org.openforis.ceo.utils.SessionUtils;
 
 import spark.Request;
 import spark.Response;
@@ -38,7 +38,7 @@ public class JsonInstitutions implements Institutions {
     }
 
     public Boolean isInstAdmin(Request req) {
-        final var userId = SessionUtils.getSessionUserId(req);
+        final var userId = getSessionUserId(req);
         final var qInstitutionId = req.queryParams("institutionId");
         final var jInstitutionId = getBodyParam(req.body(), "institutionId", null);
 

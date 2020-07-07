@@ -17,6 +17,7 @@ import static org.openforis.ceo.utils.Mail.CONTENT_TYPE_HTML;
 import static org.openforis.ceo.utils.ProjectUtils.getOrZero;
 import static org.openforis.ceo.utils.ProjectUtils.getOrEmptyString;
 import static org.openforis.ceo.utils.ProjectUtils.collectTimeIgnoreString;
+import static org.openforis.ceo.utils.SessionUtils.getSessionUserId;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
@@ -31,7 +32,6 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 import org.openforis.ceo.db_api.Users;
 import org.openforis.ceo.env.CeoConfig;
-import org.openforis.ceo.utils.SessionUtils;
 
 import spark.Request;
 import spark.Response;
@@ -136,7 +136,7 @@ public class JsonUsers implements Users {
 
     // FIXME back port postgres checks that allow user to change only one part
     public Request updateAccount(Request req, Response res) {
-        var userId = SessionUtils.getSessionUserId(req);
+        var userId = getSessionUserId(req);
         var inputEmail = req.queryParams("email");
         var inputPassword = req.queryParams("password");
         var inputPasswordConfirmation = req.queryParams("password-confirmation");

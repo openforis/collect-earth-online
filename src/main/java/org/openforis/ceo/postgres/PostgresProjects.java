@@ -26,6 +26,7 @@ import static org.openforis.ceo.utils.ProjectUtils.makeGeoJsonPolygon;
 import static org.openforis.ceo.utils.ProjectUtils.getSampleValueTranslations;
 import static org.openforis.ceo.utils.ProjectUtils.deleteShapeFileDirectories;
 import static org.openforis.ceo.utils.ProjectUtils.runBashScriptForProject;
+import static org.openforis.ceo.utils.SessionUtils.getSessionUserId;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
@@ -45,7 +46,6 @@ import java.util.stream.Stream;
 import java.util.UUID;
 import javax.servlet.http.HttpServletResponse;
 import org.openforis.ceo.db_api.Projects;
-import org.openforis.ceo.utils.SessionUtils;
 
 import spark.Request;
 import spark.Response;
@@ -53,7 +53,7 @@ import spark.Response;
 public class PostgresProjects implements Projects {
 
     private Boolean checkAuthCommon(Request req, String queryFn) {
-        final var userId = Integer.parseInt(SessionUtils.getSessionUserId(req));
+        final var userId = Integer.parseInt(getSessionUserId(req));
         final var qProjectId = req.queryParams("projectId");
         final var jProjectId = getBodyParam(req.body(), "projectId", null);
         final var qTokenKey = req.queryParams("tokenKey");
@@ -160,7 +160,7 @@ public class PostgresProjects implements Projects {
     }
 
     public String getAllProjects(Request req, Response res) {
-        final var userId =        SessionUtils.getSessionUserId(req);
+        final var userId =        getSessionUserId(req);
         final var institutionId = req.queryParams("institutionId");
 
         try (var conn = connect()) {

@@ -13,6 +13,7 @@ import static spark.Spark.post;
 import static spark.Spark.secure;
 import static spark.Spark.staticFileLocation;
 import static spark.Spark.staticFiles;
+import static org.openforis.ceo.utils.SessionUtils.getSessionUserId;
 
 import freemarker.template.Configuration;
 import freemarker.template.TemplateExceptionHandler;
@@ -37,7 +38,6 @@ import org.openforis.ceo.postgres.PostgresInstitutions;
 import org.openforis.ceo.postgres.PostgresPlots;
 import org.openforis.ceo.postgres.PostgresProjects;
 import org.openforis.ceo.postgres.PostgresUsers;
-import org.openforis.ceo.utils.SessionUtils;
 
 import spark.Request;
 import spark.Response;
@@ -76,7 +76,7 @@ public class Server implements SparkApplication {
 
         // Take query param for flash message and add to session attributes
         before((request, response) -> {
-            final var userId = Integer.parseInt(SessionUtils.getSessionUserId(request));
+            final var userId = Integer.parseInt(getSessionUserId(request));
 
             /// Page Authentication ///
 

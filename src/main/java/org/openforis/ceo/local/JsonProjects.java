@@ -39,6 +39,7 @@ import static org.openforis.ceo.utils.ProjectUtils.outputRawCsv;
 import static org.openforis.ceo.utils.ProjectUtils.padBounds;
 import static org.openforis.ceo.utils.ProjectUtils.reprojectBounds;
 import static org.openforis.ceo.utils.ProjectUtils.runBashScriptForProject;
+import static org.openforis.ceo.utils.SessionUtils.getSessionUserId;
 
 import com.google.gson.JsonObject;
 import com.google.gson.JsonArray;
@@ -62,7 +63,6 @@ import java.util.stream.Stream;
 import java.util.UUID;
 import javax.servlet.http.HttpServletResponse;
 import org.openforis.ceo.db_api.Projects;
-import org.openforis.ceo.utils.SessionUtils;
 
 import spark.Request;
 import spark.Response;
@@ -70,7 +70,7 @@ import spark.Response;
 public class JsonProjects implements Projects {
 
     private Boolean checkAuthCommon(Request req, Boolean collect) {
-        final var userId = Integer.parseInt(SessionUtils.getSessionUserId(req));
+        final var userId = Integer.parseInt(getSessionUserId(req));
         final var qProjectId = req.queryParams("projectId");
         final var jProjectId = getBodyParam(req.body(), "projectId", null);
         final var qTokenKey = req.queryParams("tokenKey");
@@ -136,7 +136,7 @@ public class JsonProjects implements Projects {
     }
 
     public String getAllProjects(Request req, Response res) {
-        final var userId = SessionUtils.getSessionUserId(req);
+        final var userId = getSessionUserId(req);
         var intUserId = Integer.parseInt(userId.isEmpty() ? "0" : userId);
         var institutionId = req.queryParamOrDefault("institutionId", "");
         var projects = elementToArray(readJsonFile("project-list.json"));
