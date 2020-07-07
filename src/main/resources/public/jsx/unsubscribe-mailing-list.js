@@ -10,8 +10,6 @@ class UnsubscribeMailingList extends React.Component {
         };
     }
 
-    onChangeEmail = (newEmail) => this.setState({ email: newEmail });
-
     submitUnsubscribe = () => {
         if (confirm("Are you sure you want to unsubscribe from mailing list?")) {
             const { email } = this.state;
@@ -56,7 +54,7 @@ class UnsubscribeMailingList extends React.Component {
                                     type="email"
                                     value={this.state.email}
                                     className="form-control"
-                                    onChange={e => this.onChangeEmail(e.target.value)}
+                                    onChange={e => this.setState({ email: e.target.value })}
                                 />
                             </div>
                             <button className="btn bg-lightgreen float-right mb-2" type="submit">Unsubscribe</button>

@@ -37,10 +37,6 @@ class MailingList extends React.Component {
         }
     };
 
-    onChangeSubject = (newSubject) => this.setState({ subject: newSubject });
-
-    onChangeBody = (newBody) => this.setState({ body: newBody });
-
     render() {
         return (
             <section id="content" className="container-fluid">
@@ -61,7 +57,7 @@ class MailingList extends React.Component {
                                         type="text"
                                         value={this.state.subject}
                                         className="form-control"
-                                        onChange={e => this.onChangeSubject(e.target.value)}
+                                        onChange={e => this.setState({ subject: e.target.value })}
                                     />
                                 </div>
                                 <div className="form-group">
@@ -69,7 +65,7 @@ class MailingList extends React.Component {
                                     <CKEditor
                                         editor={ClassicEditor}
                                         data={this.state.body}
-                                        onChange={(e, editor) => this.onChangeBody(editor.getData())}
+                                        onChange={(e, editor) => this.setState({ body: editor.getData() })}
                                     />
                                 </div>
                                 <button

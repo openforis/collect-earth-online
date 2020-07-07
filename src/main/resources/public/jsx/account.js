@@ -110,8 +110,6 @@ class AccountForm extends React.Component {
             .catch(response => console.log(response));
     };
 
-    toggleOnMailingList = () => this.setState({ onMailingList: !this.state.onMailingList });
-
     render() {
         return (
             <SectionBlock title="Account Settings">
@@ -164,7 +162,7 @@ class AccountForm extends React.Component {
                                 type="checkbox"
                                 className="form-check-input"
                                 checked={this.state.onMailingList}
-                                onChange={this.toggleOnMailingList}
+                                onChange={() => this.setState({ onMailingList: !this.state.onMailingList })}
                             />
                             <label className="form-check-label" htmlFor="on-mailing-list">
                                 Mailing List Subscription

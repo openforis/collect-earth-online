@@ -5,6 +5,8 @@ import java.util.function.Function;
 import java.util.stream.Stream;
 import java.util.stream.Collectors;
 import org.openforis.ceo.env.CeoConfig;
+import org.openforis.ceo.utils.SessionUtils;
+
 import spark.ModelAndView;
 import spark.Request;
 import spark.Route;
@@ -79,7 +81,7 @@ public class Views {
 
     public static Route account(FreeMarkerEngine freemarker) {
         Function<Request, String> getAccountId = (req) ->
-            req.queryParams("userId") != null ? req.queryParams("userId") : req.session().attribute("userid");
+            req.queryParams("userId") != null ? req.queryParams("userId") : SessionUtils.getSessionUserId(req);
         return makeRoute("Account",
                          freemarker,
                          Map.of("account_id", getAccountId));

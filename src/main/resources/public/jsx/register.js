@@ -92,7 +92,7 @@ class Register extends React.Component {
                                     type="checkbox"
                                     className="form-check-input"
                                     checked={this.state.onMailingList}
-                                    onChange={this.setState({ onMailingList: !this.state.onMailingList })}
+                                    onChange={() => this.setState({ onMailingList: !this.state.onMailingList })}
                                 />
                                 <label className="form-check-label" htmlFor="on-mailing-list">
                                     Mailing List Subscription
