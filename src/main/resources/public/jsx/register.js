@@ -29,13 +29,10 @@ class Register extends React.Component {
                     alert("You have successfully created an accout.");
                     window.location = "/home";
                 } else {
-                    return Promise.reject(data[1]);
+                    alert(data[1]);
                 }
             })
-            .catch(message => {
-                alert(message);
-                console.log(message);
-            });
+            .catch(message => console.log(message));
     };
 
     render() {
@@ -95,7 +92,7 @@ class Register extends React.Component {
                                     onChange={() => this.setState({ onMailingList: !this.state.onMailingList })}
                                 />
                                 <label className="form-check-label" htmlFor="on-mailing-list">
-                                    Mailing List Subscription
+                                    Subscribe To Mailinglist
                                 </label>
                             </div>
                             <button className="btn bg-lightgreen float-right mb-2" type="submit">

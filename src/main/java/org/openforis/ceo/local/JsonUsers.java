@@ -139,9 +139,9 @@ public class JsonUsers implements Users {
         var userId = getSessionUserId(req);
         var inputEmail = req.queryParams("email");
         var inputPassword = req.queryParams("password");
-        var inputPasswordConfirmation = req.queryParams("password-confirmation");
-        var mailingListSubscription = req.queryParams("mailing-list-subscription");
-        var inputCurrentPassword = req.queryParams("current-password");
+        var inputPasswordConfirmation = req.queryParams("passwordConfirmation");
+        var mailingListSubscription = req.queryParams("onMailingList");
+        var inputCurrentPassword = req.queryParams("currentPassword");
 
         // Validate input params and assign flash_message if invalid
         if (inputCurrentPassword.length() == 0) {

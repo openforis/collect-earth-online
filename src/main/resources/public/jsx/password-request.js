@@ -26,13 +26,10 @@ class PasswordRequest extends React.Component {
                     alert("The reset key has been sent to your email.");
                     window.location = "/home";
                 } else {
-                    return Promise.reject(data[1]);
+                    alert(data[1]);
                 }
             })
-            .catch(message => {
-                alert(message);
-                console.log(message);
-            });
+            .catch(message => console.log(message));
     };
 
     render() {

@@ -24,13 +24,10 @@ class Login extends React.Component {
                 if (data[0] && data[1] === "") {
                     window.location = this.props.returnurl === "" ? "/home" : this.props.returnurl;
                 } else {
-                    return Promise.reject(data[1]);
+                    alert(data[1]);
                 }
             })
-            .catch(message => {
-                alert(message);
-                console.log(message);
-            });
+            .catch(message => console.log(message));
     };
 
     render() {

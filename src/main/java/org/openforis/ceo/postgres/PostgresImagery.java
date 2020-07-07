@@ -63,7 +63,7 @@ public class PostgresImagery implements Imagery {
 
     public String getInstitutionImagery(Request req, Response res) {
         final var institutionId = Integer.parseInt(req.queryParams("institutionId"));
-        final var userId        = Integer.parseInt(getSessionUserId(req));
+        final var userId        = getSessionUserId(req);
 
         try (var conn = connect();
             var pstmt = conn.prepareStatement("SELECT * FROM select_imagery_by_institution(?, ?)")) {
@@ -83,7 +83,7 @@ public class PostgresImagery implements Imagery {
 
     public String getProjectImagery(Request req, Response res) {
         final var projectId = req.queryParams("projectId");
-        final var userId    = Integer.parseInt(getSessionUserId(req));
+        final var userId    = getSessionUserId(req);
 
         try (var conn = connect();
              var pstmt = conn.prepareStatement("SELECT * FROM select_imagery_by_project(?, ?)")) {

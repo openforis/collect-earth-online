@@ -53,11 +53,11 @@ import spark.Response;
 public class PostgresProjects implements Projects {
 
     private Boolean checkAuthCommon(Request req, String queryFn) {
-        final var userId = Integer.parseInt(getSessionUserId(req));
+        final var userId     = getSessionUserId(req);
         final var qProjectId = req.queryParams("projectId");
         final var jProjectId = getBodyParam(req.body(), "projectId", null);
-        final var qTokenKey = req.queryParams("tokenKey");
-        final var sTokenKey = req.session().attributes().contains("tokenKey") ? req.session().attribute("tokenKey").toString() : null;
+        final var qTokenKey  = req.queryParams("tokenKey");
+        final var sTokenKey  = req.session().attributes().contains("tokenKey") ? req.session().attribute("tokenKey").toString() : null;
 
         final var projectId =
             qProjectId != null ? Integer.parseInt(qProjectId)
@@ -164,8 +164,8 @@ public class PostgresProjects implements Projects {
         final var institutionId = req.queryParams("institutionId");
 
         try (var conn = connect()) {
-
-            if (userId == null || userId.isEmpty()) {
+            // TODO, this can probably be easily reduced to one query that takes userid and institution id
+            if (userId == -1) {
                 if (institutionId == null || institutionId.isEmpty()) {
                     try (var pstmt = conn.prepareStatement("SELECT * FROM select_all_projects()")) {
                         return queryProjectGet(pstmt);
@@ -179,12 +179,12 @@ public class PostgresProjects implements Projects {
             } else {
                 if (institutionId == null || institutionId.isEmpty()) {
                     try (var pstmt = conn.prepareStatement("SELECT * FROM select_all_user_projects(?)")) {
-                        pstmt.setInt(1, Integer.parseInt(userId));
+                        pstmt.setInt(1, userId);
                         return queryProjectGet(pstmt);
                     }
                 } else {
                     try (var pstmt = conn.prepareStatement("SELECT * FROM select_institution_projects_with_roles(?,?)")) {
-                        pstmt.setInt(1, Integer.parseInt(userId));
+                        pstmt.setInt(1, userId);
                         pstmt.setInt(2, Integer.parseInt(institutionId));
                         return queryProjectGet(pstmt);
                     }

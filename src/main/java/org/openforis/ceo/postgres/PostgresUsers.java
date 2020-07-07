@@ -128,13 +128,13 @@ public class PostgresUsers implements Users {
     }
 
     public Request updateAccount(Request req, Response res) {
-        final var userId =                        Integer.parseInt(getSessionUserId(req));
-        final var storedEmail =                   (String) req.session().attribute("username");
-        final var inputEmail =                    req.queryParams("email");
-        final var inputPassword =                 req.queryParams("password");
-        final var inputPasswordConfirmation =     req.queryParams("password-confirmation");
-        final var onMailingList =                 req.queryParams("on-mailing-list");
-        final var inputCurrentPassword =          req.queryParams("current-password");
+        final var userId                    = getSessionUserId(req);
+        final var storedEmail               = (String) req.session().attribute("username");
+        final var inputEmail                = req.queryParams("email");
+        final var inputPassword             = req.queryParams("password");
+        final var inputPasswordConfirmation = req.queryParams("passwordConfirmation");
+        final var onMailingList             = req.queryParams("onMilingList");
+        final var inputCurrentPassword      = req.queryParams("currentPassword");
 
         // Validate input params and assign flash_message if invalid
         if (inputCurrentPassword.length() == 0) {
@@ -313,11 +313,10 @@ public class PostgresUsers implements Users {
     }
 
     public String getUserDetails(Request req, Response res) {
-        final var userId = getSessionUserId(req);
         try (var conn = connect();
              var pstmt = conn.prepareStatement("SELECT * FROM get_user_details(?)");) {
 
-            pstmt.setInt(1, Integer.parseInt(userId));
+            pstmt.setInt(1, getSessionUserId(req));
             try (var rs = pstmt.executeQuery()) {
                 var userJson = new JsonObject();
                 if (rs.next()) {
@@ -332,11 +331,11 @@ public class PostgresUsers implements Users {
     }
 
     public String getUserStats(Request req, Response res) {
-        final var userName = Integer.parseInt(req.queryParams("userId"));
+        final var accountId = Integer.parseInt(req.queryParams("userId"));
         try (var conn = connect();
              var pstmt = conn.prepareStatement("SELECT * FROM get_user_stats(?)");) {
 
-            pstmt.setInt(1, userName);
+            pstmt.setInt(1, accountId);
             try (var rs = pstmt.executeQuery()) {
                 var userJson = new JsonObject();
                 if (rs.next()) {

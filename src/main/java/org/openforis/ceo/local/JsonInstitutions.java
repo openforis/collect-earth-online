@@ -25,13 +25,13 @@ import spark.Response;
 
 public class JsonInstitutions implements Institutions {
 
-    public static Boolean isInstitutionAdmin(String userId, Integer institutionId) {
+    public static Boolean isInstitutionAdmin(Integer userId, Integer institutionId) {
         var matchingInstitution = getInstitutionById(institutionId);
         if (matchingInstitution.isPresent()) {
             final var institution = matchingInstitution.get();
             final var admins = institution.has("admins") ? institution.get("admins").getAsJsonArray() : new JsonArray();
             final var archived = institution.has("archived") ? institution.get("archived").getAsBoolean() : true;
-            return admins.contains(parseJson(userId)) && !archived;
+            return admins.contains(parseJson("" + userId)) && !archived;
         } else {
             return false;
         }
@@ -55,7 +55,7 @@ public class JsonInstitutions implements Institutions {
         final var matchedProject = findInJsonArray(projects, project -> project.get("id").getAsInt() == projectId);
         if (matchedProject.isPresent()) {
             final var institutionId = matchedProject.get().get("institution").getAsInt();
-            return isInstitutionAdmin(userId.toString(), institutionId);
+            return isInstitutionAdmin(userId, institutionId);
         } else {
             return false;
         }

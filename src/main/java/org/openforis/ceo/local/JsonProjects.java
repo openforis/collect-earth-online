@@ -70,7 +70,7 @@ import spark.Response;
 public class JsonProjects implements Projects {
 
     private Boolean checkAuthCommon(Request req, Boolean collect) {
-        final var userId = Integer.parseInt(getSessionUserId(req));
+        final var userId = getSessionUserId(req);
         final var qProjectId = req.queryParams("projectId");
         final var jProjectId = getBodyParam(req.body(), "projectId", null);
         final var qTokenKey = req.queryParams("tokenKey");
@@ -137,18 +137,17 @@ public class JsonProjects implements Projects {
 
     public String getAllProjects(Request req, Response res) {
         final var userId = getSessionUserId(req);
-        var intUserId = Integer.parseInt(userId.isEmpty() ? "0" : userId);
         var institutionId = req.queryParamOrDefault("institutionId", "");
         var projects = elementToArray(readJsonFile("project-list.json"));
 
-        var institutionRoles = (new JsonUsers()).getInstitutionRoles(intUserId);
+        var institutionRoles = (new JsonUsers()).getInstitutionRoles(userId);
         var filteredProjects = toStream(projects)
             .filter(project -> project.get("archived").getAsBoolean() == false)
             .filter(project -> {
                 var role = institutionRoles.getOrDefault(project.get("institution").getAsInt(), "");
                 var privacyLevel = project.get("privacyLevel").getAsString();
                 var availability = project.get("availability").getAsString();
-                return canSeeProject(role, privacyLevel, availability, intUserId);
+                return canSeeProject(role, privacyLevel, availability, userId);
             })
             .map(project -> {
                 var role = institutionRoles.getOrDefault(project.get("institution").getAsInt(), "");

@@ -76,7 +76,7 @@ public class Server implements SparkApplication {
 
         // Take query param for flash message and add to session attributes
         before((request, response) -> {
-            final var userId = Integer.parseInt(getSessionUserId(request));
+            final var userId = getSessionUserId(request);
 
             /// Page Authentication ///
 
@@ -201,9 +201,6 @@ public class Server implements SparkApplication {
         get("/get-securewatch-dates",                 (req, res) -> Proxy.getSecureWatchDates(req, res, imagery));
         get("/mailing-list",                          Views.mailingList(freemarker));
         get("/unsubscribe-mailing-list",              Views.unsubscribeMailingList(freemarker));
-
-        // TODO make this a API route after merging in the Mailing list changes.
-        post("/account",                              (req, res) -> Views.account(freemarker).handle(users.updateAccount(req, res), res));
 
         // Routing Table: Account API
         post("/account",                              users::updateAccount);

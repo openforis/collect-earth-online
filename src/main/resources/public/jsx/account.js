@@ -3,6 +3,7 @@ import ReactDOM from "react-dom";
 
 import { FormLayout, SectionBlock, StatsCell, StatsRow } from "./components/FormComponents";
 import { NavigationBar } from "./components/PageComponents";
+import { getQueryString } from "./utils/textUtils";
 
 function Account(props) {
     const sameAsUser = props.userId === props.accountId;
@@ -95,7 +96,11 @@ class AccountForm extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
+            email: "",
+            password: "",
+            passwordConfirmation: "",
             onMailingList: false,
+            currentPassword: "",
         };
     }
 
@@ -110,6 +115,25 @@ class AccountForm extends React.Component {
             .catch(response => console.log(response));
     };
 
+    updateDetails = () => {
+        fetch("/account",
+              {
+                  method: "POST",
+                  headers: { "Content-Type": "application/x-www-form-urlencoded" },
+                  body: getQueryString(this.state),
+              })
+            .then(response => Promise.all([response.ok, response.text()]))
+            .then(data => {
+                if (data[0] && data[1] === "") {
+                    alert("Your account details have been updated.");
+                    this.getUserDetails();
+                } else {
+                    alert(data[1]);
+                }
+            })
+            .catch(message => console.log(message));
+    };
+
     render() {
         return (
             <SectionBlock title="Account Settings">
@@ -119,13 +143,13 @@ class AccountForm extends React.Component {
                         <div className="form-group">
                             <label htmlFor="email">Reset email</label>
                             <input
-                                autoComplete="off"
                                 id="email"
-                                name="email"
-                                placeholder="New email"
-                                defaultValue=""
-                                type="email"
                                 className="form-control"
+                                autoComplete="off"
+                                placeholder="New email"
+                                type="email"
+                                value={this.state.email}
+                                onChange={e => this.setState({ email: e.target.value })}
                             />
                         </div>
                         <div className="form-group">
@@ -133,24 +157,24 @@ class AccountForm extends React.Component {
                             <div className="form-row">
                                 <div className="col">
                                     <input
-                                        autoComplete="off"
                                         id="password"
-                                        name="password"
-                                        placeholder="New password"
-                                        defaultValue=""
-                                        type="password"
                                         className="form-control mb-1"
+                                        autoComplete="off"
+                                        placeholder="New password"
+                                        type="password"
+                                        value={this.state.password}
+                                        onChange={e => this.setState({ password: e.target.value })}
                                     />
                                 </div>
                                 <div className="col">
                                     <input
-                                        autoComplete="off"
                                         id="password-confirmation"
-                                        name="password-confirmation"
-                                        placeholder="New password confirmation"
-                                        defaultValue=""
-                                        type="password"
                                         className="form-control"
+                                        autoComplete="off"
+                                        placeholder="New password confirmation"
+                                        type="password"
+                                        value={this.state.passwordConfirmation}
+                                        onChange={e => this.setState({ passwordConfirmation: e.target.value })}
                                     />
                                 </div>
                             </div>
@@ -169,15 +193,15 @@ class AccountForm extends React.Component {
                             </label>
                         </div>
                         <div className="form-group">
-                            <label htmlFor = "current-password">Verify your identity</label>
+                            <label htmlFor="current-password">Verify your identity</label>
                             <input
-                                autoComplete=" off"
                                 id="current-password"
-                                name="current-password"
-                                placeholder="Current password"
-                                defaultValue=""
-                                type="password"
                                 className="form-control"
+                                autoComplete=" off"
+                                placeholder="Current password"
+                                type="password"
+                                value={this.state.currentPassword}
+                                onChange={e => this.setState({ currentPassword: e.target.value })}
                             />
                         </div>
                         <input
