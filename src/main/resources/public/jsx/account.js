@@ -104,7 +104,7 @@ class AccountForm extends React.Component {
     }
 
     getUserDetails = () => {
-        fetch(this.props.documentRoot + "/get-user-details?userId=" + this.props.accountId)
+        fetch("/get-user-details")
             .then(response => response.ok ? response.json() : Promise.reject(response))
             .then(details => this.setState({ onMailingList: details.onMailingList }))
             .catch(response => console.log(response));

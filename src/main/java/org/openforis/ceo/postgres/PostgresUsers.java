@@ -313,11 +313,11 @@ public class PostgresUsers implements Users {
     }
 
     public String getUserDetails(Request req, Response res) {
-        final var userId = Integer.parseInt(req.queryParams("userId"));
+        final var userId = SessionUtils.getSessionUserId(req);
         try (var conn = connect();
              var pstmt = conn.prepareStatement("SELECT * FROM get_user_details(?)");) {
 
-            pstmt.setInt(1, userId);
+            pstmt.setInt(1, Integer.parseInt(userId));
             try (var rs = pstmt.executeQuery()) {
                 var userJson = new JsonObject();
                 if (rs.next()) {
@@ -518,8 +518,8 @@ public class PostgresUsers implements Users {
                    // Send confirmation email to the user
                    var body = "Dear " + inputEmail + ",\n\n"
                        + "We've just received your request to unsubscribe from our mailing list.\n\n"
-                       + "Since now you will not receive any newsletter from us.\n\n"
-                       + "If you want you can subscribe to our newsletter from you account page.\n\n"
+                       + "You have been unsubscribed from our mailing list and will no longer receive a newsletter.\n\n"
+                       + "You can resubscribe to our newsletter by going to your account page.\n\n"
                        + "Kind Regards,\n"
                        + "  The CEO Team";
                    sendMail(SMTP_USER, Arrays.asList(inputEmail), null, null, SMTP_SERVER, SMTP_PORT, SMTP_PASSWORD, "CEO Mailing List: Unsubscribe Successful from CEO mailing list!", body, null);
