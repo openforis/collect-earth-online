@@ -39,8 +39,9 @@ export function PlanetMenus({
 
 export function PlanetDailyMenus({
     imageryStartDatePlanetDaily,
-    setImageryDatePlanetDaily,
+    setImageryStartDatePlanetDaily,
     imageryEndDatePlanetDaily,
+    setImageryEndDatePlanetDaily,
 }) {
     return (
         <div className="PlanetsDailyMenu my-2">
@@ -53,7 +54,7 @@ export function PlanetDailyMenus({
                     max={new Date().toJSON().split("T")[0]}
                     min="2010-01-01"
                     style={{ width: "100%" }}
-                    onChange={e => setImageryDatePlanetDaily(e.target)}
+                    onChange={e => setImageryStartDatePlanetDaily(e.target.value)}
                 />
             </div>
             <label>End Date</label>
@@ -65,7 +66,7 @@ export function PlanetDailyMenus({
                     max={new Date().toJSON().split("T")[0]}
                     min="2010-01-01"
                     style={{ width: "100%" }}
-                    onChange={e => setImageryDatePlanetDaily(e.target)}
+                    onChange={e => setImageryEndDatePlanetDaily(e.target.value)}
                 />
             </div>
         </div>

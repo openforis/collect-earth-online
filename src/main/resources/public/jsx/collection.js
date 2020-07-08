@@ -367,19 +367,20 @@ class Collection extends React.Component {
         });
     };
 
-    setImageryDatePlanetDaily = (eventTarget) => {
-        const { imageryStartDatePlanetDaily, imageryEndDatePlanetDaily, currentImagery } = this.state;
-        const startDate = (eventTarget.id === "planetDailyStartDate") ? eventTarget.value : imageryStartDatePlanetDaily;
-        const endDate = (eventTarget.id === "planetDailyEndDate") ? eventTarget.value : imageryEndDatePlanetDaily;
-        if (new Date(startDate) > new Date(endDate)) {
-            alert("Start date must be smaller than the end date.");
-        } else {
-            this.setState({
-                imageryStartDatePlanetDaily: startDate,
-                imageryEndDatePlanetDaily: endDate,
-                imageryAttribution: currentImagery.attribution + " | " + startDate + " to " + endDate,
-            });
-        }
+    setImageryStartDatePlanetDaily = (newDate) => {
+        const { imageryEndDatePlanetDaily, currentImagery } = this.state;
+        this.setState({
+            imageryStartDatePlanetDaily: newDate,
+            imageryAttribution: currentImagery.attribution + " | " + newDate + " to " + imageryEndDatePlanetDaily,
+        });
+    };
+
+    setImageryEndDatePlanetDaily = (newDate) => {
+        const { imageryStartDatePlanetDaily, currentImagery } = this.state;
+        this.setState({
+            imageryEndDatePlanetDaily: newDate,
+            imageryAttribution: currentImagery.attribution + " | " + imageryStartDatePlanetDaily + " to " + newDate,
+        });
     };
 
     setImageryMonthPlanet = (newImageryMonthPlanet) => {
@@ -561,25 +562,30 @@ class Collection extends React.Component {
     };
 
     updatePlanetDailyLayer = () => {
-        this.setState({ loading: this.state.currentImagery.sourceConfig.type === "PlanetDaily" });
-        mercator.currentMap.getControls().getArray().filter(control => control.element.classList.contains("planet-layer-switcher"))
-            .map(control => mercator.currentMap.removeControl(control));
-        const { imageryStartDatePlanetDaily, imageryEndDatePlanetDaily, currentPlot } = this.state;
-        // check so that the function is not called before the state is propagated
-        if (imageryStartDatePlanetDaily && imageryEndDatePlanetDaily && currentPlot) {
-            mercator.updateLayerSource(this.state.mapConfig,
-                                       this.state.currentImagery.id,
-                                       mercator.geometryToGeoJSON(
-                                           mercator.getViewPolygon(this.state.mapConfig),
-                                           "EPSG:4326"
-                                       ),
-                                       sourceConfig => ({
-                                           ...sourceConfig,
-                                           startDate: imageryStartDatePlanetDaily,
-                                           endDate: imageryEndDatePlanetDaily,
-                                       }),
-                                       this,
-                                       this.removeAndAddVector);
+        const { imageryStartDatePlanetDaily, imageryEndDatePlanetDaily } = this.state;
+        if (new Date(imageryStartDatePlanetDaily) > new Date(imageryEndDatePlanetDaily)) {
+            alert("Start date must be smaller than the end date.");
+        } else {
+            this.setState({ loading: this.state.currentImagery.sourceConfig.type === "PlanetDaily" });
+            mercator.currentMap.getControls().getArray().filter(control => control.element.classList.contains("planet-layer-switcher"))
+                .map(control => mercator.currentMap.removeControl(control));
+            const { imageryStartDatePlanetDaily, imageryEndDatePlanetDaily, currentPlot } = this.state;
+            // check so that the function is not called before the state is propagated
+            if (imageryStartDatePlanetDaily && imageryEndDatePlanetDaily && currentPlot) {
+                mercator.updateLayerSource(this.state.mapConfig,
+                                           this.state.currentImagery.id,
+                                           mercator.geometryToGeoJSON(
+                                               mercator.getViewPolygon(this.state.mapConfig),
+                                               "EPSG:4326"
+                                           ),
+                                           sourceConfig => ({
+                                               ...sourceConfig,
+                                               startDate: imageryStartDatePlanetDaily,
+                                               endDate: imageryEndDatePlanetDaily,
+                                           }),
+                                           this,
+                                           this.removeAndAddVector);
+            }
         }
     };
 
@@ -1451,7 +1457,8 @@ class Collection extends React.Component {
                         setImageryYearDG={this.setImageryYearDG}
                         setImageryYearPlanet={this.setImageryYearPlanet}
                         setImageryMonthPlanet={this.setImageryMonthPlanet}
-                        setImageryDatePlanetDaily={this.setImageryDatePlanetDaily}
+                        setImageryStartDatePlanetDaily={this.setImageryStartDatePlanetDaily}
+                        setImageryEndDatePlanetDaily={this.setImageryEndDatePlanetDaily}
                         imagerySecureWatchAvailableDates={this.state.imagerySecureWatchAvailableDates}
                         onChangeSecureWatchSingleLayer={this.onChangeSecureWatchSingleLayer}
                         geeImageryVisParams={this.state.geeImageryVisParams}
@@ -1862,8 +1869,9 @@ class ImageryOptions extends React.Component {
                         {props.imageryType === "PlanetDaily" &&
                             <PlanetDailyMenus
                                 imageryStartDatePlanetDaily={this.props.imageryStartDatePlanetDaily}
-                                setImageryDatePlanetDaily={this.props.setImageryDatePlanetDaily}
+                                setImageryStartDatePlanetDaily={this.props.setImageryStartDatePlanetDaily}
                                 imageryEndDatePlanetDaily={this.props.imageryEndDatePlanetDaily}
+                                setImageryEndDatePlanetDaily={this.props.setImageryEndDatePlanetDaily}
                             />
                         }
                         {props.imageryType === "SecureWatch" &&
