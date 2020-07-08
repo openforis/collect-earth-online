@@ -3,6 +3,15 @@ import ReactDOM from "react-dom";
 import { mercator, ceoMapStyles } from "../js/mercator.js";
 import { NavigationBar } from "./components/PageComponents";
 import { SurveyCollection } from "./components/SurveyCollection";
+import {
+    PlanetMenus,
+    PlanetDailyMenus,
+    SecureWatchMenus,
+    Sentinel1Menus,
+    Sentinel2Menus,
+    GEEImageMenus,
+    GEEImageCollectionMenus,
+} from "./imagery/collectionMenuControls";
 import { convertSampleValuesToSurveyQuestions } from "./utils/surveyUtils";
 import { UnicodeIcon, getQueryString } from "./utils/textUtils";
 import { formatDateISO } from "./utils/dateUtils";
@@ -1808,275 +1817,6 @@ class ImageryOptions extends React.Component {
         };
     }
 
-    planetMenus = () => (
-        <div className="PlanetsMenu my-2">
-            <div className="slidecontainer form-control form-control-sm">
-                <input
-                    type="range"
-                    min="2016"
-                    max={new Date().getFullYear()}
-                    value={this.props.imageryYearPlanet}
-                    className="slider"
-                    id="myRange"
-                    onChange={e => this.props.setImageryYearPlanet(parseInt(e.target.value))}
-                />
-                <p>Year: <span id="demo">{this.props.imageryYearPlanet}</span></p>
-            </div>
-            <div className="slidecontainer form-control form-control-sm">
-                <input
-                    type="range"
-                    min="1"
-                    max="12"
-                    value={this.props.imageryMonthPlanet}
-                    className="slider"
-                    id="myRangemonth"
-                    onChange={e => this.props.setImageryMonthPlanet(parseInt(e.target.value))}
-                />
-                <p>Month: <span id="demo">{this.props.imageryMonthNamePlanet}</span></p>
-            </div>
-        </div>
-    );
-
-    planetDailyMenus = () => (
-        <div className="PlanetsDailyMenu my-2">
-            <label>Start Date</label>
-            <div className="slidecontainer form-control form-control-sm">
-                <input
-                    type="date"
-                    id="planetDailyStartDate"
-                    value={this.props.imageryStartDatePlanetDaily}
-                    max={new Date().toJSON().split("T")[0]}
-                    min="2010-01-01"
-                    style={{ width: "100%" }}
-                    onChange={e => this.props.setImageryDatePlanetDaily(e.target)}
-                />
-            </div>
-            <label>End Date</label>
-            <div className="slidecontainer form-control form-control-sm">
-                <input
-                    type="date"
-                    id="planetDailyEndDate"
-                    value={this.props.imageryEndDatePlanetDaily}
-                    max={new Date().toJSON().split("T")[0]}
-                    min="2010-01-01"
-                    style={{ width: "100%" }}
-                    onChange={e => this.props.setImageryDatePlanetDaily(e.target)}
-                />
-            </div>
-        </div>
-    );
-
-    secureWatchMenus = () => (
-        <div className="SecureWatchMenu my-2 mb-3">
-            <div className="form-control form-control-sm">
-                <label>Available Layers</label>
-                {this.props.imagerySecureWatchAvailableDates && this.props.imagerySecureWatchAvailableDates.length > 0
-                    ?
-                        <select
-                            className="form-control form-control-sm"
-                            onChange={e => this.props.onChangeSecureWatchSingleLayer(e.target)}
-                            id="securewatch-option-select"
-                        >
-                            {this.props.imagerySecureWatchAvailableDates.map((obj, uid) =>
-                                <option key={uid} value={obj.featureId} date={obj.acquisitionDate} cloud={obj.cloudCover}>
-                                    {obj.acquisitionDate + " (" + (obj.cloudCover * 100).toFixed(2) + "% cloudy)"}
-                                </option>
-                            )}
-                        </select>
-                    :
-                        <select
-                            className="form-control form-control-sm"
-                            id="securewatch-option-select"
-                            disabled
-                        >
-                            <option>
-                                {this.props.imagerySecureWatchAvailableDates
-                                        ? "No available layers"
-                                        : "Loading dates..."
-                                }
-                            </option>
-                        </select>
-                }
-            </div>
-        </div>
-    );
-
-    sentinel1Menus = () => {
-        const bandCombinationOptions = [
-            { label: "VH,VV,VH/VV", value: "VH,VV,VH/VV" },
-            { label: "VH,VV,VV/VH", value: "VH,VV,VV/VH" },
-            { label: "VV,VH,VV/VH", value: "VV,VH,VV/VH" },
-            { label: "VV,VH,VH/VV", value: "VV,VH,VH/VV" },
-        ];
-
-        return (
-            <div className="Sentinel1Menu my-2">
-                <div className="slidecontainer form-control form-control-sm">
-                    <input
-                        type="range"
-                        min="2014"
-                        max={new Date().getFullYear()}
-                        value={this.props.imageryYearSentinel1}
-                        className="slider"
-                        id="sentinel1-year"
-                        onChange={e => this.props.setImageryYearSentinel(e.target)}
-                    />
-                    <p>Year: <span>{this.props.imageryYearSentinel1}</span></p>
-                </div>
-                <div className="slidecontainer form-control form-control-sm">
-                    <input
-                        type="range"
-                        min="1"
-                        max="12"
-                        value={this.props.imageryMonthSentinel1}
-                        className="slider"
-                        id="sentinel1-month"
-                        onChange={e => this.props.setImageryMonthSentinel(e.target)}
-                    />
-                    <p>Month: <span id="demo">{this.props.imageryMonthSentinel1}</span></p>
-                </div>
-                <div className="form-control form-control-sm" >
-                    <div className="mb-3">
-                        <label>Band Combination</label>
-                        <select
-                            className="form-control"
-                            id="sentinel1-bandCombination"
-                            onChange={e => this.props.setBandCombinationSentinel(e.target)}
-                            value={this.props.bandCombinationSentinel1}
-                        >
-                            {bandCombinationOptions.map(el => <option value={el.value} key={el.value}>{el.label}</option>)}
-                        </select>
-                    </div>
-                </div>
-            </div>
-        );
-    };
-
-    sentinel2Menus = () => {
-        const bandCombinationOptions = [
-            { label: "True Color", value: "TrueColor" },
-            { label: "False Color Infrared", value: "FalseColorInfrared" },
-            { label: "False Color Urban", value: "FalseColorUrban" },
-            { label: "Agriculture", value: "Agriculture" },
-            { label: "Healthy Vegetation", value: "HealthyVegetation" },
-            { label: "Short Wave Infrared", value: "ShortWaveInfrared" },
-        ];
-
-        return (
-            <div className="Sentinel2Menu my-2">
-                <div className="slidecontainer form-control form-control-sm">
-                    <input
-                        type="range"
-                        min="2015"
-                        max={new Date().getFullYear()}
-                        value={this.props.imageryYearSentinel2}
-                        className="slider"
-                        id="sentinel2-year"
-                        onChange={e => this.props.setImageryYearSentinel(e.target)}
-                    />
-                    <p>Year: <span>{this.props.imageryYearSentinel2}</span></p>
-                </div>
-                <div className="slidecontainer form-control form-control-sm">
-                    <input
-                        type="range"
-                        min="1"
-                        max="12"
-                        value={this.props.imageryMonthSentinel2}
-                        className="slider"
-                        id="sentinel2-month"
-                        onChange={e => this.props.setImageryMonthSentinel(e.target)}
-                    />
-                    <p>Month: <span id="demo">{this.props.imageryMonthSentinel2}</span></p>
-                </div>
-                <div className="form-control form-control-sm" >
-                    <div className="mb-3">
-                        <label>Band Combination</label>
-                        <select
-                            className="form-control"
-                            id="sentinel2-bandCombination"
-                            onChange={e => this.props.setBandCombinationSentinel(e.target)}
-                            value={this.props.bandCombinationSentinel2}
-                        >
-                            {bandCombinationOptions.map(el => <option value={el.value} key={el.value}>{el.label}</option>)}
-                        </select>
-                    </div>
-                </div>
-            </div>
-        );
-    };
-
-    GEEImageMenus = () => (
-        <div className="GEEImageMenu my-2">
-            <div className="form-control form-control-sm">
-                <label>Visualization Parameters</label>
-                <textarea
-                    className="form-control"
-                    id="geeImageVisParams"
-                    value={this.props.geeImageryVisParams}
-                    onChange={e => this.props.setGEEImageryVisParams(e.target.value)}
-                >
-                    {this.props.geeImageryVisParams}
-                </textarea>
-                <br />
-                <button
-                    type="button"
-                    className="btn bg-lightgreen btn-sm btn-block"
-                    id="update-gee-image-button"
-                    onClick={this.props.updateGEEImagery}
-                >
-                    Update Image
-                </button>
-            </div>
-        </div>
-    );
-
-    GEEImageCollectionMenus = () => (
-        <div className="GEEImageCollectionMenu my-2">
-            <div className="form-control form-control-sm">
-                <label>Start Date</label>
-                <div className="slidecontainer form-control form-control-sm">
-                    <input
-                        type="date"
-                        id="geeImageCollectionStartDate"
-                        value={this.props.geeImageCollectionStartDate}
-                        max={new Date().toJSON().split("T")[0]}
-                        style={{ width: "100%" }}
-                        onChange={e => this.props.setGEEImageCollectionStartDate(e.target.value)}
-                    />
-                </div>
-                <label>End Date</label>
-                <div className="slidecontainer form-control form-control-sm">
-                    <input
-                        type="date"
-                        id="geeImageCollectionEndDate"
-                        value={this.props.geeImageCollectionEndDate}
-                        max={new Date().toJSON().split("T")[0]}
-                        style={{ width: "100%" }}
-                        onChange={e => this.props.setGEEImageCollectionEndDate(e.target.value)}
-                    />
-                </div>
-                <label>Visualization Parameters</label>
-                <textarea
-                    className="form-control"
-                    id="geeImageCollectionVisParams"
-                    value={this.props.geeImageCollectionVisParams}
-                    onChange={e => this.props.setGEEImageCollectionVisParams(e.target.value)}
-                >
-                    {this.props.geeImageCollectionVisParams}
-                </textarea>
-                <br />
-                <button
-                    type="button"
-                    className="btn bg-lightgreen btn-sm btn-block"
-                    id="update-gee-image-button"
-                    onClick={this.props.updateGEEImageCollection}
-                >
-                    Update Image
-                </button>
-            </div>
-        </div>
-    );
-
     render() {
         const { props } = this;
         return (
@@ -2110,13 +1850,66 @@ class ImageryOptions extends React.Component {
                                         )
                             }
                         </select>
-                        {props.imageryType === "Planet" && this.planetMenus()}
-                        {props.imageryType === "PlanetDaily" && this.planetDailyMenus()}
-                        {props.imageryType === "SecureWatch" && this.secureWatchMenus()}
-                        {props.imageryType === "Sentinel1" && this.sentinel1Menus()}
-                        {props.imageryType === "Sentinel2" && this.sentinel2Menus()}
-                        {props.imageryType === "GEEImage" && this.GEEImageMenus()}
-                        {props.imageryType === "GEEImageCollection" && this.GEEImageCollectionMenus()}
+                        {props.imageryType === "Planet" &&
+                            <PlanetMenus
+                                imageryYearPlanet={this.props.imageryYearPlanet}
+                                setImageryYearPlanet={this.props.setImageryYearPlanet}
+                                imageryMonthPlanet={this.props.imageryMonthPlanet}
+                                setImageryMonthPlanet={this.props.setImageryMonthPlanet}
+                                imageryMonthNamePlanet={this.props.imageryMonthNamePlanet}
+                            />
+                        }
+                        {props.imageryType === "PlanetDaily" &&
+                            <PlanetDailyMenus
+                                imageryStartDatePlanetDaily={this.props.imageryStartDatePlanetDaily}
+                                setImageryDatePlanetDaily={this.props.setImageryDatePlanetDaily}
+                                imageryEndDatePlanetDaily={this.props.imageryEndDatePlanetDaily}
+                            />
+                        }
+                        {props.imageryType === "SecureWatch" &&
+                            <SecureWatchMenus
+                                imagerySecureWatchAvailableDates={this.props.imagerySecureWatchAvailableDates}
+                                onChangeSecureWatchSingleLayer={this.props.onChangeSecureWatchSingleLayer}
+                            />
+                        }
+                        {props.imageryType === "Sentinel1" &&
+                            <Sentinel1Menus
+                                imageryYearSentinel1={this.props.imageryYearSentinel1}
+                                setImageryYearSentinel={this.props.setImageryYearSentinel}
+                                imageryMonthSentinel1={this.props.imageryMonthSentinel1}
+                                setImageryMonthSentinel={this.props.setImageryMonthSentinel}
+                                bandCombinationSentinel1={this.props.bandCombinationSentinel1}
+                                setBandCombinationSentinel={this.props.setBandCombinationSentinel}
+                            />
+                        }
+                        {props.imageryType === "Sentinel2" &&
+                            <Sentinel2Menus
+                                imageryYearSentinel2={this.props.imageryYearSentinel2}
+                                setImageryYearSentinel={this.props.setImageryYearSentinel}
+                                imageryMonthSentinel2={this.props.imageryMonthSentinel2}
+                                setImageryMonthSentinel={this.props.setImageryMonthSentinel}
+                                bandCombinationSentinel2={this.props.bandCombinationSentinel2}
+                                setBandCombinationSentinel={this.props.setBandCombinationSentinel}
+                            />
+                        }
+                        {props.imageryType === "GEEImage" &&
+                            <GEEImageMenus
+                                geeImageryVisParams={this.props.geeImageryVisParams}
+                                setGEEImageryVisParams={this.props.setGEEImageryVisParams}
+                                updateGEEImagery={this.props.updateGEEImagery}
+                            />
+                        }
+                        {props.imageryType === "GEEImageCollection" &&
+                            <GEEImageCollectionMenus
+                                geeImageCollectionStartDate={this.props.geeImageCollectionStartDate}
+                                setGEEImageCollectionStartDate={this.props.setGEEImageCollectionStartDate}
+                                geeImageCollectionEndDate={this.props.geeImageCollectionEndDate}
+                                setGEEImageCollectionEndDate={this.props.setGEEImageCollectionEndDate}
+                                geeImageCollectionVisParams={this.props.geeImageCollectionVisParams}
+                                setGEEImageCollectionVisParams={this.props.setGEEImageCollectionVisParams}
+                                updateGEEImageCollection={this.props.updateGEEImageCollection}
+                            />
+                        }
                     </Fragment>
                 }
             </div>
