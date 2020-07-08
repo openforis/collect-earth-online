@@ -41,7 +41,7 @@ class Collection extends React.Component {
             imagerySecureWatchDate: "",
             imagerySecureWatchCloudCover: "",
             imagerySecureWatchAvailableDates: [],
-            geeImageryVisParams: "",
+            // geeImageryVisParams: "",
             geeImageCollectionStartDate: "",
             geeImageCollectionEndDate: "",
             geeImageCollectionVisParams: "",
@@ -435,7 +435,7 @@ class Collection extends React.Component {
             [sentinel1 ? "bandCombinationSentinel1" : "bandCombinationSentinel2"] : newBandCombination,
         });
 
-    setGEEImageryVisParams = (newVisParams) => this.setState({ geeImageryVisParams: newVisParams });
+    // setGEEImageryVisParams = (newVisParams) => this.setState({ geeImageryVisParams: newVisParams });
 
     setGEEImageCollectionVisParams = (newVisParams) => this.setState({ geeImageCollectionVisParams: newVisParams });
 
@@ -480,8 +480,8 @@ class Collection extends React.Component {
                     [this.state.currentImagery.sourceConfig.type === "Sentinel1" ? "bandCombinationSentinel1" : "bandCombinationSentinel2"] : bandCombination,
                     "imageryAttribution" : this.state.currentImagery.attribution + " | " + startDate + " to " + formatDateISO(endDate),
                 });
-            } else if (this.state.currentImagery.sourceConfig.type === "GEEImage") {
-                this.setState({ geeImageryVisParams: this.state.currentImagery.sourceConfig.imageVisParams });
+            // } else if (this.state.currentImagery.sourceConfig.type === "GEEImage") {
+            //     this.setState({ geeImageryVisParams: this.state.currentImagery.sourceConfig.imageVisParams });
             } else if (this.state.currentImagery.sourceConfig.type === "GEEImageCollection") {
                 this.setState({
                     geeImageCollectionVisParams: this.state.currentImagery.sourceConfig.collectionVisParams,
@@ -613,17 +613,17 @@ class Collection extends React.Component {
             eventTarget.options[eventTarget.options.selectedIndex].getAttribute("cloud")
         );
 
-    updateGEEImagery = () =>
-        mercator.updateLayerSource(
-            this.state.mapConfig,
-            this.state.currentImagery.id,
-            this.state.currentProject.boundary,
-            sourceConfig => ({
-                ...sourceConfig,
-                imageVisParams: this.state.geeImageryVisParams,
-            }),
-            this
-        );
+    // updateGEEImagery = () =>
+    //     mercator.updateLayerSource(
+    //         this.state.mapConfig,
+    //         this.state.currentImagery.id,
+    //         this.state.currentProject.boundary,
+    //         sourceConfig => ({
+    //             ...sourceConfig,
+    //             imageVisParams: this.state.geeImageryVisParams,
+    //         }),
+    //         this
+    //     );
 
     updateGEEImageCollection = () =>{
         const { geeImageCollectionStartDate, geeImageCollectionEndDate } = this.state;
@@ -1440,9 +1440,9 @@ class Collection extends React.Component {
                         setImageryEndDatePlanetDaily={this.setImageryEndDatePlanetDaily}
                         imagerySecureWatchAvailableDates={this.state.imagerySecureWatchAvailableDates}
                         onChangeSecureWatchSingleLayer={this.onChangeSecureWatchSingleLayer}
-                        geeImageryVisParams={this.state.geeImageryVisParams}
-                        setGEEImageryVisParams={this.setGEEImageryVisParams}
-                        updateGEEImagery={this.updateGEEImagery}
+                        // geeImageryVisParams={this.state.geeImageryVisParams}
+                        // setGEEImageryVisParams={this.setGEEImageryVisParams}
+                        // updateGEEImagery={this.updateGEEImagery}
                         geeImageCollectionVisParams={this.state.geeImageCollectionVisParams}
                         geeImageCollectionStartDate={this.state.geeImageCollectionStartDate}
                         geeImageCollectionEndDate={this.state.geeImageCollectionEndDate}
@@ -1452,6 +1452,9 @@ class Collection extends React.Component {
                         updateGEEImageCollection={this.updateGEEImageCollection}
                         setStackingProfileDG={this.setStackingProfileDG}
                         loadingImages={this.state.imageryList.length === 0}
+                        currentImagery={this.state.currentImagery}
+                        mapConfig={this.state.mapConfig}
+                        currentProject={this.state.currentProject}
                     />
                     {this.state.currentPlot
                         ?
@@ -1881,9 +1884,9 @@ class ImageryOptions extends React.Component {
                         }
                         {props.imageryType === "GEEImage" &&
                             <GEEImageMenus
-                                geeImageryVisParams={this.props.geeImageryVisParams}
-                                setGEEImageryVisParams={this.props.setGEEImageryVisParams}
-                                updateGEEImagery={this.props.updateGEEImagery}
+                                mapConfig={this.props.mapConfig}
+                                currentProject={this.props.currentProject}
+                                currentImagery={this.props.currentImagery}
                             />
                         }
                         {props.imageryType === "GEEImageCollection" &&

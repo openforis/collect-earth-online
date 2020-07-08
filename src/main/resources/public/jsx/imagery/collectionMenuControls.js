@@ -1,4 +1,5 @@
 import React from "react";
+import { mercator } from "../../js/mercator";
 
 export function PlanetMenus({
     imageryYearPlanet,
@@ -228,31 +229,59 @@ export function Sentinel2Menus({
     );
 }
 
-export function GEEImageMenus({ geeImageryVisParams, setGEEImageryVisParams, updateGEEImagery }) {
-    return (
-        <div className="GEEImageMenu my-2">
-            <div className="form-control form-control-sm">
-                <label>Visualization Parameters</label>
-                <textarea
-                    className="form-control"
-                    id="geeImageVisParams"
-                    value={geeImageryVisParams}
-                    onChange={e => setGEEImageryVisParams(e.target.value)}
-                >
-                    {geeImageryVisParams}
-                </textarea>
-                <br />
-                <button
-                    type="button"
-                    className="btn bg-lightgreen btn-sm btn-block"
-                    id="update-gee-image-button"
-                    onClick={updateGEEImagery}
-                >
-                    Update Image
-                </button>
+export class GEEImageMenus extends React.Component {
+    constructor(props) {
+        super(props);
+        this.state = {
+            geeImageryVisParams: "",
+        };
+    }
+
+    componentDidMount = () =>
+        this.setState({
+            geeImageryVisParams: this.props.currentImagery.sourceConfig.imageVisParams,
+        });
+
+    updateGEEImagery = () =>
+        mercator.updateLayerSource(
+            this.props.mapConfig,
+            this.props.currentImagery.id,
+            this.props.currentProject.boundary,
+            sourceConfig => ({
+                ...sourceConfig,
+                imageVisParams: this.state.geeImageryVisParams,
+            }),
+            this
+        );
+
+    setGEEImageryVisParams = (newVisParams) => this.setState({ geeImageryVisParams: newVisParams });
+
+    render() {
+        return (
+            <div className="GEEImageMenu my-2">
+                <div className="form-control form-control-sm">
+                    <label>Visualization Parameters</label>
+                    <textarea
+                        className="form-control"
+                        id="geeImageVisParams"
+                        value={this.state.geeImageryVisParams}
+                        onChange={e => this.setGEEImageryVisParams(e.target.value)}
+                    >
+                        {this.state.geeImageryVisParams}
+                    </textarea>
+                    <br />
+                    <button
+                        type="button"
+                        className="btn bg-lightgreen btn-sm btn-block"
+                        id="update-gee-image-button"
+                        onClick={this.updateGEEImagery}
+                    >
+                        Update Image
+                    </button>
+                </div>
             </div>
-        </div>
-    );
+        );
+    }
 }
 
 export function GEEImageCollectionMenus({
