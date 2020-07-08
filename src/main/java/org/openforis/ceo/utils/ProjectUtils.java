@@ -302,7 +302,7 @@ public class ProjectUtils {
         var yRange = top - bottom;
         var buffer = xRange / 50;
         return Stream.generate(() -> new Double[]{left + Math.floor(Math.random() * xRange / buffer) * buffer + (buffer / 2),
-                bottom + Math.floor(Math.random() * yRange / buffer) * buffer + (buffer / 2)})
+                                     bottom + Math.floor(Math.random() * yRange / buffer) * buffer + (buffer / 2)})
                 .limit(numPoints)
                 .map(point -> reprojectPoint(point, 3857, 4326))
                 .toArray(Double[][]::new);
@@ -343,14 +343,11 @@ public class ProjectUtils {
         var bottom = plotY - radius;
         var buffer = radius / 50;
         if (plotShape.equals("circle")) {
-            return Stream.generate(() -> 2.0 * Math.PI * Math.random())
+            return Stream.generate(() -> new Double[]{left + Math.floor(Math.random() * plotSize / buffer) * buffer,
+                                         bottom + Math.floor(Math.random() * plotSize / buffer) * buffer})
+                    .filter(point -> Math.sqrt(Math.pow(point[0] - plotX, 2) + Math.pow(point[1] - plotY, 2)) < (radius - (buffer / 2)))
                     .limit(samplesPerPlot)
-                    .map(offsetAngle -> {
-                        var offsetMagnitude = Math.ceil(radius * Math.random() / buffer) * buffer;
-                        var xOffset = offsetMagnitude * Math.cos(offsetAngle);
-                        var yOffset = offsetMagnitude * Math.sin(offsetAngle);
-                        return reprojectPoint(new Double[]{plotX + xOffset, plotY + yOffset}, 3857, 4326);
-                    })
+                    .map(point -> reprojectPoint(point, 3857, 4326))
                     .toArray(Double[][]::new);
         } else {
             return createRandomPointsInBounds(left, bottom, right, top, samplesPerPlot);
