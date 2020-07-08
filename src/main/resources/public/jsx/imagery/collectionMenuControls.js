@@ -135,7 +135,7 @@ export function Sentinel1Menus({
                     value={imageryYearSentinel1}
                     className="slider"
                     id="sentinel1-year"
-                    onChange={e => setImageryYearSentinel(e.target)}
+                    onChange={e => setImageryYearSentinel(e.target.value, true)}
                 />
                 <p>Year: <span>{imageryYearSentinel1}</span></p>
             </div>
@@ -147,7 +147,7 @@ export function Sentinel1Menus({
                     value={imageryMonthSentinel1}
                     className="slider"
                     id="sentinel1-month"
-                    onChange={e => setImageryMonthSentinel(e.target)}
+                    onChange={e => setImageryMonthSentinel(e.target.value, true)}
                 />
                 <p>Month: <span id="demo">{imageryMonthSentinel1}</span></p>
             </div>
@@ -158,7 +158,7 @@ export function Sentinel1Menus({
                         className="form-control"
                         id="sentinel1-bandCombination"
                         value={bandCombinationSentinel1}
-                        onChange={e => setBandCombinationSentinel(e.target)}
+                        onChange={e => setBandCombinationSentinel(e.target.value, true)}
                     >
                         {bandCombinationOptions.map(el => <option value={el.value} key={el.value}>{el.label}</option>)}
                     </select>
@@ -195,7 +195,7 @@ export function Sentinel2Menus({
                     value={imageryYearSentinel2}
                     className="slider"
                     id="sentinel2-year"
-                    onChange={e => setImageryYearSentinel(e.target)}
+                    onChange={e => setImageryYearSentinel(e.target.value, false)}
                 />
                 <p>Year: <span>{imageryYearSentinel2}</span></p>
             </div>
@@ -207,7 +207,7 @@ export function Sentinel2Menus({
                     value={imageryMonthSentinel2}
                     className="slider"
                     id="sentinel2-month"
-                    onChange={e => setImageryMonthSentinel(e.target)}
+                    onChange={e => setImageryMonthSentinel(e.target.value, false)}
                 />
                 <p>Month: <span id="demo">{imageryMonthSentinel2}</span></p>
             </div>
@@ -218,7 +218,7 @@ export function Sentinel2Menus({
                         className="form-control"
                         id="sentinel2-bandCombination"
                         value={bandCombinationSentinel2}
-                        onChange={e => setBandCombinationSentinel(e.target)}
+                        onChange={e => setBandCombinationSentinel(e.target.value, false)}
                     >
                         {bandCombinationOptions.map(el => <option value={el.value} key={el.value}>{el.label}</option>)}
                     </select>

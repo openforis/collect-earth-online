@@ -408,53 +408,32 @@ class Collection extends React.Component {
         });
     };
 
-    setImageryYearSentinel = (eventTarget) => {
-        const { imageryMonthSentinel1, imageryYearSentinel1, imageryMonthSentinel2, imageryYearSentinel2 } = this.state;
-
-        const newImageryYearSentinel1 = (eventTarget.id === "sentinel1-year") && eventTarget.value ? eventTarget.value : imageryYearSentinel1;
-        const newImageryYearSentinel2 = (eventTarget.id === "sentinel2-year") && eventTarget.value ? eventTarget.value : imageryYearSentinel2;
-
-        const startDate = eventTarget.id === "sentinel1-year"
-            ? newImageryYearSentinel1 + "-" + (imageryMonthSentinel1 > 9 ? "" : "0") + imageryMonthSentinel1 + "-01"
-            : newImageryYearSentinel2 + "-" + (imageryMonthSentinel2 > 9 ? "" : "0") + imageryMonthSentinel2 + "-01";
-        const endDate = eventTarget.id === "sentinel1-year"
-            ? new Date(newImageryYearSentinel1, imageryMonthSentinel1, 0)
-            : new Date(newImageryYearSentinel2, imageryMonthSentinel2, 0);
-
+    setImageryYearSentinel = (newYear, sentinel1 = true) => {
+        const imageryMonth = sentinel1 ? this.state.imageryMonthSentinel1 : this.state.imageryMonthSentinel2;
+        const startDate = newYear + "-" + (imageryMonth > 9 ? "" : "0") + imageryMonth + "-01";
+        const endDate = new Date(newYear, imageryMonth, 0);
         this.setState({
-            imageryYearSentinel1: newImageryYearSentinel1,
-            imageryYearSentinel2: newImageryYearSentinel2,
-            imageryAttribution: this.state.currentImagery.attribution + " | " + startDate + " to " + formatDateISO(endDate),
+            [sentinel1 ? "imageryYearSentinel1" : "imageryYearSentinel2"] : newYear,
+            "imageryAttribution": this.state.currentImagery.attribution + " | "
+                + startDate + " to " + formatDateISO(endDate),
         });
     };
 
-    setImageryMonthSentinel = (eventTarget) => {
-        const { imageryMonthSentinel1, imageryYearSentinel1, imageryMonthSentinel2, imageryYearSentinel2 } = this.state;
-
-        const newImageryMonthSentinel1 = (eventTarget.id === "sentinel1-month") && eventTarget.value ? eventTarget.value : imageryMonthSentinel1;
-        const newImageryMonthSentinel2 = (eventTarget.id === "sentinel2-month") && eventTarget.value ? eventTarget.value : imageryMonthSentinel2;
-
-        const startDate = eventTarget.id === "sentinel1-month"
-            ? imageryYearSentinel1 + "-" + (newImageryMonthSentinel1 > 9 ? "" : "0") + newImageryMonthSentinel1 + "-01"
-            : imageryYearSentinel2 + "-" + (newImageryMonthSentinel2 > 9 ? "" : "0") + newImageryMonthSentinel2 + "-01";
-        const endDate = eventTarget.id === "sentinel1-month"
-            ? new Date(imageryYearSentinel1, newImageryMonthSentinel1, 0)
-            : new Date(imageryYearSentinel2, newImageryMonthSentinel2, 0);
-
+    setImageryMonthSentinel = (newMonth, sentinel1 = true) => {
+        const imageryYear = sentinel1 ? this.state.imageryYearSentinel1 : this.state.imageryYearSentinel2;
+        const startDate = imageryYear + "-" + (newMonth > 9 ? "" : "0") + newMonth + "-01";
+        const endDate = new Date(imageryYear, newMonth, 0);
         this.setState({
-            imageryMonthSentinel1: newImageryMonthSentinel1,
-            imageryMonthSentinel2: newImageryMonthSentinel2,
-            imageryAttribution: this.state.currentImagery.attribution + " | " + startDate + " to " + formatDateISO(endDate),
+            [sentinel1 ? "imageryMonthSentinel1" : "imageryMonthSentinel2"] : newMonth,
+            "imageryAttribution": this.state.currentImagery.attribution + " | "
+                + startDate + " to " + formatDateISO(endDate),
         });
     };
 
-    setBandCombinationSentinel = (eventTarget) => {
-        const { bandCombinationSentinel1, bandCombinationSentinel2 } = this.state;
+    setBandCombinationSentinel = (newBandCombination, sentinel1 = true) =>
         this.setState({
-            bandCombinationSentinel1: (eventTarget.id === "sentinel1-bandCombination") && eventTarget.value ? eventTarget.value : bandCombinationSentinel1,
-            bandCombinationSentinel2: (eventTarget.id === "sentinel2-bandCombination") && eventTarget.value ? eventTarget.value : bandCombinationSentinel2,
+            [sentinel1 ? "bandCombinationSentinel1" : "bandCombinationSentinel2"] : newBandCombination,
         });
-    };
 
     setGEEImageryVisParams = (newVisParams) => this.setState({ geeImageryVisParams: newVisParams });
 
