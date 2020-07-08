@@ -93,7 +93,7 @@ export class GeoDashNavigationBar extends React.Component {
     closeDialogs = () => this.setState({
         addDialog: false,
         copyDialog: false,
-    })
+    });
 
     render() {
         const { userName, page } = this.props;
