@@ -237,16 +237,13 @@ export class GEEImageMenus extends React.Component {
         };
     }
 
-    componentDidMount = () =>
-        this.setState({
-            geeImageryVisParams: this.props.currentImagery.sourceConfig.imageVisParams,
-        });
+    componentDidMount = () => this.setState({ geeImageryVisParams: this.props.imageVisParams });
 
     updateGEEImagery = () =>
         mercator.updateLayerSource(
             this.props.mapConfig,
-            this.props.currentImagery.id,
-            this.props.currentProject.boundary,
+            this.props.currentImageryId,
+            this.props.currentProjectBoundary,
             sourceConfig => ({
                 ...sourceConfig,
                 imageVisParams: this.state.geeImageryVisParams,
@@ -284,59 +281,95 @@ export class GEEImageMenus extends React.Component {
     }
 }
 
-export function GEEImageCollectionMenus({
-    geeImageCollectionStartDate,
-    setGEEImageCollectionStartDate,
-    geeImageCollectionEndDate,
-    setGEEImageCollectionEndDate,
-    geeImageCollectionVisParams,
-    setGEEImageCollectionVisParams,
-    updateGEEImageCollection,
-}) {
-    return (
-        <div className="GEEImageCollectionMenu my-2">
-            <div className="form-control form-control-sm">
-                <label>Start Date</label>
-                <div className="slidecontainer form-control form-control-sm">
-                    <input
-                        type="date"
-                        id="geeImageCollectionStartDate"
-                        value={geeImageCollectionStartDate}
-                        max={new Date().toJSON().split("T")[0]}
-                        style={{ width: "100%" }}
-                        onChange={e => setGEEImageCollectionStartDate(e.target.value)}
-                    />
+export class GEEImageCollectionMenus extends React.Component {
+    constructor(props) {
+        super(props);
+        this.state = {
+            geeImageCollectionStartDate: "",
+            geeImageCollectionEndDate: "",
+            geeImageCollectionVisParams: "",
+        };
+    }
+
+    componentDidMount = () =>
+        this.setState({
+            geeImageCollectionStartDate: this.props.sourceConfig.startDate,
+            geeImageCollectionEndDate: this.props.sourceConfig.endDate,
+            geeImageCollectionVisParams: this.props.sourceConfig.collectionVisParams,
+        });
+
+    setGEEImageCollectionStartDate = (newDate) => this.setState({ geeImageCollectionStartDate: newDate });
+
+    setGEEImageCollectionEndDate = (newDate) => this.setState({ geeImageCollectionEndDate: newDate });
+
+    setGEEImageCollectionVisParams = (newVisParams) => this.setState({ geeImageCollectionVisParams: newVisParams });
+
+    updateGEEImageCollection = () => {
+        const { geeImageCollectionStartDate, geeImageCollectionEndDate } = this.state;
+        if (new Date(geeImageCollectionStartDate) > new Date(geeImageCollectionEndDate)) {
+            alert("Start date must be smaller than the end date.");
+        } else {
+            mercator.updateLayerSource(
+                this.props.mapConfig,
+                this.props.currentImageryId,
+                this.props.currentProjectBoundary,
+                sourceConfig => ({
+                    ...sourceConfig,
+                    collectionVisParams: this.state.geeImageCollectionVisParams,
+                    startDate: this.state.geeImageCollectionStartDate,
+                    endDate: this.state.geeImageCollectionEndDate,
+                }),
+                this
+            );
+        }
+    };
+
+    render() {
+        return (
+            <div className="GEEImageCollectionMenu my-2">
+                <div className="form-control form-control-sm">
+                    <label>Start Date</label>
+                    <div className="slidecontainer form-control form-control-sm">
+                        <input
+                            type="date"
+                            id="geeImageCollectionStartDate"
+                            value={this.state.geeImageCollectionStartDate}
+                            max={new Date().toJSON().split("T")[0]}
+                            style={{ width: "100%" }}
+                            onChange={e => this.setGEEImageCollectionStartDate(e.target.value)}
+                        />
+                    </div>
+                    <label>End Date</label>
+                    <div className="slidecontainer form-control form-control-sm">
+                        <input
+                            type="date"
+                            id="geeImageCollectionEndDate"
+                            value={this.state.geeImageCollectionEndDate}
+                            max={new Date().toJSON().split("T")[0]}
+                            style={{ width: "100%" }}
+                            onChange={e => this.setGEEImageCollectionEndDate(e.target.value)}
+                        />
+                    </div>
+                    <label>Visualization Parameters</label>
+                    <textarea
+                        className="form-control"
+                        id="geeImageCollectionVisParams"
+                        value={this.state.geeImageCollectionVisParams}
+                        onChange={e => this.setGEEImageCollectionVisParams(e.target.value)}
+                    >
+                        {this.state.geeImageCollectionVisParams}
+                    </textarea>
+                    <br />
+                    <button
+                        type="button"
+                        className="btn bg-lightgreen btn-sm btn-block"
+                        id="update-gee-image-button"
+                        onClick={this.updateGEEImageCollection}
+                    >
+                        Update Image
+                    </button>
                 </div>
-                <label>End Date</label>
-                <div className="slidecontainer form-control form-control-sm">
-                    <input
-                        type="date"
-                        id="geeImageCollectionEndDate"
-                        value={geeImageCollectionEndDate}
-                        max={new Date().toJSON().split("T")[0]}
-                        style={{ width: "100%" }}
-                        onChange={e => setGEEImageCollectionEndDate(e.target.value)}
-                    />
-                </div>
-                <label>Visualization Parameters</label>
-                <textarea
-                    className="form-control"
-                    id="geeImageCollectionVisParams"
-                    value={geeImageCollectionVisParams}
-                    onChange={e => setGEEImageCollectionVisParams(e.target.value)}
-                >
-                    {geeImageCollectionVisParams}
-                </textarea>
-                <br />
-                <button
-                    type="button"
-                    className="btn bg-lightgreen btn-sm btn-block"
-                    id="update-gee-image-button"
-                    onClick={updateGEEImageCollection}
-                >
-                    Update Image
-                </button>
             </div>
-        </div>
-    );
+        );
+    }
 }

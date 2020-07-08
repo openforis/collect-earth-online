@@ -41,10 +41,6 @@ class Collection extends React.Component {
             imagerySecureWatchDate: "",
             imagerySecureWatchCloudCover: "",
             imagerySecureWatchAvailableDates: [],
-            // geeImageryVisParams: "",
-            geeImageCollectionStartDate: "",
-            geeImageCollectionEndDate: "",
-            geeImageCollectionVisParams: "",
             mapConfig: null,
             nextPlotButtonDisabled: false,
             plotList: [],
@@ -435,14 +431,6 @@ class Collection extends React.Component {
             [sentinel1 ? "bandCombinationSentinel1" : "bandCombinationSentinel2"] : newBandCombination,
         });
 
-    // setGEEImageryVisParams = (newVisParams) => this.setState({ geeImageryVisParams: newVisParams });
-
-    setGEEImageCollectionVisParams = (newVisParams) => this.setState({ geeImageCollectionVisParams: newVisParams });
-
-    setGEEImageCollectionStartDate = (newDate) => this.setState({ geeImageCollectionStartDate: newDate });
-
-    setGEEImageCollectionEndDate = (newDate) => this.setState({ geeImageCollectionEndDate: newDate });
-
     updateMapImagery = () => {
         mercator.setVisibleLayer(this.state.mapConfig, this.state.currentImagery.id);
 
@@ -475,18 +463,10 @@ class Collection extends React.Component {
                 const endDate = new Date(year, month, 0);
 
                 this.setState({
-                    [this.state.currentImagery.sourceConfig.type === "Sentinel1" ? "imageryYearSentinel1" : "imageryYearSentinel2"] : year,
-                    [this.state.currentImagery.sourceConfig.type === "Sentinel1" ? "imageryMonthSentinel1" : "imageryMonthSentinel2"] : month,
-                    [this.state.currentImagery.sourceConfig.type === "Sentinel1" ? "bandCombinationSentinel1" : "bandCombinationSentinel2"] : bandCombination,
-                    "imageryAttribution" : this.state.currentImagery.attribution + " | " + startDate + " to " + formatDateISO(endDate),
-                });
-            // } else if (this.state.currentImagery.sourceConfig.type === "GEEImage") {
-            //     this.setState({ geeImageryVisParams: this.state.currentImagery.sourceConfig.imageVisParams });
-            } else if (this.state.currentImagery.sourceConfig.type === "GEEImageCollection") {
-                this.setState({
-                    geeImageCollectionVisParams: this.state.currentImagery.sourceConfig.collectionVisParams,
-                    geeImageCollectionStartDate: this.state.currentImagery.sourceConfig.startDate,
-                    geeImageCollectionEndDate: this.state.currentImagery.sourceConfig.endDate,
+                    [this.state.currentImagery.sourceConfig.type === "Sentinel1" ? "imageryYearSentinel1" : "imageryYearSentinel2"]: year,
+                    [this.state.currentImagery.sourceConfig.type === "Sentinel1" ? "imageryMonthSentinel1" : "imageryMonthSentinel2"]: month,
+                    [this.state.currentImagery.sourceConfig.type === "Sentinel1" ? "bandCombinationSentinel1" : "bandCombinationSentinel2"]: bandCombination,
+                    "imageryAttribution": this.state.currentImagery.attribution + " | " + startDate + " to " + formatDateISO(endDate),
                 });
             }
         }
@@ -612,38 +592,6 @@ class Collection extends React.Component {
             eventTarget.options[eventTarget.selectedIndex].getAttribute("date"),
             eventTarget.options[eventTarget.options.selectedIndex].getAttribute("cloud")
         );
-
-    // updateGEEImagery = () =>
-    //     mercator.updateLayerSource(
-    //         this.state.mapConfig,
-    //         this.state.currentImagery.id,
-    //         this.state.currentProject.boundary,
-    //         sourceConfig => ({
-    //             ...sourceConfig,
-    //             imageVisParams: this.state.geeImageryVisParams,
-    //         }),
-    //         this
-    //     );
-
-    updateGEEImageCollection = () =>{
-        const { geeImageCollectionStartDate, geeImageCollectionEndDate } = this.state;
-        if (new Date(geeImageCollectionStartDate) > new Date(geeImageCollectionEndDate)) {
-            alert("Start date must be smaller than the end date.");
-        } else {
-            mercator.updateLayerSource(
-                this.state.mapConfig,
-                this.state.currentImagery.id,
-                this.state.currentProject.boundary,
-                sourceConfig => ({
-                    ...sourceConfig,
-                    collectionVisParams: this.state.geeImageCollectionVisParams,
-                    startDate: this.state.geeImageCollectionStartDate,
-                    endDate: this.state.geeImageCollectionEndDate,
-                }),
-                this
-            );
-        }
-    };
 
     plotHasSamples = (plotData) => {
         if (plotData.samples.length === 0) {
@@ -1412,8 +1360,10 @@ class Collection extends React.Component {
                     {this.state.currentPlot && <PlotInformation extraPlotInfo={this.state.currentPlot.extraPlotInfo}/>}
                     <ImageryOptions
                         baseMapSource={this.state.currentImagery.id}
-                        imageryTitle={this.state.currentImagery.title}
-                        imageryType={this.state.currentImagery.sourceConfig.type}
+                        setBaseMapSource={this.setBaseMapSource}
+                        sourceConfig={this.state.currentImagery.sourceConfig}
+                        mapConfig={this.state.mapConfig}
+                        currentProjectBoundary={this.state.currentProject.boundary}
                         imageryList={this.state.imageryList}
                         imageryYearDG={this.state.imageryYearDG}
                         imageryYearPlanet={this.state.imageryYearPlanet}
@@ -1432,7 +1382,6 @@ class Collection extends React.Component {
                         setBandCombinationSentinel={this.setBandCombinationSentinel}
                         showPlanetDaily={this.state.currentPlot != null}
                         stackingProfileDG={this.state.stackingProfileDG}
-                        setBaseMapSource={this.setBaseMapSource}
                         setImageryYearDG={this.setImageryYearDG}
                         setImageryYearPlanet={this.setImageryYearPlanet}
                         setImageryMonthPlanet={this.setImageryMonthPlanet}
@@ -1440,21 +1389,8 @@ class Collection extends React.Component {
                         setImageryEndDatePlanetDaily={this.setImageryEndDatePlanetDaily}
                         imagerySecureWatchAvailableDates={this.state.imagerySecureWatchAvailableDates}
                         onChangeSecureWatchSingleLayer={this.onChangeSecureWatchSingleLayer}
-                        // geeImageryVisParams={this.state.geeImageryVisParams}
-                        // setGEEImageryVisParams={this.setGEEImageryVisParams}
-                        // updateGEEImagery={this.updateGEEImagery}
-                        geeImageCollectionVisParams={this.state.geeImageCollectionVisParams}
-                        geeImageCollectionStartDate={this.state.geeImageCollectionStartDate}
-                        geeImageCollectionEndDate={this.state.geeImageCollectionEndDate}
-                        setGEEImageCollectionVisParams={this.setGEEImageCollectionVisParams}
-                        setGEEImageCollectionStartDate={this.setGEEImageCollectionStartDate}
-                        setGEEImageCollectionEndDate={this.setGEEImageCollectionEndDate}
-                        updateGEEImageCollection={this.updateGEEImageCollection}
                         setStackingProfileDG={this.setStackingProfileDG}
                         loadingImages={this.state.imageryList.length === 0}
-                        currentImagery={this.state.currentImagery}
-                        mapConfig={this.state.mapConfig}
-                        currentProject={this.state.currentProject}
                     />
                     {this.state.currentPlot
                         ?
@@ -1839,7 +1775,7 @@ class ImageryOptions extends React.Component {
                                         )
                             }
                         </select>
-                        {props.imageryType === "Planet" &&
+                        {props.sourceConfig.type === "Planet" &&
                             <PlanetMenus
                                 imageryYearPlanet={this.props.imageryYearPlanet}
                                 setImageryYearPlanet={this.props.setImageryYearPlanet}
@@ -1848,7 +1784,7 @@ class ImageryOptions extends React.Component {
                                 imageryMonthNamePlanet={this.props.imageryMonthNamePlanet}
                             />
                         }
-                        {props.imageryType === "PlanetDaily" &&
+                        {props.sourceConfig.type === "PlanetDaily" &&
                             <PlanetDailyMenus
                                 imageryStartDatePlanetDaily={this.props.imageryStartDatePlanetDaily}
                                 setImageryStartDatePlanetDaily={this.props.setImageryStartDatePlanetDaily}
@@ -1856,13 +1792,13 @@ class ImageryOptions extends React.Component {
                                 setImageryEndDatePlanetDaily={this.props.setImageryEndDatePlanetDaily}
                             />
                         }
-                        {props.imageryType === "SecureWatch" &&
+                        {props.sourceConfig.type === "SecureWatch" &&
                             <SecureWatchMenus
                                 imagerySecureWatchAvailableDates={this.props.imagerySecureWatchAvailableDates}
                                 onChangeSecureWatchSingleLayer={this.props.onChangeSecureWatchSingleLayer}
                             />
                         }
-                        {props.imageryType === "Sentinel1" &&
+                        {props.sourceConfig.type === "Sentinel1" &&
                             <Sentinel1Menus
                                 imageryYearSentinel1={this.props.imageryYearSentinel1}
                                 setImageryYearSentinel={this.props.setImageryYearSentinel}
@@ -1872,7 +1808,7 @@ class ImageryOptions extends React.Component {
                                 setBandCombinationSentinel={this.props.setBandCombinationSentinel}
                             />
                         }
-                        {props.imageryType === "Sentinel2" &&
+                        {props.sourceConfig.type === "Sentinel2" &&
                             <Sentinel2Menus
                                 imageryYearSentinel2={this.props.imageryYearSentinel2}
                                 setImageryYearSentinel={this.props.setImageryYearSentinel}
@@ -1882,22 +1818,20 @@ class ImageryOptions extends React.Component {
                                 setBandCombinationSentinel={this.props.setBandCombinationSentinel}
                             />
                         }
-                        {props.imageryType === "GEEImage" &&
+                        {props.sourceConfig.type === "GEEImage" &&
                             <GEEImageMenus
-                                mapConfig={this.props.mapConfig}
-                                currentProject={this.props.currentProject}
-                                currentImagery={this.props.currentImagery}
+                                mapConfig={props.mapConfig}
+                                currentProjectBoundary={props.currentProjectBoundary}
+                                imageVisParams={props.sourceConfig.imageVisParams}
+                                currentImageryId={props.baseMapSource}
                             />
                         }
-                        {props.imageryType === "GEEImageCollection" &&
+                        {props.sourceConfig.type === "GEEImageCollection" &&
                             <GEEImageCollectionMenus
-                                geeImageCollectionStartDate={this.props.geeImageCollectionStartDate}
-                                setGEEImageCollectionStartDate={this.props.setGEEImageCollectionStartDate}
-                                geeImageCollectionEndDate={this.props.geeImageCollectionEndDate}
-                                setGEEImageCollectionEndDate={this.props.setGEEImageCollectionEndDate}
-                                geeImageCollectionVisParams={this.props.geeImageCollectionVisParams}
-                                setGEEImageCollectionVisParams={this.props.setGEEImageCollectionVisParams}
-                                updateGEEImageCollection={this.props.updateGEEImageCollection}
+                                mapConfig={props.mapConfig}
+                                currentProjectBoundary={props.currentProjectBoundary}
+                                currentImageryId={props.baseMapSource}
+                                sourceConfig={props.sourceConfig}
                             />
                         }
                     </Fragment>
