@@ -254,41 +254,159 @@ export class PlanetDailyMenus extends React.Component {
     }
 }
 
-export function SecureWatchMenus({ imagerySecureWatchAvailableDates, onChangeSecureWatchSingleLayer }) {
-    return (
-        <div className="SecureWatchMenu my-2 mb-3">
-            <div className="form-control form-control-sm">
-                <label>Available Layers</label>
-                {imagerySecureWatchAvailableDates && imagerySecureWatchAvailableDates.length > 0
-                    ?
-                        <select
-                            className="form-control form-control-sm"
-                            onChange={e => onChangeSecureWatchSingleLayer(e.target)}
-                            id="securewatch-option-select"
-                        >
-                            {imagerySecureWatchAvailableDates.map((obj, uid) =>
-                                <option key={uid} value={obj.featureId} date={obj.acquisitionDate} cloud={obj.cloudCover}>
-                                    {obj.acquisitionDate + " (" + (obj.cloudCover * 100).toFixed(2) + "% cloudy)"}
+export class SecureWatchMenus extends React.Component {
+    constructor(props) {
+        super(props);
+        this.state = {
+            imagerySecureWatchDate: "",
+            imagerySecureWatchCloudCover: "",
+            imagerySecureWatchAvailableDates: [],
+        };
+    }
+
+    componentDidMount = () => this.getSecureWatchAvailableDates();
+
+    componentDidUpdate (prevProps, prevState) {
+        if (this.props.currentPlot && this.props.currentPlot !== prevProps.currentPlot) {
+            this.getSecureWatchAvailableDates();
+        }
+    }
+
+    updateImageStates = (state) => {
+        this.props.setImageryStates(state);
+        this.setState(state);
+    }
+
+    updateSecureWatchSingleLayer = (featureId, imagerySecureWatchDate, imagerySecureWatchCloudCover) => {
+        mercator.updateLayerWmsParams(this.props.mapConfig, this.props.currentImageryId, {
+            COVERAGE_CQL_FILTER: "featureId='" + featureId + "'",
+        });
+        this.props.setImageryAttribution(this.props.imageryAttribution + (featureId
+            ? " | " + imagerySecureWatchDate
+            + " (" + (imagerySecureWatchCloudCover * 100).toFixed(2) + "% cloudy)"
+            : " | No available layers"));
+        const state = {
+            imagerySecureWatchDate: imagerySecureWatchDate,
+            imagerySecureWatchCloudCover: imagerySecureWatchCloudCover,
+        };
+        this.updateImageStates(state);
+    }
+
+    onChangeSecureWatchSingleLayer = (eventTarget) =>
+        this.updateSecureWatchSingleLayer(
+            eventTarget.value,
+            eventTarget.options[eventTarget.selectedIndex].getAttribute("date"),
+            eventTarget.options[eventTarget.options.selectedIndex].getAttribute("cloud")
+        );
+
+    getSecureWatchAvailableDates = () => {
+        const { currentImageryId, mapConfig, sourceConfig } = this.props;
+        const geometry = mercator.getViewPolygon(mapConfig).transform("EPSG:4326", "EPSG:3857");
+        const secureWatchFeatureInfoUrl = "SERVICE=WMS"
+            + "&VERSION=1.1.1"
+            + "&REQUEST=GetFeatureInfo"
+            + "&CRS=EPSG%3A3857"
+            + "&BBOX=" + geometry.getExtent().join(",")
+            + "&WIDTH=256"
+            + "&HEIGHT=256"
+            + "&LAYERS=DigitalGlobe:ImageryFootprint"
+            + "&QUERY_LAYERS=DigitalGlobe:ImageryFootprint"
+            + "&FEATURE_COUNT=1000"
+            + "&X=0"
+            + "&Y=0"
+            + "&INFO_FORMAT=application/json"
+            + "&imageryId=" + currentImageryId;
+        this.setState(
+            { imagerySecureWatchAvailableDates: null },
+            () => {
+                fetch("/get-securewatch-dates?" + secureWatchFeatureInfoUrl)
+                    .then(response => {
+                        if (response.ok) {
+                            return response.json(); // if no layers are found, the response is XML. This will fail.
+                        } else {
+                            alert("Error retrieving SecureWatch dates. See console for details.");
+                            return { features: [] };
+                        }
+                    })
+                    .catch((response) => {
+                        console.log(response);
+                        alert("It is likely that your Connect ID is expired. See console for more details.");
+                        return { features: [] };
+                    })
+                    .then(data => {
+                        this.setState({
+                            imagerySecureWatchAvailableDates: data.features
+                                .filter(feature =>
+                                    Date.parse(feature.properties.acquisitionDate) <= Date.parse(sourceConfig.endDate)
+                                    && Date.parse(feature.properties.acquisitionDate) >= Date.parse(sourceConfig.startDate)
+                                )
+                                .map(feature => ({
+                                    acquisitionDate: feature.properties.acquisitionDate,
+                                    cloudCover: feature.properties.cloudCover,
+                                    featureId: feature.properties.featureId,
+                                })),
+                        }, () => {
+                            if (this.state.imagerySecureWatchAvailableDates.length === 0) {
+                                this.updateSecureWatchSingleLayer(null, "", "");
+                            } else {
+                                this.updateSecureWatchSingleLayer(
+                                    this.state.imagerySecureWatchAvailableDates[0].featureId,
+                                    this.state.imagerySecureWatchAvailableDates[0].acquisitionDate,
+                                    this.state.imagerySecureWatchAvailableDates[0].cloudCover,
+                                );
+                            }
+                        });
+                    })
+                    .catch(response => {
+                        console.log(response);
+                        alert("Error processing SecureWatch dates. See console for details.");
+                    });
+            }
+        );
+    };
+
+    render() {
+        return (
+            <div className="SecureWatchMenu my-2 mb-3">
+                <div className="form-control form-control-sm">
+                    <label>Available Layers</label>
+                    {this.state.imagerySecureWatchAvailableDates
+                        && this.state.imagerySecureWatchAvailableDates.length > 0
+                        ?
+                            <select
+                                className="form-control form-control-sm"
+                                onChange={e => this.onChangeSecureWatchSingleLayer(e.target)}
+                                id="securewatch-option-select"
+                            >
+                                {this.state.imagerySecureWatchAvailableDates.map((obj, uid) =>
+                                    <option
+                                        key={uid}
+                                        value={obj.featureId}
+                                        date={obj.acquisitionDate}
+                                        cloud={obj.cloudCover}
+                                    >
+                                        {obj.acquisitionDate + " (" + (obj.cloudCover * 100).toFixed(2) + "% cloudy)"}
+                                    </option>
+                                )}
+                            </select>
+                        :
+                            <select
+                                className="form-control form-control-sm"
+                                id="securewatch-option-select"
+                                disabled
+                            >
+                                <option>
+                                    {this.state.imagerySecureWatchAvailableDates
+                                        ? "No available layers"
+                                        : "Loading dates..."
+                                    }
                                 </option>
-                            )}
-                        </select>
-                    :
-                        <select
-                            className="form-control form-control-sm"
-                            id="securewatch-option-select"
-                            disabled
-                        >
-                            <option>
-                                {imagerySecureWatchAvailableDates
-                                    ? "No available layers"
-                                    : "Loading dates..."
-                                }
-                            </option>
-                        </select>
-                }
+                            </select>
+                    }
+                </div>
             </div>
-        </div>
-    );
+        );
+    }
 }
 
 export class SentinelMenus extends React.Component {

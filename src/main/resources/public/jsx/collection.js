@@ -25,9 +25,6 @@ class Collection extends React.Component {
             imageryAttribution: "",
             imageryList: [],
             imageryStates: {},
-            imagerySecureWatchDate: "",
-            imagerySecureWatchCloudCover: "",
-            imagerySecureWatchAvailableDates: [],
             mapConfig: null,
             nextPlotButtonDisabled: false,
             plotList: [],
@@ -100,7 +97,6 @@ class Collection extends React.Component {
             if (this.state.hasGeoDash) this.showGeoDash();
             clearInterval(this.state.storedInterval);
             this.setState({ storedInterval: setInterval(() => this.resetPlotLock, 2.3 * 60 * 1000) });
-            if (this.state.currentImagery.sourceConfig.type === "SecureWatch") this.getSecureWatchAvailableDates();
         }
 
         // Conditions required for samples to be shown
@@ -194,71 +190,6 @@ class Collection extends React.Component {
             });
     };
 
-    getSecureWatchAvailableDates = () => {
-        const { currentImagery } = this.state;
-        const geometry = mercator.getViewPolygon(this.state.mapConfig).transform("EPSG:4326", "EPSG:3857");
-        const secureWatchFeatureInfoUrl = "SERVICE=WMS"
-              + "&VERSION=1.1.1"
-              + "&REQUEST=GetFeatureInfo"
-              + "&CRS=EPSG%3A3857"
-              + "&BBOX=" + geometry.getExtent().join(",")
-              + "&WIDTH=256"
-              + "&HEIGHT=256"
-              + "&LAYERS=DigitalGlobe:ImageryFootprint"
-              + "&QUERY_LAYERS=DigitalGlobe:ImageryFootprint"
-              + "&FEATURE_COUNT=1000"
-              + "&X=0"
-              + "&Y=0"
-              + "&INFO_FORMAT=application/json"
-              + "&imageryId=" + currentImagery.id;
-        this.setState(
-            { imagerySecureWatchAvailableDates: null },
-            () => {
-                fetch(this.props.documentRoot + "/get-securewatch-dates?" + secureWatchFeatureInfoUrl)
-                    .then(response => {
-                        if (response.ok) {
-                            return response.json(); // if no layers are found, the response is XML. This will fail.
-                        } else {
-                            alert("Error retrieving SecureWatch dates. See console for details.");
-                            return { features: [] };
-                        }
-                    })
-                    .catch(() => {
-                        alert("It is likely that your Connect ID is expired. See console for more details.");
-                        return { features: [] };
-                    })
-                    .then(data => {
-                        this.setState({
-                            imagerySecureWatchAvailableDates: data.features
-                                .filter(feature =>
-                                    Date.parse(feature.properties.acquisitionDate) <= Date.parse(currentImagery.sourceConfig.endDate)
-                                        && Date.parse(feature.properties.acquisitionDate) >= Date.parse(currentImagery.sourceConfig.startDate)
-                                )
-                                .map(feature => ({
-                                    acquisitionDate: feature.properties.acquisitionDate,
-                                    cloudCover: feature.properties.cloudCover,
-                                    featureId: feature.properties.featureId,
-                                })),
-                        }, () => {
-                            if (this.state.imagerySecureWatchAvailableDates.length === 0) {
-                                this.updateSecureWatchSingleLayer(null, "", "");
-                            } else {
-                                this.updateSecureWatchSingleLayer(
-                                    this.state.imagerySecureWatchAvailableDates[0].featureId,
-                                    this.state.imagerySecureWatchAvailableDates[0].acquisitionDate,
-                                    this.state.imagerySecureWatchAvailableDates[0].cloudCover,
-                                );
-                            }
-                        });
-                    })
-                    .catch(response => {
-                        console.log(response);
-                        alert("Error processing SecureWatch dates. See console for details.");
-                    });
-            }
-        );
-    };
-
     initializeProjectMap = () => {
         const mapConfig = mercator.createMap("image-analysis-pane",
                                              [0.0, 0.0],
@@ -289,53 +220,9 @@ class Collection extends React.Component {
     setBaseMapSource = (newBaseMapSource) =>
         this.setState({ currentImagery: this.getImageryById(newBaseMapSource) });
 
-    updateMapImagery = () => {
-        mercator.setVisibleLayer(this.state.mapConfig, this.state.currentImagery.id);
-
-        if (this.state.currentImagery.sourceConfig.type === "PlanetDaily") {
-            const startDate = this.state.currentImagery.sourceConfig.startDate || "2019-01-01";
-            const endDate = this.state.currentImagery.sourceConfig.endDate || "2019-02-01";
-            this.setState({
-                imageryStartDatePlanetDaily: startDate,
-                imageryEndDatePlanetDaily: endDate,
-                imageryAttribution: this.state.currentImagery.attribution + " | " + startDate + " to " + endDate,
-            });
-        } else {
-            mercator.currentMap.getControls().getArray().filter(control => control.element.classList.contains("planet-layer-switcher"))
-                .map(control => mercator.currentMap.removeControl(control));
-            this.setState({
-                imageryStartDatePlanetDaily: "",
-                imageryEndDatePlanetDaily: "",
-            });
-            if (this.state.currentImagery.sourceConfig.type === "SecureWatch") {
-                this.getSecureWatchAvailableDates();
-            }
-        }
-    };
+    updateMapImagery = () => mercator.setVisibleLayer(this.state.mapConfig, this.state.currentImagery.id);
 
     getImageryById = (imageryId) => this.state.imageryList.find(imagery => imagery.id === imageryId);
-
-    updateSecureWatchSingleLayer = (featureId, imagerySecureWatchDate, imagerySecureWatchCloudCover) => {
-        mercator.updateLayerWmsParams(this.state.mapConfig, this.state.currentImagery.id, {
-            COVERAGE_CQL_FILTER: "featureId='" + featureId + "'",
-        });
-        this.setState({
-            imagerySecureWatchDate: imagerySecureWatchDate,
-            imagerySecureWatchCloudCover: imagerySecureWatchCloudCover,
-            imageryAttribution: this.state.currentImagery.attribution
-                + (featureId
-                    ? " | " + imagerySecureWatchDate
-                        + " (" + (imagerySecureWatchCloudCover * 100).toFixed(2) + "% cloudy)"
-                    : " | No available layers"),
-        });
-    }
-
-    onChangeSecureWatchSingleLayer = (eventTarget) =>
-        this.updateSecureWatchSingleLayer(
-            eventTarget.value,
-            eventTarget.options[eventTarget.selectedIndex].getAttribute("date"),
-            eventTarget.options[eventTarget.options.selectedIndex].getAttribute("cloud")
-        );
 
     plotHasSamples = (plotData) => {
         if (plotData.samples.length === 0) {
@@ -652,8 +539,10 @@ class Collection extends React.Component {
             imageryEndDatePlanetDaily: this.state.imageryStates.imageryEndDatePlanetDaily,
             imageryDatePlanetDaily: mercator.getTopVisiblePlanetLayerDate(this.state.mapConfig, this.state.currentImagery.id),
         } : (this.state.currentImagery.sourceConfig.type === "SecureWatch") ? {
-            imagerySecureWatchDate: this.state.imagerySecureWatchDate || "",
-            imagerySecureWatchCloudCover: this.state.imagerySecureWatchCloudCover ? (parseFloat(this.state.imagerySecureWatchCloudCover) * 100).toFixed(2) : "",
+            imagerySecureWatchDate: this.state.imageryStates.imagerySecureWatchDate || "",
+            imagerySecureWatchCloudCover: this.state.imageryStates.imagerySecureWatchCloudCover
+                ? (parseFloat(this.state.imageryStates.imagerySecureWatchCloudCover) * 100).toFixed(2)
+                : "",
         } : (this.state.currentImagery.sourceConfig.type === "Sentinel1") ? {
             sentinel1MosaicYearMonth: this.state.imageryStates.imageryYearSentinel1 + " - " +
                 (this.state.imageryStates.imageryYearSentinel1 > 9 ? "" : "0") + this.state.imageryStates.imageryYearSentinel1,
@@ -1125,8 +1014,6 @@ class Collection extends React.Component {
                         imageryList={this.state.imageryList}
                         currentPlot={this.state.currentPlot}
                         showPlanetDaily={this.state.currentPlot != null}
-                        imagerySecureWatchAvailableDates={this.state.imagerySecureWatchAvailableDates}
-                        onChangeSecureWatchSingleLayer={this.onChangeSecureWatchSingleLayer}
                         loadingImages={this.state.imageryList.length === 0}
                     />
                     {this.state.currentPlot
@@ -1539,8 +1426,13 @@ class ImageryOptions extends React.Component {
                         }
                         {props.sourceConfig.type === "SecureWatch" &&
                             <SecureWatchMenus
-                                imagerySecureWatchAvailableDates={this.props.imagerySecureWatchAvailableDates}
-                                onChangeSecureWatchSingleLayer={this.props.onChangeSecureWatchSingleLayer}
+                                mapConfig={props.mapConfig}
+                                currentImageryId={props.baseMapSource}
+                                currentPlot={props.currentPlot}
+                                sourceConfig={props.sourceConfig}
+                                imageryAttribution={props.imageryAttribution}
+                                setImageryAttribution={props.setImageryAttribution}
+                                setImageryStates={props.setImageryStates}
                             />
                         }
                         {props.sourceConfig.type === "Sentinel1" &&
