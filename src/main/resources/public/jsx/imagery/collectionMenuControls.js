@@ -1,5 +1,5 @@
 import React from "react";
-import { mercator } from "../../js/mercator";
+import { ceoMapStyles, mercator } from "../../js/mercator";
 import { formatDateISO } from "../utils/dateUtils";
 
 export class PlanetMenus extends React.Component {
@@ -108,40 +108,150 @@ export class PlanetMenus extends React.Component {
     }
 }
 
-export function PlanetDailyMenus({
-    imageryStartDatePlanetDaily,
-    setImageryStartDatePlanetDaily,
-    imageryEndDatePlanetDaily,
-    setImageryEndDatePlanetDaily,
-}) {
-    return (
-        <div className="PlanetsDailyMenu my-2">
-            <label>Start Date</label>
-            <div className="slidecontainer form-control form-control-sm">
-                <input
-                    type="date"
-                    id="planetDailyStartDate"
-                    value={imageryStartDatePlanetDaily}
-                    max={new Date().toJSON().split("T")[0]}
-                    min="2010-01-01"
-                    style={{ width: "100%" }}
-                    onChange={e => setImageryStartDatePlanetDaily(e.target.value)}
-                />
+export class PlanetDailyMenus extends React.Component {
+    constructor(props) {
+        super(props);
+        this.state = {
+            imageryStartDatePlanetDaily: "",
+            imageryEndDatePlanetDaily: "",
+        };
+    }
+
+    componentDidMount () {
+        this.props.setImageryAttribution(this.props.imageryAttribution +
+            " | " + this.props.sourceConfig.startDate + " to " + this.props.sourceConfig.endDate);
+        const state = {
+            imageryStartDatePlanetDaily: this.props.sourceConfig.startDate,
+            imageryEndDatePlanetDaily: this.props.sourceConfig.endDate,
+        };
+        this.updateImageStates(state);
+    }
+
+    componentDidUpdate (prevProps, prevState) {
+        if (this.state.imageryStartDatePlanetDaily !== prevState.imageryStartDatePlanetDaily
+            || this.state.imageryEndDatePlanetDaily !== prevState.imageryEndDatePlanetDaily) {
+            this.updatePlanetDailyLayer();
+        }
+
+        if (this.props.currentPlot && this.props.currentPlot !== prevProps.currentPlot) {
+            this.updatePlanetDailyLayer();
+        }
+    }
+
+    updateImageStates = (state) => {
+        this.props.setImageryStates(state);
+        this.setState(state);
+    }
+
+    removeAndAddVector = () => {
+        const {
+            mapConfig,
+            currentPlot,
+            currentProject,
+            highlightSamplesByQuestion,
+            selectedQuestion: { visible },
+        } = this.props;
+        mercator.removeLayerById(mapConfig, "currentAOI");
+        mercator.addVectorLayer(mapConfig,
+                                "currentAOI",
+                                mercator.geometryToVectorSource(mercator.parseGeoJson(currentProject.boundary,
+                                                                                      true)),
+                                ceoMapStyles.yellowPolygon);
+        mercator.removeLayerById(mapConfig, "currentPlot");
+        mercator.addVectorLayer(mapConfig,
+                                "currentPlot",
+                                mercator.geometryToVectorSource(
+                                currentPlot.geom
+                                    ? mercator.parseGeoJson(currentPlot.geom, true)
+                                    : mercator.getPlotPolygon(currentPlot.center,
+                                                              currentProject.plotSize,
+                                                              currentProject.plotShape)
+                                ),
+                                ceoMapStyles.yellowPolygon);
+        mercator.removeLayerById(mapConfig, "currentSamples");
+        mercator.addVectorLayer(mapConfig,
+                                "currentSamples",
+                                mercator.samplesToVectorSource(visible),
+                                this.state.sampleOutlineBlack
+                                    ? visible[0].geom
+                                        ? ceoMapStyles.blackPolygon
+                                        : ceoMapStyles.blackCircle
+                                    : visible[0].geom
+                                        ? ceoMapStyles.whitePolygon
+                                        : ceoMapStyles.whiteCircle);
+        highlightSamplesByQuestion();
+        // this.setState({ loading: false });
+    };
+
+    updatePlanetDailyLayer = () => {
+        const { imageryStartDatePlanetDaily, imageryEndDatePlanetDaily } = this.state;
+        if (new Date(imageryStartDatePlanetDaily) > new Date(imageryEndDatePlanetDaily)) {
+            alert("Start date must be smaller than the end date.");
+        } else {
+            // this.setState({ loading: this.state.currentImagery.sourceConfig.type === "PlanetDaily" });
+            mercator.currentMap.getControls().getArray()
+                .filter(control => control.element.classList.contains("planet-layer-switcher"))
+                .map(control => mercator.currentMap.removeControl(control));
+            mercator.updateLayerSource(this.props.mapConfig,
+                                       this.props.currentImageryId,
+                                       mercator.geometryToGeoJSON(
+                                           mercator.getViewPolygon(this.props.mapConfig),
+                                           "EPSG:4326"
+                                       ),
+                                       sourceConfig => ({
+                                           ...sourceConfig,
+                                           startDate: imageryStartDatePlanetDaily,
+                                           endDate: imageryEndDatePlanetDaily,
+                                       }),
+                                       this,
+                                       this.removeAndAddVector);
+        }
+    };
+
+    setImageryStartDatePlanetDaily = (newDate) => {
+        const state = { imageryStartDatePlanetDaily: newDate };
+        this.props.setImageryAttribution(this.props.imageryAttribution +
+            " | " + newDate + " to " + this.state.imageryEndDatePlanetDaily);
+        this.updateImageStates(state);
+    };
+
+    setImageryEndDatePlanetDaily = (newDate) => {
+        const state = { imageryEndDatePlanetDaily: newDate };
+        this.props.setImageryAttribution(this.props.imageryAttribution +
+            " | " + this.state.imageryStartDatePlanetDaily + " to " + newDate);
+        this.updateImageStates(state);
+    };
+
+    render () {
+        return (
+            <div className="PlanetsDailyMenu my-2">
+                <label>Start Date</label>
+                <div className="slidecontainer form-control form-control-sm">
+                    <input
+                        type="date"
+                        id="planetDailyStartDate"
+                        value={this.state.imageryStartDatePlanetDaily}
+                        max={new Date().toJSON().split("T")[0]}
+                        min="2010-01-01"
+                        style={{ width: "100%" }}
+                        onChange={e => this.setImageryStartDatePlanetDaily(e.target.value)}
+                    />
+                </div>
+                <label>End Date</label>
+                <div className="slidecontainer form-control form-control-sm">
+                    <input
+                        type="date"
+                        id="planetDailyEndDate"
+                        value={this.state.imageryEndDatePlanetDaily}
+                        max={new Date().toJSON().split("T")[0]}
+                        min="2010-01-01"
+                        style={{ width: "100%" }}
+                        onChange={e => this.setImageryEndDatePlanetDaily(e.target.value)}
+                    />
+                </div>
             </div>
-            <label>End Date</label>
-            <div className="slidecontainer form-control form-control-sm">
-                <input
-                    type="date"
-                    id="planetDailyEndDate"
-                    value={imageryEndDatePlanetDaily}
-                    max={new Date().toJSON().split("T")[0]}
-                    min="2010-01-01"
-                    style={{ width: "100%" }}
-                    onChange={e => setImageryEndDatePlanetDaily(e.target.value)}
-                />
-            </div>
-        </div>
-    );
+        );
+    }
 }
 
 export function SecureWatchMenus({ imagerySecureWatchAvailableDates, onChangeSecureWatchSingleLayer }) {
@@ -368,9 +478,11 @@ export class GEEImageMenus extends React.Component {
 
     componentDidMount = () => {
         this.props.setImageryAttribution(this.props.imageryAttribution);
-        const state = { geeImageryVisParams: this.props.sourceConfig.imageVisParams };
-        this.setState(state);
-        this.props.setImageryStates(state["GEEImageryAssetId"] = this.props.sourceConfig.imageId );
+        this.setState({ geeImageryVisParams: this.props.sourceConfig.imageVisParams });
+        this.props.setImageryStates({
+            geeImageryVisParams: this.props.sourceConfig.imageVisParams,
+            geeImageryAssetId: this.props.sourceConfig.imageId,
+        });
     }
 
     updateImageStates = (state) => {
@@ -435,13 +547,17 @@ export class GEEImageCollectionMenus extends React.Component {
 
     componentDidMount = () => {
         this.props.setImageryAttribution(this.props.imageryAttribution);
-        const state = {
+        this.setState({
             geeImageCollectionStartDate: this.props.sourceConfig.startDate,
             geeImageCollectionEndDate: this.props.sourceConfig.endDate,
             geeImageCollectionVisParams: this.props.sourceConfig.collectionVisParams,
-        };
-        this.setState(state);
-        this.props.setImageryStates(state["GEEImageCollectionAssetId"] = this.props.sourceConfig.collectionId );
+        });
+        this.props.setImageryStates({
+            geeImageCollectionStartDate: this.props.sourceConfig.startDate,
+            geeImageCollectionEndDate: this.props.sourceConfig.endDate,
+            geeImageCollectionVisParams: this.props.sourceConfig.collectionVisParams,
+            geeImageCollectionAssetId: this.props.sourceConfig.collectionId,
+        });
     }
 
     updateImageStates = (state) => {

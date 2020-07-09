@@ -24,8 +24,7 @@ class Collection extends React.Component {
             currentPlot: null,
             imageryAttribution: "",
             imageryList: [],
-            imageryStartDatePlanetDaily: "",
-            imageryEndDatePlanetDaily: "",
+            imageryStates: {},
             imagerySecureWatchDate: "",
             imagerySecureWatchCloudCover: "",
             imagerySecureWatchAvailableDates: [],
@@ -45,7 +44,6 @@ class Collection extends React.Component {
             showSidebar: false,
             loading: false,
             showQuitModal: false,
-            imageryStates: {},
         };
     }
 
@@ -102,7 +100,6 @@ class Collection extends React.Component {
             if (this.state.hasGeoDash) this.showGeoDash();
             clearInterval(this.state.storedInterval);
             this.setState({ storedInterval: setInterval(() => this.resetPlotLock, 2.3 * 60 * 1000) });
-            if (this.state.currentImagery.sourceConfig.type === "PlanetDaily") this.updatePlanetDailyLayer();
             if (this.state.currentImagery.sourceConfig.type === "SecureWatch") this.getSecureWatchAvailableDates();
         }
 
@@ -133,11 +130,6 @@ class Collection extends React.Component {
             && (this.state.currentImagery.id !== prevState.currentImagery.id
                 || this.state.mapConfig !== prevState.mapConfig)) {
             this.updateMapImagery();
-        }
-
-        if (this.state.imageryStartDatePlanetDaily !== prevState.imageryStartDatePlanetDaily
-            || this.state.imageryEndDatePlanetDaily !== prevState.imageryEndDatePlanetDaily) {
-            this.updatePlanetDailyLayer();
         }
     }
 
@@ -297,22 +289,6 @@ class Collection extends React.Component {
     setBaseMapSource = (newBaseMapSource) =>
         this.setState({ currentImagery: this.getImageryById(newBaseMapSource) });
 
-    setImageryStartDatePlanetDaily = (newDate) => {
-        const { imageryEndDatePlanetDaily, currentImagery } = this.state;
-        this.setState({
-            imageryStartDatePlanetDaily: newDate,
-            imageryAttribution: currentImagery.attribution + " | " + newDate + " to " + imageryEndDatePlanetDaily,
-        });
-    };
-
-    setImageryEndDatePlanetDaily = (newDate) => {
-        const { imageryStartDatePlanetDaily, currentImagery } = this.state;
-        this.setState({
-            imageryEndDatePlanetDaily: newDate,
-            imageryAttribution: currentImagery.attribution + " | " + imageryStartDatePlanetDaily + " to " + newDate,
-        });
-    };
-
     updateMapImagery = () => {
         mercator.setVisibleLayer(this.state.mapConfig, this.state.currentImagery.id);
 
@@ -338,67 +314,6 @@ class Collection extends React.Component {
     };
 
     getImageryById = (imageryId) => this.state.imageryList.find(imagery => imagery.id === imageryId);
-
-    removeAndAddVector = () => {
-        const { mapConfig, currentPlot, currentProject, selectedQuestion: { visible }} = this.state;
-        mercator.removeLayerById(mapConfig, "currentAOI");
-        mercator.addVectorLayer(mapConfig,
-                                "currentAOI",
-                                mercator.geometryToVectorSource(mercator.parseGeoJson(currentProject.boundary, true)),
-                                ceoMapStyles.yellowPolygon);
-        mercator.removeLayerById(mapConfig, "currentPlot");
-        mercator.addVectorLayer(mapConfig,
-                                "currentPlot",
-                                mercator.geometryToVectorSource(
-                                    currentPlot.geom
-                                        ? mercator.parseGeoJson(currentPlot.geom, true)
-                                        : mercator.getPlotPolygon(currentPlot.center,
-                                                                  currentProject.plotSize,
-                                                                  currentProject.plotShape)
-                                ),
-                                ceoMapStyles.yellowPolygon);
-        mercator.removeLayerById(mapConfig, "currentSamples");
-        mercator.addVectorLayer(mapConfig,
-                                "currentSamples",
-                                mercator.samplesToVectorSource(visible),
-                                this.state.sampleOutlineBlack
-                                ? visible[0].geom
-                                    ? ceoMapStyles.blackPolygon
-                                    : ceoMapStyles.blackCircle
-                                : visible[0].geom
-                                    ? ceoMapStyles.whitePolygon
-                                    : ceoMapStyles.whiteCircle);
-        this.highlightSamplesByQuestion();
-        this.setState({ loading: false });
-    };
-
-    updatePlanetDailyLayer = () => {
-        const { imageryStartDatePlanetDaily, imageryEndDatePlanetDaily } = this.state;
-        if (new Date(imageryStartDatePlanetDaily) > new Date(imageryEndDatePlanetDaily)) {
-            alert("Start date must be smaller than the end date.");
-        } else {
-            this.setState({ loading: this.state.currentImagery.sourceConfig.type === "PlanetDaily" });
-            mercator.currentMap.getControls().getArray().filter(control => control.element.classList.contains("planet-layer-switcher"))
-                .map(control => mercator.currentMap.removeControl(control));
-            const { imageryStartDatePlanetDaily, imageryEndDatePlanetDaily, currentPlot } = this.state;
-            // check so that the function is not called before the state is propagated
-            if (imageryStartDatePlanetDaily && imageryEndDatePlanetDaily && currentPlot) {
-                mercator.updateLayerSource(this.state.mapConfig,
-                                           this.state.currentImagery.id,
-                                           mercator.geometryToGeoJSON(
-                                               mercator.getViewPolygon(this.state.mapConfig),
-                                               "EPSG:4326"
-                                           ),
-                                           sourceConfig => ({
-                                               ...sourceConfig,
-                                               startDate: imageryStartDatePlanetDaily,
-                                               endDate: imageryEndDatePlanetDaily,
-                                           }),
-                                           this,
-                                           this.removeAndAddVector);
-            }
-        }
-    };
 
     updateSecureWatchSingleLayer = (featureId, imagerySecureWatchDate, imagerySecureWatchCloudCover) => {
         mercator.updateLayerWmsParams(this.state.mapConfig, this.state.currentImagery.id, {
@@ -733,8 +648,8 @@ class Collection extends React.Component {
             imageryMonthPlanet: this.state.imageryStates.imageryMonthPlanet,
             imageryYearPlanet:  this.state.imageryStates.imageryYearPlanet,
         } : (this.state.currentImagery.sourceConfig.type === "PlanetDaily") ? {
-            imageryStartDatePlanetDaily: this.state.imageryStartDatePlanetDaily,
-            imageryEndDatePlanetDaily: this.state.imageryEndDatePlanetDaily,
+            imageryStartDatePlanetDaily: this.state.imageryStates.imageryStartDatePlanetDaily,
+            imageryEndDatePlanetDaily: this.state.imageryStates.imageryEndDatePlanetDaily,
             imageryDatePlanetDaily: mercator.getTopVisiblePlanetLayerDate(this.state.mapConfig, this.state.currentImagery.id),
         } : (this.state.currentImagery.sourceConfig.type === "SecureWatch") ? {
             imagerySecureWatchDate: this.state.imagerySecureWatchDate || "",
@@ -746,10 +661,10 @@ class Collection extends React.Component {
             sentinel2MosaicYearMonth: this.state.imageryStates.imageryYearSentinel2 + " - " +
                 (this.state.imageryStates.imageryYearSentinel2 > 9 ? "" : "0") + this.state.imageryStates.imageryYearSentinel2,
         } : (this.state.currentImagery.sourceConfig.type === "GEEImage") ? {
-            assetId: this.state.imageryStates.GEEImageryAssetId,
+            assetId: this.state.imageryStates.geeImageryAssetId,
             visParams: this.state.imageryStates.geeImageryVisParams,
         } : (this.state.currentImagery.sourceConfig.type === "GEEImageCollection") ? {
-            assetId: this.state.imageryStates.GEEImageCollectionAssetId,
+            assetId: this.state.imageryStates.geeImageCollectionAssetId,
             startDate: this.state.imageryStates.geeImageCollectionStartDate,
             endDate: this.state.imageryStates.geeImageCollectionEndDate,
             visParams: this.state.imageryStates.geeImageCollectionVisParams,
@@ -1200,16 +1115,16 @@ class Collection extends React.Component {
                         setBaseMapSource={this.setBaseMapSource}
                         sourceConfig={this.state.currentImagery.sourceConfig}
                         mapConfig={this.state.mapConfig}
+                        currentProject={this.state.currentProject}
                         currentProjectBoundary={this.state.currentProject.boundary}
+                        highlightSamplesByQuestion={this.highlightSamplesByQuestion}
+                        selectedQuestion={this.state.selectedQuestion}
                         imageryAttribution={this.state.currentImagery.attribution}
                         setImageryAttribution={this.setImageryAttribution}
                         setImageryStates={this.setImageryStates}
                         imageryList={this.state.imageryList}
-                        imageryStartDatePlanetDaily={this.state.imageryStartDatePlanetDaily}
-                        imageryEndDatePlanetDaily={this.state.imageryEndDatePlanetDaily}
+                        currentPlot={this.state.currentPlot}
                         showPlanetDaily={this.state.currentPlot != null}
-                        setImageryStartDatePlanetDaily={this.setImageryStartDatePlanetDaily}
-                        setImageryEndDatePlanetDaily={this.setImageryEndDatePlanetDaily}
                         imagerySecureWatchAvailableDates={this.state.imagerySecureWatchAvailableDates}
                         onChangeSecureWatchSingleLayer={this.onChangeSecureWatchSingleLayer}
                         loadingImages={this.state.imageryList.length === 0}
@@ -1610,10 +1525,16 @@ class ImageryOptions extends React.Component {
                         }
                         {props.sourceConfig.type === "PlanetDaily" &&
                             <PlanetDailyMenus
-                                imageryStartDatePlanetDaily={this.props.imageryStartDatePlanetDaily}
-                                setImageryStartDatePlanetDaily={this.props.setImageryStartDatePlanetDaily}
-                                imageryEndDatePlanetDaily={this.props.imageryEndDatePlanetDaily}
-                                setImageryEndDatePlanetDaily={this.props.setImageryEndDatePlanetDaily}
+                                mapConfig={props.mapConfig}
+                                currentProject={props.currentProject}
+                                currentImageryId={props.baseMapSource}
+                                sourceConfig={props.sourceConfig}
+                                imageryAttribution={props.imageryAttribution}
+                                setImageryAttribution={props.setImageryAttribution}
+                                setImageryStates={props.setImageryStates}
+                                currentPlot={props.currentPlot}
+                                highlightSamplesByQuestion={props.highlightSamplesByQuestion}
+                                selectedQuestion={props.selectedQuestion}
                             />
                         }
                         {props.sourceConfig.type === "SecureWatch" &&
