@@ -45,6 +45,7 @@ class Collection extends React.Component {
             showSidebar: false,
             loading: false,
             showQuitModal: false,
+            imageryStates: {},
         };
     }
 
@@ -141,6 +142,9 @@ class Collection extends React.Component {
     }
 
     setImageryAttribution = (newAttribution) => this.setState({ imageryAttribution: newAttribution });
+
+    setImageryStates = (imageryState) =>
+        this.setState({ imageryStates: { ...this.state.imageryStates, ...imageryState }});
 
     getProjectData = () => {
         Promise.all([this.getProjectById(), this.getProjectPlots(), this.checkForGeodash()])
@@ -726,8 +730,8 @@ class Collection extends React.Component {
 
     getImageryAttributes = () =>
         (this.state.currentImagery.sourceConfig.type === "Planet") ? {
-            imageryMonthPlanet: this.state.imageryMonthPlanet,
-            imageryYearPlanet:  this.state.imageryYearPlanet,
+            imageryMonthPlanet: this.state.imageryStates.imageryMonthPlanet,
+            imageryYearPlanet:  this.state.imageryStates.imageryYearPlanet,
         } : (this.state.currentImagery.sourceConfig.type === "PlanetDaily") ? {
             imageryStartDatePlanetDaily: this.state.imageryStartDatePlanetDaily,
             imageryEndDatePlanetDaily: this.state.imageryEndDatePlanetDaily,
@@ -736,11 +740,19 @@ class Collection extends React.Component {
             imagerySecureWatchDate: this.state.imagerySecureWatchDate || "",
             imagerySecureWatchCloudCover: this.state.imagerySecureWatchCloudCover ? (parseFloat(this.state.imagerySecureWatchCloudCover) * 100).toFixed(2) : "",
         } : (this.state.currentImagery.sourceConfig.type === "Sentinel1") ? {
-            sentinel1MosaicYearMonth: this.state.imageryYearSentinel1 + " - " +
-                (this.state.imageryYearSentinel1 > 9 ? "" : "0") + this.state.imageryYearSentinel1,
+            sentinel1MosaicYearMonth: this.state.imageryStates.imageryYearSentinel1 + " - " +
+                (this.state.imageryStates.imageryYearSentinel1 > 9 ? "" : "0") + this.state.imageryStates.imageryYearSentinel1,
         } : (this.state.currentImagery.sourceConfig.type === "Sentinel2") ? {
-            sentinel2MosaicYearMonth: this.state.imageryYearSentinel2 + " - " +
-                (this.state.imageryYearSentinel2 > 9 ? "" : "0") + this.state.imageryYearSentinel2,
+            sentinel2MosaicYearMonth: this.state.imageryStates.imageryYearSentinel2 + " - " +
+                (this.state.imageryStates.imageryYearSentinel2 > 9 ? "" : "0") + this.state.imageryStates.imageryYearSentinel2,
+        } : (this.state.currentImagery.sourceConfig.type === "GEEImage") ? {
+            assetId: this.state.imageryStates.GEEImageryAssetId,
+            visParams: this.state.imageryStates.geeImageryVisParams,
+        } : (this.state.currentImagery.sourceConfig.type === "GEEImageCollection") ? {
+            assetId: this.state.imageryStates.GEEImageCollectionAssetId,
+            startDate: this.state.imageryStates.geeImageCollectionStartDate,
+            endDate: this.state.imageryStates.geeImageCollectionEndDate,
+            visParams: this.state.imageryStates.geeImageCollectionVisParams,
         } : {};
 
     getChildQuestions = (currentQuestionId) => {
@@ -1191,6 +1203,7 @@ class Collection extends React.Component {
                         currentProjectBoundary={this.state.currentProject.boundary}
                         imageryAttribution={this.state.currentImagery.attribution}
                         setImageryAttribution={this.setImageryAttribution}
+                        setImageryStates={this.setImageryStates}
                         imageryList={this.state.imageryList}
                         imageryStartDatePlanetDaily={this.state.imageryStartDatePlanetDaily}
                         imageryEndDatePlanetDaily={this.state.imageryEndDatePlanetDaily}
@@ -1592,6 +1605,7 @@ class ImageryOptions extends React.Component {
                                 sourceConfig={props.sourceConfig}
                                 imageryAttribution={props.imageryAttribution}
                                 setImageryAttribution={props.setImageryAttribution}
+                                setImageryStates={props.setImageryStates}
                             />
                         }
                         {props.sourceConfig.type === "PlanetDaily" &&
@@ -1616,6 +1630,7 @@ class ImageryOptions extends React.Component {
                                 sourceConfig={props.sourceConfig}
                                 imageryAttribution={props.imageryAttribution}
                                 setImageryAttribution={props.setImageryAttribution}
+                                setImageryStates={props.setImageryStates}
                             />
                         }
                         {props.sourceConfig.type === "Sentinel2" &&
@@ -1626,16 +1641,18 @@ class ImageryOptions extends React.Component {
                                 sourceConfig={props.sourceConfig}
                                 imageryAttribution={props.imageryAttribution}
                                 setImageryAttribution={props.setImageryAttribution}
+                                setImageryStates={props.setImageryStates}
                             />
                         }
                         {props.sourceConfig.type === "GEEImage" &&
                             <GEEImageMenus
                                 mapConfig={props.mapConfig}
                                 currentProjectBoundary={props.currentProjectBoundary}
-                                imageVisParams={props.sourceConfig.imageVisParams}
+                                sourceConfig={props.sourceConfig}
                                 currentImageryId={props.baseMapSource}
                                 imageryAttribution={props.imageryAttribution}
                                 setImageryAttribution={props.setImageryAttribution}
+                                setImageryStates={props.setImageryStates}
                             />
                         }
                         {props.sourceConfig.type === "GEEImageCollection" &&
@@ -1646,6 +1663,7 @@ class ImageryOptions extends React.Component {
                                 sourceConfig={props.sourceConfig}
                                 imageryAttribution={props.imageryAttribution}
                                 setImageryAttribution={props.setImageryAttribution}
+                                setImageryStates={props.setImageryStates}
                             />
                         }
                     </Fragment>
