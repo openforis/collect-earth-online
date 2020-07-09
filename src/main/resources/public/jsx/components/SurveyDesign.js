@@ -488,7 +488,6 @@ class NewAnswerDesigner extends React.Component {
     };
 
     render() {
-        const { surveyQuestion } = this.props;
         return <div className="NewAnswerDesigner">
             <div className="col d-flex">
                 <button
@@ -505,7 +504,7 @@ class NewAnswerDesigner extends React.Component {
                     onChange={e => this.setState({ selectedColor: e.target.value })}
                 />
                 <input
-                    type={surveyQuestion.dataType === "number" ? "number" : "text"}
+                    type={this.props.surveyQuestion.dataType === "number" ? "number" : "text"}
                     className="value-name"
                     autoComplete="off"
                     value={this.state.newAnswerText}
