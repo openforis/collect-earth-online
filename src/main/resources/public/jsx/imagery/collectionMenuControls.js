@@ -251,8 +251,6 @@ export class GEEImageMenus extends React.Component {
             this
         );
 
-    setGEEImageryVisParams = (newVisParams) => this.setState({ geeImageryVisParams: newVisParams });
-
     render() {
         return (
             <div className="GEEImageMenu my-2">
@@ -262,7 +260,7 @@ export class GEEImageMenus extends React.Component {
                         className="form-control"
                         id="geeImageVisParams"
                         value={this.state.geeImageryVisParams}
-                        onChange={e => this.setGEEImageryVisParams(e.target.value)}
+                        onChange={e => this.setState({ geeImageryVisParams: e.target.value })}
                     >
                         {this.state.geeImageryVisParams}
                     </textarea>
@@ -298,12 +296,6 @@ export class GEEImageCollectionMenus extends React.Component {
             geeImageCollectionVisParams: this.props.sourceConfig.collectionVisParams,
         });
 
-    setGEEImageCollectionStartDate = (newDate) => this.setState({ geeImageCollectionStartDate: newDate });
-
-    setGEEImageCollectionEndDate = (newDate) => this.setState({ geeImageCollectionEndDate: newDate });
-
-    setGEEImageCollectionVisParams = (newVisParams) => this.setState({ geeImageCollectionVisParams: newVisParams });
-
     updateGEEImageCollection = () => {
         const { geeImageCollectionStartDate, geeImageCollectionEndDate } = this.state;
         if (new Date(geeImageCollectionStartDate) > new Date(geeImageCollectionEndDate)) {
@@ -336,7 +328,7 @@ export class GEEImageCollectionMenus extends React.Component {
                             value={this.state.geeImageCollectionStartDate}
                             max={new Date().toJSON().split("T")[0]}
                             style={{ width: "100%" }}
-                            onChange={e => this.setGEEImageCollectionStartDate(e.target.value)}
+                            onChange={e => this.setState({ geeImageCollectionStartDate: e.target.value })}
                         />
                     </div>
                     <label>End Date</label>
@@ -347,7 +339,7 @@ export class GEEImageCollectionMenus extends React.Component {
                             value={this.state.geeImageCollectionEndDate}
                             max={new Date().toJSON().split("T")[0]}
                             style={{ width: "100%" }}
-                            onChange={e => this.setGEEImageCollectionEndDate(e.target.value)}
+                            onChange={e => this.setState({ geeImageCollectionEndDate: e.target.value })}
                         />
                     </div>
                     <label>Visualization Parameters</label>
@@ -355,7 +347,7 @@ export class GEEImageCollectionMenus extends React.Component {
                         className="form-control"
                         id="geeImageCollectionVisParams"
                         value={this.state.geeImageCollectionVisParams}
-                        onChange={e => this.setGEEImageCollectionVisParams(e.target.value)}
+                        onChange={e => this.setState({ geeImageCollectionVisParams: e.target.value })}
                     >
                         {this.state.geeImageCollectionVisParams}
                     </textarea>
