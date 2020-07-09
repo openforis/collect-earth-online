@@ -487,17 +487,8 @@ class NewAnswerDesigner extends React.Component {
         }
     };
 
-    setSurveyAnswerText = (text, re) => {
-        if (re.test(text)) {
-            this.setState({ newAnswerText: text });
-        } else {
-            alert("Invalid character found. Please check the format of your answer.");
-        }
-    }
-
     render() {
         const { surveyQuestion } = this.props;
-        const re = surveyQuestion.dataType === "number" ? /^[0-9\b]+$/ : /.*/;
         return <div className="NewAnswerDesigner">
             <div className="col d-flex">
                 <button
@@ -514,11 +505,11 @@ class NewAnswerDesigner extends React.Component {
                     onChange={e => this.setState({ selectedColor: e.target.value })}
                 />
                 <input
-                    type="text"
+                    type={surveyQuestion.dataType === "number" ? "number" : "text"}
                     className="value-name"
                     autoComplete="off"
                     value={this.state.newAnswerText}
-                    onChange={e => this.setSurveyAnswerText(e.target.value, re)}
+                    onChange={e => this.setState({ newAnswerText: e.target.value })}
                 />
             </div>
         </div>;
