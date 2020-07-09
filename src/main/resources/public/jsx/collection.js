@@ -24,10 +24,7 @@ class Collection extends React.Component {
             currentPlot: null,
             imageryAttribution: "",
             imageryList: [],
-            imageryMonthPlanet: 3,
-            imageryMonthNamePlanet: "March",
             imageryYearDG: 2009,
-            imageryYearPlanet: 2018,
             imageryStartDatePlanetDaily: "",
             imageryEndDatePlanetDaily: "",
             imagerySecureWatchDate: "",
@@ -137,11 +134,6 @@ class Collection extends React.Component {
             && (this.state.currentImagery.id !== prevState.currentImagery.id
                 || this.state.mapConfig !== prevState.mapConfig)) {
             this.updateMapImagery();
-        }
-
-        if (this.state.imageryMonthPlanet !== prevState.imageryMonthPlanet
-            || this.state.imageryYearPlanet !== prevState.imageryYearPlanet) {
-            this.updatePlanetLayer();
         }
 
         if (this.state.imageryStartDatePlanetDaily !== prevState.imageryStartDatePlanetDaily
@@ -300,23 +292,8 @@ class Collection extends React.Component {
                               });
     };
 
-    setBaseMapSource = (newBaseMapSource) => {
-        const newImagery = this.getImageryById(newBaseMapSource);
-        const newImageryAttribution =
-            newImagery.sourceConfig.type === "Planet"
-                ? newImagery.attribution
-                    + " | " + this.state.imageryYearPlanet
-                    + "-" + this.state.imageryMonthPlanet
-            : newImagery.sourceConfig.type === "PlanetDaily"
-                ? newImagery.attribution
-                    + " | " + this.state.imageryStartDatePlanetDaily
-                    + " to " + this.state.imageryEndDatePlanetDaily
-            : newImagery.attribution;
-        this.setState({
-            currentImagery: newImagery,
-            imageryAttribution: newImageryAttribution,
-        });
-    };
+    setBaseMapSource = (newBaseMapSource) =>
+        this.setState({ currentImagery: this.getImageryById(newBaseMapSource) });
 
     setImageryYearDG = (newImageryYearDG) => {
         this.setState({
@@ -336,15 +313,6 @@ class Collection extends React.Component {
         });
     };
 
-    setImageryYearPlanet = (newImageryYearPlanet) => {
-        this.setState({
-            imageryYearPlanet: newImageryYearPlanet,
-            imageryAttribution: this.state.currentImagery.attribution
-                                + " | " + newImageryYearPlanet
-                                + "-" + this.state.imageryMonthNamePlanet,
-        });
-    };
-
     setImageryStartDatePlanetDaily = (newDate) => {
         const { imageryEndDatePlanetDaily, currentImagery } = this.state;
         this.setState({
@@ -358,31 +326,6 @@ class Collection extends React.Component {
         this.setState({
             imageryEndDatePlanetDaily: newDate,
             imageryAttribution: currentImagery.attribution + " | " + imageryStartDatePlanetDaily + " to " + newDate,
-        });
-    };
-
-    setImageryMonthPlanet = (newImageryMonthPlanet) => {
-        const monthData = {
-            1: "January",
-            2: "February",
-            3: "March",
-            4: "April",
-            5: "May",
-            6: "June",
-            7: "July",
-            8: "August",
-            9:  "September",
-            10: "October",
-            11: "November",
-            12: "December",
-        };
-        const newImageryMonthName = monthData[parseInt(newImageryMonthPlanet)];
-        this.setState({
-            imageryMonthPlanet: newImageryMonthPlanet,
-            imageryMonthNamePlanet: newImageryMonthName,
-            imageryAttribution: this.state.currentImagery.attribution + " | "
-                                + this.state.imageryYearPlanet + "-"
-                                + newImageryMonthName,
         });
     };
 
@@ -404,28 +347,13 @@ class Collection extends React.Component {
                 imageryStartDatePlanetDaily: "",
                 imageryEndDatePlanetDaily: "",
             });
-            if (this.state.currentImagery.sourceConfig.type === "Planet") {
-                this.updatePlanetLayer();
-            } else if (this.state.currentImagery.sourceConfig.type === "SecureWatch") {
+            if (this.state.currentImagery.sourceConfig.type === "SecureWatch") {
                 this.getSecureWatchAvailableDates();
             }
         }
     };
 
     getImageryById = (imageryId) => this.state.imageryList.find(imagery => imagery.id === imageryId);
-
-    updatePlanetLayer = () => {
-        const { currentImagery, imageryMonthPlanet, imageryYearPlanet } = this.state;
-        mercator.updateLayerSource(this.state.mapConfig,
-                                   currentImagery.id,
-                                   this.state.currentProject.boundary,
-                                   sourceConfig => ({
-                                       ...sourceConfig,
-                                       month: imageryMonthPlanet < 10 ? "0" + imageryMonthPlanet : imageryMonthPlanet,
-                                       year: imageryYearPlanet,
-                                   }),
-                                   this);
-    };
 
     removeAndAddVector = () => {
         const { mapConfig, currentPlot, currentProject, selectedQuestion: { visible }} = this.state;
@@ -1285,16 +1213,11 @@ class Collection extends React.Component {
                         setImageryAttribution={this.setImageryAttribution}
                         imageryList={this.state.imageryList}
                         imageryYearDG={this.state.imageryYearDG}
-                        imageryYearPlanet={this.state.imageryYearPlanet}
-                        imageryMonthPlanet={this.state.imageryMonthPlanet}
-                        imageryMonthNamePlanet={this.state.imageryMonthNamePlanet}
                         imageryStartDatePlanetDaily={this.state.imageryStartDatePlanetDaily}
                         imageryEndDatePlanetDaily={this.state.imageryEndDatePlanetDaily}
                         showPlanetDaily={this.state.currentPlot != null}
                         stackingProfileDG={this.state.stackingProfileDG}
                         setImageryYearDG={this.setImageryYearDG}
-                        setImageryYearPlanet={this.setImageryYearPlanet}
-                        setImageryMonthPlanet={this.setImageryMonthPlanet}
                         setImageryStartDatePlanetDaily={this.setImageryStartDatePlanetDaily}
                         setImageryEndDatePlanetDaily={this.setImageryEndDatePlanetDaily}
                         imagerySecureWatchAvailableDates={this.state.imagerySecureWatchAvailableDates}
@@ -1687,11 +1610,12 @@ class ImageryOptions extends React.Component {
                         </select>
                         {props.sourceConfig.type === "Planet" &&
                             <PlanetMenus
-                                imageryYearPlanet={this.props.imageryYearPlanet}
-                                setImageryYearPlanet={this.props.setImageryYearPlanet}
-                                imageryMonthPlanet={this.props.imageryMonthPlanet}
-                                setImageryMonthPlanet={this.props.setImageryMonthPlanet}
-                                imageryMonthNamePlanet={this.props.imageryMonthNamePlanet}
+                                mapConfig={props.mapConfig}
+                                currentProjectBoundary={props.currentProjectBoundary}
+                                currentImageryId={props.baseMapSource}
+                                sourceConfig={props.sourceConfig}
+                                imageryAttribution={props.imageryAttribution}
+                                setImageryAttribution={props.setImageryAttribution}
                             />
                         }
                         {props.sourceConfig.type === "PlanetDaily" &&
@@ -1734,6 +1658,8 @@ class ImageryOptions extends React.Component {
                                 currentProjectBoundary={props.currentProjectBoundary}
                                 imageVisParams={props.sourceConfig.imageVisParams}
                                 currentImageryId={props.baseMapSource}
+                                imageryAttribution={props.imageryAttribution}
+                                setImageryAttribution={props.setImageryAttribution}
                             />
                         }
                         {props.sourceConfig.type === "GEEImageCollection" &&
@@ -1742,6 +1668,8 @@ class ImageryOptions extends React.Component {
                                 currentProjectBoundary={props.currentProjectBoundary}
                                 currentImageryId={props.baseMapSource}
                                 sourceConfig={props.sourceConfig}
+                                imageryAttribution={props.imageryAttribution}
+                                setImageryAttribution={props.setImageryAttribution}
                             />
                         }
                     </Fragment>

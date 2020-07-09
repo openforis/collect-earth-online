@@ -2,41 +2,102 @@ import React from "react";
 import { mercator } from "../../js/mercator";
 import { formatDateISO } from "../utils/dateUtils";
 
-export function PlanetMenus({
-    imageryYearPlanet,
-    setImageryYearPlanet,
-    imageryMonthPlanet,
-    setImageryMonthPlanet,
-    imageryMonthNamePlanet,
-}) {
-    return (
-        <div className="PlanetsMenu my-2">
-            <div className="slidecontainer form-control form-control-sm">
-                <input
-                    type="range"
-                    min="2016"
-                    max={new Date().getFullYear()}
-                    value={imageryYearPlanet}
-                    className="slider"
-                    id="myRange"
-                    onChange={e => setImageryYearPlanet(parseInt(e.target.value))}
-                />
-                <p>Year: <span id="demo">{imageryYearPlanet}</span></p>
+export class PlanetMenus extends React.Component {
+    constructor(props) {
+        super(props);
+        this.monthlyMapping = {
+            1: "January",
+            2: "February",
+            3: "March",
+            4: "April",
+            5: "May",
+            6: "June",
+            7: "July",
+            8: "August",
+            9:  "September",
+            10: "October",
+            11: "November",
+            12: "December",
+        };
+        this.state = {
+            imageryYearPlanet: 2018,
+            imageryMonthPlanet: 1,
+        };
+    }
+
+    componentDidMount = () => {
+        const year = parseInt(this.props.sourceConfig.year);
+        const month = parseInt(this.props.sourceConfig.month);
+        this.props.setImageryAttribution(this.props.imageryAttribution
+            + " | Monthly Mosaic of " + year + ", " + this.monthlyMapping[month]);
+        this.setState({
+            imageryYearPlanet: year,
+            imageryMonthPlanet: month,
+        });
+    }
+
+    componentDidUpdate(prevProps, prevState) {
+        if (this.state.imageryMonthPlanet !== prevState.imageryMonthPlanet
+            || this.state.imageryYearPlanet !== prevState.imageryYearPlanet) {
+            this.updatePlanetLayer();
+        }
+    }
+
+    setImageryYearPlanet = (newImageryYearPlanet) => {
+        this.props.setImageryAttribution(this.props.imageryAttribution + " | Monthly Mosaic of "
+            + newImageryYearPlanet + ", " + this.monthlyMapping[this.state.imageryMonthPlanet]);
+        this.setState({ imageryYearPlanet: newImageryYearPlanet });
+    };
+
+    setImageryMonthPlanet = (newImageryMonthPlanet) => {
+        this.props.setImageryAttribution(this.props.imageryAttribution + " | Monthly Mosaic of "
+            + this.state.imageryYearPlanet + ", " + this.monthlyMapping[newImageryMonthPlanet]);
+        this.setState({ imageryMonthPlanet: newImageryMonthPlanet });
+    };
+
+    updatePlanetLayer = () => {
+        const { imageryMonthPlanet, imageryYearPlanet } = this.state;
+        mercator.updateLayerSource(this.props.mapConfig,
+                                   this.props.currentImageryId,
+                                   this.props.currentProjectBoundary,
+                                   sourceConfig => ({
+                                       ...sourceConfig,
+                                       month: imageryMonthPlanet < 10 ? "0" + imageryMonthPlanet : imageryMonthPlanet,
+                                       year: imageryYearPlanet,
+                                   }),
+                                   this);
+    };
+
+    render() {
+        return (
+            <div className="PlanetsMenu my-2">
+                <div className="slidecontainer form-control form-control-sm">
+                    <input
+                        type="range"
+                        min="2016"
+                        max={new Date().getFullYear()}
+                        value={this.state.imageryYearPlanet}
+                        className="slider"
+                        id="myRange"
+                        onChange={e => this.setImageryYearPlanet(parseInt(e.target.value))}
+                    />
+                    <p>Year: <span id="demo">{this.state.imageryYearPlanet}</span></p>
+                </div>
+                <div className="slidecontainer form-control form-control-sm">
+                    <input
+                        type="range"
+                        min="1"
+                        max="12"
+                        value={this.state.imageryMonthPlanet}
+                        className="slider"
+                        id="myRangemonth"
+                        onChange={e => this.setImageryMonthPlanet(parseInt(e.target.value))}
+                    />
+                    <p>Month: <span id="demo">{this.monthlyMapping[this.state.imageryMonthPlanet]}</span></p>
+                </div>
             </div>
-            <div className="slidecontainer form-control form-control-sm">
-                <input
-                    type="range"
-                    min="1"
-                    max="12"
-                    value={imageryMonthPlanet}
-                    className="slider"
-                    id="myRangemonth"
-                    onChange={e => setImageryMonthPlanet(parseInt(e.target.value))}
-                />
-                <p>Month: <span id="demo">{imageryMonthNamePlanet}</span></p>
-            </div>
-        </div>
-    );
+        );
+    }
 }
 
 export function PlanetDailyMenus({
@@ -116,20 +177,20 @@ export class SentinelMenus extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
-            imageryYearSentinel1: "",
-            imageryMonthSentinel1: "",
+            imageryYearSentinel1: 2018,
+            imageryMonthSentinel1: 1,
             bandCombinationSentinel1: "",
-            imageryYearSentinel2: "",
-            imageryMonthSentinel2: "",
+            imageryYearSentinel2: 2018,
+            imageryMonthSentinel2: 1,
             bandCombinationSentinel2: "",
         };
     }
 
     componentDidMount () {
-        const year = this.props.sourceConfig.year;
-        const month = this.props.sourceConfig.month;
-        const startDate = parseInt(year) + "-" + (parseInt(month) > 9 ? "" : "0") + parseInt(month) + "-01";
-        const endDate = new Date(parseInt(year), parseInt(month), 0);
+        const year = parseInt(this.props.sourceConfig.year);
+        const month = parseInt(this.props.sourceConfig.month);
+        const startDate = year + "-" + (month > 9 ? "" : "0") + month + "-01";
+        const endDate = new Date(year, month, 0);
         this.setState({
             [this.props.sourceConfig.type === "Sentinel1" ? "imageryYearSentinel1" : "imageryYearSentinel2"]: year,
             [this.props.sourceConfig.type === "Sentinel1" ? "imageryMonthSentinel1" : "imageryMonthSentinel2"]: month,
@@ -228,7 +289,7 @@ export class SentinelMenus extends React.Component {
                             : this.state.imageryYearSentinel2}
                         className="slider"
                         id="sentinel2-year"
-                        onChange={e => this.setImageryYearSentinel(e.target.value,
+                        onChange={e => this.setImageryYearSentinel(parseInt(e.target.value),
                                                                    this.props.sourceConfig.type === "Sentinel1")}
                     />
                     <p>Year:
@@ -249,7 +310,7 @@ export class SentinelMenus extends React.Component {
                             : this.state.imageryMonthSentinel2}
                         className="slider"
                         id="sentinel2-month"
-                        onChange={e => this.setImageryMonthSentinel(e.target.value,
+                        onChange={e => this.setImageryMonthSentinel(parseInt(e.target.value),
                                                                     this.props.sourceConfig.type === "Sentinel1")}
                     />
                     <p>Month:
@@ -289,7 +350,10 @@ export class GEEImageMenus extends React.Component {
         };
     }
 
-    componentDidMount = () => this.setState({ geeImageryVisParams: this.props.imageVisParams });
+    componentDidMount = () => {
+        this.props.setImageryAttribution(this.props.imageryAttribution);
+        this.setState({ geeImageryVisParams: this.props.imageVisParams });
+    }
 
     updateGEEImagery = () =>
         mercator.updateLayerSource(
@@ -341,12 +405,14 @@ export class GEEImageCollectionMenus extends React.Component {
         };
     }
 
-    componentDidMount = () =>
+    componentDidMount = () => {
+        this.props.setImageryAttribution(this.props.imageryAttribution);
         this.setState({
             geeImageCollectionStartDate: this.props.sourceConfig.startDate,
             geeImageCollectionEndDate: this.props.sourceConfig.endDate,
             geeImageCollectionVisParams: this.props.sourceConfig.collectionVisParams,
         });
+    }
 
     updateGEEImageCollection = () => {
         const { geeImageCollectionStartDate, geeImageCollectionEndDate } = this.state;
