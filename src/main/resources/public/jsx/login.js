@@ -9,28 +9,63 @@ class Login extends React.Component {
         this.state = {
             email: "",
             password: "",
+            emailError: "",
+            passwordError: "",
         };
     }
 
+    validate = () => {
+        let isValid = true;
+        let emailError = "";
+        let passwordError = "";
+        if (this.state.email === "") {
+            emailError = "This field is required.";
+            isValid = false;
+        } else {
+            const emailPattern = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+            if (!emailPattern.test(this.state.email)) {
+                emailError = "Is not a valid email address.";
+                isValid = false;
+            }
+        }
+        if (this.state.password === "") {
+            passwordError = "This field is required.";
+            isValid = false;
+        } else {
+            if (this.state.password.length < 8) {
+                passwordError = "Password must be at least 8 characters.";
+                isValid = false;
+            }
+        }
+        this.setState({
+            emailError,
+            passwordError,
+        });
+        return isValid;
+    }
+
     requestLogin = () => {
-        fetch("/login",
-              {
-                  method: "POST",
-                  headers: { "Content-Type": "application/x-www-form-urlencoded" },
-                  body: getQueryString(this.state),
-              })
-            .then(response => Promise.all([response.ok, response.text()]))
-            .then(data => {
-                if (data[0] && data[1] === "") {
-                    window.location = this.props.returnurl === "" ? "/home" : this.props.returnurl;
-                } else {
-                    return Promise.reject(data[1]);
-                }
-            })
-            .catch(message => {
-                alert(message);
-                console.log(message);
-            });
+        const isValid = this.validate();
+        if (isValid) {
+            fetch("/login",
+                  {
+                      method: "POST",
+                      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+                      body: getQueryString(this.state),
+                  })
+                .then(response => Promise.all([response.ok, response.text()]))
+                .then(data => {
+                    if (data[0] && data[1] === "") {
+                        window.location = this.props.returnurl === "" ? "/home" : this.props.returnurl;
+                    } else {
+                        return Promise.reject(data[1]);
+                    }
+                })
+                .catch(message => {
+                    alert(message);
+                    console.log(message);
+                });
+        }
     };
 
     render() {
@@ -44,8 +79,9 @@ class Login extends React.Component {
                                 e.preventDefault();
                                 this.requestLogin();
                             }}
+                            noValidate
                         >
-                            <div className="form-group">
+                            <div className={"form-group " + (this.state.emailError ? "invalid" : "")}>
                                 <label htmlFor="email">Email address</label>
                                 <input
                                     id="email"
@@ -55,8 +91,11 @@ class Login extends React.Component {
                                     value={this.state.email}
                                     onChange={e => this.setState({ email: e.target.value })}
                                 />
+                                {this.state.emailError &&
+                                    <div className="validation-error">{this.state.emailError}</div>
+                                }
                             </div>
-                            <div className="form-group">
+                            <div className={"form-group " + (this.state.passwordError ? "invalid" : "")}>
                                 <label htmlFor="password">Password</label>
                                 <input
                                     id="password"
@@ -66,6 +105,9 @@ class Login extends React.Component {
                                     value={this.state.password}
                                     onChange={e => this.setState({ password: e.target.value })}
                                 />
+                                {this.state.passwordError &&
+                                    <div className="validation-error">{this.state.passwordError}</div>
+                                }
                             </div>
                             <div className="d-flex justify-content-between align-items-center">
                                 <a href={"/password-request"}>Forgot your password?</a>
