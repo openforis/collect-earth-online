@@ -1,5 +1,6 @@
 import React from "react";
 import { mercator } from "../../js/mercator";
+import { formatDateISO } from "../utils/dateUtils";
 
 export function PlanetMenus({
     imageryYearPlanet,
@@ -111,122 +112,173 @@ export function SecureWatchMenus({ imagerySecureWatchAvailableDates, onChangeSec
     );
 }
 
-export function Sentinel1Menus({
-    imageryYearSentinel1,
-    setImageryYearSentinel,
-    imageryMonthSentinel1,
-    setImageryMonthSentinel,
-    bandCombinationSentinel1,
-    setBandCombinationSentinel,
-}) {
-    const bandCombinationOptions = [
-        { label: "VH,VV,VH/VV", value: "VH,VV,VH/VV" },
-        { label: "VH,VV,VV/VH", value: "VH,VV,VV/VH" },
-        { label: "VV,VH,VV/VH", value: "VV,VH,VV/VH" },
-        { label: "VV,VH,VH/VV", value: "VV,VH,VH/VV" },
-    ];
+export class SentinelMenus extends React.Component {
+    constructor(props) {
+        super(props);
+        this.state = {
+            imageryYearSentinel1: "",
+            imageryMonthSentinel1: "",
+            bandCombinationSentinel1: "",
+            imageryYearSentinel2: "",
+            imageryMonthSentinel2: "",
+            bandCombinationSentinel2: "",
+        };
+    }
 
-    return (
-        <div className="Sentinel1Menu my-2">
-            <div className="slidecontainer form-control form-control-sm">
-                <input
-                    type="range"
-                    min="2014"
-                    max={new Date().getFullYear()}
-                    value={imageryYearSentinel1}
-                    className="slider"
-                    id="sentinel1-year"
-                    onChange={e => setImageryYearSentinel(e.target.value, true)}
-                />
-                <p>Year: <span>{imageryYearSentinel1}</span></p>
-            </div>
-            <div className="slidecontainer form-control form-control-sm">
-                <input
-                    type="range"
-                    min="1"
-                    max="12"
-                    value={imageryMonthSentinel1}
-                    className="slider"
-                    id="sentinel1-month"
-                    onChange={e => setImageryMonthSentinel(e.target.value, true)}
-                />
-                <p>Month: <span id="demo">{imageryMonthSentinel1}</span></p>
-            </div>
-            <div className="form-control form-control-sm" >
-                <div className="mb-3">
-                    <label>Band Combination</label>
-                    <select
-                        className="form-control"
-                        id="sentinel1-bandCombination"
-                        value={bandCombinationSentinel1}
-                        onChange={e => setBandCombinationSentinel(e.target.value, true)}
-                    >
-                        {bandCombinationOptions.map(el => <option value={el.value} key={el.value}>{el.label}</option>)}
-                    </select>
+    componentDidMount () {
+        const year = this.props.sourceConfig.year;
+        const month = this.props.sourceConfig.month;
+        const startDate = parseInt(year) + "-" + (parseInt(month) > 9 ? "" : "0") + parseInt(month) + "-01";
+        const endDate = new Date(parseInt(year), parseInt(month), 0);
+        this.setState({
+            [this.props.sourceConfig.type === "Sentinel1" ? "imageryYearSentinel1" : "imageryYearSentinel2"]: year,
+            [this.props.sourceConfig.type === "Sentinel1" ? "imageryMonthSentinel1" : "imageryMonthSentinel2"]: month,
+            [this.props.sourceConfig.type === "Sentinel1"
+                ? "bandCombinationSentinel1"
+                : "bandCombinationSentinel2"]: this.props.sourceConfig.bandCombination,
+        });
+        this.props.setImageryAttribution(this.props.imageryAttribution + " | "
+            + startDate + " to " + formatDateISO(endDate));
+    }
+
+    componentDidUpdate (prevProps, prevState) {
+        if (this.state.imageryMonthSentinel1 !== prevState.imageryMonthSentinel1
+            || this.state.imageryYearSentinel1 !== prevState.imageryYearSentinel1
+            || this.state.bandCombinationSentinel1 !== prevState.bandCombinationSentinel1) {
+            this.updateSentinelLayer("sentinel1");
+        }
+
+        if (this.state.imageryMonthSentinel2 !== prevState.imageryMonthSentinel2
+            || this.state.imageryYearSentinel2 !== prevState.imageryYearSentinel2
+            || this.state.bandCombinationSentinel2 !== prevState.bandCombinationSentinel2) {
+            this.updateSentinelLayer("sentinel2");
+        }
+    }
+
+    updateSentinelLayer = (type) => {
+        const {
+            imageryMonthSentinel2, imageryYearSentinel2, bandCombinationSentinel2,
+            imageryMonthSentinel1, imageryYearSentinel1, bandCombinationSentinel1,
+        } = this.state;
+        mercator.updateLayerSource(this.props.mapConfig,
+                                   this.props.currentImageryId,
+                                   this.props.currentProjectBoundary,
+                                   sourceConfig => ({
+                                       ...sourceConfig,
+                                       month: (type === "sentinel1") ? imageryMonthSentinel1 : imageryMonthSentinel2,
+                                       year: (type === "sentinel1") ? imageryYearSentinel1 : imageryYearSentinel2,
+                                       bandCombination: (type === "sentinel1")
+                                           ? bandCombinationSentinel1
+                                           : bandCombinationSentinel2,
+                                   }),
+                                   this);
+    };
+
+    setImageryYearSentinel = (newYear, sentinel1 = true) => {
+        const imageryMonth = sentinel1 ? this.state.imageryMonthSentinel1 : this.state.imageryMonthSentinel2;
+        const startDate = newYear + "-" + (imageryMonth > 9 ? "" : "0") + imageryMonth + "-01";
+        const endDate = new Date(newYear, imageryMonth, 0);
+        this.setState({ [sentinel1 ? "imageryYearSentinel1" : "imageryYearSentinel2"] : newYear });
+        this.props.setImageryAttribution(this.props.imageryAttribution + " | "
+            + startDate + " to " + formatDateISO(endDate));
+    };
+
+    setImageryMonthSentinel = (newMonth, sentinel1 = true) => {
+        const imageryYear = sentinel1 ? this.state.imageryYearSentinel1 : this.state.imageryYearSentinel2;
+        const startDate = imageryYear + "-" + (newMonth > 9 ? "" : "0") + newMonth + "-01";
+        const endDate = new Date(imageryYear, newMonth, 0);
+        this.setState({ [sentinel1 ? "imageryMonthSentinel1" : "imageryMonthSentinel2"] : newMonth });
+        this.props.setImageryAttribution(this.props.imageryAttribution + " | "
+            + startDate + " to " + formatDateISO(endDate));
+    };
+
+    setBandCombinationSentinel = (newBandCombination, sentinel1 = true) =>
+        this.setState({
+            [sentinel1 ? "bandCombinationSentinel1" : "bandCombinationSentinel2"] : newBandCombination,
+        });
+
+    render() {
+        const bandCombinationOptions = this.props.sourceConfig.type === "Sentinel1"
+            ?
+            [
+                { label: "VH,VV,VH/VV", value: "VH,VV,VH/VV" },
+                { label: "VH,VV,VV/VH", value: "VH,VV,VV/VH" },
+                { label: "VV,VH,VV/VH", value: "VV,VH,VV/VH" },
+                { label: "VV,VH,VH/VV", value: "VV,VH,VH/VV" },
+            ]
+            :
+            [
+                { label: "True Color", value: "TrueColor" },
+                { label: "False Color Infrared", value: "FalseColorInfrared" },
+                { label: "False Color Urban", value: "FalseColorUrban" },
+                { label: "Agriculture", value: "Agriculture" },
+                { label: "Healthy Vegetation", value: "HealthyVegetation" },
+                { label: "Short Wave Infrared", value: "ShortWaveInfrared" },
+            ];
+
+        return (
+            <div className="Sentinel2Menu my-2">
+                <div className="slidecontainer form-control form-control-sm">
+                    <input
+                        type="range"
+                        min="2015"
+                        max={new Date().getFullYear()}
+                        value={this.props.sourceConfig.type === "Sentinel1"
+                            ? this.state.imageryYearSentinel1
+                            : this.state.imageryYearSentinel2}
+                        className="slider"
+                        id="sentinel2-year"
+                        onChange={e => this.setImageryYearSentinel(e.target.value,
+                                                                   this.props.sourceConfig.type === "Sentinel1")}
+                    />
+                    <p>Year:
+                        <span>
+                            {this.props.sourceConfig.type === "Sentinel1"
+                                ? this.state.imageryYearSentinel1
+                                : this.state.imageryYearSentinel2}
+                        </span>
+                    </p>
+                </div>
+                <div className="slidecontainer form-control form-control-sm">
+                    <input
+                        type="range"
+                        min="1"
+                        max="12"
+                        value={this.props.sourceConfig.type === "Sentinel1"
+                            ? this.state.imageryMonthSentinel1
+                            : this.state.imageryMonthSentinel2}
+                        className="slider"
+                        id="sentinel2-month"
+                        onChange={e => this.setImageryMonthSentinel(e.target.value,
+                                                                    this.props.sourceConfig.type === "Sentinel1")}
+                    />
+                    <p>Month:
+                        <span id="demo">
+                            {this.props.sourceConfig.type === "Sentinel1"
+                                ? this.state.imageryMonthSentinel1
+                                : this.state.imageryMonthSentinel2}
+                        </span>
+                    </p>
+                </div>
+                <div className="form-control form-control-sm" >
+                    <div className="mb-3">
+                        <label>Band Combination</label>
+                        <select
+                            className="form-control"
+                            id="sentinel2-bandCombination"
+                            value={this.props.sourceConfig.type === "Sentinel1"
+                                ? this.state.bandCombinationSentinel1
+                                : this.state.bandCombinationSentinel2}
+                            onChange={e => this.setBandCombinationSentinel(e.target.value,
+                                                                           this.props.sourceConfig.type === "Sentinel1")}
+                        >
+                            {bandCombinationOptions.map(el => <option value={el.value} key={el.value}>{el.label}</option>)}
+                        </select>
+                    </div>
                 </div>
             </div>
-        </div>
-    );
-}
-
-export function Sentinel2Menus({
-    imageryYearSentinel2,
-    setImageryYearSentinel,
-    imageryMonthSentinel2,
-    setImageryMonthSentinel,
-    bandCombinationSentinel2,
-    setBandCombinationSentinel,
-}) {
-    const bandCombinationOptions = [
-        { label: "True Color", value: "TrueColor" },
-        { label: "False Color Infrared", value: "FalseColorInfrared" },
-        { label: "False Color Urban", value: "FalseColorUrban" },
-        { label: "Agriculture", value: "Agriculture" },
-        { label: "Healthy Vegetation", value: "HealthyVegetation" },
-        { label: "Short Wave Infrared", value: "ShortWaveInfrared" },
-    ];
-
-    return (
-        <div className="Sentinel2Menu my-2">
-            <div className="slidecontainer form-control form-control-sm">
-                <input
-                    type="range"
-                    min="2015"
-                    max={new Date().getFullYear()}
-                    value={imageryYearSentinel2}
-                    className="slider"
-                    id="sentinel2-year"
-                    onChange={e => setImageryYearSentinel(e.target.value, false)}
-                />
-                <p>Year: <span>{imageryYearSentinel2}</span></p>
-            </div>
-            <div className="slidecontainer form-control form-control-sm">
-                <input
-                    type="range"
-                    min="1"
-                    max="12"
-                    value={imageryMonthSentinel2}
-                    className="slider"
-                    id="sentinel2-month"
-                    onChange={e => setImageryMonthSentinel(e.target.value, false)}
-                />
-                <p>Month: <span id="demo">{imageryMonthSentinel2}</span></p>
-            </div>
-            <div className="form-control form-control-sm" >
-                <div className="mb-3">
-                    <label>Band Combination</label>
-                    <select
-                        className="form-control"
-                        id="sentinel2-bandCombination"
-                        value={bandCombinationSentinel2}
-                        onChange={e => setBandCombinationSentinel(e.target.value, false)}
-                    >
-                        {bandCombinationOptions.map(el => <option value={el.value} key={el.value}>{el.label}</option>)}
-                    </select>
-                </div>
-            </div>
-        </div>
-    );
+        );
+    }
 }
 
 export class GEEImageMenus extends React.Component {

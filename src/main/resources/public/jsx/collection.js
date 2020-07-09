@@ -7,14 +7,12 @@ import {
     PlanetMenus,
     PlanetDailyMenus,
     SecureWatchMenus,
-    Sentinel1Menus,
-    Sentinel2Menus,
+    SentinelMenus,
     GEEImageMenus,
     GEEImageCollectionMenus,
 } from "./imagery/collectionMenuControls";
 import { convertSampleValuesToSurveyQuestions } from "./utils/surveyUtils";
 import { UnicodeIcon, getQueryString } from "./utils/textUtils";
-import { formatDateISO } from "./utils/dateUtils";
 
 class Collection extends React.Component {
     constructor(props) {
@@ -32,12 +30,6 @@ class Collection extends React.Component {
             imageryYearPlanet: 2018,
             imageryStartDatePlanetDaily: "",
             imageryEndDatePlanetDaily: "",
-            imageryMonthSentinel1: "",
-            imageryYearSentinel1: "",
-            bandCombinationSentinel1: "",
-            imageryMonthSentinel2: "",
-            imageryYearSentinel2: "",
-            bandCombinationSentinel2: "",
             imagerySecureWatchDate: "",
             imagerySecureWatchCloudCover: "",
             imagerySecureWatchAvailableDates: [],
@@ -156,19 +148,9 @@ class Collection extends React.Component {
             || this.state.imageryEndDatePlanetDaily !== prevState.imageryEndDatePlanetDaily) {
             this.updatePlanetDailyLayer();
         }
-
-        if (this.state.imageryMonthSentinel1 !== prevState.imageryMonthSentinel1
-            || this.state.imageryYearSentinel1 !== prevState.imageryYearSentinel1
-            || this.state.bandCombinationSentinel1 !== prevState.bandCombinationSentinel1) {
-            this.updateSentinelLayer("sentinel1");
-        }
-
-        if (this.state.imageryMonthSentinel2 !== prevState.imageryMonthSentinel2
-            || this.state.imageryYearSentinel2 !== prevState.imageryYearSentinel2
-            || this.state.bandCombinationSentinel2 !== prevState.bandCombinationSentinel2) {
-            this.updateSentinelLayer("sentinel2");
-        }
     }
+
+    setImageryAttribution = (newAttribution) => this.setState({ imageryAttribution: newAttribution });
 
     getProjectData = () => {
         Promise.all([this.getProjectById(), this.getProjectPlots(), this.checkForGeodash()])
@@ -404,33 +386,6 @@ class Collection extends React.Component {
         });
     };
 
-    setImageryYearSentinel = (newYear, sentinel1 = true) => {
-        const imageryMonth = sentinel1 ? this.state.imageryMonthSentinel1 : this.state.imageryMonthSentinel2;
-        const startDate = newYear + "-" + (imageryMonth > 9 ? "" : "0") + imageryMonth + "-01";
-        const endDate = new Date(newYear, imageryMonth, 0);
-        this.setState({
-            [sentinel1 ? "imageryYearSentinel1" : "imageryYearSentinel2"] : newYear,
-            "imageryAttribution": this.state.currentImagery.attribution + " | "
-                + startDate + " to " + formatDateISO(endDate),
-        });
-    };
-
-    setImageryMonthSentinel = (newMonth, sentinel1 = true) => {
-        const imageryYear = sentinel1 ? this.state.imageryYearSentinel1 : this.state.imageryYearSentinel2;
-        const startDate = imageryYear + "-" + (newMonth > 9 ? "" : "0") + newMonth + "-01";
-        const endDate = new Date(imageryYear, newMonth, 0);
-        this.setState({
-            [sentinel1 ? "imageryMonthSentinel1" : "imageryMonthSentinel2"] : newMonth,
-            "imageryAttribution": this.state.currentImagery.attribution + " | "
-                + startDate + " to " + formatDateISO(endDate),
-        });
-    };
-
-    setBandCombinationSentinel = (newBandCombination, sentinel1 = true) =>
-        this.setState({
-            [sentinel1 ? "bandCombinationSentinel1" : "bandCombinationSentinel2"] : newBandCombination,
-        });
-
     updateMapImagery = () => {
         mercator.setVisibleLayer(this.state.mapConfig, this.state.currentImagery.id);
 
@@ -453,21 +408,6 @@ class Collection extends React.Component {
                 this.updatePlanetLayer();
             } else if (this.state.currentImagery.sourceConfig.type === "SecureWatch") {
                 this.getSecureWatchAvailableDates();
-            } else if (this.state.currentImagery.sourceConfig.type === "Sentinel1"
-                || this.state.currentImagery.sourceConfig.type === "Sentinel2") {
-                const month = parseInt(this.state.currentImagery.sourceConfig.month) || 1;
-                const year = parseInt(this.state.currentImagery.sourceConfig.year) || 2018;
-                const bandCombination = this.state.currentImagery.sourceConfig.bandCombination ||
-                    (this.state.currentImagery.sourceConfig.type === "Sentinel1" ? "VH,VV,VH/VV" : "TrueColor");
-                const startDate = year + "-" + (month > 9 ? "" : "0") + month + "-01";
-                const endDate = new Date(year, month, 0);
-
-                this.setState({
-                    [this.state.currentImagery.sourceConfig.type === "Sentinel1" ? "imageryYearSentinel1" : "imageryYearSentinel2"]: year,
-                    [this.state.currentImagery.sourceConfig.type === "Sentinel1" ? "imageryMonthSentinel1" : "imageryMonthSentinel2"]: month,
-                    [this.state.currentImagery.sourceConfig.type === "Sentinel1" ? "bandCombinationSentinel1" : "bandCombinationSentinel2"]: bandCombination,
-                    "imageryAttribution": this.state.currentImagery.attribution + " | " + startDate + " to " + formatDateISO(endDate),
-                });
             }
         }
     };
@@ -546,29 +486,6 @@ class Collection extends React.Component {
                                            this.removeAndAddVector);
             }
         }
-    };
-
-    updateSentinelLayer = (type) => {
-        const {
-            currentImagery, imageryMonthSentinel2, imageryYearSentinel2, bandCombinationSentinel2,
-            imageryMonthSentinel1, imageryYearSentinel1, bandCombinationSentinel1,
-        } = this.state;
-        mercator.updateLayerSource(this.state.mapConfig,
-                                   currentImagery.id,
-                                   this.state.currentProject.boundary,
-                                   sourceConfig => ({
-                                       ...sourceConfig,
-                                       month: (type === "sentinel1")
-                                           ? imageryMonthSentinel1.toString()
-                                           : imageryMonthSentinel2.toString(),
-                                       year: (type === "sentinel1")
-                                           ? imageryYearSentinel1.toString()
-                                           : imageryYearSentinel2.toString(),
-                                       bandCombination: (type === "sentinel1")
-                                           ? bandCombinationSentinel1
-                                           : bandCombinationSentinel2,
-                                   }),
-                                   this);
     };
 
     updateSecureWatchSingleLayer = (featureId, imagerySecureWatchDate, imagerySecureWatchCloudCover) => {
@@ -1364,6 +1281,8 @@ class Collection extends React.Component {
                         sourceConfig={this.state.currentImagery.sourceConfig}
                         mapConfig={this.state.mapConfig}
                         currentProjectBoundary={this.state.currentProject.boundary}
+                        imageryAttribution={this.state.currentImagery.attribution}
+                        setImageryAttribution={this.setImageryAttribution}
                         imageryList={this.state.imageryList}
                         imageryYearDG={this.state.imageryYearDG}
                         imageryYearPlanet={this.state.imageryYearPlanet}
@@ -1371,15 +1290,6 @@ class Collection extends React.Component {
                         imageryMonthNamePlanet={this.state.imageryMonthNamePlanet}
                         imageryStartDatePlanetDaily={this.state.imageryStartDatePlanetDaily}
                         imageryEndDatePlanetDaily={this.state.imageryEndDatePlanetDaily}
-                        imageryMonthSentinel1={this.state.imageryMonthSentinel1}
-                        imageryYearSentinel1={this.state.imageryYearSentinel1}
-                        bandCombinationSentinel1={this.state.bandCombinationSentinel1}
-                        imageryMonthSentinel2={this.state.imageryMonthSentinel2}
-                        imageryYearSentinel2={this.state.imageryYearSentinel2}
-                        bandCombinationSentinel2={this.state.bandCombinationSentinel2}
-                        setImageryMonthSentinel={this.setImageryMonthSentinel}
-                        setImageryYearSentinel={this.setImageryYearSentinel}
-                        setBandCombinationSentinel={this.setBandCombinationSentinel}
                         showPlanetDaily={this.state.currentPlot != null}
                         stackingProfileDG={this.state.stackingProfileDG}
                         setImageryYearDG={this.setImageryYearDG}
@@ -1799,23 +1709,23 @@ class ImageryOptions extends React.Component {
                             />
                         }
                         {props.sourceConfig.type === "Sentinel1" &&
-                            <Sentinel1Menus
-                                imageryYearSentinel1={this.props.imageryYearSentinel1}
-                                setImageryYearSentinel={this.props.setImageryYearSentinel}
-                                imageryMonthSentinel1={this.props.imageryMonthSentinel1}
-                                setImageryMonthSentinel={this.props.setImageryMonthSentinel}
-                                bandCombinationSentinel1={this.props.bandCombinationSentinel1}
-                                setBandCombinationSentinel={this.props.setBandCombinationSentinel}
+                            <SentinelMenus
+                                mapConfig={props.mapConfig}
+                                currentProjectBoundary={props.currentProjectBoundary}
+                                currentImageryId={props.baseMapSource}
+                                sourceConfig={props.sourceConfig}
+                                imageryAttribution={props.imageryAttribution}
+                                setImageryAttribution={props.setImageryAttribution}
                             />
                         }
                         {props.sourceConfig.type === "Sentinel2" &&
-                            <Sentinel2Menus
-                                imageryYearSentinel2={this.props.imageryYearSentinel2}
-                                setImageryYearSentinel={this.props.setImageryYearSentinel}
-                                imageryMonthSentinel2={this.props.imageryMonthSentinel2}
-                                setImageryMonthSentinel={this.props.setImageryMonthSentinel}
-                                bandCombinationSentinel2={this.props.bandCombinationSentinel2}
-                                setBandCombinationSentinel={this.props.setBandCombinationSentinel}
+                            <SentinelMenus
+                                mapConfig={props.mapConfig}
+                                currentProjectBoundary={props.currentProjectBoundary}
+                                currentImageryId={props.baseMapSource}
+                                sourceConfig={props.sourceConfig}
+                                imageryAttribution={props.imageryAttribution}
+                                setImageryAttribution={props.setImageryAttribution}
                             />
                         }
                         {props.sourceConfig.type === "GEEImage" &&
