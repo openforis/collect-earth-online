@@ -270,6 +270,17 @@ a:hover{
     font-size: 1.1rem;
     font-weight: 500;
 }
+/* Forms */
+/*************/
+.form-group.invalid input {
+    border-color: #dc3545;
+}
+
+.form-group.invalid .validation-error {
+    margin-top: .25rem;
+    font-size: 80%;
+    color: #dc3545;
+}
 /*****************/
 /* Flash Message */
 /*****************/
