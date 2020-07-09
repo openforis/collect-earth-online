@@ -24,7 +24,6 @@ class Collection extends React.Component {
             currentPlot: null,
             imageryAttribution: "",
             imageryList: [],
-            imageryYearDG: 2009,
             imageryStartDatePlanetDaily: "",
             imageryEndDatePlanetDaily: "",
             imagerySecureWatchDate: "",
@@ -38,7 +37,6 @@ class Collection extends React.Component {
             sampleOutlineBlack: true,
             selectedQuestion: { id: 0, question: "", answers: [] },
             selectedSampleId: -1,
-            stackingProfileDG: "Accuracy_Profile",
             userSamples: {},
             userImages: {},
             storedInterval: null,
@@ -294,24 +292,6 @@ class Collection extends React.Component {
 
     setBaseMapSource = (newBaseMapSource) =>
         this.setState({ currentImagery: this.getImageryById(newBaseMapSource) });
-
-    setImageryYearDG = (newImageryYearDG) => {
-        this.setState({
-            imageryYearDG: newImageryYearDG,
-            imageryAttribution: this.state.currentImagery.attribution
-                                + " | " + newImageryYearDG
-                                + " (" + this.state.stackingProfileDG + ")",
-        });
-    };
-
-    setStackingProfileDG = (newStackingProfileDG) => {
-        this.setState({
-            stackingProfileDG: newStackingProfileDG,
-            imageryAttribution: this.state.currentImagery.attribution
-                                + " | " + this.state.imageryYearDG
-                                + " (" + newStackingProfileDG + ")",
-        });
-    };
 
     setImageryStartDatePlanetDaily = (newDate) => {
         const { imageryEndDatePlanetDaily, currentImagery } = this.state;
@@ -1212,17 +1192,13 @@ class Collection extends React.Component {
                         imageryAttribution={this.state.currentImagery.attribution}
                         setImageryAttribution={this.setImageryAttribution}
                         imageryList={this.state.imageryList}
-                        imageryYearDG={this.state.imageryYearDG}
                         imageryStartDatePlanetDaily={this.state.imageryStartDatePlanetDaily}
                         imageryEndDatePlanetDaily={this.state.imageryEndDatePlanetDaily}
                         showPlanetDaily={this.state.currentPlot != null}
-                        stackingProfileDG={this.state.stackingProfileDG}
-                        setImageryYearDG={this.setImageryYearDG}
                         setImageryStartDatePlanetDaily={this.setImageryStartDatePlanetDaily}
                         setImageryEndDatePlanetDaily={this.setImageryEndDatePlanetDaily}
                         imagerySecureWatchAvailableDates={this.state.imagerySecureWatchAvailableDates}
                         onChangeSecureWatchSingleLayer={this.onChangeSecureWatchSingleLayer}
-                        setStackingProfileDG={this.setStackingProfileDG}
                         loadingImages={this.state.imageryList.length === 0}
                     />
                     {this.state.currentPlot
