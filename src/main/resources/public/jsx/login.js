@@ -86,7 +86,7 @@ class Login extends React.Component {
                                 <input
                                     id="email"
                                     className="form-control"
-                                    placeholder="Enter email"
+                                    placeholder="Email"
                                     type="email"
                                     value={this.state.email}
                                     onChange={e => this.setState({ email: e.target.value })}
