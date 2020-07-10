@@ -285,6 +285,7 @@ mercator.createSource = function (sourceConfig, imageryId, attribution, document
                     title: dummyPlanetLayer.get("title"),
                     visible: show,
                     layers: planetLayers,
+                    zIndex: 0,
                 });
                 mercator.currentMap.addLayer(layerGroup);
                 if (callback) callback();
@@ -471,12 +472,14 @@ mercator.createLayer = function (layerConfig, documentRoot, projectAOI, show = f
             visible: false,
             extent: layerConfig.extent,
             source: source,
+            zIndex: 0,
         });
     } else {
         return new TileLayer({
             id: layerConfig.id,
             visible: false,
             source: source,
+            zIndex: 0,
         });
     }
 };
@@ -886,6 +889,7 @@ mercator.addVectorLayer = function (mapConfig, layerId, vectorSource, style) {
         id: layerId,
         source: vectorSource,
         style: style,
+        zIndex: 1,
     });
     mapConfig.map.addLayer(vectorLayer);
     return mapConfig;

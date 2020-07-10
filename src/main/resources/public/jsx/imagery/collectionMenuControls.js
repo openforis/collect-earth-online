@@ -126,46 +126,6 @@ export class PlanetDailyMenus extends React.Component {
             imageryEndDatePlanetDaily: this.state.imageryEndDatePlanetDaily,
         });
 
-    removeAndAddVector = () => {
-        const {
-            mapConfig,
-            currentPlot,
-            currentProject,
-            highlightSamplesByQuestion,
-            selectedQuestion: { visible },
-        } = this.props;
-        mercator.removeLayerById(mapConfig, "currentAOI");
-        mercator.addVectorLayer(mapConfig,
-                                "currentAOI",
-                                mercator.geometryToVectorSource(mercator.parseGeoJson(currentProject.boundary,
-                                                                                      true)),
-                                ceoMapStyles.yellowPolygon);
-        mercator.removeLayerById(mapConfig, "currentPlot");
-        mercator.addVectorLayer(mapConfig,
-                                "currentPlot",
-                                mercator.geometryToVectorSource(
-                                currentPlot.geom
-                                    ? mercator.parseGeoJson(currentPlot.geom, true)
-                                    : mercator.getPlotPolygon(currentPlot.center,
-                                                              currentProject.plotSize,
-                                                              currentProject.plotShape)
-                                ),
-                                ceoMapStyles.yellowPolygon);
-        mercator.removeLayerById(mapConfig, "currentSamples");
-        mercator.addVectorLayer(mapConfig,
-                                "currentSamples",
-                                mercator.samplesToVectorSource(visible),
-                                this.state.sampleOutlineBlack
-                                    ? visible[0].geom
-                                        ? ceoMapStyles.blackPolygon
-                                        : ceoMapStyles.blackCircle
-                                    : visible[0].geom
-                                        ? ceoMapStyles.whitePolygon
-                                        : ceoMapStyles.whiteCircle);
-        highlightSamplesByQuestion();
-        // this.setState({ loading: false });
-    };
-
     updatePlanetDailyLayer = () => {
         const { imageryStartDatePlanetDaily, imageryEndDatePlanetDaily } = this.state;
         if (new Date(imageryStartDatePlanetDaily) > new Date(imageryEndDatePlanetDaily)) {
@@ -187,7 +147,7 @@ export class PlanetDailyMenus extends React.Component {
                                            endDate: imageryEndDatePlanetDaily,
                                        }),
                                        this,
-                                       this.removeAndAddVector);
+                                       null);
         }
     };
 
