@@ -1,5 +1,5 @@
 import React from "react";
-import { ceoMapStyles, mercator } from "../../js/mercator";
+import { mercator } from "../../js/mercator";
 import { monthlyMapping } from "../utils/dateUtils";
 
 export class PlanetMenus extends React.Component {
