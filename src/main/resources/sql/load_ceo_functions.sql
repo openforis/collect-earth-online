@@ -639,7 +639,7 @@ CREATE OR REPLACE FUNCTION select_imagery_by_institution(_institution_rid intege
 $$ LANGUAGE SQL;
 
 -- Returns all rows in imagery associated with institution_rid
-CREATE OR REPLACE FUNCTION select_imagery_by_project(_project_rid integer, _user_rid integer)
+CREATE OR REPLACE FUNCTION select_imagery_by_project(_project_rid integer, _user_rid integer, _token_key text)
  RETURNS setOf imagery_return AS $$
 
     SELECT DISTINCT imagery_uid, p.institution_rid, visibility, title, attribution, extent, source_config
@@ -652,11 +652,12 @@ CREATE OR REPLACE FUNCTION select_imagery_by_project(_project_rid integer, _user
     WHERE project_uid = _project_rid
         AND archived = FALSE
         AND (visibility = 'public'
-            OR (i.institution_rid = p.institution_rid
-                AND (SELECT count(*) > 0
+             OR (i.institution_rid = p.institution_rid
+                 AND ((SELECT count(*) > 0
                         FROM get_all_users_by_institution_id(p.institution_rid)
-                        WHERE user_id = _user_rid))
-            OR _user_rid = 1)
+                        WHERE user_id = _user_rid)
+                      OR (token_key IS NOT NULL AND token_key = _token_key)))
+             OR _user_rid = 1)
 
     ORDER BY title
 
