@@ -31,15 +31,17 @@ export class PlanetMenus extends React.Component {
     setImageryYearPlanet = (newImageryYearPlanet) => {
         this.props.setImageryAttribution(" | Monthly Mosaic of " + newImageryYearPlanet +
             ", " + monthlyMapping[this.state.imageryMonthPlanet]);
-        this.setState({ imageryYearPlanet: newImageryYearPlanet },
-                      () => this.props.setImageryAttributes(this.state));
+        this.setState({
+            imageryYearPlanet: newImageryYearPlanet,
+        }, () => this.props.setImageryAttributes(this.state));
     };
 
     setImageryMonthPlanet = (newImageryMonthPlanet) => {
         this.props.setImageryAttribution(" | Monthly Mosaic of " + this.state.imageryYearPlanet +
             ", " + monthlyMapping[newImageryMonthPlanet]);
-        this.setState({ imageryMonthPlanet: newImageryMonthPlanet },
-                      () => this.props.setImageryAttributes(this.state));
+        this.setState({
+            imageryMonthPlanet: newImageryMonthPlanet,
+        }, () => this.props.setImageryAttributes(this.state));
     };
 
     updatePlanetLayer = () => {
@@ -453,15 +455,17 @@ export class SentinelMenus extends React.Component {
     setImageryYearSentinel = (newYear, sentinel1 = true) => {
         const imageryMonth = sentinel1 ? this.state.imageryMonthSentinel1 : this.state.imageryMonthSentinel2;
         this.props.setImageryAttribution(" | Monthly Mosaic of " + newYear + ", " + monthlyMapping[imageryMonth]);
-        this.setState({ [sentinel1 ? "imageryYearSentinel1" : "imageryYearSentinel2"] : newYear },
-                      () => this.updateImageryAttributes());
+        this.setState({
+            [sentinel1 ? "imageryYearSentinel1" : "imageryYearSentinel2"] : newYear,
+        }, () => this.updateImageryAttributes());
     };
 
     setImageryMonthSentinel = (newMonth, sentinel1 = true) => {
         const imageryYear = sentinel1 ? this.state.imageryYearSentinel1 : this.state.imageryYearSentinel2;
         this.props.setImageryAttribution(" | Monthly Mosaic of " + imageryYear + ", " + monthlyMapping[newMonth]);
-        this.setState({ [sentinel1 ? "imageryMonthSentinel1" : "imageryMonthSentinel2"] : newMonth },
-                      () => this.updateImageryAttributes());
+        this.setState({
+            [sentinel1 ? "imageryMonthSentinel1" : "imageryMonthSentinel2"] : newMonth,
+        }, () => this.updateImageryAttributes());
     };
 
     render() {
@@ -560,8 +564,9 @@ export class GEEImageMenus extends React.Component {
 
     componentDidMount = () => {
         this.props.setImageryAttribution("");
-        this.setState({ geeImageryVisParams: this.props.sourceConfig.imageVisParams },
-                      () => this.updateImageryAttributes());
+        this.setState({
+            geeImageryVisParams: this.props.sourceConfig.imageVisParams,
+        }, () => this.updateImageryAttributes());
     }
 
     updateImageryAttributes = () =>
@@ -591,8 +596,9 @@ export class GEEImageMenus extends React.Component {
                         className="form-control"
                         id="geeImageVisParams"
                         value={this.state.geeImageryVisParams}
-                        onChange={e => this.setState({ geeImageryVisParams: e.target.value },
-                                                     () => this.updateImageryAttributes())}
+                        onChange={e => this.setState({
+                            geeImageryVisParams: e.target.value,
+                        }, () => this.updateImageryAttributes())}
                     >
                         {this.state.geeImageryVisParams}
                     </textarea>
