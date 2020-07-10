@@ -221,6 +221,10 @@ class Collection extends React.Component {
     };
 
     setBaseMapSource = (newBaseMapSource) => {
+        // remove planet daily layer switcher
+        mercator.currentMap.getControls().getArray()
+            .filter(control => control.element.classList.contains("planet-layer-switcher"))
+            .map(control => mercator.currentMap.removeControl(control));
         this.setState({
             currentImagery: this.getImageryById(newBaseMapSource),
         }, () => {

@@ -232,6 +232,7 @@ export class SecureWatchMenus extends React.Component {
 
     getSecureWatchAvailableDates = () => {
         const { currentImageryId, mapConfig, sourceConfig } = this.props;
+        this.props.setImageryAttribution(" | Loading...");
         const geometry = mercator.getViewPolygon(mapConfig).transform("EPSG:4326", "EPSG:3857");
         const secureWatchFeatureInfoUrl = "SERVICE=WMS"
             + "&VERSION=1.1.1"
