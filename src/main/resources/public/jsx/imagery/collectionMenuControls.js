@@ -1,24 +1,10 @@
 import React from "react";
 import { ceoMapStyles, mercator } from "../../js/mercator";
-import { formatDateISO } from "../utils/dateUtils";
+import { monthlyMapping } from "../utils/dateUtils";
 
 export class PlanetMenus extends React.Component {
     constructor(props) {
         super(props);
-        this.monthlyMapping = {
-            1: "January",
-            2: "February",
-            3: "March",
-            4: "April",
-            5: "May",
-            6: "June",
-            7: "July",
-            8: "August",
-            9:  "September",
-            10: "October",
-            11: "November",
-            12: "December",
-        };
         this.state = {
             imageryYearPlanet: 2018,
             imageryMonthPlanet: 1,
@@ -28,12 +14,11 @@ export class PlanetMenus extends React.Component {
     componentDidMount = () => {
         const year = parseInt(this.props.sourceConfig.year);
         const month = parseInt(this.props.sourceConfig.month);
-        this.props.setImageryAttribution(" | Monthly Mosaic of " + year + ", " + this.monthlyMapping[month]);
-        const state = {
+        this.props.setImageryAttribution(" | Monthly Mosaic of " + year + ", " + monthlyMapping[month]);
+        this.setState({
             imageryYearPlanet: year,
             imageryMonthPlanet: month,
-        };
-        this.updateImageStates(state);
+        }, () => this.props.setImageryAttributes(this.state));
     }
 
     componentDidUpdate(prevProps, prevState) {
@@ -43,23 +28,18 @@ export class PlanetMenus extends React.Component {
         }
     }
 
-    updateImageStates = (state) => {
-        this.props.setImageryStates(state);
-        this.setState(state);
-    }
-
     setImageryYearPlanet = (newImageryYearPlanet) => {
         this.props.setImageryAttribution(" | Monthly Mosaic of " + newImageryYearPlanet +
-            ", " + this.monthlyMapping[this.state.imageryMonthPlanet]);
-        const state = { imageryYearPlanet: newImageryYearPlanet };
-        this.updateImageStates(state);
+            ", " + monthlyMapping[this.state.imageryMonthPlanet]);
+        this.setState({ imageryYearPlanet: newImageryYearPlanet },
+                      () => this.props.setImageryAttributes(this.state));
     };
 
     setImageryMonthPlanet = (newImageryMonthPlanet) => {
         this.props.setImageryAttribution(" | Monthly Mosaic of " + this.state.imageryYearPlanet +
-            ", " + this.monthlyMapping[newImageryMonthPlanet]);
-        const state = { imageryMonthPlanet: newImageryMonthPlanet };
-        this.updateImageStates(state);
+            ", " + monthlyMapping[newImageryMonthPlanet]);
+        this.setState({ imageryMonthPlanet: newImageryMonthPlanet },
+                      () => this.props.setImageryAttributes(this.state));
     };
 
     updatePlanetLayer = () => {
@@ -100,7 +80,7 @@ export class PlanetMenus extends React.Component {
                         id="myRangemonth"
                         onChange={e => this.setImageryMonthPlanet(parseInt(e.target.value))}
                     />
-                    <p>Month: <span id="demo">{this.monthlyMapping[this.state.imageryMonthPlanet]}</span></p>
+                    <p>Month: <span id="demo">{monthlyMapping[this.state.imageryMonthPlanet]}</span></p>
                 </div>
             </div>
         );
@@ -119,11 +99,10 @@ export class PlanetDailyMenus extends React.Component {
     componentDidMount () {
         this.props.setImageryAttribution(" | " + this.props.sourceConfig.startDate +
             " to " + this.props.sourceConfig.endDate);
-        const state = {
+        this.setState({
             imageryStartDatePlanetDaily: this.props.sourceConfig.startDate,
             imageryEndDatePlanetDaily: this.props.sourceConfig.endDate,
-        };
-        this.updateImageStates(state);
+        }, () => this.updateImageryAttributes());
     }
 
     componentDidUpdate (prevProps, prevState) {
@@ -137,10 +116,13 @@ export class PlanetDailyMenus extends React.Component {
         }
     }
 
-    updateImageStates = (state) => {
-        this.props.setImageryStates(state);
-        this.setState(state);
-    }
+    updateImageryAttributes = () =>
+        this.props.setImageryAttributes({
+            imageryDatePlanetDaily: mercator.getTopVisiblePlanetLayerDate(this.props.mapConfig,
+                                                                          this.props.currentImageryId),
+            imageryStartDatePlanetDaily: this.state.imageryStartDatePlanetDaily,
+            imageryEndDatePlanetDaily: this.state.imageryEndDatePlanetDaily,
+        });
 
     removeAndAddVector = () => {
         const {
@@ -208,15 +190,13 @@ export class PlanetDailyMenus extends React.Component {
     };
 
     setImageryStartDatePlanetDaily = (newDate) => {
-        const state = { imageryStartDatePlanetDaily: newDate };
         this.props.setImageryAttribution(" | " + newDate + " to " + this.state.imageryEndDatePlanetDaily);
-        this.updateImageStates(state);
+        this.setState({ imageryStartDatePlanetDaily: newDate }, () => this.updateImageryAttributes());
     };
 
     setImageryEndDatePlanetDaily = (newDate) => {
-        const state = { imageryEndDatePlanetDaily: newDate };
         this.props.setImageryAttribution(" | " + this.state.imageryStartDatePlanetDaily + " to " + newDate);
-        this.updateImageStates(state);
+        this.setState({ imageryEndDatePlanetDaily: newDate }, () => this.updateImageryAttributes());
     };
 
     render () {
@@ -255,8 +235,6 @@ export class SecureWatchMenus extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
-            imagerySecureWatchDate: "",
-            imagerySecureWatchCloudCover: "",
             imagerySecureWatchAvailableDates: [],
         };
     }
@@ -269,11 +247,6 @@ export class SecureWatchMenus extends React.Component {
         }
     }
 
-    updateImageStates = (state) => {
-        this.props.setImageryStates(state);
-        this.setState(state);
-    }
-
     updateSecureWatchSingleLayer = (featureId, imagerySecureWatchDate, imagerySecureWatchCloudCover) => {
         mercator.updateLayerWmsParams(this.props.mapConfig, this.props.currentImageryId, {
             COVERAGE_CQL_FILTER: "featureId='" + featureId + "'",
@@ -282,11 +255,10 @@ export class SecureWatchMenus extends React.Component {
             ? " | " + imagerySecureWatchDate
                 + " (" + (imagerySecureWatchCloudCover * 100).toFixed(2) + "% cloudy)"
             : " | No available layers"));
-        const state = {
+        this.props.setImageryAttributes({
             imagerySecureWatchDate: imagerySecureWatchDate,
             imagerySecureWatchCloudCover: imagerySecureWatchCloudCover,
-        };
-        this.updateImageStates(state);
+        });
     }
 
     onChangeSecureWatchSingleLayer = (eventTarget) =>
@@ -422,17 +394,14 @@ export class SentinelMenus extends React.Component {
     componentDidMount () {
         const year = parseInt(this.props.sourceConfig.year);
         const month = parseInt(this.props.sourceConfig.month);
-        const startDate = year + "-" + (month > 9 ? "" : "0") + month + "-01";
-        const endDate = new Date(year, month, 0);
-        this.props.setImageryAttribution(" | " + startDate + " to " + formatDateISO(endDate));
-        const state = {
+        this.props.setImageryAttribution(" | Monthly Mosaic of " + year + ", " + monthlyMapping[month]);
+        this.setState({
             [this.props.sourceConfig.type === "Sentinel1" ? "imageryYearSentinel1" : "imageryYearSentinel2"]: year,
             [this.props.sourceConfig.type === "Sentinel1" ? "imageryMonthSentinel1" : "imageryMonthSentinel2"]: month,
             [this.props.sourceConfig.type === "Sentinel1"
                 ? "bandCombinationSentinel1"
                 : "bandCombinationSentinel2"]: this.props.sourceConfig.bandCombination,
-        };
-        this.updateImageStates(state);
+        }, () => this.updateImageryAttributes());
     }
 
     componentDidUpdate (prevProps, prevState) {
@@ -449,10 +418,18 @@ export class SentinelMenus extends React.Component {
         }
     }
 
-    updateImageStates = (state) => {
-        this.props.setImageryStates(state);
-        this.setState(state);
-    }
+    updateImageryAttributes = () => {
+        this.props.setImageryAttributes({
+            imageryMosaicYearMonth : this.props.sourceConfig.type === "Sentinel1"
+                ? this.state.imageryYearSentinel1 + ", " +
+                    monthlyMapping[this.state.imageryMonthSentinel1]
+                : this.state.imageryYearSentinel2 + ", " +
+                    monthlyMapping[this.state.imageryMonthSentinel2],
+            imageryBandCombination: this.props.sourceConfig.type === "Sentinel1"
+                ? this.state.bandCombinationSentinel1
+                : this.state.bandCombinationSentinel2,
+        });
+    };
 
     updateSentinelLayer = (type) => {
         const {
@@ -475,26 +452,17 @@ export class SentinelMenus extends React.Component {
 
     setImageryYearSentinel = (newYear, sentinel1 = true) => {
         const imageryMonth = sentinel1 ? this.state.imageryMonthSentinel1 : this.state.imageryMonthSentinel2;
-        const startDate = newYear + "-" + (imageryMonth > 9 ? "" : "0") + imageryMonth + "-01";
-        const endDate = new Date(newYear, imageryMonth, 0);
-        this.props.setImageryAttribution(" | " + startDate + " to " + formatDateISO(endDate));
-        const state = { [sentinel1 ? "imageryYearSentinel1" : "imageryYearSentinel2"] : newYear };
-        this.updateImageStates(state);
+        this.props.setImageryAttribution(" | Monthly Mosaic of " + newYear + ", " + monthlyMapping[imageryMonth]);
+        this.setState({ [sentinel1 ? "imageryYearSentinel1" : "imageryYearSentinel2"] : newYear },
+                      () => this.updateImageryAttributes());
     };
 
     setImageryMonthSentinel = (newMonth, sentinel1 = true) => {
         const imageryYear = sentinel1 ? this.state.imageryYearSentinel1 : this.state.imageryYearSentinel2;
-        const startDate = imageryYear + "-" + (newMonth > 9 ? "" : "0") + newMonth + "-01";
-        const endDate = new Date(imageryYear, newMonth, 0);
-        this.props.setImageryAttribution(" | " + startDate + " to " + formatDateISO(endDate));
-        const state = { [sentinel1 ? "imageryMonthSentinel1" : "imageryMonthSentinel2"] : newMonth };
-        this.updateImageStates(state);
+        this.props.setImageryAttribution(" | Monthly Mosaic of " + imageryYear + ", " + monthlyMapping[newMonth]);
+        this.setState({ [sentinel1 ? "imageryMonthSentinel1" : "imageryMonthSentinel2"] : newMonth },
+                      () => this.updateImageryAttributes());
     };
-
-    setBandCombinationSentinel = (newBandCombination, sentinel1 = true) => {
-        const state = { [sentinel1 ? "bandCombinationSentinel1" : "bandCombinationSentinel2"] : newBandCombination };
-        this.updateImageStates(state);
-    }
 
     render() {
         const bandCombinationOptions = this.props.sourceConfig.type === "Sentinel1"
@@ -554,8 +522,8 @@ export class SentinelMenus extends React.Component {
                     <p>Month:
                         <span id="demo">
                             {this.props.sourceConfig.type === "Sentinel1"
-                                ? this.state.imageryMonthSentinel1
-                                : this.state.imageryMonthSentinel2}
+                                ? monthlyMapping[this.state.imageryMonthSentinel1]
+                                : monthlyMapping[this.state.imageryMonthSentinel2]}
                         </span>
                     </p>
                 </div>
@@ -568,8 +536,10 @@ export class SentinelMenus extends React.Component {
                             value={this.props.sourceConfig.type === "Sentinel1"
                                 ? this.state.bandCombinationSentinel1
                                 : this.state.bandCombinationSentinel2}
-                            onChange={e => this.setBandCombinationSentinel(e.target.value,
-                                                                           this.props.sourceConfig.type === "Sentinel1")}
+                            onChange={e => this.setState({
+                                [this.props.sourceConfig.type === "Sentinel1"
+                                    ? "bandCombinationSentinel1" : "bandCombinationSentinel2"] : e.target.value,
+                            }, () => this.updateImageryAttributes())}
                         >
                             {bandCombinationOptions.map(el => <option value={el.value} key={el.value}>{el.label}</option>)}
                         </select>
@@ -590,22 +560,15 @@ export class GEEImageMenus extends React.Component {
 
     componentDidMount = () => {
         this.props.setImageryAttribution("");
-        this.setState({ geeImageryVisParams: this.props.sourceConfig.imageVisParams });
-        this.props.setImageryStates({
-            geeImageryVisParams: this.props.sourceConfig.imageVisParams,
+        this.setState({ geeImageryVisParams: this.props.sourceConfig.imageVisParams },
+                      () => this.updateImageryAttributes());
+    }
+
+    updateImageryAttributes = () =>
+        this.props.setImageryAttributes({
             geeImageryAssetId: this.props.sourceConfig.imageId,
+            geeImageryVisParams: this.state.geeImageryVisParams,
         });
-    }
-
-    updateImageStates = (state) => {
-        this.props.setImageryStates(state);
-        this.setState(state);
-    }
-
-    setGEEImageryVisParams = (newVisParams) => {
-        const state = { geeImageryVisParams: newVisParams };
-        this.updateImageStates(state);
-    };
 
     updateGEEImagery = () =>
         mercator.updateLayerSource(
@@ -628,7 +591,8 @@ export class GEEImageMenus extends React.Component {
                         className="form-control"
                         id="geeImageVisParams"
                         value={this.state.geeImageryVisParams}
-                        onChange={e => this.setGEEImageryVisParams(e.target.value )}
+                        onChange={e => this.setState({ geeImageryVisParams: e.target.value },
+                                                     () => this.updateImageryAttributes())}
                     >
                         {this.state.geeImageryVisParams}
                     </textarea>
@@ -663,34 +627,16 @@ export class GEEImageCollectionMenus extends React.Component {
             geeImageCollectionStartDate: this.props.sourceConfig.startDate,
             geeImageCollectionEndDate: this.props.sourceConfig.endDate,
             geeImageCollectionVisParams: this.props.sourceConfig.collectionVisParams,
-        });
-        this.props.setImageryStates({
-            geeImageCollectionStartDate: this.props.sourceConfig.startDate,
-            geeImageCollectionEndDate: this.props.sourceConfig.endDate,
-            geeImageCollectionVisParams: this.props.sourceConfig.collectionVisParams,
+        }, () => this.updateImageryAttributes());
+    }
+
+    updateImageryAttributes = () =>
+        this.props.setImageryAttributes({
             geeImageCollectionAssetId: this.props.sourceConfig.collectionId,
+            geeImageCollectionStartDate: this.state.geeImageCollectionStartDate,
+            geeImageCollectionEndDate: this.state.geeImageCollectionEndDate,
+            geeImageCollectionVisParams: this.state.geeImageCollectionVisParams,
         });
-    }
-
-    updateImageStates = (state) => {
-        this.props.setImageryStates(state);
-        this.setState(state);
-    }
-
-    setGEEImageCollectionStartDate = (newStartDate) => {
-        const state = { geeImageCollectionStartDate: newStartDate };
-        this.updateImageStates(state);
-    };
-
-    setGEEImageCollectionEndDate = (newEndDate) => {
-        const state = { geeImageCollectionEndDate: newEndDate };
-        this.updateImageStates(state);
-    };
-
-    setGEEImageCollectionVisParams = (newVisParams) => {
-        const state = { geeImageCollectionVisParams: newVisParams };
-        this.updateImageStates(state);
-    };
 
     updateGEEImageCollection = () => {
         const { geeImageCollectionStartDate, geeImageCollectionEndDate } = this.state;
@@ -724,7 +670,9 @@ export class GEEImageCollectionMenus extends React.Component {
                             value={this.state.geeImageCollectionStartDate}
                             max={new Date().toJSON().split("T")[0]}
                             style={{ width: "100%" }}
-                            onChange={e => this.setGEEImageCollectionStartDate(e.target.value)}
+                            onChange={e => this.setState({
+                                geeImageCollectionStartDate: e.target.value,
+                            }, () => this.updateImageryAttributes())}
                         />
                     </div>
                     <label>End Date</label>
@@ -735,7 +683,9 @@ export class GEEImageCollectionMenus extends React.Component {
                             value={this.state.geeImageCollectionEndDate}
                             max={new Date().toJSON().split("T")[0]}
                             style={{ width: "100%" }}
-                            onChange={e => this.setGEEImageCollectionEndDate(e.target.value)}
+                            onChange={e => this.setState({
+                                geeImageCollectionEndDate: e.target.value,
+                            }, () => this.updateImageryAttributes())}
                         />
                     </div>
                     <label>Visualization Parameters</label>
@@ -743,7 +693,9 @@ export class GEEImageCollectionMenus extends React.Component {
                         className="form-control"
                         id="geeImageCollectionVisParams"
                         value={this.state.geeImageCollectionVisParams}
-                        onChange={e => this.setGEEImageCollectionVisParams(e.target.value)}
+                        onChange={e => this.setState({
+                            geeImageCollectionVisParams: e.target.value,
+                        }, () => this.updateImageryAttributes())}
                     >
                         {this.state.geeImageCollectionVisParams}
                     </textarea>

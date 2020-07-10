@@ -22,9 +22,11 @@ class Collection extends React.Component {
             currentProject: { surveyQuestions: [], institution: "" },
             currentImagery: { id: "", sourceConfig: {}},
             currentPlot: null,
+            // attribution for showing in the map
             imageryAttribution: "",
+            // attributes to record when sample is saved
+            imageryAttributes: {},
             imageryList: [],
-            imageryStates: {},
             mapConfig: null,
             nextPlotButtonDisabled: false,
             plotList: [],
@@ -132,8 +134,7 @@ class Collection extends React.Component {
     setImageryAttribution = (attributionSuffix) =>
         this.setState({ imageryAttribution: this.state.currentImagery.attribution + attributionSuffix });
 
-    setImageryStates = (imageryState) =>
-        this.setState({ imageryStates: { ...this.state.imageryStates, ...imageryState }});
+    setImageryAttributes = (newImageryAttributes) => this.setState({ imageryAttributes: newImageryAttributes });
 
     getProjectData = () => {
         Promise.all([this.getProjectById(), this.getProjectPlots(), this.checkForGeodash()])
@@ -531,35 +532,6 @@ class Collection extends React.Component {
         }
     };
 
-    getImageryAttributes = () =>
-        (this.state.currentImagery.sourceConfig.type === "Planet") ? {
-            imageryMonthPlanet: this.state.imageryStates.imageryMonthPlanet,
-            imageryYearPlanet:  this.state.imageryStates.imageryYearPlanet,
-        } : (this.state.currentImagery.sourceConfig.type === "PlanetDaily") ? {
-            imageryStartDatePlanetDaily: this.state.imageryStates.imageryStartDatePlanetDaily,
-            imageryEndDatePlanetDaily: this.state.imageryStates.imageryEndDatePlanetDaily,
-            imageryDatePlanetDaily: mercator.getTopVisiblePlanetLayerDate(this.state.mapConfig, this.state.currentImagery.id),
-        } : (this.state.currentImagery.sourceConfig.type === "SecureWatch") ? {
-            imagerySecureWatchDate: this.state.imageryStates.imagerySecureWatchDate || "",
-            imagerySecureWatchCloudCover: this.state.imageryStates.imagerySecureWatchCloudCover
-                ? (parseFloat(this.state.imageryStates.imagerySecureWatchCloudCover) * 100).toFixed(2)
-                : "",
-        } : (this.state.currentImagery.sourceConfig.type === "Sentinel1") ? {
-            sentinel1MosaicYearMonth: this.state.imageryStates.imageryYearSentinel1 + " - " +
-                (this.state.imageryStates.imageryYearSentinel1 > 9 ? "" : "0") + this.state.imageryStates.imageryYearSentinel1,
-        } : (this.state.currentImagery.sourceConfig.type === "Sentinel2") ? {
-            sentinel2MosaicYearMonth: this.state.imageryStates.imageryYearSentinel2 + " - " +
-                (this.state.imageryStates.imageryYearSentinel2 > 9 ? "" : "0") + this.state.imageryStates.imageryYearSentinel2,
-        } : (this.state.currentImagery.sourceConfig.type === "GEEImage") ? {
-            assetId: this.state.imageryStates.geeImageryAssetId,
-            visParams: this.state.imageryStates.geeImageryVisParams,
-        } : (this.state.currentImagery.sourceConfig.type === "GEEImageCollection") ? {
-            assetId: this.state.imageryStates.geeImageCollectionAssetId,
-            startDate: this.state.imageryStates.geeImageCollectionStartDate,
-            endDate: this.state.imageryStates.geeImageCollectionEndDate,
-            visParams: this.state.imageryStates.geeImageCollectionVisParams,
-        } : {};
-
     getChildQuestions = (currentQuestionId) => {
         const { surveyQuestions } = this.state.currentProject;
         const { question, id } = surveyQuestions.find(sq => sq.id === currentQuestionId);
@@ -801,7 +773,7 @@ class Collection extends React.Component {
                     ...acc,
                     [sampleId]: {
                         id: this.state.currentImagery.id,
-                        attributes: this.getImageryAttributes(),
+                        attributes: this.state.imageryAttributes,
                     },
                 }), {});
 
@@ -1009,7 +981,7 @@ class Collection extends React.Component {
                         highlightSamplesByQuestion={this.highlightSamplesByQuestion}
                         selectedQuestion={this.state.selectedQuestion}
                         setImageryAttribution={this.setImageryAttribution}
-                        setImageryStates={this.setImageryStates}
+                        setImageryAttributes={this.setImageryAttributes}
                         imageryList={this.state.imageryList}
                         currentPlot={this.state.currentPlot}
                         showPlanetDaily={this.state.currentPlot != null}
@@ -1405,7 +1377,7 @@ class ImageryOptions extends React.Component {
                                 currentImageryId={props.baseMapSource}
                                 sourceConfig={props.sourceConfig}
                                 setImageryAttribution={props.setImageryAttribution}
-                                setImageryStates={props.setImageryStates}
+                                setImageryAttributes={props.setImageryAttributes}
                             />
                         }
                         {props.sourceConfig.type === "PlanetDaily" &&
@@ -1415,7 +1387,7 @@ class ImageryOptions extends React.Component {
                                 currentImageryId={props.baseMapSource}
                                 sourceConfig={props.sourceConfig}
                                 setImageryAttribution={props.setImageryAttribution}
-                                setImageryStates={props.setImageryStates}
+                                setImageryAttributes={props.setImageryAttributes}
                                 currentPlot={props.currentPlot}
                                 highlightSamplesByQuestion={props.highlightSamplesByQuestion}
                                 selectedQuestion={props.selectedQuestion}
@@ -1428,7 +1400,7 @@ class ImageryOptions extends React.Component {
                                 currentPlot={props.currentPlot}
                                 sourceConfig={props.sourceConfig}
                                 setImageryAttribution={props.setImageryAttribution}
-                                setImageryStates={props.setImageryStates}
+                                setImageryAttributes={props.setImageryAttributes}
                             />
                         }
                         {props.sourceConfig.type === "Sentinel1" &&
@@ -1438,7 +1410,7 @@ class ImageryOptions extends React.Component {
                                 currentImageryId={props.baseMapSource}
                                 sourceConfig={props.sourceConfig}
                                 setImageryAttribution={props.setImageryAttribution}
-                                setImageryStates={props.setImageryStates}
+                                setImageryAttributes={props.setImageryAttributes}
                             />
                         }
                         {props.sourceConfig.type === "Sentinel2" &&
@@ -1448,7 +1420,7 @@ class ImageryOptions extends React.Component {
                                 currentImageryId={props.baseMapSource}
                                 sourceConfig={props.sourceConfig}
                                 setImageryAttribution={props.setImageryAttribution}
-                                setImageryStates={props.setImageryStates}
+                                setImageryAttributes={props.setImageryAttributes}
                             />
                         }
                         {props.sourceConfig.type === "GEEImage" &&
@@ -1458,7 +1430,7 @@ class ImageryOptions extends React.Component {
                                 sourceConfig={props.sourceConfig}
                                 currentImageryId={props.baseMapSource}
                                 setImageryAttribution={props.setImageryAttribution}
-                                setImageryStates={props.setImageryStates}
+                                setImageryAttributes={props.setImageryAttributes}
                             />
                         }
                         {props.sourceConfig.type === "GEEImageCollection" &&
@@ -1468,7 +1440,7 @@ class ImageryOptions extends React.Component {
                                 currentImageryId={props.baseMapSource}
                                 sourceConfig={props.sourceConfig}
                                 setImageryAttribution={props.setImageryAttribution}
-                                setImageryStates={props.setImageryStates}
+                                setImageryAttributes={props.setImageryAttributes}
                             />
                         }
                     </Fragment>
