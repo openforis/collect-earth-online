@@ -129,7 +129,8 @@ class Collection extends React.Component {
         }
     }
 
-    setImageryAttribution = (newAttribution) => this.setState({ imageryAttribution: newAttribution });
+    setImageryAttribution = (attributionSuffix) =>
+        this.setState({ imageryAttribution: this.state.currentImagery.attribution + attributionSuffix });
 
     setImageryStates = (imageryState) =>
         this.setState({ imageryStates: { ...this.state.imageryStates, ...imageryState }});
@@ -1005,10 +1006,8 @@ class Collection extends React.Component {
                         sourceConfig={this.state.currentImagery.sourceConfig}
                         mapConfig={this.state.mapConfig}
                         currentProject={this.state.currentProject}
-                        currentProjectBoundary={this.state.currentProject.boundary}
                         highlightSamplesByQuestion={this.highlightSamplesByQuestion}
                         selectedQuestion={this.state.selectedQuestion}
-                        imageryAttribution={this.state.currentImagery.attribution}
                         setImageryAttribution={this.setImageryAttribution}
                         setImageryStates={this.setImageryStates}
                         imageryList={this.state.imageryList}
@@ -1402,10 +1401,9 @@ class ImageryOptions extends React.Component {
                         {props.sourceConfig.type === "Planet" &&
                             <PlanetMenus
                                 mapConfig={props.mapConfig}
-                                currentProjectBoundary={props.currentProjectBoundary}
+                                currentProjectBoundary={props.currentProject.boundary}
                                 currentImageryId={props.baseMapSource}
                                 sourceConfig={props.sourceConfig}
-                                imageryAttribution={props.imageryAttribution}
                                 setImageryAttribution={props.setImageryAttribution}
                                 setImageryStates={props.setImageryStates}
                             />
@@ -1416,7 +1414,6 @@ class ImageryOptions extends React.Component {
                                 currentProject={props.currentProject}
                                 currentImageryId={props.baseMapSource}
                                 sourceConfig={props.sourceConfig}
-                                imageryAttribution={props.imageryAttribution}
                                 setImageryAttribution={props.setImageryAttribution}
                                 setImageryStates={props.setImageryStates}
                                 currentPlot={props.currentPlot}
@@ -1430,7 +1427,6 @@ class ImageryOptions extends React.Component {
                                 currentImageryId={props.baseMapSource}
                                 currentPlot={props.currentPlot}
                                 sourceConfig={props.sourceConfig}
-                                imageryAttribution={props.imageryAttribution}
                                 setImageryAttribution={props.setImageryAttribution}
                                 setImageryStates={props.setImageryStates}
                             />
@@ -1438,10 +1434,9 @@ class ImageryOptions extends React.Component {
                         {props.sourceConfig.type === "Sentinel1" &&
                             <SentinelMenus
                                 mapConfig={props.mapConfig}
-                                currentProjectBoundary={props.currentProjectBoundary}
+                                currentProjectBoundary={props.currentProject.boundary}
                                 currentImageryId={props.baseMapSource}
                                 sourceConfig={props.sourceConfig}
-                                imageryAttribution={props.imageryAttribution}
                                 setImageryAttribution={props.setImageryAttribution}
                                 setImageryStates={props.setImageryStates}
                             />
@@ -1449,10 +1444,9 @@ class ImageryOptions extends React.Component {
                         {props.sourceConfig.type === "Sentinel2" &&
                             <SentinelMenus
                                 mapConfig={props.mapConfig}
-                                currentProjectBoundary={props.currentProjectBoundary}
+                                currentProjectBoundary={props.currentProject.boundary}
                                 currentImageryId={props.baseMapSource}
                                 sourceConfig={props.sourceConfig}
-                                imageryAttribution={props.imageryAttribution}
                                 setImageryAttribution={props.setImageryAttribution}
                                 setImageryStates={props.setImageryStates}
                             />
@@ -1460,10 +1454,9 @@ class ImageryOptions extends React.Component {
                         {props.sourceConfig.type === "GEEImage" &&
                             <GEEImageMenus
                                 mapConfig={props.mapConfig}
-                                currentProjectBoundary={props.currentProjectBoundary}
+                                currentProjectBoundary={props.currentProject.boundary}
                                 sourceConfig={props.sourceConfig}
                                 currentImageryId={props.baseMapSource}
-                                imageryAttribution={props.imageryAttribution}
                                 setImageryAttribution={props.setImageryAttribution}
                                 setImageryStates={props.setImageryStates}
                             />
@@ -1471,10 +1464,9 @@ class ImageryOptions extends React.Component {
                         {props.sourceConfig.type === "GEEImageCollection" &&
                             <GEEImageCollectionMenus
                                 mapConfig={props.mapConfig}
-                                currentProjectBoundary={props.currentProjectBoundary}
+                                currentProjectBoundary={props.currentProject.boundary}
                                 currentImageryId={props.baseMapSource}
                                 sourceConfig={props.sourceConfig}
-                                imageryAttribution={props.imageryAttribution}
                                 setImageryAttribution={props.setImageryAttribution}
                                 setImageryStates={props.setImageryStates}
                             />

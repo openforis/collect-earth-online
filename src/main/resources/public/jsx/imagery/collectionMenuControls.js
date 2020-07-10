@@ -28,8 +28,7 @@ export class PlanetMenus extends React.Component {
     componentDidMount = () => {
         const year = parseInt(this.props.sourceConfig.year);
         const month = parseInt(this.props.sourceConfig.month);
-        this.props.setImageryAttribution(this.props.imageryAttribution
-            + " | Monthly Mosaic of " + year + ", " + this.monthlyMapping[month]);
+        this.props.setImageryAttribution(" | Monthly Mosaic of " + year + ", " + this.monthlyMapping[month]);
         const state = {
             imageryYearPlanet: year,
             imageryMonthPlanet: month,
@@ -50,15 +49,15 @@ export class PlanetMenus extends React.Component {
     }
 
     setImageryYearPlanet = (newImageryYearPlanet) => {
-        this.props.setImageryAttribution(this.props.imageryAttribution + " | Monthly Mosaic of "
-            + newImageryYearPlanet + ", " + this.monthlyMapping[this.state.imageryMonthPlanet]);
+        this.props.setImageryAttribution(" | Monthly Mosaic of " + newImageryYearPlanet +
+            ", " + this.monthlyMapping[this.state.imageryMonthPlanet]);
         const state = { imageryYearPlanet: newImageryYearPlanet };
         this.updateImageStates(state);
     };
 
     setImageryMonthPlanet = (newImageryMonthPlanet) => {
-        this.props.setImageryAttribution(this.props.imageryAttribution + " | Monthly Mosaic of "
-            + this.state.imageryYearPlanet + ", " + this.monthlyMapping[newImageryMonthPlanet]);
+        this.props.setImageryAttribution(" | Monthly Mosaic of " + this.state.imageryYearPlanet +
+            ", " + this.monthlyMapping[newImageryMonthPlanet]);
         const state = { imageryMonthPlanet: newImageryMonthPlanet };
         this.updateImageStates(state);
     };
@@ -118,8 +117,8 @@ export class PlanetDailyMenus extends React.Component {
     }
 
     componentDidMount () {
-        this.props.setImageryAttribution(this.props.imageryAttribution +
-            " | " + this.props.sourceConfig.startDate + " to " + this.props.sourceConfig.endDate);
+        this.props.setImageryAttribution(" | " + this.props.sourceConfig.startDate +
+            " to " + this.props.sourceConfig.endDate);
         const state = {
             imageryStartDatePlanetDaily: this.props.sourceConfig.startDate,
             imageryEndDatePlanetDaily: this.props.sourceConfig.endDate,
@@ -210,15 +209,13 @@ export class PlanetDailyMenus extends React.Component {
 
     setImageryStartDatePlanetDaily = (newDate) => {
         const state = { imageryStartDatePlanetDaily: newDate };
-        this.props.setImageryAttribution(this.props.imageryAttribution +
-            " | " + newDate + " to " + this.state.imageryEndDatePlanetDaily);
+        this.props.setImageryAttribution(" | " + newDate + " to " + this.state.imageryEndDatePlanetDaily);
         this.updateImageStates(state);
     };
 
     setImageryEndDatePlanetDaily = (newDate) => {
         const state = { imageryEndDatePlanetDaily: newDate };
-        this.props.setImageryAttribution(this.props.imageryAttribution +
-            " | " + this.state.imageryStartDatePlanetDaily + " to " + newDate);
+        this.props.setImageryAttribution(" | " + this.state.imageryStartDatePlanetDaily + " to " + newDate);
         this.updateImageStates(state);
     };
 
@@ -281,9 +278,9 @@ export class SecureWatchMenus extends React.Component {
         mercator.updateLayerWmsParams(this.props.mapConfig, this.props.currentImageryId, {
             COVERAGE_CQL_FILTER: "featureId='" + featureId + "'",
         });
-        this.props.setImageryAttribution(this.props.imageryAttribution + (featureId
+        this.props.setImageryAttribution((featureId
             ? " | " + imagerySecureWatchDate
-            + " (" + (imagerySecureWatchCloudCover * 100).toFixed(2) + "% cloudy)"
+                + " (" + (imagerySecureWatchCloudCover * 100).toFixed(2) + "% cloudy)"
             : " | No available layers"));
         const state = {
             imagerySecureWatchDate: imagerySecureWatchDate,
@@ -427,8 +424,7 @@ export class SentinelMenus extends React.Component {
         const month = parseInt(this.props.sourceConfig.month);
         const startDate = year + "-" + (month > 9 ? "" : "0") + month + "-01";
         const endDate = new Date(year, month, 0);
-        this.props.setImageryAttribution(this.props.imageryAttribution + " | "
-            + startDate + " to " + formatDateISO(endDate));
+        this.props.setImageryAttribution(" | " + startDate + " to " + formatDateISO(endDate));
         const state = {
             [this.props.sourceConfig.type === "Sentinel1" ? "imageryYearSentinel1" : "imageryYearSentinel2"]: year,
             [this.props.sourceConfig.type === "Sentinel1" ? "imageryMonthSentinel1" : "imageryMonthSentinel2"]: month,
@@ -481,8 +477,7 @@ export class SentinelMenus extends React.Component {
         const imageryMonth = sentinel1 ? this.state.imageryMonthSentinel1 : this.state.imageryMonthSentinel2;
         const startDate = newYear + "-" + (imageryMonth > 9 ? "" : "0") + imageryMonth + "-01";
         const endDate = new Date(newYear, imageryMonth, 0);
-        this.props.setImageryAttribution(this.props.imageryAttribution + " | "
-            + startDate + " to " + formatDateISO(endDate));
+        this.props.setImageryAttribution(" | " + startDate + " to " + formatDateISO(endDate));
         const state = { [sentinel1 ? "imageryYearSentinel1" : "imageryYearSentinel2"] : newYear };
         this.updateImageStates(state);
     };
@@ -491,8 +486,7 @@ export class SentinelMenus extends React.Component {
         const imageryYear = sentinel1 ? this.state.imageryYearSentinel1 : this.state.imageryYearSentinel2;
         const startDate = imageryYear + "-" + (newMonth > 9 ? "" : "0") + newMonth + "-01";
         const endDate = new Date(imageryYear, newMonth, 0);
-        this.props.setImageryAttribution(this.props.imageryAttribution + " | "
-            + startDate + " to " + formatDateISO(endDate));
+        this.props.setImageryAttribution(" | " + startDate + " to " + formatDateISO(endDate));
         const state = { [sentinel1 ? "imageryMonthSentinel1" : "imageryMonthSentinel2"] : newMonth };
         this.updateImageStates(state);
     };
@@ -595,7 +589,7 @@ export class GEEImageMenus extends React.Component {
     }
 
     componentDidMount = () => {
-        this.props.setImageryAttribution(this.props.imageryAttribution);
+        this.props.setImageryAttribution("");
         this.setState({ geeImageryVisParams: this.props.sourceConfig.imageVisParams });
         this.props.setImageryStates({
             geeImageryVisParams: this.props.sourceConfig.imageVisParams,
@@ -664,7 +658,7 @@ export class GEEImageCollectionMenus extends React.Component {
     }
 
     componentDidMount = () => {
-        this.props.setImageryAttribution(this.props.imageryAttribution);
+        this.props.setImageryAttribution("");
         this.setState({
             geeImageCollectionStartDate: this.props.sourceConfig.startDate,
             geeImageCollectionEndDate: this.props.sourceConfig.endDate,
