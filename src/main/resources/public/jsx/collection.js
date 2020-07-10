@@ -13,6 +13,7 @@ import {
 } from "./imagery/collectionMenuControls";
 import { convertSampleValuesToSurveyQuestions } from "./utils/surveyUtils";
 import { UnicodeIcon, getQueryString } from "./utils/textUtils";
+import { imageryOptions } from "./imagery/imageryOptions";
 
 class Collection extends React.Component {
     constructor(props) {
@@ -219,8 +220,15 @@ class Collection extends React.Component {
                               });
     };
 
-    setBaseMapSource = (newBaseMapSource) =>
-        this.setState({ currentImagery: this.getImageryById(newBaseMapSource) });
+    setBaseMapSource = (newBaseMapSource) => {
+        this.setState({
+            currentImagery: this.getImageryById(newBaseMapSource),
+        }, () => {
+            if (this.state.currentImagery.sourceConfig.type.includes("MapBox")) {
+                this.setImageryAttribution("");
+            }
+        });
+    }
 
     updateMapImagery = () => mercator.setVisibleLayer(this.state.mapConfig, this.state.currentImagery.id);
 
