@@ -784,7 +784,16 @@ class Collection extends React.Component {
                     ...acc,
                     [sampleId]: {
                         id: this.state.currentImagery.id,
-                        attributes: this.state.imageryAttributes,
+                        attributes: (this.state.currentImagery.sourceConfig.type === "PlanetDaily")
+                            ?
+                                {
+                                    ...this.state.imageryAttributes,
+                                    imageryDatePlanetDaily: mercator.getTopVisiblePlanetLayerDate(
+                                        this.state.mapConfig,
+                                        this.state.currentImagery.id
+                                    ),
+                                }
+                            : this.state.imageryAttributes,
                     },
                 }), {});
 

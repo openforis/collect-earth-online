@@ -120,8 +120,6 @@ export class PlanetDailyMenus extends React.Component {
 
     updateImageryAttributes = () =>
         this.props.setImageryAttributes({
-            imageryDatePlanetDaily: mercator.getTopVisiblePlanetLayerDate(this.props.mapConfig,
-                                                                          this.props.currentImageryId),
             imageryStartDatePlanetDaily: this.state.imageryStartDatePlanetDaily,
             imageryEndDatePlanetDaily: this.state.imageryEndDatePlanetDaily,
         });
@@ -131,7 +129,6 @@ export class PlanetDailyMenus extends React.Component {
         if (new Date(imageryStartDatePlanetDaily) > new Date(imageryEndDatePlanetDaily)) {
             alert("Start date must be smaller than the end date.");
         } else {
-            // this.setState({ loading: this.state.currentImagery.sourceConfig.type === "PlanetDaily" });
             mercator.currentMap.getControls().getArray()
                 .filter(control => control.element.classList.contains("planet-layer-switcher"))
                 .map(control => mercator.currentMap.removeControl(control));
@@ -383,9 +380,9 @@ export class SentinelMenus extends React.Component {
     updateImageryAttributes = () => {
         this.props.setImageryAttributes({
             imageryMosaicYearMonth : this.props.sourceConfig.type === "Sentinel1"
-                ? this.state.imageryYearSentinel1 + ", " +
+                ? this.state.imageryYearSentinel1 + " - " +
                     monthlyMapping[this.state.imageryMonthSentinel1]
-                : this.state.imageryYearSentinel2 + ", " +
+                : this.state.imageryYearSentinel2 + " - " +
                     monthlyMapping[this.state.imageryMonthSentinel2],
             imageryBandCombination: this.props.sourceConfig.type === "Sentinel1"
                 ? this.state.bandCombinationSentinel1
@@ -532,7 +529,6 @@ export class GEEImageMenus extends React.Component {
     updateImageryAttributes = () =>
         this.props.setImageryAttributes({
             geeImageryAssetId: this.props.sourceConfig.imageId,
-            geeImageryVisParams: this.state.geeImageryVisParams,
         });
 
     updateGEEImagery = () =>
@@ -601,7 +597,6 @@ export class GEEImageCollectionMenus extends React.Component {
             geeImageCollectionAssetId: this.props.sourceConfig.collectionId,
             geeImageCollectionStartDate: this.state.geeImageCollectionStartDate,
             geeImageCollectionEndDate: this.state.geeImageCollectionEndDate,
-            geeImageCollectionVisParams: this.state.geeImageCollectionVisParams,
         });
 
     updateGEEImageCollection = () => {

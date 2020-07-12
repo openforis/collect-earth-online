@@ -166,15 +166,13 @@ mercator.getTopVisiblePlanetLayerDate = (mapConfig, layerId) => {
 ***
 *****************************************************************************/
 // Helper function
-mercator.__sendGEERequest = function (theJson, sourceConfig, attribution, documentRoot) {
-    const theID = Math.random().toString(36).substr(2, 16)
-        + "_" + Math.random().toString(36).substr(2, 9);
+mercator.__sendGEERequest = function (theJson, sourceConfig, imageryId, attribution, documentRoot) {
     const geeLayer = new XYZ({
         url: "https://earthengine.googleapis.com/v1alpha/projects/earthengine-legacy/maps/temp/tiles/{z}/{x}/{y}",
-        id: theID,
+        id: imageryId,
         attributions: attribution,
     });
-    geeLayer.setProperties({ id: theID });
+    geeLayer.setProperties({ id: imageryId });
     fetch(documentRoot + "/geo-dash/gateway-request", {
         method: "POST",
         headers: {
@@ -197,7 +195,7 @@ mercator.__sendGEERequest = function (theJson, sourceConfig, attribution, docume
                     attributions: attribution,
                 });
                 mercator.currentMap.getLayers().forEach(function (lyr) {
-                    if (theID && theID === lyr.getSource().get("id")) {
+                    if (imageryId === lyr.getSource().get("id")) {
                         lyr.setSource(geeLayer);
                     }
                 });
@@ -339,14 +337,14 @@ mercator.createSource = function (sourceConfig, imageryId, attribution, document
             dateFrom: sourceConfig.year + "-" + (sourceConfig.month.length === 1 ? "0" : "") + sourceConfig.month + "-01",
             dateTo : formatDateISO(endDate),
         };
-        return mercator.__sendGEERequest(theJson, sourceConfig, attribution, documentRoot);
+        return mercator.__sendGEERequest(theJson, sourceConfig, imageryId, attribution, documentRoot);
     } else if (sourceConfig.type === "GEEImage") {
         const theJson = {
             path: "image",
             imageName: sourceConfig.imageId,
             visParams: JSON.parse(sourceConfig.imageVisParams),
         };
-        return mercator.__sendGEERequest(theJson, sourceConfig, attribution, documentRoot);
+        return mercator.__sendGEERequest(theJson, sourceConfig, imageryId, attribution, documentRoot);
     } else if (sourceConfig.type === "GEEImageCollection") {
         const theJson = {
             path: "meanImageByMosaicCollection",
@@ -355,7 +353,7 @@ mercator.createSource = function (sourceConfig, imageryId, attribution, document
             dateFrom: sourceConfig.startDate,
             dateTo: sourceConfig.endDate,
         };
-        return mercator.__sendGEERequest(theJson, sourceConfig, attribution, documentRoot);
+        return mercator.__sendGEERequest(theJson, sourceConfig, imageryId, attribution, documentRoot);
     } else if (sourceConfig.type === "GeeGateway") {
         // get variables and make ajax call to get mapid and token
         // then add xyz layer
