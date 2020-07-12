@@ -212,8 +212,7 @@ mercator.__sendGEERequest = function (theJson, sourceConfig, attribution, docume
 };
 
 
-// [Pure] Returns a new ol.source.* object or null if the sourceConfig
-// is invalid.
+// [Pure] Returns a new ol.source.* object or null if the sourceConfig is invalid.
 mercator.createSource = function (sourceConfig, imageryId, attribution, documentRoot,
                                   extent = [[-180, -90], [180, -90], [180, 90], [-180, 90], [-180, -90]],
                                   show = false,
@@ -236,13 +235,12 @@ mercator.createSource = function (sourceConfig, imageryId, attribution, document
             layerCount: 20, // FIXME: what should this optimally be?
             geometry: extent,
         };
-        const theID = Math.random().toString(36).substr(2, 16) + "_" + Math.random().toString(36).substr(2, 9);
         const planetLayer = new XYZ({
             // some random tiles to be replaced later
             url: "https://tiles0.planet.com/data/v1/layers/DkTnYnMW_G7i-E6Nj6lb9s7PaG8PG-Hy23Iyug/{z}/{x}/{y}.png",
             attributions: attribution,
         });
-        planetLayer.setProperties({ id: theID });
+        planetLayer.setProperties({ id: imageryId });
         console.log("Calling out to /geo-dash/gateway-request with this JSON:\n\n" + JSON.stringify(theJson));
         fetch(documentRoot + "/geo-dash/gateway-request", {
             method: "POST",
@@ -279,17 +277,23 @@ mercator.createSource = function (sourceConfig, imageryId, attribution, document
                     }),
                     title: d["date"],
                 }));
-                const dummyPlanetLayer = mercator.currentMap.getLayers().getArray().find(lyr => theID === lyr.getSource().get("id"));
+                const dummyPlanetLayer = mercator.currentMap.getLayers().getArray()
+                    .find(lyr => imageryId === lyr.getSource().get("id"));
                 mercator.currentMap.removeLayer(dummyPlanetLayer);
                 const layerGroup = new LayerGroup({
-                    title: dummyPlanetLayer.get("title"),
+                    id: imageryId,
                     visible: show,
                     layers: planetLayers,
                     zIndex: 0,
                 });
                 mercator.currentMap.addLayer(layerGroup);
                 if (callback) callback();
-                mercator.currentMap.addControl(new PlanetLayerSwitcher({ layers: layerGroup.getLayers().getArray() }));
+                const layerGroupArrays = layerGroup.getLayers().getArray();
+                if (layerGroupArrays.length > 0) {
+                    mercator.currentMap.addControl(
+                        new PlanetLayerSwitcher({ layers: layerGroupArrays })
+                    );
+                }
             }).catch(response => {
                 console.log("Error loading Planet Daily imagery: ");
                 console.log(response);
@@ -712,7 +716,7 @@ mercator.updateLayerSource = function (mapConfig, imageryId, projectBoundary, tr
     const projectAOI = projectBoundary ? JSON.parse(projectBoundary).coordinates[0] : null;
     const newSourceConfig = transformer.call(caller, layerConfig.sourceConfig);
     if (layer && layerConfig) {
-        if (layer.get("layers")) {
+        if (layer instanceof LayerGroup) {
             // This is a LayerGroup
             console.log("LayerGroup detected.");
             mapConfig.map.removeLayer(layer);
@@ -1352,5 +1356,4 @@ mercator.getKMLFromFeatures = function (features) {
 export {
     mercator,
     ceoMapStyles,
-    PlanetLayerSwitcher, // FIXME, why is the is being exported?
 };
