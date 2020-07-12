@@ -13,7 +13,6 @@ import {
 } from "./imagery/collectionMenuControls";
 import { convertSampleValuesToSurveyQuestions } from "./utils/surveyUtils";
 import { UnicodeIcon, getQueryString } from "./utils/textUtils";
-import { imageryOptions } from "./imagery/imageryOptions";
 
 class Collection extends React.Component {
     constructor(props) {
