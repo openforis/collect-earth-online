@@ -304,7 +304,6 @@ mercator.createSource = function (sourceConfig, imageryId, attribution, document
         });
     } else if (sourceConfig.type === "GeoServer") {
         return new TileWMS({
-            serverType: "geoserver",
             url: documentRoot + "/get-tile",
             params: { LAYERS: "none", imageryId: imageryId },
             attributions: attribution,

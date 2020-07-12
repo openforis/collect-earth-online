@@ -3,6 +3,7 @@ export const imageryOptions = [
     // Parameters can be defined one level deep. {paramParent: {paramChild: "", fields: "", fromJsonStr: ""}}
     {
         type: "GeoServer",
+        label: "WMS Imagery",
         params: [
             { key: "geoserverUrl", display: "GeoServer URL" },
             { key: "LAYERS", display: "GeoServer Layer Name", parent: "geoserverParams" },
@@ -17,6 +18,7 @@ export const imageryOptions = [
     },
     {
         type: "BingMaps",
+        label: "Bing Maps",
         params: [
             {
                 key: "imageryId",

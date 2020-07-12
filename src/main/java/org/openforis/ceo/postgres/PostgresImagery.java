@@ -83,12 +83,16 @@ public class PostgresImagery implements Imagery {
     public String getProjectImagery(Request req, Response res) {
         final var projectId = req.queryParams("projectId");
         final var userId    = getSessionUserId(req);
+        final var tokenKey  = req.session().attributes().contains("tokenKey")
+                                ? req.session().attribute("tokenKey").toString()
+                                : null;
 
         try (var conn = connect();
-             var pstmt = conn.prepareStatement("SELECT * FROM select_imagery_by_project(?, ?)")) {
+             var pstmt = conn.prepareStatement("SELECT * FROM select_imagery_by_project(?, ?, ?)")) {
 
             pstmt.setInt(1, Integer.parseInt(projectId));
             pstmt.setInt(2, userId);
+            pstmt.setString(3, tokenKey);
 
             try (var rs = pstmt.executeQuery()) {
                 return buildImageryArray(rs, true).toString();
