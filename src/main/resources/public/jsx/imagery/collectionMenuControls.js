@@ -146,8 +146,7 @@ export class PlanetDailyMenus extends React.Component {
                                            startDate: imageryStartDatePlanetDaily,
                                            endDate: imageryEndDatePlanetDaily,
                                        }),
-                                       this,
-                                       null);
+                                       this);
         }
     };
 
