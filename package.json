@@ -85,12 +85,11 @@
         "webpack-merge": "^4.2.1"
     },
     "scripts": {
-        "build-db-tables": "psql -h localhost -U ceo -d ceo -a -f ./src/main/resources/sql/load_ceo_tables.sql --echo-errors",
-        "build-db-functions": "psql -h localhost -U ceo -d ceo -a -f ./src/main/resources/sql/load_ceo_functions.sql --echo-errors",
-        "build-db-all": "psql -h localhost -U postgres -a -f ./src/main/resources/sql/create_ceo_db.sql --echo-errors && npm run build-db-tables && npm run build-db-functions",
+        "build-db-all": "clojure -A:build-db build-all",
+        "build-db-functions": "clojure -A:build-db only-functions",
         "webpack-dev": "webpack --config webpack.config.js --env.dev",
         "webpack-prod": "webpack --config webpack.config.js --env.prod",
-        "server-json": "mvn compile exec:java -Dexec.args=JSON",
-        "server-pg": "mvn compile exec:java -Dexec.args=POSTGRES"
+        "server-dev": "clojure -A:run-server",
+        "server-prod": "clojure -A:production:run-server"
     }
 }
