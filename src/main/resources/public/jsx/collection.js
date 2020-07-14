@@ -1082,32 +1082,20 @@ class Collection extends React.Component {
                             .reduce((sum, num) => sum + parseInt(num), 0);
                         return [sum1, sum2];
                     });
-                    if (surveyRule.questionSetIds1.includes(questionToSet)) {
-                        const invalidSum = sampleSums.find(sums => sums[0] + parseInt(answerText) !== sums[1]);
-                        if (invalidSum) {
-                            return "Matching sums validation failed: Totals of the question sets ["
+                    const invalidSum = sampleSums.find(sums =>
+                        sums[0] + (surveyRule.questionSetIds1.includes(questionToSet.id) ? parseInt(answerText) : 0)
+                        !== sums[1] + (surveyRule.questionSetIds2.includes(questionToSet.id) ? parseInt(answerText) : 0)
+                    );
+                    if (invalidSum) {
+                        return "Matching sums validation failed: Totals of the question sets ["
                                 + surveyRule.questionSetText1.toString()
                                 + "] and ["
                                 + surveyRule.questionSetText2.toString()
                                 + "] do not match. Valid total is "
-                                + (invalidSum[1] - invalidSum[0])
+                                + Math.abs(invalidSum[0] - invalidSum[1])
                                 + ".";
-                        } else {
-                            return null;
-                        }
                     } else {
-                        const invalidSum = sampleSums.find(sums => sums[0] !== sums[1] + parseInt(answerText));
-                        if (invalidSum) {
-                            return "Matching sums validation failed: Totals of the question sets ["
-                                + surveyRule.questionSetText1.toString()
-                                + "] and ["
-                                + surveyRule.questionSetText2.toString()
-                                + "] do not match. Valid total is "
-                                + (invalidSum[0] - invalidSum[1])
-                                + ".";
-                        } else {
-                            return null;
-                        }
+                        return null;
                     }
                 } else {
                     return null;
