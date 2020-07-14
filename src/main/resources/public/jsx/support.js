@@ -19,7 +19,7 @@ function Support() {
                             &#x1F4BE; Institution & Project Creation Manual (For Admin)
                         </a>
                         <a className="btn btn-outline-lightgreen btn-block" href="/downloads/CEO_Manual_InstitutionProject_20200708_espanol.pdf" role="button">
-                            &#x1F4BE; Manual de creación de instituciones y proyectos (Para El administrador)
+                            &#x1F4BE; Manual de creación de instituciones y proyectos (Para el administrador)
                         </a>
                         <a className="btn btn-outline-lightgreen btn-block" href="/downloads/CEO_Theoretical_Manual.pdf" role="button">
                             &#x1F4BE; Project Development Theory
