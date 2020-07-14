@@ -1,0 +1,21 @@
+{:paths ["src/clj" "resources" "target"]
+
+ :deps {com.draines/postal        {:mvn/version "2.0.3"}
+        hiccup/hiccup             {:mvn/version "2.0.0-alpha2"}
+        org.clojure/clojure       {:mvn/version "1.10.1"}
+        org.clojure/core.async    {:mvn/version "1.0.567"}
+        org.clojure/data.json     {:mvn/version "1.0.0"}
+        org.postgresql/postgresql {:mvn/version "42.2.10"}
+        ring/ring                 {:mvn/version "1.8.0"}
+        ring/ring-defaults        {:mvn/version "0.3.2"}
+        seancorfield/next.jdbc    {:mvn/version "1.0.384"}}
+
+ :aliases {:build-db   {:main-opts ["-m" "my-project.build-db"]}
+           :production {:jvm-opts ["-Xmx4096m" "-XX:+PrintFlagsFinal"]}
+           :run-server {:main-opts ["-m" "my-project.server"]}}}
+
+;; FIXME: Merge in these params from pom.xml/build.gradle
+;; :repositories "https://repo.osgeo.org/repository/release/"
+;; :deps {org.geotools/gt-shapefile {:mvn/version "19.2"}
+;;        org.geotools/gt-epsg-hsql {:mvn/version "19.2"}
+;; :jvm-opts ["-Xlint:unchecked"]
