@@ -163,11 +163,11 @@ $$ LANGUAGE PLPGSQL;
 --
 
 -- Adds a new user to the database
-CREATE OR REPLACE FUNCTION add_user(_email text, _password text)
+CREATE OR REPLACE FUNCTION add_user(_email text, _password text, _on_mailing_list boolean)
  RETURNS integer AS $$
 
-    INSERT INTO users (email, password)
-    VALUES (_email, crypt(_password, gen_salt('bf')))
+    INSERT INTO users (email, password, on_mailing_list)
+    VALUES (_email, crypt(_password, gen_salt('bf')), _on_mailing_list)
     RETURNING user_uid
 
 $$ LANGUAGE SQL;
@@ -308,6 +308,32 @@ CREATE OR REPLACE FUNCTION get_user_stats(_user_rid integer)
     SELECT * FROM user_totals, average_totals, proj_agg
 
 $$ LANGUAGE SQL;
+
+CREATE OR REPLACE FUNCTION set_mailing_list(_user_uid integer, _on_mailing_list boolean)
+ RETURNS void AS $$
+
+    UPDATE users SET on_mailing_list = _on_mailing_list WHERE user_uid = _user_uid
+
+$$ LANGUAGE SQL;
+
+CREATE OR REPLACE FUNCTION get_user_details(_user_uid integer)
+ RETURNS TABLE (
+    on_mailing_list    boolean
+ ) AS $$
+
+    SELECT on_mailing_list FROM users WHERE user_uid = _user_uid
+
+$$ LANGUAGE SQL;
+
+CREATE OR REPLACE FUNCTION get_all_mailing_list_users()
+ RETURNS TABLE (
+    email    text
+ ) AS $$
+
+    SELECT email FROM users WHERE on_mailing_list = TRUE
+
+$$ LANGUAGE SQL;
+
 
 -- Adds a new role to the database
 CREATE OR REPLACE FUNCTION insert_role(_title text)
@@ -639,7 +665,7 @@ CREATE OR REPLACE FUNCTION select_imagery_by_institution(_institution_rid intege
 $$ LANGUAGE SQL;
 
 -- Returns all rows in imagery associated with institution_rid
-CREATE OR REPLACE FUNCTION select_imagery_by_project(_project_rid integer, _user_rid integer)
+CREATE OR REPLACE FUNCTION select_imagery_by_project(_project_rid integer, _user_rid integer, _token_key text)
  RETURNS setOf imagery_return AS $$
 
     SELECT DISTINCT imagery_uid, p.institution_rid, visibility, title, attribution, extent, source_config
@@ -652,11 +678,12 @@ CREATE OR REPLACE FUNCTION select_imagery_by_project(_project_rid integer, _user
     WHERE project_uid = _project_rid
         AND archived = FALSE
         AND (visibility = 'public'
-            OR (i.institution_rid = p.institution_rid
-                AND (SELECT count(*) > 0
+             OR (i.institution_rid = p.institution_rid
+                 AND ((SELECT count(*) > 0
                         FROM get_all_users_by_institution_id(p.institution_rid)
-                        WHERE user_id = _user_rid))
-            OR _user_rid = 1)
+                        WHERE user_id = _user_rid)
+                      OR (token_key IS NOT NULL AND token_key = _token_key)))
+             OR _user_rid = 1)
 
     ORDER BY title
 
@@ -688,8 +715,7 @@ CREATE OR REPLACE FUNCTION delete_project_imagery(_project_rid integer)
 $$ LANGUAGE SQL;
 
 -- insert into project_imagery table
-CREATE FUNCTION insert_project_imagery(_project_rid integer, _imagery_rid integer)
-
+CREATE OR REPLACE FUNCTION insert_project_imagery(_project_rid integer, _imagery_rid integer)
  RETURNS integer AS $$
 
     INSERT INTO project_imagery
@@ -698,7 +724,32 @@ CREATE FUNCTION insert_project_imagery(_project_rid integer, _imagery_rid intege
         (_project_rid, _imagery_rid)
     RETURNING project_imagery_uid
 
-$$ LANGUAGE  SQL;
+$$ LANGUAGE SQL;
+
+CREATE OR REPLACE FUNCTION add_all_institution_imagery(_project_uid integer)
+ RETURNS void AS $$
+
+    INSERT INTO project_imagery
+        (project_rid, imagery_rid)
+    SELECT _project_uid, imagery_id
+    FROM select_imagery_by_institution((SELECT institution_rid
+                                        FROM projects
+                                        WHERE project_uid = _project_uid), 1)
+    ON CONFLICT DO NOTHING
+
+$$ LANGUAGE SQL;
+
+CREATE OR REPLACE FUNCTION add_imagery_to_all_institution_projects(_imagery_uid integer)
+ RETURNS void AS $$
+
+    INSERT INTO project_imagery
+        (project_rid, imagery_rid)
+    SELECT project_uid, _imagery_uid
+    FROM projects
+    WHERE institution_rid = (SELECT institution_rid FROM imagery WHERE imagery_uid = _imagery_uid)
+    ON CONFLICT DO NOTHING
+
+$$ LANGUAGE SQL;
 
 --
 --  WIDGET FUNCTIONS

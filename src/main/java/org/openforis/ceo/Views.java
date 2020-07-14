@@ -1,5 +1,7 @@
 package org.openforis.ceo;
 
+import static org.openforis.ceo.utils.SessionUtils.getSessionUserId;
+
 import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Stream;
@@ -78,7 +80,8 @@ public class Views {
     }
 
     public static Route account(FreeMarkerEngine freemarker) {
-        Function<Request, String> getAccountId = (req) -> req.queryParams("userId");
+        Function<Request, String> getAccountId = (req) ->
+            req.queryParams("userId") != null ? req.queryParams("userId") : getSessionUserId(req).toString();
         return makeRoute("Account",
                          freemarker,
                          Map.of("account_id", getAccountId));
@@ -173,6 +176,14 @@ public class Views {
         return makeRoute("Widget-Layout-Editor",
                          freemarker,
                          Map.of("project_id", getPid));
+    }
+
+    public static Route mailingList(FreeMarkerEngine freemarker) {
+        return makeRoute("Mailing-List", freemarker);
+    }
+
+    public static Route unsubscribeMailingList(FreeMarkerEngine freemarker) {
+        return makeRoute("Unsubscribe-Mailing-List", freemarker);
     }
 
     public static Route pageNotFound(FreeMarkerEngine freemarker) {

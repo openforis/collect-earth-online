@@ -65,6 +65,11 @@ export function NavigationBar ({ userName, userId, children }) {
                                 <a className="nav-link" href={"/account?userId=" + userId}>Account</a>
                             </li>
                         }
+                        {userId === "1" &&
+                            <li className={"nav-item" + ("/mailing-list" === uri && " active")}>
+                                <a className="nav-link" href={"/mailing-list"}>Mailing List</a>
+                            </li>
+                        }
                     </ul>
                     <ul id="login-info" className="navbar-nav mr-0">
                         <LogOutButton userName={userName} uri={uri} />

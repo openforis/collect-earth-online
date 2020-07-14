@@ -26,10 +26,10 @@ import static org.openforis.ceo.utils.ProjectUtils.makeGeoJsonPolygon;
 import static org.openforis.ceo.utils.ProjectUtils.getSampleValueTranslations;
 import static org.openforis.ceo.utils.ProjectUtils.deleteShapeFileDirectories;
 import static org.openforis.ceo.utils.ProjectUtils.runBashScriptForProject;
+import static org.openforis.ceo.utils.SessionUtils.getSessionUserId;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
-
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.sql.PreparedStatement;
@@ -51,11 +51,11 @@ import spark.Response;
 public class PostgresProjects implements Projects {
 
     private Boolean checkAuthCommon(Request req, String queryFn) {
-        final var userId = Integer.parseInt(req.session().attributes().contains("userid") ? req.session().attribute("userid").toString() : "-1");
+        final var userId     = getSessionUserId(req);
         final var qProjectId = req.queryParams("projectId");
         final var jProjectId = getBodyParam(req.body(), "projectId", null);
-        final var qTokenKey = req.queryParams("tokenKey");
-        final var sTokenKey = req.session().attributes().contains("tokenKey") ? req.session().attribute("tokenKey").toString() : null;
+        final var qTokenKey  = req.queryParams("tokenKey");
+        final var sTokenKey  = req.session().attributes().contains("tokenKey") ? req.session().attribute("tokenKey").toString() : null;
 
         final var projectId =
             qProjectId != null ? Integer.parseInt(qProjectId)
@@ -158,12 +158,12 @@ public class PostgresProjects implements Projects {
     }
 
     public String getAllProjects(Request req, Response res) {
-        final var userId =        req.session().attributes().contains("userid") ? req.session().attribute("userid").toString() : "-1";
+        final var userId        = getSessionUserId(req);
         final var institutionId = req.queryParams("institutionId");
 
         try (var conn = connect()) {
-
-            if (userId == null || userId.isEmpty()) {
+            // TODO, this can probably be easily reduced to one query that takes userid and institution id
+            if (userId == -1) {
                 if (institutionId == null || institutionId.isEmpty()) {
                     try (var pstmt = conn.prepareStatement("SELECT * FROM select_all_projects()")) {
                         return queryProjectGet(pstmt);
@@ -177,12 +177,12 @@ public class PostgresProjects implements Projects {
             } else {
                 if (institutionId == null || institutionId.isEmpty()) {
                     try (var pstmt = conn.prepareStatement("SELECT * FROM select_all_user_projects(?)")) {
-                        pstmt.setInt(1, Integer.parseInt(userId));
+                        pstmt.setInt(1, userId);
                         return queryProjectGet(pstmt);
                     }
                 } else {
                     try (var pstmt = conn.prepareStatement("SELECT * FROM select_institution_projects_with_roles(?,?)")) {
-                        pstmt.setInt(1, Integer.parseInt(userId));
+                        pstmt.setInt(1, userId);
                         pstmt.setInt(2, Integer.parseInt(institutionId));
                         return queryProjectGet(pstmt);
                     }
@@ -989,7 +989,7 @@ public class PostgresProjects implements Projects {
                 pstmt.setString(6,  newProject.get("privacyLevel").getAsString());
                 pstmt.setString(7,  newProject.get("boundary").getAsString());
                 pstmt.setString(8,  newProject.get("plotDistribution").getAsString());
-                pstmt.setInt(9,    newProject.get("numPlots").getAsInt());
+                pstmt.setInt(9,     newProject.get("numPlots").getAsInt());
                 pstmt.setDouble(10, newProject.get("plotSpacing").getAsDouble());
                 pstmt.setString(11, newProject.get("plotShape").getAsString());
                 pstmt.setDouble(12, newProject.get("plotSize").getAsDouble());
@@ -1010,6 +1010,12 @@ public class PostgresProjects implements Projects {
                         if (jsonInputs.has("projectImageryList")) {
                             // insert project images
                             insertProjectImagery(newProject.get("id").getAsInt(), jsonInputs);
+                        } else {
+                            try (var pstmt_imagery = conn.prepareStatement("SELECT * FROM add_all_institution_imagery(?)")) {
+
+                                pstmt_imagery.setInt(1, newProjectId);
+                                pstmt_imagery.execute();
+                            }
                         }
 
                         if (newProject.get("projectTemplate").getAsInt() > 0

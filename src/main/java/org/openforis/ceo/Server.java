@@ -13,6 +13,7 @@ import static spark.Spark.post;
 import static spark.Spark.secure;
 import static spark.Spark.staticFileLocation;
 import static spark.Spark.staticFiles;
+import static org.openforis.ceo.utils.SessionUtils.getSessionUserId;
 
 import freemarker.template.Configuration;
 import freemarker.template.TemplateExceptionHandler;
@@ -74,7 +75,7 @@ public class Server implements SparkApplication {
 
         // Take query param for flash message and add to session attributes
         before((request, response) -> {
-            final var userId = Integer.parseInt(request.session().attributes().contains("userid") ? request.session().attribute("userid").toString() : "-1");
+            final var userId = getSessionUserId(request);
 
             /// Page Authentication ///
 
@@ -98,6 +99,10 @@ public class Server implements SparkApplication {
                 && !institutions.isInstAdmin(request)) {
                 redirectAuth(request, response, userId);
             }
+            // Check for application admin permission pages and redirect
+            if (List.of("/mailing-list").contains(request.uri()) && userId != 1) {
+                redirectAuth(request, response, userId);
+            }
 
             /// API Authentication ///
 
@@ -105,6 +110,7 @@ public class Server implements SparkApplication {
             if (List.of("/get-all-users",
                         "/get-institution-users",
                         "/update-project-user-stats",
+                        "/get-user-details",
                         "/get-user-stats",
                         "/request-institution-membership",
                         "/create-institution")
@@ -147,6 +153,11 @@ public class Server implements SparkApplication {
                     .contains(request.uri()) && !institutions.isInstAdmin(request)) {
                 halt(403, "Forbidden!");
             }
+            // Check for application admin permission on API routes and block
+            if (List.of("/send-to-mailing-list")
+                    .contains(request.uri()) && userId != 1) {
+                halt(403, "Forbidden!");
+            }
 
             // Add flash message from queryParams (needed on redirects)
             var flashMessage = request.queryParams("flash_message");
@@ -187,9 +198,8 @@ public class Server implements SparkApplication {
         get("/widget-layout-editor",                  Views.widgetLayoutEditor(freemarker));
         get("/get-tile",                              (req, res) -> Proxy.proxyImagery(req, res, imagery));
         get("/get-securewatch-dates",                 (req, res) -> Proxy.getSecureWatchDates(req, res, imagery));
-
-        // TODO make this a API route after merging in the Mailing list changes.
-        post("/account",                              (req, res) -> Views.account(freemarker).handle(users.updateAccount(req, res), res));
+        get("/mailing-list",                          Views.mailingList(freemarker));
+        get("/unsubscribe-mailing-list",              Views.unsubscribeMailingList(freemarker));
 
         // Routing Table: Account API
         post("/account",                              users::updateAccount);
@@ -225,10 +235,13 @@ public class Server implements SparkApplication {
         // Routing Table: Users API
         get("/get-all-users",                         users::getAllUsers);
         get("/get-institution-users",                 users::getInstitutionUsers);
+        get("/get-user-details",                      users::getUserDetails);
         get("/get-user-stats",                        users::getUserStats);
         get("/update-project-user-stats",             users::updateProjectUserStats);
         post("/update-user-institution-role",         users::updateInstitutionRole);
         post("/request-institution-membership",       users::requestInstitutionMembership);
+        post("/send-to-mailing-list",                 users::submitEmailForMailingList);
+        post("/unsubscribe-mailing-list",             users::unsubscribeFromMailingList);
 
         // Routing Table: Institutions API
         get("/get-all-institutions",                  institutions::getAllInstitutions);
@@ -264,7 +277,8 @@ public class Server implements SparkApplication {
     }
 
     private static void redirectAuth(Request req, Response res, Integer userId) {
-        final var fullUrl = req.uri() + "?" + req.queryString();
+        final var queryString = req.queryString() != null ? "?" + req.queryString() : "";
+        final var fullUrl = req.uri() + queryString;
         if (userId > 0) {
             res.redirect(CeoConfig.documentRoot
                             + "/home?flash_message=You do not have permission to access "
@@ -304,12 +318,14 @@ public class Server implements SparkApplication {
         }
 
         // Load the SMTP settings for sending reset password emails
-        var smtpSettings        = readJsonFile("mail-config.json").getAsJsonObject();
-        CeoConfig.baseUrl       = smtpSettings.get("baseUrl").getAsString();
-        CeoConfig.smtpUser      = smtpSettings.get("smtpUser").getAsString();
-        CeoConfig.smtpServer    = smtpSettings.get("smtpServer").getAsString();
-        CeoConfig.smtpPort      = smtpSettings.get("smtpPort").getAsString();
-        CeoConfig.smtpPassword  = smtpSettings.get("smtpPassword").getAsString();
+        var smtpSettings              = readJsonFile("mail-config.json").getAsJsonObject();
+        CeoConfig.baseUrl             = smtpSettings.get("baseUrl").getAsString();
+        CeoConfig.smtpUser            = smtpSettings.get("smtpUser").getAsString();
+        CeoConfig.smtpServer          = smtpSettings.get("smtpServer").getAsString();
+        CeoConfig.smtpPort            = smtpSettings.get("smtpPort").getAsString();
+        CeoConfig.smtpPassword        = smtpSettings.get("smtpPassword").getAsString();
+        CeoConfig.smtpRecipientLimit  = smtpSettings.get("smtpRecipientLimit").getAsString();
+        CeoConfig.mailingListInterval = smtpSettings.get("mailingListInterval").getAsString();
 
         // Start the HTTPS Jetty webserver on port 8080
         port(8080);

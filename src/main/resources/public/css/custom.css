@@ -701,3 +701,10 @@ ul.samplevalue{
     display: table;
     margin-left: -18px;
 }
+
+/*****************/
+/* Mailing List  */
+/*****************/
+.ck-editor__editable {
+    min-height: 200px;
+}

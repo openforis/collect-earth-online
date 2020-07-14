@@ -5,12 +5,18 @@ import static org.openforis.ceo.postgres.PostgresInstitutions.getInstitutionById
 import static org.openforis.ceo.utils.JsonUtils.parseJson;
 import static org.openforis.ceo.utils.Mail.isEmail;
 import static org.openforis.ceo.utils.Mail.sendMail;
+import static org.openforis.ceo.utils.Mail.sendToMailingList;
+import static org.openforis.ceo.utils.Mail.CONTENT_TYPE_HTML;
+import static org.openforis.ceo.utils.SessionUtils.getSessionUserId;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import java.sql.SQLException;
 import java.time.format.DateTimeFormatter;
+import java.time.Duration;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -21,11 +27,14 @@ import spark.Response;
 
 public class PostgresUsers implements Users {
 
-    private static final String BASE_URL      = CeoConfig.baseUrl;
-    private static final String SMTP_USER     = CeoConfig.smtpUser;
-    private static final String SMTP_SERVER   = CeoConfig.smtpServer;
-    private static final String SMTP_PORT     = CeoConfig.smtpPort;
-    private static final String SMTP_PASSWORD = CeoConfig.smtpPassword;
+    private static final String BASE_URL              = CeoConfig.baseUrl;
+    private static final String SMTP_USER             = CeoConfig.smtpUser;
+    private static final String SMTP_SERVER           = CeoConfig.smtpServer;
+    private static final String SMTP_PORT             = CeoConfig.smtpPort;
+    private static final String SMTP_PASSWORD         = CeoConfig.smtpPassword;
+    private static final String SMTP_RECIPIENT_LIMIT  = CeoConfig.smtpRecipientLimit;
+    private static final String MAILING_LIST_INTERVAL = CeoConfig.mailingListInterval;
+    private static LocalDateTime mailingListLastSent  = LocalDateTime.now();
 
     public String login(Request req, Response res) {
         var inputEmail =        req.queryParams("email");
@@ -58,8 +67,8 @@ public class PostgresUsers implements Users {
         var inputEmail =                    req.queryParams("email");
         var inputPassword =                 req.queryParams("password");
         var inputPasswordConfirmation =     req.queryParams("passwordConfirmation");
+        var onMailingList =                 req.queryParams("onMailingList");
 
-        // Validate input params and assign flash_message if invalid
         if (!isEmail(inputEmail)) {
             return inputEmail + " is not a valid email address.";
         } else if (inputPassword.length() < 8) {
@@ -69,7 +78,7 @@ public class PostgresUsers implements Users {
         } else {
             try (var conn = connect();
                  var pstmt_user = conn.prepareStatement("SELECT * FROM email_taken(?,-1)");
-                 var pstmt_add = conn.prepareStatement("SELECT * FROM add_user(?,?)")) {
+                 var pstmt_add = conn.prepareStatement("SELECT * FROM add_user(?,?,?)")) {
 
                 pstmt_user.setString(1, inputEmail);
                 try (var rs_user = pstmt_user.executeQuery()) {
@@ -78,6 +87,7 @@ public class PostgresUsers implements Users {
                     } else {
                         pstmt_add.setString(1, inputEmail);
                         pstmt_add.setString(2, inputPassword);
+                        pstmt_add.setBoolean(3, onMailingList != null && Boolean.parseBoolean(onMailingList));
                         try (var rs = pstmt_add.executeQuery()) {
                             if (rs.next()) {
                                 // Assign the username and role session attributes
@@ -94,7 +104,7 @@ public class PostgresUsers implements Users {
                                     + "  Created on: " + timestamp + "\n\n"
                                     + "Kind Regards,\n"
                                     + "  The CEO Team";
-                                sendMail(SMTP_USER, inputEmail, SMTP_SERVER, SMTP_PORT, SMTP_PASSWORD, "Welcome to CEO!", body);
+                                sendMail(SMTP_USER, Arrays.asList(inputEmail), null, null, SMTP_SERVER, SMTP_PORT, SMTP_PASSWORD, "Welcome to CEO!", body, null);
                             }
                         }
                     }
@@ -115,57 +125,68 @@ public class PostgresUsers implements Users {
         return "";
     }
 
-    public Request updateAccount(Request req, Response res) {
-        final var userId =                        Integer.parseInt(req.queryParams("userId"));
-        final var storedEmail =                   (String) req.session().attribute("username");
-        final var inputEmail =                    req.queryParams("email");
-        final var inputPassword =                 req.queryParams("password");
-        final var inputPasswordConfirmation =     req.queryParams("password-confirmation");
-        final var inputCurrentPassword =          req.queryParams("current-password");
+    public String updateAccount(Request req, Response res) {
+        final var userId                    = getSessionUserId(req);
+        final var storedEmail               = (String) req.session().attribute("username");
+        final var inputEmail                = req.queryParams("email");
+        final var inputPassword             = req.queryParams("password");
+        final var inputPasswordConfirmation = req.queryParams("passwordConfirmation");
+        final var onMailingList             = req.queryParams("onMailingList");
+        final var inputCurrentPassword      = req.queryParams("currentPassword");
 
-        // Validate input params and assign flash_message if invalid
         if (inputCurrentPassword.length() == 0) {
-            req.session().attribute("flash_message", "Current Password required");
+            return "Current Password required";
         // let user change email without changing password
         } else if (inputEmail.length() > 0 && !isEmail(inputEmail)) {
-            req.session().attribute("flash_message", inputEmail + " is not a valid email address.");
+            return inputEmail + " is not a valid email address.";
         // let user change email without changing password
         } else if (inputPassword.length() > 0 && inputPassword.length() < 8) {
-            req.session().attribute("flash_message", "New Password must be at least 8 characters.");
+            return "New Password must be at least 8 characters.";
         } else if (!inputPassword.equals(inputPasswordConfirmation)) {
-            req.session().attribute("flash_message", "New Password and Password confirmation do not match.");
+            return "New Password and Password confirmation do not match.";
         } else {
             try (var conn = connect();
-                 var pstmt_user = conn.prepareStatement("SELECT * FROM email_taken(?,?)");
+                 var pstmt_login = conn.prepareStatement("SELECT * FROM check_login(?,?)");
+                 var pstmt_user  = conn.prepareStatement("SELECT * FROM email_taken(?,?)");
                  var pstmt_email = conn.prepareStatement("SELECT * FROM set_user_email(?,?)");
-                 var pstmt_pass = conn.prepareStatement("SELECT * FROM update_password(?,?)")) {
-                if (inputEmail.length() > 0 && !storedEmail.equals(inputEmail)) {
-                    pstmt_user.setString(1, inputEmail);
-                    pstmt_user.setInt(2, userId);
-                    try (var rs_user = pstmt_user.executeQuery()) {
-                        if(rs_user.next() && !rs_user.getBoolean("email_taken")) {
-                            pstmt_email.setString(1, storedEmail);
-                            pstmt_email.setString(2, inputEmail);
-                            pstmt_email.execute();
-                            req.session().attribute("username", inputEmail);
-                            req.session().attribute("flash_message", "The user email has been updated.");
-                        } else {
-                            req.session().attribute("flash_message", "Account " + inputEmail + " already exists.");
+                 var pstmt_pass  = conn.prepareStatement("SELECT * FROM update_password(?,?)");
+                 var pstmt_ml    = conn.prepareStatement("SELECT * FROM set_mailing_list(?,?)")) {
+                pstmt_login.setString(1, storedEmail);
+                pstmt_login.setString(2, inputCurrentPassword);
+                try (var rs_login = pstmt_login.executeQuery()) {
+                    if(rs_login.next()) {
+                        if (inputEmail.length() > 0 && !storedEmail.equals(inputEmail)) {
+                            pstmt_user.setString(1, inputEmail);
+                            pstmt_user.setInt(2, userId);
+                            try (var rs_user = pstmt_user.executeQuery()) {
+                                if(rs_user.next() && !rs_user.getBoolean("email_taken")) {
+                                    pstmt_email.setString(1, storedEmail);
+                                    pstmt_email.setString(2, inputEmail);
+                                    pstmt_email.execute();
+                                    req.session().attribute("username", inputEmail);
+                                } else {
+                                    return "An account with the email " + inputEmail + " already exists.";
+                                }
+                            }
                         }
+                        if (inputPassword.length() > 0) {
+                            pstmt_pass.setString(1, storedEmail);
+                            pstmt_pass.setString(2, inputPassword);
+                            pstmt_pass.execute();
+                        }
+                        pstmt_ml.setInt(1, userId);
+                        pstmt_ml.setBoolean(2, onMailingList != null && Boolean.parseBoolean(onMailingList));
+                        pstmt_ml.execute();
+                        return "";
+                    } else {
+                        return "Invalid current password.";
                     }
-                }
-                if (inputPassword.length() > 0) {
-                    pstmt_pass.setString(1, storedEmail);
-                    pstmt_pass.setString(2, inputPassword);
-                    pstmt_pass.execute();
-                    req.session().attribute("flash_message", "The user password has been updated.");
                 }
             } catch (SQLException e) {
                 System.out.println(e.getMessage());
-                req.session().attribute("flash_message", "There was an issue updating your account.  Please check the console.");
+                return "There was an issue updating your account.  Please check the console.";
             }
         }
-        return req;
     }
 
     public String getPasswordResetKey(Request req, Response res) {
@@ -191,7 +212,7 @@ public class PostgresUsers implements Users {
                                 + inputEmail
                                 + "&password-reset-key="
                                 + resetKey;
-                            sendMail(SMTP_USER, inputEmail, SMTP_SERVER, SMTP_PORT, SMTP_PASSWORD, "Password reset on CEO", body);
+                            sendMail(SMTP_USER, Arrays.asList(inputEmail), null, null, SMTP_SERVER, SMTP_PORT, SMTP_PASSWORD, "Password reset on CEO", body, null);
                             return "";
                         } else {
                             return "Failed to create a reset key. Please try again later";
@@ -215,7 +236,6 @@ public class PostgresUsers implements Users {
         var inputPassword =                 req.queryParams("password");
         var inputPasswordConfirmation =     req.queryParams("passwordConfirmation");
 
-        // Validate input params and assign flash_message if invalid
         if (inputPassword.length() < 8) {
             return "Password must be at least 8 characters.";
         } else if (!inputPassword.equals(inputPasswordConfirmation)) {
@@ -294,12 +314,32 @@ public class PostgresUsers implements Users {
         }
     }
 
+    public String getUserDetails(Request req, Response res) {
+        try (var conn = connect();
+             var pstmt = conn.prepareStatement("SELECT * FROM get_user_details(?)");) {
+
+            pstmt.setInt(1, getSessionUserId(req));
+            try (var rs = pstmt.executeQuery()) {
+                if (rs.next()) {
+                    var userJson = new JsonObject();
+                    userJson.addProperty("onMailingList", rs.getBoolean("on_mailing_list"));
+                    return userJson.toString();
+                } else {
+                    return "";
+                }
+            }
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+            return "";
+        }
+    }
+
     public String getUserStats(Request req, Response res) {
-        final var userName = Integer.parseInt(req.queryParams("userId"));
+        final var accountId = Integer.parseInt(req.queryParams("userId"));
         try (var conn = connect();
              var pstmt = conn.prepareStatement("SELECT * FROM get_user_stats(?)");) {
 
-            pstmt.setInt(1, userName);
+            pstmt.setInt(1, accountId);
             try (var rs = pstmt.executeQuery()) {
                 var userJson = new JsonObject();
                 if (rs.next()) {
@@ -389,7 +429,7 @@ public class PostgresUsers implements Users {
                                         + "You have been assigned the role of " + role + " for " + institutionName + " on " + timestamp + "!\n\n"
                                         + "Kind Regards,\n"
                                         + "  The CEO Team";
-                                sendMail(SMTP_USER, email, SMTP_SERVER, SMTP_PORT, SMTP_PASSWORD, "User Role Added!", body);
+                                sendMail(SMTP_USER, Arrays.asList(email), null, null, SMTP_SERVER, SMTP_PORT, SMTP_PASSWORD, "User Role Added!", body, null);
                             } else {
                                 // roles updated
                                 // Send notification to the user
@@ -397,7 +437,7 @@ public class PostgresUsers implements Users {
                                         + "Your role has been changed to " + role + " for " + institutionName + " on " + timestamp + "!\n\n"
                                         + "Kind Regards,\n"
                                         + "  The CEO Team";
-                                sendMail(SMTP_USER, email, SMTP_SERVER, SMTP_PORT, SMTP_PASSWORD, "User Role Changed!", body);
+                                sendMail(SMTP_USER, Arrays.asList(email), null, null, SMTP_SERVER, SMTP_PORT, SMTP_PASSWORD, "User Role Changed!", body, null);
                             }
                         }
                     }
@@ -427,6 +467,74 @@ public class PostgresUsers implements Users {
         } catch (SQLException e) {
             System.out.println(e.getMessage());
             return "";
+        }
+    }
+
+    public String submitEmailForMailingList(Request req, Response res) {
+        var remainingTime = Duration.between(mailingListLastSent, LocalDateTime.now()).toSeconds()
+                            - Integer.parseInt(MAILING_LIST_INTERVAL);
+        var jsonInputs = parseJson(req.body()).getAsJsonObject();
+        var inputSubject = jsonInputs.get("subject").getAsString();
+        var inputBody = jsonInputs.get("body").getAsString();
+
+        if (remainingTime < 0) {
+            return "You must wait " + remainingTime + " more seconds before sending another message.";
+        } else if (inputSubject == null || inputSubject.isEmpty() || inputBody == null || inputBody.isEmpty()) {
+            return "Subject and Body are mandatory fields.";
+        } else {
+            mailingListLastSent = LocalDateTime.now();
+            try (var conn = connect();
+                 var pstmt = conn.prepareStatement("SELECT * FROM get_all_mailing_list_users()")) {
+
+                try (var rs = pstmt.executeQuery()) {
+                    var emails = new ArrayList<String>();
+                    while (rs.next()) {
+                       emails.add(rs.getString("email"));
+                    }
+                    sendToMailingList(SMTP_USER, emails, SMTP_SERVER, SMTP_PORT, SMTP_PASSWORD, inputSubject, inputBody, CONTENT_TYPE_HTML, Integer.parseInt(SMTP_RECIPIENT_LIMIT));
+                    return "";
+                } catch (Exception e) {
+                    System.out.println(e.getMessage());
+                    return "There was an issue sending to the mailing list. Please check the server logs.";
+                }
+            } catch (SQLException e) {
+                System.out.println(e.getMessage());
+                return "There was an issue sending to the mailing list. Please check the server logs.";
+            }
+        }
+    }
+
+    public String unsubscribeFromMailingList(Request req, Response res) {
+        var jsonInputs = parseJson(req.body()).getAsJsonObject();
+        var inputEmail = jsonInputs.get("email").getAsString();
+
+        try (var conn = connect();
+             var pstmt_user = conn.prepareStatement("SELECT * FROM get_user(?)")) {
+             var pstmt_mailing_list = conn.prepareStatement("SELECT * FROM set_mailing_list(?,?)");
+
+           pstmt_user.setString(1, inputEmail);
+           try (var rs_user = pstmt_user.executeQuery()) {
+               if (rs_user.next()) {
+                   pstmt_mailing_list.setInt(1, rs_user.getInt("user_id"));
+                   pstmt_mailing_list.setBoolean(2, false);
+                   pstmt_mailing_list.execute();
+
+                   // Send confirmation email to the user
+                   var body = "Dear " + inputEmail + ",\n\n"
+                       + "We've just received your request to unsubscribe from our mailing list.\n\n"
+                       + "You have been unsubscribed from our mailing list and will no longer receive a newsletter.\n\n"
+                       + "You can resubscribe to our newsletter by going to your account page.\n\n"
+                       + "Kind Regards,\n"
+                       + "  The CEO Team";
+                   sendMail(SMTP_USER, Arrays.asList(inputEmail), null, null,
+                            SMTP_SERVER, SMTP_PORT, SMTP_PASSWORD, "Successfully unsubscribed from CEO mailing list", body, null);
+                   return "";
+                }
+                return "There was a SQL error unsubscribing.";
+            }
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+            return "There was an unknown error unsubscribing.";
         }
     }
 
