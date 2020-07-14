@@ -25,6 +25,8 @@ CREATE OR REPLACE FUNCTION get_all_mailing_list_users()
 
 $$ LANGUAGE SQL;
 
+DROP FUNCTION add_user(text, text);
+
 -- Adds a new user to the database
 CREATE OR REPLACE FUNCTION add_user(_email text, _password text, _on_mailing_list boolean)
  RETURNS integer AS $$

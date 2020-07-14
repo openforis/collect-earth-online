@@ -12,12 +12,9 @@ class UnsubscribeMailingList extends React.Component {
 
     submitUnsubscribe = () => {
         if (confirm("Are you sure you want to unsubscribe from mailing list?")) {
-            const { email } = this.state;
             fetch("/unsubscribe-mailing-list", {
                 method: "POST",
-                body: JSON.stringify({
-                    email,
-                }),
+                body: JSON.stringify(this.state),
             })
                 .then(response => Promise.all([response.ok, response.text()]))
                 .then(data => {
@@ -48,7 +45,6 @@ class UnsubscribeMailingList extends React.Component {
                                 <label htmlFor="email">Email address</label>
                                 <input
                                     id="email"
-                                    name="email"
                                     placeholder="Enter email"
                                     type="email"
                                     value={this.state.email}

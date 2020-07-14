@@ -164,7 +164,6 @@ public class PostgresUsers implements Users {
                                     pstmt_email.setString(2, inputEmail);
                                     pstmt_email.execute();
                                     req.session().attribute("username", inputEmail);
-                                    return "";
                                 } else {
                                     return "An account with the email " + inputEmail + " already exists.";
                                 }
@@ -527,14 +526,15 @@ public class PostgresUsers implements Users {
                        + "You can resubscribe to our newsletter by going to your account page.\n\n"
                        + "Kind Regards,\n"
                        + "  The CEO Team";
-                   sendMail(SMTP_USER, Arrays.asList(inputEmail), null, null, SMTP_SERVER, SMTP_PORT, SMTP_PASSWORD, "CEO Mailing List: Unsubscribe Successful from CEO mailing list!", body, null);
+                   sendMail(SMTP_USER, Arrays.asList(inputEmail), null, null,
+                            SMTP_SERVER, SMTP_PORT, SMTP_PASSWORD, "Successfully unsubscribed from CEO mailing list", body, null);
                    return "";
                 }
                 return "There was a SQL error unsubscribing.";
             }
         } catch (SQLException e) {
             System.out.println(e.getMessage());
-            return "There was a unknown error unsubscribing.";
+            return "There was an unknown error unsubscribing.";
         }
     }
 
