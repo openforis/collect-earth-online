@@ -1363,7 +1363,6 @@ class Collection extends React.Component {
     render() {
         const plotId = this.state.currentPlot
               && (this.state.currentPlot.plotId ? this.state.currentPlot.plotId : this.state.currentPlot.id);
-        const isFlagged = this.state.currentPlot && this.state.currentPlot.flagged;
         return (
             <div className="row" style={{ height: "-webkit-fill-available" }}>
                 <ImageAnalysisPane
@@ -1392,7 +1391,8 @@ class Collection extends React.Component {
                     clearAnswers={() => this.resetPlotValues(this.state.currentPlot)}
                     surveyQuestions={this.state.currentProject.surveyQuestions}
                     userName={this.props.userName}
-                    isFlagged={isFlagged}
+                    isFlagged={this.state.currentPlot && this.state.currentPlot.flagged}
+                    isAnalyzed={this.state.currentPlot && this.state.currentPlot.analyses > 0}
                     toggleQuitModal={this.toggleQuitModal}
                 >
                     <PlotNavigation
@@ -1552,7 +1552,7 @@ function SideBar(props) {
                     className="btn btn-outline-danger btn-sm col"
                     type="button"
                     name="save-values"
-                    value="Clear All"
+                    value={props.isAnalyzed ? "Clear Changes" : "Clear All"}
                     onClick={props.clearAnswers}
                 />
             </div>
