@@ -10,9 +10,9 @@
         ring/ring-defaults        {:mvn/version "0.3.2"}
         seancorfield/next.jdbc    {:mvn/version "1.0.384"}}
 
- :aliases {:build-db   {:main-opts ["-m" "my-project.build-db"]}
+ :aliases {:build-db   {:main-opts ["-m" "org.openforis.ceo.build-db"]}
            :production {:jvm-opts ["-Xmx4096m" "-XX:+PrintFlagsFinal"]}
-           :run-server {:main-opts ["-m" "my-project.server"]}}}
+           :run-server {:main-opts ["-m" "org.openforis.ceo.server"]}}}
 
 ;; FIXME: Merge in these params from pom.xml/build.gradle
 ;; :repositories "https://repo.osgeo.org/repository/release/"

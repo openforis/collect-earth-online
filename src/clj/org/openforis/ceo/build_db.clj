@@ -1,4 +1,4 @@
-(ns my-project.build-db
+(ns org.openforis.ceo.build-db
   (:require [clojure.java.io :as io]
             [clojure.java.shell :as sh]
             [clojure.string :as str]))
@@ -91,23 +91,23 @@
 
 (defn load-tables [verbose]
   (println "Loading tables...")
-  (->> (map #(format "psql -h localhost -U my_project -d my_project -f %s" %)
+  (->> (map #(format "psql -h localhost -U ceo -d ceo -f %s" %)
             (topo-sort-files-by-namespace "./src/sql/tables"))
-       (apply sh-wrapper "./" {:PGPASSWORD "my_project"} verbose)
+       (apply sh-wrapper "./" {:PGPASSWORD "ceo"} verbose)
        (println)))
 
 (defn load-functions [verbose]
   (println "Loading functions...")
-  (->> (map #(format "psql -h localhost -U my_project -d my_project -f %s" %)
+  (->> (map #(format "psql -h localhost -U ceo -d ceo -f %s" %)
             (topo-sort-files-by-namespace "./src/sql/functions"))
-       (apply sh-wrapper "./" {:PGPASSWORD "my_project"} verbose)
+       (apply sh-wrapper "./" {:PGPASSWORD "ceo"} verbose)
        (println)))
 
 (defn load-default-data [verbose]
   (println "Loading default data...")
-  (->> (map #(format "psql -h localhost -U my_project -d my_project -f %s" %)
+  (->> (map #(format "psql -h localhost -U ceo -d ceo -f %s" %)
             (topo-sort-files-by-namespace "./src/sql/default_data"))
-       (apply sh-wrapper "./" {:PGPASSWORD "my_project"} verbose)
+       (apply sh-wrapper "./" {:PGPASSWORD "ceo"} verbose)
        (println)))
 
 (defn build-everything [verbose]

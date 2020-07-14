@@ -1,8 +1,8 @@
-(ns my-project.database
+(ns org.openforis.ceo.database
   (:require [clojure.data.json :as json]
             [clojure.string :as str]
-            [my-project.logging :refer [log-str]]
-            [my-project.views :refer [data-response]]
+            [org.openforis.ceo.logging :refer [log-str]]
+            [org.openforis.ceo.views :refer [data-response]]
             [next.jdbc :as jdbc]
             [next.jdbc.result-set :as rs]))
 
@@ -19,9 +19,9 @@
 ;;; Static Data
 
 (def pg-db {:dbtype                "postgresql"
-            :dbname                "my_project"
-            :user                  "my_project"
-            :password              "my_project"
+            :dbname                "ceo"
+            :user                  "ceo"
+            :password              "ceo"
             :reWriteBatchedInserts true})
 
 ;;; Select Queries
