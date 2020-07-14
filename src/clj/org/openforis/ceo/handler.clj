@@ -1,11 +1,11 @@
-(ns my-project.handler
+(ns org.openforis.ceo.handler
   (:require [clojure.data.json :as json]
             [clojure.edn :as edn]
             [clojure.string :as str]
-            [my-project.database :refer [sql-handler]]
-            [my-project.logging :refer [log-str]]
-            [my-project.remote-api :refer [clj-handler]]
-            [my-project.views :refer [render-page not-found-page data-response]]
+            [org.openforis.ceo.database :refer [sql-handler]]
+            [org.openforis.ceo.logging :refer [log-str]]
+            [org.openforis.ceo.remote-api :refer [clj-handler]]
+            [org.openforis.ceo.views :refer [render-page not-found-page data-response]]
             [ring.middleware.absolute-redirects :refer [wrap-absolute-redirects]]
             [ring.middleware.content-type :refer [wrap-content-type]]
             [ring.middleware.default-charset :refer [wrap-default-charset]]

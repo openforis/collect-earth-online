@@ -1,5 +1,5 @@
-(ns my-project.server
-  (:require [my-project.handler :refer [development-app production-app]]
+(ns org.openforis.ceo.server
+  (:require [org.openforis.ceo.handler :refer [development-app production-app]]
             [ring.adapter.jetty :refer [run-jetty]]))
 
 (defonce server (atom nil))
