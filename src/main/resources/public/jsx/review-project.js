@@ -297,7 +297,6 @@ class Project extends React.Component {
                             imageryList={this.state.imageryList}
                             projectDetails={this.state.projectDetails}
                             setProjectDetail={this.setProjectDetail}
-                            onShowGEEScriptClick={this.onShowGEEScriptClick}
                             projectImageryList={this.state.projectImageryList}
                             setProjectImageryList={this.setProjectImageryList}
                         />

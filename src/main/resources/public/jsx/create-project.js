@@ -456,14 +456,6 @@ class Project extends React.Component {
                                     : ceoMapStyles.yellowSquare);
     };
 
-    onShowGEEScriptClick = () =>
-        this.setState({
-            projectOptions: {
-                ...this.state.projectOptions,
-                showGEEScript: !this.state.projectOptions.showGEEScript,
-            },
-        });
-
     setProjectImageryList = (newProjectImageryList) =>
         this.setState({ projectImageryList: newProjectImageryList });
 
