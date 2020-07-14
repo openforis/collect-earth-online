@@ -25,7 +25,7 @@ class ReviewInstitution extends React.Component {
 
     getProjectList = () => {
         //get projects
-        fetch(this.props.documentRoot + "/get-all-projects?institutionId=" + this.props.institutionId
+        fetch(`/get-all-projects?institutionId=${this.props.institutionId}`
         )
             .then(response => response.ok ? response.json() : Promise.reject(response))
             .then(data => this.setState({ projectList: data }))
@@ -63,7 +63,6 @@ class ReviewInstitution extends React.Component {
         return (
             <div className="ReviewInstitution">
                 <InstitutionDescription
-                    documentRoot={this.props.documentRoot}
                     institutionId={this.props.institutionId}
                     isAdmin={this.state.isAdmin}
                     setIsAdmin={this.setIsAdmin}
@@ -77,7 +76,6 @@ class ReviewInstitution extends React.Component {
                             {this.headerTab("Users", this.state.usersCount, 2, this.props.userId < 0)}
                         </div>
                         <ProjectList
-                            documentRoot={this.props.documentRoot}
                             isAdmin={this.state.isAdmin}
                             institutionId={this.props.institutionId}
                             projectList={this.state.projectList}
@@ -85,7 +83,6 @@ class ReviewInstitution extends React.Component {
                             isVisible={this.state.selectedTab === 0}
                         />
                         <ImageryList
-                            documentRoot={this.props.documentRoot}
                             isAdmin={this.state.isAdmin}
                             institutionId={this.props.institutionId}
                             setImageryCount={this.setImageryCount}
@@ -93,7 +90,6 @@ class ReviewInstitution extends React.Component {
                         />
                         {this.props.userId > 0 &&
                             <UserList
-                                documentRoot={this.props.documentRoot}
                                 institutionId={this.props.institutionId}
                                 isAdmin={this.state.isAdmin}
                                 setUsersCount={this.setUsersCount}
@@ -137,7 +133,7 @@ class InstitutionDescription extends React.Component {
     }
 
     getInstitutionDetails = () => {
-        fetch(this.props.documentRoot + "/get-institution-details?institutionId=" + this.props.institutionId)
+        fetch(`/get-institution-details?institutionId=${this.props.institutionId}`)
             .then(response => response.ok ? response.json() : Promise.reject(response))
             .then(data => {
                 this.setState({
@@ -165,7 +161,7 @@ class InstitutionDescription extends React.Component {
     };
 
     updateInstitution = () => {
-        fetch(this.props.documentRoot + "/update-institution?institutionId=" + this.props.institutionId,
+        fetch(`/update-institution?institutionId=${this.props.institutionId}`,
               {
                   method: "POST",
                   body: JSON.stringify(this.state.newInstitutionDetails),
@@ -195,7 +191,7 @@ class InstitutionDescription extends React.Component {
         if (confirm("This action will also delete all of the projects associated with this institution.\n\n"
                     + "This action is irreversible.\n\n"
                     + "Do you REALLY want to delete this institution?")) {
-            fetch(this.props.documentRoot + "/archive-institution?institutionId=" + this.props.institutionId,
+            fetch(`/archive-institution?institutionId=${this.props.institutionId}`,
                   {
                       method: "POST",
                   }
@@ -203,7 +199,7 @@ class InstitutionDescription extends React.Component {
                 .then(response => {
                     if (response.ok) {
                         alert("Institution " + this.state.institutionDetails.name + " has been deleted.");
-                        window.location = this.props.documentRoot + "/home";
+                        window.location = "/home";
                     } else {
                         console.log(response);
                         alert("Error deleting institution. See console for details.");
@@ -213,7 +209,7 @@ class InstitutionDescription extends React.Component {
     };
 
     gotoInstitutionDashboard = () => {
-        window.open(this.props.documentRoot + "/institution-dashboard?institutionId=" + this.props.institutionId);
+        window.open(`/institution-dashboard?institutionId=${this.props.institutionId}`);
     };
 
     renderEditButtonGroup = () => <div className="row">
@@ -238,7 +234,6 @@ class InstitutionDescription extends React.Component {
     </div>;
 
     render() {
-        const { documentRoot } = this.props;
         return this.state.editMode
         ?
             <InstitutionEditor
@@ -257,7 +252,7 @@ class InstitutionDescription extends React.Component {
                             <a href={this.state.institutionDetails.url}>
                                 <img
                                     className="img-fluid"
-                                    src={documentRoot + "/" + this.state.institutionDetails.logo}
+                                    src={`/${this.state.institutionDetails.logo}`}
                                     alt="logo"
                                 />
                             </a>
@@ -337,7 +332,7 @@ class ImageryList extends React.Component {
     //    Remote Calls    //
 
     getImageryList = () => {
-        fetch(this.props.documentRoot + "/get-institution-imagery?institutionId=" + this.props.institutionId)
+        fetch(`/get-institution-imagery?institutionId=${this.props.institutionId}`)
             .then(response => response.ok ? response.json() : Promise.reject(response))
             .then(data => this.setState({ imageryList: data }))
             .catch(response => {
@@ -360,7 +355,7 @@ class ImageryList extends React.Component {
 
     deleteImagery = (imageryId) => {
         if (confirm("Do you REALLY want to delete this imagery?")) {
-            fetch(this.props.documentRoot + "/archive-institution-imagery",
+            fetch("/archive-institution-imagery",
                   {
                       method: "POST",
                       body: JSON.stringify({
@@ -394,7 +389,6 @@ class ImageryList extends React.Component {
             this.state.imageryToEdit
                 ?
                     <NewImagery
-                        documentRoot={this.props.documentRoot}
                         getImageryList={this.getImageryList}
                         institutionId={this.props.institutionId}
                         hideEditMode={this.hideEditMode}
@@ -833,7 +827,7 @@ function Imagery({ isAdmin, title, selectEditImagery, deleteImagery, isInstituti
     );
 }
 
-function ProjectList({ isAdmin, isLoggedIn, institutionId, projectList, documentRoot, isVisible }) {
+function ProjectList({ isAdmin, isLoggedIn, institutionId, projectList, isVisible }) {
     return (
         <div style={!isVisible ? { display: "none" } : {}}>
             {isAdmin &&
@@ -843,7 +837,7 @@ function ProjectList({ isAdmin, isLoggedIn, institutionId, projectList, document
                         id="create-project"
                         type="button"
                         className="btn btn-sm btn-block btn-outline-yellow py-2 font-weight-bold"
-                        onClick={() => window.location = documentRoot + "/create-project?institutionId=" + institutionId}
+                        onClick={() => window.location = `/create-project?institutionId=${institutionId}`}
                     >
                         <UnicodeIcon icon="add" backgroundColor="#f1c00f"/>Create New Project
                     </button>
@@ -857,7 +851,6 @@ function ProjectList({ isAdmin, isLoggedIn, institutionId, projectList, document
                         isAdmin={isAdmin}
                         isLoggedIn={isLoggedIn}
                         key={uid}
-                        documentRoot={documentRoot}
                         project={project}
                     />
                 )}
@@ -880,7 +873,7 @@ class Project extends React.Component {
     }
 
     projectHighlight = () => {
-        fetch(this.props.documentRoot + "/get-project-stats?projectId=" + this.props.project.id)
+        fetch(`/get-project-stats?projectId=${this.props.project.id}`)
             .then(response => response.ok ? response.json() : Promise.reject(response))
             .then(data => this.setState({
                 boxShadow: data.unanalyzedPlots === 0
@@ -893,7 +886,7 @@ class Project extends React.Component {
     };
 
     render() {
-        const { documentRoot, project, isAdmin } = this.props;
+        const { project, isAdmin } = this.props;
         return <div className="row mb-1 d-flex">
             <div className="col-2 pr-0">
                 <div className="btn btn-sm btn-outline-lightgreen btn-block">
@@ -905,7 +898,7 @@ class Project extends React.Component {
                     type="button"
                     className="btn btn-sm btn-outline-lightgreen btn-block text-truncate"
                     title={project.name}
-                    onClick={() => window.location = documentRoot + "/collection?projectId=" + project.id}
+                    onClick={() => window.location = `/collection?projectId=${project.id}`}
                     style={{
                         boxShadow: this.state.boxShadow,
                     }}
@@ -917,7 +910,7 @@ class Project extends React.Component {
             <div className="mr-3">
                 <a
                     className="edit-project btn btn-sm btn-outline-yellow btn-block px-3"
-                    href={documentRoot + "/review-project?projectId=" + project.id}
+                    href={`/review-project?projectId=${project.id}`}
                 >
                     <UnicodeIcon icon="edit"/>
                 </a>
@@ -952,7 +945,7 @@ class UserList extends React.Component {
     }
 
     getInstitutionUserList = () => {
-        fetch(this.props.documentRoot + "/get-institution-users?institutionId=" + this.props.institutionId)
+        fetch(`/get-institution-users?institutionId=${this.props.institutionId}`)
             .then(response => response.ok ? response.json() : Promise.reject(response))
             .then(data => this.setState({ institutionUserList: data }))
             .catch(response => {
@@ -963,7 +956,7 @@ class UserList extends React.Component {
     };
 
     getActiveUserList = () => {
-        fetch(this.props.documentRoot + "/get-all-users")
+        fetch("/get-all-users")
             .then(response => response.ok ? response.json() : Promise.reject(response))
             .then(data => this.setState({ activeUserList: data }))
             .catch(response => {
@@ -974,7 +967,7 @@ class UserList extends React.Component {
     };
 
     updateUserInstitutionRole = (newUserId, email, role) => {
-        fetch(this.props.documentRoot + "/update-user-institution-role",
+        fetch("/update-user-institution-role",
               {
                   method: "POST",
                   body: JSON.stringify({
@@ -996,7 +989,7 @@ class UserList extends React.Component {
     };
 
     requestMembership = () => {
-        fetch(this.props.documentRoot + "/request-institution-membership",
+        fetch("/request-institution-membership",
               {
                   method: "POST",
                   body: JSON.stringify({
@@ -1045,7 +1038,6 @@ class UserList extends React.Component {
                         .map((iu, uid) =>
                             <User
                                 key={uid}
-                                documentRoot={this.props.documentRoot}
                                 user={iu}
                                 isAdmin={this.props.isAdmin}
                                 updateUserInstitutionRole={this.updateUserInstitutionRole}
@@ -1056,7 +1048,7 @@ class UserList extends React.Component {
     }
 }
 
-function User({ user, documentRoot, isAdmin, updateUserInstitutionRole }) {
+function User({ user, isAdmin, updateUserInstitutionRole }) {
     return (
         <div className="row">
             {!isAdmin &&
@@ -1071,7 +1063,7 @@ function User({ user, documentRoot, isAdmin, updateUserInstitutionRole }) {
                     type="button"
                     className="btn btn-sm btn-outline-lightgreen btn-block text-truncate"
                     title={user.email}
-                    onClick={() => window.location = documentRoot + "/account?userId=" + user.id}
+                    onClick={() => window.location = `/account?userId=${user.id}`}
                 >
                     {user.email}
                 </button>
@@ -1171,7 +1163,6 @@ export function renderReviewInstitutionPage(args) {
     ReactDOM.render(
         <NavigationBar userName={args.userName} userId={args.userId}>
             <ReviewInstitution
-                documentRoot=""
                 userId={args.userId === "" ? -1 : parseInt(args.userId)}
                 institutionId={args.institutionId === "" ? -1 : parseInt(args.institutionId)}
             />

@@ -112,7 +112,7 @@ class Project extends React.Component {
     };
 
     createProjectApi = () =>
-        fetch(this.props.documentRoot + "/create-project",
+        fetch("/create-project",
               {
                   method: "POST",
                   contentType: "application/json; charset=utf-8",
@@ -154,7 +154,7 @@ class Project extends React.Component {
             .then(data => {
                 const isInteger = n => !isNaN(parseInt(n)) && isFinite(n) && !n.includes(".");
                 if (data[0] && isInteger(data[1].projectId)) {
-                    window.location = this.props.documentRoot + "/review-project?projectId=" + data[1].projectId;
+                    window.location = "/review-project?projectId=" + data[1].projectId;
                     return Promise.resolve();
                 } else {
                     return Promise.reject(data[1].errorMessage);
@@ -363,7 +363,7 @@ class Project extends React.Component {
         this.setState({ projectDetails: { ...this.state.projectDetails, surveyRules: newSurveyRules }});
 
     getProjectList = () => {
-        fetch(this.props.documentRoot + "/get-all-projects")
+        fetch("/get-all-projects")
             .then(response => response.ok ? response.json() : Promise.reject(response))
             .then(data => this.setState({ projectList: data }))
             .catch(response => {
@@ -374,7 +374,7 @@ class Project extends React.Component {
 
     getImageryList = () => {
         const { institutionId } = this.props;
-        fetch(this.props.documentRoot + "/get-institution-imagery?institutionId=" + institutionId)
+        fetch(`/get-institution-imagery?institutionId=${institutionId}`)
             .then(response => response.ok ? response.json() : Promise.reject(response))
             .then(data => {
                 const sorted = [...data.filter(a => a.title.toLocaleLowerCase().includes("mapbox")),
@@ -394,14 +394,14 @@ class Project extends React.Component {
     };
 
     initProjectMap = () => {
-        const newMapConfig = mercator.createMap("project-map", [0.0, 0.0], 1, this.state.imageryList, this.props.documentRoot);
+        const newMapConfig = mercator.createMap("project-map", [0.0, 0.0], 1, this.state.imageryList);
         mercator.setVisibleLayer(newMapConfig, this.state.imageryList[0].id);
         this.setState({ mapConfig: newMapConfig });
     };
 
     getProjectPlots = () => {
         const maxPlots = 300;
-        fetch(this.props.documentRoot + "/get-project-plots?projectId=" + this.state.projectDetails.id + "&max=" + maxPlots)
+        fetch(`/get-project-plots?projectId=${this.state.projectDetails.id}&max=${maxPlots}`)
             .then(response => response.ok ? response.json() : Promise.reject(response))
             .then(data => this.setState({ plotList: data }))
             .catch(response => {
@@ -1095,7 +1095,6 @@ export function renderCreateProjectPage(args) {
     ReactDOM.render(
         <NavigationBar userName={args.userName} userId={args.userId}>
             <Project
-                documentRoot=""
                 userId={args.userId}
                 institutionId={args.institutionId}
             />
