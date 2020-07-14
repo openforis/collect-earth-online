@@ -1,4 +1,4 @@
-{"baseUrl": "http://collect.earth/",
+{"baseUrl": "https://collect.earth/",
  "smtpUser": "collectearth.mail@gmail.com",
  "smtpServer": "smtp.gmail.com",
  "smtpPort": "587",
