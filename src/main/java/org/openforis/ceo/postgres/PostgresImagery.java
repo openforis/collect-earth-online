@@ -139,10 +139,15 @@ public class PostgresImagery implements Imagery {
             var imageryTitle          = jsonInputs.get("imageryTitle").getAsString();
             var imageryAttribution    = jsonInputs.get("imageryAttribution").getAsString();
             var sourceConfig          = jsonInputs.get("sourceConfig").getAsJsonObject();
+            var addToAllProjects      = jsonInputs.has("addToAllProjects")
+                                            ? jsonInputs.get("addToAllProjects").getAsBoolean()
+                                            : true;
 
             try (var conn = connect();
                 var pstmt = conn.prepareStatement(
-                    "SELECT * FROM add_institution_imagery(?, ?, ?, ?, ?::JSONB, ?::JSONB)")) {
+                    "SELECT * FROM add_institution_imagery(?, ?, ?, ?, ?::JSONB, ?::JSONB)");
+                var pstmt_add = conn.prepareStatement(
+                    "SELECT * FROM add_imagery_to_all_institution_projects(?)")) {
 
                 pstmt.setInt(1, institutionId);
                 pstmt.setString(2, "private");
@@ -150,7 +155,13 @@ public class PostgresImagery implements Imagery {
                 pstmt.setString(4, imageryAttribution);
                 pstmt.setString(5, "null"); // no where to add extent in UI
                 pstmt.setString(6, sourceConfig.toString());
-                pstmt.execute();
+                try (var rs = pstmt.executeQuery()) {
+                    if (addToAllProjects && rs.next()) {
+                        var imageryId = rs.getInt("add_institution_imagery");
+                        pstmt_add.setInt(1, imageryId);
+                        pstmt_add.execute();
+                    }
+                }
 
             } catch (SQLException e) {
                 System.out.println(e.getMessage());
@@ -170,16 +181,26 @@ public class PostgresImagery implements Imagery {
             var imageryTitle          = jsonInputs.get("imageryTitle").getAsString();
             var imageryAttribution    = jsonInputs.get("imageryAttribution").getAsString();
             var sourceConfig          = jsonInputs.get("sourceConfig").getAsJsonObject();
+            var addToAllProjects      = jsonInputs.has("addToAllProjects")
+                                            ? jsonInputs.get("addToAllProjects").getAsBoolean()
+                                            : true;
 
             try (var conn = connect();
                 var pstmt = conn.prepareStatement(
-                    "SELECT * FROM update_institution_imagery(?, ?, ?, ?::JSONB)")) {
+                    "SELECT * FROM update_institution_imagery(?, ?, ?, ?::JSONB)");
+                var pstmt_add = conn.prepareStatement(
+                    "SELECT * FROM add_imagery_to_all_institution_projects(?)")) {
 
                 pstmt.setInt(1, imageryId);
                 pstmt.setString(2, imageryTitle);
                 pstmt.setString(3, imageryAttribution);
                 pstmt.setString(4, sourceConfig.toString());
                 pstmt.execute();
+
+                if (addToAllProjects) {
+                    pstmt_add.setInt(1, imageryId);
+                    pstmt_add.execute();
+                }
 
             } catch (SQLException e) {
                 System.out.println(e.getMessage());
