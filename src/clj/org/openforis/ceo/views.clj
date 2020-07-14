@@ -1,4 +1,4 @@
-(ns my-project.views
+(ns org.openforis.ceo.views
   (:require [clojure.data.json :as json]
             [clojure.string :as str]
             [hiccup.page :refer [html5 include-css include-js]]))
@@ -20,7 +20,7 @@
   (->> (str/split uri #"/")
        (remove str/blank?)
        (str/join "-")
-       (str "my-project.pages.")))
+       (str "org.openforis.ceo.pages.")))
 
 (defn cljs-init [uri params]
   (let [js-module (-> uri uri->ns kebab->snake)

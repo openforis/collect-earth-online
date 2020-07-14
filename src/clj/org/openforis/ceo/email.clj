@@ -1,4 +1,4 @@
-(ns my-project.email
+(ns org.openforis.ceo.email
   (:require [clojure.edn :as edn]
             [postal.core :refer [send-message]]))
 

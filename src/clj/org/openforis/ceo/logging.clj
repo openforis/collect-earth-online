@@ -1,4 +1,4 @@
-(ns my-project.logging
+(ns org.openforis.ceo.logging
   (:import java.text.SimpleDateFormat
            java.util.Date)
   (:require [clojure.pprint :as pp]))

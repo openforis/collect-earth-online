@@ -1,10 +1,10 @@
-(ns my-project.remote-api
+(ns org.openforis.ceo.remote-api
   (:require [clojure.data.json :as json]
             [clojure.repl :refer [demunge]]
             [clojure.string :as str]
-            [my-project.email :refer [send-email]]
-            [my-project.logging :refer [log-str]]
-            [my-project.views :refer [data-response]]))
+            [org.openforis.ceo.email :refer [send-email]]
+            [org.openforis.ceo.logging :refer [log-str]]
+            [org.openforis.ceo.views :refer [data-response]]))
 
 ;; FIXME: Add more functions as necessary.
 (def name->fn {"send-email" send-email})
