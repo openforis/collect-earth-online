@@ -27,14 +27,14 @@ import spark.Response;
 
 public class PostgresUsers implements Users {
 
-    private static final String BASE_URL              = CeoConfig.baseUrl;
-    private static final String SMTP_USER             = CeoConfig.smtpUser;
-    private static final String SMTP_SERVER           = CeoConfig.smtpServer;
-    private static final String SMTP_PORT             = CeoConfig.smtpPort;
-    private static final String SMTP_PASSWORD         = CeoConfig.smtpPassword;
-    private static final String SMTP_RECIPIENT_LIMIT  = CeoConfig.smtpRecipientLimit;
-    private static final String MAILING_LIST_INTERVAL = CeoConfig.mailingListInterval;
-    private static LocalDateTime mailingListLastSent  = LocalDateTime.now();
+    private static final String BASE_URL               = CeoConfig.baseUrl;
+    private static final String SMTP_USER              = CeoConfig.smtpUser;
+    private static final String SMTP_SERVER            = CeoConfig.smtpServer;
+    private static final String SMTP_PORT              = CeoConfig.smtpPort;
+    private static final String SMTP_PASSWORD          = CeoConfig.smtpPassword;
+    private static final String SMTP_RECIPIENT_LIMIT   = CeoConfig.smtpRecipientLimit;
+    private static final Integer MAILING_LIST_INTERVAL = Integer.parseInt(CeoConfig.mailingListInterval);
+    private static LocalDateTime mailingListLastSent   = LocalDateTime.now().minusSeconds(MAILING_LIST_INTERVAL);
 
     public String login(Request req, Response res) {
         var inputEmail =        req.queryParams("email");
@@ -471,7 +471,7 @@ public class PostgresUsers implements Users {
     }
 
     public String submitEmailForMailingList(Request req, Response res) {
-        var remainingTime = Integer.parseInt(MAILING_LIST_INTERVAL)
+        var remainingTime = MAILING_LIST_INTERVAL
                             - Duration.between(mailingListLastSent, LocalDateTime.now()).toSeconds();
         var jsonInputs = parseJson(req.body()).getAsJsonObject();
         var inputSubject = jsonInputs.get("subject").getAsString();
