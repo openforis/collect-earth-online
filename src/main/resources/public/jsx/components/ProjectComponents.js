@@ -239,18 +239,39 @@ export function ProjectAOI({
     );
 }
 
-export function ProjectOptions( { showGEEScript, onShowGEEScriptClick } ) {
+export function ProjectOptions( { projectOptions, setProjectDetail } ) {
+    const { showGEEScript, showPlotInformation } = projectOptions;
     return (
         <SectionBlock title="Project Options">
             <div className="form-check">
                 <input
+                    id="showGEEScript"
                     className="form-check-input"
                     checked={showGEEScript}
-                    id="showGEEScript"
-                    onChange={onShowGEEScriptClick}
+                    onChange={() => setProjectDetail(
+                        "projectOptions",
+                        { ...projectOptions, showGEEScript: !showGEEScript }
+                    )}
                     type="checkbox"
                 />
-                <label htmlFor="showGEEScript" className="form-check-label">Show GEE Script in Collection Page?</label>
+                <label htmlFor="showGEEScript" className="form-check-label">
+                    Show GEE Script link on Collection Page
+                </label>
+            </div>
+            <div className="form-check">
+                <input
+                    id="showPlotInformation"
+                    className="form-check-input"
+                    type="checkbox"
+                    checked={showPlotInformation}
+                    onChange={() => setProjectDetail(
+                        "projectOptions",
+                        { ...projectOptions, showPlotInformation: !showPlotInformation }
+                    )}
+                />
+                <label htmlFor="showPlotInformation" className="form-check-label">
+                    Show Extra Plot Columns on Collection Page
+                </label>
             </div>
         </SectionBlock>
     );
