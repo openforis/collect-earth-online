@@ -14,34 +14,39 @@ class Login extends React.Component {
         };
     }
 
-    validate = () => {
-        let isValid = true;
-        let emailError = "";
-        let passwordError = "";
+    handleEmailValidation = () => {
+        let error = "";
         if (this.state.email === "") {
-            emailError = "This field is required.";
-            isValid = false;
+            error = "This field is required.";
         } else {
             const emailPattern = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
             if (!emailPattern.test(this.state.email)) {
-                emailError = "Is not a valid email address.";
-                isValid = false;
+                error = "Is not a valid email address.";
             }
         }
+        this.setState({ emailError: error });
+        return error;
+    }
+
+    handlePasswordValidation = () => {
+        let error = "";
         if (this.state.password === "") {
-            passwordError = "This field is required.";
-            isValid = false;
+            error = "This field is required.";
         } else {
+            /*
             if (this.state.password.length < 8) {
-                passwordError = "Password must be at least 8 characters.";
-                isValid = false;
+                error = "Password must be at least 8 characters.";
             }
+            */
         }
-        this.setState({
-            emailError,
-            passwordError,
-        });
-        return isValid;
+        this.setState({ passwordError: error });
+        return error;
+    }
+
+    validate = () => {
+        const emailError = this.handleEmailValidation();
+        const passwordError = this.handlePasswordValidation();
+        return emailError === "" && passwordError === "";
     }
 
     requestLogin = () => {
@@ -90,6 +95,7 @@ class Login extends React.Component {
                                     type="email"
                                     value={this.state.email}
                                     onChange={e => this.setState({ email: e.target.value })}
+                                    onBlur={this.handleEmailValidation}
                                 />
                                 {this.state.emailError &&
                                     <div className="validation-error">{this.state.emailError}</div>
@@ -104,6 +110,7 @@ class Login extends React.Component {
                                     className="form-control"
                                     value={this.state.password}
                                     onChange={e => this.setState({ password: e.target.value })}
+                                    onBlur={this.handlePasswordValidation}
                                 />
                                 {this.state.passwordError &&
                                     <div className="validation-error">{this.state.passwordError}</div>
