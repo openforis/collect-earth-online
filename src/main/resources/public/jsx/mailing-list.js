@@ -37,7 +37,7 @@ class MailingList extends React.Component {
             <div className="row justify-content-center">
                 <div className="col-xl-6 col-lg-8 border bg-lightgray mb-5">
                     <div className="bg-darkgreen mb-3 no-container-margin">
-                        <h1>Mailing List!</h1>
+                        <h1>Mailing List</h1>
                     </div>
                     <div className="row mb-3">
                         <div className="col">
