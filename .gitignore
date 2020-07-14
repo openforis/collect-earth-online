@@ -1,44 +1,33 @@
 # Developer Tool Config Files
-.cpcahce
 .meghanada/
+.cpcache
+.nrepl-port
 .tern-port
-.gradle/
-gradle/
-.classpath
 .project
 .settings/
 .idea/
 collect-earth-online.iml
-gradlew
-gradlew.bat
 
 # Build Directories and Files
-/bin/
-/build/
 /target/
 /node_modules/
 package-lock.json
-/src/main/resources/public/js/*.bundle.js
-/src/main/resources/public/js/*.bundle.js.map
-out.txt
-out-win.txt
+/resources/public/js/*.bundle.js
+/resources/public/js/*.bundle.js.map
 
 # MacOS X Backups
 .DS_Store
 
 # CSVs Uploaded by Users
-/src/main/resources/public/downloads/*.csv
-
-# Google Analytics
-/src/main/resources/template/freemarker/googleanalytics.ftl
+/resources/public/downloads/*.csv
 
 # Locally compiled Python code and virtualenv directories
 *.pyc
-src/main/resources/scripts/bin
-src/main/resources/scripts/include
-src/main/resources/scripts/lib
-src/main/resources/scripts/pip-selfcheck.json
-src/main/resources/scripts/pyvenv.cfg
+/resources/scripts/bin
+/resources/scripts/include
+/resources/scripts/lib
+/resources/scripts/pip-selfcheck.json
+/resources/scripts/pyvenv.cfg
 
 # Log files
 /logs/*.log
