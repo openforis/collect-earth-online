@@ -114,7 +114,7 @@ public class Mail {
         var counter = new AtomicInteger();
         if (bcc.size() > 0) {
             var unsubscribeUrl = Paths.get(BASE_URL, "unsubscribe-mailing-list");
-            var newBody = body + "<br /><br />--<p><a href=\"" + unsubscribeUrl + "\">Unsubscribe</a></p>";
+            var newBody = body + "<br><hr><p><a href=\"https://" + unsubscribeUrl + "\">Unsubscribe</a></p>";
             bcc.stream()
                 .collect(Collectors.groupingBy(it -> counter.getAndIncrement() / chunkSize))
                 .values()
