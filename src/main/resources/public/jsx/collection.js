@@ -1091,7 +1091,7 @@ class Collection extends React.Component {
                                 + surveyRule.questionSetText1.toString()
                                 + "] and ["
                                 + surveyRule.questionSetText2.toString()
-                                + "] do not match. Valid total is "
+                                + "] do not match.\n\nValid total is "
                                 + Math.abs(invalidSum[0] - invalidSum[1])
                                 + ".";
                     } else {
