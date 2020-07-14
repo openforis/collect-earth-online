@@ -1403,7 +1403,9 @@ class Collection extends React.Component {
                         currentPlot={this.state.currentPlot}
                         currentProject={this.state.currentProject}
                     />
-                    {this.state.currentPlot && <PlotInformation extraPlotInfo={this.state.currentPlot.extraPlotInfo}/>}
+                    {this.state.currentPlot && this.state.currentProject.projectOptions.showPlotInformation &&
+                        <PlotInformation extraPlotInfo={this.state.currentPlot.extraPlotInfo}/>
+                    }
                     <ImageryOptions
                         baseMapSource={this.state.currentImagery.id}
                         imageryTitle={this.state.currentImagery.title}

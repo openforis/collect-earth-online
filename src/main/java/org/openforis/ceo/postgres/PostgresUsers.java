@@ -471,13 +471,13 @@ public class PostgresUsers implements Users {
     }
 
     public String submitEmailForMailingList(Request req, Response res) {
-        var remainingTime = Duration.between(mailingListLastSent, LocalDateTime.now()).toSeconds()
-                            - Integer.parseInt(MAILING_LIST_INTERVAL);
+        var remainingTime = Integer.parseInt(MAILING_LIST_INTERVAL)
+                            - Duration.between(mailingListLastSent, LocalDateTime.now()).toSeconds();
         var jsonInputs = parseJson(req.body()).getAsJsonObject();
         var inputSubject = jsonInputs.get("subject").getAsString();
         var inputBody = jsonInputs.get("body").getAsString();
 
-        if (remainingTime < 0) {
+        if (remainingTime > 0) {
             return "You must wait " + remainingTime + " more seconds before sending another message.";
         } else if (inputSubject == null || inputSubject.isEmpty() || inputBody == null || inputBody.isEmpty()) {
             return "Subject and Body are mandatory fields.";
