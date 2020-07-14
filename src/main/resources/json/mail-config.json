@@ -2,4 +2,6 @@
  "smtpUser": "collectearth.mail@gmail.com",
  "smtpServer": "smtp.gmail.com",
  "smtpPort": "587",
- "smtpPassword": ""}
+ "smtpPassword": "",
+ "smtpRecipientLimit": "499",
+ "mailingListInterval": "600"}

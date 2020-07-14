@@ -3,6 +3,7 @@ package org.openforis.ceo.postgres;
 import static org.openforis.ceo.utils.DatabaseUtils.connect;
 import static org.openforis.ceo.utils.JsonUtils.parseJson;
 import static org.openforis.ceo.postgres.PostgresInstitutions.isInstAdminQuery;
+import static org.openforis.ceo.utils.SessionUtils.getSessionUserId;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
@@ -61,9 +62,7 @@ public class PostgresImagery implements Imagery {
 
     public String getInstitutionImagery(Request req, Response res) {
         final var institutionId = Integer.parseInt(req.queryParams("institutionId"));
-        final var userId        = Integer.parseInt(req.session().attributes().contains("userid")
-                                                    ? req.session().attribute("userid").toString()
-                                                    : "-1");
+        final var userId        = getSessionUserId(req);
 
         try (var conn = connect();
             var pstmt = conn.prepareStatement("SELECT * FROM select_imagery_by_institution(?, ?)")) {
@@ -83,16 +82,16 @@ public class PostgresImagery implements Imagery {
 
     public String getProjectImagery(Request req, Response res) {
         final var projectId = req.queryParams("projectId");
-        final var userId    = req.session().attributes().contains("userid")
-                                ? req.session().attribute("userid").toString()
-                                : "-1";
-        final var tokenKey = req.session().attributes().contains("tokenKey") ? req.session().attribute("tokenKey").toString() : null;
+        final var userId    = getSessionUserId(req);
+        final var tokenKey  = req.session().attributes().contains("tokenKey")
+                                ? req.session().attribute("tokenKey").toString()
+                                : null;
 
         try (var conn = connect();
              var pstmt = conn.prepareStatement("SELECT * FROM select_imagery_by_project(?, ?, ?)")) {
 
             pstmt.setInt(1, Integer.parseInt(projectId));
-            pstmt.setInt(2, Integer.parseInt(userId));
+            pstmt.setInt(2, userId);
             pstmt.setString(3, tokenKey);
 
             try (var rs = pstmt.executeQuery()) {

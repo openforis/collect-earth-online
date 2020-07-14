@@ -12,9 +12,12 @@ import static org.openforis.ceo.utils.JsonUtils.toStream;
 import static org.openforis.ceo.utils.JsonUtils.writeJsonFile;
 import static org.openforis.ceo.utils.Mail.isEmail;
 import static org.openforis.ceo.utils.Mail.sendMail;
+import static org.openforis.ceo.utils.Mail.sendToMailingList;
+import static org.openforis.ceo.utils.Mail.CONTENT_TYPE_HTML;
 import static org.openforis.ceo.utils.ProjectUtils.getOrZero;
 import static org.openforis.ceo.utils.ProjectUtils.getOrEmptyString;
 import static org.openforis.ceo.utils.ProjectUtils.collectTimeIgnoreString;
+import static org.openforis.ceo.utils.SessionUtils.getSessionUserId;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
@@ -22,6 +25,8 @@ import com.google.gson.JsonPrimitive;
 import java.nio.file.Paths;
 import java.time.format.DateTimeFormatter;
 import java.time.LocalDateTime;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -32,11 +37,12 @@ import spark.Response;
 
 public class JsonUsers implements Users {
 
-    private static final String BASE_URL      = CeoConfig.baseUrl;
-    private static final String SMTP_USER     = CeoConfig.smtpUser;
-    private static final String SMTP_SERVER   = CeoConfig.smtpServer;
-    private static final String SMTP_PORT     = CeoConfig.smtpPort;
-    private static final String SMTP_PASSWORD = CeoConfig.smtpPassword;
+    private static final String BASE_URL             = CeoConfig.baseUrl;
+    private static final String SMTP_USER            = CeoConfig.smtpUser;
+    private static final String SMTP_SERVER          = CeoConfig.smtpServer;
+    private static final String SMTP_PORT            = CeoConfig.smtpPort;
+    private static final String SMTP_PASSWORD        = CeoConfig.smtpPassword;
+    private static final String SMTP_RECIPIENT_LIMIT = CeoConfig.smtpRecipientLimit;
 
     public String login(Request req, Response res) {
         var inputEmail = req.queryParams("email");
@@ -71,7 +77,6 @@ public class JsonUsers implements Users {
         var inputPassword = req.queryParams("password");
         var inputPasswordConfirmation = req.queryParams("passwordConfirmation");
 
-        // Validate input params and assign flash_message if invalid
         if (!isEmail(inputEmail)) {
             return inputEmail + " is not a valid email address.";
         } else if (inputPassword.length() < 8) {
@@ -112,7 +117,7 @@ public class JsonUsers implements Users {
                     + "  Created on: " + timestamp + "\n\n"
                     + "Kind Regards,\n"
                     + "  The CEO Team";
-                sendMail(SMTP_USER, inputEmail, SMTP_SERVER, SMTP_PORT, SMTP_PASSWORD, "Welcome to CEO!", body);
+                sendMail(SMTP_USER, Arrays.asList(inputEmail), null, null, SMTP_SERVER, SMTP_PORT, SMTP_PASSWORD, "Welcome to CEO!", body, null);
 
                 return "";
             }
@@ -127,49 +132,47 @@ public class JsonUsers implements Users {
         return "";
     }
 
-    // FIXME back port postgres checks that allow user to change only one part
-    public Request updateAccount(Request req, Response res) {
-        var userId = (String) req.session().attribute("userid");
+    public String updateAccount(Request req, Response res) {
+        var userId = getSessionUserId(req);
         var inputEmail = req.queryParams("email");
         var inputPassword = req.queryParams("password");
-        var inputPasswordConfirmation = req.queryParams("password-confirmation");
-        var inputCurrentPassword = req.queryParams("current-password");
+        var inputPasswordConfirmation = req.queryParams("passwordConfirmation");
+        var mailingListSubscription = req.queryParams("onMailingList");
+        var inputCurrentPassword = req.queryParams("currentPassword");
 
-        // Validate input params and assign flash_message if invalid
-        if (!isEmail(inputEmail)) {
-            req.session().attribute("flash_message", inputEmail + " is not a valid email address.");
-            return req;
-        } else if (inputPassword.length() < 8) {
-            req.session().attribute("flash_message", "Password must be at least 8 characters.");
-            return req;
+        if (inputCurrentPassword.length() == 0) {
+            return "Current Password required";
+        // let user change email without changing password
+        } else if (inputEmail.length() > 0 && !isEmail(inputEmail)) {
+            return inputEmail + " is not a valid email address.";
+        // let user change email without changing password
+        } else if (inputPassword.length() > 0 && inputPassword.length() < 8) {
+            return "New Password must be at least 8 characters.";
         } else if (!inputPassword.equals(inputPasswordConfirmation)) {
-            req.session().attribute("flash_message", "Password and Password confirmation do not match.");
-            return req;
+            return "New Password and Password confirmation do not match.";
         } else {
             var users = elementToArray(readJsonFile("user-list.json"));
             var matchingUser = findInJsonArray(users, user -> user.get("id").getAsString().equals(userId));
             if (!matchingUser.isPresent()) {
-                req.session().attribute("flash_message", "The requested user account does not exist.");
-                return req;
+                return "The requested user account does not exist.";
             } else {
                 var foundUser = matchingUser.get();
                 if (!foundUser.get("password").getAsString().equals(inputCurrentPassword)) {
-                    req.session().attribute("flash_message", "Invalid password.");
-                    return req;
+                    return "Invalid password.";
                 } else {
                     mapJsonFile("user-list.json",
                                 user -> {
                                     if (user.get("id").getAsString().equals(userId)) {
-                                        user.addProperty("email", inputEmail);
-                                        user.addProperty("password", inputPassword);
+                                        user.addProperty("email", inputEmail.isEmpty() ? foundUser.get("email").getAsString() : inputEmail);
+                                        user.addProperty("password", inputPassword.isEmpty() ? foundUser.get("password").getAsString() : inputPassword);
+                                        user.addProperty("on-mailing-list", mailingListSubscription != null);
                                         return user;
                                     } else {
                                         return user;
                                     }
                                 });
                     req.session().attribute("username", inputEmail);
-                    req.session().attribute("flash_message", "The user has been updated.");
-                    return req;
+                    return "";
                 }
             }
         }
@@ -201,7 +204,7 @@ public class JsonUsers implements Users {
                     + inputEmail
                     + "&password-reset-key="
                     + resetKey;
-                sendMail(SMTP_USER, inputEmail, SMTP_SERVER, SMTP_PORT, SMTP_PASSWORD, "Password reset on CEO", body);
+                sendMail(SMTP_USER, Arrays.asList(inputEmail), null, null, SMTP_SERVER, SMTP_PORT, SMTP_PASSWORD, "Password reset on CEO", body, null);
                 return "";
             } catch (Exception e) {
                 return "An error occurred. Please try again later.";
@@ -215,7 +218,6 @@ public class JsonUsers implements Users {
         var inputPassword = req.queryParams("password");
         var inputPasswordConfirmation = req.queryParams("password-confirmation");
 
-        // Validate input params and assign flash_message if invalid
         if (inputPassword.length() < 8) {
             return "Password must be at least 8 characters.";
         } else if (!inputPassword.equals(inputPasswordConfirmation)) {
@@ -292,6 +294,20 @@ public class JsonUsers implements Users {
                 .toString();
         } else {
             return (new JsonArray()).toString();
+        }
+    }
+
+    public String getUserDetails(Request req, Response res) {
+        final var userId = req.queryParams("userId");
+        var users = elementToArray(readJsonFile("user-list.json"));
+        var matchingUser = findInJsonArray(users, user -> user.get("id").getAsString().equals(userId));
+        if (!matchingUser.isPresent()) {
+            return "";
+        } else {
+            var foundUser = matchingUser.get();
+            var userDetailsObject = new JsonObject();
+            userDetailsObject.addProperty("mailingListSubscription", foundUser.get("on-mailing-list").getAsBoolean());
+            return userDetailsObject.toString();
         }
     }
 
@@ -478,7 +494,7 @@ public class JsonUsers implements Users {
                                     pending.remove(userId);
                                 }
                                 // Send confirmation email to the user
-                                sendMail(SMTP_USER, userEmail, SMTP_SERVER, SMTP_PORT, SMTP_PASSWORD, "User Role Added!", body);
+                                sendMail(SMTP_USER, Collections.singleton(userEmail), null, null, userEmail, SMTP_SERVER, SMTP_PORT, SMTP_PASSWORD, "User Role Added!", body);
                             } else if (role.equals("admin")) {
                                 if (!members.contains(userId)) {
                                     members.add(userId);
@@ -490,7 +506,7 @@ public class JsonUsers implements Users {
                                     pending.remove(userId);
                                 }
                                 // Send confirmation email to the user
-                                sendMail(SMTP_USER, userEmail, SMTP_SERVER, SMTP_PORT, SMTP_PASSWORD, "User Role Added!", body);
+                                sendMail(SMTP_USER, Collections.singleton(userEmail), null, null, userEmail, SMTP_SERVER, SMTP_PORT, SMTP_PASSWORD, "User Role Added!", body);
                             } else {
                                 members.remove(userId);
                                 admins.remove(userId);
@@ -527,6 +543,33 @@ public class JsonUsers implements Users {
                             return institution;
                         }
                     });
+        return "";
+    }
+
+    public String submitEmailForMailingList(Request req, Response res) {
+        var inputSubject = req.queryParams("subject");
+        var inputBody = req.queryParams("body");
+
+        if (inputSubject == null || inputSubject.isEmpty() || inputBody == null || inputBody.isEmpty()) {
+            throw new RuntimeException("Subject and Body are mandatory fields.");
+        } else {
+            try {
+                var users = elementToArray(readJsonFile("user-list.json"));
+                var emails = toStream(users)
+                        .filter(user -> user.get("mailing-list").getAsBoolean())
+                        .map(user -> user.get("email").getAsString())
+                        .collect(Collectors.toList());
+                sendToMailingList(SMTP_USER, emails, SMTP_SERVER, SMTP_PORT, SMTP_PASSWORD, inputSubject, inputBody, CONTENT_TYPE_HTML, Integer.parseInt(SMTP_RECIPIENT_LIMIT));
+            } catch (Exception e) {
+                System.out.println(e.getMessage());
+                throw new RuntimeException("There was an issue sending to the mailing list. Please check the server logs.");
+            }
+        }
+        return "";
+    }
+
+    public String unsubscribeFromMailingList(Request req, Response res) {
+        // TODO Auto-generated method stub
         return "";
     }
 

@@ -5,6 +5,7 @@ import static org.openforis.ceo.utils.JsonUtils.expandResourcePath;
 import static org.openforis.ceo.utils.JsonUtils.getBodyParam;
 import static org.openforis.ceo.utils.JsonUtils.parseJson;
 import static org.openforis.ceo.utils.PartUtils.writeFilePartBase64;
+import static org.openforis.ceo.utils.SessionUtils.getSessionUserId;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
@@ -37,7 +38,7 @@ public class PostgresInstitutions implements Institutions {
     }
 
     public Boolean isInstAdmin(Request req) {
-        final var userId = Integer.parseInt(req.session().attributes().contains("userid") ? req.session().attribute("userid").toString() : "-1");
+        final var userId         = getSessionUserId(req);
         final var qInstitutionId = req.queryParams("institutionId");
         final var jInstitutionId = getBodyParam(req.body(), "institutionId", null);
 

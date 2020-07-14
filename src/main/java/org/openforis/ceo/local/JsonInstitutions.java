@@ -11,6 +11,7 @@ import static org.openforis.ceo.utils.JsonUtils.parseJson;
 import static org.openforis.ceo.utils.JsonUtils.readJsonFile;
 import static org.openforis.ceo.utils.JsonUtils.writeJsonFile;
 import static org.openforis.ceo.utils.PartUtils.writeFilePartBase64;
+import static org.openforis.ceo.utils.SessionUtils.getSessionUserId;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
@@ -23,20 +24,20 @@ import spark.Response;
 
 public class JsonInstitutions implements Institutions {
 
-    public static Boolean isInstitutionAdmin(String userId, Integer institutionId) {
+    public static Boolean isInstitutionAdmin(Integer userId, Integer institutionId) {
         var matchingInstitution = getInstitutionById(institutionId);
         if (matchingInstitution.isPresent()) {
             final var institution = matchingInstitution.get();
             final var admins = institution.has("admins") ? institution.get("admins").getAsJsonArray() : new JsonArray();
             final var archived = institution.has("archived") ? institution.get("archived").getAsBoolean() : true;
-            return admins.contains(parseJson(userId)) && !archived;
+            return admins.contains(parseJson("" + userId)) && !archived;
         } else {
             return false;
         }
     }
 
     public Boolean isInstAdmin(Request req) {
-        final var userId = req.session().attributes().contains("userid") ? req.session().attribute("userid").toString() : "-1";
+        final var userId = getSessionUserId(req);
         final var qInstitutionId = req.queryParams("institutionId");
         final var jInstitutionId = getBodyParam(req.body(), "institutionId", null);
 
@@ -53,7 +54,7 @@ public class JsonInstitutions implements Institutions {
         final var matchedProject = findInJsonArray(projects, project -> project.get("id").getAsInt() == projectId);
         if (matchedProject.isPresent()) {
             final var institutionId = matchedProject.get().get("institution").getAsInt();
-            return isInstitutionAdmin(userId.toString(), institutionId);
+            return isInstitutionAdmin(userId, institutionId);
         } else {
             return false;
         }

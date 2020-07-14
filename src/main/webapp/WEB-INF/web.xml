@@ -42,6 +42,16 @@
     <param-value></param-value>
   </context-param>
 
+  <context-param>
+    <param-name>smtpRecipientLimit</param-name>
+    <param-value>499</param-value>
+  </context-param>
+
+  <context-param>
+    <param-name>mailingListInterval</param-name>
+    <param-value>600</param-value>
+  </context-param>
+
   <filter>
     <filter-name>javamelody</filter-name>
     <filter-class>net.bull.javamelody.MonitoringFilter</filter-class>
