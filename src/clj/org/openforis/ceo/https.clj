@@ -1,8 +1,8 @@
-(ns org.openforis.ceo.handler
+(ns org.openforis.ceo.https
   (:require [clojure.java.io :as io]
             [clojure.java.shell :as sh]
             [clojure.string :as str]
-            [pyregence.logging :refer [log-str]]))
+            [org.openforis.ceo.logging :refer [log-str]]))
 
 (def path-env (System/getenv "PATH"))
 
@@ -31,7 +31,8 @@
   (sh/with-sh-dir dir
     (sh/with-sh-env (merge {:PATH path-env} env)
       (every?
-       (fn [cmd] (log-str cmd)
+       (fn [cmd]
+         (log-str cmd)
          (let [{:keys [out err]} (apply sh/sh (parse-as-sh-cmd cmd))]
            (log-str "out: "   out)
            (log-str "error: " err)
@@ -53,5 +54,5 @@
                                  certbot-path
                                  certbot-path)))
     (println "You must provide a domain to create a SSL key.\n\n"
-             "Usage: clojure -A:ssl-key-gen domain [certbot path root]"))
+             "Usage: clojure -A:ssl-key-gen domain [certbot-path-root]"))
   (shutdown-agents))
