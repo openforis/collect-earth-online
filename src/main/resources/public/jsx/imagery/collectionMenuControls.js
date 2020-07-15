@@ -356,7 +356,7 @@ export class SentinelMenus extends React.Component {
                                    this.props.currentProjectBoundary,
                                    sourceConfig => ({
                                        ...sourceConfig,
-                                       month: this.state.month,
+                                       month: (this.state.month.length === 1 ? "0" : "") + this.state.month,
                                        year: this.state.year,
                                        bandCombination: this.state.bandCombination,
                                    }),
