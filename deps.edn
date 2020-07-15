@@ -11,7 +11,7 @@
         seancorfield/next.jdbc    {:mvn/version "1.0.384"}}
 
  :aliases {:build-db    {:main-opts ["-m" "org.openforis.ceo.build-db"]}
-           :ssl-key-gen {:main-opts ["-m" "pyregence.https"]}
+           :ssl-key-gen {:main-opts ["-m" "org.openforis.ceo.https"]}
            :production  {:jvm-opts  ["-Xmx4096m" "-XX:+PrintFlagsFinal"]}
            :run-server  {:main-opts ["-m" "org.openforis.ceo.server"]}}}
 
