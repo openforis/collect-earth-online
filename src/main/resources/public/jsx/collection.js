@@ -70,8 +70,8 @@ class Collection extends React.Component {
         if (this.state.currentProject.institution !== prevState.currentProject.institution) {
             // release any locks in case of user hitting refresh
             fetch(
-                `/release-plot-locks?userId=${this.props.userId}\
-                &projectId=${this.state.currentProject.id}`,
+                `/release-plot-locks?userId=${this.props.userId}` +
+                `&projectId=${this.state.currentProject.id}`,
                 { method: "POST" }
             );
             this.getImageryList();
@@ -853,14 +853,14 @@ class Collection extends React.Component {
         const plotRadius = currentProject.plotSize
               ? currentProject.plotSize / 2.0
               : mercator.getViewRadius(mapConfig);
-        window.open(`/geo-dash?\
-                    institutionId=${this.state.currentProject.institution}\
-                    &projectId=${this.props.projectId}\
-                    &plotId=${(currentPlot.plotId ? currentPlot.plotId : currentPlot.id)}\
-                    &plotShape=${encodeURIComponent((currentPlot.geom ? "polygon" : currentProject.plotShape))}\
-                    &aoi=${encodeURIComponent(`[${mercator.getViewExtent(mapConfig)}]`)}\
-                    &daterange=&bcenter=${currentPlot.center}\
-                    &bradius=${plotRadius}`,
+        window.open("/geo-dash?" +
+                    `institutionId=${this.state.currentProject.institution}` +
+                    `&projectId=${this.props.projectId}` +
+                    `&plotId=${(currentPlot.plotId ? currentPlot.plotId : currentPlot.id)}` +
+                    `&plotShape=${encodeURIComponent((currentPlot.geom ? "polygon" : currentProject.plotShape))}` +
+                    `&aoi=${encodeURIComponent(`[${mercator.getViewExtent(mapConfig)}]`)}` +
+                    `&daterange=&bcenter=${currentPlot.center}` +
+                    `&bradius=${plotRadius}`,
                     "_geo-dash");
     };
 
