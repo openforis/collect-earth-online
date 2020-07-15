@@ -3,6 +3,7 @@ import "../css/jquery-ui.css"; // TODO Remove jquery-ui as a dependency.
 import "../css/datepicker.css"; // TODO Remove jquery-ui as a dependency.
 import "react-grid-layout/css/styles.css";
 import "react-resizable/css/styles.css";
+import "react-grid-layout/examples/example-styles.css"; // TODO I dont think this is being used.
 
 import React from "react";
 import ReactDOM from "react-dom";
