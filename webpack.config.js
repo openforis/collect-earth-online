@@ -56,7 +56,7 @@ module.exports = env => ({
                 },
             },
             {
-                test: /\.css$/,
+                test: /\.css$/, // TODO Find a css optimizer
                 use: [
                     "style-loader",
                     "css-loader",

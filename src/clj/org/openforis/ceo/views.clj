@@ -2,9 +2,9 @@
   (:require [clojure.data.json :as json]
             [clojure.string :as str]
             [clojure.java.io :as io]
-            [hiccup.page :refer [html5 include-css include-js]]))
+            [hiccup.page :refer [html5 include-js]]))
 
-(defn head [additional-js additional-css]
+(defn head [additional-js]
   [:head
    [:title "Collect Earth Online"]
    [:meta {:charset "utf-8"}]
@@ -12,12 +12,6 @@
    [:meta {:name "description"  :content "Collect Earth Online is an Image Analysis Crowdsourcing Platform by OpenForis and Spatial Informatics Group"}]
    [:meta {:name "keywords"     :content "collect earth online image analysis crowdsourcing platform openforis SIG spatial informatics group"}]
    [:link {:rel "shortcut icon" :href "favicon.ico"}]
-   (apply include-css (concat additional-css
-                              ["/css/cssreset-min.css"
-                               "/css/jquery-ui.css"  ; TODO Remove jquery-ui as a dependency.
-                               "/css/datepicker.css" ; TODO Remove jquery-ui as a dependency.
-                               "/css/bootstrap.min.css"
-                               "/css/custom.css"]))
    (apply include-js  (concat additional-js
                               ["/js/bootstrap.min.js"]))]) ; TODO Remove bootstrap.min.js as a dependency. Only used in header, find a react method.
 
@@ -52,11 +46,6 @@
               "widget-layout-editor" ["/js/jquery-3.4.1.min.js"
                                       "/js/jquery-ui.min.js"]} page))))
 
-;; TODO Can we just import these from inside each page with import "../css/geo-dash.css"?
-(def page->css
-  {"geo-dash"             ["/css/geo-dash.css"]
-   "widget-layout-editor" ["/css/geo-dash.css"]})
-
 (defn cljs-init [page params]
   (let [js-params (json/write-str params)]
     [:script {:type "text/javascript"}
@@ -68,7 +57,7 @@
       {:status  200
        :headers {"Content-Type" "text/html"}
        :body    (html5
-                 (head (page->js page) (page->css page))
+                 (head (page->js page))
                  [:body
                   (when-let [flash-message (get-in request [:params :flash_message])]
                     [:p {:class "alert"} flash-message])            ; TODO This will be moved to the front end for better UX.
