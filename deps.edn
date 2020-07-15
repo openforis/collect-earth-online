@@ -7,12 +7,13 @@
         org.clojure/data.json     {:mvn/version "1.0.0"}
         org.postgresql/postgresql {:mvn/version "42.2.10"}
         ring/ring                 {:mvn/version "1.8.0"}
-        ring/ring-defaults        {:mvn/version "0.3.2"}
+        ring/ring-defaults        {:mvn/version "0.3.2"} ; FIXME I dont believe we actually use ring-defaults anymore in any project
         seancorfield/next.jdbc    {:mvn/version "1.0.384"}}
 
- :aliases {:build-db   {:main-opts ["-m" "org.openforis.ceo.build-db"]}
-           :production {:jvm-opts ["-Xmx4096m" "-XX:+PrintFlagsFinal"]}
-           :run-server {:main-opts ["-m" "org.openforis.ceo.server"]}}}
+ :aliases {:build-db    {:main-opts ["-m" "org.openforis.ceo.build-db"]}
+           :ssl-key-gen {:main-opts ["-m" "pyregence.https"]}
+           :production  {:jvm-opts  ["-Xmx4096m" "-XX:+PrintFlagsFinal"]}
+           :run-server  {:main-opts ["-m" "org.openforis.ceo.server"]}}}
 
 ;; FIXME: Merge in these params from pom.xml/build.gradle
 ;; :repositories "https://repo.osgeo.org/repository/release/"
