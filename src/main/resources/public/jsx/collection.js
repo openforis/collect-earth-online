@@ -226,11 +226,7 @@ class Collection extends React.Component {
             .map(control => mercator.currentMap.removeControl(control));
         this.setState({
             currentImagery: this.getImageryById(newBaseMapSource),
-        }, () => {
-            if (this.state.currentImagery.sourceConfig.type.includes("MapBox")) {
-                this.setImageryAttribution("");
-            }
-        });
+        }, () => this.setImageryAttribution(""));
     }
 
     updateMapImagery = () => mercator.setVisibleLayer(this.state.mapConfig, this.state.currentImagery.id);
@@ -983,13 +979,11 @@ class Collection extends React.Component {
                         <PlotInformation extraPlotInfo={this.state.currentPlot.extraPlotInfo}/>
                     }
                     <ImageryOptions
-                        baseMapSource={this.state.currentImagery.id}
+                        currentImageryId={this.state.currentImagery.id}
                         setBaseMapSource={this.setBaseMapSource}
                         sourceConfig={this.state.currentImagery.sourceConfig}
                         mapConfig={this.state.mapConfig}
                         currentProject={this.state.currentProject}
-                        highlightSamplesByQuestion={this.highlightSamplesByQuestion}
-                        selectedQuestion={this.state.selectedQuestion}
                         setImageryAttribution={this.setImageryAttribution}
                         setImageryAttributes={this.setImageryAttributes}
                         imageryList={this.state.imageryList}
@@ -1349,6 +1343,14 @@ class ImageryOptions extends React.Component {
 
     render() {
         const { props } = this;
+        const commonProps = {
+            mapConfig: props.mapConfig,
+            currentImageryId: props.currentImageryId,
+            sourceConfig: props.sourceConfig,
+            setImageryAttribution: props.setImageryAttribution,
+            setImageryAttributes: props.setImageryAttributes,
+        };
+
         return (
             <div className="justify-content-center text-center">
                 <CollapsibleTitle
@@ -1364,7 +1366,7 @@ class ImageryOptions extends React.Component {
                             id="base-map-source"
                             name="base-map-source"
                             size="1"
-                            value={props.baseMapSource || ""}
+                            value={props.currentImageryId || ""}
                             onChange={e => props.setBaseMapSource(parseInt(e.target.value))}
                         >
                             {
@@ -1382,75 +1384,45 @@ class ImageryOptions extends React.Component {
                         </select>
                         {props.sourceConfig.type === "Planet" &&
                             <PlanetMenus
-                                mapConfig={props.mapConfig}
+                                {...commonProps}
                                 currentProjectBoundary={props.currentProject.boundary}
-                                currentImageryId={props.baseMapSource}
-                                sourceConfig={props.sourceConfig}
-                                setImageryAttribution={props.setImageryAttribution}
-                                setImageryAttributes={props.setImageryAttributes}
                             />
                         }
                         {props.sourceConfig.type === "PlanetDaily" &&
                             <PlanetDailyMenus
-                                mapConfig={props.mapConfig}
-                                currentProject={props.currentProject}
-                                currentImageryId={props.baseMapSource}
-                                sourceConfig={props.sourceConfig}
-                                setImageryAttribution={props.setImageryAttribution}
-                                setImageryAttributes={props.setImageryAttributes}
+                                {...commonProps}
                                 currentPlot={props.currentPlot}
-                                highlightSamplesByQuestion={props.highlightSamplesByQuestion}
-                                selectedQuestion={props.selectedQuestion}
+                                currentProject={props.currentProject}
                             />
                         }
                         {props.sourceConfig.type === "SecureWatch" &&
                             <SecureWatchMenus
-                                mapConfig={props.mapConfig}
-                                currentImageryId={props.baseMapSource}
+                                {...commonProps}
                                 currentPlot={props.currentPlot}
-                                sourceConfig={props.sourceConfig}
-                                setImageryAttribution={props.setImageryAttribution}
-                                setImageryAttributes={props.setImageryAttributes}
                             />
                         }
                         {props.sourceConfig.type === "Sentinel1" &&
                             <SentinelMenus
-                                mapConfig={props.mapConfig}
+                                {...commonProps}
                                 currentProjectBoundary={props.currentProject.boundary}
-                                currentImageryId={props.baseMapSource}
-                                sourceConfig={props.sourceConfig}
-                                setImageryAttribution={props.setImageryAttribution}
-                                setImageryAttributes={props.setImageryAttributes}
                             />
                         }
                         {props.sourceConfig.type === "Sentinel2" &&
                             <SentinelMenus
-                                mapConfig={props.mapConfig}
+                                {...commonProps}
                                 currentProjectBoundary={props.currentProject.boundary}
-                                currentImageryId={props.baseMapSource}
-                                sourceConfig={props.sourceConfig}
-                                setImageryAttribution={props.setImageryAttribution}
-                                setImageryAttributes={props.setImageryAttributes}
                             />
                         }
                         {props.sourceConfig.type === "GEEImage" &&
                             <GEEImageMenus
-                                mapConfig={props.mapConfig}
+                                {...commonProps}
                                 currentProjectBoundary={props.currentProject.boundary}
-                                sourceConfig={props.sourceConfig}
-                                currentImageryId={props.baseMapSource}
-                                setImageryAttribution={props.setImageryAttribution}
-                                setImageryAttributes={props.setImageryAttributes}
                             />
                         }
                         {props.sourceConfig.type === "GEEImageCollection" &&
                             <GEEImageCollectionMenus
-                                mapConfig={props.mapConfig}
+                                {...commonProps}
                                 currentProjectBoundary={props.currentProject.boundary}
-                                currentImageryId={props.baseMapSource}
-                                sourceConfig={props.sourceConfig}
-                                setImageryAttribution={props.setImageryAttribution}
-                                setImageryAttributes={props.setImageryAttributes}
                             />
                         }
                     </Fragment>
