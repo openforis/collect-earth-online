@@ -226,7 +226,13 @@ class Collection extends React.Component {
             .map(control => mercator.currentMap.removeControl(control));
         this.setState({
             currentImagery: this.getImageryById(newBaseMapSource),
-        }, () => this.setImageryAttribution(""));
+        }, () => {
+            // all other than having separate menu components
+            if (!["Planet", "PlanetDaily", "SecureWatch", "Sentinel1", "Sentinel2", "GEEImage", "GEEImageCollection"]
+                .includes(this.state.currentImagery.sourceConfig.type)) {
+                this.setImageryAttribution("");
+            }
+        });
     }
 
     updateMapImagery = () => mercator.setVisibleLayer(this.state.mapConfig, this.state.currentImagery.id);
