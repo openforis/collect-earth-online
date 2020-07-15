@@ -811,7 +811,12 @@ class NewImagery extends React.Component {
 
 function Imagery({ isAdmin, title, selectEditImagery, deleteImagery, isInstitutionImage }) {
     return (
-        <div className="row mb-1">
+        <div className="row mb-1 d-flex">
+            <div className="col-2 pr-0">
+                <div className="btn btn-sm btn-outline-lightgreen btn-block">
+                    {isInstitutionImage ? "Institution" : "Public"}
+                </div>
+            </div>
             <div className="col overflow-hidden">
                 <button
                     type="button"
