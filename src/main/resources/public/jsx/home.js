@@ -178,11 +178,10 @@ class MapPanel extends React.Component {
             >
                 <div className="row no-gutters ceo-map-toggle">
                     <div
-                        id="togbutton"
-                        className="button col-xl-1 bg-lightgray d-none d-xl-block"
+                        className="bg-lightgray hidden-lg-down"
+                        style={{ height: "calc(100vh - 60px)", width: "2rem", maxWidth: "2rem", fontSize: "2rem", display: "flex", alignItems: "center", justifyContent: "center" }}
                         onClick={this.props.toggleSidebar}
                     >
-                        <div className="empty-div" style={{ height: "50vh" }}/>
                         <div className="my-auto no-gutters text-center">
                             <div className={this.props.showSidePanel ? "" : "d-none"}>
                                 <UnicodeIcon icon="leftCaret"/>
@@ -192,9 +191,7 @@ class MapPanel extends React.Component {
                             </div>
                         </div>
                     </div>
-                    <div className="col-xl-11 mr-0 ml-0 bg-lightgray">
-                        <div id="home-map-pane" style={{ width: "100%", height: "calc(100vh - 61px)", position: "fixed" }}></div>
-                    </div>
+                    <div id="home-map-pane" style={{ height: "calc(100vh - 60px)", width: "100%", marginLeft: "2rem", position: "fixed" }}></div>
                 </div>
                 <ProjectPopup
                     mapConfig={this.state.mapConfig}
