@@ -15,33 +15,30 @@ export class PlanetMenus extends React.Component {
         this.setState({
             year: this.props.sourceConfig.year,
             month: this.props.sourceConfig.month,
-        }, () => {
-            this.updateImageryAttributes();
-            this.props.setImageryAttribution(" | Monthly Mosaic of "
-                + this.state.year + ", " + monthlyMapping[this.state.month]);
-        });
+        }, () => this.updatePlanetLayer());
     }
 
-    updateImageryAttributes = () =>
+    updateImageryInformation = () => {
+        this.props.setImageryAttribution(" | Monthly Mosaic of "
+            + this.state.year + ", " + monthlyMapping[this.state.month]);
         this.props.setImageryAttributes({
             imageryYearPlanet: this.state.year,
             imageryMonthPlanet: this.state.month,
         });
+    };
 
     setStateAndUpdate = (key, newValue) =>
         this.setState({ [key]: newValue }, () => this.updatePlanetLayer());
 
     updatePlanetLayer = () => {
-        const { year, month } = this.state;
-        this.props.setImageryAttribution(" | Monthly Mosaic of " + year + ", " + monthlyMapping[month]);
-        this.updateImageryAttributes();
+        this.updateImageryInformation();
         mercator.updateLayerSource(this.props.mapConfig,
                                    this.props.currentImageryId,
                                    this.props.currentProjectBoundary,
                                    sourceConfig => ({
                                        ...sourceConfig,
-                                       month: month < 10 ? "0" + month : month,
-                                       year: year,
+                                       month: (this.state.month.length === 1 ? "0" : "") + this.state.month,
+                                       year: this.state.year,
                                    }),
                                    this);
     };
@@ -100,11 +97,13 @@ export class PlanetDailyMenus extends React.Component {
         }
     }
 
-    updateImageryAttributes = () =>
+    updateImageryInformation = () => {
+        this.props.setImageryAttribution(" | " + this.state.startDate + " to " + this.state.endDate);
         this.props.setImageryAttributes({
             imageryStartDatePlanetDaily: this.state.startDate,
             imageryEndDatePlanetDaily: this.state.endDate,
         });
+    };
 
     setStateAndUpdate = (key, newValue) =>
         this.setState({ [key]: newValue }, () => this.updatePlanetDailyLayer());
@@ -114,8 +113,7 @@ export class PlanetDailyMenus extends React.Component {
         if (new Date(startDate) > new Date(endDate)) {
             alert("Start date must be smaller than the end date.");
         } else {
-            this.updateImageryAttributes();
-            this.props.setImageryAttribution(" | " + startDate + " to " + endDate);
+            this.updateImageryInformation();
             mercator.currentMap.getControls().getArray()
                 .filter(control => control.element.classList.contains("planet-layer-switcher"))
                 .map(control => mercator.currentMap.removeControl(control));
@@ -182,18 +180,24 @@ export class SecureWatchMenus extends React.Component {
         }
     }
 
-    updateSingleLayer = (featureId, imagerySecureWatchDate, imagerySecureWatchCloudCover) => {
+    updateImageryInformation = (featureId, imageryDate, imageryCloudCover) => {
+        this.props.setImageryAttribution((featureId
+            ? " | " + imageryDate
+            + " (" + (imageryCloudCover * 100).toFixed(2) + "% cloudy)"
+            : " | No available layers"));
+        if (featureId) {
+            this.props.setImageryAttributes({
+                imagerySecureWatchDate: imageryDate,
+                imagerySecureWatchCloudCover: imageryCloudCover,
+            });
+        }
+    };
+
+    updateSingleLayer = (featureId, imageryDate, imageryCloudCover) => {
         mercator.updateLayerWmsParams(this.props.mapConfig, this.props.currentImageryId, {
             COVERAGE_CQL_FILTER: "featureId='" + featureId + "'",
         });
-        this.props.setImageryAttribution((featureId
-            ? " | " + imagerySecureWatchDate
-                + " (" + (imagerySecureWatchCloudCover * 100).toFixed(2) + "% cloudy)"
-            : " | No available layers"));
-        this.props.setImageryAttributes({
-            imagerySecureWatchDate: imagerySecureWatchDate,
-            imagerySecureWatchCloudCover: imagerySecureWatchCloudCover,
-        });
+        this.updateImageryInformation(featureId, imageryDate, imageryCloudCover);
     };
 
     onChangeSingleLayer = (eventTarget) =>
@@ -329,14 +333,12 @@ export class SentinelMenus extends React.Component {
             year: this.props.sourceConfig.year,
             month: this.props.sourceConfig.month,
             bandCombination: this.props.sourceConfig.bandCombination,
-        }, () => {
-            this.updateImageryAttributes();
-            this.props.setImageryAttribution(" | Monthly Mosaic of " +
-                this.state.year + ", " + monthlyMapping[this.state.month]);
-        });
+        }, () => this.updateSentinelLayer());
     }
 
-    updateImageryAttributes = () => {
+    updateImageryInformation = () => {
+        this.props.setImageryAttribution(" | Monthly Mosaic of " +
+            this.state.year + ", " + monthlyMapping[this.state.month]);
         this.props.setImageryAttributes({
             [this.props.sourceConfig.type === "Sentinel1"
                 ? "sentinel1MosaicYearMonth"
@@ -348,17 +350,15 @@ export class SentinelMenus extends React.Component {
         this.setState({ [key]: newValue }, () => this.updateSentinelLayer());
 
     updateSentinelLayer = () => {
-        const { year, month, bandCombination } = this.state;
-        this.props.setImageryAttribution(" | Monthly Mosaic of " + year + ", " + monthlyMapping[month]);
-        this.updateImageryAttributes();
+        this.updateImageryInformation();
         mercator.updateLayerSource(this.props.mapConfig,
                                    this.props.currentImageryId,
                                    this.props.currentProjectBoundary,
                                    sourceConfig => ({
                                        ...sourceConfig,
-                                       month: month,
-                                       year: year,
-                                       bandCombination: bandCombination,
+                                       month: this.state.month,
+                                       year: this.state.year,
+                                       bandCombination: this.state.bandCombination,
                                    }),
                                    this);
     };
@@ -437,20 +437,18 @@ export class GEEImageMenus extends React.Component {
     componentDidMount () {
         this.setState({
             visParams: this.props.sourceConfig.imageVisParams,
-        }, () => {
-            this.updateImageryAttributes();
-            this.props.setImageryAttribution(" | " + this.state.visParams);
-        });
+        }, () => this.updateGEEImagery());
     }
 
-    updateImageryAttributes = () =>
+    updateImageryInformation = () => {
+        this.props.setImageryAttribution(" | " + this.state.visParams);
         this.props.setImageryAttributes({
             geeImageryAssetId: this.props.sourceConfig.imageId,
         });
+    };
 
     updateGEEImagery = () => {
-        this.updateImageryAttributes();
-        this.props.setImageryAttribution(" | " + this.state.visParams);
+        this.updateImageryInformation();
         mercator.updateLayerSource(
             this.props.mapConfig,
             this.props.currentImageryId,
@@ -506,27 +504,25 @@ export class GEEImageCollectionMenus extends React.Component {
             startDate: this.props.sourceConfig.startDate,
             endDate: this.props.sourceConfig.endDate,
             visParams: this.props.sourceConfig.collectionVisParams,
-        }, () => {
-            this.updateImageryAttributes();
-            this.props.setImageryAttribution(" | " + this.state.startDate + " to " +
-                this.state.endDate + " | " + this.state.visParams);
-        });
+        }, () => this.updateGEEImageCollection());
     }
 
-    updateImageryAttributes = () =>
+    updateImageryInformation = () => {
+        this.props.setImageryAttribution(" | " + this.state.startDate + " to " +
+            this.state.endDate + " | " + this.state.visParams);
         this.props.setImageryAttributes({
             geeImageCollectionAssetId: this.props.sourceConfig.collectionId,
             geeImageCollectionStartDate: this.state.startDate,
             geeImageCollectionEndDate: this.state.endDate,
         });
+    };
 
     updateGEEImageCollection = () => {
         const { startDate, endDate } = this.state;
         if (new Date(startDate) > new Date(endDate)) {
             alert("Start date must be smaller than the end date.");
         } else {
-            this.props.setImageryAttribution(" | " + startDate + " to " +
-                endDate + " | " + this.state.visParams);
+            this.updateImageryInformation();
             mercator.updateLayerSource(
                 this.props.mapConfig,
                 this.props.currentImageryId,
@@ -534,8 +530,8 @@ export class GEEImageCollectionMenus extends React.Component {
                 sourceConfig => ({
                     ...sourceConfig,
                     collectionVisParams: this.state.visParams,
-                    startDate: this.state.startDate,
-                    endDate: this.state.endDate,
+                    startDate: startDate,
+                    endDate: endDate,
                 }),
                 this
             );
