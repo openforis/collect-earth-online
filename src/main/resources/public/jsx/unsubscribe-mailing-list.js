@@ -10,6 +10,10 @@ class UnsubscribeMailingList extends React.Component {
         };
     }
 
+    componentDidMount() {
+        this.setState({ email: this.props.userName });
+    }
+
     submitUnsubscribe = () => {
         if (confirm("Are you sure you want to unsubscribe from mailing list?")) {
             fetch("/unsubscribe-mailing-list", {
@@ -31,16 +35,16 @@ class UnsubscribeMailingList extends React.Component {
 
     render() {
         return (
-            <div className="container absolute-center">
-                <div className="row justify-content-center">
-                    <div className="col-lg-4 col-md-6 col-sm-10 pb-3" id="login">
+            <div className="d-flex justify-content-center">
+                <div className="card card-lightgreen">
+                    <div className="card-header card-header-lightgreen">Unsubscribe from Mailing List</div>
+                    <div className="card-body">
                         <form
                             onSubmit={e => {
                                 e.preventDefault();
                                 this.submitUnsubscribe();
                             }}
                         >
-                            <h2 className="header">Unsubscribe from Mailing List</h2>
                             <div className="form-group">
                                 <label htmlFor="email">Email address</label>
                                 <input
@@ -64,7 +68,7 @@ class UnsubscribeMailingList extends React.Component {
 export function renderUnsubscribeMailingListPage(args) {
     ReactDOM.render(
         <NavigationBar userName={args.userName} userId={args.userId}>
-            <UnsubscribeMailingList />
+            <UnsubscribeMailingList userName={args.userName} />
         </NavigationBar>,
         document.getElementById("unsubscribe-mailing-list")
     );
