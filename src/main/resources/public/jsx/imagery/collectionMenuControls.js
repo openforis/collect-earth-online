@@ -15,7 +15,11 @@ export class PlanetMenus extends React.Component {
         this.setState({
             year: parseInt(this.props.sourceConfig.year),
             month: parseInt(this.props.sourceConfig.month),
-        }, () => this.updatePlanetLayer());
+        }, () => {
+            this.updateImageryAttributes();
+            this.props.setImageryAttribution(" | Monthly Mosaic of "
+                + this.state.year + ", " + monthlyMapping[this.state.month]);
+        });
     }
 
     updateImageryAttributes = () =>
@@ -84,20 +88,13 @@ export class PlanetDailyMenus extends React.Component {
     }
 
     componentDidMount () {
-        this.props.setImageryAttribution(" | " + this.props.sourceConfig.startDate +
-            " to " + this.props.sourceConfig.endDate);
         this.setState({
             startDate: this.props.sourceConfig.startDate,
             endDate: this.props.sourceConfig.endDate,
-        }, () => this.updateImageryAttributes());
+        }, () => this.updatePlanetDailyLayer());
     }
 
     componentDidUpdate (prevProps, prevState) {
-        if (this.state.startDate !== prevState.startDate
-            || this.state.endDate !== prevState.endDate) {
-            this.updatePlanetDailyLayer();
-        }
-
         if (this.props.currentPlot && this.props.currentPlot !== prevProps.currentPlot) {
             this.updatePlanetDailyLayer();
         }
@@ -109,11 +106,16 @@ export class PlanetDailyMenus extends React.Component {
             imageryEndDatePlanetDaily: this.state.endDate,
         });
 
+    setStateAndUpdate = (key, newValue) =>
+        this.setState({ [key]: newValue }, () => this.updatePlanetDailyLayer());
+
     updatePlanetDailyLayer = () => {
         const { startDate, endDate } = this.state;
         if (new Date(startDate) > new Date(endDate)) {
             alert("Start date must be smaller than the end date.");
         } else {
+            this.updateImageryAttributes();
+            this.props.setImageryAttribution(" | " + startDate + " to " + endDate);
             mercator.currentMap.getControls().getArray()
                 .filter(control => control.element.classList.contains("planet-layer-switcher"))
                 .map(control => mercator.currentMap.removeControl(control));
@@ -132,16 +134,6 @@ export class PlanetDailyMenus extends React.Component {
         }
     };
 
-    setStartDate = (newDate) => {
-        this.props.setImageryAttribution(" | " + newDate + " to " + this.state.endDate);
-        this.setState({ startDate: newDate }, () => this.updateImageryAttributes());
-    };
-
-    setEndDate = (newDate) => {
-        this.props.setImageryAttribution(" | " + this.state.startDate + " to " + newDate);
-        this.setState({ endDate: newDate }, () => this.updateImageryAttributes());
-    };
-
     render () {
         return (
             <div className="PlanetsDailyMenu my-2">
@@ -152,9 +144,8 @@ export class PlanetDailyMenus extends React.Component {
                         id="planetDailyStartDate"
                         value={this.state.startDate}
                         max={new Date().toJSON().split("T")[0]}
-                        min="2010-01-01"
                         style={{ width: "100%" }}
-                        onChange={e => this.setStartDate(e.target.value)}
+                        onChange={e => this.setStateAndUpdate("startDate", e.target.value)}
                     />
                 </div>
                 <label>End Date</label>
@@ -164,9 +155,8 @@ export class PlanetDailyMenus extends React.Component {
                         id="planetDailyEndDate"
                         value={this.state.endDate}
                         max={new Date().toJSON().split("T")[0]}
-                        min="2010-01-01"
                         style={{ width: "100%" }}
-                        onChange={e => this.setEndDate(e.target.value)}
+                        onChange={e => this.setStateAndUpdate("endDate", e.target.value)}
                     />
                 </div>
             </div>
@@ -337,7 +327,11 @@ export class SentinelMenus extends React.Component {
             year: parseInt(this.props.sourceConfig.year),
             month: parseInt(this.props.sourceConfig.month),
             bandCombination: this.props.sourceConfig.bandCombination,
-        }, () => this.updateSentinelLayer());
+        }, () => {
+            this.updateImageryAttributes();
+            this.props.setImageryAttribution(" | Monthly Mosaic of " +
+                this.state.year + ", " + monthlyMapping[this.state.month]);
+        });
     }
 
     updateImageryAttributes = () => {
