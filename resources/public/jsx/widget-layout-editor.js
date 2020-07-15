@@ -2,8 +2,8 @@ import React from "react";
 import ReactDOM from "react-dom";
 import _ from "lodash";
 import RGL, { WidthProvider } from "react-grid-layout";
-import "/react-grid-layout/css/styles.css";
-import "/react-resizable/css/styles.css";
+import "react-grid-layout/css/styles.css";
+import "react-resizable/css/styles.css";
 const ReactGridLayout = WidthProvider(RGL);
 import { GeoDashNavigationBar } from "./components/PageComponents";
 
