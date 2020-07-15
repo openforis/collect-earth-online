@@ -94,7 +94,7 @@ function ProjectList(props) {
     );
 }
 
-export function renderInstitutionDashboardPage(args) {
+export function pageInit(args) {
     ReactDOM.render(
         <NavigationBar userName={args.userName} userId={args.userId}>
             <InstitutionDashboard
@@ -103,6 +103,6 @@ export function renderInstitutionDashboardPage(args) {
                 institutionId={args.institutionId}
             />
         </NavigationBar>,
-        document.getElementById("institution-dashboard")
+        document.getElementById("app")
     );
 }

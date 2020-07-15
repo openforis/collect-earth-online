@@ -1078,7 +1078,7 @@ function LoadingModal() {
     );
 }
 
-export function renderCreateProjectPage(args) {
+export function pageInit(args) {
     ReactDOM.render(
         <NavigationBar userName={args.userName} userId={args.userId}>
             <Project
@@ -1087,6 +1087,6 @@ export function renderCreateProjectPage(args) {
                 institutionId={args.institutionId}
             />
         </NavigationBar>,
-        document.getElementById("project")
+        document.getElementById("app")
     );
 }

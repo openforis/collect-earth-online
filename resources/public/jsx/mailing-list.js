@@ -76,11 +76,11 @@ class MailingList extends React.Component {
     }
 }
 
-export function renderMailingListPage(args) {
+export function pageInit(args) {
     ReactDOM.render(
         <NavigationBar userName={args.userName} userId={args.userId}>
             <MailingList />
         </NavigationBar>,
-        document.getElementById("mailing-list")
+        document.getElementById("app")
     );
 }

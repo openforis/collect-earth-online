@@ -2,6 +2,8 @@ import React from "react";
 import ReactDOM from "react-dom";
 import _ from "lodash";
 import RGL, { WidthProvider } from "react-grid-layout";
+import "/react-grid-layout/css/styles.css";
+import "/react-resizable/css/styles.css";
 const ReactGridLayout = WidthProvider(RGL);
 import { getGatewayPath } from "./utils/geodashUtils";
 import { GeoDashNavigationBar } from "./components/PageComponents";
@@ -1955,7 +1957,7 @@ class WidgetLayoutEditor extends React.PureComponent {
     }
 }
 
-export function renderWidgetEditorPage(args) {
+export function pageInit(args) {
     ReactDOM.render(
         <GeoDashNavigationBar
             userName={args.userName}
@@ -1969,6 +1971,6 @@ export function renderWidgetEditorPage(args) {
             }
         />
         ,
-        document.getElementById("content")
+        document.getElementById("app")
     );
 }
