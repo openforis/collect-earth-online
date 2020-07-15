@@ -2,7 +2,7 @@ import React, { Fragment } from "react";
 import ReactDOM from "react-dom";
 
 import InstitutionEditor from "./components/InstitutionEditor";
-import { NavigationBar } from "./components/PageComponents";
+import { NavigationBar, SafeImage } from "./components/PageComponents";
 import { sortAlphabetically, capitalizeFirst, UnicodeIcon } from "./utils/textUtils";
 import { imageryOptions } from "./imagery/imageryOptions";
 
@@ -255,11 +255,14 @@ class InstitutionDescription extends React.Component {
                     <div className="row mb-4">
                         <div className="col-md-3" id="institution-logo-container">
                             <a href={this.state.institutionDetails.url}>
-                                <img
-                                    className="img-fluid"
-                                    src={documentRoot + "/" + this.state.institutionDetails.logo}
-                                    alt="logo"
-                                />
+                                {this.state.institutionDetails.id !== "-1" &&
+                                    <SafeImage
+                                        className="img-fluid"
+                                        src={documentRoot + "/" + this.state.institutionDetails.logo}
+                                        fallbackSrc={"/img/ceo-logo.png"}
+                                        alt={"logo"}
+                                    />
+                                }
                             </a>
                         </div>
                         <div className="col-md-9">
