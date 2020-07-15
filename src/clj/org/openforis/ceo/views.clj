@@ -23,8 +23,6 @@
                              "/js/html5shiv.js" ; TODO remove support for IE 9
                              "/js/bootstrap.min.js"]))]) ; TODO remove bootstrap.min.js as a dependency. Only used in header, find a react method.
 
-
-
 (defn getPage [coll]
   (if (= 1 (count coll)) (first coll) (second coll)))
 
