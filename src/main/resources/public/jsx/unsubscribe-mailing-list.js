@@ -6,8 +6,12 @@ class UnsubscribeMailingList extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
-            email: props.userName,
+            email: "",
         };
+    }
+
+    componentDidMount() {
+        this.setState({ email: this.props.userName });
     }
 
     submitUnsubscribe = () => {
