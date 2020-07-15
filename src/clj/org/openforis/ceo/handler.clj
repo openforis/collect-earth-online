@@ -2,22 +2,24 @@
   (:require [clojure.data.json :as json]
             [clojure.edn :as edn]
             [clojure.string :as str]
-            [org.openforis.ceo.database :refer [sql-handler]]
-            [org.openforis.ceo.logging :refer [log-str]]
-            [org.openforis.ceo.remote-api :refer [clj-handler]]
-            [org.openforis.ceo.views :refer [render-page not-found-page data-response]]
             [ring.middleware.absolute-redirects :refer [wrap-absolute-redirects]]
-            [ring.middleware.content-type :refer [wrap-content-type]]
-            [ring.middleware.default-charset :refer [wrap-default-charset]]
-            [ring.middleware.keyword-params :refer [wrap-keyword-params]]
-            [ring.middleware.multipart-params :refer [wrap-multipart-params]]
-            [ring.middleware.nested-params :refer [wrap-nested-params]]
-            [ring.middleware.not-modified :refer [wrap-not-modified]]
-            [ring.middleware.params :refer [wrap-params]]
-            [ring.middleware.reload :refer [wrap-reload]]
-            [ring.middleware.resource :refer [wrap-resource]]
-            [ring.middleware.x-headers :refer [wrap-frame-options wrap-content-type-options wrap-xss-protection]]
-            [ring.util.codec :refer [url-decode]]))
+            [ring.middleware.content-type       :refer [wrap-content-type]]
+            [ring.middleware.default-charset    :refer [wrap-default-charset]]
+            [ring.middleware.gzip               :refer [wrap-gzip]]
+            [ring.middleware.keyword-params     :refer [wrap-keyword-params]]
+            [ring.middleware.nested-params      :refer [wrap-nested-params]]
+            [ring.middleware.not-modified       :refer [wrap-not-modified]]
+            [ring.middleware.multipart-params   :refer [wrap-multipart-params]]
+            [ring.middleware.params             :refer [wrap-params]]
+            [ring.middleware.resource           :refer [wrap-resource]]
+            [ring.middleware.reload             :refer [wrap-reload]]
+            [ring.middleware.ssl                :refer [wrap-ssl-redirect]]
+            [ring.middleware.x-headers          :refer [wrap-frame-options wrap-content-type-options wrap-xss-protection]]
+            [ring.util.codec                    :refer [url-decode]]
+            [org.openforis.ceo.database   :refer [sql-handler]]
+            [org.openforis.ceo.logging    :refer [log-str]]
+            [org.openforis.ceo.remote-api :refer [clj-handler]]
+            [org.openforis.ceo.views      :refer [render-page not-found-page data-response]]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Routing Handler
@@ -110,27 +112,36 @@
           (log-str "Error: " cause)
           (data-response (or status 500) cause))))))
 
+(defn wrap-common [handler]
+  (-> handler
+      wrap-request-logging
+      wrap-keyword-params
+      wrap-edn-params
+      wrap-nested-params
+      wrap-multipart-params
+      wrap-params
+      wrap-absolute-redirects
+      (wrap-resource "public")
+      wrap-content-type
+      (wrap-default-charset "utf-8")
+      wrap-not-modified
+      (wrap-xss-protection true {:mode :block})
+      (wrap-frame-options :sameorigin)
+      (wrap-content-type-options :nosniff)
+      wrap-response-logging
+      wrap-gzip
+      wrap-exceptions))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Handler Stacks
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (def production-app (-> routing-handler
-                        wrap-request-logging
-                        wrap-keyword-params
-                        wrap-edn-params
-                        wrap-nested-params
-                        wrap-multipart-params
-                        wrap-params
-                        wrap-absolute-redirects
-                        (wrap-resource "public")
-                        wrap-content-type
-                        (wrap-default-charset "utf-8")
-                        wrap-not-modified
-                        (wrap-xss-protection true {:mode :block})
-                        (wrap-frame-options :sameorigin)
-                        (wrap-content-type-options :nosniff)
-                        wrap-response-logging
-                        wrap-exceptions))
+                        wrap-ssl-redirect
+                        wrap-common))
 
-(def development-app (-> production-app
+;; TODO figwheel adds a good bit of its own middleware.
+;;      The current middleware in wrap-common are mostly over written by figwheel.
+(def development-app (-> routing-handler
+                         wrap-common
                          wrap-reload))
