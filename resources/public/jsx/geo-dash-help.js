@@ -282,6 +282,6 @@ export function pageInit(args) {
         <NavigationBar userName={args.userName} userId={args.userId}>
             <GeoDashHelp browserLanguage={args.browserLanguage}/>
         </NavigationBar>,
-        document.getElementById("pageInit")
+        document.getElementById("app")
     );
 }
