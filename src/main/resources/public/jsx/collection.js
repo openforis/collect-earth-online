@@ -649,32 +649,20 @@ class Collection extends React.Component {
                             .reduce((sum, num) => sum + parseInt(num), 0);
                         return [sum1, sum2];
                     });
-                    if (surveyRule.questionSetIds1.includes(questionToSet)) {
-                        const invalidSum = sampleSums.find(sums => sums[0] + parseInt(answerText) !== sums[1]);
-                        if (invalidSum) {
-                            return "Matching sums validation failed: Totals of the question sets ["
+                    const invalidSum = sampleSums.find(sums =>
+                        sums[0] + (surveyRule.questionSetIds1.includes(questionToSet.id) ? parseInt(answerText) : 0)
+                        !== sums[1] + (surveyRule.questionSetIds2.includes(questionToSet.id) ? parseInt(answerText) : 0)
+                    );
+                    if (invalidSum) {
+                        return "Matching sums validation failed: Totals of the question sets ["
                                 + surveyRule.questionSetText1.toString()
                                 + "] and ["
                                 + surveyRule.questionSetText2.toString()
-                                + "] do not match. Valid total is "
-                                + (invalidSum[1] - invalidSum[0])
+                                + "] do not match.\n\nValid total is "
+                                + Math.abs(invalidSum[0] - invalidSum[1])
                                 + ".";
-                        } else {
-                            return null;
-                        }
                     } else {
-                        const invalidSum = sampleSums.find(sums => sums[0] !== sums[1] + parseInt(answerText));
-                        if (invalidSum) {
-                            return "Matching sums validation failed: Totals of the question sets ["
-                                + surveyRule.questionSetText1.toString()
-                                + "] and ["
-                                + surveyRule.questionSetText2.toString()
-                                + "] do not match. Valid total is "
-                                + (invalidSum[0] - invalidSum[1])
-                                + ".";
-                        } else {
-                            return null;
-                        }
+                        return null;
                     }
                 } else {
                     return null;
@@ -939,7 +927,6 @@ class Collection extends React.Component {
     render() {
         const plotId = this.state.currentPlot
               && (this.state.currentPlot.plotId ? this.state.currentPlot.plotId : this.state.currentPlot.id);
-        const isFlagged = this.state.currentPlot && this.state.currentPlot.flagged;
         return (
             <div className="row" style={{ height: "-webkit-fill-available" }}>
                 <ImageAnalysisPane
@@ -968,7 +955,8 @@ class Collection extends React.Component {
                     clearAnswers={() => this.resetPlotValues(this.state.currentPlot)}
                     surveyQuestions={this.state.currentProject.surveyQuestions}
                     userName={this.props.userName}
-                    isFlagged={isFlagged}
+                    isFlagged={this.state.currentPlot && this.state.currentPlot.flagged}
+                    isAnalyzed={this.state.currentPlot && this.state.currentPlot.analyses > 0}
                     toggleQuitModal={this.toggleQuitModal}
                 >
                     <PlotNavigation
@@ -991,7 +979,9 @@ class Collection extends React.Component {
                         currentPlot={this.state.currentPlot}
                         currentProject={this.state.currentProject}
                     />
-                    {this.state.currentPlot && <PlotInformation extraPlotInfo={this.state.currentPlot.extraPlotInfo}/>}
+                    {this.state.currentPlot && this.state.currentProject.projectOptions.showPlotInformation &&
+                        <PlotInformation extraPlotInfo={this.state.currentPlot.extraPlotInfo}/>
+                    }
                     <ImageryOptions
                         baseMapSource={this.state.currentImagery.id}
                         setBaseMapSource={this.setBaseMapSource}
@@ -1101,7 +1091,7 @@ function SideBar(props) {
                     className="btn btn-outline-danger btn-sm col"
                     type="button"
                     name="save-values"
-                    value="Clear All"
+                    value={props.isAnalyzed ? "Clear Changes" : "Clear All"}
                     onClick={props.clearAnswers}
                 />
             </div>

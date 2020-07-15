@@ -10,6 +10,7 @@ class Register extends React.Component {
             email: "",
             password: "",
             passwordConfirmation: "",
+            onMailingList: true,
         };
     }
 
@@ -28,13 +29,10 @@ class Register extends React.Component {
                     alert("You have successfully created an accout.");
                     window.location = "/home";
                 } else {
-                    return Promise.reject(data[1]);
+                    alert(data[1]);
                 }
             })
-            .catch(message => {
-                alert(message);
-                console.log(message);
-            });
+            .catch(err => console.log(err));
     };
 
     render() {
@@ -84,6 +82,18 @@ class Register extends React.Component {
                                     type="password"
                                     onChange={e => this.setState({ passwordConfirmation: e.target.value })}
                                 />
+                            </div>
+                            <div className="form-check mb-3">
+                                <input
+                                    id="on-mailing-list"
+                                    type="checkbox"
+                                    className="form-check-input"
+                                    checked={this.state.onMailingList}
+                                    onChange={() => this.setState({ onMailingList: !this.state.onMailingList })}
+                                />
+                                <label className="form-check-label" htmlFor="on-mailing-list">
+                                    Subscribe To Mailinglist
+                                </label>
                             </div>
                             <button className="btn bg-lightgreen float-right mb-2" type="submit">
                                 Register

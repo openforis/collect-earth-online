@@ -504,7 +504,7 @@ class NewAnswerDesigner extends React.Component {
                     onChange={e => this.setState({ selectedColor: e.target.value })}
                 />
                 <input
-                    type="text"
+                    type={this.props.surveyQuestion.dataType === "number" ? "number" : "text"}
                     className="value-name"
                     autoComplete="off"
                     value={this.state.newAnswerText}

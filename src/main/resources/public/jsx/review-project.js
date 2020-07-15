@@ -277,17 +277,6 @@ class Project extends React.Component {
     setProjectDetail = (key, newValue) =>
         this.setState({ projectDetails: { ...this.state.projectDetails, [key]: newValue }});
 
-    onShowGEEScriptClick = () =>
-        this.setState({
-            projectDetails: {
-                ...this.state.projectDetails,
-                projectOptions: {
-                    ...this.state.projectDetails.projectOptions,
-                    showGEEScript: !this.state.projectDetails.projectOptions.showGEEScript,
-                },
-            },
-        });
-
     projectNotFound = (projectId) => (
         <SectionBlock title="Project Information">
             <h3>Project {projectId} not found.</h3>
@@ -308,7 +297,6 @@ class Project extends React.Component {
                             imageryList={this.state.imageryList}
                             projectDetails={this.state.projectDetails}
                             setProjectDetail={this.setProjectDetail}
-                            onShowGEEScriptClick={this.onShowGEEScriptClick}
                             projectImageryList={this.state.projectImageryList}
                             setProjectImageryList={this.setProjectImageryList}
                         />
@@ -487,7 +475,6 @@ function ProjectDesignReview({
     coordinates,
     imageryList,
     setProjectDetail,
-    onShowGEEScriptClick,
     projectImageryList,
     setProjectImageryList,
 }) {
@@ -508,8 +495,8 @@ function ProjectDesignReview({
                 setProjectImageryList={setProjectImageryList}
             />
             <ProjectOptions
-                showGEEScript={projectDetails.projectOptions.showGEEScript}
-                onShowGEEScriptClick={onShowGEEScriptClick}
+                projectOptions={projectDetails.projectOptions}
+                setProjectDetail={setProjectDetail}
             />
             <PlotReview projectDetails={projectDetails}/>
             <SampleReview projectDetails={projectDetails}/>

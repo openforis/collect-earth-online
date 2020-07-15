@@ -444,6 +444,7 @@ class NewImagery extends React.Component {
             newImageryAttribution: "",
             selectedType: 0,
             newImageryParams: {},
+            addToAllProjects: false,
         };
     }
 
@@ -505,6 +506,7 @@ class NewImagery extends React.Component {
                           imageryId: this.props.imageryToEdit.id,
                           imageryTitle: this.state.newImageryTitle,
                           imageryAttribution: this.state.newImageryAttribution,
+                          addToAllProjects: this.state.addToAllProjects,
                           sourceConfig: sourceConfig,
                       }),
                   }
@@ -741,7 +743,7 @@ class NewImagery extends React.Component {
     render() {
         const isNewImagery = this.props.imageryToEdit.id === -1;
         return (
-            <div className="mb-2 p-2 border rounded">
+            <div className="mb-2 p-4 border rounded">
                 {/* Selection for imagery type */}
                 <div className="mb-3">
                     <label>Select Type</label>
@@ -769,6 +771,20 @@ class NewImagery extends React.Component {
                 {imageryOptions[this.state.selectedType].params.map(o => this.formTemplate(o))}
                 {/* Action buttons for save and quit */}
                 <div className="btn-group-vertical btn-block">
+                    <div>
+                        <input
+                            id="add-to-all"
+                            className="mr-3"
+                            type="checkbox"
+                            checked={this.state.addToAllProjects}
+                            onChange={() => this.setState({ addToAllProjects: !this.state.addToAllProjects })}
+                        />
+                        <label
+                            htmlFor="add-to-all"
+                        >
+                            Add Imagery to All Projects When Saving
+                        </label>
+                    </div>
                     <button
                         type="button"
                         id="add-imagery-button"

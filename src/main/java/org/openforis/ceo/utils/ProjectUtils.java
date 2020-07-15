@@ -300,8 +300,9 @@ public class ProjectUtils {
     public static Double[][] createRandomPointsInBounds(double left, double bottom, double right, double top, int numPoints) {
         var xRange = right - left;
         var yRange = top - bottom;
-        return Stream.generate(() -> new Double[]{left + Math.random() * xRange,
-                bottom + Math.random() * yRange})
+        var buffer = xRange / 50;
+        return Stream.generate(() -> new Double[]{left + Math.floor(Math.random() * xRange / buffer) * buffer + (buffer / 2),
+                                     bottom + Math.floor(Math.random() * yRange / buffer) * buffer + (buffer / 2)})
                 .limit(numPoints)
                 .map(point -> reprojectPoint(point, 3857, 4326))
                 .toArray(Double[][]::new);
@@ -340,15 +341,13 @@ public class ProjectUtils {
         var right =  plotX + radius;
         var top =    plotY + radius;
         var bottom = plotY - radius;
+        var buffer = radius / 50;
         if (plotShape.equals("circle")) {
-            return Stream.generate(() -> 2.0 * Math.PI * Math.random())
+            return Stream.generate(() -> new Double[]{left + Math.floor(Math.random() * plotSize / buffer) * buffer,
+                                         bottom + Math.floor(Math.random() * plotSize / buffer) * buffer})
+                    .filter(point -> Math.sqrt(Math.pow(point[0] - plotX, 2) + Math.pow(point[1] - plotY, 2)) < (radius - (buffer / 2)))
                     .limit(samplesPerPlot)
-                    .map(offsetAngle -> {
-                        var offsetMagnitude = radius * Math.random();
-                        var xOffset = offsetMagnitude * Math.cos(offsetAngle);
-                        var yOffset = offsetMagnitude * Math.sin(offsetAngle);
-                        return reprojectPoint(new Double[]{plotX + xOffset, plotY + yOffset}, 3857, 4326);
-                    })
+                    .map(point -> reprojectPoint(point, 3857, 4326))
                     .toArray(Double[][]::new);
         } else {
             return createRandomPointsInBounds(left, bottom, right, top, samplesPerPlot);

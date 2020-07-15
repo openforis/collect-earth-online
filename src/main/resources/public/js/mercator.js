@@ -305,7 +305,6 @@ mercator.createSource = function (sourceConfig, imageryId, attribution, document
         });
     } else if (sourceConfig.type === "GeoServer") {
         return new TileWMS({
-            serverType: "geoserver",
             url: documentRoot + "/get-tile",
             params: { LAYERS: "none", imageryId: imageryId },
             attributions: attribution,
@@ -904,12 +903,20 @@ mercator.removeLayerById = function (mapConfig, layerId) {
 // in the passed in GeoJSON string. If reprojectToMap is true,
 // reproject the created geometry from WGS84 to Web Mercator before returning.
 mercator.parseGeoJson = function (geoJson, reprojectToMap) {
-    const format = new GeoJSON();
-    const geometry = format.readGeometry(geoJson);
-    if (reprojectToMap) {
-        return geometry.transform("EPSG:4326", "EPSG:3857");
+    if (geoJson) {
+        try {
+            const format = new GeoJSON();
+            const geometry = format.readGeometry(geoJson);
+            if (reprojectToMap) {
+                return geometry.transform("EPSG:4326", "EPSG:3857");
+            } else {
+                return geometry;
+            }
+        } catch (e) {
+            return new Point([0, 0]);
+        }
     } else {
-        return geometry;
+        return new Point([0, 0]);
     }
 };
 
