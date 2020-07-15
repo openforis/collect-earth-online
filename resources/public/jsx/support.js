@@ -62,11 +62,11 @@ function Support() {
 }
 
 
-export function renderSupportPage(args) {
+export function pageInit(args) {
     ReactDOM.render(
         <NavigationBar userName={args.userName} userId={args.userId}>
             <Support/>
         </NavigationBar>,
-        document.getElementById("support")
+        document.getElementById("app")
     );
 }

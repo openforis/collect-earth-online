@@ -638,7 +638,7 @@ function ProjectManagement(props) {
     );
 }
 
-export function renderReviewProjectPage(args) {
+export function pageInit(args) {
     ReactDOM.render(
         <NavigationBar userName={args.userName} userId={args.userId}>
             <Project
@@ -646,6 +646,6 @@ export function renderReviewProjectPage(args) {
                 projectId={args.projectId}
             />
         </NavigationBar>,
-        document.getElementById("project")
+        document.getElementById("app")
     );
 }
