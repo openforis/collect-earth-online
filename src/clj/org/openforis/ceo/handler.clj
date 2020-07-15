@@ -1,7 +1,7 @@
 (ns org.openforis.ceo.handler
   (:require [clojure.data.json :as json]
-            [clojure.edn :as edn]
-            [clojure.string :as str]
+            [clojure.edn       :as edn]
+            [clojure.string    :as str]
             [ring.middleware.absolute-redirects :refer [wrap-absolute-redirects]]
             [ring.middleware.content-type       :refer [wrap-content-type]]
             [ring.middleware.default-charset    :refer [wrap-default-charset]]
@@ -16,10 +16,10 @@
             [ring.middleware.ssl                :refer [wrap-ssl-redirect]]
             [ring.middleware.x-headers          :refer [wrap-frame-options wrap-content-type-options wrap-xss-protection]]
             [ring.util.codec                    :refer [url-decode]]
-            [org.openforis.ceo.database   :refer [sql-handler]]
-            [org.openforis.ceo.logging    :refer [log-str]]
-            [org.openforis.ceo.remote-api :refer [clj-handler]]
-            [org.openforis.ceo.views      :refer [render-page not-found-page data-response]]))
+            [org.openforis.ceo.database         :refer [sql-handler]]
+            [org.openforis.ceo.logging          :refer [log-str]]
+            [org.openforis.ceo.remote-api       :refer [clj-handler]]
+            [org.openforis.ceo.views            :refer [render-page not-found-page data-response]]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Routing Handler
@@ -140,8 +140,6 @@
                         wrap-ssl-redirect
                         wrap-common))
 
-;; TODO figwheel adds a good bit of its own middleware.
-;;      The current middleware in wrap-common are mostly over written by figwheel.
 (def development-app (-> routing-handler
                          wrap-common
                          wrap-reload))
