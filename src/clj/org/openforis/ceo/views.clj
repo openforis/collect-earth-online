@@ -37,7 +37,7 @@
        (getPage)
        (kebab->camel)))
 
-(def page->js
+(def page->js ; TODO add webpack bundles
   {"geo-dash"             ["js/highcharts.js" ; TODO use the npm version
                            "/js/respond.min.js" ; TODO I dont think this is used. Billy imports a grid manager now instead.
                            "/js/jquery-3.4.1.min.js" ; TODO remove jquery as a dependency
