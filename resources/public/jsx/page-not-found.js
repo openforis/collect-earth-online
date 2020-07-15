@@ -21,11 +21,11 @@ function NotFound() {
 }
 
 
-export function renderPageNotFoundPage(args) {
+export function pageInit(args) {
     ReactDOM.render(
         <NavigationBar userName={args.userName} userId={args.userId}>
             <NotFound/>
         </NavigationBar>,
-        document.getElementById("page-not-found")
+        document.getElementById("app")
     );
 }

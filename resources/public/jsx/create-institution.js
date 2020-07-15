@@ -97,13 +97,13 @@ class CreateInstitution extends React.Component {
     }
 }
 
-export function renderCreateInstitutionPage(args) {
+export function pageInit(args) {
     ReactDOM.render(
         <NavigationBar userName={args.userName} userId={args.userId}>
             <CreateInstitution
                 userId={args.userId === "" ? -1 : parseInt(args.userId)}
             />
         </NavigationBar>,
-        document.getElementById("institution")
+        document.getElementById("app")
     );
 }

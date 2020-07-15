@@ -65,11 +65,11 @@ class UnsubscribeMailingList extends React.Component {
     }
 }
 
-export function renderUnsubscribeMailingListPage(args) {
+export function pageInit(args) {
     ReactDOM.render(
         <NavigationBar userName={args.userName} userId={args.userId}>
             <UnsubscribeMailingList userName={args.userName} />
         </NavigationBar>,
-        document.getElementById("unsubscribe-mailing-list")
+        document.getElementById("app")
     );
 }

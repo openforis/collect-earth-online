@@ -111,11 +111,11 @@ class PasswordReset extends React.Component {
     }
 }
 
-export function renderPasswordResetPage(args) {
+export function pageInit(args) {
     ReactDOM.render(
         <NavigationBar userName={""} userId={-1}>
             <PasswordReset email={args.email} passwordResetKey={args.passwordResetKey} />
         </NavigationBar>,
-        document.getElementById("password-reset")
+        document.getElementById("app")
     );
 }
