@@ -603,7 +603,7 @@ class ProjectPopup extends React.Component {
                                             <td className="small col-6 px-0 my-auto">Name</td>
                                             <td className="small col-6 pr-0">
                                                 <a
-                                                    href={"/collection?projectId=" + feature.get("projectId")}
+                                                    href={`/collection?projectId=${feature.get("projectId")}`}
                                                     className="btn btn-sm btn-block btn-outline-lightgreen"
                                                     style={{
                                                         whiteSpace: "nowrap",

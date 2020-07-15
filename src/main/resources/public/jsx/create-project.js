@@ -154,7 +154,7 @@ class Project extends React.Component {
             .then(data => {
                 const isInteger = n => !isNaN(parseInt(n)) && isFinite(n) && !n.includes(".");
                 if (data[0] && isInteger(data[1].projectId)) {
-                    window.location = "/review-project?projectId=" + data[1].projectId;
+                    window.location = `/review-project?projectId=${data[1].projectId}`;
                     return Promise.resolve();
                 } else {
                     return Promise.reject(data[1].errorMessage);

@@ -220,9 +220,9 @@ mercator.createSource = function (sourceConfig, imageryId, attribution,
                                   callback = null) {
     if (sourceConfig.type === "Planet") {
         return new XYZ({
-            url: "/get-tile?imageryId=" + imageryId
-                 + "&z={z}&x={x}&y={y}&tile={0-3}&month=" + sourceConfig.month
-                 + "&year=" + sourceConfig.year,
+            url: `/get-tile?imageryId=${imageryId}\
+                 &z={z}&x={x}&y={y}&tile={0-3}&month=${sourceConfig.month}\
+                 "&year=${sourceConfig.year}`,
             attributions: attribution,
         });
     } else if (sourceConfig.type === "PlanetDaily") {
