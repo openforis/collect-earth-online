@@ -258,7 +258,7 @@ class InstitutionDescription extends React.Component {
                                 {this.state.institutionDetails.id !== "-1" &&
                                     <SafeImage
                                         className="img-fluid"
-                                        src={documentRoot + "/" + this.state.institutionDetails.logo}
+                                        src={`/${this.state.institutionDetails.logo}`}
                                         fallbackSrc={"/img/ceo-logo.png"}
                                         alt={"logo"}
                                     />
