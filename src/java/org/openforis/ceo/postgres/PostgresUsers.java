@@ -3,8 +3,8 @@
 import static org.openforis.ceo.utils.DatabaseUtils.connect;
 import static org.openforis.ceo.postgres.PostgresInstitutions.getInstitutionById;
 import static org.openforis.ceo.utils.JsonUtils.parseJson;
-import static org.openforis.ceo.utils.Mail.isEmail;
-import static org.openforis.ceo.utils.Mail.sendMail;
+// import static org.openforis.ceo.utils.Mail.isEmail;
+// import static org.openforis.ceo.utils.Mail.sendMail;
 import static org.openforis.ceo.utils.Mail.sendToMailingList;
 import static org.openforis.ceo.utils.Mail.CONTENT_TYPE_HTML;
 import static org.openforis.ceo.utils.SessionUtils.getSessionUserId;
@@ -12,9 +12,9 @@ import static org.openforis.ceo.utils.SessionUtils.getSessionUserId;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import java.sql.SQLException;
-import java.time.format.DateTimeFormatter;
+// import java.time.format.DateTimeFormatter;
 import java.time.Duration;
-import java.time.LocalDateTime;
+// import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -27,95 +27,15 @@ import spark.Response;
 
 // public class PostgresUsers implements Users {
 
-    private static final String BASE_URL               = CeoConfig.baseUrl;
-    private static final String SMTP_USER              = CeoConfig.smtpUser;
-    private static final String SMTP_SERVER            = CeoConfig.smtpServer;
-    private static final String SMTP_PORT              = CeoConfig.smtpPort;
-    private static final String SMTP_PASSWORD          = CeoConfig.smtpPassword;
-    private static final String SMTP_RECIPIENT_LIMIT   = CeoConfig.smtpRecipientLimit;
-    private static final Integer MAILING_LIST_INTERVAL = Integer.parseInt(CeoConfig.mailingListInterval);
+    // private static final String BASE_URL               = CeoConfig.baseUrl;
+    // private static final String SMTP_USER              = CeoConfig.smtpUser;
+    // private static final String SMTP_SERVER            = CeoConfig.smtpServer;
+    // private static final String SMTP_PORT              = CeoConfig.smtpPort;
+    // private static final String SMTP_PASSWORD          = CeoConfig.smtpPassword;
+    // private static final String SMTP_RECIPIENT_LIMIT   = CeoConfig.smtpRecipientLimit;
+    // private static final Integer MAILING_LIST_INTERVAL = Integer.parseInt(CeoConfig.mailingListInterv
+                                                                          al);
     private static LocalDateTime mailingListLastSent   = LocalDateTime.now().minusSeconds(MAILING_LIST_INTERVAL);
-
-    // public String login(Request req, Response res) {
-        // var inputEmail =        req.queryParams("email");
-        // var inputPassword =     req.queryParams("password");
-
-        // try (var conn = connect();
-        //      var pstmt = conn.prepareStatement("SELECT * FROM check_login(?,?)")) {
-
-        //     pstmt.setString(1, inputEmail);
-        //     pstmt.setString(2, inputPassword);
-        //     try (var rs = pstmt.executeQuery()) {
-        //         if(rs.next()) {
-        //             // Authentication successful
-        //             req.session().attribute("userid", rs.getString("user_id"));
-        //             req.session().attribute("username", inputEmail);
-        //             req.session().attribute("role", rs.getBoolean("administrator") ? "admin" : "user");
-        //             return "";
-        //         } else {
-        //             return "Invalid email/password combination.";
-        //         }
-        //     }
-
-        // } catch (SQLException e) {
-        //     System.out.println(e.getMessage());
-        //     return "There was an server side issue logging in.";
-        // }
-    // }
-
-    public String register(Request req, Response res) {
-        var inputEmail =                    req.queryParams("email");
-        var inputPassword =                 req.queryParams("password");
-        var inputPasswordConfirmation =     req.queryParams("passwordConfirmation");
-        var onMailingList =                 req.queryParams("onMailingList");
-
-        if (!isEmail(inputEmail)) {
-            return inputEmail + " is not a valid email address.";
-        } else if (inputPassword.length() < 8) {
-            return "Password must be at least 8 characters.";
-        } else if (!inputPassword.equals(inputPasswordConfirmation)) {
-            return "Password and Password confirmation do not match.";
-        } else {
-            try (var conn = connect();
-                 var pstmt_user = conn.prepareStatement("SELECT * FROM email_taken(?,-1)");
-                 var pstmt_add = conn.prepareStatement("SELECT * FROM add_user(?,?,?)")) {
-
-                pstmt_user.setString(1, inputEmail);
-                try (var rs_user = pstmt_user.executeQuery()) {
-                    if (rs_user.next() && rs_user.getBoolean("email_taken")) {
-                        return "Account " + inputEmail + " already exists.";
-                    } else {
-                        pstmt_add.setString(1, inputEmail);
-                        pstmt_add.setString(2, inputPassword);
-                        pstmt_add.setBoolean(3, onMailingList != null && Boolean.parseBoolean(onMailingList));
-                        try (var rs = pstmt_add.executeQuery()) {
-                            if (rs.next()) {
-                                // Assign the username and role session attributes
-                                req.session().attribute("userid", rs.getString("add_user"));
-                                req.session().attribute("username", inputEmail);
-                                req.session().attribute("role", "user");
-
-                                // Send confirmation email to the user
-                                var timestamp = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss").format(LocalDateTime.now());
-                                var body = "Dear " + inputEmail + ",\n\n"
-                                    + "Thank you for signing up for CEO!\n\n"
-                                    + "Your Account Summary Details:\n\n"
-                                    + "  Email: " + inputEmail + "\n"
-                                    + "  Created on: " + timestamp + "\n\n"
-                                    + "Kind Regards,\n"
-                                    + "  The CEO Team";
-                                sendMail(SMTP_USER, Arrays.asList(inputEmail), null, null, SMTP_SERVER, SMTP_PORT, SMTP_PASSWORD, "Welcome to CEO!", body, null);
-                            }
-                        }
-                    }
-                }
-                return "";
-            } catch (SQLException e) {
-                System.out.println(e.getMessage());
-                return "There was an server side issue registering a new account.";
-            }
-        }
-    }
 
     public String logout(Request req, Response res) {
         req.session().removeAttribute("userid");
