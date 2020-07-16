@@ -12,7 +12,7 @@ class ReviewInstitution extends React.Component {
         this.state = {
             imageryCount: 0,
             usersCount: 0,
-            projectList: [],
+            projectList: null,
             isAdmin: false,
             selectedTab: 0,
         };
@@ -72,7 +72,7 @@ class ReviewInstitution extends React.Component {
                 <div className="row justify-content-center">
                     <div className="col-lg-7 col-xs-12 align-items-center mb-5">
                         <div className="row">
-                            {this.headerTab("Projects", this.state.projectList.length, 0)}
+                            {this.headerTab("Projects", this.state.projectList ? this.state.projectList.length : 0, 0)}
                             {this.headerTab("Imagery", this.state.imageryCount, 1)}
                             {this.headerTab("Users", this.state.usersCount, 2, this.props.userId < 0)}
                         </div>
@@ -871,17 +871,19 @@ function ProjectList({ isAdmin, isLoggedIn, institutionId, projectList, document
                 </div>
             </div>
             }
-            {projectList.length === 0
+            {projectList === null
                 ? <h3>Loading projects...</h3>
-                : projectList.map((project, uid) =>
-                    <Project
-                        isAdmin={isAdmin}
-                        isLoggedIn={isLoggedIn}
-                        key={uid}
-                        documentRoot={documentRoot}
-                        project={project}
-                    />
-                )}
+                : projectList.length === 0
+                    ? <h3>There are no projects</h3>
+                    : projectList.map((project, uid) =>
+                        <Project
+                            isAdmin={isAdmin}
+                            isLoggedIn={isLoggedIn}
+                            key={uid}
+                            documentRoot={documentRoot}
+                            project={project}
+                        />
+                    )}
         </div>
     );
 }
