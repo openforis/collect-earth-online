@@ -1,6 +1,7 @@
 {:paths ["src/clj" "resources" "target"]
 
- :deps {com.draines/postal        {:mvn/version "2.0.3"}
+ :deps {bk/ring-gzip              {:mvn/version "0.3.0"}
+        com.draines/postal        {:mvn/version "2.0.3"}
         hiccup/hiccup             {:mvn/version "2.0.0-alpha2"}
         org.clojure/clojure       {:mvn/version "1.10.1"}
         org.clojure/core.async    {:mvn/version "1.0.567"}

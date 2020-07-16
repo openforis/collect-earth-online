@@ -88,13 +88,13 @@ class Login extends React.Component {
     }
 }
 
-export function renderLoginPage(args) {
+export function pageInit(args) {
     ReactDOM.render(
         <NavigationBar userName={args.userName} userId={args.userId}>
             <Login
                 returnurl={args.returnurl}
             />
         </NavigationBar>,
-        document.getElementById("login")
+        document.getElementById("app")
     );
 }

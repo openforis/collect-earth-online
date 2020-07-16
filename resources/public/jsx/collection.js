@@ -2323,16 +2323,16 @@ function QuitMenu({ userId, projectId, documentRoot, toggleQuitModal }) {
     );
 }
 
-export function renderCollectionPage(args) {
+export function pageInit(args) {
     ReactDOM.render(
         <NavigationBar userName={args.userName} userId={args.userId}>
             <Collection
                 documentRoot=""
                 userId={args.userId === "" ? -1 : parseInt(args.userId)}
-                userName={args.userName}
+                userName={args.userName || "guest"}
                 projectId={args.projectId}
             />
         </NavigationBar>,
-        document.getElementById("collection")
+        document.getElementById("app")
     );
 }

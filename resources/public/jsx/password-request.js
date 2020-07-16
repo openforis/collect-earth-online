@@ -68,11 +68,11 @@ class PasswordRequest extends React.Component {
     }
 }
 
-export function renderPasswordRequestPage(args) {
+export function pageInit(args) {
     ReactDOM.render(
         <NavigationBar userName={""} userId={-1}>
             <PasswordRequest />
         </NavigationBar>,
-        document.getElementById("password-request")
+        document.getElementById("app")
     );
 }

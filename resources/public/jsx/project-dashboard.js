@@ -218,17 +218,17 @@ function ProjectAOI() {
     );
 }
 
-export function renderProjectDashboardPage(args) {
+export function pageInit(args) {
     ReactDOM.render(
         <NavigationBar userName={args.userName} userId={args.userId}>
             <ProjectDashboard
                 documentRoot=""
                 userId={args.userId}
-                projectId={args.projectId}
-                project_stats_visibility={args.project_stats_visibility}
-                project_template_visibility={args.project_template_visibility}
+                projectId={args.projectId || "0"}
+                project_stats_visibility={args.projectId ? "visible" : "d-none"}
+                project_template_visibility={args.projectId ? "d-none" : "visible"}
             />
         </NavigationBar>,
-        document.getElementById("project-dashboard")
+        document.getElementById("app")
     );
 }

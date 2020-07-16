@@ -1183,7 +1183,7 @@ class NewUserButtons extends React.Component {
     }
 }
 
-export function renderReviewInstitutionPage(args) {
+export function pageInit(args) {
     ReactDOM.render(
         <NavigationBar userName={args.userName} userId={args.userId}>
             <ReviewInstitution
@@ -1192,6 +1192,6 @@ export function renderReviewInstitutionPage(args) {
                 institutionId={args.institutionId === "" ? -1 : parseInt(args.institutionId)}
             />
         </NavigationBar>,
-        document.getElementById("institution")
+        document.getElementById("app")
     );
 }

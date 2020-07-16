@@ -94,15 +94,15 @@ function ProjectList(props) {
     );
 }
 
-export function renderInstitutionDashboardPage(args) {
+export function pageInit(args) {
     ReactDOM.render(
         <NavigationBar userName={args.userName} userId={args.userId}>
             <InstitutionDashboard
                 documentRoot=""
                 userId={args.userId}
-                institutionId={args.institutionId}
+                institutionId={args.institutionId || "0"}
             />
         </NavigationBar>,
-        document.getElementById("institution-dashboard")
+        document.getElementById("app")
     );
 }

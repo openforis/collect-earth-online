@@ -1,3 +1,10 @@
+import "../css/geo-dash.css";
+import "../css/jquery-ui.css"; // TODO Remove jquery-ui as a dependency.
+import "../css/datepicker.css"; // TODO Remove jquery-ui as a dependency.
+import "react-grid-layout/css/styles.css";
+import "react-resizable/css/styles.css";
+import "react-grid-layout/examples/example-styles.css"; // TODO I dont think this is being used.
+
 import React from "react";
 import ReactDOM from "react-dom";
 import _ from "lodash";
@@ -1955,7 +1962,7 @@ class WidgetLayoutEditor extends React.PureComponent {
     }
 }
 
-export function renderWidgetEditorPage(args) {
+export function pageInit(args) {
     ReactDOM.render(
         <GeoDashNavigationBar
             userName={args.userName}
@@ -1969,6 +1976,6 @@ export function renderWidgetEditorPage(args) {
             }
         />
         ,
-        document.getElementById("content")
+        document.getElementById("app")
     );
 }
