@@ -1,7 +1,8 @@
 (ns org.openforis.ceo.db.users
   (:import java.time.format.DateTimeFormatter
            java.time.LocalDateTime)
-  (:require [org.openforis.ceo.database :refer [call-sql sql-primitive]]
+  (:require [clojure.string :as str]
+            [org.openforis.ceo.database :refer [call-sql sql-primitive]]
             [org.openforis.ceo.utils.mail :refer [email? send-mail]]))
 
 (defn login [{:keys [params]}]
@@ -61,9 +62,63 @@
                    :userName email
                    :userRole "user"}}))))
 
-(defn logout [request])
+(defn logout [_]
+  {:status  200
+   :headers {"Content-Type" "text/plain"}
+   :body    ""
+   :session nil})
 
-(defn update-account [request])
+(defn- get-update-account-errors [stored-email email password password-confirmation current-password]
+  (cond (str/blank? current-password)
+        "Current Password required"
+
+        (not (or (str/blank? email) (email? email)))
+        (str email " is not a valid email address.")
+
+        (and (not (str/blank? password)) (< (count password) 8))
+        "New Password must be at least 8 characters."
+
+        (not= password password-confirmation)
+        "New Password and Password confirmation do not match."
+
+        (empty? (call-sql "check_login" stored-email current-password))
+        "Invalid current password."
+
+        :else nil))
+
+(defn- update-email [user-id old-email new-email]
+  (if (sql-primitive (call-sql "email_taken" new-email user-id))
+    {:status  200
+     :headers {"Content-Type" "text/plain"}
+     :body    (str "An account with the email " new-email " already exists.")}
+    (do
+      (call-sql "set_user_email" old-email new-email)
+      {:status  200
+       :headers {"Content-Type" "text/plain"}
+       :body    ""
+       :session {:userName new-email}})))
+
+(defn update-account [{:keys [params]}]
+  (let [user-id               (Integer/parseInt (or (:userId params) "-1"))
+        stored-email          (:userName params)
+        email                 (:email params)
+        password              (:password params)
+        password-confirmation (:passwordConfirmation params)
+        current-password      (:currentPassword params)
+        on-mailing-list?      (boolean (:onMailingList params))]
+    (if-let [error-msg (get-update-account-errors stored-email email password password-confirmation current-password)]
+      {:status  200
+       :headers {"Content-Type" "text/plain"}
+       :body    error-msg}
+      (do
+        (when (and (not (str/blank? email)) (not= email stored-email))
+          (update-email user-id stored-email email))
+        (when (not (str/blank? password))
+          (call-sql "update_password" stored-email password))
+        (call-sql "set_mailing_list" user-id on-mailing-list?)
+        {:status  200
+         :headers {"Content-Type" "text/plain"}
+         :body    ""}))))
 
 (defn get-password-reset-key [request])
 
