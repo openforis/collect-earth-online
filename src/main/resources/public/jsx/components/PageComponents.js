@@ -245,33 +245,23 @@ export class SafeImage extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
-            src: props.src,
             error: false,
         };
     }
 
     componentDidUpdate(prevProps) {
         if (prevProps.src !== this.props.src) {
-            this.setState({ src: this.props.src });
-        }
-    }
-
-    onError = () => {
-        if (!this.state.error) {
-            this.setState({
-                src: this.props.fallbackSrc,
-                error: true,
-            });
+            this.setState({ error: false });
         }
     }
 
     render() {
-        const { src, fallbackSrc, ...props } = this.props;
+        const { src, fallbackSrc, ...extraProps } = this.props;
         return (
             <img
-                src={this.state.src}
-                onError={this.onError}
-                {...props}
+                src={this.state.error ? fallbackSrc : src}
+                onError={() => this.setState({ error: true })}
+                {...extraProps}
             />
         );
     }
