@@ -13,6 +13,7 @@
             [ring.middleware.params             :refer [wrap-params]]
             [ring.middleware.resource           :refer [wrap-resource]]
             [ring.middleware.reload             :refer [wrap-reload]]
+            [ring.middleware.session            :refer [wrap-session]]
             [ring.middleware.ssl                :refer [wrap-ssl-redirect]]
             [ring.middleware.x-headers          :refer [wrap-frame-options wrap-content-type-options wrap-xss-protection]]
             [ring.util.codec                    :refer [url-decode]]
@@ -102,6 +103,10 @@
         (handler (assoc request :params (merge params get-params post-params))))
       (handler request))))
 
+(defn wrap-session-params [handler]
+  (fn [{:keys [session] :as request}]
+    (handler (update request :params merge session))))
+
 (defn wrap-exceptions [handler]
   (fn [request]
     (try
@@ -119,7 +124,9 @@
       wrap-edn-params
       wrap-nested-params
       wrap-multipart-params
+      wrap-session-params
       wrap-params
+      wrap-session
       wrap-absolute-redirects
       (wrap-resource "public")
       wrap-content-type
