@@ -16,11 +16,12 @@
                                        :else                      1)))]
     (concat webpack-files
             (case page
-              {"geoDash"            ["/js/highcharts.js"       ; TODO Use the npm version.
-                                     "/js/jquery-3.4.1.min.js" ; TODO Remove jquery as a dependency.
-                                     "/js/jquery-ui.min.js"]   ; TODO Remove jquery-ui as a dependency.
-               "widgetLayoutEditor" ["/js/jquery-3.4.1.min.js"
-                                     "/js/jquery-ui.min.js"]}))))
+              "geoDash"            ["/js/highcharts.js"       ; TODO Use the npm version.
+                                    "/js/jquery-3.4.1.min.js" ; TODO Remove jquery as a dependency.
+                                    "/js/jquery-ui.min.js"]   ; TODO Remove jquery-ui as a dependency.
+              "widgetLayoutEditor" ["/js/jquery-3.4.1.min.js"
+                                    "/js/jquery-ui.min.js"]
+              []))))
 
 (defn head [page]
   [:head
@@ -30,7 +31,7 @@
    [:meta {:name "description" :content "Collect Earth Online is an Image Analysis Crowdsourcing Platform by OpenForis and Spatial Informatics Group"}]
    [:meta {:name "keywords"    :content "collect earth online image analysis crowdsourcing platform openforis SIG spatial informatics group"}]
    [:link {:rel "shortcut icon" :href "favicon.ico"}]
-   (apply include-js  "/js/bootstrap.min.js" (page->js page))]) ; TODO Remove bootstrap.min.js as a dependency. Only used in header, find a react method.
+   (apply include-js "/js/bootstrap.min.js" (page->js page))]) ; TODO Remove bootstrap.min.js as a dependency. Only used in header, find a react method.
 
 (defn kebab->camel [kebab]
   (let [pieces (str/split kebab #"-")]
@@ -40,14 +41,13 @@
 (defn uri->page [uri]
   (let [[part1 part2] (->> (str/split uri #"/")
                            (remove str/blank?)
-                           (map kebab->camel)
-                           (kebab->camel))]
+                           (map kebab->camel))]
     (or part2 part1)))
 
 (defn js-init [page params]
   (let [js-params (json/write-str params)]
     [:script {:type "text/javascript"}
-     (str "window.onload = function () { " (kebab->camel page) ".pageInit(" js-params "); };")]))
+     (str "window.onload = function () { " page ".pageInit(" js-params "); };")]))
 
 (defn render-page [uri]
   (fn [request]
@@ -63,7 +63,7 @@
                    (let [announcement (slurp "/announcement.txt")]
                      (when (pos? (count announcement))
                        [:p {:style {:color "#eec922" :background-color "#e63232" :text-align "center" :padding "5px" :margin "0px"}}
-                        announcement])) ; TODO Slurp announcement text from announcement.txt.
+                        announcement]))
                    [:div#app]]
                   (js-init page (:params request))])})))
 
