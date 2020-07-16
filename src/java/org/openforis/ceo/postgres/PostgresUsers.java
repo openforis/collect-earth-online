@@ -1,10 +1,6 @@
-// package org.openforis.ceo.postgres;
-
 import static org.openforis.ceo.utils.DatabaseUtils.connect;
 import static org.openforis.ceo.postgres.PostgresInstitutions.getInstitutionById;
 import static org.openforis.ceo.utils.JsonUtils.parseJson;
-// import static org.openforis.ceo.utils.Mail.isEmail;
-// import static org.openforis.ceo.utils.Mail.sendMail;
 import static org.openforis.ceo.utils.Mail.sendToMailingList;
 import static org.openforis.ceo.utils.Mail.CONTENT_TYPE_HTML;
 import static org.openforis.ceo.utils.SessionUtils.getSessionUserId;
@@ -12,9 +8,7 @@ import static org.openforis.ceo.utils.SessionUtils.getSessionUserId;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import java.sql.SQLException;
-// import java.time.format.DateTimeFormatter;
 import java.time.Duration;
-// import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -25,89 +19,10 @@ import org.openforis.ceo.env.CeoConfig;
 import spark.Request;
 import spark.Response;
 
-// public class PostgresUsers implements Users {
-
-    // private static final String BASE_URL               = CeoConfig.baseUrl;
-    // private static final String SMTP_USER              = CeoConfig.smtpUser;
-    // private static final String SMTP_SERVER            = CeoConfig.smtpServer;
-    // private static final String SMTP_PORT              = CeoConfig.smtpPort;
-    // private static final String SMTP_PASSWORD          = CeoConfig.smtpPassword;
-    // private static final String SMTP_RECIPIENT_LIMIT   = CeoConfig.smtpRecipientLimit;
-    // private static final Integer MAILING_LIST_INTERVAL = Integer.parseInt(CeoConfig.mailingListInterv
+    private static final String BASE_URL               = CeoConfig.baseUrl;
+    private static final Integer MAILING_LIST_INTERVAL = Integer.parseInt(CeoConfig.mailingListInterv
                                                                           al);
     private static LocalDateTime mailingListLastSent   = LocalDateTime.now().minusSeconds(MAILING_LIST_INTERVAL);
-
-    public String logout(Request req, Response res) {
-        req.session().removeAttribute("userid");
-        req.session().removeAttribute("username");
-        req.session().removeAttribute("role");
-
-        return "";
-    }
-
-    public String updateAccount(Request req, Response res) {
-        final var userId                    = getSessionUserId(req);
-        final var storedEmail               = (String) req.session().attribute("username");
-        final var inputEmail                = req.queryParams("email");
-        final var inputPassword             = req.queryParams("password");
-        final var inputPasswordConfirmation = req.queryParams("passwordConfirmation");
-        final var onMailingList             = req.queryParams("onMailingList");
-        final var inputCurrentPassword      = req.queryParams("currentPassword");
-
-        if (inputCurrentPassword.length() == 0) {
-            return "Current Password required";
-        // let user change email without changing password
-        } else if (inputEmail.length() > 0 && !isEmail(inputEmail)) {
-            return inputEmail + " is not a valid email address.";
-        // let user change email without changing password
-        } else if (inputPassword.length() > 0 && inputPassword.length() < 8) {
-            return "New Password must be at least 8 characters.";
-        } else if (!inputPassword.equals(inputPasswordConfirmation)) {
-            return "New Password and Password confirmation do not match.";
-        } else {
-            try (var conn = connect();
-                 var pstmt_login = conn.prepareStatement("SELECT * FROM check_login(?,?)");
-                 var pstmt_user  = conn.prepareStatement("SELECT * FROM email_taken(?,?)");
-                 var pstmt_email = conn.prepareStatement("SELECT * FROM set_user_email(?,?)");
-                 var pstmt_pass  = conn.prepareStatement("SELECT * FROM update_password(?,?)");
-                 var pstmt_ml    = conn.prepareStatement("SELECT * FROM set_mailing_list(?,?)")) {
-                pstmt_login.setString(1, storedEmail);
-                pstmt_login.setString(2, inputCurrentPassword);
-                try (var rs_login = pstmt_login.executeQuery()) {
-                    if(rs_login.next()) {
-                        if (inputEmail.length() > 0 && !storedEmail.equals(inputEmail)) {
-                            pstmt_user.setString(1, inputEmail);
-                            pstmt_user.setInt(2, userId);
-                            try (var rs_user = pstmt_user.executeQuery()) {
-                                if(rs_user.next() && !rs_user.getBoolean("email_taken")) {
-                                    pstmt_email.setString(1, storedEmail);
-                                    pstmt_email.setString(2, inputEmail);
-                                    pstmt_email.execute();
-                                    req.session().attribute("username", inputEmail);
-                                } else {
-                                    return "An account with the email " + inputEmail + " already exists.";
-                                }
-                            }
-                        }
-                        if (inputPassword.length() > 0) {
-                            pstmt_pass.setString(1, storedEmail);
-                            pstmt_pass.setString(2, inputPassword);
-                            pstmt_pass.execute();
-                        }
-                        pstmt_ml.setInt(1, userId);
-                        pstmt_ml.setBoolean(2, onMailingList != null && Boolean.parseBoolean(onMailingList));
-                        pstmt_ml.execute();
-                        return "";
-                    } else {
-                        return "Invalid current password.";
-                    }
-                }
-            } catch (SQLException e) {
-                System.out.println(e.getMessage());
-                return "There was an issue updating your account.  Please check the console.";
-            }
-        }
-    }
 
     public String getPasswordResetKey(Request req, Response res) {
         var inputEmail = req.queryParams("email");
@@ -457,5 +372,3 @@ import spark.Response;
             return "There was an unknown error unsubscribing.";
         }
     }
-
-// }
