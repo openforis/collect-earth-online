@@ -3,20 +3,19 @@
            java.time.LocalDateTime
            java.util.UUID)
   (:require [clojure.string :as str]
+            [clojure.data.json :as json]
             [org.openforis.ceo.database :refer [call-sql sql-primitive]]
             [org.openforis.ceo.utils.mail :refer [email? send-mail mail-config]]))
 
 (defn login [{:keys [params]}]
   (let [{:keys [email password]} params]
     (if-let [user (first (call-sql "check_login" email password))]
-      ;; Authentication successful
       {:status  200
        :headers {"Content-Type" "text/plain"}
        :body    ""
        :session {:userId   (:user_id user)
                  :userName email
                  :userRole (if (:administrator user) "admin" "user")}}
-      ;; Authentication failed
       {:status  200
        :headers {"Content-Type" "text/plain"}
        :body    "Invalid email/password combination."})))
@@ -176,15 +175,58 @@
          :headers {"Content-Type" "text/plain"}
          :body    "There is no user with that email address."}))))
 
-(defn get-all-users [request])
+(defn get-all-users [_]
+  (let [all-users (mapv (fn [{:keys [user_id email administrator]}]
+                          {:id    user_id
+                           :email email
+                           :role  (if administrator "admin" "user")})
+                        (call-sql "get_all_users"))]
+    {:status  200
+     :headers {"Content-Type" "application/json"}
+     :body    (json/write-str all-users)}))
 
-(defn get-institution-users [request])
+(defn get-institution-users [request]
+  (let [institution-id (Integer/parseInt (-> request :params :institutionId))
+        all-users      (mapv (fn [{:keys [user_id email administrator reset_key institution_role]}]
+                               {:id              user_id
+                                :email           email
+                                :role            (if administrator "admin" "user")
+                                :resetKey        reset_key
+                                :institutionRole institution_role})
+                             (call-sql "get_all_users_by_institution_id" institution-id))]
+    {:status  200
+     :headers {"Content-Type" "application/json"}
+     :body    (json/write-str all-users)}))
 
-(defn get-user-details [request])
+(defn get-user-details [{:keys [params]}]
+  (let [user-id (Integer/parseInt (or (:userId params) "-1"))]
+    (if-let [details (first (call-sql "get_user_details" user-id))]
+      {:status  200
+       :headers {"Content-Type" "application/json"}
+       :body    (json/write-str {:onMailingList (:on_mailing_list details)})}
+      {:status  200
+       :headers {"Content-Type" "application/json"}
+       :body    ""})))
 
-(defn get-user-stats [request])
+;; FIXME: Change :userId to :accountId to avoid conflict with matching session key
+(defn get-user-stats [{:keys [params]}]
+  (let [account-id (Integer/parseInt (:userId params))]
+    (if-let [stats (first (call-sql "get_user_stats" account-id))]
+      {:status  200
+       :headers {"Content-Type" "application/json"}
+       :body    (json/write-str {:totalProjects (:total_projects stats)
+                                 :totalPlots    (:total_plots stats)
+                                 :averageTime   (:average_time stats)
+                                 :perProject    (json/read-str (:per_project stats))})}
+      {:status  200
+       :headers {"Content-Type" "application/json"}
+       :body    (json/write-str {})})))
 
-(defn update-project-user-stats [request])
+;; FIXME: stub
+(defn update-project-user-stats [_]
+  {:status  200
+   :headers {"Content-Type" "application/json"}
+   :body    ""})
 
 (defn get-institution-roles [user-id]) ; Returns {int -> string}
 
