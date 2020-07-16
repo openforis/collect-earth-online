@@ -16,6 +16,8 @@
   [f-str & args]
   (apply format (str/replace f-str #"(%[^ ])" "%s") args))
 
+(def sql-primitive (comp val first first))
+
 ;;; Static Data
 
 (def pg-db {:dbtype                "postgresql"
