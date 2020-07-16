@@ -1,0 +1,6 @@
+{:site-url "http://local.pyregence.org:8080"
+ :host     "smtp.gmail.com"
+ :user     "support@sig-gis.com"
+ :pass     "FgZ@tss79@gmoFuQ47Kr"
+ :tls      true
+ :port     587}
