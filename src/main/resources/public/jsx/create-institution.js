@@ -22,7 +22,7 @@ class CreateInstitution extends React.Component {
         this.getInstitutions();
     }
 
-    getInstitutions = () => fetch(this.props.documentRoot + "/get-all-institutions")
+    getInstitutions = () => fetch("/get-all-institutions")
         .then(response => response.ok ? response.json() : Promise.reject(response))
         .then(data => this.setState({ institutions: data }))
         .catch(response => {
@@ -37,7 +37,7 @@ class CreateInstitution extends React.Component {
                 + "Either select a different name or change the name of the duplicate institution here: "
                 + window.location.origin + "/review-institution?institutionId=" + duplicateInst.id);
         } else {
-            fetch(this.props.documentRoot + "/create-institution",
+            fetch("/create-institution",
                   {
                       method: "POST",
                       body: JSON.stringify({
@@ -54,7 +54,7 @@ class CreateInstitution extends React.Component {
                 .then(data => {
                     const isInteger = n => !isNaN(parseInt(n)) && isFinite(n) && !n.includes(".");
                     if (data[0] && isInteger(data[1])) {
-                        window.location = this.props.documentRoot + "/review-institution?institutionId=" + data[1];
+                        window.location = `/review-institution?institutionId=${data[1]}`;
                         return Promise.resolve();
                     } else {
                         return Promise.reject(data[1]);
@@ -101,7 +101,6 @@ export function renderCreateInstitutionPage(args) {
     ReactDOM.render(
         <NavigationBar userName={args.userName} userId={args.userId}>
             <CreateInstitution
-                documentRoot=""
                 userId={args.userId === "" ? -1 : parseInt(args.userId)}
             />
         </NavigationBar>,

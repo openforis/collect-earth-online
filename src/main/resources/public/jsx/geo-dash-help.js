@@ -12,14 +12,14 @@ class GeoDashHelp extends React.Component {
     }
 
     componentDidMount() {
-        fetch(this.props.documentRoot + "/locale/geodashhelp_" + this.props.browserLanguage + ".json")
+        fetch(`/locale/geodashhelp_${this.props.browserLanguage}.json`)
             .then(res => res.json())
             .then(data => this.setState({ lngObject: data }));
     }
 
     expandableImageWrapper = (src) =>
         <ExpandableImage
-            src={this.props.documentRoot + src}
+            src={src}
             previewStyles={{
                 float:"right",
                 width:"284px",
@@ -280,7 +280,7 @@ class GeoDashHelp extends React.Component {
 export function renderGeodashHelpPage(args) {
     ReactDOM.render(
         <NavigationBar userName={args.userName} userId={args.userId}>
-            <GeoDashHelp documentRoot="" browserLanguage={args.browserLanguage}/>
+            <GeoDashHelp browserLanguage={args.browserLanguage}/>
         </NavigationBar>,
         document.getElementById("geo-dash-help")
     );
