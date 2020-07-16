@@ -173,29 +173,21 @@ class MapPanel extends React.Component {
             <div
                 id="mapPanel"
                 className={this.props.showSidePanel
-                                ? "col-lg-9 col-md-12 pl-0"
-                                : "col-lg-9 col-md-12 pl-0 col-xl-12 col-xl-9"}
+                                ? "col-lg-9 col-md-12 pl-0 full-height"
+                                : "col-lg-9 col-md-12 pl-0 col-xl-12 col-xl-9 full-height"}
             >
-                <div className="row no-gutters ceo-map-toggle">
-                    <div
-                        id="togbutton"
-                        className="button col-xl-1 bg-lightgray d-none d-xl-block"
-                        onClick={this.props.toggleSidebar}
-                    >
-                        <div className="empty-div" style={{ height: "50vh" }}/>
-                        <div className="my-auto no-gutters text-center">
-                            <div className={this.props.showSidePanel ? "" : "d-none"}>
-                                <UnicodeIcon icon="leftCaret"/>
-                            </div>
-                            <div className={this.props.showSidePanel ? "d-none" : ""}>
-                                <UnicodeIcon icon="rightCaret"/>
-                            </div>
-                        </div>
-                    </div>
-                    <div className="col-xl-11 mr-0 ml-0 bg-lightgray">
-                        <div id="home-map-pane" style={{ width: "100%", height: "calc(100vh - 61px)", position: "fixed" }}></div>
-                    </div>
+                <div
+                    id="toggle-map-button"
+                    className="bg-lightgray"
+                    onClick={this.props.toggleSidebar}
+                >
+                    {this.props.showSidePanel ?
+                        <UnicodeIcon icon="leftCaret"/>
+                        :
+                        <UnicodeIcon icon="rightCaret"/>
+                    }
                 </div>
+                <div id="home-map-pane" className="full-height"></div>
                 <ProjectPopup
                     mapConfig={this.state.mapConfig}
                     clusterExtent={this.state.clusterExtent}
