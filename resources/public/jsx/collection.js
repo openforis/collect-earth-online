@@ -2329,7 +2329,7 @@ export function pageInit(args) {
             <Collection
                 documentRoot=""
                 userId={args.userId === "" ? -1 : parseInt(args.userId)}
-                userName={args.userName}
+                userName={args.userName || "guest"}
                 projectId={args.projectId}
             />
         </NavigationBar>,

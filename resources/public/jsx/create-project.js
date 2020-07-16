@@ -1084,7 +1084,7 @@ export function pageInit(args) {
             <Project
                 documentRoot=""
                 userId={args.userId}
-                institutionId={args.institutionId}
+                institutionId={args.institutionId || 0}
             />
         </NavigationBar>,
         document.getElementById("app")
