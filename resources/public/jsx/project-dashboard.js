@@ -224,7 +224,7 @@ export function pageInit(args) {
             <ProjectDashboard
                 documentRoot=""
                 userId={args.userId}
-                projectId={args.projectId || 0}
+                projectId={args.projectId || "0"}
                 project_stats_visibility={args.projectId ? "visible" : "d-none"}
                 project_template_visibility={args.projectId ? "d-none" : "visible"}
             />
