@@ -1,9 +1,10 @@
 (ns org.openforis.ceo.db.users
   (:import java.time.format.DateTimeFormatter
-           java.time.LocalDateTime)
+           java.time.LocalDateTime
+           java.util.UUID)
   (:require [clojure.string :as str]
             [org.openforis.ceo.database :refer [call-sql sql-primitive]]
-            [org.openforis.ceo.utils.mail :refer [email? send-mail]]))
+            [org.openforis.ceo.utils.mail :refer [email? send-mail mail-config]]))
 
 (defn login [{:keys [params]}]
   (let [{:keys [email password]} params]
@@ -47,13 +48,15 @@
       (let [user-id   (sql-primitive (call-sql "add_user" email password on-mailing-list?))
             timestamp (-> (DateTimeFormatter/ofPattern "yyyy/MM/dd HH:mm:ss")
                           (.format (LocalDateTime/now)))
-            email-msg     (format "Dear %s,\n\n"
-                              "Thank you for signing up for CEO!\n\n"
-                              "Your Account Summary Details:\n\n"
-                              "  Email: %s\n"
-                              "  Created on: %s\n\n"
-                              "Kind Regards,\n"
-                              "  The CEO Team" email email timestamp)]
+            email-msg     (format (str/join "\n"
+                                            ["Dear %s,\n"
+                                             "Thank you for signing up for CEO!\n"
+                                             "Your Account Summary Details:\n"
+                                             "  Email: %s"
+                                             "  Created on: %s\n"
+                                             "Kind Regards,"
+                                             "  The CEO Team"])
+                                  email email timestamp)]
         (send-mail [email] nil nil "Welcome to CEO!" email-msg "text/plain")
         {:status  200
          :headers {"Content-Type" "text/plain"}
@@ -120,9 +123,58 @@
          :headers {"Content-Type" "text/plain"}
          :body    ""}))))
 
-(defn get-password-reset-key [request])
+(defn get-password-reset-key [request]
+  (let [email (-> request :params :email)]
+    (if (first (call-sql "get_user" email))
+      (let [reset-key (str (UUID/randomUUID))]
+        (if (sql-primitive (call-sql "set_password_reset_key" email reset-key))
+          (let [email-msg (format (str/join "\n"
+                                            ["Hi %s,\n"
+                                             "  To reset your password, simply click the following link:\n"
+                                             "  %spassword-reset?email=%s&password-reset-key=%s"])
+                                  email (:base-url @mail-config) email reset-key)]
+            (send-mail [email] nil nil "Password reset on CEO" email-msg "text/plain")
+            {:status  200
+             :headers {"Content-Type" "text/plain"}
+             :body    ""})
+          {:status  200
+           :headers {"Content-Type" "text/plain"}
+           :body    "Failed to create a reset key. Please try again later"}))
+      {:status  200
+       :headers {"Content-Type" "text/plain"}
+       :body    "There is no user with that email address."})))
 
-(defn reset-password [request])
+(defn- get-reset-password-errors [password password-confirmation]
+  (cond (< (count password) 8)
+        "Password must be at least 8 characters."
+
+        (not= password password-confirmation)
+        "Password and Password confirmation do not match."
+
+        :else nil))
+
+(defn reset-password [{:keys [params]}]
+  (let [email                 (:email params)
+        reset-key             (:passwordResetKey params)
+        password              (:password params)
+        password-confirmation (:passwordConfirmation params)]
+    (if-let [error-msg (get-reset-password-errors password password-confirmation)]
+      {:status  200
+       :headers {"Content-Type" "text/plain"}
+       :body    error-msg}
+      (if-let [user (first (call-sql "get_user" email))]
+        (if (= reset-key (:reset_key user))
+          (do
+            (call-sql "update_password" email password)
+            {:status  200
+             :headers {"Content-Type" "text/plain"}
+             :body    ""})
+          {:status  200
+           :headers {"Content-Type" "text/plain"}
+           :body    (str "Invalid reset key for user " email ".")})
+        {:status  200
+         :headers {"Content-Type" "text/plain"}
+         :body    "There is no user with that email address."}))))
 
 (defn get-all-users [request])
 
