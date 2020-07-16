@@ -659,7 +659,7 @@ class ProjectPopup extends React.Component {
     }
 }
 
-export function renderHomePage(args) {
+export function pageInit(args) {
     ReactDOM.render(
         <NavigationBar userName={args.userName} userId={args.userId}>
             <Home
@@ -668,6 +668,6 @@ export function renderHomePage(args) {
                 userRole={args.userRole}
             />
         </NavigationBar>,
-        document.getElementById("home")
+        document.getElementById("app")
     );
 }

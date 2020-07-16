@@ -107,11 +107,11 @@ class Register extends React.Component {
     }
 }
 
-export function renderRegisterPage(args) {
+export function pageInit(args) {
     ReactDOM.render(
         <NavigationBar userName={""} userId={-1}>
             <Register />
         </NavigationBar>,
-        document.getElementById("register")
+        document.getElementById("app")
     );
 }

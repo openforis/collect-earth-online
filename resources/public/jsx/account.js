@@ -220,7 +220,7 @@ class AccountForm extends React.Component {
     }
 }
 
-export function renderAccountPage(args) {
+export function pageInit(args) {
     ReactDOM.render(
         <NavigationBar userName={args.userName} userId={args.userId}>
             <Account
@@ -229,6 +229,6 @@ export function renderAccountPage(args) {
                 userName={args.userName}
             />
         </NavigationBar>,
-        document.getElementById("account")
+        document.getElementById("app")
     );
 }

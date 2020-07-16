@@ -277,11 +277,11 @@ class GeoDashHelp extends React.Component {
     }
 }
 
-export function renderGeodashHelpPage(args) {
+export function pageInit(args) {
     ReactDOM.render(
         <NavigationBar userName={args.userName} userId={args.userId}>
             <GeoDashHelp documentRoot="" browserLanguage={args.browserLanguage}/>
         </NavigationBar>,
-        document.getElementById("geo-dash-help")
+        document.getElementById("app")
     );
 }

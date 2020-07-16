@@ -1,3 +1,7 @@
+import "../css/geo-dash.css";
+import "../css/jquery-ui.css"; // TODO Remove jquery-ui as a dependency.
+import "../css/datepicker.css"; // TODO Remove jquery-ui as a dependency.
+
 import React from "react";
 import ReactDOM from "react-dom";
 import { mercator } from "../js/mercator.js";
@@ -1639,12 +1643,12 @@ class StatsWidget extends React.Component {
     }
 }
 
-export function renderGeodashPage(args) {
+export function pageInit(args) {
     ReactDOM.render(
         <GeoDashNavigationBar
             userName={args.userName}
             page={() => <Geodash documentRoot=""/>}
         />,
-        document.getElementById("geo-dash")
+        document.getElementById("app")
     );
 }
