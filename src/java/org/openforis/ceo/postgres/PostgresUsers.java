@@ -1,4 +1,4 @@
-package org.openforis.ceo.postgres;
+// package org.openforis.ceo.postgres;
 
 import static org.openforis.ceo.utils.DatabaseUtils.connect;
 import static org.openforis.ceo.postgres.PostgresInstitutions.getInstitutionById;
@@ -25,7 +25,7 @@ import org.openforis.ceo.env.CeoConfig;
 import spark.Request;
 import spark.Response;
 
-public class PostgresUsers implements Users {
+// public class PostgresUsers implements Users {
 
     private static final String BASE_URL               = CeoConfig.baseUrl;
     private static final String SMTP_USER              = CeoConfig.smtpUser;
@@ -36,32 +36,32 @@ public class PostgresUsers implements Users {
     private static final Integer MAILING_LIST_INTERVAL = Integer.parseInt(CeoConfig.mailingListInterval);
     private static LocalDateTime mailingListLastSent   = LocalDateTime.now().minusSeconds(MAILING_LIST_INTERVAL);
 
-    public String login(Request req, Response res) {
-        var inputEmail =        req.queryParams("email");
-        var inputPassword =     req.queryParams("password");
+    // public String login(Request req, Response res) {
+        // var inputEmail =        req.queryParams("email");
+        // var inputPassword =     req.queryParams("password");
 
-        try (var conn = connect();
-             var pstmt = conn.prepareStatement("SELECT * FROM check_login(?,?)")) {
+        // try (var conn = connect();
+        //      var pstmt = conn.prepareStatement("SELECT * FROM check_login(?,?)")) {
 
-            pstmt.setString(1, inputEmail);
-            pstmt.setString(2, inputPassword);
-            try (var rs = pstmt.executeQuery()) {
-                if(rs.next()) {
-                    // Authentication successful
-                    req.session().attribute("userid", rs.getString("user_id"));
-                    req.session().attribute("username", inputEmail);
-                    req.session().attribute("role", rs.getBoolean("administrator") ? "admin" : "user");
-                    return "";
-                } else {
-                    return "Invalid email/password combination.";
-                }
-            }
+        //     pstmt.setString(1, inputEmail);
+        //     pstmt.setString(2, inputPassword);
+        //     try (var rs = pstmt.executeQuery()) {
+        //         if(rs.next()) {
+        //             // Authentication successful
+        //             req.session().attribute("userid", rs.getString("user_id"));
+        //             req.session().attribute("username", inputEmail);
+        //             req.session().attribute("role", rs.getBoolean("administrator") ? "admin" : "user");
+        //             return "";
+        //         } else {
+        //             return "Invalid email/password combination.";
+        //         }
+        //     }
 
-        } catch (SQLException e) {
-            System.out.println(e.getMessage());
-            return "There was an server side issue logging in.";
-        }
-    }
+        // } catch (SQLException e) {
+        //     System.out.println(e.getMessage());
+        //     return "There was an server side issue logging in.";
+        // }
+    // }
 
     public String register(Request req, Response res) {
         var inputEmail =                    req.queryParams("email");
@@ -538,4 +538,4 @@ public class PostgresUsers implements Users {
         }
     }
 
-}
+// }

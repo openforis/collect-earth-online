@@ -1,6 +1,20 @@
-(ns org.openforis.ceo.db.users)
+(ns org.openforis.ceo.db.users
+  (:require [org.openforis.ceo.database :refer [call-sql]]))
 
-(defn login [request])
+(defn login [{:keys [params] :as request}]
+  (let [{:keys [email password]} params]
+    (if-let [user (first (call-sql "check_login" email password))]
+      ;; Authentication successful
+      {:status  200
+       :headers {"Content-Type" "text/plain"}
+       :body    ""
+       :session {:userId   (:user_id user)
+                 :userName email
+                 :userRole (if (:administrator user) "admin" "user")}}
+      ;; Authentication failed
+      {:status  200
+       :headers {"Content-Type" "text/plain"}
+       :body    "Invalid email/password combination."})))
 
 (defn register [request])
 
