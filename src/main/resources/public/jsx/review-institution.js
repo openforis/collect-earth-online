@@ -403,6 +403,10 @@ class ImageryList extends React.Component {
                     />
                 :
                     <Fragment>
+                        <div className="mb-3">
+                            This is a list of available imagery for this institution.
+                            For each project you can select to use some or all of these imagery.
+                        </div>
                         {this.props.isAdmin &&
                             <div className="row">
                                 <div className="col-lg-12 mb-1">
@@ -857,8 +861,13 @@ function Imagery({ isAdmin, title, selectEditImagery, deleteImagery, isInstituti
 function ProjectList({ isAdmin, isLoggedIn, institutionId, projectList, documentRoot, isVisible }) {
     return (
         <div style={!isVisible ? { display: "none" } : {}}>
+            <div className="mb-3">
+                This is a list of all institution projects. The color around the name shows its progress.
+                Red indicates that it has no plots collected, yellow indicates that some plots have been
+                collected, and green indicates that all plots have been selected.
+            </div>
             {isAdmin &&
-            <div className="row mb-1">
+            <div className="row mb-3">
                 <div className="col">
                     <button
                         id="create-project"
@@ -1050,6 +1059,11 @@ class UserList extends React.Component {
     render() {
         return this.props.isVisible &&
             <Fragment>
+                <div className="mb-3">
+                    This is a list of all institution users.
+                    A institution admin can create and update projects and imagery for the institution.
+                    Members can view projects with the visibility Institution or higher.
+                </div>
                 <NewUserButtons
                     currentIsInstitutionMember={this.currentIsInstitutionMember()}
                     requestMembership={this.requestMembership}
