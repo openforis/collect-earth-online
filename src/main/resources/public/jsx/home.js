@@ -173,26 +173,21 @@ class MapPanel extends React.Component {
             <div
                 id="mapPanel"
                 className={this.props.showSidePanel
-                                ? "col-lg-9 col-md-12 pl-0"
-                                : "col-lg-9 col-md-12 pl-0 col-xl-12 col-xl-9"}
+                                ? "col-lg-9 col-md-12 pl-0 full-height"
+                                : "col-lg-9 col-md-12 pl-0 col-xl-12 col-xl-9 full-height"}
             >
-                <div className="row no-gutters ceo-map-toggle">
-                    <div
-                        className="bg-lightgray hidden-lg-down"
-                        style={{ height: "calc(100vh - 60px)", width: "2rem", maxWidth: "2rem", fontSize: "2rem", display: "flex", alignItems: "center", justifyContent: "center" }}
-                        onClick={this.props.toggleSidebar}
-                    >
-                        <div className="my-auto no-gutters text-center">
-                            <div className={this.props.showSidePanel ? "" : "d-none"}>
-                                <UnicodeIcon icon="leftCaret"/>
-                            </div>
-                            <div className={this.props.showSidePanel ? "d-none" : ""}>
-                                <UnicodeIcon icon="rightCaret"/>
-                            </div>
-                        </div>
-                    </div>
-                    <div id="home-map-pane" style={{ height: "calc(100vh - 60px)", width: "100%", marginLeft: "2rem", position: "fixed" }}></div>
+                <div
+                    id="toggle-map-button"
+                    className="bg-lightgray"
+                    onClick={this.props.toggleSidebar}
+                >
+                    {this.props.showSidePanel ?
+                        <UnicodeIcon icon="leftCaret"/>
+                        :
+                        <UnicodeIcon icon="rightCaret"/>
+                    }
                 </div>
+                <div id="home-map-pane" className="full-height" style={{ width: "100%", position: "fixed" }}></div>
                 <ProjectPopup
                     mapConfig={this.state.mapConfig}
                     clusterExtent={this.state.clusterExtent}
