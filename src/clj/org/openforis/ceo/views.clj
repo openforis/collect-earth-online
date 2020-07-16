@@ -57,7 +57,7 @@
        :body    (html5
                  (head page)
                  [:body {:style {:padding-top "60px"}}
-                  [:secton {:id "content" :class "container-fluid"} ; TODO This seems out of order with the app div, should the container class be inside each page?
+                  [:section {:id "content" :class "container-fluid"} ; TODO This seems out of order with the app div, should the container class be inside each page?
                    (when-let [flash-message (get-in request [:params :flash_message])]
                      [:p {:class "alert"} flash-message])            ; TODO This will be moved to the front end for better UX.
                    (let [announcement (slurp "/announcement.txt")]
