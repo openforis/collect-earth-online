@@ -15,13 +15,9 @@ class MailingList extends React.Component {
 
     submitEmail = () => {
         if (confirm("Are you sure you want to send to this mailing list?")) {
-            const { subject, body } = this.state;
             fetch("/send-to-mailing-list", {
                 method: "POST",
-                body: JSON.stringify({
-                    subject,
-                    body,
-                }),
+                body: JSON.stringify(this.state),
             })
                 .then(response => Promise.all([response.ok, response.text()]))
                 .then(data => {
@@ -38,46 +34,44 @@ class MailingList extends React.Component {
 
     render() {
         return (
-            <section id="content" className="container-fluid">
-                <div className="row justify-content-center">
-                    <div className="col-xl-6 col-lg-8 border bg-lightgray mb-5">
-                        <div className="bg-darkgreen mb-3 no-container-margin">
-                            <h1>Mailing List!</h1>
-                        </div>
-                        <div className="row mb-3">
-                            <div className="col">
-                                <div className="form-group">
-                                    <label htmlFor="subject">Subject</label>
-                                    <input
-                                        id="subject"
-                                        className="form-control"
-                                        autoComplete="off"
-                                        placeholder="Subject"
-                                        type="text"
-                                        value={this.state.subject}
-                                        onChange={e => this.setState({ subject: e.target.value })}
-                                    />
-                                </div>
-                                <div className="form-group">
-                                    <label htmlFor="body">Body</label>
-                                    <CKEditor
-                                        editor={ClassicEditor}
-                                        data={this.state.body}
-                                        onChange={(e, editor) => this.setState({ body: editor.getData() })}
-                                    />
-                                </div>
-                                <button
-                                    type="button"
-                                    className="btn btn-outline-lightgreen btn-block"
-                                    onClick={this.submitEmail}
-                                >
-                                    Send to All CEO Users
-                                </button>
+            <div className="row justify-content-center">
+                <div className="col-xl-6 col-lg-8 border bg-lightgray mb-5">
+                    <div className="bg-darkgreen mb-3 no-container-margin">
+                        <h1>Mailing List</h1>
+                    </div>
+                    <div className="row mb-3">
+                        <div className="col">
+                            <div className="form-group">
+                                <label htmlFor="subject">Subject</label>
+                                <input
+                                    id="subject"
+                                    className="form-control"
+                                    autoComplete="off"
+                                    placeholder="Subject"
+                                    type="text"
+                                    value={this.state.subject}
+                                    onChange={e => this.setState({ subject: e.target.value })}
+                                />
                             </div>
+                            <div className="form-group">
+                                <label htmlFor="body">Body</label>
+                                <CKEditor
+                                    editor={ClassicEditor}
+                                    data={this.state.body}
+                                    onChange={(e, editor) => this.setState({ body: editor.getData() })}
+                                />
+                            </div>
+                            <button
+                                type="button"
+                                className="btn btn-outline-lightgreen btn-block"
+                                onClick={this.submitEmail}
+                            >
+                                Send to All CEO Users
+                            </button>
                         </div>
                     </div>
                 </div>
-            </section>
+            </div>
         );
     }
 }

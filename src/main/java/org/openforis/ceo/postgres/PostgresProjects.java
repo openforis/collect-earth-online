@@ -989,7 +989,7 @@ public class PostgresProjects implements Projects {
                 pstmt.setString(6,  newProject.get("privacyLevel").getAsString());
                 pstmt.setString(7,  newProject.get("boundary").getAsString());
                 pstmt.setString(8,  newProject.get("plotDistribution").getAsString());
-                pstmt.setInt(9,    newProject.get("numPlots").getAsInt());
+                pstmt.setInt(9,     newProject.get("numPlots").getAsInt());
                 pstmt.setDouble(10, newProject.get("plotSpacing").getAsDouble());
                 pstmt.setString(11, newProject.get("plotShape").getAsString());
                 pstmt.setDouble(12, newProject.get("plotSize").getAsDouble());
@@ -1010,6 +1010,12 @@ public class PostgresProjects implements Projects {
                         if (jsonInputs.has("projectImageryList")) {
                             // insert project images
                             insertProjectImagery(newProject.get("id").getAsInt(), jsonInputs);
+                        } else {
+                            try (var pstmt_imagery = conn.prepareStatement("SELECT * FROM add_all_institution_imagery(?)")) {
+
+                                pstmt_imagery.setInt(1, newProjectId);
+                                pstmt_imagery.execute();
+                            }
                         }
 
                         if (newProject.get("projectTemplate").getAsInt() > 0

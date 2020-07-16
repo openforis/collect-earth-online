@@ -28,6 +28,10 @@ const blankProject = {
     samplesPerPlot: "",
     surveyQuestions: [],
     surveyRules: [],
+    projectOptions: {
+        showGEEScript: false,
+        showPlotInformation: false,
+    },
 };
 
 class Project extends React.Component {
@@ -37,9 +41,6 @@ class Project extends React.Component {
             projectDetails: blankProject,
             useTemplatePlots: false,
             useTemplateWidgets: false,
-            projectOptions: {
-                showGEEScript: false,
-            },
             imageryList: [],
             projectImageryList: [],
             mapConfig: null,
@@ -126,7 +127,7 @@ class Project extends React.Component {
                       latMax: this.state.coordinates.latMax,
                       description: this.state.projectDetails.description,
                       name: this.state.projectDetails.name,
-                      projectOptions: this.state.projectOptions,
+                      projectOptions: this.state.projectDetails.projectOptions,
                       numPlots: this.state.projectDetails.numPlots,
                       plotDistribution: this.state.projectDetails.plotDistribution,
                       plotShape: this.state.projectDetails.plotShape,
@@ -302,9 +303,6 @@ class Project extends React.Component {
                 },
                 useTemplatePlots: false,
                 useTemplateWidgets: false,
-                projectOptions: {
-                    showGEEScript: false,
-                },
             });
             mercator.removeLayerById(this.state.mapConfig, "dragBoxLayer");
         } else {
@@ -319,7 +317,6 @@ class Project extends React.Component {
                     surveyRules: templateProject.surveyRules || [],
                     privacyLevel: "institution",
                 },
-                projectOptions: templateProject.projectOptions,
                 plotList: [],
                 useTemplatePlots: true,
                 useTemplateWidgets: true,
@@ -459,14 +456,6 @@ class Project extends React.Component {
                                     : ceoMapStyles.yellowSquare);
     };
 
-    onShowGEEScriptClick = () =>
-        this.setState({
-            projectOptions: {
-                ...this.state.projectOptions,
-                showGEEScript: !this.state.projectOptions.showGEEScript,
-            },
-        });
-
     setProjectImageryList = (newProjectImageryList) =>
         this.setState({ projectImageryList: newProjectImageryList });
 
@@ -489,8 +478,6 @@ class Project extends React.Component {
                             toggleTemplateWidgets={this.toggleTemplateWidgets}
                             useTemplatePlots={this.state.useTemplatePlots}
                             useTemplateWidgets={this.state.useTemplateWidgets}
-                            showGEEScript={this.state.projectOptions.showGEEScript}
-                            onShowGEEScriptClick={this.onShowGEEScriptClick}
                             projectImageryList={this.state.projectImageryList}
                             setProjectImageryList={this.setProjectImageryList}
                         />
@@ -532,8 +519,8 @@ function ProjectDesignForm(props) {
                 setProjectImageryList={props.setProjectImageryList}
             />
             <ProjectOptions
-                showGEEScript={props.showGEEScript}
-                onShowGEEScriptClick={props.onShowGEEScriptClick}
+                projectOptions={props.projectDetails.projectOptions}
+                setProjectDetail={props.setProjectDetail}
             />
             {props.useTemplatePlots
             ?

@@ -185,7 +185,6 @@ class AccountForm extends React.Component {
                         </div>
                         <div className="form-check mb-3">
                             <input
-                                name="on-mailing-list"
                                 id="on-mailing-list"
                                 type="checkbox"
                                 className="form-check-input"

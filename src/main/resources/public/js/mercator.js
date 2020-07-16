@@ -898,12 +898,20 @@ mercator.removeLayerById = function (mapConfig, layerId) {
 // reproject the created geometry from WGS84 to Web Mercator before
 // returning.
 mercator.parseGeoJson = function (geoJson, reprojectToMap) {
-    const format = new GeoJSON();
-    const geometry = format.readGeometry(geoJson);
-    if (reprojectToMap) {
-        return geometry.transform("EPSG:4326", "EPSG:3857");
+    if (geoJson) {
+        try {
+            const format = new GeoJSON();
+            const geometry = format.readGeometry(geoJson);
+            if (reprojectToMap) {
+                return geometry.transform("EPSG:4326", "EPSG:3857");
+            } else {
+                return geometry;
+            }
+        } catch (e) {
+            return new Point([0, 0]);
+        }
     } else {
-        return geometry;
+        return new Point([0, 0]);
     }
 };
 

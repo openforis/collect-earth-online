@@ -16,7 +16,6 @@ import javax.mail.Transport;
 import javax.mail.internet.AddressException;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
-
 import org.openforis.ceo.env.CeoConfig;
 
 public class Mail {
@@ -109,13 +108,13 @@ public class Mail {
         }
     }
 
-    // TODO, there is no way to pick up errors from here.
+    // TODO, there is no way to pick up password failed errors from here.
     public static void sendToMailingList(String from, List<String> bcc, String smtpServer, String smtpPort,
                                          String smtpPassword, String subject, String body, String contentType, int chunkSize) {
         var counter = new AtomicInteger();
         if (bcc.size() > 0) {
-            var unsubscribeUrl = Paths.get(BASE_URL, "unsubscribe-mailing-list");
-            var newBody = body + "<br /><br />--<p><a href=\"" + unsubscribeUrl + "\">Unsubscribe</a></p>";
+            var unsubscribeUrl = BASE_URL + (BASE_URL.endsWith("/") ? "" : "/") + "unsubscribe-mailing-list";
+            var newBody = body + "<br><hr><p><a href=\"" + unsubscribeUrl + "\">Unsubscribe</a></p>";
             bcc.stream()
                 .collect(Collectors.groupingBy(it -> counter.getAndIncrement() / chunkSize))
                 .values()
