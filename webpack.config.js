@@ -1,7 +1,7 @@
 const path = require("path");
 const fs = require("fs");
 
-const outdir = "target/classes/public/js";
+const outdir = "target/public/js";
 
 module.exports = env => ({
     mode: env.dev ? "development" : "production",

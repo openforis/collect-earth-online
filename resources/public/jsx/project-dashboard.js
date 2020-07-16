@@ -222,9 +222,9 @@ export function pageInit(args) {
         <NavigationBar userName={args.userName} userId={args.userId}>
             <ProjectDashboard
                 userId={args.userId}
-                projectId={args.projectId}
-                project_stats_visibility={args.project_stats_visibility}
-                project_template_visibility={args.project_template_visibility}
+                projectId={args.projectId || 0}
+                project_stats_visibility={args.projectId ? "visible" : "d-none"}
+                project_template_visibility={args.projectId ? "d-none" : "visible"}
             />
         </NavigationBar>,
         document.getElementById("app")

@@ -643,7 +643,7 @@ export function pageInit(args) {
         <NavigationBar userName={args.userName} userId={args.userId}>
             <Project
                 userId={args.userId}
-                projectId={args.projectId}
+                projectId={args.projectId || 0}
             />
         </NavigationBar>,
         document.getElementById("app")
