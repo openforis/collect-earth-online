@@ -187,7 +187,7 @@ class MapPanel extends React.Component {
                         <UnicodeIcon icon="rightCaret"/>
                     }
                 </div>
-                <div id="home-map-pane" className="full-height" style={{ width: "100%", position: "fixed" }}></div>
+                <div id="home-map-pane" className="full-height"></div>
                 <ProjectPopup
                     mapConfig={this.state.mapConfig}
                     clusterExtent={this.state.clusterExtent}
