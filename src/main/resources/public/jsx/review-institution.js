@@ -1061,7 +1061,7 @@ class UserList extends React.Component {
             <Fragment>
                 <div className="mb-3">
                     This is a list of all institution users.
-                    A institution admin can create and update projects and imagery for the institution.
+                    An institution admin can create and update projects and imagery for the institution.
                     Members can view projects with the visibility Institution or higher.
                 </div>
                 <NewUserButtons
