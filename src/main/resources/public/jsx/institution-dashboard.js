@@ -15,7 +15,7 @@ class InstitutionDashboard extends React.Component {
     }
 
     getProjectList = () => {
-        fetch(this.props.documentRoot + "/get-all-projects?institutionId=" + this.props.institutionId)
+        fetch(`/get-all-projects?institutionId=${this.props.institutionId}`)
             .then(response => response.ok ? response.json() : Promise.reject(response))
             .then(data => {
                 this.setDetails(data);
@@ -29,7 +29,7 @@ class InstitutionDashboard extends React.Component {
     setDetails = (projects) => {
         const details = this.state.details;
         projects.forEach(proj => {
-            fetch(this.props.documentRoot + "/get-project-stats?projectId=" + proj.id)
+            fetch(`/get-project-stats?projectId=${proj.id}`)
                 .then(response => response.ok ? response.json() : Promise.reject(response))
                 .then(data => {
                     details.push({
@@ -98,7 +98,6 @@ export function renderInstitutionDashboardPage(args) {
     ReactDOM.render(
         <NavigationBar userName={args.userName} userId={args.userId}>
             <InstitutionDashboard
-                documentRoot=""
                 userId={args.userId}
                 institutionId={args.institutionId}
             />

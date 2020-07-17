@@ -25,7 +25,7 @@ class Home extends React.Component {
             });
     }
 
-    getProjects = () => fetch(this.props.documentRoot + "/get-all-projects")
+    getProjects = () => fetch("/get-all-projects")
         .then(response => response.ok ? response.json() : Promise.reject(response))
         .then(data => {
             if (data.length > 0) {
@@ -36,7 +36,7 @@ class Home extends React.Component {
             }
         });
 
-    getImagery = () => fetch(this.props.documentRoot + "/get-public-imagery")
+    getImagery = () => fetch("/get-public-imagery")
         .then(response => response.ok ? response.json() : Promise.reject(response))
         .then(data => {
             if (data.length > 0) {
@@ -47,7 +47,7 @@ class Home extends React.Component {
             }
         });
 
-    getInstitutions = () => fetch(this.props.documentRoot + "/get-all-institutions")
+    getInstitutions = () => fetch("/get-all-institutions")
         .then(response => response.ok ? response.json() : Promise.reject(response))
         .then(data => {
             if (data.length > 0) {
@@ -72,7 +72,6 @@ class Home extends React.Component {
                 <div className="Wrapper">
                     <div className="row tog-effect">
                         <SideBar
-                            documentRoot={this.props.documentRoot}
                             institutions={this.state.institutions}
                             projects={this.state.projects}
                             showSidePanel={this.state.showSidePanel}
@@ -81,7 +80,6 @@ class Home extends React.Component {
                             userRole={this.props.userRole}
                         />
                         <MapPanel
-                            documentRoot={this.props.documentRoot}
                             imagery={this.state.imagery}
                             projects={this.state.projects}
                             showSidePanel={this.state.showSidePanel}
@@ -111,7 +109,7 @@ class MapPanel extends React.Component {
                     return imagery.title === "Mapbox Satellite w/ Labels";
                 }
             ) || this.props.imagery[0];
-            const mapConfig = mercator.createMap("home-map-pane", [70, 15], 2.1, [homePageLayer], this.props.documentRoot);
+            const mapConfig = mercator.createMap("home-map-pane", [70, 15], 2.1, [homePageLayer]);
             mercator.setVisibleLayer(mapConfig, homePageLayer.id);
             this.setState({ mapConfig: mapConfig });
         }
@@ -120,12 +118,11 @@ class MapPanel extends React.Component {
 
             this.addProjectMarkers(this.state.mapConfig,
                                    this.props.projects,
-                                   this.props.documentRoot,
                                    40); // clusterDistance = 40, use null to disable clustering
         }
     }
 
-    addProjectMarkers(mapConfig, projects, documentRoot, clusterDistance) {
+    addProjectMarkers(mapConfig, projects, clusterDistance) {
         const projectSource = mercator.projectsToVectorSource(projects.filter(project => project.boundary));
         if (clusterDistance == null) {
             mercator.addVectorLayer(mapConfig,
@@ -173,34 +170,25 @@ class MapPanel extends React.Component {
             <div
                 id="mapPanel"
                 className={this.props.showSidePanel
-                                ? "col-lg-9 col-md-12 pl-0"
-                                : "col-lg-9 col-md-12 pl-0 col-xl-12 col-xl-9"}
+                                ? "col-lg-9 col-md-12 pl-0 full-height"
+                                : "col-lg-9 col-md-12 pl-0 col-xl-12 col-xl-9 full-height"}
             >
-                <div className="row no-gutters ceo-map-toggle">
-                    <div
-                        id="togbutton"
-                        className="button col-xl-1 bg-lightgray d-none d-xl-block"
-                        onClick={this.props.toggleSidebar}
-                    >
-                        <div className="empty-div" style={{ height: "50vh" }}/>
-                        <div className="my-auto no-gutters text-center">
-                            <div className={this.props.showSidePanel ? "" : "d-none"}>
-                                <UnicodeIcon icon="leftCaret"/>
-                            </div>
-                            <div className={this.props.showSidePanel ? "d-none" : ""}>
-                                <UnicodeIcon icon="rightCaret"/>
-                            </div>
-                        </div>
-                    </div>
-                    <div className="col-xl-11 mr-0 ml-0 bg-lightgray">
-                        <div id="home-map-pane" style={{ width: "100%", height: "calc(100vh - 61px)", position: "fixed" }}></div>
-                    </div>
+                <div
+                    id="toggle-map-button"
+                    className="bg-lightgray"
+                    onClick={this.props.toggleSidebar}
+                >
+                    {this.props.showSidePanel ?
+                        <UnicodeIcon icon="leftCaret"/>
+                        :
+                        <UnicodeIcon icon="rightCaret"/>
+                    }
                 </div>
+                <div id="home-map-pane" className="full-height"></div>
                 <ProjectPopup
                     mapConfig={this.state.mapConfig}
                     clusterExtent={this.state.clusterExtent}
                     features={this.state.clickedFeatures}
-                    documentRoot={this.props.documentRoot}
                 />
             </div>
         );
@@ -241,10 +229,9 @@ class SideBar extends React.Component {
                 </div>
                 }
                 {this.props.userId > 0 &&
-                <CreateInstitutionButton documentRoot={this.props.documentRoot}/>
+                <CreateInstitutionButton/>
                 }
                 <InstitutionFilter
-                    documentRoot={this.props.documentRoot}
                     updateFilterText={this.updateFilterText}
                     filterText={this.state.filterText}
                     toggleUseFirst={this.toggleUseFirst}
@@ -264,7 +251,6 @@ class SideBar extends React.Component {
                         <h2 className="tree_label" id="panelTitle">Your Affiliations</h2>
                     </div>
                     <InstitutionList
-                        documentRoot={this.props.documentRoot}
                         userId={this.props.userId}
                         institutions={this.props.userInstitutions}
                         projects={this.props.projects}
@@ -282,7 +268,6 @@ class SideBar extends React.Component {
                 }
                 {this.props.institutions.length > 0 && this.props.projects.length > 0 ?
                     <InstitutionList
-                        documentRoot={this.props.documentRoot}
                         userId={this.props.userId}
                         institutions={this.props.institutions}
                         projects={this.props.projects}
@@ -302,7 +287,6 @@ class SideBar extends React.Component {
 }
 
 function InstitutionList({
-    documentRoot,
     userId,
     institutions,
     projects,
@@ -351,7 +335,6 @@ function InstitutionList({
                     key={uid}
                     id={institution.id}
                     name={institution.name}
-                    documentRoot={documentRoot}
                     projects={filteredProjects
                         .filter(project => project.institution === institution.id)}
                     forceInstitutionExpand={!filterInstitution && filterText.length > 0}
@@ -380,7 +363,7 @@ function InstitutionFilter(props) {
                 />
                 <a href="#" onClick={props.toggleShowFilters}>
                     <img
-                        src={props.documentRoot + (props.showFilters ? "/img/hidefilter.png" : "/img/showfilter.png")}
+                        src={props.showFilters ? "/img/hidefilter.png" : "/img/showfilter.png"}
                         width="40"
                         height="40"
                         style={{ padding: "5px" }}
@@ -468,13 +451,13 @@ function InstitutionFilter(props) {
     );
 }
 
-function CreateInstitutionButton(props) {
+function CreateInstitutionButton() {
     return (
         <div className="bg-yellow text-center p-2">
             <a
                 className="create-institution"
                 style={{ display:"block" }}
-                href={props.documentRoot + "/create-institution"}
+                href={"/create-institution"}
             >
                 <UnicodeIcon icon="add" backgroundColor="#31BAB0"/> Create New Institution
             </a>
@@ -513,7 +496,7 @@ class Institution extends React.Component {
                         <div className="col-lg-1">
                             <a
                                 className="institution_info btn btn-sm btn-outline-lightgreen"
-                                href={props.documentRoot + "/review-institution?institutionId=" + props.id}
+                                href={`/review-institution?institutionId=${props.id}`}
                             >
                                 <span style={{ color: "white", fontSize: "1rem" }}>
                                     <UnicodeIcon icon="info"/>
@@ -527,7 +510,6 @@ class Institution extends React.Component {
                     <ProjectList
                         id={props.id}
                         projects={props.projects}
-                        documentRoot={props.documentRoot}
                     />
                 }
             </li>
@@ -545,7 +527,6 @@ function ProjectList(props) {
                     institutionId={props.id}
                     editable={project.editable}
                     name={project.name}
-                    documentRoot={props.documentRoot}
                 />
         );
 }
@@ -562,7 +543,7 @@ function Project(props) {
                             overflow: "hidden",
                             textOverflow: "ellipsis",
                         }}
-                        href={props.documentRoot + "/collection?projectId=" + props.id}
+                        href={`/collection?projectId=${props.id}`}
                     >
                         {props.name || "*un-named*"}
                     </a>
@@ -570,7 +551,7 @@ function Project(props) {
                 <div className="col-lg-2 pl-lg-0">
                     <a
                         className="edit-project btn btn-sm btn-outline-yellow btn-block"
-                        href={props.documentRoot + "/review-project?projectId=" + props.id}
+                        href={`/review-project?projectId=${props.id}`}
                     >
                         <UnicodeIcon icon="edit"/>
                     </a>
@@ -581,7 +562,7 @@ function Project(props) {
                 <div className="col mb-1 mx-0">
                     <a
                         className="btn btn-sm btn-outline-lightgreen btn-block"
-                        href={props.documentRoot + "/collection?projectId=" + props.id}
+                        href={`/collection?projectId=${props.id}`}
                     >
                         {props.name}
                     </a>
@@ -614,7 +595,7 @@ class ProjectPopup extends React.Component {
                                             <td className="small col-6 px-0 my-auto">Name</td>
                                             <td className="small col-6 pr-0">
                                                 <a
-                                                    href={this.props.documentRoot + "/collection?projectId=" + feature.get("projectId")}
+                                                    href={`/collection?projectId=${feature.get("projectId")}`}
                                                     className="btn btn-sm btn-block btn-outline-lightgreen"
                                                     style={{
                                                         whiteSpace: "nowrap",
@@ -663,7 +644,6 @@ export function renderHomePage(args) {
     ReactDOM.render(
         <NavigationBar userName={args.userName} userId={args.userId}>
             <Home
-                documentRoot=""
                 userId={args.userId === "" ? -1 : parseInt(args.userId)}
                 userRole={args.userRole}
             />

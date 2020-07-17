@@ -50,7 +50,7 @@ class WidgetLayoutEditor extends React.PureComponent {
             wizardStep: 1,
             projectId: this.getParameterByName("projectId"),
             institutionID: this.getParameterByName("institutionId") ? this.getParameterByName("institutionId") : "1",
-            theURI: this.props.documentRoot + "/geo-dash",
+            theURI: "/geo-dash",
         };
     }
 
@@ -60,7 +60,7 @@ class WidgetLayoutEditor extends React.PureComponent {
                 console.log(response);
                 alert("Error downloading the widget list. See console for details.");
             });
-        fetch(this.props.documentRoot + "/get-institution-imagery?institutionId=" + this.state.institutionID)
+        fetch(`/get-institution-imagery?institutionId=${this.state.institutionID}`)
             .then(response => response.ok ? response.json() : Promise.reject(response))
             .then(data => {
                 this.setState({
@@ -221,7 +221,7 @@ class WidgetLayoutEditor extends React.PureComponent {
 
     addCustomImagery = imagery => {
         if (this.state.addCustomImagery === true) {
-            fetch(this.props.documentRoot + "/add-geodash-imagery",
+            fetch("/add-geodash-imagery",
                   {
                       method: "POST",
                       headers: {
@@ -240,7 +240,7 @@ class WidgetLayoutEditor extends React.PureComponent {
     };
 
     buildImageryObject = img => {
-        const gatewayUrl = this.props.documentRoot + "/geo-dash/gateway-request";
+        const gatewayUrl = "/geo-dash/gateway-request";
         let title = this.state.widgetTitle !== "" ? this.state.widgetTitle : img.filterType.replace(/\w\S*/g, function (word) {
             return word.charAt(0) + word.slice(1).toLowerCase();
         }) + ": " + img.startDate + " to " + img.endDate;
@@ -328,13 +328,12 @@ class WidgetLayoutEditor extends React.PureComponent {
 
     getBandsFromGateway = isDual => {
         // go get available bands
-        const url = this.props.documentRoot + "/geo-dash/gateway-request";
         if (event.target.value !== "custom") {
             const postObject = {
                 path: "getAvailableBands",
                 imageCollection: event.target.value, //"LANDSAT/LT05/C01/T1"
             };
-            fetch(url, {
+            fetch("/geo-dash/gateway-request", {
                 method: "POST",
                 headers: {
                     "Accept": "application/json",
@@ -871,7 +870,7 @@ class WidgetLayoutEditor extends React.PureComponent {
     };
 
     getProjectList = () => {
-        fetch(this.props.documentRoot + "/get-all-projects")
+        fetch("/get-all-projects")
             .then(response => response.ok ? response.json() : Promise.reject(response))
             .then(data => this.setState({ projectList: data }))
             .catch(response => {
@@ -1961,7 +1960,6 @@ export function renderWidgetEditorPage(args) {
             userName={args.userName}
             page={(addDialog, copyDialog, closeDialogs) =>
                 <WidgetLayoutEditor
-                    documentRoot=""
                     addDialog={addDialog}
                     copyDialog={copyDialog}
                     closeDialogs={closeDialogs}

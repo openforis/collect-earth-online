@@ -50,11 +50,11 @@ class Geodash extends React.Component {
     }
 
     componentDidMount() {
-        fetch(this.props.documentRoot + "/get-institution-imagery?institutionId=" + this.state.institutionId)
+        fetch(`/get-institution-imagery?institutionId=${this.state.institutionId}`)
             .then(response => response.ok ? response.json() : Promise.reject(response))
             .then(data => this.setState({ imageryList: data }))
             .then(() =>
-                fetch(this.props.documentRoot + "/geo-dash/get-by-projid?projectId=" + this.state.projectId)
+                fetch(`/geo-dash/get-by-projid?projectId=${this.state.projectId}`)
                     .then(response => response.json())
                     .then(data => data.widgets.map(widget => {
                         widget.isFull = false;
@@ -147,7 +147,6 @@ class Geodash extends React.Component {
                     onSwipeChange={this.handleSwipeChange}
                     callbackComplete={this.state.callbackComplete}
                     getParameterByName={this.getParameterByName}
-                    documentRoot={this.props.documentRoot}
                     mapCenter={this.state.mapCenter}
                     mapZoom={this.state.mapZoom}
                     setCenterAndZoom={this.setCenterAndZoom}
@@ -176,7 +175,6 @@ class Widgets extends React.Component {
                             onSliderChange = {this.props.onSliderChange}
                             onSwipeChange = {this.props.onSwipeChange}
                             getParameterByName={this.props.getParameterByName}
-                            documentRoot={this.props.documentRoot}
                             mapCenter={this.props.mapCenter}
                             mapZoom={this.props.mapZoom}
                             setCenterAndZoom={this.props.setCenterAndZoom}
@@ -325,7 +323,6 @@ class Widget extends React.Component {
                     onSwipeChange={onSwipeChange}
                     syncMapWidgets={this.syncMapWidgets}
                     getParameterByName={this.props.getParameterByName}
-                    documentRoot={this.props.documentRoot}
                     setCenterAndZoom={this.props.setCenterAndZoom}
                     imageryList={this.props.imageryList}
                     resetCenterAndZoom={this.props.resetCenterAndZoom}
@@ -337,7 +334,6 @@ class Widget extends React.Component {
                     widget={widget}
                     projPairAOI={this.props.projPairAOI}
                     getParameterByName={this.props.getParameterByName}
-                    documentRoot={this.props.documentRoot}
                     initCenter={this.props.initCenter}
                 />
             </div>;
@@ -346,7 +342,6 @@ class Widget extends React.Component {
                 <StatsWidget
                     widget={widget}
                     projPairAOI={this.props.projPairAOI}
-                    documentRoot={this.props.documentRoot}
                 />
             </div>;
         } else if (widget.properties[0] === "DegradationTool") {
@@ -355,7 +350,6 @@ class Widget extends React.Component {
                     widget={widget}
                     projPairAOI={this.props.projPairAOI}
                     getParameterByName={this.props.getParameterByName}
-                    documentRoot={this.props.documentRoot}
                     initCenter={this.props.initCenter}
                     mapCenter={this.props.mapCenter}
                     mapZoom={this.props.mapZoom}
@@ -421,7 +415,6 @@ class DegradationWidget extends React.Component {
                                     onSwipeChange={this.props.onSwipeChange}
                                     syncMapWidgets={this.syncMapWidgets}
                                     getParameterByName={this.props.getParameterByName}
-                                    documentRoot={this.props.documentRoot}
                                     setCenterAndZoom={this.props.setCenterAndZoom}
                                     imageryList={this.props.imageryList}
                                     resetCenterAndZoom={this.props.resetCenterAndZoom}
@@ -440,7 +433,6 @@ class DegradationWidget extends React.Component {
                                     widget={this.props.widget}
                                     projPairAOI={this.props.projPairAOI}
                                     getParameterByName={this.props.getParameterByName}
-                                    documentRoot={this.props.documentRoot}
                                     initCenter={this.props.initCenter}
                                     handleSelectDate={this.handleSelectDate}
                                     degDataType={this.state.degDataType}
@@ -554,7 +546,7 @@ class MapWidget extends React.Component {
             shortWidget.properties.push(collectionName);
             shortWidget.ImageAsset = firstImage.imageAsset;
             shortWidget.ImageCollectionAsset = firstImage.ImageCollectionAsset;
-            url = this.props.documentRoot + "/geo-dash/gateway-request";
+            url = "/geo-dash/gateway-request";
             path = getGatewayPath(shortWidget, collectionName);
             shortWidget.visParams = firstImage.visParams;
             shortWidget.min = firstImage.min != null ? firstImage.min : "";
@@ -582,7 +574,7 @@ class MapWidget extends React.Component {
             shortWidget2.properties.push(dualImageObject.collectionName);
             shortWidget2.ImageAsset = secondImage.imageAsset;
             shortWidget2.ImageCollectionAsset = secondImage.ImageCollectionAsset;
-            dualImageObject.url = this.props.documentRoot + "/geo-dash/gateway-request";
+            dualImageObject.url = "/geo-dash/gateway-request";
             dualImageObject. path = getGatewayPath(shortWidget2, dualImageObject.collectionName);
             shortWidget2.visParams = secondImage.visParams;
             shortWidget2.min = secondImage.min != null ? secondImage.min : "";
@@ -625,7 +617,7 @@ class MapWidget extends React.Component {
             if (widget.properties[0] === "ImageElevation") {
                 widget.ImageAsset = "USGS/SRTMGL1_003";
             }
-            url = this.props.documentRoot + "/geo-dash/gateway-request";
+            url = "/geo-dash/gateway-request";
             path = getGatewayPath(widget, collectionName);
             postObject.visParams = this.getImageParams(widget);
             postObject.featureCollection = widget.featureCollection;
@@ -693,7 +685,7 @@ class MapWidget extends React.Component {
                 }
                 if (typeof(Storage) !== "undefined"
                     && this.checkForCache(postObject, this.props.widget, false)) {
-                    this.fetchMapInfo(postObject, this.props.documentRoot + "/geo-dash/gateway-request", this.props.widget, null);
+                    this.fetchMapInfo(postObject, "/geo-dash/gateway-request", this.props.widget, null);
                 }
             }
         }
@@ -828,7 +820,7 @@ class MapWidget extends React.Component {
         new TileLayer({
             source: (!basemap || basemap.id === "osm")
                 ? new OSM()
-                : mercator.createSource(basemap.sourceConfig, basemap.id, this.props.documentRoot),
+                : mercator.createSource(basemap.sourceConfig, basemap.id),
         });
 
     getImageParams = widget => {
@@ -1118,7 +1110,7 @@ class MapWidget extends React.Component {
                 });
                 whichMap.addLayer(layer);
             } else {
-                fetch(this.props.documentRoot + "/get-proj-plot?projectId=" + projectID + "&plotId=" + plotID)
+                fetch(`/get-proj-plot?projectId=${projectID}&plotId=${plotID}`)
                     .then(res => res.json())
                     .then(data => {
                         const geoJsonObject = typeof(data) === "string" ? JSON.parse(data) : data;
@@ -1260,7 +1252,7 @@ class GraphWidget extends React.Component {
         } else {
             // check if this.props.degDataType is landsat, sar, or ""
             // if "" fetch is needed else check the new state variable chartData.landsat.data
-            fetch(this.props.documentRoot + "/geo-dash/gateway-request", {
+            fetch("/geo-dash/gateway-request", {
                 method: "POST",
                 headers: {
                     "Accept": "application/json",
@@ -1503,7 +1495,7 @@ class StatsWidget extends React.Component {
 
     componentDidMount() {
         const projPairAOI = this.props.projPairAOI;
-        fetch(this.props.documentRoot + "/geo-dash/gateway-request", {
+        fetch("/geo-dash/gateway-request", {
             method: "POST",
             headers: {
                 "Accept": "application/json",
@@ -1643,7 +1635,7 @@ export function renderGeodashPage(args) {
     ReactDOM.render(
         <GeoDashNavigationBar
             userName={args.userName}
-            page={() => <Geodash documentRoot=""/>}
+            page={() => <Geodash/>}
         />,
         document.getElementById("geo-dash")
     );
