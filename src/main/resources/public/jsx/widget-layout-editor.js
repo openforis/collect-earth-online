@@ -728,29 +728,16 @@ class WidgetLayoutEditor extends React.PureComponent {
         this.setState({ widgetMax: event.target.value });
     };
 
-    onStartDateChanged = date => {
-        if (date.target) {
-            if ( date.target.value) {
-                this.setState({ startDate: date.target.value });
-            } else {
-                this.setState({ startDate: "" });
-            }
-        } else {
-            this.setState({ startDate: date });
-        }
+    onStartDateChanged = event => {
+        this.setState({
+            startDate: event.target ? event.target.value : "",
+        }, this.setFormStateByDates);
     };
 
-    onEndDateChanged = date => {
-        if (date.target) {
-            if (date.target.value) {
-                this.setState({ endDate: date.target.value });
-            } else {
-                this.setState({ endDate: "" });
-            }
-        } else {
-            this.setState({ endDate: date });
-            this.setFormStateByDates();
-        }
+    onEndDateChanged = event => {
+        this.setState({
+            endDate: event.target ? event.target.value : "",
+        }, this.setFormStateByDates);
     };
 
     onWidgetCloudScoreChange = event => {
@@ -785,29 +772,16 @@ class WidgetLayoutEditor extends React.PureComponent {
         this.setState({ widgetCloudScoreDual: event.target.value });
     };
 
-    onStartDateChangedDual = date => {
-        if (date.target) {
-            if (date.target.value) {
-                this.setState({ startDateDual: date.target.value });
-            } else {
-                this.setState({ startDateDual: "" });
-            }
-        } else {
-            this.setState({ startDateDual: date });
-        }
+    onStartDateChangedDual = event => {
+        this.setState({
+            startDateDual: event.target ? event.target.value : "",
+        }, () => this.setFormStateByDates(true));
     };
 
-    onEndDateChangedDual = date => {
-        if (date.target) {
-            if (date.target.value) {
-                this.setState({ endDateDual: date.target.value });
-            } else {
-                this.setState({ endDateDual: "" });
-            }
-        } else {
-            this.setState({ endDateDual: date });
-            this.setFormStateByDates(true);
-        }
+    onEndDateChangedDual = event => {
+        this.setState({
+            endDateDual: event.target ? event.target.value : "",
+        }, () => this.setFormStateByDates(true));
     };
 
     onDataTypeSelectChangedDual = event => {
@@ -844,29 +818,16 @@ class WidgetLayoutEditor extends React.PureComponent {
         }
     };
 
-    onStartDate2Changed = date => {
-        if (date.target) {
-            if (date.target.value) {
-                this.setState({ startDate2: date.target.value });
-            } else {
-                this.setState({ startDate2: "" });
-            }
-        } else {
-            this.setState({ startDate2: date });
-        }
+    onStartDate2Changed = event => {
+        this.setState({
+            startDate2: event.target ? event.target.value : "",
+        }, this.setFormStateByDates);
     };
 
-    onEndDate2Changed = date => {
-        if (date.target) {
-            if (date.target.value) {
-                this.setState({ endDate2: date.target.value });
-            } else {
-                this.setState({ endDate2: "" });
-            }
-        } else {
-            this.setState({ endDate2: date });
-            this.setFormStateByDates();
-        }
+    onEndDate2Changed = event => {
+        this.setState({
+            endDate2: event.target ? event.target.value : "",
+        }, this.setFormStateByDates);
     };
 
     getProjectList = () => {
