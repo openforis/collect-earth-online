@@ -518,7 +518,7 @@ export class GEEImageCollectionMenus extends React.Component {
     };
 
     updateGEEImageCollection = () => {
-        const { startDate, endDate } = this.state;
+        const { startDate, endDate, visParams } = this.state;
         if (new Date(startDate) > new Date(endDate)) {
             alert("Start date must be smaller than the end date.");
         } else {
@@ -529,7 +529,7 @@ export class GEEImageCollectionMenus extends React.Component {
                 this.props.currentProjectBoundary,
                 sourceConfig => ({
                     ...sourceConfig,
-                    collectionVisParams: this.state.visParams,
+                    collectionVisParams: visParams,
                     startDate: startDate,
                     endDate: endDate,
                 }),
