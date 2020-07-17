@@ -13,20 +13,17 @@
                                                   get-base-url
                                                   get-mailing-list-interval
                                                   get-mailing-list-last-sent
-                                                  set-mailing-list-last-sent!]]))
+                                                  set-mailing-list-last-sent!]]
+            [org.openforis.ceo.views :refer [data-response]]))
 
 (defn login [{:keys [params]}]
   (let [{:keys [email password]} params]
     (if-let [user (first (call-sql "check_login" email password))]
-      {:status  200
-       :headers {"Content-Type" "application/json"}
-       :body    ""
-       :session {:userId   (:user_id user)
-                 :userName email
-                 :userRole (if (:administrator user) "admin" "user")}}
-      {:status  200
-       :headers {"Content-Type" "application/json"}
-       :body    "Invalid email/password combination."})))
+      (data-response ""
+                     {:session {:userId   (:user_id user)
+                                :userName email
+                                :userRole (if (:administrator user) "admin" "user")}})
+      (data-response "Invalid email/password combination."))))
 
 (defn- get-register-errors [email password password-confirmation]
   (cond (not (email? email))
@@ -49,9 +46,7 @@
         password-confirmation (:passwordConfirmation params)
         on-mailing-list?      (boolean (:onMailingList params))]
     (if-let [error-msg (get-register-errors email password password-confirmation)]
-      {:status  200
-       :headers {"Content-Type" "application/json"}
-       :body    error-msg}
+      (data-response error-msg)
       (let [user-id   (sql-primitive (call-sql "add_user" email password on-mailing-list?))
             timestamp (-> (DateTimeFormatter/ofPattern "yyyy/MM/dd HH:mm:ss")
                           (.format (LocalDateTime/now)))
@@ -64,18 +59,13 @@
                                        "  The CEO Team")
                                   email email timestamp)]
         (send-mail [email] nil nil "Welcome to CEO!" email-msg "text/plain")
-        {:status  200
-         :headers {"Content-Type" "application/json"}
-         :body    ""
-         :session {:userId   user-id
-                   :userName email
-                   :userRole "user"}}))))
+        (data-response ""
+                       {:session {:userId   user-id
+                                  :userName email
+                                  :userRole "user"}})))))
 
 (defn logout [_]
-  {:status  200
-   :headers {"Content-Type" "application/json"}
-   :body    ""
-   :session nil})
+  (data-response "" {:session nil}))
 
 (defn- get-update-account-errors [stored-email email password password-confirmation current-password]
   (cond (str/blank? current-password)
@@ -97,15 +87,10 @@
 
 (defn- update-email [user-id old-email new-email]
   (if (sql-primitive (call-sql "email_taken" new-email user-id))
-    {:status  200
-     :headers {"Content-Type" "application/json"}
-     :body    (str "An account with the email " new-email " already exists.")}
+    (data-response (str "An account with the email " new-email " already exists."))
     (do
       (call-sql "set_user_email" old-email new-email)
-      {:status  200
-       :headers {"Content-Type" "application/json"}
-       :body    ""
-       :session {:userName new-email}})))
+      (data-response "" {:session {:userName new-email}}))))
 
 (defn update-account [{:keys [params]}]
   (let [user-id               (Integer/parseInt (or (:userId params) "-1"))
@@ -116,18 +101,14 @@
         current-password      (:currentPassword params)
         on-mailing-list?      (boolean (:onMailingList params))]
     (if-let [error-msg (get-update-account-errors stored-email email password password-confirmation current-password)]
-      {:status  200
-       :headers {"Content-Type" "application/json"}
-       :body    error-msg}
+      (data-response error-msg)
       (do
         (when (and (not (str/blank? email)) (not= email stored-email))
           (update-email user-id stored-email email))
         (when (not (str/blank? password))
           (call-sql "update_password" stored-email password))
         (call-sql "set_mailing_list" user-id on-mailing-list?)
-        {:status  200
-         :headers {"Content-Type" "application/json"}
-         :body    ""}))))
+        (data-response "")))))
 
 (defn get-password-reset-key [request]
   (let [email (-> request :params :email)]
@@ -139,15 +120,9 @@
                                        "  %spassword-reset?email=%s&password-reset-key=%s")
                                   email (get-base-url) email reset-key)]
             (send-mail [email] nil nil "Password reset on CEO" email-msg "text/plain")
-            {:status  200
-             :headers {"Content-Type" "application/json"}
-             :body    ""})
-          {:status  200
-           :headers {"Content-Type" "application/json"}
-           :body    "Failed to create a reset key. Please try again later"}))
-      {:status  200
-       :headers {"Content-Type" "application/json"}
-       :body    "There is no user with that email address."})))
+            (data-response ""))
+          (data-response "Failed to create a reset key. Please try again later")))
+      (data-response "There is no user with that email address."))))
 
 (defn- get-reset-password-errors [password password-confirmation]
   (cond (< (count password) 8)
@@ -164,22 +139,14 @@
         password              (:password params)
         password-confirmation (:passwordConfirmation params)]
     (if-let [error-msg (get-reset-password-errors password password-confirmation)]
-      {:status  200
-       :headers {"Content-Type" "application/json"}
-       :body    error-msg}
+      (data-response error-msg)
       (if-let [user (first (call-sql "get_user" email))]
         (if (= reset-key (:reset_key user))
           (do
             (call-sql "update_password" email password)
-            {:status  200
-             :headers {"Content-Type" "application/json"}
-             :body    ""})
-          {:status  200
-           :headers {"Content-Type" "application/json"}
-           :body    (str "Invalid reset key for user " email ".")})
-        {:status  200
-         :headers {"Content-Type" "application/json"}
-         :body    "There is no user with that email address."}))))
+            (data-response ""))
+          (data-response (str "Invalid reset key for user " email ".")))
+        (data-response "There is no user with that email address.")))))
 
 (defn get-all-users [_]
   (let [all-users (mapv (fn [{:keys [user_id email administrator]}]
@@ -187,9 +154,7 @@
                            :email email
                            :role  (if administrator "admin" "user")})
                         (call-sql "get_all_users"))]
-    {:status  200
-     :headers {"Content-Type" "application/json"}
-     :body    (json/write-str all-users)}))
+    (data-response all-users)))
 
 (defn get-institution-users [request]
   (let [institution-id (Integer/parseInt (-> request :params :institutionId))
@@ -200,39 +165,27 @@
                                 :resetKey        reset_key
                                 :institutionRole institution_role})
                              (call-sql "get_all_users_by_institution_id" institution-id))]
-    {:status  200
-     :headers {"Content-Type" "application/json"}
-     :body    (json/write-str all-users)}))
+    (data-response all-users)))
 
 (defn get-user-details [{:keys [params]}]
   (let [user-id (Integer/parseInt (or (:userId params) "-1"))]
     (if-let [details (first (call-sql "get_user_details" user-id))]
-      {:status  200
-       :headers {"Content-Type" "application/json"}
-       :body    (json/write-str {:onMailingList (:on_mailing_list details)})}
-      {:status  200
-       :headers {"Content-Type" "application/json"}
-       :body    ""})))
+      (data-response {:onMailingList (:on_mailing_list details)})
+      (data-response ""))))
 
 ;; FIXME: Change :userId to :accountId to avoid conflict with matching session key
 (defn get-user-stats [{:keys [params]}]
   (let [account-id (Integer/parseInt (:userId params))]
     (if-let [stats (first (call-sql "get_user_stats" account-id))]
-      {:status  200
-       :headers {"Content-Type" "application/json"}
-       :body    (json/write-str {:totalProjects (:total_projects stats)
-                                 :totalPlots    (:total_plots stats)
-                                 :averageTime   (:average_time stats)
-                                 :perProject    (json/read-str (:per_project stats))})}
-      {:status  200
-       :headers {"Content-Type" "application/json"}
-       :body    (json/write-str {})})))
+      (data-response {:totalProjects (:total_projects stats)
+                      :totalPlots    (:total_plots stats)
+                      :averageTime   (:average_time stats)
+                      :perProject    (json/read-str (:per_project stats))})
+      (data-response {}))))
 
 ;; FIXME: stub (This was also incomplete in the Java implementation.)
 (defn update-project-user-stats [_]
-  {:status  200
-   :headers {"Content-Type" "application/json"}
-   :body    ""})
+  (data-response ""))
 
 ;; FIXME: This fails silently. Add better error messages.
 (defn update-institution-role [{:keys [params]}]
@@ -262,17 +215,13 @@
                                              "  The CEO Team")
                                         email role institution-name timestamp)]
                   (send-mail [email] nil nil "User Role Changed!" email-msg "text/plain"))))))))
-    {:status  200
-     :headers {"Content-Type" "application/json"}
-     :body    (json/write-str (get-institution-by-id institution-id))}))
+    (data-response (get-institution-by-id institution-id))))
 
 (defn request-institution-membership [{:keys [params]}]
   (let [user-id        (Integer/parseInt (:userId params))
         institution-id (Integer/parseInt (:institutionId params))]
     (call-sql "add_institution_user" institution-id user-id 3)
-    {:status  200
-     :headers {"Content-Type" "application/json"}
-     :body    (json/write-str (get-institution-by-id institution-id))}))
+    (data-response (get-institution-by-id institution-id))))
 
 (defn submit-email-for-mailing-list [{:keys [params]}]
   (let [{:keys [subject body]} params
@@ -281,19 +230,13 @@
                             (.toSeconds)
                             (- (get-mailing-list-interval)))]
     (if (pos? remaining-time)
-      {:status  200
-       :headers {"Content-Type" "application/json"}
-       :body    (str "You must wait " remaining-time " more seconds before sending another message.")}
+      (data-response (str "You must wait " remaining-time " more seconds before sending another message."))
       (if (or (str/blank? subject) (str/blank? body))
-        {:status  200
-         :headers {"Content-Type" "application/json"}
-         :body    "Subject and Body are mandatory fields."}
+        (data-response "Subject and Body are mandatory fields.")
         (let [emails (mapv :email (call-sql "get_all_mailing_list_users"))]
           (send-to-mailing-list emails subject body "text/html")
           (set-mailing-list-last-sent! (LocalDateTime/now))
-          {:status  200
-           :headers {"Content-Type" "application/json"}
-           :body    ""})))))
+          (data-response ""))))))
 
 (defn unsubscribe-from-mailing-list [request]
   (let [email (-> request :params :email)]
@@ -308,9 +251,5 @@
                               email)]
         (call-sql "set_mailing_list" (:user_id user) false)
         (send-mail [email] nil nil "Successfully unsubscribed from CEO mailing list" email-msg "text/plain")
-        {:status  200
-         :headers {"Content-Type" "application/json"}
-         :body    ""})
-      {:status  200
-       :headers {"Content-Type" "application/json"}
-       :body    "There is no user with that email address."})))
+        (data-response ""))
+      (data-response "There is no user with that email address."))))
