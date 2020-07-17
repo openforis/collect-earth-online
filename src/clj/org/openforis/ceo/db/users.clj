@@ -1,11 +1,19 @@
 (ns org.openforis.ceo.db.users
-  (:import java.time.format.DateTimeFormatter
+  (:import java.time.Duration
+           java.time.format.DateTimeFormatter
            java.time.LocalDateTime
            java.util.UUID)
   (:require [clojure.string :as str]
             [clojure.data.json :as json]
             [org.openforis.ceo.database :refer [call-sql sql-primitive]]
-            [org.openforis.ceo.utils.mail :refer [email? send-mail mail-config]]))
+            [org.openforis.ceo.db.institutions :refer [get-institution-by-id]]
+            [org.openforis.ceo.utils.mail :refer [email?
+                                                  send-mail
+                                                  send-to-mailing-list
+                                                  get-base-url
+                                                  get-mailing-list-interval
+                                                  get-mailing-list-last-sent
+                                                  set-mailing-list-last-sent!]]))
 
 (defn login [{:keys [params]}]
   (let [{:keys [email password]} params]
@@ -131,7 +139,7 @@
                                             ["Hi %s,\n"
                                              "  To reset your password, simply click the following link:\n"
                                              "  %spassword-reset?email=%s&password-reset-key=%s"])
-                                  email (:base-url @mail-config) email reset-key)]
+                                  email (get-base-url) email reset-key)]
             (send-mail [email] nil nil "Password reset on CEO" email-msg "text/plain")
             {:status  200
              :headers {"Content-Type" "text/plain"}
@@ -222,18 +230,43 @@
        :headers {"Content-Type" "application/json"}
        :body    (json/write-str {})})))
 
-;; FIXME: stub
+;; FIXME: stub (This was also incomplete in the Java implementation.)
 (defn update-project-user-stats [_]
   {:status  200
    :headers {"Content-Type" "application/json"}
    :body    ""})
 
-(defn get-institution-roles [user-id]) ; Returns {int -> string}
-
+;; FIXME: Convert me
 (defn update-institution-role [request])
 
-(defn request-institution-membership [request])
+(defn request-institution-membership [{:keys [params]}]
+  (let [user-id        (Integer/parseInt (:userId params))
+        institution-id (Integer/parseInt (:institutionId params))]
+    (call-sql "add_institution_user" institution-id user-id 3)
+    {:status  200
+     :headers {"Content-Type" "application/json"}
+     :body    (json/write-str (get-institution-by-id institution-id))}))
 
-(defn submit-email-for-mailing-list [request])
+(defn submit-email-for-mailing-list [{:keys [params]}]
+  (let [{:keys [subject body]} params
+        remaining-time (->> (LocalDateTime/now)
+                            (Duration/between (get-mailing-list-last-sent))
+                            (.toSeconds)
+                            (- (get-mailing-list-interval)))]
+    (if (pos? remaining-time)
+      {:status  200
+       :headers {"Content-Type" "application/json"}
+       :body    (str "You must wait " remaining-time " more seconds before sending another message.")}
+      (if (or (str/blank? subject) (str/blank? body))
+        {:status  200
+         :headers {"Content-Type" "application/json"}
+         :body    "Subject and Body are mandatory fields."}
+        (let [emails (mapv :email (call-sql "get_all_mailing_list_users"))]
+          (send-to-mailing-list emails subject body "text/html")
+          (set-mailing-list-last-sent! (LocalDateTime/now))
+          {:status  200
+           :headers {"Content-Type" "application/json"}
+           :body    ""})))))
 
+;; FIXME: Convert me
 (defn unsubscribe-from-mailing-list [request])

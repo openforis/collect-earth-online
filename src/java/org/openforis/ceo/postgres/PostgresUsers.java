@@ -1,5 +1,4 @@
 import static org.openforis.ceo.utils.DatabaseUtils.connect;
-import static org.openforis.ceo.postgres.PostgresInstitutions.getInstitutionById;
 import static org.openforis.ceo.utils.JsonUtils.parseJson;
 import static org.openforis.ceo.utils.Mail.sendToMailingList;
 import static org.openforis.ceo.utils.Mail.CONTENT_TYPE_HTML;
@@ -8,39 +7,14 @@ import static org.openforis.ceo.utils.SessionUtils.getSessionUserId;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import java.sql.SQLException;
-import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.UUID;
 import org.openforis.ceo.db_api.Users;
 import org.openforis.ceo.env.CeoConfig;
 import spark.Request;
 import spark.Response;
-
-    private static final String BASE_URL               = CeoConfig.baseUrl;
-    private static final Integer MAILING_LIST_INTERVAL = Integer.parseInt(CeoConfig.mailingListInterv
-                                                                          al);
-    private static LocalDateTime mailingListLastSent   = LocalDateTime.now().minusSeconds(MAILING_LIST_INTERVAL);
-
-    // FIXME this appears to be unused.  Not tested
-    public Map<Integer, String> getInstitutionRoles(int userId) {
-        var inst = new HashMap<Integer,String>();
-        try (var conn = connect();
-             var pstmt = conn.prepareStatement("SELECT * FROM get_institution_user_roles(?)");) {
-
-            pstmt.setInt(1, userId);
-            try (var rs = pstmt.executeQuery()) {
-                while (rs.next()) {
-                    inst.put(rs.getInt("institution_id"), rs.getString("role").toString());
-                }
-            }
-        } catch (SQLException e) {
-            System.out.println(e.getMessage());
-        }
-        return inst;
-    }
 
     public String updateInstitutionRole(Request req, Response res) {
         var jsonInputs =        parseJson(req.body()).getAsJsonObject();
@@ -114,59 +88,6 @@ import spark.Response;
         } catch (SQLException e) {
             System.out.println(e.getMessage());
             return "";
-        }
-    }
-
-    public String requestInstitutionMembership(Request req, Response res) {
-        var jsonInputs =        parseJson(req.body()).getAsJsonObject();
-        var userId =            jsonInputs.get("userId").getAsInt();
-        var institutionId =     jsonInputs.get("institutionId").getAsInt();
-
-        try (var conn = connect();
-             var pstmt = conn.prepareStatement("SELECT * FROM add_institution_user(?,?,?)")) {
-
-            pstmt.setInt(1,institutionId);
-            pstmt.setInt(2,userId);
-            pstmt.setInt(3,3);
-            pstmt.execute();
-            return getInstitutionById(institutionId);
-        } catch (SQLException e) {
-            System.out.println(e.getMessage());
-            return "";
-        }
-    }
-
-    public String submitEmailForMailingList(Request req, Response res) {
-        var remainingTime = MAILING_LIST_INTERVAL
-                            - Duration.between(mailingListLastSent, LocalDateTime.now()).toSeconds();
-        var jsonInputs = parseJson(req.body()).getAsJsonObject();
-        var inputSubject = jsonInputs.get("subject").getAsString();
-        var inputBody = jsonInputs.get("body").getAsString();
-
-        if (remainingTime > 0) {
-            return "You must wait " + remainingTime + " more seconds before sending another message.";
-        } else if (inputSubject == null || inputSubject.isEmpty() || inputBody == null || inputBody.isEmpty()) {
-            return "Subject and Body are mandatory fields.";
-        } else {
-            mailingListLastSent = LocalDateTime.now();
-            try (var conn = connect();
-                 var pstmt = conn.prepareStatement("SELECT * FROM get_all_mailing_list_users()")) {
-
-                try (var rs = pstmt.executeQuery()) {
-                    var emails = new ArrayList<String>();
-                    while (rs.next()) {
-                       emails.add(rs.getString("email"));
-                    }
-                    sendToMailingList(SMTP_USER, emails, SMTP_SERVER, SMTP_PORT, SMTP_PASSWORD, inputSubject, inputBody, CONTENT_TYPE_HTML, Integer.parseInt(SMTP_RECIPIENT_LIMIT));
-                    return "";
-                } catch (Exception e) {
-                    System.out.println(e.getMessage());
-                    return "There was an issue sending to the mailing list. Please check the server logs.";
-                }
-            } catch (SQLException e) {
-                System.out.println(e.getMessage());
-                return "There was an issue sending to the mailing list. Please check the server logs.";
-            }
         }
     }
 
