@@ -55,14 +55,13 @@
       (let [user-id   (sql-primitive (call-sql "add_user" email password on-mailing-list?))
             timestamp (-> (DateTimeFormatter/ofPattern "yyyy/MM/dd HH:mm:ss")
                           (.format (LocalDateTime/now)))
-            email-msg     (format (str/join "\n"
-                                            ["Dear %s,\n"
-                                             "Thank you for signing up for CEO!\n"
-                                             "Your Account Summary Details:\n"
-                                             "  Email: %s"
-                                             "  Created on: %s\n"
-                                             "Kind Regards,"
-                                             "  The CEO Team"])
+            email-msg     (format (str "Dear %s,\n\n"
+                                       "Thank you for signing up for CEO!\n\n"
+                                       "Your Account Summary Details:\n\n"
+                                       "  Email: %s\n"
+                                       "  Created on: %s\n\n"
+                                       "Kind Regards,\n"
+                                       "  The CEO Team")
                                   email email timestamp)]
         (send-mail [email] nil nil "Welcome to CEO!" email-msg "text/plain")
         {:status  200
@@ -135,10 +134,9 @@
     (if (first (call-sql "get_user" email))
       (let [reset-key (str (UUID/randomUUID))]
         (if (sql-primitive (call-sql "set_password_reset_key" email reset-key))
-          (let [email-msg (format (str/join "\n"
-                                            ["Hi %s,\n"
-                                             "  To reset your password, simply click the following link:\n"
-                                             "  %spassword-reset?email=%s&password-reset-key=%s"])
+          (let [email-msg (format (str "Hi %s,\n\n"
+                                       "  To reset your password, simply click the following link:\n\n"
+                                       "  %spassword-reset?email=%s&password-reset-key=%s")
                                   email (get-base-url) email reset-key)]
             (send-mail [email] nil nil "Password reset on CEO" email-msg "text/plain")
             {:status  200
@@ -236,8 +234,37 @@
    :headers {"Content-Type" "application/json"}
    :body    ""})
 
-;; FIXME: Convert me
-(defn update-institution-role [request])
+;; FIXME: This fails silently. Add better error messages.
+(defn update-institution-role [{:keys [params]}]
+  (let [user-id        (Integer/parseInt (:userId params))
+        institution-id (Integer/parseInt (:institutionId params))
+        role           (:role params)]
+    (if (= role "not-member")
+      (call-sql "remove_institution_user_role" institution-id user-id)
+      (when-let [inst-user-id (sql-primitive (call-sql "update_institution_user_role" institution-id user-id role))]
+        (when-let [user (first (call-sql "get_user_by_id" user-id))]
+          (when-let [institution (first (call-sql "select_institution_by_id" institution-id))]
+            (let [email            (:email user)
+                  timestamp        (-> (DateTimeFormatter/ofPattern "yyyy/MM/dd HH:mm:ss")
+                                       (.format (LocalDateTime/now)))
+                  institution-name (:name institution)]
+              (if (zero? inst-user-id)
+                (let [email-msg (format (str "Dear %s,\n\n"
+                                             "You have been assigned the role of %s for %s on %s.\n\n"
+                                             "Kind Regards,\n"
+                                             "  The CEO Team")
+                                        email role institution-name timestamp)]
+                  (call-sql "add_institution_user" institution-id user-id role)
+                  (send-mail [email] nil nil "User Role Added!" email-msg "text/plain"))
+                (let [email-msg (format (str "Dear %s,\n\n"
+                                             "Your role has been changed to %s for %s on %s.\n\n"
+                                             "Kind Regards,\n"
+                                             "  The CEO Team")
+                                        email role institution-name timestamp)]
+                  (send-mail [email] nil nil "User Role Changed!" email-msg "text/plain"))))))))
+    {:status  200
+     :headers {"Content-Type" "application/json"}
+     :body    (json/write-str (get-institution-by-id institution-id))}))
 
 (defn request-institution-membership [{:keys [params]}]
   (let [user-id        (Integer/parseInt (:userId params))
