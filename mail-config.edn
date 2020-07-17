@@ -1,6 +1,8 @@
-{:site-url "http://local.pyregence.org:8080"
- :host     "smtp.gmail.com"
- :user     "support@sig-gis.com"
- :pass     "FgZ@tss79@gmoFuQ47Kr"
- :tls      true
- :port     587}
+{:base-url              "https://collect.earth/"
+ :smtp-server           "smtp.gmail.com"
+ :smtp-port             587
+ :smtp-user             "collectearth.mail@gmail.com"
+ :smtp-password         "foobar"
+ :smtp-recipient-limit  100
+ :mailing-list-interval 600
+ :ssl?                  true}
