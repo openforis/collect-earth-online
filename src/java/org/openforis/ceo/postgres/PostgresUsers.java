@@ -90,37 +90,3 @@ import spark.Response;
             return "";
         }
     }
-
-    public String unsubscribeFromMailingList(Request req, Response res) {
-        var jsonInputs = parseJson(req.body()).getAsJsonObject();
-        var inputEmail = jsonInputs.get("email").getAsString();
-
-        try (var conn = connect();
-             var pstmt_user = conn.prepareStatement("SELECT * FROM get_user(?)")) {
-             var pstmt_mailing_list = conn.prepareStatement("SELECT * FROM set_mailing_list(?,?)");
-
-           pstmt_user.setString(1, inputEmail);
-           try (var rs_user = pstmt_user.executeQuery()) {
-               if (rs_user.next()) {
-                   pstmt_mailing_list.setInt(1, rs_user.getInt("user_id"));
-                   pstmt_mailing_list.setBoolean(2, false);
-                   pstmt_mailing_list.execute();
-
-                   // Send confirmation email to the user
-                   var body = "Dear " + inputEmail + ",\n\n"
-                       + "We've just received your request to unsubscribe from our mailing list.\n\n"
-                       + "You have been unsubscribed from our mailing list and will no longer receive a newsletter.\n\n"
-                       + "You can resubscribe to our newsletter by going to your account page.\n\n"
-                       + "Kind Regards,\n"
-                       + "  The CEO Team";
-                   sendMail(SMTP_USER, Arrays.asList(inputEmail), null, null,
-                            SMTP_SERVER, SMTP_PORT, SMTP_PASSWORD, "Successfully unsubscribed from CEO mailing list", body, null);
-                   return "";
-                }
-                return "There was a SQL error unsubscribing.";
-            }
-        } catch (SQLException e) {
-            System.out.println(e.getMessage());
-            return "There was an unknown error unsubscribing.";
-        }
-    }

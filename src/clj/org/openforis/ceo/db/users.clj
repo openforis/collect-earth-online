@@ -268,5 +268,22 @@
            :headers {"Content-Type" "application/json"}
            :body    ""})))))
 
-;; FIXME: Convert me
-(defn unsubscribe-from-mailing-list [request])
+(defn unsubscribe-from-mailing-list [request]
+  (let [email (-> request :params :email)]
+    (if-let [user (first (call-sql "get_user" email))]
+      (let [email-msg (format (str "Dear %s,\n\n"
+                                   "We've just received your request to unsubscribe from our mailing list.\n\n"
+                                   "You have been unsubscribed from our mailing list and will no longer"
+                                   " receive a newsletter.\n\n"
+                                   "You can resubscribe to our newsletter by going to your account page.\n\n"
+                                   "Kind Regards,\n"
+                                   "  The CEO Team")
+                              email)]
+        (call-sql "set_mailing_list" (:user_id user) false)
+        (send-mail [email] nil nil "Successfully unsubscribed from CEO mailing list" email-msg "text/plain")
+        {:status  200
+         :headers {"Content-Type" "application/json"}
+         :body    ""})
+      {:status  200
+       :headers {"Content-Type" "application/json"}
+       :body    "There is no user with that email address."})))
