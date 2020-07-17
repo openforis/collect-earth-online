@@ -66,7 +66,7 @@ class Project extends React.Component {
 
     updateProject = () => {
         if (this.validateProject() && confirm("Do you REALLY want to update this project?")) {
-            fetch(this.props.documentRoot + "/update-project",
+            fetch("/update-project",
                   {
                       method: "POST",
                       contentType: "application/json; charset=utf-8",
@@ -108,7 +108,7 @@ class Project extends React.Component {
 
     publishProject = () => {
         if (confirm("Do you REALLY want to publish this project?")) {
-            fetch(this.props.documentRoot + "/publish-project?projectId=" + this.state.projectDetails.id,
+            fetch(`/publish-project?projectId=${this.state.projectDetails.id}`,
                   {
                       method: "POST",
                   }
@@ -126,7 +126,7 @@ class Project extends React.Component {
 
     closeProject = () => {
         if (confirm("Do you REALLY want to close this project?")) {
-            fetch(this.props.documentRoot + "/close-project?projectId=" + this.state.projectDetails.id,
+            fetch(`/close-project?projectId=${this.state.projectDetails.id}`,
                   {
                       method: "POST",
                   })
@@ -143,14 +143,14 @@ class Project extends React.Component {
 
     archiveProject = () => {
         if (confirm("Do you REALLY want to delete this project? This operation cannot be undone.")) {
-            fetch(this.props.documentRoot + "/archive-project?projectId=" + this.state.projectDetails.id,
+            fetch(`/archive-project?projectId=${this.state.projectDetails.id}`,
                   {
                       method: "POST",
                   })
                 .then(response => {
                     if (response.ok) {
                         alert("Project " + this.state.projectDetails.id + " has been deleted.");
-                        window.location = this.props.documentRoot + "/home";
+                        window.location = "/home";
                     } else {
                         console.log(response);
                         alert("Error deleting project. See console for details.");
@@ -172,31 +172,31 @@ class Project extends React.Component {
     configureGeoDash = () => {
         if (this.state.plotList != null && this.state.projectDetails != null) {
             window.open(
-                this.props.documentRoot + "/widget-layout-editor?editable=true&"
-                + encodeURIComponent(
-                    "institutionId=" + this.state.projectDetails.institution
-                    + "&projectId=" + this.state.projectDetails.id
+                "/widget-layout-editor?editable=true&" +
+                encodeURIComponent(
+                    `institutionId=${this.state.projectDetails.institution}` +
+                    `&projectId=${this.state.projectDetails.id}`
                 ),
                 "_geo-dash");
         }
     };
 
     downloadPlotData = () => {
-        window.open(this.props.documentRoot + "/dump-project-aggregate-data?projectId=" + this.state.projectDetails.id, "_blank");
+        window.open(`/dump-project-aggregate-data?projectId=${this.state.projectDetails.id}`, "_blank");
     };
 
     downloadSampleData = () => {
-        window.open(this.props.documentRoot + "/dump-project-raw-data?projectId=" + this.state.projectDetails.id, "_blank");
+        window.open(`/dump-project-raw-data?projectId=${this.state.projectDetails.id}`, "_blank");
     };
 
     getProjectById = () => {
         const { projectId } = this.props;
-        fetch(this.props.documentRoot + "/get-project-by-id?projectId=" + projectId)
+        fetch(`/get-project-by-id?projectId=${projectId}`)
             .then(response => response.ok ? response.json() : Promise.reject(response))
             .then(data => {
                 if (data === "") {
                     alert("No project found with ID " + projectId + ".");
-                    window.location = this.state.documentRoot + "/home";
+                    window.location = "/home";
                 } else {
                     const newSurveyQuestions = convertSampleValuesToSurveyQuestions(data.sampleValues);
                     this.setState({ projectDetails: { ...data, surveyQuestions: newSurveyQuestions }});
@@ -209,7 +209,7 @@ class Project extends React.Component {
     };
 
     getImageryList = () => {
-        fetch(this.props.documentRoot + "/get-institution-imagery?institutionId=" + this.state.projectDetails.institution)
+        fetch(`/get-institution-imagery?institutionId=${this.state.projectDetails.institution}`)
             .then(response => response.ok ? response.json() : Promise.reject(response))
             .then(data => this.setState({ imageryList: data }))
             .catch(response => {
@@ -219,7 +219,7 @@ class Project extends React.Component {
     };
 
     getProjectImageryList = () => {
-        fetch(this.props.documentRoot + "/get-project-imagery?projectId=" + this.props.projectId)
+        fetch(`/get-project-imagery?projectId=${this.props.projectId}`)
             .then(response => response.ok ? response.json() : Promise.reject(response))
             .then(data => this.setState({ projectImageryList: data.map(imagery => imagery.id) }))
             .catch(response => {
@@ -229,7 +229,7 @@ class Project extends React.Component {
     };
 
     getProjectPlots = () => {
-        fetch(this.props.documentRoot + "/get-project-plots?projectId=" + this.props.projectId + "&max=300")
+        fetch(`/get-project-plots?projectId=${this.props.projectId}&max=300`)
             .then(response => response.ok ? response.json() : Promise.reject(response))
             .then(data => this.setState({ plotList: data }))
             .catch(response => {
@@ -239,7 +239,7 @@ class Project extends React.Component {
     };
 
     initProjectMap = () => {
-        this.setState({ mapConfig: mercator.createMap("project-map", [0.0, 0.0], 1, this.state.imageryList, this.props.documentRoot) });
+        this.setState({ mapConfig: mercator.createMap("project-map", [0.0, 0.0], 1, this.state.imageryList) });
     };
 
     showProjectMap = () => {
@@ -270,7 +270,7 @@ class Project extends React.Component {
 
     gotoProjectDashboard = () => {
         if (this.state.plotList != null && this.state.projectDetails != null) {
-            window.open(this.props.documentRoot + "/project-dashboard?projectId=" + this.state.projectDetails.id);
+            window.open(`/project-dashboard?projectId=${this.state.projectDetails.id}`);
         }
     };
 
@@ -311,7 +311,6 @@ class Project extends React.Component {
                         />
                         <ProjectStatsGroup
                             availability={this.state.projectDetails && this.state.projectDetails.availability}
-                            documentRoot={this.props.documentRoot}
                             projectId={this.props.projectId}
                         />
                     </Fragment>
@@ -362,7 +361,7 @@ class ProjectStats extends React.Component {
     }
 
     getProjectStats = () => {
-        fetch(this.props.documentRoot + "/get-project-stats?projectId=" + this.props.projectId)
+        fetch(`/get-project-stats?projectId=${this.props.projectId}`)
             .then(response => response.ok ? response.json() : Promise.reject(response))
             .then(data => this.setState({ stats: data }))
             .catch(response => {
@@ -644,7 +643,6 @@ export function renderReviewProjectPage(args) {
     ReactDOM.render(
         <NavigationBar userName={args.userName} userId={args.userId}>
             <Project
-                documentRoot=""
                 userId={args.userId}
                 projectId={args.projectId}
             />

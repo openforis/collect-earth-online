@@ -60,9 +60,8 @@ class Collection extends React.Component {
         if (this.state.currentProject.institution !== prevState.currentProject.institution) {
             // release any locks in case of user hitting refresh
             fetch(
-                this.props.documentRoot
-                    + "/release-plot-locks?userId=" + this.props.userId
-                    + "&projectId=" + this.state.currentProject.id,
+                `/release-plot-locks?userId=${this.props.userId}` +
+                `&projectId=${this.state.currentProject.id}`,
                 { method: "POST" }
             );
             this.getImageryList();
@@ -144,7 +143,7 @@ class Collection extends React.Component {
             });
     };
 
-    getProjectById = () => fetch(this.props.documentRoot + "/get-project-by-id?projectId=" + this.props.projectId)
+    getProjectById = () => fetch(`/get-project-by-id?projectId=${this.props.projectId}`)
         .then(response => response.ok ? response.json() : Promise.reject(response))
         .then(project => {
             if (project.id > 0 && project.availability !== "archived") {
@@ -158,7 +157,7 @@ class Collection extends React.Component {
             }
         });
 
-    checkForGeodash = () => fetch(this.props.documentRoot + "/geo-dash/get-by-projid?projectId=" + this.props.projectId)
+    checkForGeodash = () => fetch(`/geo-dash/get-by-projid?projectId=${this.props.projectId}`)
         .then(response => response.ok ? response.json() : Promise.reject(response))
         .then(data => {
             const widgets = Array.isArray(data.widgets)
@@ -170,7 +169,7 @@ class Collection extends React.Component {
             return Promise.resolve("resolved");
         });
 
-    getProjectPlots = () => fetch(this.props.documentRoot + "/get-project-plots?projectId=" + this.props.projectId + "&max=1000")
+    getProjectPlots = () => fetch(`/get-project-plots?projectId=${this.props.projectId}&max=1000`)
         .then(response => response.ok ? response.json() : Promise.reject(response))
         .then(data => {
             if (data.length > 0) {
@@ -183,7 +182,7 @@ class Collection extends React.Component {
 
     getImageryList = () => {
         const { id } = this.state.currentProject;
-        fetch(this.props.documentRoot + "/get-project-imagery?projectId=" + id)
+        fetch(`/get-project-imagery?projectId=${id}`)
             .then(response => response.ok ? response.json() : Promise.reject(response))
             .then(data => this.setState({ imageryList: data }))
             .catch(response => {
@@ -197,7 +196,6 @@ class Collection extends React.Component {
                                              [0.0, 0.0],
                                              1,
                                              this.state.imageryList,
-                                             this.props.documentRoot,
                                              this.state.currentProject.boundary);
         mercator.addVectorLayer(mapConfig,
                                 "currentAOI",
@@ -249,7 +247,7 @@ class Collection extends React.Component {
     };
 
     getPlotData = (plotId) => {
-        fetch(this.props.documentRoot + "/get-plot-by-id?"
+        fetch("/get-plot-by-id?"
               + getQueryString({
                   getUserPlots: this.state.reviewPlots,
                   plotId: plotId,
@@ -283,7 +281,7 @@ class Collection extends React.Component {
     };
 
     getNextPlotData = (plotId) => {
-        fetch(this.props.documentRoot + "/get-next-plot?"
+        fetch("/get-next-plot?"
               + getQueryString({
                   getUserPlots: this.state.reviewPlots,
                   plotId: plotId,
@@ -320,7 +318,7 @@ class Collection extends React.Component {
     };
 
     getPrevPlotData = (plotId) => {
-        fetch(this.props.documentRoot + "/get-prev-plot?"
+        fetch("/get-prev-plot?"
               + getQueryString({
                   getUserPlots: this.state.reviewPlots,
                   plotId: plotId,
@@ -353,7 +351,7 @@ class Collection extends React.Component {
     };
 
     resetPlotLock = () => {
-        fetch(this.props.documentRoot + "/reset-plot-lock",
+        fetch("/reset-plot-lock",
               {
                   method: "POST",
                   body: JSON.stringify({
@@ -443,14 +441,14 @@ class Collection extends React.Component {
         const plotRadius = currentProject.plotSize
               ? currentProject.plotSize / 2.0
               : mercator.getViewRadius(mapConfig);
-        window.open(this.props.documentRoot + "/geo-dash?"
-                    + "institutionId=" + this.state.currentProject.institution
-                    + "&projectId=" + this.props.projectId
-                    + "&plotId=" + (currentPlot.plotId ? currentPlot.plotId : currentPlot.id)
-                    + "&plotShape=" + encodeURIComponent((currentPlot.geom ? "polygon" : currentProject.plotShape))
-                    + "&aoi=" + encodeURIComponent("[" + mercator.getViewExtent(mapConfig) + "]")
-                    + "&daterange=&bcenter=" + currentPlot.center
-                    + "&bradius=" + plotRadius,
+        window.open("/geo-dash?" +
+                    `institutionId=${this.state.currentProject.institution}` +
+                    `&projectId=${this.props.projectId}` +
+                    `&plotId=${(currentPlot.plotId ? currentPlot.plotId : currentPlot.id)}` +
+                    `&plotShape=${encodeURIComponent((currentPlot.geom ? "polygon" : currentProject.plotShape))}` +
+                    `&aoi=${encodeURIComponent(`[${mercator.getViewExtent(mapConfig)}]`)}` +
+                    `&daterange=&bcenter=${currentPlot.center}` +
+                    `&bradius=${plotRadius}`,
                     "_geo-dash");
     };
 
@@ -489,7 +487,7 @@ class Collection extends React.Component {
 
     flagPlotInDB = () => {
         if (this.state.currentPlot != null) {
-            fetch(this.props.documentRoot + "/flag-plot",
+            fetch("/flag-plot",
                   {
                       method: "POST",
                       body: JSON.stringify({
@@ -516,7 +514,7 @@ class Collection extends React.Component {
         } else if (this.state.currentProject.availability === "closed") {
             alert("This project has been closed and is no longer accepting survey input.");
         } else {
-            fetch(this.props.documentRoot + "/add-user-samples",
+            fetch("/add-user-samples",
                   {
                       method: "post",
                       headers: {
@@ -950,7 +948,6 @@ class Collection extends React.Component {
                 <SideBar
                     projectId={this.props.projectId}
                     plotId={plotId}
-                    documentRoot={this.props.documentRoot}
                     flagPlotInDB={this.flagPlotInDB}
                     postValuesToDB={this.postValuesToDB}
                     projectName={this.state.currentProject.name}
@@ -1021,7 +1018,6 @@ class Collection extends React.Component {
                 </SideBar>
                 {this.state.showQuitModal &&
                     <QuitMenu
-                        documentRoot={this.props.documentRoot}
                         userId={this.props.userId}
                         projectId={this.props.projectId}
                         toggleQuitModal={this.toggleQuitModal}
@@ -1101,7 +1097,6 @@ function SideBar(props) {
     return (
         <div id="sidebar" className="col-xl-3 border-left full-height" style={{ overflowY: "scroll", overflowX: "hidden" }}>
             <ProjectTitle
-                documentRoot={props.documentRoot}
                 projectId={props.projectId}
                 plotId={props.plotId}
                 userName={props.userName}
@@ -1465,7 +1460,6 @@ class ProjectTitle extends React.Component {
                 </h2>
                 {this.state.showStats &&
                 <ProjectStats
-                    documentRoot={this.props.documentRoot}
                     projectId={this.props.projectId}
                     userName={this.props.userName}
                 />
@@ -1494,7 +1488,7 @@ class ProjectStats extends React.Component {
     }
 
     getProjectStats() {
-        fetch(this.props.documentRoot + "/get-project-stats?projectId=" + this.props.projectId)
+        fetch(`/get-project-stats?projectId=${this.props.projectId}`)
             .then(response => response.ok ? response.json() : Promise.reject(response))
             .then(data => this.setState({ stats: data }))
             .catch(response => {
@@ -1590,7 +1584,7 @@ class ProjectStats extends React.Component {
 }
 
 // remains hidden, shows a styled menu when the quit button is clicked
-function QuitMenu({ userId, projectId, documentRoot, toggleQuitModal }) {
+function QuitMenu({ userId, projectId, toggleQuitModal }) {
     return (
         <div
             className="modal fade show"
@@ -1632,10 +1626,10 @@ function QuitMenu({ userId, projectId, documentRoot, toggleQuitModal }) {
                             id="quit-button"
                             onClick={() =>
                                 fetch(
-                                    documentRoot + "/release-plot-locks?userId=" + userId + "&projectId=" + projectId,
+                                    `/release-plot-locks?userId=${userId}&projectId=${projectId}`,
                                     { method: "POST" }
                                 )
-                                    .then(() => window.location = documentRoot + "/home")
+                                    .then(() => window.location = "/home")
                             }
                         >
                             OK
@@ -1651,7 +1645,6 @@ export function renderCollectionPage(args) {
     ReactDOM.render(
         <NavigationBar userName={args.userName} userId={args.userId}>
             <Collection
-                documentRoot=""
                 userId={args.userId === "" ? -1 : parseInt(args.userId)}
                 userName={args.userName}
                 projectId={args.projectId}

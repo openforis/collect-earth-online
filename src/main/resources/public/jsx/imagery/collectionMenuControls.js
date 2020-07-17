@@ -228,7 +228,7 @@ export class SecureWatchMenus extends React.Component {
         this.setState(
             { availableDates: [] },
             () => {
-                fetch("/get-securewatch-dates?" + secureWatchFeatureInfoUrl)
+                fetch(`/get-securewatch-dates?${secureWatchFeatureInfoUrl}`)
                     .then(response => {
                         if (response.ok) {
                             return response.json(); // if no layers are found, the response is XML. This will fail.

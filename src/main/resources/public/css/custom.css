@@ -55,11 +55,6 @@
     height: calc(100vh - 60px);
 }
 
-.ceo-map-toggle{
-    position:fixed;
-    height: calc(100vh - 60px);
-}
-
 .absolute-center{
     position: absolute;
     top: 50%;
@@ -360,8 +355,23 @@ a:hover{
 /* HOME PAGE */
 /*********************************************************************/
 
+#home-map-pane {
+    width: 100%;
+    position: fixed;
+}
+
 #home-map-pane .ol-attribution {
     position: fixed;
+}
+
+#toggle-map-button {
+    position: absolute;
+    top: 50%;
+    padding: 1rem 0;
+    font-size: 1.5rem;
+    z-index: 1;
+    border-radius: 0 10% 10% 0;
+    cursor: pointer;
 }
 
 #home #ceo-description {
@@ -388,24 +398,6 @@ a:hover{
 
 #lPanel .btn.bg-lightgreen, #lPanel .btn.btn-outline-lightgreen {
     white-space: normal;
-}
-
-@media (min-width: 1200px){
-    #mapPanel .col-xl-1 {
-        min-width: 14px;
-        max-width: 14px;
-        width: 14px;
-        padding: 0;
-        cursor:pointer;
-        border-left:#dadcdf solid 1px;
-        border-right:#dadcdf solid 1px;
-    }
-    #mapPanel .col-xl-11 {
-    min-width: calc(100% - 14px);
-    max-width: calc(100% - 14px);
-    width: calc(100% - 14px);
-
-    }
 }
 
 /* map popover */

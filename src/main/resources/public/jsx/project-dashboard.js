@@ -50,7 +50,7 @@ class ProjectDashboard extends React.Component {
     }
 
     getProjectById(projectId) {
-        fetch(this.props.documentRoot + "/get-project-by-id?projectId=" + projectId)
+        fetch(`/get-project-by-id?projectId=${projectId}`)
             .then(response => {
                 if (response.ok) {
                     return response.json();
@@ -62,7 +62,7 @@ class ProjectDashboard extends React.Component {
             .then(data => {
                 if (data === "") {
                     alert("No project found with ID " + projectId + ".");
-                    window.location = this.props.documentRoot + "/home";
+                    window.location = "/home";
                 } else {
                     const newSurveyQuestions = convertSampleValuesToSurveyQuestions(data.sampleValues);
                     this.setState({ projectDetails: { ...data, surveyQuestions: newSurveyQuestions }});
@@ -71,7 +71,7 @@ class ProjectDashboard extends React.Component {
     }
 
     getProjectStats(projectId) {
-        fetch(this.props.documentRoot + "/get-project-stats?projectId=" + projectId)
+        fetch(`/get-project-stats?projectId=${projectId}`)
             .then(response => {
                 if (response.ok) {
                     return response.json();
@@ -86,7 +86,7 @@ class ProjectDashboard extends React.Component {
     }
 
     getImageryList(institutionId) {
-        fetch(this.props.documentRoot + "/get-institution-imagery?institutionId=" + institutionId)
+        fetch(`/get-institution-imagery?institutionId=${institutionId}`)
             .then(response => {
                 if (response.ok) {
                     return response.json();
@@ -101,7 +101,7 @@ class ProjectDashboard extends React.Component {
     }
 
     getPlotList(projectId, maxPlots) {
-        fetch(this.props.documentRoot + "/get-project-plots?projectId=" + projectId + "&max=" + maxPlots)
+        fetch(`/get-project-plots?projectId=${projectId}&max=${maxPlots}`)
             .then(response => {
                 if (response.ok) {
                     return response.json();
@@ -120,8 +120,7 @@ class ProjectDashboard extends React.Component {
         const mapConfig = mercator.createMap("project-map",
                                              [0.0, 0.0],
                                              1,
-                                             this.state.imageryList,
-                                             this.props.documentRoot);
+                                             this.state.imageryList);
         mercator.setVisibleLayer(mapConfig, this.state.projectDetails.imageryId);
         // Display a bounding box with the project's AOI on the map and zoom to it
         mercator.addVectorLayer(mapConfig,
@@ -222,7 +221,6 @@ export function renderProjectDashboardPage(args) {
     ReactDOM.render(
         <NavigationBar userName={args.userName} userId={args.userId}>
             <ProjectDashboard
-                documentRoot=""
                 userId={args.userId}
                 projectId={args.projectId}
                 project_stats_visibility={args.project_stats_visibility}
