@@ -19,13 +19,13 @@
   (let [{:keys [email password]} params]
     (if-let [user (first (call-sql "check_login" email password))]
       {:status  200
-       :headers {"Content-Type" "text/plain"}
+       :headers {"Content-Type" "application/json"}
        :body    ""
        :session {:userId   (:user_id user)
                  :userName email
                  :userRole (if (:administrator user) "admin" "user")}}
       {:status  200
-       :headers {"Content-Type" "text/plain"}
+       :headers {"Content-Type" "application/json"}
        :body    "Invalid email/password combination."})))
 
 (defn- get-register-errors [email password password-confirmation]
@@ -50,7 +50,7 @@
         on-mailing-list?      (boolean (:onMailingList params))]
     (if-let [error-msg (get-register-errors email password password-confirmation)]
       {:status  200
-       :headers {"Content-Type" "text/plain"}
+       :headers {"Content-Type" "application/json"}
        :body    error-msg}
       (let [user-id   (sql-primitive (call-sql "add_user" email password on-mailing-list?))
             timestamp (-> (DateTimeFormatter/ofPattern "yyyy/MM/dd HH:mm:ss")
@@ -66,7 +66,7 @@
                                   email email timestamp)]
         (send-mail [email] nil nil "Welcome to CEO!" email-msg "text/plain")
         {:status  200
-         :headers {"Content-Type" "text/plain"}
+         :headers {"Content-Type" "application/json"}
          :body    ""
          :session {:userId   user-id
                    :userName email
@@ -74,7 +74,7 @@
 
 (defn logout [_]
   {:status  200
-   :headers {"Content-Type" "text/plain"}
+   :headers {"Content-Type" "application/json"}
    :body    ""
    :session nil})
 
@@ -99,12 +99,12 @@
 (defn- update-email [user-id old-email new-email]
   (if (sql-primitive (call-sql "email_taken" new-email user-id))
     {:status  200
-     :headers {"Content-Type" "text/plain"}
+     :headers {"Content-Type" "application/json"}
      :body    (str "An account with the email " new-email " already exists.")}
     (do
       (call-sql "set_user_email" old-email new-email)
       {:status  200
-       :headers {"Content-Type" "text/plain"}
+       :headers {"Content-Type" "application/json"}
        :body    ""
        :session {:userName new-email}})))
 
@@ -118,7 +118,7 @@
         on-mailing-list?      (boolean (:onMailingList params))]
     (if-let [error-msg (get-update-account-errors stored-email email password password-confirmation current-password)]
       {:status  200
-       :headers {"Content-Type" "text/plain"}
+       :headers {"Content-Type" "application/json"}
        :body    error-msg}
       (do
         (when (and (not (str/blank? email)) (not= email stored-email))
@@ -127,7 +127,7 @@
           (call-sql "update_password" stored-email password))
         (call-sql "set_mailing_list" user-id on-mailing-list?)
         {:status  200
-         :headers {"Content-Type" "text/plain"}
+         :headers {"Content-Type" "application/json"}
          :body    ""}))))
 
 (defn get-password-reset-key [request]
@@ -142,13 +142,13 @@
                                   email (get-base-url) email reset-key)]
             (send-mail [email] nil nil "Password reset on CEO" email-msg "text/plain")
             {:status  200
-             :headers {"Content-Type" "text/plain"}
+             :headers {"Content-Type" "application/json"}
              :body    ""})
           {:status  200
-           :headers {"Content-Type" "text/plain"}
+           :headers {"Content-Type" "application/json"}
            :body    "Failed to create a reset key. Please try again later"}))
       {:status  200
-       :headers {"Content-Type" "text/plain"}
+       :headers {"Content-Type" "application/json"}
        :body    "There is no user with that email address."})))
 
 (defn- get-reset-password-errors [password password-confirmation]
@@ -167,20 +167,20 @@
         password-confirmation (:passwordConfirmation params)]
     (if-let [error-msg (get-reset-password-errors password password-confirmation)]
       {:status  200
-       :headers {"Content-Type" "text/plain"}
+       :headers {"Content-Type" "application/json"}
        :body    error-msg}
       (if-let [user (first (call-sql "get_user" email))]
         (if (= reset-key (:reset_key user))
           (do
             (call-sql "update_password" email password)
             {:status  200
-             :headers {"Content-Type" "text/plain"}
+             :headers {"Content-Type" "application/json"}
              :body    ""})
           {:status  200
-           :headers {"Content-Type" "text/plain"}
+           :headers {"Content-Type" "application/json"}
            :body    (str "Invalid reset key for user " email ".")})
         {:status  200
-         :headers {"Content-Type" "text/plain"}
+         :headers {"Content-Type" "application/json"}
          :body    "There is no user with that email address."}))))
 
 (defn get-all-users [_]
