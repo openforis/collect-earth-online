@@ -11,3 +11,5 @@
 (defn update-institution [request])
 
 (defn archive-institution [request])
+
+(defn get-institution-by-id [institution-id]) ; returns institution map
