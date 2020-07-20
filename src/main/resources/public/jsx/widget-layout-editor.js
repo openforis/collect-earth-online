@@ -728,29 +728,16 @@ class WidgetLayoutEditor extends React.PureComponent {
         this.setState({ widgetMax: event.target.value });
     };
 
-    onStartDateChanged = date => {
-        if (date.target) {
-            if ( date.target.value) {
-                this.setState({ startDate: date.target.value });
-            } else {
-                this.setState({ startDate: "" });
-            }
-        } else {
-            this.setState({ startDate: date });
-        }
+    onStartDateChanged = event => {
+        this.setState({
+            startDate: event.target ? event.target.value : "",
+        }, this.setFormStateByDates);
     };
 
-    onEndDateChanged = date => {
-        if (date.target) {
-            if (date.target.value) {
-                this.setState({ endDate: date.target.value });
-            } else {
-                this.setState({ endDate: "" });
-            }
-        } else {
-            this.setState({ endDate: date });
-            this.setFormStateByDates();
-        }
+    onEndDateChanged = event => {
+        this.setState({
+            endDate: event.target ? event.target.value : "",
+        }, this.setFormStateByDates);
     };
 
     onWidgetCloudScoreChange = event => {
@@ -785,29 +772,16 @@ class WidgetLayoutEditor extends React.PureComponent {
         this.setState({ widgetCloudScoreDual: event.target.value });
     };
 
-    onStartDateChangedDual = date => {
-        if (date.target) {
-            if (date.target.value) {
-                this.setState({ startDateDual: date.target.value });
-            } else {
-                this.setState({ startDateDual: "" });
-            }
-        } else {
-            this.setState({ startDateDual: date });
-        }
+    onStartDateChangedDual = event => {
+        this.setState({
+            startDateDual: event.target ? event.target.value : "",
+        }, () => this.setFormStateByDates(true));
     };
 
-    onEndDateChangedDual = date => {
-        if (date.target) {
-            if (date.target.value) {
-                this.setState({ endDateDual: date.target.value });
-            } else {
-                this.setState({ endDateDual: "" });
-            }
-        } else {
-            this.setState({ endDateDual: date });
-            this.setFormStateByDates(true);
-        }
+    onEndDateChangedDual = event => {
+        this.setState({
+            endDateDual: event.target ? event.target.value : "",
+        }, () => this.setFormStateByDates(true));
     };
 
     onDataTypeSelectChangedDual = event => {
@@ -844,29 +818,16 @@ class WidgetLayoutEditor extends React.PureComponent {
         }
     };
 
-    onStartDate2Changed = date => {
-        if (date.target) {
-            if (date.target.value) {
-                this.setState({ startDate2: date.target.value });
-            } else {
-                this.setState({ startDate2: "" });
-            }
-        } else {
-            this.setState({ startDate2: date });
-        }
+    onStartDate2Changed = event => {
+        this.setState({
+            startDate2: event.target ? event.target.value : "",
+        }, this.setFormStateByDates);
     };
 
-    onEndDate2Changed = date => {
-        if (date.target) {
-            if (date.target.value) {
-                this.setState({ endDate2: date.target.value });
-            } else {
-                this.setState({ endDate2: "" });
-            }
-        } else {
-            this.setState({ endDate2: date });
-            this.setFormStateByDates();
-        }
+    onEndDate2Changed = event => {
+        this.setState({
+            endDate2: event.target ? event.target.value : "",
+        }, this.setFormStateByDates);
     };
 
     getProjectList = () => {
@@ -1277,7 +1238,7 @@ class WidgetLayoutEditor extends React.PureComponent {
 
     getDateRangeControl = () => <div className="input-group input-daterange" id="range_new_cooked">
         <input
-            type="text"
+            type="date"
             className="form-control"
             onChange={this.onStartDateChanged}
             value={this.state.startDate}
@@ -1286,7 +1247,7 @@ class WidgetLayoutEditor extends React.PureComponent {
         />
         <div className="input-group-addon">to</div>
         <input
-            type="text"
+            type="date"
             className="form-control"
             onChange={this.onEndDateChanged}
             value={this.state.endDate}
@@ -1300,7 +1261,7 @@ class WidgetLayoutEditor extends React.PureComponent {
                 <label>Select the Date Range for the top layer</label>
                 <div className="input-group input-daterange" id="range_new_cooked2">
                     <input
-                        type="text"
+                        type="date"
                         className="form-control"
                         onChange={this.onStartDate2Changed}
                         value={this.state.startDate2}
@@ -1309,7 +1270,7 @@ class WidgetLayoutEditor extends React.PureComponent {
                     />
                     <div className="input-group-addon">to</div>
                     <input
-                        type="text"
+                        type="date"
                         className="form-control"
                         onChange={this.onEndDate2Changed}
                         value={this.state.endDate2}
@@ -1333,31 +1294,6 @@ class WidgetLayoutEditor extends React.PureComponent {
                 <label>{this.state.availableBandsDual}</label>
             </div>
              : "";
-
-    initDatePickers(gObject) {
-        setTimeout(() => {
-            $(".input-daterange input").each(function () {
-                try {
-                    const bindEvt = this.id === "sDate_new_cookedDual" ? gObject.onStartDateChangedDual
-                        : this.id === "eDate_new_cookedDual" ? gObject.onEndDateChangedDual
-                        : this.id === "sDate_new_cooked" ? gObject.onStartDateChanged
-                        : this.id === "eDate_new_cooked" ? gObject.onEndDateChanged
-                        : this.id === "sDate_new_cooked2" ? gObject.onStartDate2Changed
-                        : gObject.onEndDate2Changed;
-                    $(this).datepicker({
-                        changeMonth: true,
-                        changeYear: true,
-                        dateFormat: "yy-mm-dd",
-                        onSelect: function() {
-                            bindEvt(this.value);
-                        },
-                    });
-                } catch (e) {
-                    console.warn(e.message);
-                }
-            });
-        }, 250);
-    }
 
     getDataForm = () => {
         if (this.state.selectedWidgetType === "ImageElevation") {
@@ -1397,8 +1333,6 @@ class WidgetLayoutEditor extends React.PureComponent {
             </React.Fragment>;
         }
         if (this.state.selectedWidgetType === "DegradationTool") {
-            const gObject = this;
-            this.initDatePickers(gObject);
             return <React.Fragment>
                 {this.getTitleBlock()}
                 <div>
@@ -1449,8 +1383,6 @@ class WidgetLayoutEditor extends React.PureComponent {
         } else if (this.state.selectedDataType === "-1") {
             return "";
         } else {
-            const gObject = this;
-            this.initDatePickers(gObject);
             if (["LANDSAT5", "LANDSAT7", "LANDSAT8", "Sentinel2"].includes(this.state.selectedDataType) && this.state.wizardStep === 1) {
                 //need to get available bands
                 return <React.Fragment>
@@ -1516,7 +1448,7 @@ class WidgetLayoutEditor extends React.PureComponent {
                     <label>Select the Date Range you would like</label>
                     <div className="input-group input-daterange" id="range_new_cooked">
                         <input
-                            type="text"
+                            type="date"
                             className="form-control"
                             onChange={this.onStartDateChangedDual}
                             value={this.state.startDateDual}
@@ -1525,7 +1457,7 @@ class WidgetLayoutEditor extends React.PureComponent {
                         />
                         <div className="input-group-addon">to</div>
                         <input
-                            type="text"
+                            type="date"
                             className="form-control"
                             onChange={this.onEndDateChangedDual}
                             value={this.state.endDateDual}
@@ -1727,7 +1659,7 @@ class WidgetLayoutEditor extends React.PureComponent {
                     <label>Select the Date Range you would like</label>
                     <div className="input-group input-daterange form-group" id="range_new_cooked">
                         <input
-                            type="text"
+                            type="date"
                             className="form-control"
                             onChange={this.onStartDateChangedDual}
                             value={this.state.startDateDual}
@@ -1736,7 +1668,7 @@ class WidgetLayoutEditor extends React.PureComponent {
                         />
                         <div className="input-group-addon">to</div>
                         <input
-                            type="text"
+                            type="date"
                             className="form-control"
                             onChange={this.onEndDateChangedDual}
                             value={this.state.endDateDual}
@@ -1767,7 +1699,7 @@ class WidgetLayoutEditor extends React.PureComponent {
                             <label>Select the Date Range you would like</label>
                             <div className="input-group input-daterange" id="range_new_cooked2">
                                 <input
-                                    type="text"
+                                    type="date"
                                     className="form-control"
                                     onChange={this.onStartDate2Changed}
                                     value={this.state.startDate2}
@@ -1776,7 +1708,7 @@ class WidgetLayoutEditor extends React.PureComponent {
                                 />
                                 <div className="input-group-addon">to</div>
                                 <input
-                                    type="text"
+                                    type="date"
                                     className="form-control"
                                     onChange={this.onEndDate2Changed}
                                     value={this.state.endDate2}
@@ -1803,7 +1735,7 @@ class WidgetLayoutEditor extends React.PureComponent {
                     <label>Select the Date Range you would like</label>
                     <div className="input-group input-daterange form-group" id="range_new_cooked">
                         <input
-                            type="text"
+                            type="date"
                             className="form-control"
                             onChange={this.onStartDateChangedDual}
                             value={this.state.startDateDual}
@@ -1812,7 +1744,7 @@ class WidgetLayoutEditor extends React.PureComponent {
                         />
                         <div className="input-group-addon">to</div>
                         <input
-                            type="text"
+                            type="date"
                             className="form-control"
                             onChange={this.onEndDateChangedDual}
                             value={this.state.endDateDual}
