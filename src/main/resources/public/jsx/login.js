@@ -7,51 +7,43 @@ class Login extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
-            email: "",
-            password: "",
-            emailError: "",
-            passwordError: "",
+            values: {
+                email: "",
+                password: "",
+            },
+            errors: {
+                email: "",
+                password: "",
+            },
         };
+        this.emailPattern = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
     }
 
-    handleEmailValidation = () => {
+    handleValidation = (e) => {
         let error = "";
-        if (this.state.email === "") {
-            error = "This field is required.";
-        } else {
-            const emailPattern = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
-            if (!emailPattern.test(this.state.email)) {
-                error = "Is not a valid email address.";
+        const name = e.target ? e.target.name : e;
+        if (name === "email") {
+            if (this.state.values[name] === "") {
+                error = "This field is required.";
+            } else if (!this.emailPattern.test(this.state.values[name])) {
+                error = "Not a valid email address.";
+            }
+        } else if (name === "password") {
+            if (this.state.values[name] === "") {
+                error = "This field is required.";
+            } else if (this.state.values[name].length < 4) {
+                error = "Password must be at least 4 characters.";
             }
         }
-        this.setState({ emailError: error });
+        this.setState({ errors: { ...this.state.errors, [name]: error }});
         return error;
     }
 
-    handlePasswordValidation = () => {
-        let error = "";
-        if (this.state.password === "") {
-            error = "This field is required.";
-        } else {
-            /*
-            if (this.state.password.length < 8) {
-                error = "Password must be at least 8 characters.";
-            }
-            */
-        }
-        this.setState({ passwordError: error });
-        return error;
-    }
-
-    validate = () => {
-        const emailError = this.handleEmailValidation();
-        const passwordError = this.handlePasswordValidation();
-        return emailError === "" && passwordError === "";
-    }
+    validateAll = () => this.handleValidation("email") === "" &&
+        this.handleValidation("password") === "";
 
     requestLogin = () => {
-        const isValid = this.validate();
-        if (isValid) {
+        if (this.validateAll()) {
             fetch("/login",
                   {
                       method: "POST",
@@ -86,34 +78,34 @@ class Login extends React.Component {
                             }}
                             noValidate
                         >
-                            <div className={"form-group " + (this.state.emailError ? "invalid" : "")}>
+                            <div className={"form-group " + (this.state.errors.email ? "invalid" : "")}>
                                 <label htmlFor="email">Email address</label>
                                 <input
-                                    id="email"
+                                    name="email"
                                     className="form-control"
                                     placeholder="Email"
                                     type="email"
-                                    value={this.state.email}
-                                    onChange={e => this.setState({ email: e.target.value })}
-                                    onBlur={this.handleEmailValidation}
+                                    value={this.state.values.email}
+                                    onChange={e => this.setState({ values: { ...this.state.values, [e.target.name]: e.target.value }})}
+                                    onBlur={this.handleValidation}
                                 />
-                                {this.state.emailError &&
-                                    <div className="validation-error">{this.state.emailError}</div>
+                                {this.state.errors.email &&
+                                    <div className="validation-error">{this.state.errors.email}</div>
                                 }
                             </div>
-                            <div className={"form-group " + (this.state.passwordError ? "invalid" : "")}>
+                            <div className={"form-group " + (this.state.errors.password ? "invalid" : "")}>
                                 <label htmlFor="password">Password</label>
                                 <input
-                                    id="password"
+                                    name="password"
                                     placeholder="Password"
                                     type="password"
                                     className="form-control"
-                                    value={this.state.password}
-                                    onChange={e => this.setState({ password: e.target.value })}
-                                    onBlur={this.handlePasswordValidation}
+                                    value={this.state.values.password}
+                                    onChange={e => this.setState({ values: { ...this.state.values, [e.target.name]: e.target.value }})}
+                                    onBlur={this.handleValidation}
                                 />
-                                {this.state.passwordError &&
-                                    <div className="validation-error">{this.state.passwordError}</div>
+                                {this.state.errors.password &&
+                                    <div className="validation-error">{this.state.errors.password}</div>
                                 }
                             </div>
                             <div className="d-flex justify-content-between align-items-center">
