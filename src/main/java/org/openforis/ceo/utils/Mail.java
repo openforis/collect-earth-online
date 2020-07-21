@@ -98,7 +98,7 @@ public class Mail {
             message.setSubject(subject);
 
             // Set Content
-            message.setContent(body, contentType != null && contentType.equals(Mail.CONTENT_TYPE_HTML) ? Mail.CONTENT_TYPE_HTML : Mail.CONTENT_TYPE_TEXT);
+            message.setContent(body, contentType != null && contentType.equals(Mail.CONTENT_TYPE_HTML) ? Mail.CONTENT_TYPE_HTML + "; charset=UTF-8" : Mail.CONTENT_TYPE_TEXT);
 
             // Send message
             Transport.send(message);
