@@ -1,3 +1,5 @@
+-- Validate and then move to functions where it can run every time the server is re-deployed
+
 -- Clean up any orphaned tables
 DO $$
  DECLARE
