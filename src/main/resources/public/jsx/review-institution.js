@@ -12,7 +12,7 @@ class ReviewInstitution extends React.Component {
         this.state = {
             imageryCount: 0,
             usersCount: 0,
-            projectList: [],
+            projectList: null,
             isAdmin: false,
             selectedTab: 0,
         };
@@ -71,7 +71,7 @@ class ReviewInstitution extends React.Component {
                 <div className="row justify-content-center">
                     <div className="col-lg-7 col-xs-12 align-items-center mb-5">
                         <div className="row">
-                            {this.headerTab("Projects", this.state.projectList.length, 0)}
+                            {this.headerTab("Projects", this.state.projectList ? this.state.projectList.length : 0, 0)}
                             {this.headerTab("Imagery", this.state.imageryCount, 1)}
                             {this.headerTab("Users", this.state.usersCount, 2, this.props.userId < 0)}
                         </div>
@@ -400,6 +400,10 @@ class ImageryList extends React.Component {
                     />
                 :
                     <Fragment>
+                        <div className="mb-3">
+                            This is a list of available imagery for this institution.
+                            For each project you can select to use some or all of these imagery.
+                        </div>
                         {this.props.isAdmin &&
                             <div className="row">
                                 <div className="col-lg-12 mb-1">
@@ -854,8 +858,13 @@ function Imagery({ isAdmin, title, selectEditImagery, deleteImagery, isInstituti
 function ProjectList({ isAdmin, isLoggedIn, institutionId, projectList, isVisible }) {
     return (
         <div style={!isVisible ? { display: "none" } : {}}>
+            <div className="mb-3">
+                This is a list of all institution projects. The color around the name shows its progress.
+                Red indicates that it has no plots collected, yellow indicates that some plots have been
+                collected, and green indicates that all plots have been selected.
+            </div>
             {isAdmin &&
-            <div className="row mb-1">
+            <div className="row mb-3">
                 <div className="col">
                     <button
                         id="create-project"
@@ -868,16 +877,18 @@ function ProjectList({ isAdmin, isLoggedIn, institutionId, projectList, isVisibl
                 </div>
             </div>
             }
-            {projectList.length === 0
+            {projectList === null
                 ? <h3>Loading projects...</h3>
-                : projectList.map((project, uid) =>
-                    <Project
-                        isAdmin={isAdmin}
-                        isLoggedIn={isLoggedIn}
-                        key={uid}
-                        project={project}
-                    />
-                )}
+                : projectList.length === 0
+                    ? <h3>There are no projects</h3>
+                    : projectList.map((project, uid) =>
+                        <Project
+                            isAdmin={isAdmin}
+                            isLoggedIn={isLoggedIn}
+                            key={uid}
+                            project={project}
+                        />
+                    )}
         </div>
     );
 }
@@ -1044,6 +1055,11 @@ class UserList extends React.Component {
     render() {
         return this.props.isVisible &&
             <Fragment>
+                <div className="mb-3">
+                    This is a list of all institution users.
+                    An institution admin can create and update projects and imagery for the institution.
+                    Members can view projects with the visibility Institution or higher.
+                </div>
                 <NewUserButtons
                     currentIsInstitutionMember={this.currentIsInstitutionMember()}
                     requestMembership={this.requestMembership}
