@@ -13,6 +13,8 @@ import { transform as projTransform } from "ol/proj";
 import { OSM, Vector, XYZ } from "ol/source";
 import { Style, Stroke } from "ol/style";
 import { getArea as sphereGetArea } from "ol/sphere";
+import Highcharts from "highcharts";
+import HighchartsReact from "highcharts-react-official";
 
 class Geodash extends React.Component {
     constructor(props) {
@@ -271,28 +273,29 @@ class Widget extends React.Component {
         }
     };
 
-    getCommonWidgetLayout = (widget, onSliderChange, onSwipeChange) => <div className="panel panel-default" id={"widget_" + widget.id}>
-        <div className="panel-heading">
-            <ul className="list-inline panel-actions pull-right">
-                <li style={{ display: "inline" }}>{widget.name}</li>
-                <li style={{ display: "inline" }}>
-                    <a
-                        className="list-inline panel-actions panel-fullscreen"
-                        onClick={() => this.props.onFullScreen(this.props.widget)}
-                        style={{ color: "#31BAB0" }}
-                        role="button"
-                        title="Toggle Fullscreen"
-                    >
-                        {widget.isFull ? <UnicodeIcon icon="collapse"/> : <UnicodeIcon icon="expand"/>}
-                    </a>
-                </li>
-                {this.getResetMapButton(widget)}
-            </ul>
+    getCommonWidgetLayout = (widget, onSliderChange, onSwipeChange) =>
+        <div className="panel panel-default" id={"widget_" + widget.id}>
+            <div className="panel-heading">
+                <ul className="list-inline panel-actions pull-right">
+                    <li style={{ display: "inline" }}>{widget.name}</li>
+                    <li style={{ display: "inline" }}>
+                        <a
+                            className="list-inline panel-actions panel-fullscreen"
+                            onClick={() => this.props.onFullScreen(this.props.widget)}
+                            style={{ color: "#31BAB0" }}
+                            role="button"
+                            title="Toggle Fullscreen"
+                        >
+                            {widget.isFull ? <UnicodeIcon icon="collapse"/> : <UnicodeIcon icon="expand"/>}
+                        </a>
+                    </li>
+                    {this.getResetMapButton(widget)}
+                </ul>
+            </div>
+            <div id={"widget-container_" + widget.id} className="widget-container">
+                {this.getWidgetInnerHtml(widget, onSliderChange, onSwipeChange)}
+            </div>
         </div>
-        <div id={"widget-container_" + widget.id} className="widget-container">
-            {this.getWidgetInnerHtml(widget, onSliderChange, onSwipeChange)}
-        </div>
-    </div>;
 
     getResetMapButton = widget => {
         if (this.isMapWidget(widget)) {
@@ -363,7 +366,13 @@ class Widget extends React.Component {
                 />
             </div>;
         } else {
-            return <img src="data:image/gif;base64,R0lGODlhAQABAIAAAHd3dwAAACH5BAAAAAAALAAAAAABAAEAAAICRAEAOw==" width ="200" height ="200" className="img-responsive" alt="Blank Widget"/>;
+            return <img
+                src="data:image/gif;base64,R0lGODlhAQABAIAAAHd3dwAAACH5BAAAAAAALAAAAAABAAEAAAICRAEAOw=="
+                width="200"
+                height="200"
+                className="img-responsive"
+                alt="Blank Widget"
+            />;
         }
     };
 
@@ -375,7 +384,11 @@ class Widget extends React.Component {
 
     render() {
         const { widget } = this.props;
-        return (<React.Fragment>{ this.getWidgetHtml(widget, this.props.onSliderChange, this.props.onSwipeChange) }</React.Fragment>);
+        return (
+            <React.Fragment>
+                { this.getWidgetHtml(widget, this.props.onSliderChange, this.props.onSwipeChange) }
+            </React.Fragment>
+        );
     }
 }
 
@@ -1207,9 +1220,10 @@ class GraphWidget extends React.Component {
             selectSarGraphBand: "VV",
             graphLoading: true,
             chartData: {
-                landsat:{ data:[] },
-                sar:{ data:[] },
+                landsat: { data: [] },
+                sar: { data: [] },
             },
+            nonDegChartData: [],
         };
     }
 
@@ -1225,13 +1239,13 @@ class GraphWidget extends React.Component {
                 this.setState({
                     graphLoading: this.state.chartData[this.props.degDataType]
                         && this.state.chartData[this.props.degDataType].data.length === 0,
-                }, this.loadGraph(this.props.widget));
+                }, () => this.loadGraph(this.props.widget));
             }
         }
         this.handleResize();
     }
 
-    loadGraph = (widget) =>{
+    loadGraph = (widget) => {
         const centerPoint = JSON.parse(this.props.getParameterByName("bcenter")).coordinates;
         const widgetType = widget.type || "";
         const collectionName = widget.properties[1];
@@ -1240,14 +1254,12 @@ class GraphWidget extends React.Component {
             : collectionName.trim() === "timeSeriesAssetForPoint" ? "timeSeriesAssetForPoint"
             : collectionName.trim().length > 0 ? "timeSeriesIndex"
             : "timeSeriesIndex2";
-        if (this.state.chartData[this.props.degDataType] && this.state.chartData[this.props.degDataType].data.length > 0) {
-            this.setState({
-                graphRef: this.createChart(
-                    widget.id,
-                    widget.graphBand || indexName,
-                    this.state.chartData[this.props.degDataType].data
-                ),
-                graphLoading: false,
+        if (this.state.chartData[this.props.degDataType]
+            && this.state.chartData[this.props.degDataType].data.length > 0) {
+            this.state.graphRef.update({
+                series: [{
+                    data: this.state.chartData[this.props.degDataType].data[0].data,
+                }],
             });
         } else {
             // check if this.props.degDataType is landsat, sar, or ""
@@ -1262,8 +1274,12 @@ class GraphWidget extends React.Component {
                     collectionNameTimeSeries: collectionName,
                     geometry: JSON.parse(this.props.projPairAOI),
                     indexName: widget.graphBand || indexName,
-                    dateFromTimeSeries: widget.properties[2].trim().length === 10 ? widget.properties[2].trim() : "2000-01-01",
-                    dateToTimeSeries: widget.properties[3].trim().length === 10 ? widget.properties[3].trim() : formatDateISO(new Date()),
+                    dateFromTimeSeries: widget.properties[2].trim().length === 10
+                        ? widget.properties[2].trim()
+                        : "2000-01-01",
+                    dateToTimeSeries: widget.properties[3].trim().length === 10
+                        ? widget.properties[3].trim()
+                        : formatDateISO(new Date()),
                     reducer: widget.graphReducer != null ? widget.graphReducer.toLowerCase() : "",
                     scale: 30,
                     path: path,
@@ -1291,6 +1307,7 @@ class GraphWidget extends React.Component {
                                     data: res.timeseries.filter(v => v[0]).map(v => [v[0], v[1]]).sort((a, b) => a[0] - b[0]),
                                     color: "#31bab0",
                                 });
+                                this.setState({ nonDegChartData : pData });
                             } else {
                                 // this is where degData ends up
                                 const theKeys = Object.keys(res.timeseries[0][1]);
@@ -1343,7 +1360,6 @@ class GraphWidget extends React.Component {
                             }
                             this.setState({
                                 graphLoading: false,
-                                graphRef: this.createChart(widget.id, indexName, pData),
                                 chartData: chartStorage,
                             });
                         } else {
@@ -1376,115 +1392,133 @@ class GraphWidget extends React.Component {
         }
     };
 
-    createChart = (wIndex, wText, series) => {
-        "use strict";
-        return Highcharts.chart("graphcontainer_" + wIndex, {
-            chart: {
-                zoomType: "x",
-            },
-            title: {
-                text: "",
-            },
-            subtitle: {
-                text: document.ontouchstart === undefined
-                    ? "Click and drag in the plot area to zoom in"
-                    : "Pinch the chart to zoom in",
-            },
-            xAxis: {
-                type: "datetime",
-            },
-            yAxis: {
-                title: {
-                    text: wText,
-                },
-            },
-            legend: {
-                enabled: true,
-            },
-            plotOptions: {
-                area: {
-                    connectNulls: wText.toLowerCase() === "custom",
-                    fillColor: {
-                        linearGradient: {
-                            x1: 0,
-                            y1: 0,
-                            x2: 0,
-                            y2: 1,
-                        },
-                        stops: [
-                            [0, Highcharts.Color(Highcharts.getOptions().colors[0]).setOpacity(0).get("rgba")],
-                            [1, Highcharts.Color(Highcharts.getOptions().colors[0]).setOpacity(0).get("rgba")],
-                        ],
-                    },
-                    marker: {
-                        radius: 2,
-                    },
-                    lineWidth: 1,
-                    states: {
-                        hover: {
-                            lineWidth: 1,
-                        },
-                    },
-                    threshold: null,
-                },
-                scatter: {
-                    marker: {
-                        radius: 2,
-                    },
-                },
-            },
-            tooltip: {
-                pointFormat: "<span style=\"color:{series.color}\">{series.name}</span>: <b>{point.y:.6f}</b><br/>",
-                valueDecimals: 20,
-                split: false,
-                xDateFormat: "%Y-%m-%d",
-            },
-            series: series,
-        }, () => {
-            document.getElementById("widgettitle_" + wIndex).innerHTML = wText;
-        });
-    };
-
     selectSarGraphBand = evt => {
         this.setState({
             selectSarGraphBand: evt.target.value,
             graphLoading: this.state.chartData[this.props.degDataType] && this.state.chartData[this.props.degDataType].data.length === 0,
-        }, this.loadGraph(this.props.widget));
+        }, () => this.loadGraph(this.props.widget));
     };
 
-    getLoading = () => this.state.graphLoading
-        ? <img
-            src={"img/ceo-loading.gif"}
-            alt={"Loading"}
-            style={{ position: "absolute", bottom: "50%", left: "50%" }}
-        />
+    getSarBandOption = () =>
+        this.props.widget.type === "DegradationTool" && this.props.degDataType === "sar"
+        ?
+            <select
+                className={"form-control"}
+                style={{
+                    maxWidth: "85%",
+                    display: "inline-block",
+                    fontSize: ".9rem",
+                    height: "30px",
+                }}
+                onChange={evt => this.selectSarGraphBand(evt)}
+            >
+                <option>VV</option>
+                <option>VH</option>
+                <option>VV/VH</option>
+            </select>
         : "";
-    getSarBandOption = () => this.props.widget.type === "DegradationTool" && this.props.degDataType === "sar"
-        ? <select
-            className={"form-control"}
-            style={{
-                maxWidth: "85%",
-                display: "inline-block",
-                fontSize: ".9rem",
-                height: "30px",
-            }}
-            onChange={evt => this.selectSarGraphBand(evt)}
-        >
-            <option>VV</option>
-            <option>VH</option>
-            <option>VV/VH</option>
-        </select>
-        : "";
+
+    getChartOptions = () => ({
+        chart: {
+            zoomType: "x",
+        },
+        title: {
+            text: "",
+        },
+        subtitle: {
+            text: document.ontouchstart === undefined
+                ? "Click and drag in the plot area to zoom in"
+                : "Pinch the chart to zoom in",
+        },
+        xAxis: {
+            type: "datetime",
+        },
+        yAxis: {
+            title: {
+                text: this.props.widget.properties[4],
+            },
+        },
+        legend: {
+            enabled: true,
+        },
+        credits: {
+            enabled: false,
+        },
+        plotOptions: {
+            area: {
+                connectNulls: this.props.widget.properties[4].toLowerCase() === "custom",
+                fillColor: {
+                    linearGradient: {
+                        x1: 0,
+                        y1: 0,
+                        x2: 0,
+                        y2: 1,
+                    },
+                    stops: [
+                        [0, Highcharts.Color(Highcharts.getOptions().colors[0]).setOpacity(0).get("rgba")],
+                        [1, Highcharts.Color(Highcharts.getOptions().colors[0]).setOpacity(0).get("rgba")],
+                    ],
+                },
+                marker: {
+                    radius: 2,
+                },
+                lineWidth: 1,
+                states: {
+                    hover: {
+                        lineWidth: 1,
+                    },
+                },
+                threshold: null,
+            },
+            scatter: {
+                marker: {
+                    radius: 2,
+                },
+            },
+        },
+        tooltip: {
+            pointFormat: "<span style=\"color:{series.color}\">{series.name}</span>: <b>{point.y:.6f}</b><br/>",
+            valueDecimals: 20,
+            split: false,
+            xDateFormat: "%Y-%m-%d",
+        },
+        series: this.props.widget.type === "DegradationTool"
+            ? this.state.chartData[this.props.degDataType].data
+            : this.state.nonDegChartData,
+    });
 
     render() {
         const widget = this.props.widget;
-        return <div id={"widgetgraph_" + widget.id} className="minmapwidget">
-            <div id={"graphcontainer_" + widget.id} className="minmapwidget graphwidget normal">
+        return (
+            <div id={"widgetgraph_" + widget.id} className="minmapwidget">
+                <div id={"graphcontainer_" + widget.id} className="minmapwidget graphwidget normal">
+                    {(this.props.widget.type === "DegradationTool"
+                        && this.state.chartData[this.props.degDataType].data.length > 0)
+                    || this.state.nonDegChartData.length > 0
+                        ?
+                            <HighchartsReact
+                                highcharts={Highcharts}
+                                options={this.getChartOptions()}
+                                callback={thisChart => this.setState({ graphRef: thisChart })}
+                            />
+                        :
+                            <img
+                                src={"img/ceo-loading.gif"}
+                                alt={"Loading"}
+                                style={{
+                                    position: "absolute",
+                                    bottom: "50%",
+                                    left: "50%",
+                                }}
+                            />
+                    }
+                </div>
+                <h3 id={"widgettitle_" + widget.id}>
+                    {this.props.widget.properties[4]}
+                </h3>
+                {this.getSarBandOption()}
             </div>
-            {this.getLoading()}
-            <h3 id={"widgettitle_" + widget.id} />
-            {this.getSarBandOption()}
-        </div>;
+        );
     }
 }
 class StatsWidget extends React.Component {
