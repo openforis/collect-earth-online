@@ -1158,7 +1158,7 @@ class MapWidget extends React.Component {
 
     setStretch = evt => this.setState({ stretch: parseInt(evt.target.value) });
 
-    toggleDegDataType = evt => this.props.handleDegDataType(evt.target.checked ? "sar" : "landsat");
+    toggleDegDataType = checked => this.props.handleDegDataType(checked ? "sar" : "landsat");
 
     getStretchToggle = () => this.props.degDataType === "landsat"
         ?
@@ -1187,18 +1187,16 @@ class MapWidget extends React.Component {
                 </div>
         : "";
 
-    getDegDataTypeToggle = () => this.props.isDegradation
-        ?
-            <div className="col-6">
-                <span className="ctrlText font-weight-bold">Data: </span>
-                <span className="ctrlText">LANDSAT </span>
-                <label className="switch">
-                    <input type="checkbox" onChange={evt => this.toggleDegDataType(evt)}/>
-                    <span className="switchslider round"/>
-                </label>
-                <span className="ctrlText"> SAR</span>
-            </div>
-        : "";
+    getDegDataTypeToggle = () =>
+        <div className="col-6" style={{ display: this.props.isDegradation ? "block" : "none" }}>
+            <span className="ctrlText font-weight-bold">Data: </span>
+            <span className="ctrlText">LANDSAT </span>
+            <label className="switch">
+                <input type="checkbox" onChange={evt => this.toggleDegDataType(evt.target.checked)} />
+                <span className="switchslider round"/>
+            </label>
+            <span className="ctrlText"> SAR</span>
+        </div>
 
     render() {
         return <React.Fragment>
@@ -1249,13 +1247,13 @@ class GraphWidget extends React.Component {
         if (this.props.degDataType === "landsat"
             && this.state.chartDataSeriesLandsat.length > 0) {
             this.state.graphRef.update({
-                series: this.state.chartDataSeriesLandsat,
+                series: [...this.state.chartDataSeriesLandsat],
             });
         } else if (this.props.degDataType === "sar"
             && this.state.chartDataSeriesSar.hasOwnProperty(this.state.selectSarGraphBand)
             && this.state.chartDataSeriesSar[this.state.selectSarGraphBand].length > 0) {
             this.state.graphRef.update({
-                series: this.state.chartDataSeriesSar[this.state.selectSarGraphBand],
+                series: [...this.state.chartDataSeriesSar[this.state.selectSarGraphBand]],
             });
         } else {
             // check if this.props.degDataType is landsat, sar, or ""
@@ -1391,22 +1389,28 @@ class GraphWidget extends React.Component {
             selectSarGraphBand: evt.target.value,
         }, () => this.loadGraph(this.props.widget));
 
-    getSarBandOption = () =>
-        <select
-            className={"form-control"}
-            style={{
-                maxWidth: "85%",
-                display: this.props.widget.type === "DegradationTool" && this.props.degDataType === "sar"
-                    ? "inline-block" : "none",
-                fontSize: ".9rem",
-                height: "30px",
-            }}
-            onChange={evt => this.onSelectSarGraphBand(evt)}
-        >
-            <option>VV</option>
-            <option>VH</option>
-            <option>VV/VH</option>
-        </select>;
+    getSarBandOption = () => {
+        const selectOptions = [
+            { label: "VV", value: "VV" },
+            { label: "VH", value: "VH" },
+            { label: "VV/VH", value: "VV/VH" },
+        ];
+        return (
+            <select
+                className={"form-control"}
+                style={{
+                    maxWidth: "85%",
+                    display: this.props.widget.type === "DegradationTool" && this.props.degDataType === "sar"
+                        ? "inline-block" : "none",
+                    fontSize: ".9rem",
+                    height: "30px",
+                }}
+                onChange={evt => this.onSelectSarGraphBand(evt)}
+            >
+                {selectOptions.map(el => <option value={el.value} key={el.value}>{el.label}</option>)}
+            </select>
+        );
+    };
 
     getChartOptions = () => ({
         chart: {
