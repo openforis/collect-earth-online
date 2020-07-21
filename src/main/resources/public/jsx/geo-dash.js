@@ -1218,11 +1218,8 @@ class GraphWidget extends React.Component {
         this.state = {
             graphRef: null,
             selectSarGraphBand: "VV",
-            graphLoading: true,
-            chartData: {
-                landsat: { data: [] },
-                sar: { data: [] },
-            },
+            chartDataSeriesLandsat: [],
+            chartDataSeriesSar: {},
             nonDegChartData: [],
         };
     }
@@ -1235,12 +1232,7 @@ class GraphWidget extends React.Component {
         if (this.props.degDataType
             && (prevProps.degDataType !== this.props.degDataType
                 || prevState.selectSarGraphBand !== this.state.selectSarGraphBand)) {
-            if (this.state.graphLoading !== true) {
-                this.setState({
-                    graphLoading: this.state.chartData[this.props.degDataType]
-                        && this.state.chartData[this.props.degDataType].data.length === 0,
-                }, () => this.loadGraph(this.props.widget));
-            }
+            this.loadGraph(this.props.widget);
         }
         this.handleResize();
     }
@@ -1254,12 +1246,16 @@ class GraphWidget extends React.Component {
             : collectionName.trim() === "timeSeriesAssetForPoint" ? "timeSeriesAssetForPoint"
             : collectionName.trim().length > 0 ? "timeSeriesIndex"
             : "timeSeriesIndex2";
-        if (this.state.chartData[this.props.degDataType]
-            && this.state.chartData[this.props.degDataType].data.length > 0) {
+        if (this.props.degDataType === "landsat"
+            && this.state.chartDataSeriesLandsat.length > 0) {
             this.state.graphRef.update({
-                series: [{
-                    data: this.state.chartData[this.props.degDataType].data[0].data,
-                }],
+                series: this.state.chartDataSeriesLandsat,
+            });
+        } else if (this.props.degDataType === "sar"
+            && this.state.chartDataSeriesSar.hasOwnProperty(this.state.selectSarGraphBand)
+            && this.state.chartDataSeriesSar[this.state.selectSarGraphBand].length > 0) {
+            this.state.graphRef.update({
+                series: this.state.chartDataSeriesSar[this.state.selectSarGraphBand],
             });
         } else {
             // check if this.props.degDataType is landsat, sar, or ""
@@ -1296,18 +1292,16 @@ class GraphWidget extends React.Component {
                         console.warn(res.errMsg);
                     } else {
                         if (res.hasOwnProperty("timeseries")) {
-                            let chartStorage = {};
-                            const pData = [];
                             if (res.timeseries.length === 0) {
                                 console.log("no data");
                             } else if (Object.keys(res.timeseries[0][1]).length === 0) {
-                                pData.push({
+                                const thisDataSeries = {
                                     type: "area",
                                     name: widget.graphBand || indexName,
                                     data: res.timeseries.filter(v => v[0]).map(v => [v[0], v[1]]).sort((a, b) => a[0] - b[0]),
                                     color: "#31bab0",
-                                });
-                                this.setState({ nonDegChartData : pData });
+                                };
+                                this.setState({ nonDegChartData : [thisDataSeries] });
                             } else {
                                 // this is where degData ends up
                                 const theKeys = Object.keys(res.timeseries[0][1]);
@@ -1327,41 +1321,41 @@ class GraphWidget extends React.Component {
                                 });
                                 compiledData.forEach((d, index) => {
                                     const cdata = this.convertData(d);
-                                    if (widgetType !== "DegradationTool"
-                                        || this.props.degDataType !== "sar"
-                                        || (this.props.degDataType === "sar" && theKeys[index] === this.state.selectSarGraphBand)) {
-                                        pData.push({
-                                            type: widgetType === "DegradationTool" ? "scatter" : "area",
-                                            name: theKeys[index],
-                                            data: this.sortMultiData(cdata),
-                                            valueDecimals: 20,
-                                            connectNulls: widgetType !== "DegradationTool",
-                                            color: "#31bab0",
-                                            allowPointSelect: true,
-                                            point: {
-                                                events: {
-                                                    select: e => {
-                                                        this.props.handleSelectDate(formatDateISO(new Date(e.target.x)));
-                                                    },
+                                    const mSortData = this.sortMultiData(cdata);
+                                    const thisDataSeries = {
+                                        type: "scatter",
+                                        name: theKeys[index],
+                                        data: mSortData,
+                                        valueDecimals: 20,
+                                        connectNulls: true,
+                                        color: "#31bab0",
+                                        allowPointSelect: true,
+                                        point: {
+                                            events: {
+                                                select: e => {
+                                                    this.props.handleSelectDate(formatDateISO(new Date(e.target.x)));
                                                 },
                                             },
-                                            tooltip: {
-                                                pointFormat: "<span style=\"color:{series.color}\">{point.x:%Y-%m-%d}</span>: <b>{point.y:.6f}</b><br/>",
-                                                valueDecimals: 20,
-                                                split: false,
-                                                xDateFormat: "%Y-%m-%d",
+                                        },
+                                        tooltip: {
+                                            pointFormat: "<span style=\"color:{series.color}\">{point.x:%Y-%m-%d}</span>: <b>{point.y:.6f}</b><br/>",
+                                            valueDecimals: 20,
+                                            split: false,
+                                            xDateFormat: "%Y-%m-%d",
+                                        },
+                                    };
+                                    if (this.props.degDataType === "landsat") {
+                                        this.setState({ chartDataSeriesLandsat: [thisDataSeries] });
+                                    } else {
+                                        this.setState({
+                                            chartDataSeriesSar: {
+                                                ...this.state.chartDataSeriesSar,
+                                                [theKeys[index]]: [thisDataSeries],
                                             },
                                         });
                                     }
                                 });
-
-                                chartStorage = this.state.chartData;
-                                chartStorage[this.props.degDataType].data = pData;
                             }
-                            this.setState({
-                                graphLoading: false,
-                                chartData: chartStorage,
-                            });
                         } else {
                             console.warn("Wrong Data Returned");
                         }
@@ -1392,31 +1386,27 @@ class GraphWidget extends React.Component {
         }
     };
 
-    selectSarGraphBand = evt => {
+    onSelectSarGraphBand = evt =>
         this.setState({
             selectSarGraphBand: evt.target.value,
-            graphLoading: this.state.chartData[this.props.degDataType] && this.state.chartData[this.props.degDataType].data.length === 0,
         }, () => this.loadGraph(this.props.widget));
-    };
 
     getSarBandOption = () =>
-        this.props.widget.type === "DegradationTool" && this.props.degDataType === "sar"
-        ?
-            <select
-                className={"form-control"}
-                style={{
-                    maxWidth: "85%",
-                    display: "inline-block",
-                    fontSize: ".9rem",
-                    height: "30px",
-                }}
-                onChange={evt => this.selectSarGraphBand(evt)}
-            >
-                <option>VV</option>
-                <option>VH</option>
-                <option>VV/VH</option>
-            </select>
-        : "";
+        <select
+            className={"form-control"}
+            style={{
+                maxWidth: "85%",
+                display: this.props.widget.type === "DegradationTool" && this.props.degDataType === "sar"
+                    ? "inline-block" : "none",
+                fontSize: ".9rem",
+                height: "30px",
+            }}
+            onChange={evt => this.onSelectSarGraphBand(evt)}
+        >
+            <option>VV</option>
+            <option>VH</option>
+            <option>VV/VH</option>
+        </select>;
 
     getChartOptions = () => ({
         chart: {
@@ -1483,7 +1473,9 @@ class GraphWidget extends React.Component {
             xDateFormat: "%Y-%m-%d",
         },
         series: this.props.widget.type === "DegradationTool"
-            ? this.state.chartData[this.props.degDataType].data
+            ? this.props.degDataType === "landsat"
+                ? this.state.chartDataSeriesLandsat
+                : this.state.chartDataSeriesSar[this.state.selectSarGraphBand]
             : this.state.nonDegChartData,
     });
 
@@ -1493,7 +1485,12 @@ class GraphWidget extends React.Component {
             <div id={"widgetgraph_" + widget.id} className="minmapwidget">
                 <div id={"graphcontainer_" + widget.id} className="minmapwidget graphwidget normal">
                     {(this.props.widget.type === "DegradationTool"
-                        && this.state.chartData[this.props.degDataType].data.length > 0)
+                        && this.props.degDataType === "sar"
+                        && this.state.chartDataSeriesSar.hasOwnProperty(this.state.selectSarGraphBand)
+                        && this.state.chartDataSeriesSar[this.state.selectSarGraphBand].length > 0)
+                    || (this.props.widget.type === "DegradationTool"
+                        && this.props.degDataType === "landsat"
+                        && this.state.chartDataSeriesLandsat.length > 0)
                     || this.state.nonDegChartData.length > 0
                         ?
                             <HighchartsReact
