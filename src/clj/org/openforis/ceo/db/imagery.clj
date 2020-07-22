@@ -49,13 +49,13 @@
         add-to-all-projects? (tc/str-bool (:addToAllProjects params) true)]
     (if (sql-primitive (call-sql "check_institution_imagery")) ; TODO this SQL function name is unclear
       (data-response "The title you have chosen is already taken")
-      (let [new-imagery-id (call-sql "add_institution_imagery"
-                                     institution-id
-                                     "private"
-                                     imagery-title
-                                     imagery-attribution
-                                     nil ; FIXME, this was being saved a string to match JSON, create update query to replace "null" with NULL
-                                     source-config)]
+      (let [new-imagery-id (sql-primitive (call-sql "add_institution_imagery"
+                                                    institution-id
+                                                    "private"
+                                                    imagery-title
+                                                    imagery-attribution
+                                                    nil ; FIXME, this was being saved a string to match JSON, create update query to replace "null" with NULL
+                                                    source-config))]
         (when add-to-all-projects?
           (call-sql "add_imagery_to_all_institution_projects" new-imagery-id))
         (data-response "")))))
