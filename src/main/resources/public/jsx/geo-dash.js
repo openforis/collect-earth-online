@@ -449,7 +449,6 @@ class DegradationWidget extends React.Component {
                                     initCenter={this.props.initCenter}
                                     handleSelectDate={this.handleSelectDate}
                                     degDataType={this.state.degDataType}
-                                    isDegradation
                                 />
                             </div>
                         </div>
@@ -1343,7 +1342,9 @@ class GraphWidget extends React.Component {
                                         },
                                     };
                                     if (this.props.degDataType === "landsat") {
-                                        this.setState({ chartDataSeriesLandsat: [thisDataSeries] });
+                                        this.setState({
+                                            chartDataSeriesLandsat: [...this.state.chartDataSeriesLandsat, thisDataSeries],
+                                        });
                                     } else {
                                         this.setState({
                                             chartDataSeriesSar: {
@@ -1380,14 +1381,12 @@ class GraphWidget extends React.Component {
                 this.state.graphRef.setSize(gwidget.clientWidth, gwidget.clientHeight, true);
             }
         } catch (e) {
+            console.log("handleResize error:");
             console.log(e.message);
         }
     };
 
-    onSelectSarGraphBand = evt =>
-        this.setState({
-            selectSarGraphBand: evt.target.value,
-        }, () => this.loadGraph(this.props.widget));
+    onSelectSarGraphBand = newValue => this.setState({ selectSarGraphBand: newValue });
 
     getSarBandOption = () => {
         const selectOptions = [
@@ -1405,7 +1404,7 @@ class GraphWidget extends React.Component {
                     fontSize: ".9rem",
                     height: "30px",
                 }}
-                onChange={evt => this.onSelectSarGraphBand(evt)}
+                onChange={evt => this.onSelectSarGraphBand(evt.target.value)}
             >
                 {selectOptions.map(el => <option value={el.value} key={el.value}>{el.label}</option>)}
             </select>
@@ -1478,9 +1477,9 @@ class GraphWidget extends React.Component {
         },
         series: this.props.widget.type === "DegradationTool"
             ? this.props.degDataType === "landsat"
-                ? this.state.chartDataSeriesLandsat
-                : this.state.chartDataSeriesSar[this.state.selectSarGraphBand]
-            : this.state.nonDegChartData,
+                ? [...this.state.chartDataSeriesLandsat]
+                : [...this.state.chartDataSeriesSar[this.state.selectSarGraphBand]]
+            : [...this.state.nonDegChartData],
     });
 
     render() {
