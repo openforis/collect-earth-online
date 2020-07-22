@@ -16,4 +16,4 @@ DO $$
         RAISE NOTICE 'No functions found.';
     END IF;
  END
-$$  LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql;

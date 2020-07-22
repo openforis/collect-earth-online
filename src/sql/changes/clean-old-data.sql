@@ -23,7 +23,7 @@ DO $$
         RAISE NOTICE 'No orphaned tables found.';
     END IF;
  END
-$$  LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql;
 
 -- Archive old projects
 SELECT archive_project(project_uid)
