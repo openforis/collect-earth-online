@@ -1,6 +1,7 @@
 import React from "react";
 import ReactDOM from "react-dom";
 import { NavigationBar } from "./components/PageComponents";
+import { FormInput } from "./components/FormComponents";
 import { getQueryString } from "./utils/textUtils";
 
 class Login extends React.Component {
@@ -19,28 +20,35 @@ class Login extends React.Component {
         this.emailPattern = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
     }
 
+    requiredValidator = value => value === "" ? "This field is required." : "";
+
+    emailValidator = value => !this.emailPattern.test(value) ? "Not a valid email address." : "";
+
+    passwordValidator = value => value && value.length < 4 ? "Password must be at least 4 characters." : "";
+
     handleValidation = (e) => {
+        const { name, type, required } = e.target;
+        return this.validate(name, type, required);
+    }
+
+    validate = (name, type, required) => {
         let error = "";
-        const name = e.target ? e.target.name : e;
-        if (name === "email") {
-            if (this.state.values[name] === "") {
-                error = "This field is required.";
-            } else if (!this.emailPattern.test(this.state.values[name])) {
-                error = "Not a valid email address.";
-            }
-        } else if (name === "password") {
-            if (this.state.values[name] === "") {
-                error = "This field is required.";
-            } else if (this.state.values[name].length < 4) {
-                error = "Password must be at least 4 characters.";
+        const value = this.state.values[name];
+        if (required) {
+            error = this.requiredValidator(value);
+        } else {
+            if (type === "email") {
+                error = this.emailValidator(value);
+            } else if (type === "password") {
+                error = this.passwordValidator(value);
             }
         }
         this.setState({ errors: { ...this.state.errors, [name]: error }});
         return error;
     }
 
-    validateAll = () => this.handleValidation("email") === "" &&
-        this.handleValidation("password") === "";
+    validateAll = () => this.validate("email", "email") === "" &&
+        this.validate("password", "password") === "";
 
     requestLogin = () => {
         if (this.validateAll()) {
@@ -78,6 +86,18 @@ class Login extends React.Component {
                             }}
                             noValidate
                         >
+                            <FormInput
+                                label={"Email address"}
+                                id="login-email"
+                                name={"email"}
+                                type={"email"}
+                                placeholder="Email"
+                                value={this.state.values.email}
+                                error={this.state.errors.email}
+                                onChange={(name, value) => this.setState({ values: { ...this.state.values, [name]: value }})}
+                                onBlur={(name, type, required) => this.validate(name, type, required)}
+                                required
+                            />
                             <div className={"form-group " + (this.state.errors.email ? "invalid" : "")}>
                                 <label htmlFor="email">Email address</label>
                                 <input
@@ -88,6 +108,7 @@ class Login extends React.Component {
                                     value={this.state.values.email}
                                     onChange={e => this.setState({ values: { ...this.state.values, [e.target.name]: e.target.value }})}
                                     onBlur={this.handleValidation}
+                                    required
                                 />
                                 {this.state.errors.email &&
                                     <div className="validation-error">{this.state.errors.email}</div>
@@ -103,6 +124,7 @@ class Login extends React.Component {
                                     value={this.state.values.password}
                                     onChange={e => this.setState({ values: { ...this.state.values, [e.target.name]: e.target.value }})}
                                     onBlur={this.handleValidation}
+                                    required
                                 />
                                 {this.state.errors.password &&
                                     <div className="validation-error">{this.state.errors.password}</div>
