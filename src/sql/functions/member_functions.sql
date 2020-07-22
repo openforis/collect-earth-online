@@ -1,5 +1,5 @@
 -- NAMESPACE: member
--- REQUIRES: clear
+-- REQUIRES: clear, project
 
 --
 --  USER FUNCTIONS
@@ -9,8 +9,10 @@
 CREATE OR REPLACE FUNCTION add_user(_email text, _password text, _on_mailing_list boolean)
  RETURNS integer AS $$
 
-    INSERT INTO users (email, password, on_mailing_list)
-    VALUES (_email, crypt(_password, gen_salt('bf')), _on_mailing_list)
+    INSERT INTO users
+        (email, password, on_mailing_list)
+    VALUES
+        (_email, crypt(_password, gen_salt('bf')), _on_mailing_list)
     RETURNING user_uid
 
 $$ LANGUAGE SQL;
@@ -34,9 +36,9 @@ $$ LANGUAGE SQL;
 -- Get information for single user
 CREATE OR REPLACE FUNCTION get_user(_email text)
  RETURNS TABLE (
-     user_id          integer,
-     administrator    boolean,
-     reset_key        text
+    user_id          integer,
+    administrator    boolean,
+    reset_key        text
  ) AS $$
 
     SELECT user_uid, administrator, reset_key
@@ -45,21 +47,21 @@ CREATE OR REPLACE FUNCTION get_user(_email text)
 
 $$ LANGUAGE SQL;
 
-CREATE OR REPLACE FUNCTION get_user_by_id(_user_rid integer)
-    RETURNS TABLE (
-                      email            text,
-                      administrator    boolean,
-                      reset_key        text
-                  ) AS $$
+CREATE OR REPLACE FUNCTION get_user_by_id(_user_id integer)
+ RETURNS TABLE (
+    email            text,
+    administrator    boolean,
+    reset_key        text
+ ) AS $$
 
-SELECT email, administrator, reset_key
-FROM users
-WHERE user_uid = _user_rid
+    SELECT email, administrator, reset_key
+    FROM users
+    WHERE user_uid = _user_id
 
 $$ LANGUAGE SQL;
 
 -- Get all users by institution ID, includes role
-CREATE OR REPLACE FUNCTION get_all_users_by_institution_id(_institution_rid integer)
+CREATE OR REPLACE FUNCTION get_all_users_by_institution_id(_institution_id integer)
  RETURNS TABLE (
     user_id             integer,
     email               text,
@@ -74,7 +76,7 @@ CREATE OR REPLACE FUNCTION get_all_users_by_institution_id(_institution_rid inte
         ON users.user_id = iu.user_rid
     INNER JOIN roles
         ON roles.role_uid = iu.role_rid
-    WHERE iu.institution_rid = _institution_rid
+    WHERE iu.institution_rid = _institution_id
 
 $$ LANGUAGE SQL;
 
@@ -93,15 +95,15 @@ CREATE OR REPLACE FUNCTION check_login(_email text, _password text)
 $$ LANGUAGE SQL;
 
 -- Returns all of the user fields associated with the provided email
-CREATE OR REPLACE FUNCTION email_taken(_email text, _user_uid integer)
+CREATE OR REPLACE FUNCTION email_taken(_email text, _user_id integer)
  RETURNS boolean AS $$
 
-    SELECT EXISTS(SELECT 1 FROM users WHERE email = _email AND user_uid <> _user_uid)
+    SELECT EXISTS(SELECT 1 FROM users WHERE email = _email AND user_uid <> _user_id)
 
 $$ LANGUAGE SQL;
 
 -- Returns plot stats for user
-CREATE OR REPLACE FUNCTION get_user_stats(_user_rid integer)
+CREATE OR REPLACE FUNCTION get_user_stats(_user_id integer)
  RETURNS TABLE (
     total_projects     integer,
     total_plots        integer,
@@ -120,7 +122,7 @@ CREATE OR REPLACE FUNCTION get_user_stats(_user_rid integer)
         INNER JOIN projects p
             ON pl.project_rid = project_uid
         INNER JOIN users u
-            ON up.user_rid = _user_rid
+            ON up.user_rid = _user_id
     ), user_totals as (
         SELECT COUNT(DISTINCT project_uid)::int as proj_count,
             COUNT(DISTINCT plot_uid)::int as plot_count
@@ -152,19 +154,21 @@ CREATE OR REPLACE FUNCTION get_user_stats(_user_rid integer)
 
 $$ LANGUAGE SQL;
 
-CREATE OR REPLACE FUNCTION set_mailing_list(_user_uid integer, _on_mailing_list boolean)
+CREATE OR REPLACE FUNCTION set_mailing_list(_user_id integer, _on_mailing_list boolean)
  RETURNS void AS $$
 
-    UPDATE users SET on_mailing_list = _on_mailing_list WHERE user_uid = _user_uid
+    UPDATE users
+    SET on_mailing_list = _on_mailing_list
+    WHERE user_uid = _user_id
 
 $$ LANGUAGE SQL;
 
-CREATE OR REPLACE FUNCTION get_user_details(_user_uid integer)
+CREATE OR REPLACE FUNCTION get_user_details(_user_id integer)
  RETURNS TABLE (
     on_mailing_list    boolean
  ) AS $$
 
-    SELECT on_mailing_list FROM users WHERE user_uid = _user_uid
+    SELECT on_mailing_list FROM users WHERE user_uid = _user_id
 
 $$ LANGUAGE SQL;
 
@@ -210,7 +214,7 @@ CREATE OR REPLACE FUNCTION set_password_reset_key(_email text, _reset_key text)
 
 $$ LANGUAGE SQL;
 
--- Sets the password reset key for the given user. If one already exists, it is replaced.
+-- Updates password for a given user and clears the reset key.
 CREATE OR REPLACE FUNCTION update_password(_email text, _password text)
  RETURNS text AS $$
 
@@ -239,21 +243,22 @@ CREATE OR REPLACE FUNCTION add_institution(_name text, _logo text, _description 
 $$ LANGUAGE SQL;
 
 -- Archive institution and all projects under it
-CREATE OR REPLACE FUNCTION archive_institution(_institution_uid integer)
+CREATE OR REPLACE FUNCTION archive_institution(_institution_id integer)
  RETURNS integer AS $$
 
     SELECT (archive_project(project_uid))
     FROM projects
-    WHERE institution_rid = _institution_uid;
+    WHERE institution_rid = _institution_id;
 
     UPDATE institutions
-    SET archived = true,
+    SET archived = TRUE,
         archived_date = NOW()
-    WHERE institution_uid = _institution_uid
+    WHERE institution_uid = _institution_id
     RETURNING institution_uid;
 
 $$ LANGUAGE SQL;
 
+-- FIXME all institutions does not need to return the whole institution_return
 -- Returns all institutions
 CREATE OR REPLACE FUNCTION select_all_institutions()
  RETURNS setOf institution_return AS $$
@@ -303,17 +308,17 @@ CREATE OR REPLACE FUNCTION select_all_institutions()
 $$ LANGUAGE SQL;
 
 -- Returns one institution
-CREATE OR REPLACE FUNCTION select_institution_by_id(_institution_uid integer)
+CREATE OR REPLACE FUNCTION select_institution_by_id(_institution_id integer)
  RETURNS setOf institution_return AS $$
 
     SELECT * FROM select_all_institutions()
-    WHERE institution_id = _institution_uid
+    WHERE institution_id = _institution_id
         AND archived = false
 
 $$ LANGUAGE SQL;
 
 -- Updates institution details
-CREATE OR REPLACE FUNCTION update_institution(_institution_uid integer, _name text, _logo_path text, _description text, _url text)
+CREATE OR REPLACE FUNCTION update_institution(_institution_id integer, _name text, _logo_path text, _description text, _url text)
  RETURNS integer AS $$
 
     UPDATE institutions
@@ -321,18 +326,18 @@ CREATE OR REPLACE FUNCTION update_institution(_institution_uid integer, _name te
         url = _url,
         description = _description,
         logo = _logo_path
-    WHERE institution_uid = _institution_uid
+    WHERE institution_uid = _institution_id
     RETURNING institution_uid
 
 $$ LANGUAGE SQL;
 
 -- Update only logo. Id is not known during add_institution.
-CREATE OR REPLACE FUNCTION update_institution_logo(_institution_uid integer, _logo text)
+CREATE OR REPLACE FUNCTION update_institution_logo(_institution_id integer, _logo text)
  RETURNS integer AS $$
 
     UPDATE institutions
     SET logo = _logo
-    WHERE institution_uid = _institution_uid
+    WHERE institution_uid = _institution_id
     RETURNING institution_uid
 
 $$ LANGUAGE SQL;
@@ -341,65 +346,51 @@ $$ LANGUAGE SQL;
 --  INSTITUTION USER FUNCTIONS
 --
 
+-- FIXME, we dont use the return values, convert to void
+
 -- Adds a new institution_user to the database
-CREATE OR REPLACE FUNCTION add_institution_user(_institution_rid integer, _user_rid integer, _role_rid integer)
+CREATE OR REPLACE FUNCTION add_institution_user(_institution_id integer, _user_id integer, _role_id integer)
  RETURNS integer AS $$
 
     INSERT INTO institution_users
         (institution_rid, user_rid, role_rid)
     VALUES
-        (_institution_rid, _user_rid, _role_rid)
+        (_institution_id, _user_id, _role_id)
     RETURNING inst_user_uid
 
 $$ LANGUAGE SQL;
 
 -- Adding a institution_user with role as text
-CREATE OR REPLACE FUNCTION add_institution_user(_institution_rid integer, _user_rid integer, _role text)
+CREATE OR REPLACE FUNCTION add_institution_user(_institution_id integer, _user_id integer, _role text)
  RETURNS integer AS $$
 
     INSERT INTO institution_users
         (institution_rid, user_rid, role_rid)
-    SELECT _institution_rid, _user_rid, role_uid
+    SELECT _institution_id, _user_id, role_uid
     FROM (SELECT role_uid FROM roles WHERE title = _role) AS tr
     RETURNING inst_user_uid
 
 $$ LANGUAGE SQL;
 
--- Adds a returns institution user roles from the database
-CREATE OR REPLACE FUNCTION get_institution_user_roles(_user_rid integer)
- RETURNS TABLE (
-    institution_rid    integer,
-    role               text
- ) AS $$
-
-    SELECT institution_rid, title
-    FROM institution_users as iu
-    INNER JOIN roles as r
-        ON iu.role_rid = role_uid
-    WHERE iu.user_rid = _user_rid
-    ORDER BY institution_rid
-
-$$ LANGUAGE SQL;
-
 -- Remove user from institution
-CREATE OR REPLACE FUNCTION remove_institution_user_role(_institution_rid integer, _user_rid integer)
+CREATE OR REPLACE FUNCTION remove_institution_user_role(_institution_id integer, _user_id integer)
  RETURNS void AS $$
 
     DELETE FROM institution_users
-    WHERE institution_rid = _institution_rid
-        AND user_rid = _user_rid
+    WHERE institution_rid = _institution_id
+        AND user_rid = _user_id
 
 $$ LANGUAGE SQL;
 
 -- Update the role of the user in a given institution
-CREATE OR REPLACE FUNCTION update_institution_user_role(_institution_rid integer, _user_rid integer, _role text)
+CREATE OR REPLACE FUNCTION update_institution_user_role(_institution_id integer, _user_id integer, _role text)
  RETURNS integer AS $$
 
     UPDATE institution_users
     SET role_rid = role_uid
     FROM roles AS r
-    WHERE institution_rid = _institution_rid
-        AND user_rid = _user_rid
+    WHERE institution_rid = _institution_id
+        AND user_rid = _user_id
         AND title = _role
     RETURNING inst_user_uid
 
@@ -410,7 +401,7 @@ $$ LANGUAGE SQL;
 --
 
 -- Check if user is admin of institution
-CREATE OR REPLACE FUNCTION is_institution_user_admin(_user_rid integer, _institution_rid integer)
+CREATE OR REPLACE FUNCTION is_institution_user_admin(_user_id integer, _institution_id integer)
  RETURNS boolean AS $$
 
     SELECT EXISTS(
@@ -420,8 +411,8 @@ CREATE OR REPLACE FUNCTION is_institution_user_admin(_user_rid integer, _institu
             ON iu.role_rid = role_uid
         INNER JOIN institutions as i
             ON institution_rid = institution_uid
-        WHERE iu.user_rid = _user_rid
-            AND institution_rid = _institution_rid
+        WHERE iu.user_rid = _user_id
+            AND institution_rid = _institution_id
             AND title = 'admin'
             AND archived = FALSE
     )
@@ -429,21 +420,21 @@ CREATE OR REPLACE FUNCTION is_institution_user_admin(_user_rid integer, _institu
 $$ LANGUAGE SQL;
 
 -- Check if user has collection rights (read rights) for the project
-CREATE OR REPLACE FUNCTION can_user_collect(_user_rid integer, _project_uid integer)
+CREATE OR REPLACE FUNCTION can_user_collect(_user_id integer, _project_id integer)
  RETURNS boolean AS $$
 
-    SELECT EXISTS(SELECT * FROM select_all_user_projects(_user_rid) WHERE project_id = _project_uid)
+    SELECT EXISTS(SELECT * FROM select_all_user_projects(_user_id) WHERE project_id = _project_id)
 
 $$ LANGUAGE SQL;
 
 -- Check if user has modify rights for the project
-CREATE OR REPLACE FUNCTION can_user_edit(_user_rid integer, _project_uid integer)
+CREATE OR REPLACE FUNCTION can_user_edit(_user_id integer, _project_id integer)
  RETURNS boolean AS $$
 
     SELECT EXISTS(
         SELECT *
-        FROM select_all_user_projects(_user_rid)
-        WHERE project_id = _project_uid
+        FROM select_all_user_projects(_user_id)
+        WHERE project_id = _project_id
             AND editable = true
     )
 
