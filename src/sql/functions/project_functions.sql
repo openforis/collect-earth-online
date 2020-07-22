@@ -5,52 +5,6 @@
 --  READ EXTERNAL FILE FUNCTIONS
 --
 
--- Archive project
-CREATE OR REPLACE FUNCTION archive_project(_project_uid integer)
- RETURNS integer AS $$
-
-    UPDATE projects
-    SET availability = 'archived',
-        archived_date = Now()
-    WHERE project_uid = _project_uid
-    RETURNING _project_uid
-
-$$ LANGUAGE SQL;
-
--- Add user plots for migration (with add_sample_values)
-CREATE OR REPLACE FUNCTION add_user_plots_migration(_plot_rid integer, _username text, _flagged boolean, _collection_start timestamp, _collection_time timestamp)
- RETURNS integer AS $$
-
-    WITH user_id AS (
-        SELECT user_uid FROM users WHERE email = _username
-    ), guest_id AS (
-        SELECT user_uid FROM users WHERE email = 'guest'
-    )
-
-    INSERT INTO user_plots
-        (plot_rid, flagged, collection_start, collection_time, user_rid)
-    (SELECT _plot_rid,
-        _flagged,
-        _collection_start,
-        _collection_time,
-        (CASE WHEN user_id.user_uid IS NULL THEN guest_id.user_uid ELSE user_id.user_uid END)
-     FROM user_id, guest_id)
-    RETURNING user_plot_uid
-
-$$ LANGUAGE SQL;
-
--- Add user samples for migration (with add_user_plots)
-CREATE OR REPLACE FUNCTION add_sample_values_migration(_user_plot_rid integer, _sample_rid integer, _value jsonb, _imagery_rid integer, _imagery_attributes jsonb)
- RETURNS integer AS $$
-
-    INSERT INTO sample_values
-        (user_plot_rid, sample_rid, value, imagery_rid, imagery_attributes)
-    VALUES
-        ( _user_plot_rid, _sample_rid, _value, _imagery_rid, _imagery_attributes)
-    RETURNING sample_value_uid
-
-$$ LANGUAGE SQL;
-
 -- Select known columns from a shp or csv file
 CREATE OR REPLACE FUNCTION select_partial_table_by_name(_table_name text)
  RETURNS TABLE (
@@ -79,7 +33,7 @@ CREATE OR REPLACE FUNCTION select_partial_table_by_name(_table_name text)
 
 $$ LANGUAGE PLPGSQL;
 
--- Converts unknown columns to a single json column for processing in Java
+-- Converts all columns (including uknown) to a single json column for processing
 CREATE OR REPLACE FUNCTION select_json_table_by_name(_table_name text)
  RETURNS TABLE (
     ext_id      integer,
@@ -126,13 +80,13 @@ CREATE OR REPLACE FUNCTION select_partial_sample_table_by_name(_table_name text)
 $$ LANGUAGE PLPGSQL;
 
 -- Returns all headers without prior knowledge
-CREATE OR REPLACE FUNCTION get_plot_headers(_project_uid integer)
+CREATE OR REPLACE FUNCTION get_plot_headers(_project_id integer)
  RETURNS TABLE (column_names text) AS $$
 
  DECLARE
     _plots_ext_table text;
  BEGIN
-    SELECT plots_ext_table INTO _plots_ext_table FROM projects WHERE project_uid = _project_uid;
+    SELECT plots_ext_table INTO _plots_ext_table FROM projects WHERE project_uid = _project_id;
 
     IF _plots_ext_table IS NOT NULL THEN
         RETURN QUERY EXECUTE
@@ -144,13 +98,13 @@ CREATE OR REPLACE FUNCTION get_plot_headers(_project_uid integer)
 $$ LANGUAGE PLPGSQL;
 
 -- Returns all headers without prior knowledge
-CREATE OR REPLACE FUNCTION get_sample_headers(_project_uid integer)
+CREATE OR REPLACE FUNCTION get_sample_headers(_project_id integer)
  RETURNS TABLE (column_names text) AS $$
 
  DECLARE
     _samples_ext_table text;
  BEGIN
-    SELECT samples_ext_table INTO _samples_ext_table FROM projects WHERE project_uid = _project_uid;
+    SELECT samples_ext_table INTO _samples_ext_table FROM projects WHERE project_uid = _project_id;
 
     IF _samples_ext_table IS NOT NULL THEN
         RETURN QUERY EXECUTE
@@ -166,18 +120,18 @@ $$ LANGUAGE PLPGSQL;
 --
 
 -- Adds a project_widget to the database
-CREATE OR REPLACE FUNCTION add_project_widget(_project_rid integer, _dashboard_id uuid, _widget jsonb)
+CREATE OR REPLACE FUNCTION add_project_widget(_project_id integer, _dashboard_id uuid, _widget jsonb)
  RETURNS integer AS $$
 
     INSERT INTO project_widgets
         (project_rid, dashboard_id, widget)
     VALUES
-        (_project_rid, _dashboard_id , _widget)
+        (_project_id, _dashboard_id , _widget)
     RETURNING widget_uid
 
 $$ LANGUAGE SQL;
 
--- Deletes a delete_project_widget_by_widget_id from the database
+-- Deletes a project_widget from the database
 CREATE OR REPLACE FUNCTION delete_project_widget_by_widget_id(_widget_uid integer, _dashboard_id uuid)
  RETURNS integer AS $$
 
@@ -189,7 +143,7 @@ CREATE OR REPLACE FUNCTION delete_project_widget_by_widget_id(_widget_uid intege
 $$ LANGUAGE SQL;
 
 -- Gets project widgets by project id from the database
-CREATE OR REPLACE FUNCTION get_project_widgets_by_project_id(_project_rid integer)
+CREATE OR REPLACE FUNCTION get_project_widgets_by_project_id(_project_id integer)
  RETURNS TABLE(
     widget_id        integer,
     project_id       integer,
@@ -202,11 +156,11 @@ CREATE OR REPLACE FUNCTION get_project_widgets_by_project_id(_project_rid intege
     FROM project_widgets pw
     INNER JOIN projects p
         ON project_uid = project_rid
-    WHERE project_rid = _project_rid
+    WHERE project_rid = _project_id
 
 $$ LANGUAGE SQL;
 
--- Updates a update_project_widget_by_widget_id from the database
+-- Updates a project_widget from the database
 CREATE OR REPLACE FUNCTION update_project_widget_by_widget_id(_widget_uid integer, _dash_id uuid, _widget jsonb)
  RETURNS integer AS $$
 
@@ -224,8 +178,8 @@ $$ LANGUAGE SQL;
 
 -- Create a project
 CREATE OR REPLACE FUNCTION create_project(
-    _institution_rid         integer,
-    _imagery_rid             integer,
+    _institution_id          integer,
+    _imagery_id              integer,
     _availability            text,
     _name                    text,
     _description             text,
@@ -260,7 +214,7 @@ CREATE OR REPLACE FUNCTION create_project(
         classification_times,   token_key,
         options
     ) VALUES (
-        _institution_rid,       _imagery_rid,
+        _institution_id,         _imagery_id,
         _availability,           _name,
         _description,            _privacy_level,
         _boundary,               _plot_distribution,
@@ -275,8 +229,44 @@ CREATE OR REPLACE FUNCTION create_project(
 
 $$ LANGUAGE SQL;
 
+-- Publish project
+CREATE OR REPLACE FUNCTION publish_project(_project_id integer)
+ RETURNS integer AS $$
+
+    UPDATE projects
+    SET availability = 'published',
+        published_date = Now()
+    WHERE project_uid = _project_id
+    RETURNING _project_id
+
+$$ LANGUAGE SQL;
+
+-- Close project
+CREATE OR REPLACE FUNCTION close_project(_project_id integer)
+ RETURNS integer AS $$
+
+    UPDATE projects
+    SET availability = 'closed',
+        closed_date = Now()
+    WHERE project_uid = _project_id
+    RETURNING _project_id
+
+$$ LANGUAGE SQL;
+
+-- Archive project
+CREATE OR REPLACE FUNCTION archive_project(_project_id integer)
+ RETURNS integer AS $$
+
+    UPDATE projects
+    SET availability = 'archived',
+        archived_date = Now()
+    WHERE project_uid = _project_id
+    RETURNING _project_id
+
+$$ LANGUAGE SQL;
+
 -- Delete project and external file
-CREATE OR REPLACE FUNCTION delete_project(_project_uid integer)
+CREATE OR REPLACE FUNCTION delete_project(_project_id integer)
  RETURNS void AS $$
 
  BEGIN
@@ -286,41 +276,42 @@ CREATE OR REPLACE FUNCTION delete_project(_project_uid integer)
         FROM projects
         INNER JOIN plots
             ON project_uid = project_rid
-            AND project_uid = _project_uid);
+            AND project_uid = _project_id
+    );
 
-    DELETE FROM projects WHERE project_uid = _project_uid;
+    DELETE FROM projects WHERE project_uid = _project_id;
 
     EXECUTE
-    'DROP TABLE IF EXISTS ext_tables.project_' || _project_uid || '_plots_csv;'
-    'DROP TABLE IF EXISTS ext_tables.project_' || _project_uid || '_plots_shp;'
-    'DROP TABLE IF EXISTS ext_tables.project_' || _project_uid || '_samples_csv;'
-    'DROP TABLE IF EXISTS ext_tables.project_' || _project_uid || '_samples_shp;';
+    'DROP TABLE IF EXISTS ext_tables.project_' || _project_id || '_plots_csv;'
+    'DROP TABLE IF EXISTS ext_tables.project_' || _project_id || '_plots_shp;'
+    'DROP TABLE IF EXISTS ext_tables.project_' || _project_id || '_samples_csv;'
+    'DROP TABLE IF EXISTS ext_tables.project_' || _project_id || '_samples_shp;';
  END
 
 $$ LANGUAGE PLPGSQL;
 
 -- Update select set of project fields
 CREATE OR REPLACE FUNCTION update_project(
-    _project_uid             integer,
-    _name                    text,
-    _description             text,
-    _privacy_level           text,
-    _imagery_rid             integer,
-    _options                 jsonb
+    _project_id       integer,
+    _name             text,
+    _description      text,
+    _privacy_level    text,
+    _imagery_id       integer,
+    _options          jsonb
  ) RETURNS void AS $$
 
     UPDATE projects
     SET name = _name,
         description = _description,
         privacy_level = _privacy_level,
-        imagery_rid = _imagery_rid,
+        imagery_rid = _imagery_id,
         options = _options
-    WHERE project_uid = _project_uid
+    WHERE project_uid = _project_id
 
 $$ LANGUAGE SQL;
 
 -- Update counts after plots are created
-CREATE OR REPLACE FUNCTION update_project_counts(_project_uid integer)
+CREATE OR REPLACE FUNCTION update_project_counts(_project_id integer)
  RETURNS void AS $$
 
     WITH project_plots AS (
@@ -330,7 +321,7 @@ CREATE OR REPLACE FUNCTION update_project_counts(_project_uid integer)
             ON pl.project_rid = project_uid
         INNER JOIN samples s
             ON plot_uid = s.plot_rid
-        WHERE project_uid = _project_uid
+        WHERE project_uid = _project_id
     )
 
     UPDATE projects
@@ -338,10 +329,14 @@ CREATE OR REPLACE FUNCTION update_project_counts(_project_uid integer)
         samples_per_plot = samples
     FROM (
         SELECT COUNT(DISTINCT plot_uid) as plots,
-            (CASE WHEN COUNT(DISTINCT plot_uid) = 0 THEN 0 ELSE COUNT(sample_uid) / COUNT(DISTINCT plot_uid) END) as samples
+            (CASE WHEN COUNT(DISTINCT plot_uid) = 0 THEN
+                0
+            ELSE
+                COUNT(sample_uid) / COUNT(DISTINCT plot_uid)
+            END) as samples
         FROM project_plots
     ) a
-    WHERE project_uid = _project_uid
+    WHERE project_uid = _project_id
 
 $$ LANGUAGE SQL;
 
@@ -400,7 +395,7 @@ CREATE OR REPLACE FUNCTION delete_duplicates(_table_name text, _on_cols text)
 $$ LANGUAGE PLPGSQL;
 
 -- Calculates boundary from for csv data
-CREATE OR REPLACE FUNCTION csv_boundary(_project_uid integer, _m_buffer float)
+CREATE OR REPLACE FUNCTION csv_boundary(_project_id integer, _m_buffer float)
  RETURNS void AS $$
 
     UPDATE projects SET boundary = b
@@ -409,14 +404,14 @@ CREATE OR REPLACE FUNCTION csv_boundary(_project_uid integer, _m_buffer float)
         FROM select_partial_table_by_name((
             SELECT plots_ext_table
             FROM projects
-            WHERE project_uid = _project_uid
+            WHERE project_uid = _project_id
     ))) bb
-    WHERE project_uid = _project_uid
+    WHERE project_uid = _project_id
 
 $$ LANGUAGE SQL;
 
 -- Calculates boundary from shp file using geometry. Padding not needed.
-CREATE OR REPLACE FUNCTION shp_boundary(_project_uid integer)
+CREATE OR REPLACE FUNCTION shp_boundary(_project_id integer)
  RETURNS void AS $$
 
     UPDATE projects SET boundary = b
@@ -425,29 +420,30 @@ CREATE OR REPLACE FUNCTION shp_boundary(_project_uid integer)
         FROM select_partial_table_by_name((
             SELECT plots_ext_table
             FROM projects
-            WHERE project_uid = _project_uid
+            WHERE project_uid = _project_id
     ))) bb
-    WHERE project_uid = _project_uid
+    WHERE project_uid = _project_id
 
 $$ LANGUAGE SQL;
 
 -- Runs a few functions after data has been uploaded
-CREATE OR REPLACE FUNCTION cleanup_project_tables(_project_uid integer, _m_buffer float)
+CREATE OR REPLACE FUNCTION cleanup_project_tables(_project_id integer, _m_buffer float)
  RETURNS void AS $$
 
     DECLARE
         _plots_ext_table text;
         _samples_ext_table text;
     BEGIN
-        SELECT plots_ext_table INTO _plots_ext_table FROM projects WHERE project_uid = _project_uid;
-        SELECT samples_ext_table INTO _samples_ext_table FROM projects WHERE project_uid = _project_uid;
+        SELECT plots_ext_table INTO _plots_ext_table FROM projects WHERE project_uid = _project_id;
+        SELECT samples_ext_table INTO _samples_ext_table FROM projects WHERE project_uid = _project_id;
 
         IF _plots_ext_table SIMILAR TO '%(_csv)' THEN
-            PERFORM csv_boundary(_project_uid, _m_buffer);
+            PERFORM csv_boundary(_project_id, _m_buffer);
         ELSIF _plots_ext_table SIMILAR TO '%(_shp)' THEN
-            PERFORM shp_boundary(_project_uid);
+            PERFORM shp_boundary(_project_id);
         END IF;
 
+        -- TODO consider rejecting files with duplicate data
         PERFORM delete_duplicates(_plots_ext_table, 'plotid');
         PERFORM delete_duplicates(_samples_ext_table, 'plotid, sampleid');
     END
@@ -455,7 +451,7 @@ CREATE OR REPLACE FUNCTION cleanup_project_tables(_project_uid integer, _m_buffe
 $$ LANGUAGE PLPGSQL;
 
 -- Add plots from file
-CREATE OR REPLACE FUNCTION add_file_plots(_project_uid integer)
+CREATE OR REPLACE FUNCTION add_file_plots(_project_id integer)
  RETURNS TABLE (
     plot_uid    integer,
     plotid      integer,
@@ -467,10 +463,10 @@ CREATE OR REPLACE FUNCTION add_file_plots(_project_uid integer)
         SELECT * FROM select_partial_table_by_name((
             SELECT plots_ext_table
             FROM projects
-            WHERE project_uid = _project_uid
+            WHERE project_uid = _project_id
     ))), plotrows AS (
         INSERT INTO plots (project_rid, center, ext_id)
-        SELECT _project_uid, center, ext_id
+        SELECT _project_id, center, ext_id
         FROM plot_tbl
         RETURNING plot_uid, ext_id, center
     )
@@ -483,16 +479,16 @@ CREATE OR REPLACE FUNCTION add_file_plots(_project_uid integer)
 $$ LANGUAGE SQL;
 
 -- Add samples from file assuming plot data will also come from a file
-CREATE OR REPLACE FUNCTION samples_from_plots_with_files(_project_uid integer)
+CREATE OR REPLACE FUNCTION samples_from_plots_with_files(_project_id integer)
  RETURNS integer AS $$
 
     WITH sample_tbl AS (
         SELECT * FROM select_partial_table_by_name((
             SELECT samples_ext_table
             FROM projects
-            WHERE project_uid = _project_uid
+            WHERE project_uid = _project_id
         )) as st
-        INNER JOIN add_file_plots(_project_uid) asp
+        INNER JOIN add_file_plots(_project_id) asp
             ON asp.plotId = st.plotId
     ), samplerows AS (
         INSERT INTO samples (plot_rid, point, ext_id)
@@ -510,7 +506,7 @@ $$ LANGUAGE SQL;
 
 -- Update tables for external data after project is created
 CREATE OR REPLACE FUNCTION update_project_tables(
-    _project_uid          integer,
+    _project_id          integer,
     _plots_ext_table      text,
     _samples_ext_table    text
  ) RETURNS void AS $$
@@ -518,7 +514,7 @@ CREATE OR REPLACE FUNCTION update_project_tables(
     UPDATE projects
     SET plots_ext_table = _plots_ext_table,
         samples_ext_table = _samples_ext_table
-    WHERE project_uid = _project_uid;
+    WHERE project_uid = _project_id;
 
 $$ LANGUAGE SQL;
 
@@ -630,14 +626,14 @@ $$ LANGUAGE SQL;
 -- VALIDATIONS
 
 -- Check if a project was created where plots have no samples
-CREATE OR REPLACE FUNCTION plots_missing_samples(_project_uid integer)
+CREATE OR REPLACE FUNCTION plots_missing_samples(_project_id integer)
  RETURNS TABLE (plot_id integer) AS $$
 
     WITH plot_tbl AS (
         SELECT * FROM select_partial_table_by_name((
             SELECT plots_ext_table
             FROM projects
-            WHERE project_uid = _project_uid
+            WHERE project_uid = _project_id
     )))
 
     SELECT plotid
@@ -648,13 +644,13 @@ CREATE OR REPLACE FUNCTION plots_missing_samples(_project_uid integer)
         ON pl.ext_id = plot_tbl.ext_id
     LEFT JOIN samples s
         ON plot_uid = s.plot_rid
-    WHERE project_uid = _project_uid
+    WHERE project_uid = _project_id
         AND sample_uid IS NULL
 
 $$ LANGUAGE SQL;
 
 -- Return table sizes for shp and csv to check against limits
-CREATE OR REPLACE FUNCTION ext_table_count(_project_uid integer)
+CREATE OR REPLACE FUNCTION ext_table_count(_project_id integer)
  RETURNS TABLE(plot_count integer, sample_count integer) AS $$
 
     DECLARE
@@ -663,8 +659,8 @@ CREATE OR REPLACE FUNCTION ext_table_count(_project_uid integer)
         _plots_count integer;
         _samples_count integer;
     BEGIN
-        SELECT plots_ext_table INTO _plots_ext_table FROM projects WHERE project_uid = _project_uid;
-        SELECT samples_ext_table INTO _samples_ext_table FROM projects WHERE project_uid = _project_uid;
+        SELECT plots_ext_table INTO _plots_ext_table FROM projects WHERE project_uid = _project_id;
+        SELECT samples_ext_table INTO _samples_ext_table FROM projects WHERE project_uid = _project_id;
 
         IF _plots_ext_table = '' OR _plots_ext_table IS NULL THEN
             _plots_count = 0;
@@ -690,14 +686,16 @@ $$ LANGUAGE PLPGSQL;
 CREATE OR REPLACE FUNCTION valid_boundary(_boundary geometry)
  RETURNS boolean AS $$
 
-    SELECT EXISTS(SELECT 1
-    WHERE ST_IsValid(_boundary)
-          AND NOT (ST_XMax(_boundary) > 180
-            OR ST_XMin(_boundary) < -180
-            OR ST_YMax(_boundary) > 90
-            OR ST_YMin(_boundary) < -90
-            OR ST_XMax(_boundary) <= ST_XMin(_boundary)
-            OR ST_YMax(_boundary) <= ST_YMin(_boundary)))
+    SELECT EXISTS(
+        SELECT 1
+        WHERE ST_IsValid(_boundary)
+            AND NOT (ST_XMax(_boundary) > 180
+                OR ST_XMin(_boundary) < -180
+                OR ST_YMax(_boundary) > 90
+                OR ST_YMin(_boundary) < -90
+                OR ST_XMax(_boundary) <= ST_XMin(_boundary)
+                OR ST_YMax(_boundary) <= ST_YMin(_boundary))
+    )
 
 $$ LANGUAGE SQL;
 
@@ -728,15 +726,18 @@ SELECT
 FROM projects;
 
 -- Returns a row in projects by id
-CREATE OR REPLACE FUNCTION select_project(_project_uid integer)
+CREATE OR REPLACE FUNCTION select_project(_project_id integer)
  RETURNS setOf project_return AS $$
 
     SELECT *, FALSE as editable
     FROM project_boundary
-    WHERE project_uid = _project_uid
+    WHERE project_uid = _project_id
 
 $$ LANGUAGE SQL;
 
+-- FIXME this list does not need to contain all fields in project_boundary
+-- FIXME Rename to select_public_projects()
+-- FIXME this may not be needed, passing -1 to select_all_user_projects should give the same results (test performance)
 -- Returns all public projects
 CREATE OR REPLACE FUNCTION select_all_projects()
  RETURNS setOf project_return AS $$
@@ -750,29 +751,46 @@ CREATE OR REPLACE FUNCTION select_all_projects()
 $$ LANGUAGE SQL;
 
 -- Returns projects for institution_rid
-CREATE OR REPLACE FUNCTION select_all_institution_projects(_institution_rid integer)
+CREATE OR REPLACE FUNCTION select_all_institution_projects(_institution_id integer)
  RETURNS setOf project_return AS $$
 
     SELECT *
     FROM select_all_projects()
-    WHERE institution_id = _institution_rid
+    WHERE institution_id = _institution_id
     ORDER BY project_id
 
 $$ LANGUAGE SQL;
 
+-- Returns institution user roles from the database
+CREATE OR REPLACE FUNCTION get_institution_user_roles(_user_id integer)
+ RETURNS TABLE (
+    institution_rid    integer,
+    role               text
+ ) AS $$
+
+    SELECT institution_rid, title
+    FROM institution_users as iu
+    INNER JOIN roles as r
+        ON iu.role_rid = role_uid
+    WHERE iu.user_rid = _user_id
+    ORDER BY institution_rid
+
+$$ LANGUAGE SQL;
+
+-- FIXME this list does not need to contain all fields in project_boundary
 -- Returns all rows in projects for a user_id with roles
-CREATE OR REPLACE FUNCTION select_all_user_projects(_user_rid integer)
+CREATE OR REPLACE FUNCTION select_all_user_projects(_user_id integer)
  RETURNS setOf project_return AS $$
 
     SELECT p.*, (CASE WHEN role IS NULL THEN FALSE ELSE role = 'admin' END) AS editable
     FROM project_boundary as p
-    LEFT JOIN get_institution_user_roles(_user_rid) AS roles
+    LEFT JOIN get_institution_user_roles(_user_id) AS roles
         USING (institution_rid)
     WHERE (role = 'admin' AND p.availability <> 'archived')
         OR (role = 'member'
             AND p.privacy_level IN ('public', 'institution', 'users')
             AND p.availability = 'published')
-        OR (_user_rid > 0
+        OR (_user_id > 0
             AND p.privacy_level IN ('public', 'users')
             AND p.availability = 'published')
         OR (p.privacy_level IN ('public')
@@ -782,18 +800,18 @@ CREATE OR REPLACE FUNCTION select_all_user_projects(_user_rid integer)
 $$ LANGUAGE SQL;
 
 -- Returns all rows in projects for a user_id and institution_rid with roles
-CREATE OR REPLACE FUNCTION select_institution_projects_with_roles( _user_rid integer, _institution_rid integer)
+CREATE OR REPLACE FUNCTION select_institution_projects_with_roles( _user_id integer, _institution_id integer)
  RETURNS setOf project_return AS $$
 
     SELECT *
-    FROM select_all_user_projects(_user_rid)
-    WHERE institution_id = _institution_rid
+    FROM select_all_user_projects(_user_id)
+    WHERE institution_id = _institution_id
     ORDER BY project_id
 
 $$ LANGUAGE SQL;
 
 -- Returns project users (SQL helper functions)
-CREATE OR REPLACE FUNCTION select_project_users(_project_uid integer)
+CREATE OR REPLACE FUNCTION select_project_users(_project_id integer)
  RETURNS TABLE (
     user_uid integer
  ) AS $$
@@ -801,13 +819,13 @@ CREATE OR REPLACE FUNCTION select_project_users(_project_uid integer)
     WITH matching_projects AS (
         SELECT *
         FROM projects
-        WHERE project_uid = _project_uid
+        WHERE project_uid = _project_id
     ), matching_institutions AS (
         SELECT *
         FROM projects p
         INNER JOIN institutions i
             ON p.institution_rid = institution_uid
-        WHERE project_uid = _project_uid
+        WHERE project_uid = _project_id
     ), matching_institution_users AS (
         SELECT *
         FROM matching_institutions mi
@@ -841,7 +859,7 @@ $$ LANGUAGE SQL;
 
 -- Returns project statistics
 -- Overlapping queries, consider condensing. Query time is not an issue.
-CREATE OR REPLACE FUNCTION select_project_statistics(_project_uid integer)
+CREATE OR REPLACE FUNCTION select_project_statistics(_project_id integer)
  RETURNS TABLE(
     flagged_plots       integer,
     assigned_plots      integer,
@@ -869,7 +887,7 @@ CREATE OR REPLACE FUNCTION select_project_statistics(_project_uid integer)
             ON pl.project_rid = project_uid
         INNER JOIN users u
             ON up.user_rid = user_uid
-        WHERE project_uid = _project_uid
+        WHERE project_uid = _project_id
     ), user_groups AS (
         SELECT email,
             SUM(seconds)::int as seconds,
@@ -887,7 +905,7 @@ CREATE OR REPLACE FUNCTION select_project_statistics(_project_uid integer)
         FROM user_groups
     ), members AS (
         SELECT COUNT(distinct user_uid) as members
-        FROM select_project_users(_project_uid)
+        FROM select_project_users(_project_id)
     ), plotsum AS (
         SELECT plot_rid,
                SUM(flagged::int) > 0 as flagged,
@@ -907,13 +925,13 @@ CREATE OR REPLACE FUNCTION select_project_statistics(_project_uid integer)
           ON project_uid = pl.project_rid
         LEFT JOIN plotsum ps
           ON ps.plot_rid = plot_uid
-        WHERE project_uid = _project_uid
+        WHERE project_uid = _project_id
     ), users_count AS (
         SELECT COUNT (DISTINCT user_rid) as users
         FROM projects prj
         INNER JOIN plots pl
           ON project_uid = pl.project_rid
-            AND project_uid = _project_uid
+            AND project_uid = _project_id
         LEFT JOIN user_plots up
           ON up.plot_rid = plot_uid
     )
@@ -929,56 +947,39 @@ CREATE OR REPLACE FUNCTION select_project_statistics(_project_uid integer)
 
 $$ LANGUAGE SQL;
 
--- Publish project
-CREATE OR REPLACE FUNCTION publish_project(_project_uid integer)
- RETURNS integer AS $$
-
-    UPDATE projects
-    SET availability = 'published',
-        published_date = Now()
-    WHERE project_uid = _project_uid
-    RETURNING _project_uid
-
-$$ LANGUAGE SQL;
-
--- Close project
-CREATE OR REPLACE FUNCTION close_project(_project_uid integer)
- RETURNS integer AS $$
-
-    UPDATE projects
-    SET availability = 'closed',
-        closed_date = Now()
-    WHERE project_uid = _project_uid
-    RETURNING _project_uid
-
-$$ LANGUAGE SQL;
-
 --
 --  PLOT FUNCTIONS
 --
 
 -- Create a single project plot with no external file data
-CREATE OR REPLACE FUNCTION create_project_plot(_project_rid integer, _center geometry(Point, 4326))
+CREATE OR REPLACE FUNCTION create_project_plot(_project_id integer, _center geometry(Point, 4326))
  RETURNS integer AS $$
 
     INSERT INTO plots
         (project_rid, center)
     VALUES
-        (_project_rid, _center)
+        (_project_id, _center)
     RETURNING plot_uid
 
 $$ LANGUAGE SQL;
 
 -- Flag plot
-CREATE OR REPLACE FUNCTION flag_plot(_plot_rid integer, _user_rid integer, _confidence integer)
+CREATE OR REPLACE FUNCTION flag_plot(_plot_id integer, _user_id integer, _confidence integer)
  RETURNS integer AS $$
 
-    DELETE FROM sample_values WHERE user_plot_rid = (SELECT user_plot_uid FROM user_plots WHERE user_rid = _user_rid AND plot_rid = _plot_rid);
+    DELETE
+    FROM sample_values
+    WHERE user_plot_rid = (
+        SELECT user_plot_uid
+        FROM user_plots
+        WHERE user_rid = _user_id
+            AND plot_rid = _plot_id
+    );
 
     INSERT INTO user_plots
         (user_rid, plot_rid, flagged, confidence, collection_time)
     VALUES
-        (_user_rid, _plot_rid, true, _confidence, Now())
+        (_user_id, _plot_id, true, _confidence, Now())
     ON CONFLICT (user_rid, plot_rid) DO
         UPDATE
         SET flagged = excluded.flagged,
@@ -986,13 +987,14 @@ CREATE OR REPLACE FUNCTION flag_plot(_plot_rid integer, _user_rid integer, _conf
             confidence = excluded.confidence,
             collection_time = Now()
 
-    RETURNING _plot_rid
+    RETURNING _plot_id
 
 $$ LANGUAGE SQL;
 
 -- Select plots
 -- FIXME when multiple users can be assigned to plots, returning a single username does not make sense
-CREATE OR REPLACE FUNCTION select_all_project_plots(_project_rid integer)
+-- FIXME limit return to only the needed columns
+CREATE OR REPLACE FUNCTION select_all_project_plots(_project_id integer)
  RETURNS setOf plots_return AS $$
 
     WITH username AS (
@@ -1013,7 +1015,7 @@ CREATE OR REPLACE FUNCTION select_all_project_plots(_project_rid integer)
     ), tablename AS (
         SELECT plots_ext_table
         FROM projects
-        WHERE project_uid = _project_rid
+        WHERE project_uid = _project_id
     ), file_data AS (
         SELECT * FROM select_partial_table_by_name((SELECT plots_ext_table FROM tablename))
     )
@@ -1037,15 +1039,15 @@ CREATE OR REPLACE FUNCTION select_all_project_plots(_project_rid integer)
         ON plot_uid = username.plot_rid
     LEFT JOIN file_data fd
         ON plots.ext_id = fd.ext_id
-    WHERE project_rid = _project_rid
+    WHERE project_rid = _project_id
 
 $$ LANGUAGE SQL;
 
-CREATE OR REPLACE FUNCTION select_all_unlocked_project_plots(_project_rid integer)
+CREATE OR REPLACE FUNCTION select_all_unlocked_project_plots(_project_id integer)
  RETURNS setOf plots_return AS $$
 
     SELECT ap.*
-    FROM select_all_project_plots(_project_rid) ap
+    FROM select_all_project_plots(_project_id) ap
     LEFT JOIN plot_locks pl
         ON plot_id = pl.plot_rid
     WHERE pl.lock_end IS NULL
@@ -1054,7 +1056,8 @@ CREATE OR REPLACE FUNCTION select_all_unlocked_project_plots(_project_rid intege
 $$ LANGUAGE SQL;
 
 -- Select plots but only return a maximum number
-CREATE OR REPLACE FUNCTION select_limited_project_plots(_project_rid integer, _maximum integer)
+-- FIXME not all of plots_return are needed here.
+CREATE OR REPLACE FUNCTION select_limited_project_plots(_project_id integer, _maximum integer)
  RETURNS setOf plots_return AS $$
 
     SELECT all_plots.plot_id,     all_plots.project_id,
@@ -1067,8 +1070,8 @@ CREATE OR REPLACE FUNCTION select_limited_project_plots(_project_rid integer, _m
         SELECT *,
             row_number() OVER(ORDER BY plot_id) AS rows,
             COUNT(*) OVER() as total_plots
-        FROM select_all_project_plots(_project_rid)
-        WHERE project_id = _project_rid
+        FROM select_all_project_plots(_project_id)
+        WHERE project_id = _project_id
     ) as all_plots
     WHERE all_plots.rows %
         (CASE WHEN _maximum > all_plots.total_plots THEN 0.5 ELSE all_plots.total_plots / _maximum END) = 0
@@ -1077,44 +1080,47 @@ CREATE OR REPLACE FUNCTION select_limited_project_plots(_project_rid integer, _m
 $$ LANGUAGE SQL;
 
 -- Returns next plot by id
-CREATE OR REPLACE FUNCTION select_plot_by_id(_project_rid integer, _plot_uid integer)
+CREATE OR REPLACE FUNCTION select_plot_by_id(_project_id integer, _plot_id integer)
  RETURNS setOf plot_collection_return AS $$
 
     WITH tablenames AS (
         SELECT plots_ext_table
         FROM projects
-        WHERE project_uid = _project_rid
+        WHERE project_uid = _project_id
     ), plots_file_data AS (
         SELECT * FROM select_json_table_by_name((SELECT plots_ext_table FROM tablenames))
     )
 
     SELECT spp.*,
        pfd.rem_data
-    FROM select_all_project_plots(_project_rid) as spp
+    FROM select_all_project_plots(_project_id) as spp
     LEFT JOIN plots_file_data pfd
         ON spp.ext_id = pfd.ext_id
-    WHERE spp.plotId = _plot_uid
+    WHERE spp.plotId = _plot_id
 
 $$ LANGUAGE SQL;
 
+-- FIXME, I dont think we need 6 functions for navigating plots
+-- FIXME, Create dynamic function to replace select_json_table_by_name that is able to get just one row
+-- FIXME, Using select_all_unlocked_project_plots is neat, but likely slower than a custom query. Test performance
 -- Returns next unanalyzed plot
-CREATE OR REPLACE FUNCTION select_next_unassigned_plot(_project_rid integer, _plot_uid integer)
+CREATE OR REPLACE FUNCTION select_next_unassigned_plot(_project_id integer, _plot_id integer)
  RETURNS setOf plot_collection_return AS $$
 
     WITH tablenames AS (
         SELECT plots_ext_table
         FROM projects
-        WHERE project_uid = _project_rid
+        WHERE project_uid = _project_id
     ), plots_file_data AS (
         SELECT * FROM select_json_table_by_name((SELECT plots_ext_table FROM tablenames))
     )
 
     SELECT spp.*,
        pfd.rem_data
-    FROM select_all_unlocked_project_plots(_project_rid) as spp
+    FROM select_all_unlocked_project_plots(_project_id) as spp
     LEFT JOIN plots_file_data pfd
         ON spp.ext_id = pfd.ext_id
-    WHERE spp.plotId > _plot_uid
+    WHERE spp.plotId > _plot_id
         AND flagged = 0
         AND assigned = 0
     ORDER BY plotId ASC
@@ -1123,23 +1129,23 @@ CREATE OR REPLACE FUNCTION select_next_unassigned_plot(_project_rid integer, _pl
 $$ LANGUAGE SQL;
 
 -- Returns next user analyzed plot
-CREATE OR REPLACE FUNCTION select_next_user_plot(_project_rid integer, _plot_uid integer, _username text)
+CREATE OR REPLACE FUNCTION select_next_user_plot(_project_id integer, _plot_id integer, _username text)
  RETURNS setOf plot_collection_return AS $$
 
     WITH tablenames AS (
         SELECT plots_ext_table
         FROM projects
-        WHERE project_uid = _project_rid
+        WHERE project_uid = _project_id
     ), plots_file_data AS (
         SELECT * FROM select_json_table_by_name((SELECT plots_ext_table FROM tablenames))
     )
 
     SELECT spp.*,
        pfd.rem_data
-    FROM select_all_project_plots(_project_rid) as spp
+    FROM select_all_project_plots(_project_id) as spp
     LEFT JOIN plots_file_data pfd
         ON spp.ext_id = pfd.ext_id
-    WHERE spp.plotId > _plot_uid
+    WHERE spp.plotId > _plot_id
         AND spp.username = _username
     ORDER BY plotId ASC
     LIMIT 1
@@ -1147,23 +1153,23 @@ CREATE OR REPLACE FUNCTION select_next_user_plot(_project_rid integer, _plot_uid
 $$ LANGUAGE SQL;
 
 -- Returns next user analyzed plot asked by admin
-CREATE OR REPLACE FUNCTION select_next_user_plot_by_admin(_project_rid integer, _plot_uid integer)
-    RETURNS setOf plot_collection_return AS $$
+CREATE OR REPLACE FUNCTION select_next_user_plot_by_admin(_project_id integer, _plot_id integer)
+ RETURNS setOf plot_collection_return AS $$
 
     WITH tablenames AS (
         SELECT plots_ext_table
         FROM projects
-        WHERE project_uid = _project_rid
+        WHERE project_uid = _project_id
     ), plots_file_data AS (
         SELECT * FROM select_json_table_by_name((SELECT plots_ext_table FROM tablenames))
     )
 
     SELECT spp.*,
        pfd.rem_data
-    FROM select_all_project_plots(_project_rid) as spp
+    FROM select_all_project_plots(_project_id) as spp
     LEFT JOIN plots_file_data pfd
         ON spp.ext_id = pfd.ext_id
-    WHERE spp.plotId > _plot_uid
+    WHERE spp.plotId > _plot_id
         AND spp.username != ''
     ORDER BY plotId ASC
     LIMIT 1
@@ -1171,23 +1177,23 @@ CREATE OR REPLACE FUNCTION select_next_user_plot_by_admin(_project_rid integer, 
 $$ LANGUAGE SQL;
 
 -- Returns prev unanalyzed plot
-CREATE OR REPLACE FUNCTION select_prev_unassigned_plot(_project_rid integer, _plot_uid integer)
+CREATE OR REPLACE FUNCTION select_prev_unassigned_plot(_project_id integer, _plot_id integer)
  RETURNS setOf plot_collection_return AS $$
 
     WITH tablenames AS (
         SELECT plots_ext_table
         FROM projects
-        WHERE project_uid = _project_rid
+        WHERE project_uid = _project_id
     ), plots_file_data AS (
         SELECT * FROM select_json_table_by_name((SELECT plots_ext_table FROM tablenames))
     )
 
     SELECT spp.*,
        pfd.rem_data
-    FROM select_all_unlocked_project_plots(_project_rid) as spp
+    FROM select_all_unlocked_project_plots(_project_id) as spp
     LEFT JOIN plots_file_data pfd
         ON spp.ext_id = pfd.ext_id
-    WHERE spp.plotId < _plot_uid
+    WHERE spp.plotId < _plot_id
         AND flagged = 0
         AND assigned = 0
     ORDER BY plotId DESC
@@ -1196,23 +1202,23 @@ CREATE OR REPLACE FUNCTION select_prev_unassigned_plot(_project_rid integer, _pl
 $$ LANGUAGE SQL;
 
 -- Returns prev user analyzed plot
-CREATE OR REPLACE FUNCTION select_prev_user_plot(_project_rid integer, _plot_uid integer, _username text)
+CREATE OR REPLACE FUNCTION select_prev_user_plot(_project_id integer, _plot_id integer, _username text)
  RETURNS setOf plot_collection_return AS $$
 
     WITH tablenames AS (
         SELECT plots_ext_table
         FROM projects
-        WHERE project_uid = _project_rid
+        WHERE project_uid = _project_id
     ), plots_file_data AS (
         SELECT * FROM select_json_table_by_name((SELECT plots_ext_table FROM tablenames))
     )
 
     SELECT spp.*,
        pfd.rem_data
-    FROM select_all_project_plots(_project_rid) as spp
+    FROM select_all_project_plots(_project_id) as spp
     LEFT JOIN plots_file_data pfd
         ON spp.ext_id = pfd.ext_id
-    WHERE spp.plotId < _plot_uid
+    WHERE spp.plotId < _plot_id
         AND spp.username = _username
     ORDER BY plotId DESC
     LIMIT 1
@@ -1220,23 +1226,23 @@ CREATE OR REPLACE FUNCTION select_prev_user_plot(_project_rid integer, _plot_uid
 $$ LANGUAGE SQL;
 
 -- Returns prev user analyzed plot asked by admin
-CREATE OR REPLACE FUNCTION select_prev_user_plot_by_admin(_project_rid integer, _plot_uid integer)
-    RETURNS setOf plot_collection_return AS $$
+CREATE OR REPLACE FUNCTION select_prev_user_plot_by_admin(_project_id integer, _plot_id integer)
+ RETURNS setOf plot_collection_return AS $$
 
     WITH tablenames AS (
         SELECT plots_ext_table
         FROM projects
-        WHERE project_uid = _project_rid
+        WHERE project_uid = _project_id
     ), plots_file_data AS (
         SELECT * FROM select_json_table_by_name((SELECT plots_ext_table FROM tablenames))
     )
 
     SELECT spp.*,
        pfd.rem_data
-    FROM select_all_project_plots(_project_rid) as spp
+    FROM select_all_project_plots(_project_id) as spp
     LEFT JOIN plots_file_data pfd
         ON spp.ext_id = pfd.ext_id
-    WHERE spp.plotId < _plot_uid
+    WHERE spp.plotId < _plot_id
         AND spp.username != ''
     ORDER BY plotId DESC
     LIMIT 1
@@ -1244,79 +1250,79 @@ CREATE OR REPLACE FUNCTION select_prev_user_plot_by_admin(_project_rid integer, 
 $$ LANGUAGE SQL;
 
 -- Returns unanalyzed plots by plot id
-CREATE OR REPLACE FUNCTION select_unassigned_plot_by_id(_project_rid integer, _plot_uid integer)
+CREATE OR REPLACE FUNCTION select_unassigned_plot_by_id(_project_id integer, _plot_id integer)
  RETURNS setOf plot_collection_return AS $$
 
     WITH tablenames AS (
         SELECT plots_ext_table
         FROM projects
-        WHERE project_uid = _project_rid
+        WHERE project_uid = _project_id
     ), plots_file_data AS (
         SELECT * FROM select_json_table_by_name((SELECT plots_ext_table FROM tablenames))
     )
 
     SELECT spp.*,
        pfd.rem_data
-    FROM select_all_unlocked_project_plots(_project_rid) as spp
+    FROM select_all_unlocked_project_plots(_project_id) as spp
     LEFT JOIN plots_file_data pfd
         ON spp.ext_id = pfd.ext_id
-    WHERE spp.plotId = _plot_uid
+    WHERE spp.plotId = _plot_id
         AND flagged = 0
         AND assigned = 0
 
 $$ LANGUAGE SQL;
 
 -- Returns user analyzed plots by plot id
-CREATE OR REPLACE FUNCTION select_user_plot_by_id(_project_rid integer, _plot_uid integer, _username text)
+CREATE OR REPLACE FUNCTION select_user_plot_by_id(_project_id integer, _plot_id integer, _username text)
  RETURNS setOf plot_collection_return AS $$
 
     WITH tablenames AS (
         SELECT plots_ext_table
         FROM projects
-        WHERE project_uid = _project_rid
+        WHERE project_uid = _project_id
     ), plots_file_data AS (
         SELECT * FROM select_json_table_by_name((SELECT plots_ext_table FROM tablenames))
     )
 
     SELECT spp.*,
        pfd.rem_data
-    FROM select_all_project_plots(_project_rid) as spp
+    FROM select_all_project_plots(_project_id) as spp
     LEFT JOIN plots_file_data pfd
         ON spp.ext_id = pfd.ext_id
-    WHERE spp.plotId = _plot_uid
+    WHERE spp.plotId = _plot_id
         AND spp.username = _username
 
 $$ LANGUAGE SQL;
 
 
 -- Lock plot to user
-CREATE OR REPLACE FUNCTION lock_plot(_plot_rid integer, _user_rid integer, _lock_end timestamp)
+CREATE OR REPLACE FUNCTION lock_plot(_plot_id integer, _user_id integer, _lock_end timestamp)
  RETURNS VOID AS $$
 
     INSERT INTO plot_locks
         (user_rid, plot_rid, lock_end)
     VALUES
-        (_user_rid, _plot_rid, _lock_end)
+        (_user_id, _plot_id, _lock_end)
 
 $$ LANGUAGE SQL;
 
 -- Reset time on lock
-CREATE OR REPLACE FUNCTION lock_plot_reset(_plot_rid integer, _user_rid integer, _lock_end timestamp)
+CREATE OR REPLACE FUNCTION lock_plot_reset(_plot_id integer, _user_id integer, _lock_end timestamp)
  RETURNS VOID AS $$
 
     UPDATE plot_locks pl
     SET lock_end = _lock_end
-    WHERE pl.plot_rid = _plot_rid
-        AND pl.user_rid = _user_rid
+    WHERE pl.plot_rid = _plot_id
+        AND pl.user_rid = _user_id
 
 $$ LANGUAGE SQL;
 
 -- Remove all locks from user and old locks
-CREATE OR REPLACE FUNCTION unlock_plots(_user_rid integer)
+CREATE OR REPLACE FUNCTION unlock_plots(_user_id integer)
  RETURNS VOID AS $$
 
     DELETE FROM plot_locks pl
-    WHERE pl.user_rid = _user_rid
+    WHERE pl.user_rid = _user_id
         OR pl.lock_end < localtimestamp
 
 $$ LANGUAGE SQL;
@@ -1326,19 +1332,19 @@ $$ LANGUAGE SQL;
 --
 
 -- Create project plot sample with no external file data
-CREATE OR REPLACE FUNCTION create_project_plot_sample(_plot_rid integer, _sample_point geometry(Point, 4326))
+CREATE OR REPLACE FUNCTION create_project_plot_sample(_plot_id integer, _sample_point geometry(Point, 4326))
  RETURNS integer AS $$
 
     INSERT INTO samples
         (plot_rid, point)
     VALUES
-        (_plot_rid, _sample_point)
+        (_plot_id, _sample_point)
     RETURNING sample_uid
 
 $$ LANGUAGE SQL;
 
 -- Select samples. GEOM comes from shp file table.
-CREATE OR REPLACE FUNCTION select_plot_samples(_plot_rid integer, _project_uid integer)
+CREATE OR REPLACE FUNCTION select_plot_samples(_plot_id integer, _project_id integer)
  RETURNS TABLE (
     sample_id             integer,
     point                 text,
@@ -1354,7 +1360,7 @@ CREATE OR REPLACE FUNCTION select_plot_samples(_plot_rid integer, _project_uid i
     WITH tablename AS (
         SELECT samples_ext_table
         FROM projects
-        WHERE project_uid = _project_uid
+        WHERE project_uid = _project_id
     ), file_data AS (
         SELECT * FROM select_partial_sample_table_by_name((SELECT samples_ext_table FROM tablename))
     )
@@ -1373,29 +1379,31 @@ CREATE OR REPLACE FUNCTION select_plot_samples(_plot_rid integer, _project_uid i
         ON sample_uid = sv.sample_rid
     LEFT JOIN file_data fd
         ON samples.ext_id = fd.ext_id
-    WHERE samples.plot_rid = _plot_rid
+    WHERE samples.plot_rid = _plot_id
 
 $$ LANGUAGE SQL;
 
+-- FIXME this does not account for someone submitting to a plot already saved
+-- FIXME this can probably be eliminate with a rewrite to update_user_samples
 -- Returns user plots table id if available
-CREATE OR REPLACE FUNCTION check_user_plots(_project_rid integer, _plot_rid integer, _user_rid integer)
+CREATE OR REPLACE FUNCTION check_user_plots(_project_id integer, _plot_id integer, _user_id integer)
  RETURNS TABLE (user_plot_id integer) AS $$
 
     SELECT user_plot_uid
     FROM plots p
     INNER JOIN user_plots up
         ON plot_uid = up.plot_rid
-        AND p.project_rid = _project_rid
-        AND up.user_rid = _user_rid
-        AND up.plot_rid = _plot_rid
+        AND p.project_rid = _project_id
+        AND up.user_rid = _user_id
+        AND up.plot_rid = _plot_id
 
 $$ LANGUAGE SQL;
 
 -- Add user sample value selections
 CREATE OR REPLACE FUNCTION add_user_samples(
-    _project_rid         integer,
-    _plot_rid            integer,
-    _user_rid            integer,
+    _project_id          integer,
+    _plot_id             integer,
+    _user_id             integer,
     _confidence          integer,
     _collection_start    timestamp,
     _samples             jsonb,
@@ -1406,7 +1414,7 @@ CREATE OR REPLACE FUNCTION add_user_samples(
         INSERT INTO user_plots
             (user_rid, plot_rid, confidence, collection_start, collection_time)
         VALUES
-            (_user_rid, _plot_rid, _confidence, _collection_start, Now())
+            (_user_id, _plot_id, _confidence, _collection_start, Now())
         RETURNING user_plot_uid
     ), new_sample_values AS (
         SELECT CAST(key as integer) as sample_id, value FROM jsonb_each(_samples)
@@ -1425,18 +1433,19 @@ CREATE OR REPLACE FUNCTION add_user_samples(
                 ON sample_uid = sv.sample_id
             INNER JOIN image_values as iv
                 ON sample_uid = iv.sample_id
-        WHERE s.plot_rid = _plot_rid)
+        WHERE s.plot_rid = _plot_id)
 
     RETURNING sample_value_uid
 
 $$ LANGUAGE SQL;
 
+-- FIXME, project_id, plot_id, user_id is probably enough information since that is all that is provided to check_user_plots
 -- Update user sample value selections
 CREATE OR REPLACE FUNCTION update_user_samples(
     _user_plots_uid      integer,
-    _project_rid         integer,
-    _plot_rid            integer,
-    _user_rid            integer,
+    _project_id          integer,
+    _plot_id             integer,
+    _user_id             integer,
     _confidence          integer,
     _collection_start    timestamp,
     _samples             jsonb,
@@ -1463,7 +1472,7 @@ CREATE OR REPLACE FUNCTION update_user_samples(
         FROM user_plot_table AS upt, samples AS s
         INNER JOIN new_sample_values as sv ON sample_uid = sv.sample_id
         INNER JOIN image_values as iv ON sample_uid = iv.sample_id
-        WHERE s.plot_rid = _plot_rid
+        WHERE s.plot_rid = _plot_id
     )
 
     INSERT INTO sample_values
@@ -1485,7 +1494,7 @@ $$ LANGUAGE SQL;
 --
 
 -- Returns project aggregate data
-CREATE OR REPLACE FUNCTION dump_project_plot_data(_project_uid integer)
+CREATE OR REPLACE FUNCTION dump_project_plot_data(_project_id integer)
  RETURNS TABLE (
         plot_id                     integer,
         lon                         float,
@@ -1511,7 +1520,7 @@ CREATE OR REPLACE FUNCTION dump_project_plot_data(_project_uid integer)
               ELSE imagery_attributes->>'imagerySecureWatchDate'
          END) as imagerySecureWatchDate,
         *
-        FROM select_all_project_plots(_project_uid) pl
+        FROM select_all_project_plots(_project_id) pl
         INNER JOIN samples s
             ON s.plot_rid = pl.plot_id
         LEFT JOIN sample_values sv
@@ -1519,7 +1528,7 @@ CREATE OR REPLACE FUNCTION dump_project_plot_data(_project_uid integer)
     ), tablenames AS (
         SELECT plots_ext_table, samples_ext_table
         FROM projects
-        WHERE project_uid = _project_uid
+        WHERE project_uid = _project_id
     ), plots_file_data AS (
         SELECT * FROM select_json_table_by_name((SELECT plots_ext_table FROM tablenames))
     ), plots_agg AS (
@@ -1570,7 +1579,7 @@ CREATE OR REPLACE FUNCTION dump_project_plot_data(_project_uid integer)
 $$ LANGUAGE SQL;
 
 -- Returns project raw data
-CREATE OR REPLACE FUNCTION dump_project_sample_data(_project_uid integer)
+CREATE OR REPLACE FUNCTION dump_project_sample_data(_project_id integer)
  RETURNS TABLE (
         plot_id               integer,
         sample_id             integer,
@@ -1592,7 +1601,7 @@ CREATE OR REPLACE FUNCTION dump_project_sample_data(_project_uid integer)
     WITH tablenames AS (
         SELECT plots_ext_table, samples_ext_table
         FROM projects
-        WHERE project_uid = _project_uid
+        WHERE project_uid = _project_id
     ), plots_file_data AS (
         SELECT * FROM select_json_table_by_name((SELECT plots_ext_table FROM tablenames))
     ), samples_file_data AS (
@@ -1614,7 +1623,7 @@ CREATE OR REPLACE FUNCTION dump_project_sample_data(_project_uid integer)
        value,
        pfd.rem_data,
        sfd.rem_data
-    FROM select_all_project_plots(_project_uid) p
+    FROM select_all_project_plots(_project_id) p
     INNER JOIN samples s
         ON s.plot_rid = plot_id
     LEFT JOIN sample_values sv
