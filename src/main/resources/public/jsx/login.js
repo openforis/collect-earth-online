@@ -28,27 +28,34 @@ class Login extends React.Component {
 
     handleValidation = (e) => {
         const { name, type, required } = e.target;
-        return this.validate(name, type, required);
+        const value = this.state.values[name];
+        const error = this.validate(value, name, type, required);
+        this.setState({ errors: { ...this.state.errors, [name]: error }});
     }
 
-    validate = (name, type, required) => {
+    validate = (value, name, type, required) => {
         let error = "";
-        const value = this.state.values[name];
         if (required) {
             error = this.requiredValidator(value);
-        } else {
+        }
+        if (error === "") {
             if (type === "email") {
                 error = this.emailValidator(value);
             } else if (type === "password") {
                 error = this.passwordValidator(value);
             }
         }
-        this.setState({ errors: { ...this.state.errors, [name]: error }});
         return error;
     }
 
-    validateAll = () => this.validate("email", "email") === "" &&
-        this.validate("password", "password") === "";
+    validateAll = () => {
+        const errors = {
+            email: this.validate(this.state.values.email, "email", "email", true),
+            password: this.validate(this.state.values.password, "password", "password", true),
+        };
+        this.setState({ errors });
+        return errors.email === "" && errors.password === "";
+    }
 
     requestLogin = () => {
         if (this.validateAll()) {
