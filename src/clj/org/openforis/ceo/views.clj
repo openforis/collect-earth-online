@@ -77,7 +77,8 @@
 (defn body->transit [body]
   (let [out    (ByteArrayOutputStream. 4096)
         writer (transit/writer out :json)]
-    (.toString (transit/write writer body))))
+    (transit/write writer body)
+    (.toString out)))
 
 (defn data-response
   "Create a response object.
