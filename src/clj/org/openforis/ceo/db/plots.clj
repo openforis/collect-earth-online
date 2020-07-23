@@ -53,91 +53,46 @@
 (defn- unlock_plots [user-id]
   (call-sql "SELECT * FROM unlock_plots" user-id))
 
-(defn- plot-lock-wrapper [project-id user-id sql-results]
-  (if-let [plot-info (first (sql-results))]
-    (do
-      (unlock_plots user-id)
-      (call-sql "SELECT * FROM lock_plot"
-                (:plot_id plot-info)
-                user-id
-                (time-plus-five-min))
-      (build-plot-object plot-info project-id))
-    "done"))
+(defn- get-collection-plot [params method]
+  (let [get-user-plots? (tc/str->bool (:getUserPlots params))
+        project-id      (tc/str->int (:projectId params))
+        institution-id  (tc/str->int (:institutionId params))
+        plot-id         (tc/str->int (:plotId params))
+        user-id         (tc/str->int (:userId params))
+        user-name       (:userName params)
+        admin?          (is-inst-admin-query user-id institution-id)
+        sql2            #(call-sql % project-id plot-id)
+        sql3            #(call-sql % project-id plot-id user-name)]
+    (data-response (if-let [plot-info (first (cond
+                                               (and admin? get-user-plots?)
+                                               (sql2 (str "select_" method "user_plot_by_admin"))
+
+                                               get-user-plots?
+                                               (sql3 (str "select_" method "user_plot"))
+
+                                               :else
+                                               (sql3 (str "select_" method "unassigned_plot"))))]
+                     (do
+                       (unlock_plots user-id)
+                       (call-sql "SELECT * FROM lock_plot"
+                                 (:plot_id plot-info)
+                                 user-id
+                                 (time-plus-five-min))
+                       (build-plot-object plot-info project-id))
+                     "done"))))
 
 (defn get-plot-by-id [{:keys [params]}]
-  (let [get-user-plots? (tc/str->bool (:getUserPlots params))
-        project-id      (tc/str->int (:projectId params))
-        plot-id         (tc/str->int (:plotId params))
-        user-id         (tc/str->int (:userId params))
-        user-name       (:userName params)]
+  (let  [project-id (tc/str->int (:projectId params))
+         plot-id    (tc/str->int (:plotId params))]
     (if (first (call-sql "select_plot_by_id" project-id plot-id))
-      (data-response (plot-lock-wrapper project-id
-                                        user-id
-                                        (if get-user-plots?
-                                          (call-sql "select_user_plot_by_id"
-                                                    project-id
-                                                    plot-id
-                                                    user-name)
-                                          (call-sql "select_unassigned_plot_by_id"
-                                                    project-id
-                                                    plot-id))))
-      (data-response "not found"))))
+      (get-collection-plot params "")
+      (data-response "not-found"))))
 
 (defn get-next-plot [{:keys [params]}]
-  (let [get-user-plots? (tc/str->bool (:getUserPlots params))
-        project-id      (tc/str->int (:projectId params))
-        institution-id  (tc/str->int (:institutionId params))
-        plot-id         (tc/str->int (:plotId params))
-        user-id         (tc/str->int (:userId params))
-        user-name       (:userName params)
-        admin?          (is-inst-admin-query user-id institution-id)]
-    (data-response (plot-lock-wrapper project-id
-                                      user-id
-                                      (cond
-                                        (and admin? get-user-plots?)
-                                        (call-sql "select_next_user_plot_by_admin"
-                                                  project-id
-                                                  plot-id)
-
-                                        get-user-plots?
-                                        (call-sql "select_next_user_plot"
-                                                  project-id
-                                                  plot-id
-                                                  user-name)
-
-                                        :else
-                                        (call-sql "select_next_unassigned_plot"
-                                                  project-id
-                                                  plot-id
-                                                  user-name))))))
+  (get-collection-plot params "next_"))
 
 (defn get-prev-plot [{:keys [params]}]
-  (let [get-user-plots? (tc/str->bool (:getUserPlots params))
-        project-id      (tc/str->int (:projectId params))
-        institution-id  (tc/str->int (:institutionId params))
-        plot-id         (tc/str->int (:plotId params))
-        user-id         (tc/str->int (:userId params))
-        user-name       (:userName params)
-        admin?          (is-inst-admin-query user-id institution-id)]
-    (data-response (plot-lock-wrapper project-id
-                                      user-id
-                                      (cond
-                                        (and admin? get-user-plots?)
-                                        (call-sql "select_prev_user_plot_by_admin"
-                                                  project-id
-                                                  plot-id)
-
-                                        get-user-plots?
-                                        (call-sql "select_prev_user_plot"
-                                                  project-id
-                                                  plot-id
-                                                  user-name)
-
-                                        :else
-                                        (call-sql "select_prev_unassigned_plot"
-                                                  project-id
-                                                  plot-id
-                                                  user-name))))))
+  (get-collection-plot params "prev_"))
 
 (defn reset-plot-lock [{:keys [params]}]
   (let [plot-id (tc/str->int (:plotId params))
