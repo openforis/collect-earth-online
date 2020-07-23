@@ -254,9 +254,23 @@ export class DynamicForm extends React.Component {
         return error;
     }
 
+    validateAll = () => {
+        const errors = {};
+        this.props.elements.map(element => {
+            const { name, required } = element;
+            errors[name] = this.validate(this.state.values[name], name, required);
+
+        });
+        this.setState({ errors });
+        return Object.values(errors).reduce((acc, curr) => acc && curr === "", true);
+    }
+
     onFormSubmit = (e) => {
         e.preventDefault();
-        this.props.onSubmit(e);
+        if (this.validateAll()) {
+            this.props.onSubmit(this.state.values);
+        }
+
     }
 
     render() {

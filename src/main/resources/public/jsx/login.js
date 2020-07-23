@@ -77,30 +77,34 @@ class Login extends React.Component {
             password: this.validate(this.state.values.password, "password", true),
         };
         this.setState({ errors });
-        return errors.email === "" && errors.password === "";
+        return Object.values(errors).reduce((acc, curr) => acc && curr === "", true);
     }
 
-    requestLogin = () => {
+    onFormSubmit = () => {
         if (this.validateAll()) {
-            fetch("/login",
-                  {
-                      method: "POST",
-                      headers: { "Content-Type": "application/x-www-form-urlencoded" },
-                      body: getQueryString(this.state.values),
-                  })
-                .then(response => Promise.all([response.ok, response.text()]))
-                .then(data => {
-                    if (data[0] && data[1] === "") {
-                        window.location = this.props.returnurl === "" ? "/home" : this.props.returnurl;
-                    } else {
-                        return Promise.reject(data[1]);
-                    }
-                })
-                .catch(message => {
-                    alert(message);
-                    console.log(message);
-                });
+            this.requestLogin(this.state.values);
         }
+    }
+
+    requestLogin = (values) => {
+        fetch("/login",
+              {
+                  method: "POST",
+                  headers: { "Content-Type": "application/x-www-form-urlencoded" },
+                  body: getQueryString(values),
+              })
+            .then(response => Promise.all([response.ok, response.text()]))
+            .then(data => {
+                if (data[0] && data[1] === "") {
+                    window.location = this.props.returnurl === "" ? "/home" : this.props.returnurl;
+                } else {
+                    return Promise.reject(data[1]);
+                }
+            })
+            .catch(message => {
+                alert(message);
+                console.log(message);
+            });
     };
 
     render() {
@@ -120,7 +124,7 @@ class Login extends React.Component {
                             </div>
                         </DynamicForm>
 
-                        <Form onSubmit={this.requestLogin}>
+                        <Form onSubmit={this.onFormSubmit}>
                             <FormInput
                                 label="Email address"
                                 id="login-email"
