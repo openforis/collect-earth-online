@@ -107,7 +107,7 @@ export class PlanetDailyMenus extends React.Component {
         if (this.props.currentPlot && this.props.currentPlot !== prevProps.currentPlot) {
             this.updatePlanetDailyLayer();
         }
-        if ((this.props.visible && prevProps.visible !== this.props.visible)) {
+        if (this.props.visible && prevProps.visible !== this.props.visible) {
             this.updatePlanetDailyLayer();
             this.updateImageryInformation();
         }
@@ -201,7 +201,7 @@ export class SecureWatchMenus extends React.Component {
         if (this.props.currentPlot && this.props.currentPlot !== prevProps.currentPlot) {
             this.getAvailableDates();
         }
-        if ((this.props.visible && prevProps.visible !== this.props.visible)) {
+        if (this.props.visible && prevProps.visible !== this.props.visible) {
             this.updateImageryInformation();
         }
     }
@@ -372,7 +372,7 @@ export class SentinelMenus extends React.Component {
     }
 
     componentDidUpdate (prevProps, prevState) {
-        if ((this.props.visible && prevProps.visible !== this.props.visible)) {
+        if (this.props.visible && prevProps.visible !== this.props.visible) {
             this.updateImageryInformation();
         }
     }
@@ -484,7 +484,7 @@ export class GEEImageMenus extends React.Component {
     }
 
     componentDidUpdate (prevProps, prevState) {
-        if ((this.props.visible && prevProps.visible !== this.props.visible)) {
+        if (this.props.visible && prevProps.visible !== this.props.visible) {
             this.updateImageryInformation();
         }
     }
@@ -559,7 +559,7 @@ export class GEEImageCollectionMenus extends React.Component {
     }
 
     componentDidUpdate (prevProps, prevState) {
-        if ((this.props.visible && prevProps.visible !== this.props.visible)) {
+        if (this.props.visible && prevProps.visible !== this.props.visible) {
             this.updateImageryInformation();
         }
     }
