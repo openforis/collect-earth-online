@@ -1,7 +1,7 @@
 import React from "react";
 import ReactDOM from "react-dom";
 import { NavigationBar } from "./components/PageComponents";
-import { FormInput } from "./components/FormComponents";
+import { Form, FormInput } from "./components/FormComponents";
 import { getQueryString } from "./utils/textUtils";
 
 const emailPattern = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
@@ -69,7 +69,7 @@ class Login extends React.Component {
                   {
                       method: "POST",
                       headers: { "Content-Type": "application/x-www-form-urlencoded" },
-                      body: getQueryString(this.state),
+                      body: getQueryString(this.state.values),
                   })
                 .then(response => Promise.all([response.ok, response.text()]))
                 .then(data => {
@@ -92,13 +92,7 @@ class Login extends React.Component {
                 <div className="card card-lightgreen">
                     <div className="card-header card-header-lightgreen">Sign into your account</div>
                     <div className="card-body">
-                        <form
-                            onSubmit={e => {
-                                e.preventDefault();
-                                this.requestLogin();
-                            }}
-                            noValidate
-                        >
+                        <Form onSubmit={this.requestLogin}>
                             <FormInput
                                 label={"Email address"}
                                 id="login-email"
@@ -111,43 +105,23 @@ class Login extends React.Component {
                                 onBlur={this.onInputBlur}
                                 required
                             />
-                            <div className={"form-group " + (this.state.errors.email ? "invalid" : "")}>
-                                <label htmlFor="email">Email address</label>
-                                <input
-                                    name="email"
-                                    className="form-control"
-                                    placeholder="Email"
-                                    type="email"
-                                    value={this.state.values.email}
-                                    onChange={e => this.setState({ values: { ...this.state.values, [e.target.name]: e.target.value }})}
-                                    onBlur={this.onInputBlur}
-                                    required
-                                />
-                                {this.state.errors.email &&
-                                    <div className="validation-error">{this.state.errors.email}</div>
-                                }
-                            </div>
-                            <div className={"form-group " + (this.state.errors.password ? "invalid" : "")}>
-                                <label htmlFor="password">Password</label>
-                                <input
-                                    name="password"
-                                    placeholder="Password"
-                                    type="password"
-                                    className="form-control"
-                                    value={this.state.values.password}
-                                    onChange={e => this.setState({ values: { ...this.state.values, [e.target.name]: e.target.value }})}
-                                    onBlur={this.onInputBlur}
-                                    required
-                                />
-                                {this.state.errors.password &&
-                                    <div className="validation-error">{this.state.errors.password}</div>
-                                }
-                            </div>
+                            <FormInput
+                                label={"Password"}
+                                id="login-password"
+                                name={"password"}
+                                type={"password"}
+                                placeholder="Password"
+                                value={this.state.values.password}
+                                error={this.state.errors.password}
+                                onChange={this.onInputChange}
+                                onBlur={this.onInputBlur}
+                                required
+                            />
                             <div className="d-flex justify-content-between align-items-center">
                                 <a href={"/password-request"}>Forgot your password?</a>
                                 <button className="btn bg-lightgreen" type="submit">Login</button>
                             </div>
-                        </form>
+                        </Form>
                     </div>
                     <div className="card-header-lightgreen card-footer">New to CEO?</div>
                     <div className="card-body">
