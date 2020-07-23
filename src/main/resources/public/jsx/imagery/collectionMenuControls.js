@@ -96,7 +96,11 @@ export class PlanetDailyMenus extends React.Component {
         this.setState({
             startDate: this.props.sourceConfig.startDate,
             endDate: this.props.sourceConfig.endDate,
-        }, () => this.updatePlanetDailyLayer());
+        }, () => {
+            if (this.props.visible) {
+                this.updatePlanetDailyLayer();
+            }
+        });
     }
 
     componentDidUpdate (prevProps, prevState) {
@@ -104,6 +108,7 @@ export class PlanetDailyMenus extends React.Component {
             this.updatePlanetDailyLayer();
         }
         if ((this.props.visible && prevProps.visible !== this.props.visible)) {
+            this.updatePlanetDailyLayer();
             this.updateImageryInformation();
         }
     }
@@ -122,26 +127,28 @@ export class PlanetDailyMenus extends React.Component {
         this.setState({ [key]: newValue }, () => this.updatePlanetDailyLayer());
 
     updatePlanetDailyLayer = () => {
-        const { startDate, endDate } = this.state;
-        if (new Date(startDate) > new Date(endDate)) {
-            alert("Start date must be smaller than the end date.");
-        } else {
-            this.updateImageryInformation();
-            mercator.currentMap.getControls().getArray()
-                .filter(control => control.element.classList.contains("planet-layer-switcher"))
-                .map(control => mercator.currentMap.removeControl(control));
-            mercator.updateLayerSource(this.props.mapConfig,
-                                       this.props.thisImageryId,
-                                       mercator.geometryToGeoJSON(
-                                           mercator.getViewPolygon(this.props.mapConfig),
-                                           "EPSG:4326"
-                                       ),
-                                       sourceConfig => ({
-                                           ...sourceConfig,
-                                           startDate: startDate,
-                                           endDate: endDate,
-                                       }),
-                                       this);
+        if (this.props.visible) {
+            const { startDate, endDate } = this.state;
+            if (new Date(startDate) > new Date(endDate)) {
+                alert("Start date must be smaller than the end date.");
+            } else {
+                this.updateImageryInformation();
+                mercator.currentMap.getControls().getArray()
+                    .filter(control => control.element.classList.contains("planet-layer-switcher"))
+                    .map(control => mercator.currentMap.removeControl(control));
+                mercator.updateLayerSource(this.props.mapConfig,
+                                           this.props.thisImageryId,
+                                           mercator.geometryToGeoJSON(
+                                               mercator.getViewPolygon(this.props.mapConfig),
+                                               "EPSG:4326"
+                                           ),
+                                           sourceConfig => ({
+                                               ...sourceConfig,
+                                               startDate: startDate,
+                                               endDate: endDate,
+                                           }),
+                                           this);
+            }
         }
     };
 
