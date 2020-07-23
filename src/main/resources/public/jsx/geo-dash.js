@@ -1235,28 +1235,24 @@ class GraphWidget extends React.Component {
     }
 
     loadGraph = (widget) => {
-        const centerPoint = JSON.parse(this.props.getParameterByName("bcenter")).coordinates;
-        const widgetType = widget.type || "";
-        const collectionName = widget.properties[1];
-        const indexName = widget.properties[4];
-        const path = widgetType === "DegradationTool" ? "getImagePlotDegradition"
-            : collectionName.trim() === "timeSeriesAssetForPoint" ? "timeSeriesAssetForPoint"
-            : collectionName.trim().length > 0 ? "timeSeriesIndex"
-            : "timeSeriesIndex2";
-        if (this.props.degDataType === "landsat"
-            && this.state.chartDataSeriesLandsat.length > 0) {
-            this.state.graphRef.update({
-                series: [...this.state.chartDataSeriesLandsat],
-            });
-        } else if (this.props.degDataType === "sar"
-            && this.state.chartDataSeriesSar.hasOwnProperty(this.state.selectSarGraphBand)
-            && this.state.chartDataSeriesSar[this.state.selectSarGraphBand].length > 0) {
-            this.state.graphRef.update({
-                series: [...this.state.chartDataSeriesSar[this.state.selectSarGraphBand]],
-            });
+        const { chartDataSeriesLandsat, chartDataSeriesSar, selectSarGraphBand, graphRef } = this.state;
+        const { degDataType, getParameterByName, projPairAOI, handleSelectDate } = this.props;
+
+        if (degDataType === "landsat" && chartDataSeriesLandsat.length > 0) {
+            graphRef.update({ series: [...chartDataSeriesLandsat] });
+        } else if (degDataType === "sar"
+            && chartDataSeriesSar.hasOwnProperty(selectSarGraphBand)
+            && chartDataSeriesSar[selectSarGraphBand].length > 0) {
+            graphRef.update({ series: [...chartDataSeriesSar[selectSarGraphBand]] });
         } else {
-            // check if this.props.degDataType is landsat, sar, or ""
-            // if "" fetch is needed else check the new state variable chartData.landsat.data
+            const centerPoint = JSON.parse(getParameterByName("bcenter")).coordinates;
+            const widgetType = widget.type || "";
+            const collectionName = widget.properties[1];
+            const indexName = widget.properties[4];
+            const path = widgetType === "DegradationTool" ? "getImagePlotDegradition"
+                : collectionName.trim() === "timeSeriesAssetForPoint" ? "timeSeriesAssetForPoint"
+                    : collectionName.trim().length > 0 ? "timeSeriesIndex"
+                        : "timeSeriesIndex2";
             fetch("/geo-dash/gateway-request", {
                 method: "POST",
                 headers: {
@@ -1265,7 +1261,7 @@ class GraphWidget extends React.Component {
                 },
                 body: JSON.stringify({
                     collectionNameTimeSeries: collectionName,
-                    geometry: JSON.parse(this.props.projPairAOI),
+                    geometry: JSON.parse(projPairAOI),
                     indexName: widget.graphBand || indexName,
                     dateFromTimeSeries: widget.properties[2].trim().length === 10
                         ? widget.properties[2].trim()
@@ -1280,7 +1276,7 @@ class GraphWidget extends React.Component {
                     start: widget.startDate || "",
                     end: widget.endDate || "",
                     band: widget.graphBand || "",
-                    dataType: this.props.degDataType || "",
+                    dataType: degDataType || "",
                 }),
             })
                 .then(res => res.json())
@@ -1329,9 +1325,7 @@ class GraphWidget extends React.Component {
                                         allowPointSelect: true,
                                         point: {
                                             events: {
-                                                select: e => {
-                                                    this.props.handleSelectDate(formatDateISO(new Date(e.target.x)));
-                                                },
+                                                select: e => handleSelectDate(formatDateISO(new Date(e.target.x))),
                                             },
                                         },
                                         tooltip: {
@@ -1341,7 +1335,7 @@ class GraphWidget extends React.Component {
                                             xDateFormat: "%Y-%m-%d",
                                         },
                                     };
-                                    if (this.props.degDataType === "landsat") {
+                                    if (degDataType === "landsat") {
                                         this.setState({
                                             chartDataSeriesLandsat: [...this.state.chartDataSeriesLandsat, thisDataSeries],
                                         });
@@ -1411,90 +1405,99 @@ class GraphWidget extends React.Component {
         );
     };
 
-    getChartOptions = () => ({
-        chart: {
-            zoomType: "x",
-        },
-        title: {
-            text: "",
-        },
-        subtitle: {
-            text: document.ontouchstart === undefined
-                ? "Click and drag in the plot area to zoom in"
-                : "Pinch the chart to zoom in",
-        },
-        xAxis: {
-            type: "datetime",
-        },
-        yAxis: {
+    getChartOptions = () => {
+        const { widget, degDataType } = this.props;
+        const { chartDataSeriesLandsat, chartDataSeriesSar, selectSarGraphBand, nonDegChartData } = this.state;
+        return {
+            chart: {
+                zoomType: "x",
+            },
             title: {
-                text: this.props.widget.properties[4],
+                text: "",
             },
-        },
-        legend: {
-            enabled: true,
-        },
-        credits: {
-            enabled: false,
-        },
-        plotOptions: {
-            area: {
-                connectNulls: this.props.widget.properties[4].toLowerCase() === "custom",
-                fillColor: {
-                    linearGradient: {
-                        x1: 0,
-                        y1: 0,
-                        x2: 0,
-                        y2: 1,
+            subtitle: {
+                text: document.ontouchstart === undefined
+                    ? "Click and drag in the plot area to zoom in"
+                    : "Pinch the chart to zoom in",
+            },
+            xAxis: {
+                type: "datetime",
+            },
+            yAxis: {
+                title: {
+                    text: widget.properties[4],
+                },
+            },
+            legend: {
+                enabled: true,
+            },
+            credits: {
+                enabled: false,
+            },
+            plotOptions: {
+                area: {
+                    connectNulls: widget.properties[4].toLowerCase() === "custom",
+                    fillColor: {
+                        linearGradient: {
+                            x1: 0,
+                            y1: 0,
+                            x2: 0,
+                            y2: 1,
+                        },
+                        stops: [
+                            [0, Highcharts.Color(Highcharts.getOptions().colors[0]).setOpacity(0).get("rgba")],
+                            [1, Highcharts.Color(Highcharts.getOptions().colors[0]).setOpacity(0).get("rgba")],
+                        ],
                     },
-                    stops: [
-                        [0, Highcharts.Color(Highcharts.getOptions().colors[0]).setOpacity(0).get("rgba")],
-                        [1, Highcharts.Color(Highcharts.getOptions().colors[0]).setOpacity(0).get("rgba")],
-                    ],
+                    marker: {
+                        radius: 2,
+                    },
+                    lineWidth: 1,
+                    states: {
+                        hover: {
+                            lineWidth: 1,
+                        },
+                    },
+                    threshold: null,
                 },
-                marker: {
-                    radius: 2,
-                },
-                lineWidth: 1,
-                states: {
-                    hover: {
-                        lineWidth: 1,
+                scatter: {
+                    marker: {
+                        radius: 2,
                     },
                 },
-                threshold: null,
             },
-            scatter: {
-                marker: {
-                    radius: 2,
-                },
+            tooltip: {
+                pointFormat: "<span style=\"color:{series.color}\">{series.name}</span>: <b>{point.y:.6f}</b><br/>",
+                valueDecimals: 20,
+                split: false,
+                xDateFormat: "%Y-%m-%d",
             },
-        },
-        tooltip: {
-            pointFormat: "<span style=\"color:{series.color}\">{series.name}</span>: <b>{point.y:.6f}</b><br/>",
-            valueDecimals: 20,
-            split: false,
-            xDateFormat: "%Y-%m-%d",
-        },
-        series: this.props.widget.type === "DegradationTool"
-            ? this.props.degDataType === "landsat"
-                ? [...this.state.chartDataSeriesLandsat]
-                : [...this.state.chartDataSeriesSar[this.state.selectSarGraphBand]]
-            : [...this.state.nonDegChartData],
-    });
+            series:
+                widget.type === "DegradationTool"
+                    ? degDataType === "landsat" && chartDataSeriesLandsat.length > 0
+                        ? [...chartDataSeriesLandsat]
+                        : degDataType === "sar" && chartDataSeriesSar.hasOwnProperty(selectSarGraphBand)
+                            && chartDataSeriesSar[selectSarGraphBand].length > 0
+                            ? [...chartDataSeriesSar[selectSarGraphBand]]
+                            : []
+                    : [...nonDegChartData],
+        };
+    }
 
     render() {
-        const widget = this.props.widget;
+        const { widget, degDataType } = this.props;
+        const { chartDataSeriesSar, chartDataSeriesLandsat, selectSarGraphBand, nonDegChartData } = this.state;
         return (
             <div id={"widgetgraph_" + widget.id} className="minmapwidget">
                 <div id={"graphcontainer_" + widget.id} className="minmapwidget graphwidget normal">
-                    {(this.props.widget.type === "DegradationTool"
-                        && this.props.degDataType === "sar"
-                        && this.state.chartDataSeriesSar.hasOwnProperty(this.state.selectSarGraphBand)
-                        && this.state.chartDataSeriesSar[this.state.selectSarGraphBand].length > 0)
-                    || (this.props.widget.type === "DegradationTool"
-                        && this.props.degDataType === "landsat"
-                        && this.state.chartDataSeriesLandsat.length > 0)
-                    || this.state.nonDegChartData.length > 0
+                    {(widget.type === "DegradationTool"
+                        && degDataType === "sar"
+                        && chartDataSeriesSar.hasOwnProperty(selectSarGraphBand)
+                        && chartDataSeriesSar[selectSarGraphBand].length > 0)
+                    || (widget.type === "DegradationTool"
+                        && degDataType === "landsat"
+                        && chartDataSeriesLandsat.length > 0)
+                    || nonDegChartData.length > 0
                         ?
                             <HighchartsReact
                                 highcharts={Highcharts}
@@ -1513,9 +1516,7 @@ class GraphWidget extends React.Component {
                             />
                     }
                 </div>
-                <h3 id={"widgettitle_" + widget.id}>
-                    {this.props.widget.properties[4]}
-                </h3>
+                <h3 id={"widgettitle_" + widget.id}>{widget.properties[4]}</h3>
                 {this.getSarBandOption()}
             </div>
         );
