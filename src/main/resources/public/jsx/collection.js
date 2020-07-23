@@ -982,15 +982,14 @@ class Collection extends React.Component {
                         <PlotInformation extraPlotInfo={this.state.currentPlot.extraPlotInfo}/>
                     }
                     <ImageryOptions
-                        currentImageryId={this.state.currentImagery.id}
-                        setBaseMapSource={this.setBaseMapSource}
-                        sourceConfig={this.state.currentImagery.sourceConfig}
                         mapConfig={this.state.mapConfig}
-                        currentProject={this.state.currentProject}
+                        imageryList={this.state.imageryList}
+                        setBaseMapSource={this.setBaseMapSource}
                         setImageryAttribution={this.setImageryAttribution}
                         setImageryAttributes={this.setImageryAttributes}
-                        imageryList={this.state.imageryList}
+                        currentImageryId={this.state.currentImagery.id}
                         currentPlot={this.state.currentPlot}
+                        currentProjectBoundary={this.state.currentProject.boundary}
                         showPlanetDaily={this.state.currentPlot != null}
                         loadingImages={this.state.imageryList.length === 0}
                     />
@@ -1346,11 +1345,14 @@ class ImageryOptions extends React.Component {
         const { props } = this;
         const commonProps = {
             mapConfig: props.mapConfig,
-            currentImageryId: props.currentImageryId,
-            sourceConfig: props.sourceConfig,
             setImageryAttribution: props.setImageryAttribution,
             setImageryAttributes: props.setImageryAttributes,
+            currentPlot: props.currentPlot,
+            currentProjectBoundary: props.currentProjectBoundary,
         };
+        const filteredImageryList = props.showPlanetDaily
+            ? props.imageryList
+            : props.imageryList.filter(layerConfig => layerConfig.sourceConfig.type !== "PlanetDaily");
 
         return (
             <div className="justify-content-center text-center">
@@ -1360,74 +1362,92 @@ class ImageryOptions extends React.Component {
                     toggleShow={() => this.setState({ showImg: !this.state.showImg })}
                 />
                 {props.loadingImages && <h3>Loading imagery data...</h3>}
-                {(this.state.showImg && !props.loadingImages) &&
-                    <Fragment>
-                        <select
-                            className="form-control form-control-sm"
-                            id="base-map-source"
-                            name="base-map-source"
-                            size="1"
-                            value={props.currentImageryId || ""}
-                            onChange={e => props.setBaseMapSource(parseInt(e.target.value))}
-                        >
-                            {
-                                props.showPlanetDaily
-                                    ? props.imageryList.map(
-                                        (imagery, uid) =>
-                                            <option key={uid} value={imagery.id}>{imagery.title}</option>
-                                    )
-                                    : props.imageryList.filter(layerConfig => layerConfig.sourceConfig.type !== "PlanetDaily")
-                                        .map(
-                                            (imagery, uid) =>
-                                                <option key={uid} value={imagery.id}>{imagery.title}</option>
-                                        )
-                            }
-                        </select>
-                        {props.sourceConfig.type === "Planet" &&
+                {this.state.showImg && !props.loadingImages && props.currentImageryId &&
+                    <select
+                        className="form-control form-control-sm"
+                        id="base-map-source"
+                        name="base-map-source"
+                        size="1"
+                        value={props.currentImageryId || ""}
+                        onChange={e => props.setBaseMapSource(parseInt(e.target.value))}
+                    >
+                        {filteredImageryList
+                            .map((imagery, uid) => <option key={uid} value={imagery.id}>{imagery.title}</option>)}
+                    </select>
+                }
+                {props.currentImageryId && filteredImageryList.map((imagery, uid) => {
+                    if (imagery.sourceConfig.type === "Planet") {
+                        return (
                             <PlanetMenus
                                 {...commonProps}
-                                currentProjectBoundary={props.currentProject.boundary}
+                                key={uid}
+                                thisImageryId={imagery.id}
+                                sourceConfig={imagery.sourceConfig}
+                                visible={props.currentImageryId === imagery.id}
                             />
-                        }
-                        {props.sourceConfig.type === "PlanetDaily" &&
+                        );
+                    } else if (imagery.sourceConfig.type === "PlanetDaily") {
+                        return (
                             <PlanetDailyMenus
                                 {...commonProps}
-                                currentPlot={props.currentPlot}
-                                currentProject={props.currentProject}
+                                key={uid}
+                                thisImageryId={imagery.id}
+                                sourceConfig={imagery.sourceConfig}
+                                visible={props.currentImageryId === imagery.id}
                             />
-                        }
-                        {props.sourceConfig.type === "SecureWatch" &&
+                        );
+                    } else if (imagery.sourceConfig.type === "SecureWatch") {
+                        return (
                             <SecureWatchMenus
                                 {...commonProps}
-                                currentPlot={props.currentPlot}
+                                key={uid}
+                                thisImageryId={imagery.id}
+                                sourceConfig={imagery.sourceConfig}
+                                visible={props.currentImageryId === imagery.id}
                             />
-                        }
-                        {props.sourceConfig.type === "Sentinel1" &&
+                        );
+                    } else if (imagery.sourceConfig.type === "Sentinel1") {
+                        return (
                             <SentinelMenus
                                 {...commonProps}
-                                currentProjectBoundary={props.currentProject.boundary}
+                                key={uid}
+                                thisImageryId={imagery.id}
+                                sourceConfig={imagery.sourceConfig}
+                                visible={props.currentImageryId === imagery.id}
                             />
-                        }
-                        {props.sourceConfig.type === "Sentinel2" &&
+                        );
+                    } else if (imagery.sourceConfig.type === "Sentinel2") {
+                        return (
                             <SentinelMenus
                                 {...commonProps}
-                                currentProjectBoundary={props.currentProject.boundary}
+                                key={uid}
+                                thisImageryId={imagery.id}
+                                sourceConfig={imagery.sourceConfig}
+                                visible={props.currentImageryId === imagery.id}
                             />
-                        }
-                        {props.sourceConfig.type === "GEEImage" &&
+                        );
+                    } else if (imagery.sourceConfig.type === "GEEImage") {
+                        return (
                             <GEEImageMenus
                                 {...commonProps}
-                                currentProjectBoundary={props.currentProject.boundary}
+                                key={uid}
+                                thisImageryId={imagery.id}
+                                sourceConfig={imagery.sourceConfig}
+                                visible={props.currentImageryId === imagery.id}
                             />
-                        }
-                        {props.sourceConfig.type === "GEEImageCollection" &&
+                        );
+                    } else if (imagery.sourceConfig.type === "GEEImageCollection") {
+                        return (
                             <GEEImageCollectionMenus
                                 {...commonProps}
-                                currentProjectBoundary={props.currentProject.boundary}
+                                key={uid}
+                                thisImageryId={imagery.id}
+                                sourceConfig={imagery.sourceConfig}
+                                visible={props.currentImageryId === imagery.id}
                             />
-                        }
-                    </Fragment>
-                }
+                        );
+                    }
+                })}
             </div>
         );
     }

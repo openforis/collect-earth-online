@@ -33,7 +33,7 @@ export class PlanetMenus extends React.Component {
     updatePlanetLayer = () => {
         this.updateImageryInformation();
         mercator.updateLayerSource(this.props.mapConfig,
-                                   this.props.currentImageryId,
+                                   this.props.thisImageryId,
                                    this.props.currentProjectBoundary,
                                    sourceConfig => ({
                                        ...sourceConfig,
@@ -45,7 +45,7 @@ export class PlanetMenus extends React.Component {
 
     render() {
         return (
-            <div className="PlanetsMenu my-2">
+            <div className="PlanetsMenu my-2" style={{ display: this.props.visible ? "block" : "none" }}>
                 <div className="slidecontainer form-control form-control-sm">
                     <input
                         type="range"
@@ -118,7 +118,7 @@ export class PlanetDailyMenus extends React.Component {
                 .filter(control => control.element.classList.contains("planet-layer-switcher"))
                 .map(control => mercator.currentMap.removeControl(control));
             mercator.updateLayerSource(this.props.mapConfig,
-                                       this.props.currentImageryId,
+                                       this.props.thisImageryId,
                                        mercator.geometryToGeoJSON(
                                            mercator.getViewPolygon(this.props.mapConfig),
                                            "EPSG:4326"
@@ -134,7 +134,7 @@ export class PlanetDailyMenus extends React.Component {
 
     render () {
         return (
-            <div className="PlanetsDailyMenu my-2">
+            <div className="PlanetsDailyMenu my-2" style={{ display: this.props.visible ? "block" : "none" }}>
                 <label>Start Date</label>
                 <div className="slidecontainer form-control form-control-sm">
                     <input
@@ -194,7 +194,7 @@ export class SecureWatchMenus extends React.Component {
     };
 
     updateSingleLayer = (featureId, imageryDate, imageryCloudCover) => {
-        mercator.updateLayerWmsParams(this.props.mapConfig, this.props.currentImageryId, {
+        mercator.updateLayerWmsParams(this.props.mapConfig, this.props.thisImageryId, {
             COVERAGE_CQL_FILTER: "featureId='" + featureId + "'",
         });
         this.updateImageryInformation(featureId, imageryDate, imageryCloudCover);
@@ -208,7 +208,7 @@ export class SecureWatchMenus extends React.Component {
         );
 
     getAvailableDates = () => {
-        const { currentImageryId, mapConfig, sourceConfig } = this.props;
+        const { thisImageryId, mapConfig, sourceConfig } = this.props;
         this.props.setImageryAttribution(" | Loading...");
         const geometry = mercator.getViewPolygon(mapConfig).transform("EPSG:4326", "EPSG:3857");
         const secureWatchFeatureInfoUrl = "SERVICE=WMS"
@@ -224,7 +224,7 @@ export class SecureWatchMenus extends React.Component {
             + "&X=0"
             + "&Y=0"
             + "&INFO_FORMAT=application/json"
-            + "&imageryId=" + currentImageryId;
+            + "&imageryId=" + thisImageryId;
         this.setState(
             { availableDates: [] },
             () => {
@@ -237,9 +237,9 @@ export class SecureWatchMenus extends React.Component {
                             return { features: [] };
                         }
                     })
-                    .catch((response) => {
+                    .catch(response => {
                         console.log(response);
-                        alert("It is likely that your Connect ID is expired. See console for more details.");
+                        alert("It is likely that your Connect ID for Securewatch imagery is expired. See console for more details.");
                         return { features: [] };
                     })
                     .then(data => {
@@ -276,7 +276,7 @@ export class SecureWatchMenus extends React.Component {
 
     render() {
         return (
-            <div className="SecureWatchMenu my-2 mb-3">
+            <div className="SecureWatchMenu my-2 mb-3" style={{ display: this.props.visible ? "block" : "none" }}>
                 <div className="form-control form-control-sm">
                     <label>Available Layers</label>
                     {this.state.availableDates
@@ -352,7 +352,7 @@ export class SentinelMenus extends React.Component {
     updateSentinelLayer = () => {
         this.updateImageryInformation();
         mercator.updateLayerSource(this.props.mapConfig,
-                                   this.props.currentImageryId,
+                                   this.props.thisImageryId,
                                    this.props.currentProjectBoundary,
                                    sourceConfig => ({
                                        ...sourceConfig,
@@ -383,7 +383,7 @@ export class SentinelMenus extends React.Component {
             ];
 
         return (
-            <div className="SentinelMenu my-2">
+            <div className="SentinelMenu my-2" style={{ display: this.props.visible ? "block" : "none" }}>
                 <div className="slidecontainer form-control form-control-sm">
                     <input
                         type="range"
@@ -451,7 +451,7 @@ export class GEEImageMenus extends React.Component {
         this.updateImageryInformation();
         mercator.updateLayerSource(
             this.props.mapConfig,
-            this.props.currentImageryId,
+            this.props.thisImageryId,
             this.props.currentProjectBoundary,
             sourceConfig => ({
                 ...sourceConfig,
@@ -463,7 +463,7 @@ export class GEEImageMenus extends React.Component {
 
     render() {
         return (
-            <div className="GEEImageMenu my-2">
+            <div className="GEEImageMenu my-2" style={{ display: this.props.visible ? "block" : "none" }}>
                 <div className="form-control form-control-sm">
                     <label>Visualization Parameters</label>
                     <textarea
@@ -525,7 +525,7 @@ export class GEEImageCollectionMenus extends React.Component {
             this.updateImageryInformation();
             mercator.updateLayerSource(
                 this.props.mapConfig,
-                this.props.currentImageryId,
+                this.props.thisImageryId,
                 this.props.currentProjectBoundary,
                 sourceConfig => ({
                     ...sourceConfig,
@@ -540,7 +540,7 @@ export class GEEImageCollectionMenus extends React.Component {
 
     render() {
         return (
-            <div className="GEEImageCollectionMenu my-2">
+            <div className="GEEImageCollectionMenu my-2" style={{ display: this.props.visible ? "block" : "none" }}>
                 <div className="form-control form-control-sm">
                     <label>Start Date</label>
                     <div className="slidecontainer form-control form-control-sm">
