@@ -183,6 +183,14 @@ export class ExpandableImage extends React.Component {
     }
 }
 
+const emailPattern = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+
+const validateRequired = value => value === "" ? "This field is required." : "";
+
+const validateEmail = value => !emailPattern.test(value) ? "Not a valid email address." : "";
+
+const validatePassword = value => value && value.length < 4 ? "Password must be at least 4 characters." : "";
+
 export class Form extends React.Component {
     constructor(props) {
         super(props);
@@ -196,6 +204,79 @@ export class Form extends React.Component {
     render() {
         return (
             <form onSubmit={this.onFormSubmit} noValidate>
+                {this.props.children}
+            </form>
+        );
+    }
+
+}
+
+export class DynamicForm extends React.Component {
+    constructor(props) {
+        super(props);
+        const values = {};
+        const errors = {};
+        this.props.elements.map(element => {
+            const { name } = element;
+            values[name] = "";
+            errors[name] = "";
+        });
+        this.state = {
+            values,
+            errors,
+        };
+    }
+
+    onInputChange = e => {
+        const { name, value } = e.target;
+        this.setState({ values: { ...this.state.values, [name]: value }});
+    }
+
+    onInputBlur = e => {
+        const { name, type, required } = e.target;
+        const value = this.state.values[name];
+        const error = this.validate(value, type, required);
+        this.setState({ errors: { ...this.state.errors, [name]: error }});
+    }
+
+    validate = (value, type, required) => {
+        let error = "";
+        if (required) {
+            error = validateRequired(value);
+        }
+        if (error === "") {
+            if (type === "email") {
+                error = validateEmail(value);
+            } else if (type === "password") {
+                error = validatePassword(value);
+            }
+        }
+        return error;
+    }
+
+    onFormSubmit = (e) => {
+        e.preventDefault();
+        this.props.onSubmit(e);
+    }
+
+    render() {
+        return (
+            <form onSubmit={this.onFormSubmit} noValidate>
+                {this.props.elements.map(element =>
+                    <FormInput
+                        key={element.id}
+                        label={element.label}
+                        id={element.id}
+                        name={element.name}
+                        type={element.type}
+                        placeholder={element.placeholder}
+                        value={this.state.values[element.name]}
+                        error={this.state.errors[element.name]}
+                        onChange={this.onInputChange}
+                        onBlur={this.onInputBlur}
+                        required={element.required}
+                    />
+                )}
                 {this.props.children}
             </form>
         );

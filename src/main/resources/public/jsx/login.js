@@ -1,7 +1,7 @@
 import React from "react";
 import ReactDOM from "react-dom";
 import { NavigationBar } from "./components/PageComponents";
-import { Form, FormInput } from "./components/FormComponents";
+import { Form, DynamicForm, FormInput } from "./components/FormComponents";
 import { getQueryString } from "./utils/textUtils";
 
 const emailPattern = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
@@ -24,6 +24,23 @@ class Login extends React.Component {
                 email: "",
                 password: "",
             },
+            elements: [
+                {
+                    label: "Email address",
+                    id: "login-email",
+                    name: "email",
+                    type: "email",
+                    placeholder: "Email",
+                    required: true,
+                }, {
+                    label: "Password",
+                    id: "login-password",
+                    name: "password",
+                    type: "password",
+                    placeholder: "Password",
+                    required: true,
+                },
+            ],
         };
     }
 
@@ -92,12 +109,23 @@ class Login extends React.Component {
                 <div className="card card-lightgreen">
                     <div className="card-header card-header-lightgreen">Sign into your account</div>
                     <div className="card-body">
+
+                        <DynamicForm
+                            onSubmit={this.requestLogin}
+                            elements={this.state.elements}
+                        >
+                            <div className="d-flex justify-content-between align-items-center">
+                                <a href={"/password-request"}>Forgot your password?</a>
+                                <button className="btn bg-lightgreen" type="submit">Login</button>
+                            </div>
+                        </DynamicForm>
+
                         <Form onSubmit={this.requestLogin}>
                             <FormInput
-                                label={"Email address"}
+                                label="Email address"
                                 id="login-email"
-                                name={"email"}
-                                type={"email"}
+                                name="email"
+                                type="email"
                                 placeholder="Email"
                                 value={this.state.values.email}
                                 error={this.state.errors.email}
@@ -106,10 +134,10 @@ class Login extends React.Component {
                                 required
                             />
                             <FormInput
-                                label={"Password"}
+                                label="Password"
                                 id="login-password"
-                                name={"password"}
-                                type={"password"}
+                                name="password"
+                                type="password"
                                 placeholder="Password"
                                 value={this.state.values.password}
                                 error={this.state.errors.password}
