@@ -4,6 +4,14 @@ import { NavigationBar } from "./components/PageComponents";
 import { FormInput } from "./components/FormComponents";
 import { getQueryString } from "./utils/textUtils";
 
+const emailPattern = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+
+const validateRequired = value => value === "" ? "This field is required." : "";
+
+const validateEmail = value => !emailPattern.test(value) ? "Not a valid email address." : "";
+
+const validatePassword = value => value && value.length < 4 ? "Password must be at least 4 characters." : "";
+
 class Login extends React.Component {
     constructor(props) {
         super(props);
@@ -17,32 +25,30 @@ class Login extends React.Component {
                 password: "",
             },
         };
-        this.emailPattern = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
     }
 
-    requiredValidator = value => value === "" ? "This field is required." : "";
+    onInputChange = e => {
+        const { name, value } = e.target;
+        this.setState({ values: { ...this.state.values, [name]: value }});
+    }
 
-    emailValidator = value => !this.emailPattern.test(value) ? "Not a valid email address." : "";
-
-    passwordValidator = value => value && value.length < 4 ? "Password must be at least 4 characters." : "";
-
-    handleValidation = (e) => {
+    onInputBlur = e => {
         const { name, type, required } = e.target;
         const value = this.state.values[name];
-        const error = this.validate(value, name, type, required);
+        const error = this.validate(value, type, required);
         this.setState({ errors: { ...this.state.errors, [name]: error }});
     }
 
-    validate = (value, name, type, required) => {
+    validate = (value, type, required) => {
         let error = "";
         if (required) {
-            error = this.requiredValidator(value);
+            error = validateRequired(value);
         }
         if (error === "") {
             if (type === "email") {
-                error = this.emailValidator(value);
+                error = validateEmail(value);
             } else if (type === "password") {
-                error = this.passwordValidator(value);
+                error = validatePassword(value);
             }
         }
         return error;
@@ -50,8 +56,8 @@ class Login extends React.Component {
 
     validateAll = () => {
         const errors = {
-            email: this.validate(this.state.values.email, "email", "email", true),
-            password: this.validate(this.state.values.password, "password", "password", true),
+            email: this.validate(this.state.values.email, "email", true),
+            password: this.validate(this.state.values.password, "password", true),
         };
         this.setState({ errors });
         return errors.email === "" && errors.password === "";
@@ -101,8 +107,8 @@ class Login extends React.Component {
                                 placeholder="Email"
                                 value={this.state.values.email}
                                 error={this.state.errors.email}
-                                onChange={(name, value) => this.setState({ values: { ...this.state.values, [name]: value }})}
-                                onBlur={(name, type, required) => this.validate(name, type, required)}
+                                onChange={this.onInputChange}
+                                onBlur={this.onInputBlur}
                                 required
                             />
                             <div className={"form-group " + (this.state.errors.email ? "invalid" : "")}>
@@ -114,7 +120,7 @@ class Login extends React.Component {
                                     type="email"
                                     value={this.state.values.email}
                                     onChange={e => this.setState({ values: { ...this.state.values, [e.target.name]: e.target.value }})}
-                                    onBlur={this.handleValidation}
+                                    onBlur={this.onInputBlur}
                                     required
                                 />
                                 {this.state.errors.email &&
@@ -130,7 +136,7 @@ class Login extends React.Component {
                                     className="form-control"
                                     value={this.state.values.password}
                                     onChange={e => this.setState({ values: { ...this.state.values, [e.target.name]: e.target.value }})}
-                                    onBlur={this.handleValidation}
+                                    onBlur={this.onInputBlur}
                                     required
                                 />
                                 {this.state.errors.password &&

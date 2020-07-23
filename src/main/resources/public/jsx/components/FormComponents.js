@@ -183,29 +183,35 @@ export class ExpandableImage extends React.Component {
     }
 }
 
-export class FormInput extends React.Component {
+export class Form extends React.Component {
     constructor(props) {
         super(props);
-        this.state = {
-            touched: false,
-        };
     }
 
-    onInputChange = (e) => {
-        this.setState({ touched: true });
-        const { name, value } = e.target;
-        this.props.onChange(name, value);
-    }
-
-    onInputBlur = (e) => {
-        const { name, type, required } = e.target;
-        this.props.onBlur(name, type, required);
+    onFormSubmit = (e) => {
+        e.preventDefault();
+        this.props.onSubmit(e);
     }
 
     render() {
-        const { label, id, name, type, placeholder, value } = this.props;
         return (
-            <div className={"form-group " + (this.state.touched && this.props.error ? "invalid" : "")}>
+            <form onSubmit={this.onFormSubmit} noValidate>
+                {this.props.children}
+            </form>
+        );
+    }
+
+}
+
+export class FormInput extends React.Component {
+    constructor(props) {
+        super(props);
+    }
+
+    render() {
+        const { label, id, name, type, placeholder, value, required } = this.props;
+        return (
+            <div className={"form-group " + (this.props.error ? "invalid" : "")}>
                 <label htmlFor={id}>{label}</label>
                 <input
                     id={id}
@@ -213,11 +219,12 @@ export class FormInput extends React.Component {
                     type={type}
                     placeholder={placeholder}
                     value={value}
-                    onChange={this.onInputChange}
-                    onBlur={this.onInputBlur}
+                    onChange={this.props.onChange}
+                    onBlur={this.props.onBlur}
                     className={"form-control"}
+                    required={required}
                 />
-                {this.state.touched && this.props.error &&
+                {this.props.error &&
                     <div className="validation-error">{this.props.error}</div>
                 }
             </div>
