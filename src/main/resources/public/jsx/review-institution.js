@@ -726,7 +726,7 @@ class NewImagery extends React.Component {
                 newImageryAttribution: "Google Earth Engine | © Google LLC",
                 newImageryParams: { bandCombination: imageryOptions[val]["params"].filter(param => param.key === "bandCombination")[0].options[0].value },
             });
-        } else if (imageryOptions[val].type.includes("Mapbox")) {
+        } else if (imageryOptions[val].type.includes("MapBox")) {
             this.setState({
                 newImageryAttribution: "© Mapbox",
                 newImageryParams: {},
