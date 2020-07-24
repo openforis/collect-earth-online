@@ -26,8 +26,8 @@ export class PlanetMenus extends React.Component {
 
     updateImageryInformation = () => {
         if (this.props.visible) {
-            this.props.setImageryAttribution(" | Monthly Mosaic of "
-                + this.state.year + ", " + monthlyMapping[this.state.month]);
+            this.props.setImageryAttribution(" | Monthly Mosaic of " +
+            `${this.state.year}, ${monthlyMapping[this.state.month]}`);
             this.props.setImageryAttributes({
                 imageryYearPlanet: this.state.year,
                 imageryMonthPlanet: this.state.month,
@@ -104,23 +104,19 @@ export class PlanetDailyMenus extends React.Component {
     }
 
     componentDidUpdate (prevProps, prevState) {
-        if (this.props.currentPlot && this.props.currentPlot !== prevProps.currentPlot) {
+        if (this.props.visible &&
+            (this.props.currentPlot && this.props.currentPlot !== prevProps.currentPlot
+                || prevProps.visible !== this.props.visible)) {
             this.updatePlanetDailyLayer();
-        }
-        if (this.props.visible && prevProps.visible !== this.props.visible) {
-            this.updatePlanetDailyLayer();
-            this.updateImageryInformation();
         }
     }
 
     updateImageryInformation = () => {
-        if (this.props.visible) {
-            this.props.setImageryAttribution(" | " + this.state.startDate + " to " + this.state.endDate);
-            this.props.setImageryAttributes({
-                imageryStartDatePlanetDaily: this.state.startDate,
-                imageryEndDatePlanetDaily: this.state.endDate,
-            });
-        }
+        this.props.setImageryAttribution(` | ${this.state.startDate} to ${this.state.endDate}`);
+        this.props.setImageryAttributes({
+            imageryStartDatePlanetDaily: this.state.startDate,
+            imageryEndDatePlanetDaily: this.state.endDate,
+        });
     };
 
     setStateAndUpdate = (key, newValue) =>
@@ -210,8 +206,8 @@ export class SecureWatchMenus extends React.Component {
         if (this.props.visible) {
             const { featureId, imageryDate, imageryCloudCover } = this.state;
             this.props.setImageryAttribution((featureId
-                ? " | " + imageryDate
-                + " (" + (imageryCloudCover * 100).toFixed(2) + "% cloudy)"
+                ? ` | ${imageryDate}`
+                + ` (${(imageryCloudCover * 100).toFixed(2)}% cloudy)`
                 : " | No available layers"));
             if (featureId) {
                 this.props.setImageryAttributes({
@@ -380,7 +376,7 @@ export class SentinelMenus extends React.Component {
     updateImageryInformation = () => {
         if (this.props.visible) {
             this.props.setImageryAttribution(" | Monthly Mosaic of " +
-                this.state.year + ", " + monthlyMapping[this.state.month]);
+                `${this.state.year}, ${monthlyMapping[this.state.month]}`);
             this.props.setImageryAttributes({
                 [this.props.sourceConfig.type === "Sentinel1"
                     ? "sentinel1MosaicYearMonth"
@@ -491,7 +487,7 @@ export class GEEImageMenus extends React.Component {
 
     updateImageryInformation = () => {
         if (this.props.visible) {
-            this.props.setImageryAttribution(" | " + this.state.visParams);
+            this.props.setImageryAttribution(` | ${this.state.visParams}`);
             this.props.setImageryAttributes({
                 geeImageryAssetId: this.props.sourceConfig.imageId,
             });
@@ -566,8 +562,8 @@ export class GEEImageCollectionMenus extends React.Component {
 
     updateImageryInformation = () => {
         if (this.props.visible) {
-            this.props.setImageryAttribution(" | " + this.state.startDate + " to " +
-                this.state.endDate + " | " + this.state.visParams);
+            this.props.setImageryAttribution(` | ${this.state.startDate} to ` +
+                `${this.state.endDate} | ${this.state.visParams}`);
             this.props.setImageryAttributes({
                 geeImageCollectionAssetId: this.props.sourceConfig.collectionId,
                 geeImageCollectionStartDate: this.state.startDate,
