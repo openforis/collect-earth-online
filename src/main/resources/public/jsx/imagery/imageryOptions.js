@@ -56,6 +56,15 @@ export const imageryOptions = [
     {
         type: "SecureWatch",
         params: [
+            {
+                key: "baseUrl",
+                display: "Base URL",
+                type: "select",
+                options: [
+                    { label: "https://securewatch.digitalglobe.com", value: "https://securewatch.digitalglobe.com" },
+                    { label: "https://services.digitalglobe.com", value: "https://services.digitalglobe.com" },
+                ],
+            },
             { key: "connectid", display: "Connect ID" },
             {
                 key: "startDate",
@@ -67,7 +76,6 @@ export const imageryOptions = [
                 key: "endDate",
                 display: "End Date",
                 type: "date",
-                options: { max: new Date().toJSON().split("T")[0] },
             },
         ],
     },

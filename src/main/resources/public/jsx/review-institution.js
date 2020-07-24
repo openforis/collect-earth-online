@@ -474,11 +474,12 @@ class NewImagery extends React.Component {
                 geoserverParams: JSON.stringify(cleanGeoserverParams),
             };
         } else if (type === "SecureWatch") {
-            const { geoserverParams: { CONNECTID }, startDate, endDate } = imageryParams;
+            const { geoserverParams: { CONNECTID }, startDate, endDate, baseUrl } = imageryParams;
             return {
                 connectid: CONNECTID,
                 startDate,
                 endDate,
+                baseUrl,
             };
         } else {
             return imageryParams;
@@ -547,7 +548,7 @@ class NewImagery extends React.Component {
     // TODO this shouldn't be needed if SecureWatch is defined correctly in imageryOptions
     buildSecureWatch = (sourceConfig) => {
         if (sourceConfig.type === "SecureWatch") {
-            sourceConfig["geoserverUrl"] = "https://securewatch.digitalglobe.com/mapservice/wmsaccess";
+            sourceConfig["geoserverUrl"] = `${sourceConfig.baseUrl}/mapservice/wmsaccess`;
             const geoserverParams = {
                 "VERSION": "1.1.1",
                 "STYLES": "",
@@ -760,7 +761,11 @@ class NewImagery extends React.Component {
                     </select>
                 </div>
                 {/* Add fields. Include same for all and unique to selected type. */}
-                {this.formInput("Title", "text", this.state.newImageryTitle, e => this.setState({ newImageryTitle: e.target.value }))}
+                {this.formInput("Title",
+                                "text",
+                                this.state.newImageryTitle,
+                                e => this.setState({ newImageryTitle: e.target.value })
+                )}
                 {/* This should be generalized into the imageryOptions */}
                 {imageryOptions[this.state.selectedType].type === "GeoServer"
                     && this.formInput(
