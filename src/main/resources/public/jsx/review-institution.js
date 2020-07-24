@@ -388,7 +388,7 @@ class ImageryList extends React.Component {
             )
                 .then(response => {
                     if (response.ok) {
-                        this.getImageryList();
+                        this.setState(prevState => ({ imageryList: prevState.imageryList.filter(imagery => imagery.id !== imageryId) }));
                         alert("Imagery has been successfully deleted.");
                     } else {
                         console.log(response);
