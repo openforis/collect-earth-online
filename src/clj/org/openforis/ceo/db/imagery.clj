@@ -7,7 +7,7 @@
 
 (defn- clean-source [sourceConfig]
   (if (#{"GeoServer" "SecureWatch" "Planet"})
-    (select-keys sourceConfig [:type :startDate :endDate :month :year])
+    (dissoc sourceConfig [:geoserverParams :accessToken])
     sourceConfig))
 
 (defn- map-imagery [imagery admin?]
