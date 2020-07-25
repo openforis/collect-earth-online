@@ -496,7 +496,11 @@ class Institution extends React.Component {
                         <div className="col-lg-1">
                             <a
                                 className="institution_info btn btn-sm btn-outline-lightgreen"
-                                href={`/review-institution?institutionId=${props.id}`}
+                                onClick={e => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    window.location = `/review-institution?institutionId=${props.id}`;
+                                }}
                             >
                                 <span style={{ color: "white", fontSize: "1rem" }}>
                                     <UnicodeIcon icon="info"/>
