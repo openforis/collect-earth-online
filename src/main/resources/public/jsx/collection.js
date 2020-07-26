@@ -227,7 +227,7 @@ class Collection extends React.Component {
               + "&VERSION=1.1.1"
               + "&REQUEST=GetFeatureInfo"
               + "&CRS=EPSG%3A3857"
-              + "&BBOX=" + geometry.getExtent().join(",")
+              + `&BBOX=${geometry.getExtent().join(",")}`
               + "&WIDTH=256"
               + "&HEIGHT=256"
               + "&LAYERS=DigitalGlobe:ImageryFootprint"
@@ -236,7 +236,7 @@ class Collection extends React.Component {
               + "&X=0"
               + "&Y=0"
               + "&INFO_FORMAT=application/json"
-              + "&imageryId=" + currentImagery.id;
+              + `&imageryId=${currentImagery.id}`;
         this.setState(
             { imagerySecureWatchAvailableDates: null },
             () => {
