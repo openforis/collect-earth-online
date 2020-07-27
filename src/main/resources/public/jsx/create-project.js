@@ -190,7 +190,7 @@ class Project extends React.Component {
         } else if (["public", "users"].includes(projectDetails.privacyLevel)
             && [...projectImageryList, projectDetails.imageryId]
                 .every(id => imageryList.some(il => il.id === id && il.visibility === "private"))) {
-            alert("Projects with privacy level of " + projectDetails.privacyLevel + " require at least one public imagery.");
+            alert(`Projects with privacy level of ${projectDetails.privacyLevel} require at least one public imagery.`);
             return false;
         } else {
             return true;
@@ -459,6 +459,54 @@ class Project extends React.Component {
     setProjectImageryList = (newProjectImageryList) =>
         this.setState({ projectImageryList: newProjectImageryList });
 
+    getTotalPlots = () => {
+        const { projectDetails, coordinates } = this.state;
+        if (projectDetails.plotDistribution === "random"
+            && projectDetails.numPlots) {
+            return projectDetails.numPlots;
+        } else if (projectDetails.plotDistribution === "gridded"
+            && projectDetails.plotSize
+            && projectDetails.plotSpacing) {
+            const lowerLeft = mercator.transformPoint(coordinates.lonMin,
+                                                      coordinates.latMin,
+                                                      "EPSG:4326",
+                                                      "EPSG:3857").getCoordinates();
+            const upperRight = mercator.transformPoint(coordinates.lonMax,
+                                                       coordinates.latMax,
+                                                       "EPSG:4326",
+                                                       "EPSG:3857").getCoordinates();
+            const left = lowerLeft[0] + Number(projectDetails.plotSize) / 2;
+            const bottom = lowerLeft[1] + Number(projectDetails.plotSize) / 2;
+            const right = upperRight[0] - Number(projectDetails.plotSize) / 2;
+            const top = upperRight[1] - Number(projectDetails.plotSize) / 2;
+
+            const xRange = right - left;
+            const yRange = top - bottom;
+            const xSteps = Math.floor(xRange / projectDetails.plotSpacing) + 1;
+            const ySteps = Math.floor(yRange / projectDetails.plotSpacing) + 1;
+            return xSteps * ySteps;
+        } else {
+            return 0;
+        }
+    }
+
+    getSamplesPerPlot = () => {
+        const { projectDetails } = this.state;
+        if (projectDetails.sampleDistribution === "random"
+            && projectDetails.samplesPerPlot) {
+            return projectDetails.samplesPerPlot;
+        } else if (projectDetails.sampleDistribution === "gridded"
+            && projectDetails.plotSize
+            && projectDetails.sampleResolution) {
+            const steps = Math.floor(Number(projectDetails.plotSize) / Number(projectDetails.sampleResolution)) + 1;
+            return steps * steps;
+        } else if (projectDetails.sampleDistribution === "center") {
+            return 1;
+        } else {
+            return 0;
+        }
+    };
+
     render() {
         return (
             <FormLayout id="project-design" title="Create Project">
@@ -480,6 +528,8 @@ class Project extends React.Component {
                             useTemplateWidgets={this.state.useTemplateWidgets}
                             projectImageryList={this.state.projectImageryList}
                             setProjectImageryList={this.setProjectImageryList}
+                            getTotalPlots={this.getTotalPlots}
+                            getSamplesPerPlot={this.getSamplesPerPlot}
                         />
                         <ProjectManagement createProject={this.createProject} />
                     </Fragment>
@@ -531,7 +581,12 @@ function ProjectDesignForm(props) {
             :
                 <Fragment>
                     <PlotDesign projectDetails={props.projectDetails} setProjectDetail={props.setProjectDetail}/>
-                    <SampleDesign projectDetails={props.projectDetails} setProjectDetail={props.setProjectDetail}/>
+                    <SampleDesign
+                        projectDetails={props.projectDetails}
+                        setProjectDetail={props.setProjectDetail}
+                        getTotalPlots={props.getTotalPlots}
+                        getSamplesPerPlot={props.getSamplesPerPlot}
+                    />
                 </Fragment>
             }
             <SurveyDesign
@@ -864,6 +919,8 @@ function PlotDesign ({
 
 function SampleDesign ({
     setProjectDetail,
+    getTotalPlots,
+    getSamplesPerPlot,
     projectDetails: {
         plotDistribution,
         sampleDistribution,
@@ -872,6 +929,13 @@ function SampleDesign ({
         sampleFileName,
     },
 }) {
+    const plots = getTotalPlots();
+    const plotLimit = 5000;
+    const perPlot = getSamplesPerPlot();
+    const perPlotLimit = 200;
+    const sampleLimit = 50000;
+    const plotLimitError = plots > plotLimit;
+    const sampleLimitError = (perPlot > perPlotLimit) || (plots * perPlot > sampleLimit);
     return (
         <SectionBlock title="Sample Design">
             <div id="sample-design">
@@ -1043,6 +1107,42 @@ function SampleDesign ({
                         onChange={e => setProjectDetail("sampleResolution", e.target.value)}
                     />
                 </div>
+                <p
+                    id="plots info-text"
+                    className="font-italic ml-2 small"
+                    style={{
+                        marginTop: "10px",
+                        color: plotLimitError ? "#8B0000" : "#006400",
+                        fontSize: "0.8rem",
+                        whiteSpace: "pre-line",
+                    }}
+                >
+                    {plots ? `This project will contain around ${plots} plots.` : ""}
+                    {
+                        plotLimitError
+                            ? `\n * The maximum allowed number for the selected plot distribution is ${plotLimit}.`
+                            : ""
+                    }
+                </p>
+                <p
+                    id="samples info-text"
+                    className="font-italic ml-2 small"
+                    style={{
+                        marginBottom: "-5px",
+                        color: sampleLimitError ? "#8B0000" : "#006400",
+                        fontSize: "0.8rem",
+                        whiteSpace: "pre-line",
+                    }}
+                >
+                    {perPlot ? `Each plot will contain around ${perPlot} samples.` +
+                               `\nThere will be around ${plots * perPlot} total samples in the project.` : ""}
+                    {
+                        sampleLimitError
+                            ? `\n * The maximum allowed for the selected sample distribution is ${perPlotLimit}`
+                            + ` samples per plot.\n * The maximum allowed samples per project is ${sampleLimit}.`
+                            : ""
+                    }
+                </p>
             </div>
         </SectionBlock>
     );
