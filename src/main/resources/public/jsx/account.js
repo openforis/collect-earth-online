@@ -62,7 +62,12 @@ class UserStats extends React.Component {
                             </div>
                             <div className="col-6">
                                 <StatsCell title="Average Analysis Duration">
-                                    {averageTime} secs/plot
+                                    {averageTime
+                                        ? averageTime >= 60
+                                            ? `${(averageTime / 60).toFixed(2)} mins/plot`
+                                            : `${averageTime} secs/plot`
+                                        : "loading..."
+                                    }
                                 </StatsCell>
                                 <StatsCell title="Average Plots per Project">
                                     {Number(((totalPlots / totalProjects)).toFixed(1)) || 0} plots
@@ -78,6 +83,7 @@ class UserStats extends React.Component {
                                 <StatsRow
                                     key={uid}
                                     title={`#${project.id} - ${project.name}`}
+                                    titleHref={`/collection?projectId=${project.id}`}
                                     plots={project.plotCount}
                                     analysisTime={project.analysisAverage}
                                 />
