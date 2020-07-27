@@ -43,8 +43,8 @@ class ReviewInstitution extends React.Component {
                   })
                 .then(response => {
                     if (response.ok) {
+                        this.getProjectList();
                         alert("Project " + projectId + " has been deleted.");
-                        this.setState(prevState => ({ projectList: prevState.projectList.filter(project => project.id !== projectId) }));
                     } else {
                         console.log(response);
                         alert("Error deleting project. See console for details.");
@@ -388,7 +388,7 @@ class ImageryList extends React.Component {
             )
                 .then(response => {
                     if (response.ok) {
-                        this.setState(prevState => ({ imageryList: prevState.imageryList.filter(imagery => imagery.id !== imageryId) }));
+                        this.getImageryList();
                         alert("Imagery has been successfully deleted.");
                     } else {
                         console.log(response);
@@ -974,10 +974,7 @@ class Project extends React.Component {
                 <div className="mr-3">
                     <a
                         className="delete-project btn btn-sm btn-outline-danger btn-block px-3"
-                        onClick={e => {
-                            e.preventDefault();
-                            this.props.deleteProject(project.id);
-                        }}
+                        onClick={() => this.props.deleteProject(project.id)}
                     >
                         <UnicodeIcon icon="trash"/>
                     </a>
