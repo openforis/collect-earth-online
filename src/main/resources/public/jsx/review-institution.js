@@ -35,6 +35,24 @@ class ReviewInstitution extends React.Component {
             });
     }
 
+    archiveProject = (projectId) => {
+        if (confirm("Do you REALLY want to delete this project? This operation cannot be undone.")) {
+            fetch(`/archive-project?projectId=${projectId}`,
+                  {
+                      method: "POST",
+                  })
+                .then(response => {
+                    if (response.ok) {
+                        this.getProjectList();
+                        alert("Project " + projectId + " has been deleted.");
+                    } else {
+                        console.log(response);
+                        alert("Error deleting project. See console for details.");
+                    }
+                });
+        }
+    };
+
     setImageryCount = (newCount) => this.setState({ imageryCount: newCount });
 
     setUsersCount = (newCount) => this.setState({ usersCount: newCount });
@@ -81,6 +99,7 @@ class ReviewInstitution extends React.Component {
                             projectList={this.state.projectList}
                             isLoggedIn={this.props.userId > 0}
                             isVisible={this.state.selectedTab === 0}
+                            deleteProject={this.archiveProject}
                         />
                         <ImageryList
                             isAdmin={this.state.isAdmin}
@@ -855,7 +874,7 @@ function Imagery({ isAdmin, title, selectEditImagery, deleteImagery, isInstituti
     );
 }
 
-function ProjectList({ isAdmin, isLoggedIn, institutionId, projectList, isVisible }) {
+function ProjectList({ isAdmin, isLoggedIn, institutionId, projectList, isVisible, deleteProject }) {
     return (
         <div style={!isVisible ? { display: "none" } : {}}>
             <div className="mb-3">
@@ -887,6 +906,7 @@ function ProjectList({ isAdmin, isLoggedIn, institutionId, projectList, isVisibl
                             isLoggedIn={isLoggedIn}
                             key={uid}
                             project={project}
+                            deleteProject={deleteProject}
                         />
                     )}
         </div>
@@ -942,14 +962,24 @@ class Project extends React.Component {
                 </button>
             </div>
             {isAdmin &&
-            <div className="mr-3">
-                <a
-                    className="edit-project btn btn-sm btn-outline-yellow btn-block px-3"
-                    href={`/review-project?projectId=${project.id}`}
-                >
-                    <UnicodeIcon icon="edit"/>
-                </a>
-            </div>
+            <>
+                <div className="mr-3">
+                    <a
+                        className="edit-project btn btn-sm btn-outline-yellow btn-block px-3"
+                        href={`/review-project?projectId=${project.id}`}
+                    >
+                        <UnicodeIcon icon="edit"/>
+                    </a>
+                </div>
+                <div className="mr-3">
+                    <a
+                        className="delete-project btn btn-sm btn-outline-danger btn-block px-3"
+                        onClick={() => this.props.deleteProject(project.id)}
+                    >
+                        <UnicodeIcon icon="trash"/>
+                    </a>
+                </div>
+            </>
             }
         </div>;
     }
