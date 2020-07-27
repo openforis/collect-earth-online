@@ -104,17 +104,27 @@ export function StatsCell({ title, children }) {
     );
 }
 
-export function StatsRow({ title, plots, analysisTime }) {
+export function StatsRow({ title, plots, analysisTime, titleHref }) {
     return (
         <div className="StatsRow row mx-1 py-1 border-bottom">
-            <div className="col-8">{title}</div>
+            <div className="col-8">
+                {titleHref
+                    ? <a href={titleHref} target="_blank" rel="noreferrer noopener">{title}</a>
+                    : title
+                }
+            </div>
             <div className="col-2">
-                <span className="badge badge-pill bg-lightgreen">{plots} plots </span>
+                <span className="badge badge-pill bg-lightgreen">{plots} plots</span>
             </div>
             <div className="col-2">
                 {analysisTime ?
                     (
-                        <span className="badge badge-pill bg-lightgreen">{analysisTime} sec/plot </span>
+                        <span className="badge badge-pill bg-lightgreen">
+                            {analysisTime >= 60
+                                ? `${(analysisTime / 60).toFixed(2)} mins/plot`
+                                : `${analysisTime} secs/plot`
+                            }
+                        </span>
                     )
                     : ("--")
                 }
