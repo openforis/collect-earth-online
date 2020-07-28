@@ -480,28 +480,27 @@ class Institution extends React.Component {
         return (
             <li>
                 <div
-                    className="btn bg-lightgreen btn-block m-0 p-2 rounded-0"
+                    className="btn bg-lightgreen btn-block p-2 rounded-0"
+                    style={{ marginBottom: "2px" }}
                     onClick={this.toggleShowProjectList}
                 >
-                    <div className="row">
-                        <div className="col-lg-10 my-auto">
-                            <p
-                                className="tree_label text-white m-0"
-                                htmlFor={"c" + props.id}
-                            >
-                                <input type="checkbox" className="d-none" id={"c" + props.id}/>
-                                <span className="">{props.name}</span>
-                            </p>
+                    <div className="d-flex justify-content-between align-items-center">
+                        <div style={{ flex: "0 0 1rem" }}>
+                            {props.projects && props.projects.length > 0 && (
+                                props.forceInstitutionExpand || this.state.showProjectList ? "\u25BC" : "\u25BA"
+                            )}
                         </div>
-                        <div className="col-lg-1">
-                            <a
-                                className="institution_info btn btn-sm btn-outline-lightgreen"
-                                href={`/review-institution?institutionId=${props.id}`}
-                            >
-                                <span style={{ color: "white", fontSize: "1rem" }}>
-                                    <UnicodeIcon icon="info"/>
-                                </span>
-                            </a>
+                        <div style={{ flex: 1 }}>
+                            {props.name}
+                        </div>
+                        <div
+                            className="btn btn-sm visit-btn"
+                            onClick={e => {
+                                e.stopPropagation();
+                                window.location = `/review-institution?institutionId=${props.id}`;
+                            }}
+                        >
+                            VISIT
                         </div>
                     </div>
                 </div>
