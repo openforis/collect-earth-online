@@ -82,19 +82,19 @@
 /*************/
 @font-face {
 font-family: 'CaviarDreams';
-src: url('../fonts/CaviarDreams.eot');
+src: url('/fonts/CaviarDreams.eot');
 src: local('☺'),
-url('../fonts/CaviarDreams.woff') format('woff'),
-url('../fonts/CaviarDreams.ttf') format('truetype'),
-url('../fonts/CaviarDreams.svg') format('svg');
+url('/fonts/CaviarDreams.woff') format('woff'),
+url('/fonts/CaviarDreams.ttf') format('truetype'),
+url('/fonts/CaviarDreams.svg') format('svg');
 }
 @font-face {
 font-family: 'CaviarDreams_Bold';
-src: url('../fonts/CaviarDreams_Bold.eot');
+src: url('/fonts/CaviarDreams_Bold.eot');
 src: local('☺'),
-url('../fonts/CaviarDreams_Bold.woff') format('woff'),
-url('../fonts/CaviarDreams_Bold.ttf') format('truetype'),
-url('../fonts/CaviarDreams_Bold.svg') format('svg');
+url('/fonts/CaviarDreams_Bold.woff') format('woff'),
+url('/fonts/CaviarDreams_Bold.ttf') format('truetype'),
+url('/fonts/CaviarDreams_Bold.svg') format('svg');
 }
 /* Typography */
 /*************/
