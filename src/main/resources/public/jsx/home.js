@@ -504,7 +504,6 @@ class Institution extends React.Component {
                         </div>
                     </div>
                 </div>
-
                 {(props.forceInstitutionExpand || this.state.showProjectList) &&
                     <ProjectList
                         id={props.id}
