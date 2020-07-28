@@ -6,6 +6,7 @@
             [ring.middleware.content-type       :refer [wrap-content-type]]
             [ring.middleware.default-charset    :refer [wrap-default-charset]]
             [ring.middleware.gzip               :refer [wrap-gzip]]
+            [ring.middleware.json               :refer [wrap-json-params]]
             [ring.middleware.keyword-params     :refer [wrap-keyword-params]]
             [ring.middleware.nested-params      :refer [wrap-nested-params]]
             [ring.middleware.not-modified       :refer [wrap-not-modified]]
@@ -122,6 +123,7 @@
       wrap-request-logging
       wrap-keyword-params
       wrap-edn-params
+      wrap-json-params
       wrap-nested-params
       wrap-multipart-params
       wrap-session-params
