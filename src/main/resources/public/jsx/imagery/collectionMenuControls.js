@@ -11,14 +11,14 @@ export class PlanetMenus extends React.Component {
         };
     }
 
-    componentDidMount () {
+    componentDidMount() {
         this.setState({
             year: this.props.sourceConfig.year,
             month: this.props.sourceConfig.month,
         }, () => this.updatePlanetLayer());
     }
 
-    componentDidUpdate (prevProps, prevState) {
+    componentDidUpdate(prevProps) {
         if (this.props.visible && prevProps.visible !== this.props.visible) {
             this.updateImageryInformation();
         }
@@ -59,7 +59,7 @@ export class PlanetMenus extends React.Component {
                         type="range"
                         min="2016"
                         max={new Date().getFullYear()}
-                        value={this.state.year}
+                        value={this.state.year || ""}
                         className="slider"
                         id="myRange"
                         onChange={e => this.setStateAndUpdate("year", e.target.value)}
@@ -71,7 +71,7 @@ export class PlanetMenus extends React.Component {
                         type="range"
                         min="1"
                         max="12"
-                        value={this.state.month}
+                        value={this.state.month || ""}
                         className="slider"
                         id="myRangemonth"
                         onChange={e => this.setStateAndUpdate("month", e.target.value)}
@@ -92,7 +92,7 @@ export class PlanetDailyMenus extends React.Component {
         };
     }
 
-    componentDidMount () {
+    componentDidMount() {
         this.setState({
             startDate: this.props.sourceConfig.startDate,
             endDate: this.props.sourceConfig.endDate,
@@ -103,7 +103,7 @@ export class PlanetDailyMenus extends React.Component {
         });
     }
 
-    componentDidUpdate (prevProps, prevState) {
+    componentDidUpdate(prevProps) {
         if (this.props.visible &&
             (this.props.currentPlot && this.props.currentPlot !== prevProps.currentPlot
                 || prevProps.visible !== this.props.visible)) {
@@ -156,7 +156,7 @@ export class PlanetDailyMenus extends React.Component {
                     <input
                         type="date"
                         id="planetDailyStartDate"
-                        value={this.state.startDate}
+                        value={this.state.startDate || ""}
                         max={new Date().toJSON().split("T")[0]}
                         style={{ width: "100%" }}
                         onChange={e => this.setStateAndUpdate("startDate", e.target.value)}
@@ -167,7 +167,7 @@ export class PlanetDailyMenus extends React.Component {
                     <input
                         type="date"
                         id="planetDailyEndDate"
-                        value={this.state.endDate}
+                        value={this.state.endDate || ""}
                         max={new Date().toJSON().split("T")[0]}
                         style={{ width: "100%" }}
                         onChange={e => this.setStateAndUpdate("endDate", e.target.value)}
@@ -189,17 +189,16 @@ export class SecureWatchMenus extends React.Component {
         };
     }
 
-    componentDidMount () {
-        this.getAvailableDates();
+    componentDidMount() {
+        // fixme show message to tell the user to go to the first plot.
     }
 
-    componentDidUpdate (prevProps, prevState) {
-        if (this.props.currentPlot && this.props.currentPlot !== prevProps.currentPlot) {
+    componentDidUpdate(prevProps) {
+        if (this.props.extent.length > 0
+             && JSON.stringify(this.props.extent) !== JSON.stringify(prevProps.extent)) {
             this.getAvailableDates();
         }
-        if (this.props.visible && prevProps.visible !== this.props.visible) {
-            this.updateImageryInformation();
-        }
+        if (prevProps.visible !== this.props.visible) this.updateImageryInformation();
     }
 
     updateImageryInformation = () => {
@@ -237,16 +236,13 @@ export class SecureWatchMenus extends React.Component {
         );
 
     getAvailableDates = () => {
-        const { thisImageryId, mapConfig, sourceConfig, visible } = this.props;
-        if (visible) {
-            this.props.setImageryAttribution(" | Loading...");
-        }
-        const geometry = mercator.getViewPolygon(mapConfig).transform("EPSG:4326", "EPSG:3857");
+        const { thisImageryId, sourceConfig, visible, extent, setImageryAttribution } = this.props;
+        if (visible) setImageryAttribution(" | Loading...");
         const secureWatchFeatureInfoUrl = "SERVICE=WMS"
             + "&VERSION=1.1.1"
             + "&REQUEST=GetFeatureInfo"
             + "&CRS=EPSG%3A3857"
-            + "&BBOX=" + geometry.getExtent().join(",")
+            + "&BBOX=" + extent.join(",")
             + "&WIDTH=256"
             + "&HEIGHT=256"
             + "&LAYERS=DigitalGlobe:ImageryFootprint"
@@ -359,7 +355,7 @@ export class SentinelMenus extends React.Component {
         };
     }
 
-    componentDidMount () {
+    componentDidMount() {
         this.setState({
             year: this.props.sourceConfig.year,
             month: this.props.sourceConfig.month,
@@ -367,7 +363,7 @@ export class SentinelMenus extends React.Component {
         }, () => this.updateSentinelLayer());
     }
 
-    componentDidUpdate (prevProps, prevState) {
+    componentDidUpdate(prevProps) {
         if (this.props.visible && prevProps.visible !== this.props.visible) {
             this.updateImageryInformation();
         }
@@ -473,13 +469,13 @@ export class GEEImageMenus extends React.Component {
         };
     }
 
-    componentDidMount () {
+    componentDidMount() {
         this.setState({
             visParams: this.props.sourceConfig.imageVisParams,
         }, () => this.updateGEEImagery());
     }
 
-    componentDidUpdate (prevProps, prevState) {
+    componentDidUpdate(prevProps) {
         if (this.props.visible && prevProps.visible !== this.props.visible) {
             this.updateImageryInformation();
         }
@@ -546,7 +542,7 @@ export class GEEImageCollectionMenus extends React.Component {
         };
     }
 
-    componentDidMount () {
+    componentDidMount() {
         this.setState({
             startDate: this.props.sourceConfig.startDate,
             endDate: this.props.sourceConfig.endDate,
@@ -554,7 +550,7 @@ export class GEEImageCollectionMenus extends React.Component {
         }, () => this.updateGEEImageCollection());
     }
 
-    componentDidUpdate (prevProps, prevState) {
+    componentDidUpdate(prevProps) {
         if (this.props.visible && prevProps.visible !== this.props.visible) {
             this.updateImageryInformation();
         }

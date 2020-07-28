@@ -21,7 +21,7 @@ class Collection extends React.Component {
             collectionStart: 0,
             currentProject: { surveyQuestions: [], institution: "" },
             currentImagery: { id: "", sourceConfig: {}},
-            currentPlot: null,
+            currentPlot: {},
             // attribution for showing in the map
             imageryAttribution: "",
             // attributes to record when sample is saved
@@ -93,7 +93,7 @@ class Collection extends React.Component {
         //
 
         // Initialize when new plot
-        if (this.state.currentPlot && this.state.currentPlot !== prevState.currentPlot) {
+        if (this.state.currentPlot.id && this.state.currentPlot !== prevState.currentPlot) {
             this.showProjectPlot();
             if (this.state.hasGeoDash) this.showGeoDash();
             clearInterval(this.state.storedInterval);
@@ -101,7 +101,7 @@ class Collection extends React.Component {
         }
 
         // Conditions required for samples to be shown
-        if (this.state.currentPlot
+        if (this.state.currentPlot.id
             && this.state.selectedQuestion.visible
             && this.state.selectedQuestion.visible.length > 0) {
 
@@ -486,7 +486,7 @@ class Collection extends React.Component {
     });
 
     flagPlotInDB = () => {
-        if (this.state.currentPlot != null) {
+        if (this.state.currentPlot.id) {
             fetch("/flag-plot",
                   {
                       method: "POST",
@@ -925,8 +925,7 @@ class Collection extends React.Component {
     toggleQuitModal = () => this.setState({ showQuitModal: !this.state.showQuitModal });
 
     render() {
-        const plotId = this.state.currentPlot
-              && (this.state.currentPlot.plotId ? this.state.currentPlot.plotId : this.state.currentPlot.id);
+        const plotId = this.state.currentPlot.plotId ? this.state.currentPlot.plotId : this.state.currentPlot.id;
         return (
             <div className="row" style={{ height: "-webkit-fill-available" }}>
                 <ImageAnalysisPane
@@ -961,7 +960,7 @@ class Collection extends React.Component {
                     <PlotNavigation
                         plotId={plotId}
                         projectId={this.props.projectId}
-                        navButtonsShown={this.state.currentPlot != null}
+                        navButtonsShown={this.state.currentPlot.id}
                         nextPlotButtonDisabled={this.state.nextPlotButtonDisabled}
                         prevPlotButtonDisabled={this.state.prevPlotButtonDisabled}
                         reviewPlots={this.state.reviewPlots}
@@ -978,7 +977,7 @@ class Collection extends React.Component {
                         currentPlot={this.state.currentPlot}
                         currentProject={this.state.currentProject}
                     />
-                    {this.state.currentPlot && this.state.currentProject.projectOptions.showPlotInformation &&
+                    {this.state.currentPlot.id && this.state.currentProject.projectOptions.showPlotInformation &&
                         <PlotInformation extraPlotInfo={this.state.currentPlot.extraPlotInfo}/>
                     }
                     <ImageryOptions
@@ -989,11 +988,12 @@ class Collection extends React.Component {
                         setImageryAttributes={this.setImageryAttributes}
                         currentImageryId={this.state.currentImagery.id}
                         currentPlot={this.state.currentPlot}
+                        currentProject={this.state.currentProject}
                         currentProjectBoundary={this.state.currentProject.boundary}
                         showPlanetDaily={this.state.currentPlot != null}
                         loadingImages={this.state.imageryList.length === 0}
                     />
-                    {this.state.currentPlot
+                    {this.state.currentPlot.id
                         ?
                             <>
                                 {this.unansweredColor()}
@@ -1337,7 +1337,7 @@ class ImageryOptions extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
-            showImg: true,
+            showImageryOptions: true,
         };
     }
 
@@ -1358,11 +1358,11 @@ class ImageryOptions extends React.Component {
             <div className="justify-content-center text-center">
                 <CollapsibleTitle
                     title="Imagery Options"
-                    showGroup={this.state.showImg}
-                    toggleShow={() => this.setState({ showImg: !this.state.showImg })}
+                    showGroup={this.state.showImageryOptions}
+                    toggleShow={() => this.setState({ showImageryOptions: !this.state.showImageryOptions })}
                 />
                 {props.loadingImages && <h3>Loading imagery data...</h3>}
-                {this.state.showImg && !props.loadingImages && props.currentImageryId &&
+                {this.state.showImageryOptions && !props.loadingImages && props.currentImageryId &&
                     <select
                         className="form-control form-control-sm"
                         id="base-map-source"
@@ -1383,7 +1383,7 @@ class ImageryOptions extends React.Component {
                                 key={uid}
                                 thisImageryId={imagery.id}
                                 sourceConfig={imagery.sourceConfig}
-                                visible={props.currentImageryId === imagery.id}
+                                visible={props.currentImageryId === imagery.id && this.state.showImageryOptions}
                             />
                         );
                     } else if (imagery.sourceConfig.type === "PlanetDaily") {
@@ -1393,7 +1393,7 @@ class ImageryOptions extends React.Component {
                                 key={uid}
                                 thisImageryId={imagery.id}
                                 sourceConfig={imagery.sourceConfig}
-                                visible={props.currentImageryId === imagery.id}
+                                visible={props.currentImageryId === imagery.id && this.state.showImageryOptions}
                             />
                         );
                     } else if (imagery.sourceConfig.type === "SecureWatch") {
@@ -1403,7 +1403,15 @@ class ImageryOptions extends React.Component {
                                 key={uid}
                                 thisImageryId={imagery.id}
                                 sourceConfig={imagery.sourceConfig}
-                                visible={props.currentImageryId === imagery.id}
+                                extent={props.currentPlot.id && props.currentProject.id
+                                        ? props.currentPlot.geom
+                                            ? mercator.parseGeoJson(props.currentPlot.geom, true).getExtent()
+                                            : mercator.getPlotPolygon(props.currentPlot.center,
+                                                                      props.currentProject.plotSize,
+                                                                      props.currentProject.plotShape).getExtent()
+                                        : []
+                                }
+                                visible={props.currentImageryId === imagery.id && this.state.showImageryOptions}
                             />
                         );
                     } else if (imagery.sourceConfig.type === "Sentinel1") {
@@ -1413,7 +1421,7 @@ class ImageryOptions extends React.Component {
                                 key={uid}
                                 thisImageryId={imagery.id}
                                 sourceConfig={imagery.sourceConfig}
-                                visible={props.currentImageryId === imagery.id}
+                                visible={props.currentImageryId === imagery.id && this.state.showImageryOptions}
                             />
                         );
                     } else if (imagery.sourceConfig.type === "Sentinel2") {
@@ -1423,7 +1431,7 @@ class ImageryOptions extends React.Component {
                                 key={uid}
                                 thisImageryId={imagery.id}
                                 sourceConfig={imagery.sourceConfig}
-                                visible={props.currentImageryId === imagery.id}
+                                visible={props.currentImageryId === imagery.id && this.state.showImageryOptions}
                             />
                         );
                     } else if (imagery.sourceConfig.type === "GEEImage") {
@@ -1433,7 +1441,7 @@ class ImageryOptions extends React.Component {
                                 key={uid}
                                 thisImageryId={imagery.id}
                                 sourceConfig={imagery.sourceConfig}
-                                visible={props.currentImageryId === imagery.id}
+                                visible={props.currentImageryId === imagery.id && this.state.showImageryOptions}
                             />
                         );
                     } else if (imagery.sourceConfig.type === "GEEImageCollection") {
@@ -1443,7 +1451,7 @@ class ImageryOptions extends React.Component {
                                 key={uid}
                                 thisImageryId={imagery.id}
                                 sourceConfig={imagery.sourceConfig}
-                                visible={props.currentImageryId === imagery.id}
+                                visible={props.currentImageryId === imagery.id && this.state.showImageryOptions}
                             />
                         );
                     }
