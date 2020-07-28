@@ -480,7 +480,8 @@ class Institution extends React.Component {
         return (
             <li>
                 <div
-                    className="btn bg-lightgreen btn-block mb-1 p-2 rounded-0"
+                    className="btn bg-lightgreen btn-block p-2 rounded-0"
+                    style={{ marginBottom: "2px" }}
                     onClick={this.toggleShowProjectList}
                 >
                     <div className="d-flex justify-content-between align-items-center">
@@ -493,8 +494,7 @@ class Institution extends React.Component {
                             {props.name}
                         </div>
                         <div
-                            className="btn btn-sm btn-outline-yellow"
-                            style={{ borderColor: "#f1c00f" }}
+                            className="btn btn-sm visit-btn"
                             onClick={e => {
                                 e.preventDefault();
                                 e.stopPropagation();
