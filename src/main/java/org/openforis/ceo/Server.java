@@ -254,7 +254,6 @@ public class Server implements SparkApplication {
         get("/get-institution-imagery",               imagery::getInstitutionImagery);
         get("/get-project-imagery",                   imagery::getProjectImagery);
         get("/get-public-imagery",                    imagery::getPublicImagery);
-        post("/add-geodash-imagery",                  imagery::addGeoDashImagery);
         post("/add-institution-imagery",              imagery::addInstitutionImagery);
         post("/update-institution-imagery",           imagery::updateInstitutionImagery);
         post("/archive-institution-imagery",          imagery::archiveInstitutionImagery);
