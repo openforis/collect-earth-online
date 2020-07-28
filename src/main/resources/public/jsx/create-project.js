@@ -6,8 +6,10 @@ import { NavigationBar } from "./components/PageComponents";
 import { ProjectInfo, ProjectAOI, ProjectOptions, PlotReview, SampleReview } from "./components/ProjectComponents";
 import { mercator, ceoMapStyles } from "../js/mercator.js";
 import { SurveyDesign } from "./components/SurveyDesign";
+import { plotLimit, perPlotLimit, sampleLimit } from "./utils/projectUtils";
 import { convertSampleValuesToSurveyQuestions } from "./utils/surveyUtils";
 import { encodeFileAsBase64 } from "./utils/fileUtils";
+import { formatNumberWithCommas } from "./utils/textUtils";
 
 const blankProject = {
     archived: false,
@@ -192,6 +194,11 @@ class Project extends React.Component {
                 .every(id => imageryList.some(il => il.id === id && il.visibility === "private"))) {
             alert(`Projects with privacy level of ${projectDetails.privacyLevel} require at least one public imagery.`);
             return false;
+
+        } else if (!projectDetails.imageryId > 0) {
+            alert("Select a valid Basemap.");
+            return false;
+
         } else {
             return true;
         }
@@ -199,6 +206,7 @@ class Project extends React.Component {
 
     validatePlotData = () => {
         const { projectDetails, coordinates } = this.state;
+        const plotSampleLimitVals = this.checkPlotSampleLimitError();
         if (["random", "gridded"].includes(projectDetails.plotDistribution) && coordinates.latMax === "") {
             alert("Please select a boundary");
             return false;
@@ -248,10 +256,6 @@ class Project extends React.Component {
             alert("A sample SHP (.zip) file is required.");
             return false;
 
-        } else if (!projectDetails.imageryId > 0) {
-            alert("Select a valid Basemap.");
-            return false;
-
         } else if (projectDetails.sampleDistribution === "gridded"
                     && projectDetails.plotShape === "circle"
                     && projectDetails.sampleResolution >= projectDetails.plotSize / Math.sqrt(2)) {
@@ -262,6 +266,10 @@ class Project extends React.Component {
                     && projectDetails.plotShape === "square"
                     && parseInt(projectDetails.sampleResolution) >= projectDetails.plotSize) {
             alert("The sample resolution must be less than the plot width.");
+            return false;
+
+        } else if (plotSampleLimitVals.plotLimitError || plotSampleLimitVals.sampleLimitError) {
+            alert("The plot or sample size limit exceeded. Check the Sample Design section for detailed info.");
             return false;
 
         } else {
@@ -463,7 +471,7 @@ class Project extends React.Component {
         const { projectDetails, coordinates } = this.state;
         if (projectDetails.plotDistribution === "random"
             && projectDetails.numPlots) {
-            return projectDetails.numPlots;
+            return Number(projectDetails.numPlots);
         } else if (projectDetails.plotDistribution === "gridded"
             && projectDetails.plotSize
             && projectDetails.plotSpacing) {
@@ -494,7 +502,7 @@ class Project extends React.Component {
         const { projectDetails } = this.state;
         if (projectDetails.sampleDistribution === "random"
             && projectDetails.samplesPerPlot) {
-            return projectDetails.samplesPerPlot;
+            return Number(projectDetails.samplesPerPlot);
         } else if (projectDetails.sampleDistribution === "gridded"
             && projectDetails.plotSize
             && projectDetails.sampleResolution) {
@@ -505,6 +513,19 @@ class Project extends React.Component {
         } else {
             return 0;
         }
+    };
+
+    checkPlotSampleLimitError = () => {
+        const plots = this.getTotalPlots();
+        const perPlot = this.getSamplesPerPlot();
+        const plotLimitError = plots > plotLimit;
+        const sampleLimitError = (perPlot > perPlotLimit) || (plots * perPlot > sampleLimit);
+        return {
+            plots: plots,
+            perPlot: perPlot,
+            plotLimitError: plotLimitError,
+            sampleLimitError: sampleLimitError,
+        };
     };
 
     render() {
@@ -528,8 +549,7 @@ class Project extends React.Component {
                             useTemplateWidgets={this.state.useTemplateWidgets}
                             projectImageryList={this.state.projectImageryList}
                             setProjectImageryList={this.setProjectImageryList}
-                            getTotalPlots={this.getTotalPlots}
-                            getSamplesPerPlot={this.getSamplesPerPlot}
+                            checkPlotSampleLimitError={this.checkPlotSampleLimitError}
                         />
                         <ProjectManagement createProject={this.createProject} />
                     </Fragment>
@@ -584,8 +604,7 @@ function ProjectDesignForm(props) {
                     <SampleDesign
                         projectDetails={props.projectDetails}
                         setProjectDetail={props.setProjectDetail}
-                        getTotalPlots={props.getTotalPlots}
-                        getSamplesPerPlot={props.getSamplesPerPlot}
+                        checkPlotSampleLimitError={props.checkPlotSampleLimitError}
                     />
                 </Fragment>
             }
@@ -919,8 +938,7 @@ function PlotDesign ({
 
 function SampleDesign ({
     setProjectDetail,
-    getTotalPlots,
-    getSamplesPerPlot,
+    checkPlotSampleLimitError,
     projectDetails: {
         plotDistribution,
         sampleDistribution,
@@ -929,13 +947,7 @@ function SampleDesign ({
         sampleFileName,
     },
 }) {
-    const plots = getTotalPlots();
-    const plotLimit = 5000;
-    const perPlot = getSamplesPerPlot();
-    const perPlotLimit = 200;
-    const sampleLimit = 50000;
-    const plotLimitError = plots > plotLimit;
-    const sampleLimitError = (perPlot > perPlotLimit) || (plots * perPlot > sampleLimit);
+    const plotSampleLimitVals = checkPlotSampleLimitError();
     return (
         <SectionBlock title="Sample Design">
             <div id="sample-design">
@@ -1112,15 +1124,18 @@ function SampleDesign ({
                     className="font-italic ml-2 small"
                     style={{
                         marginTop: "10px",
-                        color: plotLimitError ? "#8B0000" : "#006400",
+                        color: plotSampleLimitVals.plotLimitError ? "#8B0000" : "#006400",
                         fontSize: "0.8rem",
                         whiteSpace: "pre-line",
                     }}
                 >
-                    {plots ? `This project will contain around ${plots} plots.` : ""}
+                    {plotSampleLimitVals.plots
+                        ? `This project will contain around ${formatNumberWithCommas(plotSampleLimitVals.plots)} plots.`
+                        : ""
+                    }
                     {
-                        plotLimitError
-                            ? `\n * The maximum allowed number for the selected plot distribution is ${plotLimit}.`
+                        plotSampleLimitVals.plotLimitError
+                            ? `\n * The maximum allowed number for the selected plot distribution is ${formatNumberWithCommas(plotLimit)}.`
                             : ""
                     }
                 </p>
@@ -1129,17 +1144,22 @@ function SampleDesign ({
                     className="font-italic ml-2 small"
                     style={{
                         marginBottom: "-5px",
-                        color: sampleLimitError ? "#8B0000" : "#006400",
+                        color: plotSampleLimitVals.sampleLimitError ? "#8B0000" : "#006400",
                         fontSize: "0.8rem",
                         whiteSpace: "pre-line",
                     }}
                 >
-                    {perPlot ? `Each plot will contain around ${perPlot} samples.` +
-                               `\nThere will be around ${plots * perPlot} total samples in the project.` : ""}
                     {
-                        sampleLimitError
-                            ? `\n * The maximum allowed for the selected sample distribution is ${perPlotLimit}`
-                            + ` samples per plot.\n * The maximum allowed samples per project is ${sampleLimit}.`
+                        plotSampleLimitVals.perPlot
+                            ? `Each plot will contain around ${formatNumberWithCommas(plotSampleLimitVals.perPlot)} samples.` +
+                               `\nThere will be around ${formatNumberWithCommas(plotSampleLimitVals.plots * plotSampleLimitVals.perPlot)} ` +
+                                "total samples in the project."
+                            : ""
+                    }
+                    {
+                        plotSampleLimitVals.sampleLimitError
+                            ? `\n * The maximum allowed for the selected sample distribution is ${formatNumberWithCommas(perPlotLimit)}`
+                            + ` samples per plot.\n * The maximum allowed samples per project is ${formatNumberWithCommas(sampleLimit)}.`
                             : ""
                     }
                 </p>
