@@ -496,7 +496,6 @@ class Institution extends React.Component {
                         <div
                             className="btn btn-sm visit-btn"
                             onClick={e => {
-                                e.preventDefault();
                                 e.stopPropagation();
                                 window.location = `/review-institution?institutionId=${props.id}`;
                             }}
