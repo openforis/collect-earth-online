@@ -221,7 +221,7 @@ class WidgetLayoutEditor extends React.PureComponent {
 
     addCustomImagery = imagery => {
         if (this.state.addCustomImagery === true) {
-            fetch("/add-geodash-imagery",
+            fetch("/add-institution-imagery",
                   {
                       method: "POST",
                       headers: {
@@ -246,10 +246,8 @@ class WidgetLayoutEditor extends React.PureComponent {
         }) + ": " + img.startDate + " to " + img.endDate;
         const ImageAsset = img.ImageAsset ? img.ImageAsset : "";
         const ImageCollectionAsset = img.ImageCollectionAsset ? img.ImageCollectionAsset : "";
-        const iObject = {
-            institutionId: this.state.institutionID,
-            imageryTitle: title,
-            imageryAttribution: "Google Earth Engine",
+        const sourceConfig = {
+            type: "GeeGateway",
             geeUrl: gatewayUrl,
             geeParams: {
                 collectionType: img.collectionType,
@@ -261,6 +259,13 @@ class WidgetLayoutEditor extends React.PureComponent {
                 ImageCollectionAsset: ImageCollectionAsset,
                 path: getGatewayPath(img),
             },
+        };
+        const iObject = {
+            institutionId: this.state.institutionID,
+            imageryTitle: title,
+            imageryAttribution: "Google Earth Engine",
+            sourceConfig,
+            addToAllProjects: false,
         };
         if (img.ImageAsset && img.ImageAsset.length > 0) {
             title = this.state.widgetTitle !== "" ? this.state.widgetTitle : img.ImageAsset.substr(img.ImageAsset.lastIndexOf("/") + 1).replace(new RegExp("_", "g"), " ");
