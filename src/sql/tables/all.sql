@@ -1,3 +1,5 @@
+-- NAMESPACE: all
+
 --
 -- Create tables
 --
@@ -269,9 +271,6 @@ CREATE UNIQUE INDEX packet_plots_packet_rid_plot_rid ON packet_plots USING btree
 CREATE UNIQUE INDEX plot_comments_project_plot_user_packet ON plot_comments USING btree(project_rid, plot_rid, user_rid, packet_rid);
 CREATE INDEX vertex_project_plot_user_packet ON vertex USING btree(project_rid, plot_rid, user_rid, packet_rid);
 CREATE UNIQUE INDEX image_preference_project_plot_user_packet_year ON image_preference (project_rid, plot_rid, user_rid, packet_rid, image_year);
-
--- Schema for external tables
-CREATE SCHEMA ext_tables;
 
 -- Types and views, to be defined once
 CREATE TYPE institution_return AS (
