@@ -1125,7 +1125,7 @@ function SampleDesign ({
                     style={{
                         marginTop: "10px",
                         color: plotSampleLimitVals.plotLimitError ? "#8B0000" : "#006400",
-                        fontSize: "0.8rem",
+                        fontSize: "0.9rem",
                         whiteSpace: "pre-line",
                     }}
                 >
@@ -1145,7 +1145,7 @@ function SampleDesign ({
                     style={{
                         marginBottom: "-5px",
                         color: plotSampleLimitVals.sampleLimitError ? "#8B0000" : "#006400",
-                        fontSize: "0.8rem",
+                        fontSize: "0.9rem",
                         whiteSpace: "pre-line",
                     }}
                 >
