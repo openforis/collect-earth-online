@@ -2,8 +2,10 @@
   (:import java.util.Date)
   (:require [clojure.string    :as str]
             [clojure.data.json :as json]
-            [org.openforis.ceo.database :refer [call-sql sql-primitive]]
-            [org.openforis.ceo.views    :refer [data-response]]))
+            [org.openforis.ceo.database         :refer [call-sql sql-primitive]]
+            [org.openforis.ceo.views            :refer [data-response]]
+            [org.openforis.ceo.utils.json-utils :refer [expand-resource-path]]
+            [org.openforis.ceo.utils.part-utils :refer [write-file-part-base64]]))
 
 (defn is-inst-admin-query? [user-id institution-id]
   (sql-primitive (call-sql "is_institution_user_admin" user-id institution-id)))
@@ -29,7 +31,8 @@
        (mapv prepare-institution)
        (data-response)))
 
-(defn get-institution-by-id [institution-id]
+;; TODO: Return an error instead of an empty institution map
+(defn- get-institution-by-id [institution-id]
   (if-let [institution (first (call-sql "select_institution_by_id" institution-id))]
     (prepare-institution institution)
     {:id           -1
@@ -46,7 +49,6 @@
   (let [institution-id (Integer/parseInt (:institutionId params))]
     (data-response (get-institution-by-id institution-id))))
 
-;; NEEDS: write-file-part-base64 expand-resource-path
 (defn create-institution [{:keys [params]}]
   (let [user-id      (Integer/parseInt (:userId params))
         name         (:name params)
@@ -65,9 +67,8 @@
         (doseq [admin-id #{user-id 1}]
           (call-sql "add_institution_user" institution-id admin-id 1))
         (data-response institution-id))
-      (data-response ""))))
+      (data-response "")))) ; FIXME: Return "Error creating institution." and update front-end code accordingly.
 
-;; NEEDS: write-file-part-base64 expand-resource-path
 (defn update-institution [{:keys [params]}]
   (let [institution-id (Integer/parseInt (:institutionId params))
         name           (:name params)
@@ -84,10 +85,10 @@
                                                           (expand-resource-path "/public/img/institution-logos")
                                                           (str "institution-" institution-id))))]
         (call-sql "update_institution" institution-id name logo-file-name description url)
-        (data-response institution-id))
-      (data-response ""))))
+        (data-response ""))
+      (data-response "")))) ; FIXME: Return "Institution not found." and update front-end code accordingly.
 
 (defn archive-institution [{:keys [params]}]
   (let [institution-id (Integer/parseInt (:institutionId params))]
     (call-sql "archive_institution" institution-id)
-    (data-response institution-id)))
+    (data-response "")))
