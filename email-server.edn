@@ -1,5 +1,0 @@
-{:site-url "https://collect.earth/"
- :host     "smtp.gmail.com"
- :user     "collectearth.mail@gmail.com"
- :pass     ""
- :ssl      true}
