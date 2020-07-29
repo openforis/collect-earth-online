@@ -1,18 +1,18 @@
 (ns org.openforis.ceo.db.imagery
   (:require [clojure.data.json :as json]
             [org.openforis.ceo.database :refer [call-sql sql-primitive]]
-            [org.openforis.ceo.db.institutions :refer [is-inst-admin-query]] ; FIXME this function has not yet been converted in institutions
+            [org.openforis.ceo.db.institutions :refer [is-inst-admin-query]]
             [org.openforis.ceo.utils.type-conversion :as tc]
             [org.openforis.ceo.views :refer [data-response]]))
 
-(defn- clean-source [sourceConfig]
-  (if (#{"GeoServer" "SecureWatch" "Planet"})
-    (dissoc sourceConfig [:geoserverParams :accessToken])
-    sourceConfig))
+(defn- clean-source [source-config]
+  (if (#{"GeoServer" "SecureWatch" "Planet"} (:type source-config))
+    (dissoc source-config [:geoserverParams :accessToken])
+    source-config))
 
 (defn- map-imagery [imagery admin?]
   (mapv (fn [{:keys [imagery_id institution_id visibility title attribution extent source_config]}]
-          {:id           imagery_id ; FIXME, legacy variable name, update to imageryId
+          {:id           imagery_id
            :institution  institution_id ; FIXME, legacy variable name, update to institutionId
            :visibility   visibility
            :title        title
