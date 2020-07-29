@@ -19,14 +19,15 @@ CREATE OR REPLACE FUNCTION select_first_public_imagery()
 $$ LANGUAGE SQL;
 
 -- Check if imagery title already exists
-CREATE OR REPLACE FUNCTION check_institution_imagery(_institution_id integer, _title text)
+CREATE OR REPLACE FUNCTION imagery_name_taken(_institution_rid integer, _title text, _imagery_id integer)
  RETURNS boolean AS $$
 
     SELECT EXISTS(
         SELECT 1
         FROM imagery
-        WHERE institution_rid = _institution_id
+        WHERE institution_rid = _institution_rid
             AND title = _title
+            AND imagery_uid <> _imagery_id
     )
 
 $$ LANGUAGE SQL;
