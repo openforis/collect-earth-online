@@ -19,6 +19,7 @@
             [ring.middleware.x-headers          :refer [wrap-frame-options wrap-content-type-options wrap-xss-protection]]
             [ring.util.codec                    :refer [url-decode]]
             [org.openforis.ceo.logging          :refer [log-str]]
+            [org.openforis.ceo.remote-api       :refer [api-handler]]
             [org.openforis.ceo.views            :refer [render-page not-found-page data-response]]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -51,66 +52,70 @@
 (def proxy-routes #{"/get-tile"
                     "/get-securewatch-dates"})
 
-(def api-routes (set (concat
-                 ;; Account API
-                 #{"/account"
-                   "/login"
-                   "/logout"
-                   "/register"
-                   "/password-reset"
-                   "/password-request"}
-                 ;; Project API
-                 #{"/dump-project-aggregate-data"
-                   "/dump-project-raw-data"
-                   "/get-all-projects"
-                   "/get-project-by-id"
-                   "/get-project-stats"
-                   "/archive-project"
-                   "/close-project"
-                   "/create-project"
-                   "/publish-project"
-                   "/update-project"}
-                 ;; Plots API
-                 #{"/get-next-plot"
-                   "/get-plot-by-id"
-                   "/get-prev-plot"
-                   "/get-project-plots"
-                   "/get-proj-plot"
-                   "/add-user-samples"
-                   "/flag-plot"
-                   "/release-plot-locks"
-                   "/reset-plot-lock"}
-                 ;; Users API
-                 #{"/get-all-users"
-                   "/get-institution-users"
-                   "/get-user-details"
-                   "/get-user-stats"
-                   "/update-project-user-stats"
-                   "/update-user-institution-role"
-                   "/request-institution-membership"
-                   "/send-to-mailing-list"
-                   "/unsubscribe-mailing-list"}
-                 ;; Institutions API
-                 #{"/get-all-institutions"
-                   "/get-institution-details"
-                   "/archive-institution"
-                   "/create-institution"
-                   "/update-institution"}
-                 ;; Imagery API
-                 #{"/get-institution-imagery"
-                   "/get-project-imagery"
-                   "/get-public-imagery"
-                   "/add-geodash-imagery"
-                   "/add-institution-imagery"
-                   "/update-institution-imagery"
-                   "/archive-institution-imagery"}
-                 ;; GeoDash API
-                 ;; TODO flatten routes
-                 #{"/geo-dash/get-by-projid"
-                   "/geo-dash/create-widget"
-                   "/geo-dash/delete-widget"
-                   "/geo-dash/gateway-request"
-                   "/geo-dash/update-widget"})))
+                      ;; Users API
+(def get-api-routes #{"/get-all-users"
+                      "/get-institution-users"
+                      "/get-user-details"
+                      "/get-user-stats"
+                      ;; Project API
+                      "/dump-project-aggregate-data" ; TODO these are the only two get routes that dont start with "get"
+                      "/dump-project-raw-data"
+                      "/get-all-projects"
+                      "/get-project-by-id"
+                      "/get-project-stats"
+                      ;; Plots API
+                      "/get-next-plot"
+                      "/get-plot-by-id"
+                      "/get-prev-plot"
+                      "/get-project-plots"
+                      "/get-proj-plot"
+                      ;; Institutions API
+                      "/get-all-institutions"
+                      "/get-institution-details"
+                      ;; Imagery API
+                      "/get-institution-imagery"
+                      "/get-project-imagery"
+                      "/get-public-imagery"
+                      ;; GeoDash API
+                      ;; TODO flatten routes
+                      "/geo-dash/get-by-projid"})
+
+(def post-api-routes #{"/account"
+                       "/login"
+                       "/logout"
+                       "/register"
+                       "/password-reset"
+                       "/password-request"
+                       "/update-user-institution-role"
+                       "/request-institution-membership"
+                       "/send-to-mailing-list"
+                       "/unsubscribe-mailing-list"
+                      ;; Project API
+                       "/archive-project"
+                       "/close-project"
+                       "/create-project"
+                       "/publish-project"
+                       "/update-project"
+                      ;; Plots API
+                       "/add-user-samples"
+                       "/flag-plot"
+                       "/release-plot-locks"
+                       "/reset-plot-lock"
+                      ;; Institutions API
+                       "/archive-institution"
+                       "/create-institution"
+                       "/update-institution"
+                      ;; Imagery API
+                       "/add-geodash-imagery"
+                       "/add-institution-imagery"
+                       "/update-institution-imagery"
+                       "/archive-institution-imagery"
+                      ;; GeoDash API
+                      ;; TODO flatten routes
+                       "/geo-dash/create-widget"
+                       "/geo-dash/delete-widget"
+                       "/geo-dash/gateway-request"
+                       "/geo-dash/update-widget"})
 
 ;; FIXME: Add any conditions you want for URLs you want to exclude up front.
 (defn bad-uri? [uri] (str/includes? (str/lower-case uri) "php"))
@@ -120,15 +125,28 @@
 
 (defn routing-handler [{:keys [uri request-method] :as request}]
   (let [next-handler (cond
-                       (bad-uri? uri)                    forbidden-response
-                       (= uri "/")                       (render-page "/home")
+                       (bad-uri? uri)
+                       forbidden-response
+
+                       (= uri "/")
+                       (render-page "/home")
+
                        (and (contains? view-routes uri)
-                            (= request-method :get))     (render-page uri)
-                       (and (contains? api-routes uri)
-                            (= request-method :post))    (data-response "")
+                            (= request-method :get))
+                       (render-page uri)
+
+                       (or (and (contains? post-api-routes uri)
+                                (= request-method :post))
+                           (and (contains? get-api-routes uri)
+                                (= request-method :get)))
+                       (api-handler uri)
+
                        (and (contains? proxy-routes uri)
-                            (= request-method :get))     (data-response "")
-                       :else                             not-found-page)]
+                            (= request-method :get))
+                       (data-response "")
+
+                       :else
+                       not-found-page)]
     (next-handler request)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -138,7 +156,7 @@
 (defn wrap-request-logging [handler]
   (fn [request]
     (let [{:keys [uri request-method params]} request
-          param-str (pr-str (dissoc params :auth-token))]
+          param-str (pr-str (dissoc params :password :passwordConfirmation))]
       (log-str "Request(" (name request-method) "): \"" uri "\" " param-str)
       (handler request))))
 
