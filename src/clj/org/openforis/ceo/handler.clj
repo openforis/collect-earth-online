@@ -51,70 +51,63 @@
 (def proxy-routes #{"/get-tile"
                     "/get-securewatch-dates"})
 
-                      ;; Users API
-(def get-api-routes #{"/get-all-users"
-                      "/get-institution-users"
-                      "/get-user-details"
-                      "/get-user-stats"
-                      ;; Project API
-                      "/dump-project-aggregate-data" ; TODO these are the only two get routes that dont start with "get"
-                      "/dump-project-raw-data"
-                      "/get-all-projects"
-                      "/get-project-by-id"
-                      "/get-project-stats"
-                      ;; Plots API
-                      "/get-next-plot"
-                      "/get-plot-by-id"
-                      "/get-prev-plot"
-                      "/get-project-plots"
-                      "/get-proj-plot"
-                      ;; Institutions API
-                      "/get-all-institutions"
-                      "/get-institution-details"
-                      ;; Imagery API
-                      "/get-institution-imagery"
-                      "/get-project-imagery"
-                      "/get-public-imagery"
-                      ;; GeoDash API
-                      ;; TODO flatten routes
-                      "/geo-dash/get-by-projid"})
-
-(def post-api-routes #{"/account"
-                       "/login"
-                       "/logout"
-                       "/register"
-                       "/password-reset"
-                       "/password-request"
-                       "/update-user-institution-role"
-                       "/request-institution-membership"
-                       "/send-to-mailing-list"
-                       "/unsubscribe-mailing-list"
-                      ;; Project API
-                       "/archive-project"
-                       "/close-project"
-                       "/create-project"
-                       "/publish-project"
-                       "/update-project"
-                      ;; Plots API
-                       "/add-user-samples"
-                       "/flag-plot"
-                       "/release-plot-locks"
-                       "/reset-plot-lock"
-                      ;; Institutions API
-                       "/archive-institution"
-                       "/create-institution"
-                       "/update-institution"
-                      ;; Imagery API
-                       "/add-geodash-imagery"
-                       "/add-institution-imagery"
-                       "/update-institution-imagery"
-                       "/archive-institution-imagery"
-                      ;; GeoDash API
-                      ;; TODO flatten routes
-                       "/geo-dash/create-widget"
-                       "/geo-dash/delete-widget"
-                       "/geo-dash/gateway-request"
-                       "/geo-dash/update-widget"})
+                 ;; Users API
+(def api-routes {"/get-all-users"                  :get
+                 "/get-institution-users"          :get
+                 "/get-user-details"               :get
+                 "/get-user-stats"                 :get
+                 "/account"                        :post
+                 "/login"                          :post
+                 "/logout"                         :post
+                 "/register"                       :post
+                 "/password-reset"                 :post
+                 "/password-request"               :post
+                 "/update-user-institution-role"   :post
+                 "/request-institution-membership" :post
+                 "/send-to-mailing-list"           :post
+                 "/unsubscribe-mailing-list"       :post
+                 ;; Project API
+                 "/dump-project-aggregate-data" :get
+                 "/dump-project-raw-data"       :get
+                 "/get-all-projects"            :get
+                 "/get-project-by-id"           :get
+                 "/get-project-stats"           :get
+                 "/archive-project"             :post
+                 "/close-project"               :post
+                 "/create-project"              :post
+                 "/publish-project"             :post
+                 "/update-project"              :post
+                 ;; Plots API
+                 "/get-next-plot"      :get
+                 "/get-plot-by-id"     :get
+                 "/get-prev-plot"      :get
+                 "/get-project-plots"  :get
+                 "/get-proj-plot"      :get
+                 "/add-user-samples"   :post
+                 "/flag-plot"          :post
+                 "/release-plot-locks" :post
+                 "/reset-plot-lock"    :post
+                 ;; Institutions API
+                 "/get-all-institutions"    :get
+                 "/get-institution-details" :get
+                 "/archive-institution"     :post
+                 "/create-institution"      :post
+                 "/update-institution"      :post
+                 ;; Imagery API
+                 "/get-institution-imagery"     :get
+                 "/get-project-imagery"         :get
+                 "/get-public-imagery"          :get
+                 "/add-geodash-imagery"         :post
+                 "/add-institution-imagery"     :post
+                 "/update-institution-imagery"  :post
+                 "/archive-institution-imagery" :post
+                 ;; GeoDash API
+                 ;; TODO flatten routes
+                 "/geo-dash/get-by-projid"   :get
+                 "/geo-dash/create-widget"   :post
+                 "/geo-dash/delete-widget"   :post
+                 "/geo-dash/gateway-request" :post
+                 "/geo-dash/update-widget"   :post})
 
 ;; FIXME: Add any conditions you want for URLs you want to exclude up front.
 (defn bad-uri? [uri] (str/includes? (str/lower-case uri) "php"))
@@ -134,10 +127,8 @@
                             (= request-method :get))
                        (render-page uri)
 
-                       (or (and (contains? post-api-routes uri)
-                                (= request-method :post))
-                           (and (contains? get-api-routes uri)
-                                (= request-method :get)))
+                       (and (contains? api-routes uri)
+                            (= request-method (api-routes uri)))
                        (api-handler uri)
 
                        (and (contains? proxy-routes uri)
