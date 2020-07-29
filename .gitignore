@@ -24,7 +24,7 @@ package-lock.json
 # SSL keystore
 /deploy/keystore.jks
 
-# Old Stuff to Ignore
+# Old Stuff to Ignore (FIXME: Remove these entries once the Java->CLJ rewrite is completed.)
 /src/main/
 build.gradle
 pom.xml
