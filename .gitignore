@@ -11,22 +11,12 @@ collect-earth-online.iml
 /target/
 /node_modules/
 package-lock.json
-/resources/public/js/*.bundle.js
-/resources/public/js/*.bundle.js.map
 
 # MacOS X Backups
 .DS_Store
 
 # CSVs Uploaded by Users
 /resources/public/downloads/*.csv
-
-# Locally compiled Python code and virtualenv directories
-*.pyc
-/resources/scripts/bin
-/resources/scripts/include
-/resources/scripts/lib
-/resources/scripts/pip-selfcheck.json
-/resources/scripts/pyvenv.cfg
 
 # Log files
 /logs/*.log
