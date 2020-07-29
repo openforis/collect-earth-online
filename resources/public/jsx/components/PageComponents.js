@@ -1,5 +1,5 @@
-import "../../css/custom.css";
 import "../../css/bootstrap.min.css";
+import "../../css/custom.css";
 
 import React from "react";
 
