@@ -1,0 +1,8 @@
+{:base-url              "https://collect.earth/"
+ :smtp-server           "smtp.gmail.com"
+ :smtp-port             587
+ :smtp-user             "collectearth.mail@gmail.com"
+ :smtp-password         "foobar"
+ :smtp-recipient-limit  100
+ :mailing-list-interval 600
+ :ssl?                  true}
