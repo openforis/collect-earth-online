@@ -29,9 +29,9 @@
 ;; FIXME: Fill these in as you make pages.
 (def view-routes #{"/"
                    "/about"
-                   "/accout"
+                   "/account"
                    "/collection"
-                   "/create-instituion"
+                   "/create-institution"
                    "/create-project"
                    "/geo-dash"
                    "/geo-dash/geo-dash-help" ; TODO flatten url structure
@@ -67,7 +67,7 @@
                  "/request-institution-membership" :post
                  "/send-to-mailing-list"           :post
                  "/unsubscribe-mailing-list"       :post
-                 ;; Project API
+                 ;; Projects API
                  "/dump-project-aggregate-data" :get
                  "/dump-project-raw-data"       :get
                  "/get-all-projects"            :get
@@ -128,13 +128,12 @@
                             (= request-method :get))
                        (render-page uri)
 
-                       (and (contains? api-routes uri)
-                            (= request-method (api-routes uri)))
+                       (= request-method (api-routes uri))
                        (api-handler uri)
 
                        (and (contains? proxy-routes uri)
                             (= request-method :get))
-                       (data-response "")
+                       (data-response "") ; FIXME missing proxy implementation
 
                        :else
                        not-found-page)]
