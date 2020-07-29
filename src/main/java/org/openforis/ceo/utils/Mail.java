@@ -1,8 +1,8 @@
 package org.openforis.ceo.utils;
 
-import java.nio.file.Paths;
 import java.util.Collection;
 import java.util.List;
+import java.util.Objects;
 import java.util.Properties;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Pattern;
@@ -36,12 +36,13 @@ public class Mail {
         return listString.stream()
             .map(email -> {
                 try {
-                    return new InternetAddress(email);
+                    return new InternetAddress(email, true);
                 } catch (AddressException e) {
                     //e.printStackTrace();
                     return null;
                 }
             })
+            .filter(Objects::nonNull)
             .collect(Collectors.toList())
             .toArray(new Address[0]);
     }
