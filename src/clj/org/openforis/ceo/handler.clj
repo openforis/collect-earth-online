@@ -116,7 +116,7 @@
         (let [{:keys [data cause]} (Throwable->map e)
               status (:status data)]
           (log-str "Error: " cause)
-          (data-response (or status 500) cause))))))
+          (data-response cause {:status (or status 500)}))))))
 
 (defn wrap-common [handler]
   (-> handler
