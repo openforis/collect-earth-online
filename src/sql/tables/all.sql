@@ -1,4 +1,4 @@
--- NAMESPACE: tables
+-- NAMESPACE: all
 
 --
 -- Create tables
