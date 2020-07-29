@@ -1151,9 +1151,13 @@ function SampleDesign ({
                 >
                     {
                         plotSampleLimitVals.perPlot
-                            ? `Each plot will contain around ${formatNumberWithCommas(plotSampleLimitVals.perPlot)} samples.` +
-                               `\nThere will be around ${formatNumberWithCommas(plotSampleLimitVals.plots * plotSampleLimitVals.perPlot)} ` +
-                                "total samples in the project."
+                            ? `Each plot will contain around ${formatNumberWithCommas(plotSampleLimitVals.perPlot)} samples.`
+                            : ""
+                    }
+                    {
+                        plotSampleLimitVals.plots && plotSampleLimitVals.perPlot
+                            ? `\nThere will be around ${formatNumberWithCommas(plotSampleLimitVals.plots * plotSampleLimitVals.perPlot)} ` +
+                              "total samples in the project."
                             : ""
                     }
                     {
