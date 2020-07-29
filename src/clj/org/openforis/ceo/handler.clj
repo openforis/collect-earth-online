@@ -18,9 +18,8 @@
             [ring.middleware.ssl                :refer [wrap-ssl-redirect]]
             [ring.middleware.x-headers          :refer [wrap-frame-options wrap-content-type-options wrap-xss-protection]]
             [ring.util.codec                    :refer [url-decode]]
-            [org.openforis.ceo.database         :refer [sql-handler]]
             [org.openforis.ceo.logging          :refer [log-str]]
-            [org.openforis.ceo.remote-api       :refer [clj-handler]]
+            [org.openforis.ceo.remote-api       :refer [api-handler]]
             [org.openforis.ceo.views            :refer [render-page not-found-page data-response]]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -28,28 +27,116 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;; FIXME: Fill these in as you make pages.
-(def view-routes #{})
+(def view-routes #{"/"
+                   "/about"
+                   "/account"
+                   "/collection"
+                   "/create-institution"
+                   "/create-project"
+                   "/geo-dash"
+                   "/geo-dash/geo-dash-help" ; TODO flatten url structure
+                   "/home"
+                   "/institution-dashboard"
+                   "/login"
+                   "/password-request"
+                   "/password-reset"
+                   "/project-dashboard"
+                   "/register"
+                   "/review-institution"
+                   "/review-project"
+                   "/support"
+                   "/widget-layout-editor"
+                   "/mailing-list"
+                   "/unsubscribe-mailing-list"})
+
+(def proxy-routes #{"/get-tile"
+                    "/get-securewatch-dates"})
+
+                 ;; Users API
+(def api-routes {"/get-all-users"                  :get
+                 "/get-institution-users"          :get
+                 "/get-user-details"               :get
+                 "/get-user-stats"                 :get
+                 "/account"                        :post
+                 "/login"                          :post
+                 "/logout"                         :post
+                 "/register"                       :post
+                 "/password-reset"                 :post
+                 "/password-request"               :post
+                 "/update-user-institution-role"   :post
+                 "/request-institution-membership" :post
+                 "/send-to-mailing-list"           :post
+                 "/unsubscribe-mailing-list"       :post
+                 ;; Projects API
+                 "/dump-project-aggregate-data" :get
+                 "/dump-project-raw-data"       :get
+                 "/get-all-projects"            :get
+                 "/get-project-by-id"           :get
+                 "/get-project-stats"           :get
+                 "/archive-project"             :post
+                 "/close-project"               :post
+                 "/create-project"              :post
+                 "/publish-project"             :post
+                 "/update-project"              :post
+                 ;; Plots API
+                 "/get-next-plot"      :get
+                 "/get-plot-by-id"     :get
+                 "/get-prev-plot"      :get
+                 "/get-project-plots"  :get
+                 "/get-proj-plot"      :get
+                 "/add-user-samples"   :post
+                 "/flag-plot"          :post
+                 "/release-plot-locks" :post
+                 "/reset-plot-lock"    :post
+                 ;; Institutions API
+                 "/get-all-institutions"    :get
+                 "/get-institution-details" :get
+                 "/archive-institution"     :post
+                 "/create-institution"      :post
+                 "/update-institution"      :post
+                 ;; Imagery API
+                 "/get-institution-imagery"     :get
+                 "/get-project-imagery"         :get
+                 "/get-public-imagery"          :get
+                 "/add-geodash-imagery"         :post
+                 "/add-institution-imagery"     :post
+                 "/update-institution-imagery"  :post
+                 "/archive-institution-imagery" :post
+                 ;; GeoDash API
+                 ;; TODO flatten routes
+                 "/geo-dash/get-by-projid"   :get
+                 "/geo-dash/create-widget"   :post
+                 "/geo-dash/delete-widget"   :post
+                 "/geo-dash/gateway-request" :post
+                 "/geo-dash/update-widget"   :post})
 
 ;; FIXME: Add any conditions you want for URLs you want to exclude up front.
 (defn bad-uri? [uri] (str/includes? (str/lower-case uri) "php"))
 
 (defn forbidden-response [_]
-  {:status 403
-   :body "Forbidden"})
+  (data-response "Forbidden" {:status 403}))
 
-(defn token-resp [{:keys [auth-token]} handler]
-  (if (= auth-token "KJlkjhasduewlkjdyask-dsf")
-    handler
-    forbidden-response))
-
-(defn routing-handler [{:keys [uri params] :as request}]
+(defn routing-handler [{:keys [uri request-method] :as request}]
   (let [next-handler (cond
-                       (bad-uri? uri)                  forbidden-response
-                       (= uri "/")                     (render-page "/home")
-                       (contains? view-routes uri)     (render-page uri)
-                       (str/starts-with? uri "/clj/")  (token-resp params clj-handler)
-                       (str/starts-with? uri "/sql/")  (token-resp params sql-handler)
-                       :else                           not-found-page)]
+                       (bad-uri? uri)
+                       forbidden-response
+
+                       (= uri "/")
+                       (render-page "/home")
+
+                       (and (contains? view-routes uri)
+                            (= request-method :get))
+                       (render-page uri)
+
+                       (= request-method (api-routes uri))
+                       (api-handler uri)
+
+                       (and (contains? proxy-routes uri)
+                            (= request-method :get))
+                       (data-response "") ; FIXME missing proxy implementation
+
+                       :else
+                       not-found-page)]
     (next-handler request)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -59,7 +146,7 @@
 (defn wrap-request-logging [handler]
   (fn [request]
     (let [{:keys [uri request-method params]} request
-          param-str (pr-str (dissoc params :auth-token))]
+          param-str (pr-str (dissoc params :password :passwordConfirmation))]
       (log-str "Request(" (name request-method) "): \"" uri "\" " param-str)
       (handler request))))
 
@@ -116,7 +203,7 @@
         (let [{:keys [data cause]} (Throwable->map e)
               status (:status data)]
           (log-str "Error: " cause)
-          (data-response (or status 500) cause))))))
+          (data-response cause {:status (or status 500)}))))))
 
 (defn wrap-common [handler]
   (-> handler
