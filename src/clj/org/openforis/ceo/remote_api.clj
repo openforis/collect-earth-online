@@ -25,7 +25,7 @@
                "/request-institution-membership" users/request-institution-membership
                "/send-to-mailing-list"           users/submit-email-for-mailing-list ; TODO conform route and fn
                "/unsubscribe-mailing-list"       users/unsubscribe-from-mailing-list ; TODO conform route and fn
-               ;; Project API
+               ;; Projects API
                "/dump-project-aggregate-data" projects/dump-project-aggregate-data
                "/dump-project-raw-data"       projects/dump-project-raw-data
                "/get-all-projects"            projects/get-all-projects
@@ -36,7 +36,7 @@
                "/create-project"              projects/create-project
                "/publish-project"             projects/publish-project
                "/update-project"              projects/update-project
-               ;; Plot API
+               ;; Plots API
                "/get-next-plot"      plots/get-next-plot
                "/get-plot-by-id"     plots/get-plot-by-id
                "/get-prev-plot"      plots/get-prev-plot
@@ -46,7 +46,7 @@
                "/flag-plot"          plots/flag-plot
                "/release-plot-locks" plots/release-plot-locks
                "/reset-plot-lock"    plots/reset-plot-lock
-               ;; Institution API
+               ;; Institutions API
                "/get-all-institutions"    institutions/get-all-institutions
                "/get-institution-details" institutions/get-institution-details
                "/archive-institution"     institutions/archive-institution
@@ -82,4 +82,4 @@
       (log-str "API call to " (fn->sym function))
       (if (:body api-result)
         api-result
-        (data-response api-result {:type :json})))))
+        (data-response api-result)))))
