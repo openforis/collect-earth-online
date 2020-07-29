@@ -115,6 +115,18 @@ CREATE OR REPLACE FUNCTION get_sample_headers(_project_id integer)
 
 $$ LANGUAGE PLPGSQL;
 
+-- Renames any column
+CREATE OR REPLACE FUNCTION rename_col(_table_name text, _from text, _to text)
+ RETURNS void AS $$
+
+ BEGIN
+    IF UPPER(_from) <> UPPER(_to) THEN
+        EXECUTE 'ALTER TABLE ext_tables.' || _table_name || ' RENAME COLUMN ' || _from || ' to ' || _to;
+    END IF;
+ END
+
+$$ LANGUAGE PLPGSQL;
+
 --
 --  WIDGET FUNCTIONS
 --
