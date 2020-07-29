@@ -10,7 +10,8 @@
   (let [webpack-files (->> (io/file "target/public/js")
                            (file-seq)
                            (map #(str "/js/" (.getName %)))
-                           (filter #(and (str/includes? % page)
+                           (filter #(and (or (str/includes? % page)
+                                             (str/includes? % "common"))
                                          (not (str/ends-with? % ".map"))))
                            (sort-by #(cond
                                        (str/includes? % "common") -1
@@ -62,7 +63,7 @@
                   [:section {:id "content" :class "container-fluid"} ; TODO This seems out of order with the app div, should the container class be inside each page?
                    (when-let [flash-message (get-in request [:params :flash_message])]
                      [:p {:class "alert"} flash-message])            ; TODO This will be moved to the front end for better UX.
-                   (let [announcement (slurp "/announcement.txt")]
+                   (let [announcement (slurp "announcement.txt")]
                      (when (pos? (count announcement))
                        [:p {:style {:color "#eec922" :background-color "#e63232" :text-align "center" :padding "5px" :margin "0px"}}
                         announcement]))
@@ -71,7 +72,7 @@
 
 (defn not-found-page [request]
   (-> request
-      ((render-page "/not-found"))
+      ((render-page "/page-not-found"))
       (assoc :status 404)))
 
 (defn body->transit [body]

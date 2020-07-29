@@ -18,9 +18,7 @@
             [ring.middleware.ssl                :refer [wrap-ssl-redirect]]
             [ring.middleware.x-headers          :refer [wrap-frame-options wrap-content-type-options wrap-xss-protection]]
             [ring.util.codec                    :refer [url-decode]]
-            [org.openforis.ceo.database         :refer [sql-handler]]
             [org.openforis.ceo.logging          :refer [log-str]]
-            [org.openforis.ceo.remote-api       :refer [clj-handler]]
             [org.openforis.ceo.views            :refer [render-page not-found-page data-response]]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -28,28 +26,109 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;; FIXME: Fill these in as you make pages.
-(def view-routes #{})
+(def view-routes #{"/"
+                   "/about"
+                   "/accout"
+                   "/collection"
+                   "/create-instituion"
+                   "/create-project"
+                   "/geo-dash"
+                   "/geo-dash/geo-dash-help" ; TODO flatten url structure
+                   "/home"
+                   "/institution-dashboard"
+                   "/login"
+                   "/password-request"
+                   "/password-reset"
+                   "/project-dashboard"
+                   "/register"
+                   "/review-institution"
+                   "/review-project"
+                   "/support"
+                   "/widget-layout-editor"
+                   "/mailing-list"
+                   "/unsubscribe-mailing-list"})
+
+(def proxy-routes #{"/get-tile"
+                    "/get-securewatch-dates"})
+
+(def api-routes (set (concat
+                 ;; Account API
+                 #{"/account"
+                   "/login"
+                   "/logout"
+                   "/register"
+                   "/password-reset"
+                   "/password-request"}
+                 ;; Project API
+                 #{"/dump-project-aggregate-data"
+                   "/dump-project-raw-data"
+                   "/get-all-projects"
+                   "/get-project-by-id"
+                   "/get-project-stats"
+                   "/archive-project"
+                   "/close-project"
+                   "/create-project"
+                   "/publish-project"
+                   "/update-project"}
+                 ;; Plots API
+                 #{"/get-next-plot"
+                   "/get-plot-by-id"
+                   "/get-prev-plot"
+                   "/get-project-plots"
+                   "/get-proj-plot"
+                   "/add-user-samples"
+                   "/flag-plot"
+                   "/release-plot-locks"
+                   "/reset-plot-lock"}
+                 ;; Users API
+                 #{"/get-all-users"
+                   "/get-institution-users"
+                   "/get-user-details"
+                   "/get-user-stats"
+                   "/update-project-user-stats"
+                   "/update-user-institution-role"
+                   "/request-institution-membership"
+                   "/send-to-mailing-list"
+                   "/unsubscribe-mailing-list"}
+                 ;; Institutions API
+                 #{"/get-all-institutions"
+                   "/get-institution-details"
+                   "/archive-institution"
+                   "/create-institution"
+                   "/update-institution"}
+                 ;; Imagery API
+                 #{"/get-institution-imagery"
+                   "/get-project-imagery"
+                   "/get-public-imagery"
+                   "/add-geodash-imagery"
+                   "/add-institution-imagery"
+                   "/update-institution-imagery"
+                   "/archive-institution-imagery"}
+                 ;; GeoDash API
+                 ;; TODO flatten routes
+                 #{"/geo-dash/get-by-projid"
+                   "/geo-dash/create-widget"
+                   "/geo-dash/delete-widget"
+                   "/geo-dash/gateway-request"
+                   "/geo-dash/update-widget"})))
 
 ;; FIXME: Add any conditions you want for URLs you want to exclude up front.
 (defn bad-uri? [uri] (str/includes? (str/lower-case uri) "php"))
 
 (defn forbidden-response [_]
-  {:status 403
-   :body "Forbidden"})
+  (data-response "Forbidden" {:status 403}))
 
-(defn token-resp [{:keys [auth-token]} handler]
-  (if (= auth-token "KJlkjhasduewlkjdyask-dsf")
-    handler
-    forbidden-response))
-
-(defn routing-handler [{:keys [uri params] :as request}]
+(defn routing-handler [{:keys [uri request-method] :as request}]
   (let [next-handler (cond
-                       (bad-uri? uri)                  forbidden-response
-                       (= uri "/")                     (render-page "/home")
-                       (contains? view-routes uri)     (render-page uri)
-                       (str/starts-with? uri "/clj/")  (token-resp params clj-handler)
-                       (str/starts-with? uri "/sql/")  (token-resp params sql-handler)
-                       :else                           not-found-page)]
+                       (bad-uri? uri)                    forbidden-response
+                       (= uri "/")                       (render-page "/home")
+                       (and (contains? view-routes uri)
+                            (= request-method :get))     (render-page uri)
+                       (and (contains? api-routes uri)
+                            (= request-method :post))    (data-response "")
+                       (and (contains? proxy-routes uri)
+                            (= request-method :get))     (data-response "")
+                       :else                             not-found-page)]
     (next-handler request)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
