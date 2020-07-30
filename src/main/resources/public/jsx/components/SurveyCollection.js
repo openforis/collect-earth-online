@@ -61,7 +61,7 @@ export class SurveyCollection extends React.Component {
                     || childQuestions.every(cq => this.checkAllSubAnswers(cq.id)));
     };
 
-    getTopColor = (node) => this.checkAllSubAnswers(node.id)
+    getTopColor = (node, isFlagged) => this.checkAllSubAnswers(node.id) || isFlagged
                                 ? "0px 0px 6px 4px #3bb9d6 inset"
                                 : node.answered.length > 0
                                     ? "0px 0px 6px 4px yellow inset"
@@ -136,18 +136,21 @@ export class SurveyCollection extends React.Component {
                                 {">"}
                             </button>
                         </div>
-                        {this.state.topLevelNodeIds.length > 0 &&
-                            <SurveyQuestionTree
-                                hierarchyLabel=""
-                                surveyNode={this.getNodeById(this.state.topLevelNodeIds[this.state.currentNodeIndex])}
-                                surveyQuestions={this.props.surveyQuestions}
-                                surveyRules={this.props.surveyRules}
-                                setCurrentValue={this.props.setCurrentValue}
-                                selectedQuestion={this.props.selectedQuestion}
-                                selectedSampleId={this.props.selectedSampleId}
-                                setSelectedQuestion={this.props.setSelectedQuestion}
-                                getRulesById={this.getRulesById}
-                            />
+                        {this.props.isFlagged
+                            ?
+                                <div style={{ color: "red" }}>FLAGGED</div>
+                            : this.state.topLevelNodeIds.length > 0 &&
+                                <SurveyQuestionTree
+                                    hierarchyLabel=""
+                                    surveyNode={this.getNodeById(this.state.topLevelNodeIds[this.state.currentNodeIndex])}
+                                    surveyQuestions={this.props.surveyQuestions}
+                                    surveyRules={this.props.surveyRules}
+                                    setCurrentValue={this.props.setCurrentValue}
+                                    selectedQuestion={this.props.selectedQuestion}
+                                    selectedSampleId={this.props.selectedSampleId}
+                                    setSelectedQuestion={this.props.setSelectedQuestion}
+                                    getRulesById={this.getRulesById}
+                                />
                         }
                     </div>
                 :
