@@ -61,7 +61,7 @@ export class SurveyCollection extends React.Component {
                     || childQuestions.every(cq => this.checkAllSubAnswers(cq.id)));
     };
 
-    getTopColor = (node) => this.checkAllSubAnswers(node.id)
+    getTopColor = (node, isFlagged) => this.checkAllSubAnswers(node.id) || isFlagged
                                 ? "0px 0px 6px 4px #3bb9d6 inset"
                                 : node.answered.length > 0
                                     ? "0px 0px 6px 4px yellow inset"
@@ -118,7 +118,7 @@ export class SurveyCollection extends React.Component {
                                         boxShadow: `${(i === this.state.currentNodeIndex)
                                                         ? "0px 0px 2px 2px black inset,"
                                                         : ""}
-                                                    ${this.getTopColor(this.getNodeById(node))}
+                                                    ${this.getTopColor(this.getNodeById(node), this.props.isFlagged)}
                                                     `,
                                     }}
                                 >
@@ -136,7 +136,10 @@ export class SurveyCollection extends React.Component {
                                 {">"}
                             </button>
                         </div>
-                        {this.state.topLevelNodeIds.length > 0 &&
+                        {this.props.isFlagged
+                        ?
+                            <div style={{ color: "red" }}>FLAGGED</div>
+                        : this.state.topLevelNodeIds.length > 0 &&
                             <SurveyQuestionTree
                                 hierarchyLabel=""
                                 surveyNode={this.getNodeById(this.state.topLevelNodeIds[this.state.currentNodeIndex])}
