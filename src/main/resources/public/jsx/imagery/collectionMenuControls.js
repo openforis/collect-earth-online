@@ -190,15 +190,22 @@ export class SecureWatchMenus extends React.Component {
     }
 
     componentDidMount() {
-        // fixme show message to tell the user to go to the first plot.
+        mercator.updateLayerWmsParams(this.props.mapConfig,
+                                      this.props.thisImageryId,
+                                      {},
+                                      "img/securewatch-go-to-plot.png");
     }
 
     componentDidUpdate(prevProps) {
-        if (this.props.extent.length > 0
-             && JSON.stringify(this.props.extent) !== JSON.stringify(prevProps.extent)) {
+        const { extent, currentPlot, mapConfig, thisImageryId, visible } = this.props;
+        if (extent.length > 0
+             && JSON.stringify(extent) !== JSON.stringify(prevProps.extent)) {
             this.getAvailableDates();
         }
-        if (prevProps.visible !== this.props.visible) this.updateImageryInformation();
+        if (!currentPlot.id) {
+            mercator.updateLayerWmsParams(mapConfig, thisImageryId, {}, "img/securewatch-go-to-plot.png");
+        }
+        if (prevProps.visible !== visible) this.updateImageryInformation();
     }
 
     updateImageryInformation = () => {
@@ -220,7 +227,7 @@ export class SecureWatchMenus extends React.Component {
     updateSingleLayer = (featureId, imageryDate, imageryCloudCover) => {
         mercator.updateLayerWmsParams(this.props.mapConfig, this.props.thisImageryId, {
             COVERAGE_CQL_FILTER: "featureId='" + featureId + "'",
-        });
+        }, "/get-tile");
         this.setState({
             featureId: featureId,
             imageryDate: imageryDate,
