@@ -1,5 +1,19 @@
 import React, { useState, useRef, useEffect } from "react";
 import ReactDOM from "react-dom";
+import * as _ from "lodash";
+import * as d3 from "d3";
+
+function scaleByStretch(data, index, stretch) {
+    const v = ((data[index] - stretch[index].min) / (stretch[index].max - stretch[index].min)) * 255;
+    return v < 0 ? 0 : (v > 255 ? 255 : v);
+}
+
+//TODO: refactor to simplify parameter signature, e.g. combine rgb together
+function dataRGB(data, redIndex, greenIndex, blueIndex, stretch, nStd) {
+    return d3.rgb(scaleByStretch(data, redIndex, stretch, nStd),
+                  scaleByStretch(data, greenIndex, stretch, nStd),
+                  scaleByStretch(data, blueIndex, stretch, nStd));
+}
 
 class TimeSync extends React.Component {
     constructor(props) {
@@ -245,11 +259,11 @@ class MainToolbar extends React.Component {
                     </label>
                 </div>
 
-                <div style={{ display: "inline-block" }}>
+                {/* <div style={{ display: "inline-block" }}>
                     <label className="switch switch-left-right">
                         <button id="syncWithCEO">Sync with Collect Earth Online</button>
                     </label>
-                </div>
+                </div> */}
             </div>
         );
     }
@@ -283,12 +297,11 @@ class PlotPanel extends React.Component {
  * @param {Array} allData all landsat spectral data
  * @param {boolean} showAll draw all spectral data
  */
-function TrajectoryPanel({annualData, allData, domain, showAll, vertices, setVertices}) {
-    const plotRef = useRef(null)
+function TrajectoryPanel({ annualData, allData, domain, showAll, vertices, setVertices, stretch }) {
+    const plotRef = useRef(null);
     const d3Container = useRef(null);
 
     const [specIndex, setSpecIndex] = useState("NBR");
-
     const [activeRedSpecIndex, setActiveRedSpecIndex] = useState("TCB");
     const [activeGreenSpecIndex, setActiveGreenSpecIndex] = useState("TCG");
     const [activeBlueSpecIndex, setActiveBlueSpecIndex] = useState("TCW");
@@ -306,10 +319,10 @@ function TrajectoryPanel({annualData, allData, domain, showAll, vertices, setVer
         const plotHeight = 250; //plotRef.current.clientHeight;
 
         //top, right, bottom, left
-        const margins = {top: 10, right: 15, bottom: 28, left: 65};
+        const margins = { top: 10, right: 15, bottom: 28, left: 65 };
 
         const xLabels = [];
-        for (let i = 0; i < domain.year.max - domain.year.min; i+=2) {
+        for (let i = 0; i < domain.year.max - domain.year.min; i += 2) {
             xLabels.push(domain.year.min + i + 0.49);
         }
 
@@ -320,7 +333,7 @@ function TrajectoryPanel({annualData, allData, domain, showAll, vertices, setVer
 
         const xscale = d3.scale.linear()
             .domain([domain.year.min, domain.year.max])
-            .range([margins.left, plotWidth-margins.right]);
+            .range([margins.left, plotWidth - margins.right]);
 
         const yscale = d3.scale.linear()
             .domain([domain[specIndex].min, domain[specIndex].max])
@@ -349,8 +362,8 @@ function TrajectoryPanel({annualData, allData, domain, showAll, vertices, setVer
             .append("line")
             .attr("x1", d => xscale(d))
             .attr("x2", d => xscale(d))
-            .attr("y1", d => -20000)
-            .attr("y2", d => 20000)
+            .attr("y1", -20000)
+            .attr("y2", 20000)
             .attr("class", "vline");
 
         const allCircles = svg.selectAll(".allData")
@@ -412,7 +425,7 @@ function TrajectoryPanel({annualData, allData, domain, showAll, vertices, setVer
         d3.selectAll("circle.data")
             .attr("class", "data")
             .filter((d, i) => vertices.includes(i))
-            .attr("class", "data selected")
+            .attr("class", "data selected");
 
         const lineData = annualData.filter((d, i) => vertices.sort((a, b) => a - b).includes(i));
 
@@ -435,9 +448,7 @@ function TrajectoryPanel({annualData, allData, domain, showAll, vertices, setVer
                 .attr("y", yscale(d[specIndex]) - 10)
                 .style("opacity", 1);
         })
-            .on("mouseout", function (d) {
-                doyTxt.style("opacity", 0);
-            });
+            .on("mouseout", () => doyTxt.style("opacity", 0));
 
         //show doy on hover
         circles.on("mouseover", d => {
@@ -446,10 +457,8 @@ function TrajectoryPanel({annualData, allData, domain, showAll, vertices, setVer
                 .attr("y", yscale(d[specIndex]) - 20)
                 .style("opacity", 1);
         })
-            .on("mouseout", function (d) {
-                doyTxt.style("opacity", 0);
-            })
-            .on("dblclick", (d, i) => setVertices(prev => [..._.xor(prev, [i]).sort((a,b) => a-b)]));
+            .on("mouseout", () => doyTxt.style("opacity", 0))
+            .on("dblclick", (d, i) => setVertices(prev => [..._.xor(prev, [i]).sort((a, b) => a - b)]));
     });
 
     return (
@@ -610,78 +619,87 @@ class InterpretationPanel extends React.Component {
                     </ul>
                     <p className="subHeader">Notes:</p>
                     <ul id="CPnotesList" className="notesList">
-                        <li><input
-                            id="natural"
-                            className="natural forFire"
-                            type="checkbox"
-                            name="changeProcess"
-                            defaultValue="natural"
-                            autoComplete="off"
-                        /> Natural</li>
-                        <li><input
-                            id="clearcut"
-                            className="clearcut forHarvest"
-                            type="checkbox"
-                            name="changeProcess"
-                            defaultValue="clearcut"
-                            autoComplete="off"
-                        /> Clearcut</li>
-                        <li><input
-                            id="thinning"
-                            className="thinning forHarvest"
-                            type="checkbox"
-                            name="changeProcess"
-                            defaultValue="thinning"
-                            autoComplete="off"
-                        /> Thinning</li>
-                        <li><input
-                            id="prescribed"
-                            className="prescribed forFire"
-                            type="checkbox"
-                            name="changeProcess"
-                            defaultValue="prescribed"
-                            autoComplete="off"
-                        /> Prescribed</li>
-                        <li><input
-                            id="sitePrepFire"
-                            className="sitePrepFire forFire forHarvest"
-                            type="checkbox"
-                            name="changeProcess"
-                            defaultValue="sitePrepFire"
-                            autoComplete="off"
-                        /> Site-prep fire</li>
-                        <li><input
-                            id="flooding"
-                            className="flooding forHydro"
-                            type="checkbox"
-                            name="changeProcess"
-                            defaultValue="flooding"
-                            autoComplete="off"
-                        /> Flooding</li>
-                        <li><input
-                            id="reserviorLakeFlux"
-                            className="reserviorLakeFlux forHydro"
-                            type="checkbox"
-                            name="changeProcess"
-                            defaultValue="reserviorLakeFlux"
-                            autoComplete="off"
-                        /> Reservoir/Lake flux</li>
-                        <li><input
-                            id="wetlandDrainage"
-                            className="wetlandDrainage forConserv"
-                            type="checkbox"
-                            name="changeProcess"
-                            defaultValue="wetlandDrainage"
-                            autoComplete="off"
-                        /> Wetland drainage</li>
-                        <li><input
-                            id="airphotoOnly"
-                            className="airphotoOnly forFire forHarvest forDecline forAcuteDecline forConditionDecline forWind forHydro forDebris forGrowth forStable forMechanical forOther"
-                            type="checkbox"
-                            name="changeProcess"
-                            defaultValue="airphotoOnly"
-                            autoComplete="off"
-                        /> Airphoto only
+                        <li>
+                            <input
+                                id="natural"
+                                className="natural forFire"
+                                type="checkbox"
+                                name="changeProcess"
+                                defaultValue="natural"
+                                autoComplete="off"
+                            />Natural</li>
+                        <li>
+                            <input
+                                id="clearcut"
+                                className="clearcut forHarvest"
+                                type="checkbox"
+                                name="changeProcess"
+                                defaultValue="clearcut"
+                                autoComplete="off"
+                            /> Clearcut</li>
+                        <li>
+                            <input
+                                id="thinning"
+                                className="thinning forHarvest"
+                                type="checkbox"
+                                name="changeProcess"
+                                defaultValue="thinning"
+                                autoComplete="off"
+                            /> Thinning</li>
+                        <li>
+                            <input
+                                id="prescribed"
+                                className="prescribed forFire"
+                                type="checkbox"
+                                name="changeProcess"
+                                defaultValue="prescribed"
+                                autoComplete="off"
+                            /> Prescribed</li>
+                        <li>
+                            <input
+                                id="sitePrepFire"
+                                className="sitePrepFire forFire forHarvest"
+                                type="checkbox"
+                                name="changeProcess"
+                                defaultValue="sitePrepFire"
+                                autoComplete="off"
+                            /> Site-prep fire</li>
+                        <li>
+                            <input
+                                id="flooding"
+                                className="flooding forHydro"
+                                type="checkbox"
+                                name="changeProcess"
+                                defaultValue="flooding"
+                                autoComplete="off"
+                            /> Flooding</li>
+                        <li>
+                            <input
+                                id="reserviorLakeFlux"
+                                className="reserviorLakeFlux forHydro"
+                                type="checkbox"
+                                name="changeProcess"
+                                defaultValue="reserviorLakeFlux"
+                                autoComplete="off"
+                            /> Reservoir/Lake flux</li>
+                        <li>
+                            <input
+                                id="wetlandDrainage"
+                                className="wetlandDrainage forConserv"
+                                type="checkbox"
+                                name="changeProcess"
+                                defaultValue="wetlandDrainage"
+                                autoComplete="off"
+                            /> Wetland drainage</li>
+                        <li>
+                            <input
+                                id="airphotoOnly"
+                                className="airphotoOnly forFire forHarvest forDecline forAcuteDecline forConditionDecline forWind forHydro forDebris forGrowth forStable forMechanical forOther"
+                                type="checkbox"
+                                name="changeProcess"
+                                defaultValue="airphotoOnly"
+                                autoComplete="off"
+                            /> Airphoto only
                         </li>
                     </ul>
                 </div>
@@ -742,14 +760,14 @@ class InterpretationPanel extends React.Component {
                                         <ul id="LUnotesList" className="notesList">
                                             <li><input id="wetland" className="wetland forForest" type="checkbox" name="landUse" defaultValue="wetland" autoComplete="off"/> Wetland</li>
                                             <li><input id="mining" className="mining forDeveloped" type="checkbox" name="landUse" defaultValue="mining" autoComplete="off"/> Mining</li>
-                                            <li><input id="rowCrop" className="rowCrop forAg" className="rowCrop forAg" type="checkbox" name="landUse" defaultValue="rowCrop" autoComplete="off"/> Row crop</li>
+                                            <li><input id="rowCrop" className="rowCrop forAg" type="checkbox" name="landUse" defaultValue="rowCrop" autoComplete="off"/> Row crop</li>
                                             <li><input id="orchardTreeFarm" className="orchardTreeFarm forAg" type="checkbox" name="landUse" defaultValue="orchardTreeFarm" autoComplete="off"/> Orchard/Tree farm/Vineyard</li>
                                         </ul>
 
                                         <ul id="LUnotesListSec" className="notesList" style={{ display: "none" }}>
                                             <li><input id="wetland" className="wetland forForest" type="checkbox" name="landUse" defaultValue="wetland" autoComplete="off"/> Wetland</li>
                                             <li><input id="mining" className="mining forDeveloped" type="checkbox" name="landUse" defaultValue="mining" autoComplete="off"/> Mining</li>
-                                            <li><input id="rowCrop" className="rowCrop forAg" className="rowCrop forAg" type="checkbox" name="landUse" defaultValue="rowCrop" autoComplete="off"/> Row crop</li>
+                                            <li><input id="rowCrop" className="rowCrop forAg" type="checkbox" name="landUse" defaultValue="rowCrop" autoComplete="off"/> Row crop</li>
                                             <li><input id="orchardTreeFarm" className="orchardTreeFarm forAg" type="checkbox" name="landUse" defaultValue="orchardTreeFarm" autoComplete="off"/> Orchard/Tree farm/Vineyard</li>
                                         </ul>
                                     </div>
@@ -847,7 +865,9 @@ function ChipViewer({ chipInfo, toggleVertex, chipProps, setChipProps }) {
                                chipSize / 2 - boxZoom / 2,
                                boxZoom,
                                boxZoom);
-            } catch (e) { }
+            } catch (e) {
+                console.log("Error loading image");
+            }
         };
         image.src = url;
     });
@@ -861,18 +881,14 @@ function ChipViewer({ chipInfo, toggleVertex, chipProps, setChipProps }) {
         setChipProps({ ...chipProps, zoomLevel: newZoomLevel });
     }
 
-    function handleDblClick(e) {
-        const info = { ...chipInfo, isVertex: !isVertex };
-        toggleVertex(info);
-    }
-
     return (
         <div
             className={`chipHolder annual ${isHover ? "hover" : ""} ${isVertex ? "selected" : ""}`}
             style={{ borderColor: isHover ? highlightColor : "" }}
-            onMouseEnter={e=>setHover(true)}
-            onMouseLeave={e=>setHover(false)}
-            onDoubleClick={handleDblClick}>
+            onMouseEnter={()=>setHover(true)}
+            onMouseLeave={()=>setHover(false)}
+            onDoubleClick={()=>toggleVertex({ ...chipInfo, isVertex: !isVertex })}
+        >
             <canvas
                 ref={canvasRef}
                 width={chipSize}
@@ -909,12 +925,14 @@ function ChipGallery () {
             </div>
 
             <div id="chip-gallery">
-                {chips.map((chip, i) => <ChipViewer
-                    key={`chip${i}`}
-                    chipInfo={chip}
-                    toggleVertex={toggleVertex}
-                    chipProps={chipProps}
-                    setChipProps={setChipProps}/>)}
+                {chips.map((chip, i) =>
+                    <ChipViewer
+                        key={`chip${i}`}
+                        chipInfo={chip}
+                        toggleVertex={toggleVertex}
+                        chipProps={chipProps}
+                        setChipProps={setChipProps}
+                    />)}
             </div>
             {/* <div id="spinner" className="loader stop"></div> */}
         </div>
