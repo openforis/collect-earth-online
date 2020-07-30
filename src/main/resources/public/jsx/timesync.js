@@ -897,7 +897,3 @@ export function renderTimeSyncPage(args) {
     );
 }
 
-export {
-    ChipViewer,
-    TrajectoryPanel,
-};
