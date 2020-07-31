@@ -1,27 +1,51 @@
 import React from "react";
 import ReactDOM from "react-dom";
 import { NavigationBar } from "./components/PageComponents";
+import { DynamicForm } from "./components/FormComponents";
 import { getQueryString } from "./utils/textUtils";
 
 class Register extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
-            email: "",
-            password: "",
-            passwordConfirmation: "",
+            formElements: [
+                {
+                    label: "Email address",
+                    id: "register-email",
+                    name: "email",
+                    type: "email",
+                    placeholder: "Email",
+                    autoComplete: "off",
+                    required: true,
+                }, {
+                    label: "Password",
+                    id: "register-password",
+                    name: "password",
+                    type: "password",
+                    placeholder: "Password",
+                    autoComplete: "off",
+                    required: true,
+                }, {
+                    label: "Confirm your password",
+                    id: "register-password-confirmation",
+                    name: "passwordConfirmation",
+                    type: "password",
+                    placeholder: "Password",
+                    autoComplete: "off",
+                    required: true,
+                },
+            ],
             onMailingList: true,
         };
     }
 
-    register = () => {
+    requestRegister = (values) => {
+        values["onMailingList"] = this.state.onMailingList;
         fetch("/register",
               {
                   method: "POST",
-                  headers: {
-                      "Content-Type": "application/x-www-form-urlencoded",
-                  },
-                  body: getQueryString(this.state),
+                  headers: { "Content-Type": "application/x-www-form-urlencoded" },
+                  body: getQueryString(values),
               })
             .then(response => Promise.all([response.ok, response.text()]))
             .then(data => {
@@ -41,48 +65,10 @@ class Register extends React.Component {
                 <div className="card card-lightgreen" id="register-form">
                     <div className="card-header card-header-lightgreen">Register a new account</div>
                     <div className="card-body">
-                        <form
-                            onSubmit={e => {
-                                e.preventDefault();
-                                this.register();
-                            }}
+                        <DynamicForm
+                            onSubmit={this.requestRegister}
+                            elements={this.state.formElements}
                         >
-                            <div className="form-group">
-                                <label htmlFor="email">Email address</label>
-                                <input
-                                    id="email"
-                                    className="form-control"
-                                    autoComplete="off"
-                                    placeholder="Email"
-                                    value={this.state.email}
-                                    type="email"
-                                    onChange={e => this.setState({ email: e.target.value })}
-                                />
-                            </div>
-                            <div className="form-group">
-                                <label htmlFor="password">Enter your password</label>
-                                <input
-                                    id="password"
-                                    className="form-control"
-                                    autoComplete="off"
-                                    placeholder="Password"
-                                    value={this.state.password}
-                                    type="password"
-                                    onChange={e => this.setState({ password: e.target.value })}
-                                />
-                            </div>
-                            <div className="form-group">
-                                <label htmlFor="password-confirmation">Confirm your password</label>
-                                <input
-                                    id="password-confirmation"
-                                    className="form-control"
-                                    autoComplete="off"
-                                    placeholder="Password confirmation"
-                                    value={this.state.passwordConfirmation}
-                                    type="password"
-                                    onChange={e => this.setState({ passwordConfirmation: e.target.value })}
-                                />
-                            </div>
                             <div className="form-check mb-3">
                                 <input
                                     id="on-mailing-list"
@@ -95,14 +81,13 @@ class Register extends React.Component {
                                     Subscribe To Mailinglist
                                 </label>
                             </div>
-                            <button className="btn bg-lightgreen float-right mb-2" type="submit">
-                                Register
-                            </button>
-                        </form>
+                            <div className="d-flex justify-content-end">
+                                <button className="btn bg-lightgreen" type="submit">Register</button>
+                            </div>
+                        </DynamicForm>
                     </div>
                 </div>
             </div>
-
         );
     }
 }

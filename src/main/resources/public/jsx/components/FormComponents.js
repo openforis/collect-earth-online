@@ -283,6 +283,7 @@ export class DynamicForm extends React.Component {
                         name={element.name}
                         type={element.type}
                         placeholder={element.placeholder}
+                        autoComplete={element.autoComplete}
                         value={this.state.values[element.name]}
                         error={this.state.errors[element.name]}
                         onChange={this.onInputChange}
@@ -303,7 +304,7 @@ export class FormInput extends React.Component {
     }
 
     render() {
-        const { label, id, name, type, placeholder, value, required } = this.props;
+        const { label, id, name, type, placeholder, value, required, autoComplete } = this.props;
         return (
             <div className={"form-group " + (this.props.error ? "invalid" : "")}>
                 <label htmlFor={id}>{label}</label>
@@ -312,6 +313,7 @@ export class FormInput extends React.Component {
                     name={name}
                     type={type}
                     placeholder={placeholder}
+                    autoComplete={autoComplete}
                     value={value}
                     onChange={this.props.onChange}
                     onBlur={this.props.onBlur}
