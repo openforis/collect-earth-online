@@ -270,7 +270,6 @@ export class DynamicForm extends React.Component {
         if (this.validateAll()) {
             this.props.onSubmit(this.state.values);
         }
-
     }
 
     render() {
