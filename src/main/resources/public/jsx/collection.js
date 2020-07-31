@@ -508,6 +508,30 @@ class Collection extends React.Component {
         }
     };
 
+    unflagPlotInDB = () => {
+        console.log(1);
+        if (this.state.currentPlot.id) {
+            fetch("/unflag-plot",
+                  {
+                      method: "POST",
+                      body: JSON.stringify({
+                          projectId: this.props.projectId,
+                          plotId: this.state.currentPlot.id,
+                          userId: this.props.userId,
+                      }),
+                  })
+                .then(response => {
+                    console.log(2);
+                    if (response.ok) {
+                        this.nextPlot();
+                    } else {
+                        console.log(response);
+                        alert("Error unflagging plot as bad. See console for details.");
+                    }
+                });
+        }
+    };
+
     postValuesToDB = () => {
         if (this.state.currentProject.availability === "unpublished") {
             alert("Please publish the project before starting the survey.");
@@ -948,6 +972,7 @@ class Collection extends React.Component {
                     projectId={this.props.projectId}
                     plotId={plotId}
                     flagPlotInDB={this.flagPlotInDB}
+                    unflagPlotInDB={this.unflagPlotInDB}
                     postValuesToDB={this.postValuesToDB}
                     projectName={this.state.currentProject.name}
                     clearAnswers={() => this.resetPlotValues(this.state.currentPlot)}
@@ -1073,15 +1098,22 @@ function SideBar(props) {
                 disabled={!saveValuesButtonEnabled}
             />
             <div className="my-2 d-flex justify-content-between">
-                <input
-                    id="save-values-button"
-                    className="btn btn-outline-danger btn-sm col mr-1"
-                    type="button"
-                    name="save-values"
-                    value="Flag Plot"
-                    onClick={props.flagPlotInDB}
-                    disabled={props.isFlagged}
-                />
+                {props.isFlagged
+                    ?
+                        <input
+                            className="btn btn-outline-danger btn-sm col mr-1"
+                            type="button"
+                            value="Unflag Plot"
+                            onClick={props.unflagPlotInDB}
+                        />
+                    :
+                        <input
+                            className="btn btn-outline-danger btn-sm col mr-1"
+                            type="button"
+                            value="Flag Plot"
+                            onClick={props.flagPlotInDB}
+                        />
+                }
                 <input
                     id="save-values-button"
                     className="btn btn-outline-danger btn-sm col"

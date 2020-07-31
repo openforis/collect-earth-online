@@ -1580,6 +1580,18 @@ CREATE OR REPLACE FUNCTION flag_plot(_plot_rid integer, _user_rid integer, _conf
 
 $$ LANGUAGE SQL;
 
+-- Unflag plot
+CREATE OR REPLACE FUNCTION unflag_plot(_plot_rid integer, _user_rid integer)
+ RETURNS integer AS $$
+
+    UPDATE user_plots
+    SET flagged = FALSE
+    WHERE plot_rid = _plot_rid
+        AND user_rid = _user_rid
+    RETURNING _plot_rid
+
+$$ LANGUAGE SQL;
+
 -- Select plots
 -- FIXME when multiple users can be assigned to plots, returning a single username does not make sense
 CREATE OR REPLACE FUNCTION select_all_project_plots(_project_rid integer)

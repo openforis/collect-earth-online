@@ -336,4 +336,8 @@ public class JsonPlots implements Plots {
         return "";
     }
 
+    public String unflagPlot(Request req, Response res) {
+        return "";
+    }
+
 }

@@ -127,6 +127,7 @@ public class Server implements SparkApplication {
                         "/get-proj-plot",
                         "/add-user-samples",
                         "/flag-plot",
+                        "/unflag-plot",
                         "/release-plot-locks",
                         "/reset-plot-lock")
                     .contains(request.uri()) && !projects.canCollect(request)) {
@@ -229,6 +230,7 @@ public class Server implements SparkApplication {
         get("/get-proj-plot",                         plots::getProjectPlot);
         post("/add-user-samples",                     plots::addUserSamples);
         post("/flag-plot",                            plots::flagPlot);
+        post("/unflag-plot",                          plots::unflagPlot);
         post("/release-plot-locks",                   plots::releasePlotLocks);
         post("/reset-plot-lock",                      plots::resetPlotLock);
 
