@@ -33,6 +33,12 @@ class Register extends React.Component {
                     placeholder: "Password",
                     autoComplete: "off",
                     required: true,
+                }, {
+                    label: "Subscribe To Mailinglist",
+                    id: "register-on-mailing-list",
+                    name: "onMailingList",
+                    type: "checkbox",
+                    checked: true,
                 },
             ],
             onMailingList: true,
@@ -69,18 +75,6 @@ class Register extends React.Component {
                             onSubmit={this.requestRegister}
                             elements={this.state.formElements}
                         >
-                            <div className="form-check mb-3">
-                                <input
-                                    id="on-mailing-list"
-                                    type="checkbox"
-                                    className="form-check-input"
-                                    checked={this.state.onMailingList}
-                                    onChange={() => this.setState({ onMailingList: !this.state.onMailingList })}
-                                />
-                                <label className="form-check-label" htmlFor="on-mailing-list">
-                                    Subscribe To Mailinglist
-                                </label>
-                            </div>
                             <div className="d-flex justify-content-end">
                                 <button className="btn bg-lightgreen" type="submit">Register</button>
                             </div>

@@ -218,7 +218,7 @@ export class DynamicForm extends React.Component {
         const errors = {};
         this.props.elements.map(element => {
             const { name } = element;
-            values[name] = "";
+            values[name] = element.type === "checkbox" ? !!element.checked : element.value ? element.value : "";
             errors[name] = "";
         });
         this.state = {
@@ -237,6 +237,12 @@ export class DynamicForm extends React.Component {
         const value = this.state.values[name];
         const error = this.validate(value, type, required);
         this.setState({ errors: { ...this.state.errors, [name]: error }});
+    }
+
+    onCheckboxChange = e => {
+        const { name, checked } = e.target;
+        console.log(checked);
+        this.setState({ values: { ...this.state.values, [name]: !this.state.values[name] }});
     }
 
     validate = (value, type, required) => {
@@ -276,26 +282,61 @@ export class DynamicForm extends React.Component {
         return (
             <form onSubmit={this.onFormSubmit} noValidate>
                 {this.props.elements.map(element =>
-                    <FormInput
-                        key={element.id}
-                        label={element.label}
-                        id={element.id}
-                        name={element.name}
-                        type={element.type}
-                        placeholder={element.placeholder}
-                        autoComplete={element.autoComplete}
-                        value={this.state.values[element.name]}
-                        error={this.state.errors[element.name]}
-                        onChange={this.onInputChange}
-                        onBlur={this.onInputBlur}
-                        required={element.required}
-                    />
+                    element.type === "checkbox"
+                    ?
+                        <FormInputCheckbox
+                            key={element.id}
+                            label={element.label}
+                            id={element.id}
+                            name={element.name}
+                            type={element.type}
+                            checked={this.state.values[element.name]}
+                            onChange={this.onCheckboxChange}
+                        />
+                    :
+                        <FormInput
+                            key={element.id}
+                            label={element.label}
+                            id={element.id}
+                            name={element.name}
+                            type={element.type}
+                            placeholder={element.placeholder}
+                            autoComplete={element.autoComplete}
+                            value={this.state.values[element.name]}
+                            error={this.state.errors[element.name]}
+                            onChange={this.onInputChange}
+                            onBlur={this.onInputBlur}
+                            required={element.required}
+                        />
                 )}
                 {this.props.children}
             </form>
         );
     }
 
+}
+
+export class FormInputCheckbox extends React.Component {
+    constructor(props) {
+        super(props);
+    }
+
+    render() {
+        const { label, id, name, type, checked } = this.props;
+        return (
+            <div className="form-check mb-3">
+                <input
+                    id={id}
+                    name={name}
+                    type={type}
+                    checked={checked}
+                    onChange={this.props.onChange}
+                    className="form-check-input"
+                />
+                <label className="form-check-label" htmlFor={id}>{label}</label>
+            </div>
+        );
+    }
 }
 
 export class FormInput extends React.Component {
@@ -317,7 +358,7 @@ export class FormInput extends React.Component {
                     value={value}
                     onChange={this.props.onChange}
                     onBlur={this.props.onBlur}
-                    className={"form-control"}
+                    className="form-control"
                     required={required}
                 />
                 {this.props.error &&
