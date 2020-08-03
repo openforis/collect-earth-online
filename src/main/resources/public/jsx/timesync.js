@@ -772,11 +772,11 @@ function InterpretationPanel() {
     );
 }
 
-function ChipViewer({ chipInfo, toggleVertex, chipProps, setChipProps }) {
+function ChipViewer({ chipInfo, toggleVertex, chipSettings, setChipSettings }) {
     const canvasRef = useRef(null);
 
     const { sensor, year, day, url, isVertex } = chipInfo;
-    const { chipSize, box, zoomLevel, minZoom, maxZoom } = chipProps;
+    const { chipSize, box, zoomLevel, minZoom, maxZoom } = chipSettings;
 
     //TODO: make this as a prop
     const IMAGE_CHIP_SIZE = 255;
@@ -830,7 +830,7 @@ function ChipViewer({ chipInfo, toggleVertex, chipProps, setChipProps }) {
 
         const newZoomLevel = e.deltaY > 0 ? (zoomLevel < maxZoom ? zoomLevel + 1 : zoomLevel) : (zoomLevel > minZoom ? zoomLevel - 1 : zoomLevel);
 
-        setChipProps({ ...chipProps, zoomLevel: newZoomLevel });
+        setChipSettings({ ...chipProps, zoomLevel: newZoomLevel });
     }
 
     return (
@@ -879,8 +879,8 @@ function ChipGallery () {
                         key={`chip${i}`}
                         chipInfo={chip}
                         toggleVertex={toggleVertex}
-                        chipProps={chipSettings}
-                        setChipProps={setChipSettings}
+                        chipSettings={chipSettings}
+                        setChipSettings={setChipSettings}
                     />)}
             </div>
             {/* <div id="spinner" className="loader stop"></div> */}
