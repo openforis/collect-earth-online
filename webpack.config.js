@@ -80,6 +80,10 @@ module.exports = env => ({
         {
             apply: (compiler) => {
                 compiler.hooks.beforeCompile.tap("BeforeRunPlugin", () => {
+                    // Ensure that outdir exists.
+                    if (!fs.existsSync("./" + outdir)) {
+                        fs.mkdirSync("./" + outdir, { recursive: true });
+                    }
                     // Remove old files to prevent conflicts.
                     fs.readdirSync("./" + outdir)
                         .forEach(f => fs.unlinkSync(path.join("./" + outdir, f)));
