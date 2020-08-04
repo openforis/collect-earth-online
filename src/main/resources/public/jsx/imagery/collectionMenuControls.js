@@ -197,15 +197,15 @@ export class SecureWatchMenus extends React.Component {
     }
 
     componentDidUpdate(prevProps) {
-        const { extent, currentPlot, mapConfig, thisImageryId, visible } = this.props;
+        const { extent, mapConfig, thisImageryId, visible } = this.props;
         if (extent.length > 0
              && JSON.stringify(extent) !== JSON.stringify(prevProps.extent)) {
             this.getAvailableDates();
         }
-        if (!currentPlot.id) {
+        if (prevProps.visible !== visible) {
             mercator.updateLayerWmsParams(mapConfig, thisImageryId, {}, "img/securewatch-go-to-plot.png");
+            this.updateImageryInformation();
         }
-        if (prevProps.visible !== visible) this.updateImageryInformation();
     }
 
     updateImageryInformation = () => {
