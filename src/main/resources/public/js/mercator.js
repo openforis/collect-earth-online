@@ -739,9 +739,10 @@ mercator.updateLayerSource = function (mapConfig, imageryId, projectBoundary, tr
 //                                                  {COVERAGE_CQL_FILTER: "(acquisitionDate>='" + imageryYear + "-01-01')"
 //                                                                   + "AND(acquisitionDate<='" + imageryYear + "-12-31')",
 //                                                  FEATUREPROFILE: stackingProfile});
-mercator.updateLayerWmsParams = function (mapConfig, layerId, newParams) {
+mercator.updateLayerWmsParams = function (mapConfig, layerId, newParams, url = null) {
     const layer = mercator.getLayerById(mapConfig, layerId);
     if (layer) {
+        if (url) layer.getSource().urls[0] = url;
         const mergedParams = Object.assign({}, layer.getSource().getParams(), newParams);
         layer.getSource().updateParams(mergedParams);
     }
