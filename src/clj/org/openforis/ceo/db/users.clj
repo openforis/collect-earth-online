@@ -4,8 +4,8 @@
            java.time.LocalDateTime
            java.util.UUID)
   (:require [clojure.string :as str]
-            [clojure.data.json :as json]
-            [org.openforis.ceo.database :refer [call-sql sql-primitive]]
+            [org.openforis.ceo.utils.type-conversion :as tc]
+            [org.openforis.ceo.database   :refer [call-sql sql-primitive]]
             [org.openforis.ceo.utils.mail :refer [email?
                                                   send-mail
                                                   send-to-mailing-list
@@ -13,7 +13,7 @@
                                                   get-mailing-list-interval
                                                   get-mailing-list-last-sent
                                                   set-mailing-list-last-sent!]]
-            [org.openforis.ceo.views :refer [data-response]]))
+            [org.openforis.ceo.views      :refer [data-response]]))
 
 (defn login [{:keys [params]}]
   (let [{:keys [email password]} params]
@@ -21,7 +21,7 @@
       (data-response ""
                      {:session {:userId   (:user_id user)
                                 :userName email
-                                :userRole (if (:administrator user) "admin" "user")}})
+                                :userRole (if (:administrator user) "admin" "user")}}) ; TODO user 1 is the only superuser
       (data-response "Invalid email/password combination."))))
 
 (defn- get-register-errors [email password password-confirmation]
@@ -43,7 +43,7 @@
   (let [email                 (:email params)
         password              (:password params)
         password-confirmation (:passwordConfirmation params)
-        on-mailing-list?      (boolean (:onMailingList params))]
+        on-mailing-list?      (tc/str->bool (:onMailingList params))]
     (if-let [error-msg (get-register-errors email password password-confirmation)]
       (data-response error-msg)
       (let [user-id   (sql-primitive (call-sql "add_user" email password on-mailing-list?))
@@ -89,13 +89,13 @@
         :else nil))
 
 (defn update-account [{:keys [params session]}]
-  (let [user-id               (Integer/parseInt (or (:userId params) "-1"))
+  (let [user-id               (tc/str->int (or (:userId params) "-1"))
         current-email         (:userName params)
         current-password      (:currentPassword params)
         new-email             (:email params)
         password              (:password params)
         password-confirmation (:passwordConfirmation params)
-        on-mailing-list?      (boolean (:onMailingList params))]
+        on-mailing-list?      (tc/str->bool (:onMailingList params))]
     (if-let [error-msg (get-update-account-errors user-id current-email current-password
                                                   new-email password password-confirmation)]
       (data-response error-msg)
@@ -160,7 +160,7 @@
 ;; FIXME: We might not want to pass the reset key to the front end.
 ;; FIXME: Update get_all_users_by_institution to rename user_id to id and return role instead of administrator.
 (defn get-institution-users [{:keys [params]}]
-  (let [institution-id (Integer/parseInt (:institutionId params))
+  (let [institution-id (tc/str->int (:institutionId params))
         all-users      (mapv (fn [{:keys [user_id email administrator reset_key institution_role]}]
                                {:id              user_id
                                 :email           email
@@ -171,26 +171,26 @@
     (data-response all-users)))
 
 (defn get-user-details [{:keys [params]}]
-  (let [user-id (Integer/parseInt (or (:userId params) "-1"))]
+  (let [user-id (tc/str->int (:userId params))]
     (if-let [details (first (call-sql "get_user_details" user-id))]
       (data-response {:onMailingList (:on_mailing_list details)})
       (data-response ""))))
 
 ;; FIXME: Change :userId to :accountId to avoid conflict with matching session key
 (defn get-user-stats [{:keys [params]}]
-  (let [account-id (Integer/parseInt (:userId params))]
+  (let [account-id (tc/str->int (:userId params))]
     (if-let [stats (first (call-sql "get_user_stats" account-id))]
       (data-response {:totalProjects (:total_projects stats)
                       :totalPlots    (:total_plots stats)
                       :averageTime   (:average_time stats)
-                      :perProject    (json/read-str (:per_project stats))})
+                      :perProject    (tc/jsonb->clj (:per_project stats))})
       (data-response {}))))
 
 ;; FIXME: This fails silently. Add better error messages.
 ;; FIXME: We might need to change :userId to :accountId to avoid conflict with matching session key
 (defn update-institution-role [{:keys [params]}]
-  (let [user-id        (Integer/parseInt (:userId params))
-        institution-id (Integer/parseInt (:institutionId params))
+  (let [user-id        (tc/str->int (:userId params))
+        institution-id (tc/str->int (:institutionId params))
         role           (:role params)]
     (if (= role "not-member")
       (call-sql "remove_institution_user_role" institution-id user-id)
@@ -218,8 +218,8 @@
     (data-response "")))
 
 (defn request-institution-membership [{:keys [params]}]
-  (let [user-id        (Integer/parseInt (:userId params))
-        institution-id (Integer/parseInt (:institutionId params))]
+  (let [user-id        (tc/str->int (:userId params))
+        institution-id (tc/str->int (:institutionId params))]
     (call-sql "add_institution_user" institution-id user-id 3)
     (data-response "")))
 
