@@ -11,13 +11,13 @@
 
 (defn- prepare-imagery [imagery admin?]
   (mapv (fn [{:keys [imagery_id institution_id visibility title attribution extent source_config]}]
-          (let [source-config (tc/json->clj source_config)]
+          (let [source-config (tc/jsonb->clj source_config)]
             {:id           imagery_id
              :institution  institution_id ; FIXME, legacy variable name, update to institutionId
              :visibility   visibility
              :title        title
              :attribution  attribution
-             :extent       (tc/json->clj extent)
+             :extent       (tc/jsonb->clj extent)
              :sourceConfig (if admin? source-config (clean-source source-config))}))
         imagery))
 
@@ -30,8 +30,8 @@
 (defn get-project-imagery [{:keys [params]}]
   (let [project-id (tc/str->int (:projectId params))
         user-id    (tc/str->int (:userId params))
-        tokenKey   (:tokenKey params)]
-    (data-response (prepare-imagery (call-sql "select_imagery_by_project" project-id user-id tokenKey)
+        token-key   (:tokenKey params)]
+    (data-response (prepare-imagery (call-sql "select_imagery_by_project" project-id user-id token-key)
                                     false))))
 
 (defn get-public-imagery [_]
