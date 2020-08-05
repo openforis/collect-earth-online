@@ -6,6 +6,7 @@
 .settings/
 .idea/
 collect-earth-online.iml
+.rebel_readline_history
 
 # Build Directories and Files
 /target/
