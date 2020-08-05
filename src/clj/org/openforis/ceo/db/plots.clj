@@ -1,7 +1,6 @@
 (ns org.openforis.ceo.db.plots
   (:import java.sql.Timestamp)
-  (:require [clojure.data.json :as json]
-            [org.openforis.ceo.database :refer [call-sql sql-primitive]]
+  (:require [org.openforis.ceo.database :refer [call-sql sql-primitive]]
             [org.openforis.ceo.db.institutions :refer [is-inst-admin-query]]
             [org.openforis.ceo.utils.type-conversion :as tc]
             [org.openforis.ceo.views :refer [data-response]]))
@@ -20,16 +19,16 @@
                          (call-sql "select_limited_project_plots" project-id max-plots)))))
 
 (defn- clean-extra-plot-info [extra-plot-info]
-  (or (dissoc (json/read-str extra-plot-info) :gid :lat :lon :plotid)
+  (or (dissoc (tc/jsonb->clj extra-plot-info) :gid :lat :lon :plotid)
       {}))
 
-(defn- get-sample-object [plot-id project-id]
+(defn- prepare-sample-object [plot-id project-id]
   (mapv (fn [{:keys [sample_id point sampleId geom value]}]
           {:id       sample_id
            :point    point
            :sampleId sampleId ;TODO I dont think we we distinguish between sample_id and sampleId so this could go away
-           :geom     geom
-           :value    (if (< 2 (count value)) (json/read-str value) {})})
+           :geom     (tc/jsonb->clj geom) ; FIXME
+           :value    (if (< 2 (count value)) (tc/jsonb->clj value) {})})
         (call-sql "select_plot_samples" plot-id project-id)))
 
 (defn- build-plot-object [{:keys [plot_id center flagged plotId geom extra_plot_info]} project-id]
@@ -38,9 +37,9 @@
    :center        center
    :flagged       (= 0 flagged)
    :plotId        plotId
-   :geom          geom
+   :geom          (tc/jsonb->clj geom)
    :extraPlotInfo (clean-extra-plot-info extra_plot_info)
-   :samples       (get-sample-object plot_id project-id)})
+   :samples       (prepare-sample-object plot_id project-id)})
 
 (defn get-project-plot [{:keys [params]}]
   (let [project-id (tc/str->int (:projectId params))
@@ -110,8 +109,8 @@
         user-id          (tc/str->int (:userId params))
         confidence       (tc/str->int (:confidence params))
         collection-start (tc/str->long (:collectionStart params))
-        user-samples     (json/read-str (:userSamples params))
-        user-images      (json/read-str (:userImages params))
+        user-samples     (tc/json->jsonb (:userSamples params))
+        user-images      (tc/json->jsonb (:userImages params))
         user-plot-id     (sql-primitive (call-sql "check_user_plots" project-id plot-id user-id))]
     (apply call-sql
            (concat (if user-plot-id
