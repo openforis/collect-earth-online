@@ -887,7 +887,7 @@ class Collection extends React.Component {
     };
 
     unansweredColor = () => (
-        <div className="PlotNavigation__change-color row justify-content-center">
+        <div className="PlotNavigation__change-color row justify-content-center mb-2">
             Unanswered Color
             <div className="form-check form-check-inline">
                 <input
@@ -996,7 +996,6 @@ class Collection extends React.Component {
                     {this.state.currentPlot.id
                         ?
                             <>
-                                {this.unansweredColor()}
                                 <SurveyCollection
                                     selectedQuestion={this.state.selectedQuestion}
                                     surveyQuestions={this.state.currentProject.surveyQuestions}
@@ -1007,6 +1006,7 @@ class Collection extends React.Component {
                                         ? parseInt(Object.keys(this.state.userSamples)[0])
                                         : this.state.selectedSampleId}
                                 />
+                                {this.unansweredColor()}
                             </>
                         :
                             <fieldset className="mb-3 justify-content-center text-center">
@@ -1121,11 +1121,11 @@ function SideBar(props) {
     );
 }
 
-function CollapsibleTitle({ title, showGroup, toggleShow }) {
+export function CollapsibleTitle({ title, showGroup, toggleShow }) {
     const buttonDownStyle = { width: "1.5rem", height: "1.5rem", paddingTop: "1px", paddingLeft: "3px" };
     const buttonRightStyle = { width: "1.5rem", height: "1.5rem", paddingTop: "0px", paddingLeft: "6px", fontSize: ".8rem" };
     return (
-        <div className="PlotNavigation__Title row">
+        <div className="CollapsibleTitle__Title row">
             <h3
                 className="ml-3 btn btn-sm btn-outline-darkgray"
                 style={showGroup ? buttonDownStyle : buttonRightStyle}
@@ -1133,7 +1133,7 @@ function CollapsibleTitle({ title, showGroup, toggleShow }) {
             >
                 {showGroup ? <UnicodeIcon icon="downCaret"/> : <UnicodeIcon icon="rightCaret"/>}
             </h3>
-            <h3 className="ml-2">{title}</h3>
+            <h3 className="ml-2" style={{ backgroundColor: "#32baaf40" }}>{title}</h3>
         </div>
     );
 }
@@ -1143,7 +1143,7 @@ class PlotNavigation extends React.Component {
         super(props);
         this.state = {
             newPlotInput: "",
-            showNav: true,
+            showNav: false,
             auxWindow: null,
         };
     }
@@ -1157,7 +1157,7 @@ class PlotNavigation extends React.Component {
     updateNewPlotId = (value) => this.setState({ newPlotInput: value });
 
     gotoButton = () => (
-        <div className="PlotNavigation__first row" id="go-to-first-plot">
+        <div className="PlotNavigation__first row mb-2" id="go-to-first-plot">
             <div className="col">
                 <input
                     id="go-to-first-plot-button"
@@ -1265,6 +1265,7 @@ class PlotNavigation extends React.Component {
         const { props } = this;
         return (
             <div className="text-center mt-2">
+                {!props.navButtonsShown && this.gotoButton()}
                 <CollapsibleTitle
                     title={`Plot Navigation ${this.props.plotId ? `- ID: ${this.props.plotId}` : ""}`}
                     showGroup={this.state.showNav}
@@ -1273,7 +1274,7 @@ class PlotNavigation extends React.Component {
                 {props.loadingPlots && <h3>Loading plot data...</h3>}
                 {this.state.showNav && !props.loadingPlots &&
                     <Fragment>
-                        {!props.navButtonsShown ? this.gotoButton() : this.navButtons()}
+                        {props.navButtonsShown && this.navButtons()}
                         <div className="PlotNavigation__review-option row justify-content-center mb-3">
                             <div className="form-check">
                                 <input
@@ -1364,7 +1365,7 @@ class ImageryOptions extends React.Component {
                 {props.loadingImages && <h3>Loading imagery data...</h3>}
                 {this.state.showImageryOptions && !props.loadingImages && props.currentImageryId &&
                     <select
-                        className="form-control form-control-sm"
+                        className="form-control form-control-sm mb-2"
                         id="base-map-source"
                         name="base-map-source"
                         size="1"
