@@ -15,6 +15,8 @@
 
  :aliases {:build-db    {:main-opts ["-m" "org.openforis.ceo.build-db"]}
            :ssl-key-gen {:main-opts ["-m" "org.openforis.ceo.https"]}
+           :rebel       {:extra-deps {com.bhauman/rebel-readline {:mvn/version "0.1.4"}}
+                         :main-opts  ["-m" "rebel-readline.main"]}
            :production  {:jvm-opts  ["-Xmx4096m" "-XX:+PrintFlagsFinal"]}
            :run-server  {:main-opts ["-m" "org.openforis.ceo.server"]}}}
 
