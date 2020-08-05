@@ -31,6 +31,7 @@ const blankProject = {
     projectOptions: {
         showGEEScript: false,
         showPlotInformation: false,
+        autoLaunchGeoDash: true,
     },
 };
 
