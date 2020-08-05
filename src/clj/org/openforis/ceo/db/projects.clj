@@ -1,13 +1,12 @@
 (ns org.openforis.ceo.db.projects
-  (:require [clojure.data.json :as json]
-            [org.openforis.ceo.database :refer [call-sql sql-primitive]]
+  (:require [org.openforis.ceo.database :refer [call-sql sql-primitive]]
             [org.openforis.ceo.utils.type-conversion :as tc]
             [org.openforis.ceo.views :refer [data-response]]))
 
 (defn- check-auth-common [params sql-query]
   (let [user-id    (tc/str->int (:userId params))
         project-id (tc/str->int (:projectId params))
-        token-key  (:token-key params)]
+        token-key  (:tokenKey params)]
     ;; FIXME we need a middleware that sets non null tokenKey to the session
     (or (and token-key
              (= token-key (sql-primitive (call-sql (str "SELECT token_key FROM projects WHERE project_uid = "
@@ -28,7 +27,7 @@
    :name                 (:name project)
    :description          (:description project)
    :privacyLevel         (:privacy_level project)
-   :boundary             (:boundary project)
+   :boundary             (tc/jsonb->clj (:boundary project))
    :plotDistribution     (:plot_distribution project)
    :numPlots             (:num_plots project)
    :plotSpacing          (:plot_spacing project)
@@ -41,9 +40,9 @@
    :classification_times "" ; TODO this has never been used
    :editable             (:editable project)
    :validBoundary        (:valid_boundary project)
-   :sampleValues         (:survey_questions project) ; TODO why dont these names match
-   :surveyRules          (:survey_rules project)
-   :projectOptions       (:options project)})
+   :sampleValues         (tc/jsonb->clj (:survey_questions project)) ; TODO why dont these names match
+   :surveyRules          (tc/jsonb->clj (:survey_rules project))
+   :projectOptions       (tc/jsonb->clj (:options project))})
 
 (defn- get-project-list [sql-results]
   (mapv single-project-object
@@ -86,7 +85,7 @@
                     :publishedDate   (:published_date stats)
                     :closedDate      (:closed_date stats)
                     :archivedDate    (:archived_date stats)
-                    :userStats       (json/read-str (:user_stats stats))}))) ; FIXME, is json/read-str needed?
+                    :userStats       (tc/jsonb->clj (:user_stats stats))})))
 
 (defn dump-project-aggregate-data [request])
 
