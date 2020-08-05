@@ -15,7 +15,9 @@
    (str->bool string false))
   ([string default]
    (if string
-     (Boolean/parseBoolean (str string))
+     (try
+       (Boolean/parseBoolean string)
+       (catch Exception _ default))
      default)))
 
 (defn json->clj
@@ -36,3 +38,7 @@
 
 (defn json->jsonb [json]
   (-> json json->clj clj->jsonb))
+
+(def clj->json json/write-str)
+
+(def jsonb->json str)
