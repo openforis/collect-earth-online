@@ -55,12 +55,19 @@ class Project extends React.Component {
             },
             projectList: [],
             showModal: false,
+            plotSampleLimitVals: {
+                plots: 0,
+                perPlot: 0,
+                plotLimitError: true,
+                sampleLimitError: true,
+            },
         };
     }
 
     componentDidMount() {
         this.getImageryList();
         this.getProjectList();
+        this.checkPlotSampleLimitError();
     }
 
     componentDidUpdate(prevProps, prevState) {
@@ -311,7 +318,7 @@ class Project extends React.Component {
                 },
                 useTemplatePlots: false,
                 useTemplateWidgets: false,
-            });
+            }, () => this.checkPlotSampleLimitError());
             mercator.removeLayerById(this.state.mapConfig, "dragBoxLayer");
         } else {
             const templateProject = this.state.projectList.find(p => p.id === newTemplateId);
@@ -359,7 +366,11 @@ class Project extends React.Component {
     toggleTemplateWidgets = () => this.setState({ useTemplateWidgets: !this.state.useTemplateWidgets });
 
     setProjectDetail = (key, newValue) =>
-        this.setState({ projectDetails: { ...this.state.projectDetails, [key]: newValue }});
+        this.setState({
+            projectDetails: {
+                ...this.state.projectDetails, [key]: newValue,
+            },
+        }, () => this.checkPlotSampleLimitError());
 
     setSurveyQuestions = (newSurveyQuestions) =>
         this.setState({ projectDetails: { ...this.state.projectDetails, surveyQuestions: newSurveyQuestions }});
@@ -428,7 +439,7 @@ class Project extends React.Component {
                     lonMax: extent[2],
                     latMax: extent[3],
                 },
-            });
+            }, () => this.checkPlotSampleLimitError());
         };
         mercator.enableDragBoxDraw(this.state.mapConfig, displayDragBoxBounds);
     };
@@ -445,7 +456,7 @@ class Project extends React.Component {
                 lonMax: boundaryExtent[2],
                 latMax: boundaryExtent[3],
             },
-        });
+        }, () => this.checkPlotSampleLimitError());
 
         // Display a bounding box with the project's AOI on the map and zoom to it
         mercator.addVectorLayer(this.state.mapConfig,
@@ -474,7 +485,11 @@ class Project extends React.Component {
             return Number(projectDetails.numPlots);
         } else if (projectDetails.plotDistribution === "gridded"
             && projectDetails.plotSize
-            && projectDetails.plotSpacing) {
+            && projectDetails.plotSpacing
+            && coordinates.lonMin
+            && coordinates.latMin
+            && coordinates.lonMax
+            && coordinates.latMax) {
             const lowerLeft = mercator.transformPoint(coordinates.lonMin,
                                                       coordinates.latMin,
                                                       "EPSG:4326",
@@ -499,13 +514,17 @@ class Project extends React.Component {
     }
 
     getSamplesPerPlot = () => {
-        const { projectDetails } = this.state;
+        const { projectDetails, coordinates } = this.state;
         if (projectDetails.sampleDistribution === "random"
             && projectDetails.samplesPerPlot) {
             return Number(projectDetails.samplesPerPlot);
         } else if (projectDetails.sampleDistribution === "gridded"
             && projectDetails.plotSize
-            && projectDetails.sampleResolution) {
+            && projectDetails.sampleResolution
+            && coordinates.lonMin
+            && coordinates.latMin
+            && coordinates.lonMax
+            && coordinates.latMax) {
             const steps = Math.floor(Number(projectDetails.plotSize) / Number(projectDetails.sampleResolution)) + 1;
             return steps * steps;
         } else if (projectDetails.sampleDistribution === "center") {
@@ -520,12 +539,15 @@ class Project extends React.Component {
         const perPlot = this.getSamplesPerPlot();
         const plotLimitError = plots > plotLimit;
         const sampleLimitError = (perPlot > perPlotLimit) || (plots * perPlot > sampleLimit);
-        return {
-            plots: plots,
-            perPlot: perPlot,
-            plotLimitError: plotLimitError,
-            sampleLimitError: sampleLimitError,
-        };
+        this.setState({
+            plotSampleLimitVals: {
+                ...this.state.plotSampleLimitVals,
+                plots: plots,
+                perPlot: perPlot,
+                plotLimitError: plotLimitError,
+                sampleLimitError: sampleLimitError,
+            },
+        });
     };
 
     render() {
@@ -549,6 +571,7 @@ class Project extends React.Component {
                             useTemplateWidgets={this.state.useTemplateWidgets}
                             projectImageryList={this.state.projectImageryList}
                             setProjectImageryList={this.setProjectImageryList}
+                            plotSampleLimitVals={this.state.plotSampleLimitVals}
                             checkPlotSampleLimitError={this.checkPlotSampleLimitError}
                         />
                         <ProjectManagement createProject={this.createProject} />
@@ -604,7 +627,7 @@ function ProjectDesignForm(props) {
                     <SampleDesign
                         projectDetails={props.projectDetails}
                         setProjectDetail={props.setProjectDetail}
-                        checkPlotSampleLimitError={props.checkPlotSampleLimitError}
+                        plotSampleLimitVals={props.plotSampleLimitVals}
                     />
                 </Fragment>
             }
@@ -938,7 +961,7 @@ function PlotDesign ({
 
 function SampleDesign ({
     setProjectDetail,
-    checkPlotSampleLimitError,
+    plotSampleLimitVals,
     projectDetails: {
         plotDistribution,
         sampleDistribution,
@@ -947,7 +970,6 @@ function SampleDesign ({
         sampleFileName,
     },
 }) {
-    const plotSampleLimitVals = checkPlotSampleLimitError();
     return (
         <SectionBlock title="Sample Design">
             <div id="sample-design">
@@ -1134,7 +1156,7 @@ function SampleDesign ({
                         : ""
                     }
                     {
-                        plotSampleLimitVals.plotLimitError
+                        plotSampleLimitVals.plots && plotSampleLimitVals.plotLimitError
                             ? `\n * The maximum allowed number for the selected plot distribution is ${formatNumberWithCommas(plotLimit)}.`
                             : ""
                     }
@@ -1161,7 +1183,7 @@ function SampleDesign ({
                             : ""
                     }
                     {
-                        plotSampleLimitVals.sampleLimitError
+                        plotSampleLimitVals.plots && plotSampleLimitVals.perPlot && plotSampleLimitVals.sampleLimitError
                             ? `\n * The maximum allowed for the selected sample distribution is ${formatNumberWithCommas(perPlotLimit)}`
                             + ` samples per plot.\n * The maximum allowed samples per project is ${formatNumberWithCommas(sampleLimit)}.`
                             : ""
