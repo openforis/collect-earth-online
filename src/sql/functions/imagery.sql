@@ -5,6 +5,16 @@
 --  IMAGERY FUNCTIONS
 --
 
+-- Returns a single imagery by ID
+CREATE OR REPLACE FUNCTION select_imagery_by_id(_imagery_id integer)
+ RETURNS setOf imagery_return AS $$
+
+    SELECT imagery_uid, institution_rid, visibility, title, attribution, extent, source_config
+    FROM imagery
+    WHERE imagery_uid = _imagery_id
+
+$$ LANGUAGE SQL;
+
 -- Returns first public imagery
 CREATE OR REPLACE FUNCTION select_first_public_imagery()
  RETURNS integer AS $$

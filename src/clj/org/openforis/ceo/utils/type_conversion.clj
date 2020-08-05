@@ -1,4 +1,6 @@
-(ns org.openforis.ceo.utils.type-conversion)
+(ns org.openforis.ceo.utils.type-conversion
+  (:import org.postgresql.util.PGobject)
+  (:require [clojure.data.json :as json]))
 
 (defn str->int
   ([string]
@@ -6,12 +8,31 @@
   ([string default]
    (try
      (Integer/parseInt string)
-     (catch default))))
+     (catch Exception _ default))))
 
 (defn str->bool
   ([string]
    (str->bool string false))
   ([string default]
+   (if string
+     (Boolean/parseBoolean (str string))
+     default)))
+
+(defn json->clj
+  ([string]
+   (json->clj string {}))
+  ([string default]
    (try
-     (boolean string)
-     (catch default))))
+     (json/read-str string :key-fn keyword)
+     (catch Exception _ default))))
+
+(defn jsonb->clj [jsonb]
+  (json->clj (str jsonb)))
+
+(defn clj->jsonb [data]
+  (doto (PGobject.)
+    (.setType "jsonb")
+    (.setValue (json/write-str data))))
+
+(defn json->jsonb [json]
+  (-> json json->clj clj->jsonb))
