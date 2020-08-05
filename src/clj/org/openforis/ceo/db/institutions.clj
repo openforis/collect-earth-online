@@ -1,7 +1,7 @@
 (ns org.openforis.ceo.db.institutions
   (:import java.util.Date)
   (:require [clojure.string    :as str]
-            [clojure.data.json :as json]
+            [org.openforis.ceo.utils.type-conversion :as tc]
             [org.openforis.ceo.database         :refer [call-sql sql-primitive]]
             [org.openforis.ceo.views            :refer [data-response]]
             [org.openforis.ceo.utils.json-utils :refer [expand-resource-path]]
@@ -11,9 +11,11 @@
   (sql-primitive (call-sql "is_institution_user_admin" user-id institution-id)))
 
 (defn is-inst-admin? [{:keys [params]}]
-  (let [user-id        (Integer/parseInt (or (:userId params) "-1"))
-        institution-id (Integer/parseInt (or (:institutionId params) "0"))]
-    (is-inst-admin-query? user-id institution-id)))
+  (let [user-id        (tc/str->int (:userId params))
+        institution-id (tc/str->int (:institutionId params))]
+    (and (pos? user-id)
+         (pos? institution-id)
+         (is-inst-admin-query? user-id institution-id))))
 
 (defn- prepare-institution [{:keys [institution_id name logo description url archived members admins pending]}]
   {:id          institution_id
@@ -22,9 +24,9 @@
    :description description
    :url         url
    :archived    archived
-   :members     (json/read-str members)
-   :admins      (json/read-str admins)
-   :pending     (json/read-str pending)})
+   :members     (tc/jsonb->clj members)
+   :admins      (tc/jsonb->clj admins)
+   :pending     (tc/jsonb->clj pending)})
 
 (defn get-all-institutions [_]
   (->> (call-sql "select_all_institutions")
@@ -46,11 +48,11 @@
      :pending      []}))
 
 (defn get-institution-details [{:keys [params]}]
-  (let [institution-id (Integer/parseInt (:institutionId params))]
+  (let [institution-id (tc/str->int (:institutionId params))]
     (data-response (get-institution-by-id institution-id))))
 
 (defn create-institution [{:keys [params]}]
-  (let [user-id      (Integer/parseInt (:userId params))
+  (let [user-id      (tc/str->int (:userId params))
         name         (:name params)
         url          (:url params)
         logo         (:logo params)
@@ -70,7 +72,7 @@
       (data-response "")))) ; FIXME: Return "Error creating institution." and update front-end code accordingly.
 
 (defn update-institution [{:keys [params]}]
-  (let [institution-id (Integer/parseInt (:institutionId params))
+  (let [institution-id (tc/str->int (:institutionId params))
         name           (:name params)
         url            (:url params)
         logo           (:logo params)
@@ -89,6 +91,6 @@
       (data-response "")))) ; FIXME: Return "Institution not found." and update front-end code accordingly.
 
 (defn archive-institution [{:keys [params]}]
-  (let [institution-id (Integer/parseInt (:institutionId params))]
+  (let [institution-id (tc/str->int (:institutionId params))]
     (call-sql "archive_institution" institution-id)
     (data-response "")))
