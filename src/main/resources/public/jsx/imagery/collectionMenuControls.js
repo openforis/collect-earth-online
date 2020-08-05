@@ -203,7 +203,7 @@ export class SecureWatchMenus extends React.Component {
             this.getAvailableDates();
         }
         if (prevProps.visible !== visible) {
-            mercator.updateLayerWmsParams(mapConfig, thisImageryId, {}, "img/securewatch-go-to-plot.png");
+            mercator.updateLayerWmsParams(mapConfig, thisImageryId, {}, "img/go-to-plot.png");
             this.updateImageryInformation();
         }
     }
