@@ -530,22 +530,22 @@ function ProjectList(props) {
 }
 
 function Project(props) {
-    return props.editable
-        ?
-            <div className="bg-lightgrey text-center p-1 row px-auto">
-                <div className="col-lg-10 pr-lg-1">
-                    <a
-                        className="view-project btn btn-sm btn-outline-lightgreen btn-block"
-                        style={{
-                            whiteSpace: "nowrap",
-                            overflow: "hidden",
-                            textOverflow: "ellipsis",
-                        }}
-                        href={`/collection?projectId=${props.id}`}
-                    >
-                        {props.name || "*un-named*"}
-                    </a>
-                </div>
+    return (
+        <div className="bg-lightgrey text-center p-1 row px-auto">
+            <div className={props.editable ? "col-lg-10 pr-lg-1" : "col mb-1 mx-0"}>
+                <a
+                    className="btn btn-sm btn-outline-lightgreen btn-block"
+                    style={{
+                        whiteSpace: "nowrap",
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                    }}
+                    href={`/collection?projectId=${props.id}`}
+                >
+                    {props.name || "*un-named*"}
+                </a>
+            </div>
+            {props.editable &&
                 <div className="col-lg-2 pl-lg-0">
                     <a
                         className="edit-project btn btn-sm btn-outline-yellow btn-block"
@@ -554,18 +554,9 @@ function Project(props) {
                         <UnicodeIcon icon="edit"/>
                     </a>
                 </div>
-            </div>
-        :
-            <div className="bg-lightgrey text-center p-1 row">
-                <div className="col mb-1 mx-0">
-                    <a
-                        className="btn btn-sm btn-outline-lightgreen btn-block"
-                        href={`/collection?projectId=${props.id}`}
-                    >
-                        {props.name}
-                    </a>
-                </div>
-            </div>;
+            }
+        </div>
+    );
 }
 
 class ProjectPopup extends React.Component {
