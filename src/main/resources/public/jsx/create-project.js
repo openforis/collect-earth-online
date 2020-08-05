@@ -212,8 +212,7 @@ class Project extends React.Component {
     };
 
     validatePlotData = () => {
-        const { projectDetails, coordinates } = this.state;
-        const plotSampleLimitVals = this.checkPlotSampleLimitError();
+        const { projectDetails, coordinates, plotSampleLimitVals } = this.state;
         if (["random", "gridded"].includes(projectDetails.plotDistribution) && coordinates.latMax === "") {
             alert("Please select a boundary");
             return false;
