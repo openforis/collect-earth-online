@@ -67,7 +67,6 @@ class Project extends React.Component {
     componentDidMount() {
         this.getImageryList();
         this.getProjectList();
-        this.checkPlotSampleLimitError();
     }
 
     componentDidUpdate(prevProps, prevState) {
@@ -112,6 +111,22 @@ class Project extends React.Component {
                                         : plotDistribution === "shp"
                                               && ["random", "gridded"].includes(sampleDistribution) ? "shp"
                                             : sampleDistribution);
+        }
+
+        // calculation of the plots and samples number
+        if (this.state.projectDetails.plotDistribution !== prevState.projectDetails.plotDistribution
+            || this.state.projectDetails.sampleDistribution !== prevState.projectDetails.sampleDistribution
+            || this.state.projectDetails.numPlots !== prevState.projectDetails.numPlots
+            || this.state.projectDetails.plotSize !== prevState.projectDetails.plotSize
+            || this.state.projectDetails.plotSpacing !== prevState.projectDetails.plotSpacing
+            || this.state.projectDetails.samplesPerPlot !== prevState.projectDetails.samplesPerPlot
+            || this.state.projectDetails.sampleResolution !== prevState.projectDetails.sampleResolution
+            || this.state.coordinates.lonMin !== prevState.coordinates.lonMin
+            || this.state.coordinates.lonMax !== prevState.coordinates.lonMax
+            || this.state.coordinates.latMin !== prevState.coordinates.latMin
+            || this.state.coordinates.latMax !== prevState.coordinates.latMax
+        ) {
+            this.checkPlotSampleLimitError();
         }
     }
 
@@ -317,7 +332,7 @@ class Project extends React.Component {
                 },
                 useTemplatePlots: false,
                 useTemplateWidgets: false,
-            }, () => this.checkPlotSampleLimitError());
+            });
             mercator.removeLayerById(this.state.mapConfig, "dragBoxLayer");
         } else {
             const templateProject = this.state.projectList.find(p => p.id === newTemplateId);
@@ -369,7 +384,7 @@ class Project extends React.Component {
             projectDetails: {
                 ...this.state.projectDetails, [key]: newValue,
             },
-        }, () => this.checkPlotSampleLimitError());
+        });
 
     setSurveyQuestions = (newSurveyQuestions) =>
         this.setState({ projectDetails: { ...this.state.projectDetails, surveyQuestions: newSurveyQuestions }});
@@ -438,7 +453,7 @@ class Project extends React.Component {
                     lonMax: extent[2],
                     latMax: extent[3],
                 },
-            }, () => this.checkPlotSampleLimitError());
+            });
         };
         mercator.enableDragBoxDraw(this.state.mapConfig, displayDragBoxBounds);
     };
@@ -455,7 +470,7 @@ class Project extends React.Component {
                 lonMax: boundaryExtent[2],
                 latMax: boundaryExtent[3],
             },
-        }, () => this.checkPlotSampleLimitError());
+        });
 
         // Display a bounding box with the project's AOI on the map and zoom to it
         mercator.addVectorLayer(this.state.mapConfig,
@@ -497,13 +512,11 @@ class Project extends React.Component {
                                                        coordinates.latMax,
                                                        "EPSG:4326",
                                                        "EPSG:3857").getCoordinates();
-            const left = lowerLeft[0] + Number(projectDetails.plotSize) / 2;
-            const bottom = lowerLeft[1] + Number(projectDetails.plotSize) / 2;
-            const right = upperRight[0] - Number(projectDetails.plotSize) / 2;
-            const top = upperRight[1] - Number(projectDetails.plotSize) / 2;
 
-            const xRange = right - left;
-            const yRange = top - bottom;
+            const buffer = Number(projectDetails.plotSize);
+            const xRange = upperRight[0] - lowerLeft[0] - buffer;
+            const yRange = upperRight[1] - lowerLeft[1] - buffer;
+
             const xSteps = Math.floor(xRange / projectDetails.plotSpacing) + 1;
             const ySteps = Math.floor(yRange / projectDetails.plotSpacing) + 1;
             return xSteps * ySteps;
@@ -571,7 +584,6 @@ class Project extends React.Component {
                             projectImageryList={this.state.projectImageryList}
                             setProjectImageryList={this.setProjectImageryList}
                             plotSampleLimitVals={this.state.plotSampleLimitVals}
-                            checkPlotSampleLimitError={this.checkPlotSampleLimitError}
                         />
                         <ProjectManagement createProject={this.createProject} />
                     </Fragment>
