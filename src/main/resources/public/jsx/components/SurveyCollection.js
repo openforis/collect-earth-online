@@ -2,7 +2,7 @@ import React, { Fragment } from "react";
 
 import { removeEnumerator } from "../utils/surveyUtils";
 import { UnicodeIcon } from "../utils/textUtils";
-import { CollapsibleTitle } from "../collection";
+import { CollapsibleTitle } from "./FormComponents";
 
 export class SurveyCollection extends React.Component {
     constructor(props) {
@@ -159,7 +159,7 @@ export class SurveyCollection extends React.Component {
                         </div>
                     :
                         <h3>This project is missing survey questions!</h3>
-                : null
+                : ""
                 }
             </fieldset>
         );
