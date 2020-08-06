@@ -550,7 +550,7 @@ public class PostgresProjects implements Projects {
                                     : getFirstPublicImageryId());
             pstmt.setString(6, jsonInputs.has("projectOptions")
                                     ? jsonInputs.get("projectOptions").getAsJsonObject().toString()
-                                    : "{\"showGEEScript\":false}");
+                                    : "{\"showGEEScript\":false, \"showPlotInformation\":false, \"autoLaunchGeoDash\":true}");
             pstmt.execute();
 
             if (jsonInputs.has("projectImageryList")) {
@@ -956,8 +956,8 @@ public class PostgresProjects implements Projects {
             newProject.addProperty("useTemplatePlots",   getOrFalse(jsonInputs, "useTemplatePlots").getAsBoolean());
             newProject.addProperty("useTemplateWidgets", getOrFalse(jsonInputs, "useTemplateWidgets").getAsBoolean());
             newProject.add("projectOptions",             jsonInputs.has("projectOptions")
-                                                                    ? jsonInputs.get("projectOptions").getAsJsonObject()
-                                                                    : parseJson("{\"showGEEScript\":false}").getAsJsonObject());
+                    ? jsonInputs.get("projectOptions").getAsJsonObject()
+                    : parseJson("{\"showGEEScript\":false, \"showPlotInformation\":false, \"autoLaunchGeoDash\":true}").getAsJsonObject());
 
             // file part properties
             newProject.addProperty("plotFileName",       getOrEmptyString(jsonInputs, "plotFileName").getAsString());

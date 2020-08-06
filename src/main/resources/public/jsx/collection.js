@@ -95,7 +95,9 @@ class Collection extends React.Component {
         // Initialize when new plot
         if (this.state.currentPlot.id && this.state.currentPlot !== prevState.currentPlot) {
             this.showProjectPlot();
-            if (this.state.hasGeoDash) this.showGeoDash();
+            if (this.state.hasGeoDash && this.state.currentProject.projectOptions.autoLaunchGeoDash) {
+                this.showGeoDash();
+            }
             clearInterval(this.state.storedInterval);
             this.setState({ storedInterval: setInterval(() => this.resetPlotLock, 2.3 * 60 * 1000) });
         }
