@@ -23,14 +23,14 @@
 
 (defn get-institution-imagery [{:keys [params]}]
   (let [institution-id (tc/str->int (:institutionId params))
-        user-id        (tc/str->int (:userId params))]
+        user-id        (:userId params)]
     (data-response (prepare-imagery (call-sql "select_imagery_by_institution" institution-id user-id)
                                     (is-inst-admin-query? user-id institution-id)))))
 
 (defn get-project-imagery [{:keys [params]}]
   (let [project-id (tc/str->int (:projectId params))
-        user-id    (tc/str->int (:userId params))
-        token-key   (:tokenKey params)]
+        user-id    (:userId params)
+        token-key  (:tokenKey params)]
     (data-response (prepare-imagery (call-sql "select_imagery_by_project" project-id user-id token-key)
                                     false))))
 

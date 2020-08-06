@@ -8,7 +8,8 @@
             [org.openforis.ceo.db.institutions :as institutions]
             [org.openforis.ceo.db.plots        :as plots]
             [org.openforis.ceo.db.projects     :as projects]
-            [org.openforis.ceo.db.users        :as users]))
+            [org.openforis.ceo.db.users        :as users]
+            [org.openforis.ceo.proxy           :as proxy]))
 
                ;; Users API
 (def name->fn {"/account"                        users/update-account ; TODO conform route and fn
@@ -66,7 +67,10 @@
                "/geo-dash/create-widget"         geodash/create-dashboard-widget-by-id
                "/geo-dash/delete-widget"         geodash/delete-dashboard-widget-by-id
                "/geo-dash/gateway-request"       geodash/gateway-request
-               "/geo-dash/update-widget"         geodash/update-dashboard-widget-by-id})
+               "/geo-dash/update-widget"         geodash/update-dashboard-widget-by-id
+               ;; Proxy Routes
+               "/get-tile"                       proxy/proxy-imagery
+               "/get-securewatch-dates"          proxy/get-secure-watch-dates})
 
 (defn fn->sym [f]
   (-> (str f)
