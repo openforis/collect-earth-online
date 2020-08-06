@@ -189,7 +189,7 @@ mercator.__sendGEERequest = function (theJson, sourceConfig, imageryId, attribut
             }
         })
         .then(data => {
-            if (data.hasOwnProperty("url")) {
+            if (data && data.hasOwnProperty("url")) {
                 const geeLayer = new XYZ({
                     url: data.url,
                     attributions: attribution,
@@ -304,9 +304,8 @@ mercator.createSource = function (sourceConfig, imageryId, attribution,
         });
     } else if (sourceConfig.type === "GeoServer") {
         return new TileWMS({
-            serverType: "geoserver",
-            url: "/get-tile",
-            params: { LAYERS: "none", imageryId: imageryId },
+            url: documentRoot + "/get-tile",
+            params: { imageryId: imageryId },
             attributions: attribution,
         });
     } else if (sourceConfig.type === "SecureWatch") {
