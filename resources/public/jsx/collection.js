@@ -254,7 +254,7 @@ class Collection extends React.Component {
                   plotId: plotId,
                   projectId: this.props.projectId,
               }))
-            .then(response => response.ok ? response.text() : Promise.reject(response))
+            .then(response => response.ok ? response.json() : Promise.reject(response))
             .then(data => {
                 if (data === "done") {
                     alert(this.state.reviewPlots
@@ -287,7 +287,7 @@ class Collection extends React.Component {
                   projectId: this.props.projectId,
                   institutionId: this.state.currentProject.institution,
               }))
-            .then(response => response.ok ? response.text() : Promise.reject(response))
+            .then(response => response.ok ? response.json() : Promise.reject(response))
             .then(data => {
                 if (data === "done") {
                     if (plotId === -1) {
@@ -322,7 +322,7 @@ class Collection extends React.Component {
                   projectId: this.props.projectId,
                   institutionId: this.state.currentProject.institution,
               }))
-            .then(response => response.ok ? response.text() : Promise.reject(response))
+            .then(response => response.ok ? response.json() : Promise.reject(response))
             .then(data => {
                 if (data === "done") {
                     this.setState({ prevPlotButtonDisabled: true });

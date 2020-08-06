@@ -235,6 +235,6 @@
                         wrap-ssl-redirect
                         wrap-common))
 
-(def development-app (-> routing-handler
-                         wrap-common
-                         wrap-reload))
+(defonce development-app (-> routing-handler
+                             wrap-common
+                             wrap-reload))

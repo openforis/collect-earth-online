@@ -19,7 +19,7 @@ class Login extends React.Component {
                   headers: { "Content-Type": "application/x-www-form-urlencoded" },
                   body: getQueryString(this.state),
               })
-            .then(response => Promise.all([response.ok, response.text()]))
+            .then(response => Promise.all([response.ok, response.json()]))
             .then(data => {
                 if (data[0] && data[1] === "") {
                     window.location = this.props.returnurl === "" ? "/home" : this.props.returnurl;
