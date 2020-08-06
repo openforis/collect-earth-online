@@ -480,32 +480,30 @@ class Institution extends React.Component {
         return (
             <li>
                 <div
-                    className="btn bg-lightgreen btn-block m-0 p-2 rounded-0"
+                    className="btn bg-lightgreen btn-block p-2 rounded-0"
+                    style={{ marginBottom: "2px" }}
                     onClick={this.toggleShowProjectList}
                 >
-                    <div className="row">
-                        <div className="col-lg-10 my-auto">
-                            <p
-                                className="tree_label text-white m-0"
-                                htmlFor={"c" + props.id}
-                            >
-                                <input type="checkbox" className="d-none" id={"c" + props.id}/>
-                                <span className="">{props.name}</span>
-                            </p>
+                    <div className="d-flex justify-content-between align-items-center">
+                        <div style={{ flex: "0 0 1rem" }}>
+                            {props.projects && props.projects.length > 0 && (
+                                props.forceInstitutionExpand || this.state.showProjectList ? "\u25BC" : "\u25BA"
+                            )}
                         </div>
-                        <div className="col-lg-1">
-                            <a
-                                className="institution_info btn btn-sm btn-outline-lightgreen"
-                                href={`/review-institution?institutionId=${props.id}`}
-                            >
-                                <span style={{ color: "white", fontSize: "1rem" }}>
-                                    <UnicodeIcon icon="info"/>
-                                </span>
-                            </a>
+                        <div style={{ flex: 1 }}>
+                            {props.name}
+                        </div>
+                        <div
+                            className="btn btn-sm visit-btn"
+                            onClick={e => {
+                                e.stopPropagation();
+                                window.location = `/review-institution?institutionId=${props.id}`;
+                            }}
+                        >
+                            VISIT
                         </div>
                     </div>
                 </div>
-
                 {(props.forceInstitutionExpand || this.state.showProjectList) &&
                     <ProjectList
                         id={props.id}
@@ -532,22 +530,22 @@ function ProjectList(props) {
 }
 
 function Project(props) {
-    return props.editable
-        ?
-            <div className="bg-lightgrey text-center p-1 row px-auto">
-                <div className="col-lg-10 pr-lg-1">
-                    <a
-                        className="view-project btn btn-sm btn-outline-lightgreen btn-block"
-                        style={{
-                            whiteSpace: "nowrap",
-                            overflow: "hidden",
-                            textOverflow: "ellipsis",
-                        }}
-                        href={`/collection?projectId=${props.id}`}
-                    >
-                        {props.name || "*un-named*"}
-                    </a>
-                </div>
+    return (
+        <div className="bg-lightgrey text-center p-1 row px-auto">
+            <div className={props.editable ? "col-lg-10 pr-lg-1" : "col mb-1 mx-0"}>
+                <a
+                    className="btn btn-sm btn-outline-lightgreen btn-block"
+                    style={{
+                        whiteSpace: "nowrap",
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                    }}
+                    href={`/collection?projectId=${props.id}`}
+                >
+                    {props.name || "*un-named*"}
+                </a>
+            </div>
+            {props.editable &&
                 <div className="col-lg-2 pl-lg-0">
                     <a
                         className="edit-project btn btn-sm btn-outline-yellow btn-block"
@@ -556,18 +554,9 @@ function Project(props) {
                         <UnicodeIcon icon="edit"/>
                     </a>
                 </div>
-            </div>
-        :
-            <div className="bg-lightgrey text-center p-1 row">
-                <div className="col mb-1 mx-0">
-                    <a
-                        className="btn btn-sm btn-outline-lightgreen btn-block"
-                        href={`/collection?projectId=${props.id}`}
-                    >
-                        {props.name}
-                    </a>
-                </div>
-            </div>;
+            }
+        </div>
+    );
 }
 
 class ProjectPopup extends React.Component {
