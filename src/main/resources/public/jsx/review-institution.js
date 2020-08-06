@@ -1007,9 +1007,11 @@ class UserList extends React.Component {
     componentDidUpdate(prevProps, prevState) {
         if (this.state.institutionUserList.length !== prevState.institutionUserList.length) {
             this.props.setUsersCount(
-                this.props.isAdmin
+                this.props.isAdmin || this.currentIsInstitutionAdmin()
                     ? this.state.institutionUserList.length
-                    : this.state.institutionUserList.filter(user => user.institutionRole !== "pending").length
+                    : this.currentIsInstitutionMember()
+                        ? 1
+                        : ""
             );
         }
     }
@@ -1081,6 +1083,9 @@ class UserList extends React.Component {
     currentIsInstitutionMember = () =>
         this.props.userId === 1 || this.state.institutionUserList.some(iu => iu.id === this.props.userId);
 
+    currentIsInstitutionAdmin = () =>
+        this.props.userId === 1 || this.state.institutionUserList.some(iu => iu.id === this.props.userId && iu.institutionRole === "admin")
+
     isInstitutionMember = (userEmail) => this.state.institutionUserList.some(iu => iu.email === userEmail);
 
     isActiveUser = (userEmail) => this.state.activeUserList.some(au => au.email === userEmail);
@@ -1105,19 +1110,30 @@ class UserList extends React.Component {
                     updateUserInstitutionRole={this.updateUserInstitutionRole}
                     userId={this.props.userId}
                 />
-                {this.props.userId > 0 &&
-                    this.state.institutionUserList
-                        .filter(iu => this.props.isAdmin || iu.institutionRole !== "pending")
+                {this.props.isAdmin || this.currentIsInstitutionAdmin()
+                    ? this.state.institutionUserList
                         .sort((a, b) => sortAlphabetically(a.email, b.email))
                         .sort((a, b) => sortAlphabetically(a.institutionRole, b.institutionRole))
                         .map((iu, uid) =>
                             <User
                                 key={uid}
                                 user={iu}
-                                isAdmin={this.props.isAdmin}
+                                isAdmin
                                 updateUserInstitutionRole={this.updateUserInstitutionRole}
                             />
                         )
+                    : this.currentIsInstitutionMember()
+                        ? [this.state.institutionUserList
+                            .find(iu => iu.id === this.props.userId)]
+                            .map((iu, uid) =>
+                                <User
+                                    key={uid}
+                                    user={iu}
+                                    isAdmin={false}
+                                    updateUserInstitutionRole={this.updateUserInstitutionRole}
+                                />
+                            )
+                        : ""
                 }
             </Fragment>;
     }
