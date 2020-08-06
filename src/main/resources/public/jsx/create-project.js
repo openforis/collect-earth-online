@@ -6,8 +6,10 @@ import { NavigationBar } from "./components/PageComponents";
 import { ProjectInfo, ProjectAOI, ProjectOptions, PlotReview, SampleReview } from "./components/ProjectComponents";
 import { mercator, ceoMapStyles } from "../js/mercator.js";
 import { SurveyDesign } from "./components/SurveyDesign";
+import { plotLimit, perPlotLimit, sampleLimit } from "./utils/projectUtils";
 import { convertSampleValuesToSurveyQuestions } from "./utils/surveyUtils";
 import { encodeFileAsBase64 } from "./utils/fileUtils";
+import { formatNumberWithCommas } from "./utils/textUtils";
 
 const blankProject = {
     archived: false,
@@ -54,6 +56,12 @@ class Project extends React.Component {
             },
             projectList: [],
             showModal: false,
+            plotSampleLimitVals: {
+                plots: 0,
+                perPlot: 0,
+                plotLimitError: true,
+                sampleLimitError: true,
+            },
         };
     }
 
@@ -104,6 +112,22 @@ class Project extends React.Component {
                                         : plotDistribution === "shp"
                                               && ["random", "gridded"].includes(sampleDistribution) ? "shp"
                                             : sampleDistribution);
+        }
+
+        // calculation of the plots and samples number
+        if (this.state.projectDetails.plotDistribution !== prevState.projectDetails.plotDistribution
+            || this.state.projectDetails.sampleDistribution !== prevState.projectDetails.sampleDistribution
+            || this.state.projectDetails.numPlots !== prevState.projectDetails.numPlots
+            || this.state.projectDetails.plotSize !== prevState.projectDetails.plotSize
+            || this.state.projectDetails.plotSpacing !== prevState.projectDetails.plotSpacing
+            || this.state.projectDetails.samplesPerPlot !== prevState.projectDetails.samplesPerPlot
+            || this.state.projectDetails.sampleResolution !== prevState.projectDetails.sampleResolution
+            || this.state.coordinates.lonMin !== prevState.coordinates.lonMin
+            || this.state.coordinates.lonMax !== prevState.coordinates.lonMax
+            || this.state.coordinates.latMin !== prevState.coordinates.latMin
+            || this.state.coordinates.latMax !== prevState.coordinates.latMax
+        ) {
+            this.checkPlotSampleLimitError();
         }
     }
 
@@ -191,15 +215,20 @@ class Project extends React.Component {
         } else if (["public", "users"].includes(projectDetails.privacyLevel)
             && [...projectImageryList, projectDetails.imageryId]
                 .every(id => imageryList.some(il => il.id === id && il.visibility === "private"))) {
-            alert("Projects with privacy level of " + projectDetails.privacyLevel + " require at least one public imagery.");
+            alert(`Projects with privacy level of ${projectDetails.privacyLevel} require at least one public imagery.`);
             return false;
+
+        } else if (!projectDetails.imageryId > 0) {
+            alert("Select a valid Basemap.");
+            return false;
+
         } else {
             return true;
         }
     };
 
     validatePlotData = () => {
-        const { projectDetails, coordinates } = this.state;
+        const { projectDetails, coordinates, plotSampleLimitVals } = this.state;
         if (["random", "gridded"].includes(projectDetails.plotDistribution) && coordinates.latMax === "") {
             alert("Please select a boundary");
             return false;
@@ -249,10 +278,6 @@ class Project extends React.Component {
             alert("A sample SHP (.zip) file is required.");
             return false;
 
-        } else if (!projectDetails.imageryId > 0) {
-            alert("Select a valid Basemap.");
-            return false;
-
         } else if (projectDetails.sampleDistribution === "gridded"
                     && projectDetails.plotShape === "circle"
                     && projectDetails.sampleResolution >= projectDetails.plotSize / Math.sqrt(2)) {
@@ -263,6 +288,10 @@ class Project extends React.Component {
                     && projectDetails.plotShape === "square"
                     && parseInt(projectDetails.sampleResolution) >= projectDetails.plotSize) {
             alert("The sample resolution must be less than the plot width.");
+            return false;
+
+        } else if (plotSampleLimitVals.plotLimitError || plotSampleLimitVals.sampleLimitError) {
+            alert("The plot or sample size limit exceeded. Check the Sample Design section for detailed info.");
             return false;
 
         } else {
@@ -460,6 +489,76 @@ class Project extends React.Component {
     setProjectImageryList = (newProjectImageryList) =>
         this.setState({ projectImageryList: newProjectImageryList });
 
+    getTotalPlots = () => {
+        const { projectDetails, coordinates } = this.state;
+        if (projectDetails.plotDistribution === "random"
+            && projectDetails.numPlots) {
+            return Number(projectDetails.numPlots);
+        } else if (projectDetails.plotDistribution === "gridded"
+            && projectDetails.plotSize
+            && projectDetails.plotSpacing
+            && coordinates.lonMin
+            && coordinates.latMin
+            && coordinates.lonMax
+            && coordinates.latMax) {
+            const lowerLeft = mercator.transformPoint(coordinates.lonMin,
+                                                      coordinates.latMin,
+                                                      "EPSG:4326",
+                                                      "EPSG:3857").getCoordinates();
+            const upperRight = mercator.transformPoint(coordinates.lonMax,
+                                                       coordinates.latMax,
+                                                       "EPSG:4326",
+                                                       "EPSG:3857").getCoordinates();
+
+            const buffer = Number(projectDetails.plotSize);
+            const xRange = upperRight[0] - lowerLeft[0] - buffer;
+            const yRange = upperRight[1] - lowerLeft[1] - buffer;
+
+            const xSteps = Math.floor(xRange / projectDetails.plotSpacing) + 1;
+            const ySteps = Math.floor(yRange / projectDetails.plotSpacing) + 1;
+            return xSteps * ySteps;
+        } else {
+            return 0;
+        }
+    }
+
+    getSamplesPerPlot = () => {
+        const { projectDetails, coordinates } = this.state;
+        if (projectDetails.sampleDistribution === "random"
+            && projectDetails.samplesPerPlot) {
+            return Number(projectDetails.samplesPerPlot);
+        } else if (projectDetails.sampleDistribution === "gridded"
+            && projectDetails.plotSize
+            && projectDetails.sampleResolution
+            && coordinates.lonMin
+            && coordinates.latMin
+            && coordinates.lonMax
+            && coordinates.latMax) {
+            const steps = Math.floor(Number(projectDetails.plotSize) / Number(projectDetails.sampleResolution)) + 1;
+            return steps * steps;
+        } else if (projectDetails.sampleDistribution === "center") {
+            return 1;
+        } else {
+            return 0;
+        }
+    };
+
+    checkPlotSampleLimitError = () => {
+        const plots = this.getTotalPlots();
+        const perPlot = this.getSamplesPerPlot();
+        const plotLimitError = plots > plotLimit;
+        const sampleLimitError = (perPlot > perPlotLimit) || (plots * perPlot > sampleLimit);
+        this.setState({
+            plotSampleLimitVals: {
+                ...this.state.plotSampleLimitVals,
+                plots: plots,
+                perPlot: perPlot,
+                plotLimitError: plotLimitError,
+                sampleLimitError: sampleLimitError,
+            },
+        });
+    };
+
     render() {
         return (
             <FormLayout id="project-design" title="Create Project">
@@ -481,6 +580,7 @@ class Project extends React.Component {
                             useTemplateWidgets={this.state.useTemplateWidgets}
                             projectImageryList={this.state.projectImageryList}
                             setProjectImageryList={this.setProjectImageryList}
+                            plotSampleLimitVals={this.state.plotSampleLimitVals}
                         />
                         <ProjectManagement createProject={this.createProject} />
                     </Fragment>
@@ -532,7 +632,11 @@ function ProjectDesignForm(props) {
             :
                 <Fragment>
                     <PlotDesign projectDetails={props.projectDetails} setProjectDetail={props.setProjectDetail}/>
-                    <SampleDesign projectDetails={props.projectDetails} setProjectDetail={props.setProjectDetail}/>
+                    <SampleDesign
+                        projectDetails={props.projectDetails}
+                        setProjectDetail={props.setProjectDetail}
+                        plotSampleLimitVals={props.plotSampleLimitVals}
+                    />
                 </Fragment>
             }
             <SurveyDesign
@@ -865,6 +969,7 @@ function PlotDesign ({
 
 function SampleDesign ({
     setProjectDetail,
+    plotSampleLimitVals,
     projectDetails: {
         plotDistribution,
         sampleDistribution,
@@ -1044,6 +1149,54 @@ function SampleDesign ({
                         onChange={e => setProjectDetail("sampleResolution", e.target.value)}
                     />
                 </div>
+                <p
+                    id="plots info-text"
+                    className="font-italic ml-2 small"
+                    style={{
+                        marginTop: "10px",
+                        color: plotSampleLimitVals.plotLimitError ? "#8B0000" : "#006400",
+                        fontSize: "0.9rem",
+                        whiteSpace: "pre-line",
+                    }}
+                >
+                    {plotSampleLimitVals.plots
+                        ? `This project will contain around ${formatNumberWithCommas(plotSampleLimitVals.plots)} plots.`
+                        : ""
+                    }
+                    {
+                        plotSampleLimitVals.plots && plotSampleLimitVals.plotLimitError
+                            ? `\n * The maximum allowed number for the selected plot distribution is ${formatNumberWithCommas(plotLimit)}.`
+                            : ""
+                    }
+                </p>
+                <p
+                    id="samples info-text"
+                    className="font-italic ml-2 small"
+                    style={{
+                        marginBottom: "-5px",
+                        color: plotSampleLimitVals.sampleLimitError ? "#8B0000" : "#006400",
+                        fontSize: "0.9rem",
+                        whiteSpace: "pre-line",
+                    }}
+                >
+                    {
+                        plotSampleLimitVals.perPlot
+                            ? `Each plot will contain around ${formatNumberWithCommas(plotSampleLimitVals.perPlot)} samples.`
+                            : ""
+                    }
+                    {
+                        plotSampleLimitVals.plots && plotSampleLimitVals.perPlot
+                            ? `\nThere will be around ${formatNumberWithCommas(plotSampleLimitVals.plots * plotSampleLimitVals.perPlot)} ` +
+                              "total samples in the project."
+                            : ""
+                    }
+                    {
+                        plotSampleLimitVals.plots && plotSampleLimitVals.perPlot && plotSampleLimitVals.sampleLimitError
+                            ? `\n * The maximum allowed for the selected sample distribution is ${formatNumberWithCommas(perPlotLimit)}`
+                            + ` samples per plot.\n * The maximum allowed samples per project is ${formatNumberWithCommas(sampleLimit)}.`
+                            : ""
+                    }
+                </p>
             </div>
         </SectionBlock>
     );
