@@ -6,9 +6,21 @@
   ([string]
    (str->int string -1))
   ([string default]
-   (try
-     (Integer/parseInt string)
-     (catch Exception _ default))))
+   (if (int? string)
+     string
+     (try
+       (Integer/parseInt string)
+       (catch Exception _ default)))))
+
+(defn str->long
+  ([string]
+   (str->int string -1))
+  ([string default]
+   (if (number? string)
+     string
+     (try
+       (Long/parseLong string)
+       (catch Exception _ default)))))
 
 (defn str->float
   ([string]

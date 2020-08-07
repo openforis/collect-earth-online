@@ -263,14 +263,13 @@ class Collection extends React.Component {
                 } else if (data === "not found") {
                     alert("Plot " + plotId + " not found.");
                 } else {
-                    const newPlot = JSON.parse(data);
                     this.setState({
-                        currentPlot: newPlot,
-                        ...this.newPlotValues(newPlot),
+                        currentPlot: data,
+                        ...this.newPlotValues(data),
                         prevPlotButtonDisabled: false,
                         nextPlotButtonDisabled: false,
                     });
-                    this.plotHasSamples(newPlot);
+                    this.plotHasSamples(data);
                 }
             })
             .catch(response => {
@@ -299,13 +298,12 @@ class Collection extends React.Component {
                         alert("You have reached the end of the plot list.");
                     }
                 } else {
-                    const newPlot = JSON.parse(data);
                     this.setState({
-                        currentPlot: newPlot,
-                        ...this.newPlotValues(newPlot),
+                        currentPlot: data,
+                        ...this.newPlotValues(data),
                         prevPlotButtonDisabled: plotId === -1,
                     });
-                    this.plotHasSamples(newPlot);
+                    this.plotHasSamples(data);
                 }
             })
             .catch(response => {
@@ -330,13 +328,12 @@ class Collection extends React.Component {
                           ? "No previous plots were analyzed by you. You are logged in as " + this.props.userName + "."
                           : "All previous plots have been analyzed.");
                 } else {
-                    const newPlot = JSON.parse(data);
                     this.setState({
-                        currentPlot: newPlot,
-                        ...this.newPlotValues(newPlot),
+                        currentPlot: data,
+                        ...this.newPlotValues(data),
                         nextPlotButtonDisabled: false,
                     });
-                    this.plotHasSamples(newPlot);
+                    this.plotHasSamples(data);
                 }
             })
             .catch(response => {
