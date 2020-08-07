@@ -185,7 +185,7 @@ export class ExpandableImage extends React.Component {
 
 const emailPattern = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
 
-const validateRequired = value => value === "" ? "This field is required." : "";
+const validateRequired = value => value === "" || value === false ? "This field is required." : "";
 
 const validateEmail = value => !emailPattern.test(value) ? "Not a valid email address." : "";
 
@@ -240,8 +240,7 @@ export class DynamicForm extends React.Component {
     }
 
     onCheckboxChange = e => {
-        const { name, checked } = e.target;
-        console.log(checked);
+        const { name } = e.target;
         this.setState({ values: { ...this.state.values, [name]: !this.state.values[name] }});
     }
 
@@ -263,9 +262,8 @@ export class DynamicForm extends React.Component {
     validateAll = () => {
         const errors = {};
         this.props.elements.map(element => {
-            const { name, required } = element;
-            errors[name] = this.validate(this.state.values[name], name, required);
-
+            const { name, type, required } = element;
+            errors[name] = this.validate(this.state.values[name], type, required);
         });
         this.setState({ errors });
         return Object.values(errors).reduce((acc, curr) => acc && curr === "", true);
@@ -291,7 +289,9 @@ export class DynamicForm extends React.Component {
                             name={element.name}
                             type={element.type}
                             checked={this.state.values[element.name]}
+                            error={this.state.errors[element.name]}
                             onChange={this.onCheckboxChange}
+                            required={element.required}
                         />
                     :
                         <FormInput
@@ -324,7 +324,7 @@ export class FormInputCheckbox extends React.Component {
     render() {
         const { label, id, name, type, checked } = this.props;
         return (
-            <div className="form-check mb-3">
+            <div className={"form-group form-check mb-3" + (this.props.error ? "invalid" : "")}>
                 <input
                     id={id}
                     name={name}
@@ -334,6 +334,9 @@ export class FormInputCheckbox extends React.Component {
                     className="form-check-input"
                 />
                 <label className="form-check-label" htmlFor={id}>{label}</label>
+                {this.props.error &&
+                    <div className="validation-error">{this.props.error}</div>
+                }
             </div>
         );
     }

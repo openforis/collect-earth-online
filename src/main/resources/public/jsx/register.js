@@ -41,12 +41,10 @@ class Register extends React.Component {
                     checked: true,
                 },
             ],
-            onMailingList: true,
         };
     }
 
     requestRegister = (values) => {
-        values["onMailingList"] = this.state.onMailingList;
         fetch("/register",
               {
                   method: "POST",
