@@ -47,7 +47,7 @@
        (map #(str "/js/" (.getName %)))
        (filter #(and (or (str/includes? % page)
                          (str/includes? % "common"))
-                     (not (str/ends-with? % ".map"))))
+                     (str/ends-with? % "bundle.js")))
        (sort-by #(cond
                    (str/includes? % "common") -1
                    (str/includes? % "~")      0
