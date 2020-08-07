@@ -9,7 +9,7 @@ const outdir = fs.existsSync(path.resolve(__dirname, "target")) ? "target/classe
 
 module.exports = env => ({
     mode: env.dev ? "development" : "production",
-    devtool: env.dev ? "inline-source-map" : "source-map",
+    devtool: env.dev ? "eval-cheap-module-source-map" : "",
     watch: env.dev,
     entry: {
         about                    : path.resolve(__dirname, "src/main/resources/public/jsx/about.js"),
@@ -134,7 +134,7 @@ module.exports = env => ({
                 commons: {
                     name: "common~chunk",
                     chunks: "all",
-                    minChunks: 5, // smaller number puts more into the common chunk
+                    minChunks: Infinity,
                 },
             },
         },
