@@ -134,7 +134,7 @@ module.exports = env => ({
                 commons: {
                     name: "common~chunk",
                     chunks: "all",
-                    minChunks: Infinity,
+                    minChunks: 5, // Any more than 5 and we lose route names in the file name.
                 },
             },
         },
