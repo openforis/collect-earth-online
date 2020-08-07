@@ -521,7 +521,6 @@ class Collection extends React.Component {
                       }),
                   })
                 .then(response => {
-                    console.log(2);
                     if (response.ok) {
                         this.nextPlot();
                     } else {
@@ -1088,10 +1087,8 @@ function SideBar(props) {
     const saveButtonGroup = () => (
         <>
             <input
-                id="save-values-button"
                 className="btn btn-outline-lightgreen btn-sm btn-block"
                 type="button"
-                name="save-values"
                 value="Save"
                 onClick={props.postValuesToDB}
                 style={{ opacity: saveValuesButtonEnabled ? "1.0" : ".25" }}
@@ -1115,10 +1112,8 @@ function SideBar(props) {
                         />
                 }
                 <input
-                    id="save-values-button"
                     className="btn btn-outline-danger btn-sm col"
                     type="button"
-                    name="save-values"
                     value={props.isAnalyzed ? "Clear Changes" : "Clear All"}
                     onClick={props.clearAnswers}
                 />

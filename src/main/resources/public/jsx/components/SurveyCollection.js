@@ -61,7 +61,7 @@ export class SurveyCollection extends React.Component {
                     || childQuestions.every(cq => this.checkAllSubAnswers(cq.id)));
     };
 
-    getTopColor = (node, isFlagged) => this.checkAllSubAnswers(node.id) || isFlagged
+    getTopColor = (node) => this.checkAllSubAnswers(node.id) || this.props.isFlagged
                                 ? "0px 0px 6px 4px #3bb9d6 inset"
                                 : node.answered.length > 0
                                     ? "0px 0px 6px 4px yellow inset"
