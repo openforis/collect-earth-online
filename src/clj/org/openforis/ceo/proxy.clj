@@ -22,7 +22,7 @@
 
 ;; TODO since we dropped STYLE=default for SecureWatch, we can drop STYLE= in buildSecureWatch
 (defn- default-styles [params geoserver-params]
-  (update params :STYLES #(if (= 0 (count %))
+  (update params :STYLES #(if (= "" %)
                             (str/join ","
                                       (take (count (str/split (:LAYERS  geoserver-params) #","))
                                             (repeat "")))
@@ -36,22 +36,21 @@
 (defn keys-upper-case [[key val]]
   [(keyword (str/upper-case (name key))) val])
 
-(defn- wms-url [source-config req]
-  (let [{geoserver-params :geoserverParams
-         source-url       :geoserverUrl} source-config]
+(defn- wms-url [source-config query-params]
+  (let [geoserver-params (mapm keys-upper-case (:geoserverParams source-config))
+        source-url       (:geoserverUrl source-config)]
     (str source-url
          (when-not (str/includes? source-url "?") "?")
-         (as-> (:query-params req) params
-           (mapm keys-upper-case params)
+         (as-> (mapm keys-upper-case query-params) params
            (remove-extra-params params)
-           (merge params (mapm keys-upper-case geoserver-params))
+           (merge params geoserver-params)
            (default-styles params geoserver-params)
            (map (fn [[key val]]
                   (str (name key) "=" val))
                 params)
            (str/join "&" params)))))
 
-(defn- build-url [{:keys [params] :as req}]
+(defn- build-url [{:keys [params query-params]}]
   (let [source-config (get-imagery-source-config (tc/str->int (:imageryId params)))
         source-type   (:type source-config "")]
     (cond
@@ -59,7 +58,7 @@
       (planet-url source-config params)
 
       (#{"GeoServer", "SecureWatch"} source-type)
-      (wms-url source-config req)
+      (wms-url source-config query-params)
 
       :else
       "")))
@@ -68,8 +67,7 @@
   (client/get (build-url req) {:as :stream}))
 
 (defn get-secure-watch-dates [req]
-  (let [imagery-id    (tc/str->int (get-in req [:params :imageryId]))
-        source-config (get-imagery-source-config imagery-id)
+  (let [source-config (get-imagery-source-config (tc/str->int (get-in req [:params :imageryId])))
         url           (str (:geoserverUrl source-config)
                            (->> (dissoc (:query-params req) :imageryId)
                                 (map (fn [[key val]] (str (name key) "=" val)))
