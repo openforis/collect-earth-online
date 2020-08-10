@@ -960,23 +960,24 @@ class Collection extends React.Component {
                 >
                     <PlotNavigation
                         plotId={plotId}
-                        projectId={this.props.projectId}
                         navButtonsShown={this.state.currentPlot.id}
                         nextPlotButtonDisabled={this.state.nextPlotButtonDisabled}
                         prevPlotButtonDisabled={this.state.prevPlotButtonDisabled}
                         reviewPlots={this.state.reviewPlots}
-                        showGeoDash={this.showGeoDash}
                         goToFirstPlot={this.goToFirstPlot}
                         goToPlot={this.goToPlot}
                         nextPlot={this.nextPlot}
                         prevPlot={this.prevPlot}
                         setReviewPlots={this.setReviewPlots}
                         loadingPlots={this.state.plotList.length === 0}
-                        KMLFeatures={this.state.KMLFeatures}
+                    />
+                    <ExternalTools
+                        plotId={plotId}
                         zoomMapToPlot={() => mercator.zoomMapToLayer(this.state.mapConfig, "currentPlot")}
-                        projectOptions={this.state.currentProject.projectOptions}
+                        showGeoDash={this.showGeoDash}
                         currentPlot={this.state.currentPlot}
                         currentProject={this.state.currentProject}
+                        projectOptions={this.state.currentProject.projectOptions}
                     />
                     {this.state.currentPlot.id && this.state.currentProject.projectOptions.showPlotInformation &&
                         <PlotInformation extraPlotInfo={this.state.currentPlot.extraPlotInfo}/>
@@ -1127,15 +1128,12 @@ class PlotNavigation extends React.Component {
         super(props);
         this.state = {
             newPlotInput: "",
-            showNav: false,
-            auxWindow: null,
+            showNav: true,
         };
     }
 
     componentDidUpdate(prevProps) {
-        if (this.props.plotId !== prevProps.plotId) {
-            this.setState({ newPlotInput: this.props.plotId });
-        }
+        if (this.props.plotId !== prevProps.plotId) this.setState({ newPlotInput: this.props.plotId });
     }
 
     updateNewPlotId = (value) => this.setState({ newPlotInput: value });
@@ -1196,6 +1194,48 @@ class PlotNavigation extends React.Component {
         </div>
     );
 
+    render() {
+        const { props } = this;
+        return (
+            <div className="text-center mt-2">
+                {!props.navButtonsShown && this.gotoButton()}
+                <CollapsibleTitle
+                    title={`Plot Navigation ${this.props.plotId ? `- ID: ${this.props.plotId}` : ""}`}
+                    showGroup={this.state.showNav}
+                    toggleShow={() => this.setState({ showNav: !this.state.showNav })}
+                />
+                {props.loadingPlots && <h3>Loading plot data...</h3>}
+                {this.state.showNav && !props.loadingPlots &&
+                <Fragment>
+                    {props.navButtonsShown && this.navButtons()}
+                    <div className="PlotNavigation__review-option row justify-content-center mb-3">
+                        <div className="form-check">
+                            <input
+                                className="form-check-input"
+                                checked={props.reviewPlots}
+                                id="reviewCheck"
+                                onChange={props.setReviewPlots}
+                                type="checkbox"
+                            />
+                            <label htmlFor="reviewCheck" className="form-check-label">Review your analyzed plots</label>
+                        </div>
+                    </div>
+                </Fragment>
+                }
+            </div>
+        );
+    }
+}
+
+class ExternalTools extends React.Component {
+    constructor(props) {
+        super(props);
+        this.state = {
+            showTools: false,
+            auxWindow: null,
+        };
+    }
+
     geoButtons = () => (
         <div className="PlotNavigation__geo-buttons d-flex justify-content-between my-2" id="plot-nav">
             <input
@@ -1216,19 +1256,19 @@ class PlotNavigation extends React.Component {
     loadGEEScript = () => {
         const urlParams = this.props.currentPlot.geom ? "geoJson=" + this.props.currentPlot.geom
             : this.props.currentProject.plotShape === "circle"
-                    ? "center=["
-                    + mercator.parseGeoJson(this.props.currentPlot.center).getCoordinates()
-                    + "];radius=" + this.props.currentProject.plotSize / 2
-            : "geoJson=" + mercator.geometryToGeoJSON(
-                mercator.getPlotPolygon(
-                    this.props.currentPlot.center,
-                    this.props.currentProject.plotSize,
-                    this.props.currentProject.plotShape
-                ),
-                "EPSG:4326",
-                "EPSG:3857",
-                5
-            );
+                ? "center=["
+                + mercator.parseGeoJson(this.props.currentPlot.center).getCoordinates()
+                + "];radius=" + this.props.currentProject.plotSize / 2
+                : "geoJson=" + mercator.geometryToGeoJSON(
+                    mercator.getPlotPolygon(
+                        this.props.currentPlot.center,
+                        this.props.currentProject.plotSize,
+                        this.props.currentProject.plotShape
+                    ),
+                    "EPSG:4326",
+                    "EPSG:3857",
+                    5
+                );
         if (this.state.auxWindow) this.state.auxWindow.close();
         this.setState({
             auxWindow: window.open("https://billyz313.users.earthengine.app/view/ceoplotancillary#" + urlParams,
@@ -1246,37 +1286,10 @@ class PlotNavigation extends React.Component {
     );
 
     render() {
-        const { props } = this;
         return (
             <div className="text-center mt-2">
-                {!props.navButtonsShown && this.gotoButton()}
-                <CollapsibleTitle
-                    title={`External Tools ${this.props.plotId ? `- ID: ${this.props.plotId}` : ""}`}
-                    showGroup={this.state.showNav}
-                    toggleShow={() => this.setState({ showNav: !this.state.showNav })}
-                />
-                {props.loadingPlots && <h3>Loading plot data...</h3>}
-                {this.state.showNav && !props.loadingPlots &&
-                    <Fragment>
-                        {props.navButtonsShown && this.navButtons()}
-                        <div className="PlotNavigation__review-option row justify-content-center mb-3">
-                            <div className="form-check">
-                                <input
-                                    className="form-check-input"
-                                    checked={props.reviewPlots}
-                                    id="reviewCheck"
-                                    onChange={props.setReviewPlots}
-                                    type="checkbox"
-                                />
-                                <label htmlFor="reviewCheck" className="form-check-label">Review your analyzed plots</label>
-                            </div>
-                        </div>
-                        {props.plotId && this.geoButtons()}
-                        {props.plotId
-                            && props.projectOptions.hasOwnProperty("showGEEScript")
-                            && props.projectOptions.showGEEScript && this.geeButton()}
-                    </Fragment>
-                }
+                {this.props.plotId && this.geoButtons()}
+                {this.props.plotId && this.props.projectOptions.showGEEScript && this.geeButton()}
             </div>
         );
     }
