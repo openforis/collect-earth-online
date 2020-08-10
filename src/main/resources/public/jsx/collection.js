@@ -1265,19 +1265,19 @@ class ExternalTools extends React.Component {
     loadGEEScript = () => {
         const urlParams = this.props.currentPlot.geom ? "geoJson=" + this.props.currentPlot.geom
             : this.props.currentProject.plotShape === "circle"
-                ? "center=["
-                + mercator.parseGeoJson(this.props.currentPlot.center).getCoordinates()
-                + "];radius=" + this.props.currentProject.plotSize / 2
-                : "geoJson=" + mercator.geometryToGeoJSON(
-                    mercator.getPlotPolygon(
-                        this.props.currentPlot.center,
-                        this.props.currentProject.plotSize,
-                        this.props.currentProject.plotShape
-                    ),
-                    "EPSG:4326",
-                    "EPSG:3857",
-                    5
-                );
+                    ? "center=["
+                    + mercator.parseGeoJson(this.props.currentPlot.center).getCoordinates()
+                    + "];radius=" + this.props.currentProject.plotSize / 2
+            : "geoJson=" + mercator.geometryToGeoJSON(
+                mercator.getPlotPolygon(
+                    this.props.currentPlot.center,
+                    this.props.currentProject.plotSize,
+                    this.props.currentProject.plotShape
+                ),
+                "EPSG:4326",
+                "EPSG:3857",
+                5
+            );
         if (this.state.auxWindow) this.state.auxWindow.close();
         this.setState({
             auxWindow: window.open("https://billyz313.users.earthengine.app/view/ceoplotancillary#" + urlParams,
