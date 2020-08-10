@@ -966,6 +966,7 @@ class Collection extends React.Component {
                         nextPlotButtonDisabled={this.state.nextPlotButtonDisabled}
                         prevPlotButtonDisabled={this.state.prevPlotButtonDisabled}
                         reviewPlots={this.state.reviewPlots}
+                        showGeoDash={this.showGeoDash}
                         goToFirstPlot={this.goToFirstPlot}
                         goToPlot={this.goToPlot}
                         nextPlot={this.nextPlot}
@@ -973,10 +974,9 @@ class Collection extends React.Component {
                         setReviewPlots={this.setReviewPlots}
                         loadingPlots={this.state.plotList.length === 0}
                         zoomMapToPlot={() => mercator.zoomMapToLayer(this.state.mapConfig, "currentPlot")}
-                        showGeoDash={this.showGeoDash}
+                        projectOptions={this.state.currentProject.projectOptions}
                         currentPlot={this.state.currentPlot}
                         currentProject={this.state.currentProject}
-                        projectOptions={this.state.currentProject.projectOptions}
                     />
                     {this.state.currentPlot.id && this.state.currentProject.projectOptions.showPlotInformation &&
                         <PlotInformation extraPlotInfo={this.state.currentPlot.extraPlotInfo}/>
