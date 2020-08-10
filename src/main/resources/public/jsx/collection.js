@@ -972,9 +972,6 @@ class Collection extends React.Component {
                         prevPlot={this.prevPlot}
                         setReviewPlots={this.setReviewPlots}
                         loadingPlots={this.state.plotList.length === 0}
-                    />
-                    <ExternalTools
-                        plotId={plotId}
                         zoomMapToPlot={() => mercator.zoomMapToLayer(this.state.mapConfig, "currentPlot")}
                         showGeoDash={this.showGeoDash}
                         currentPlot={this.state.currentPlot}
@@ -1222,6 +1219,17 @@ class PlotNavigation extends React.Component {
                             <label htmlFor="reviewCheck" className="form-check-label">Review your analyzed plots</label>
                         </div>
                     </div>
+                    <div className="text-center mt-2">
+                        {this.props.plotId &&
+                        <ExternalTools
+                            zoomMapToPlot={() => mercator.zoomMapToLayer(props.mapConfig, "currentPlot")}
+                            showGeoDash={props.showGeoDash}
+                            currentPlot={props.currentPlot}
+                            currentProject={props.currentProject}
+                            projectOptions={props.currentProject.projectOptions}
+                        />
+                        }
+                    </div>
                 </Fragment>
                 }
             </div>
@@ -1233,7 +1241,6 @@ class ExternalTools extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
-            showTools: false,
             auxWindow: null,
         };
     }
@@ -1289,10 +1296,10 @@ class ExternalTools extends React.Component {
 
     render() {
         return (
-            <div className="text-center mt-2">
-                {this.props.plotId && this.geoButtons()}
-                {this.props.plotId && this.props.projectOptions.showGEEScript && this.geeButton()}
-            </div>
+            <>
+                {this.geoButtons()}
+                {this.props.projectOptions.showGEEScript && this.geeButton()}
+            </>
         );
     }
 }
