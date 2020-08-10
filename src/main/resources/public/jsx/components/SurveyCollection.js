@@ -101,7 +101,7 @@ export class SurveyCollection extends React.Component {
                 {this.state.showSurveyQuestions
                 ? this.props.surveyQuestions.length > 0
                     ?
-                        <div className="SurveyQuestions__questions">
+                        <div className="SurveyQuestions__questions mx-1">
                             <div className="SurveyQuestions__top-questions">
                                 <button
                                     type="button"

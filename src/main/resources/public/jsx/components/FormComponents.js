@@ -194,18 +194,22 @@ export class ExpandableImage extends React.Component {
 }
 
 export function CollapsibleTitle({ title, showGroup, toggleShow }) {
-    const buttonDownStyle = { width: "1.5rem", height: "1.5rem", paddingTop: "1px", paddingLeft: "3px" };
-    const buttonRightStyle = { width: "1.5rem", height: "1.5rem", paddingTop: "0px", paddingLeft: "6px", fontSize: ".8rem" };
+    const commonStyle = { width: "1.5rem", height: "1.5rem", marginBottom: "0" };
+    const buttonDownStyle = { ...commonStyle, paddingTop: "1px", paddingLeft: "3px" };
+    const buttonRightStyle = { ...commonStyle, paddingTop: "0px", paddingLeft: "6px", fontSize: ".8rem" };
     return (
-        <div className="CollapsibleTitle__Title row">
+        <div
+            className="CollapsibleTitle__Title row p-1"
+            style={{ borderBottom: "2px solid black", margin: "0 0 .5rem 0" }}
+        >
             <h3
-                className="ml-3 btn btn-sm btn-outline-darkgray"
+                className="btn btn-sm btn-outline-darkgray"
                 style={showGroup ? buttonDownStyle : buttonRightStyle}
                 onClick={toggleShow}
             >
                 {showGroup ? <UnicodeIcon icon="downCaret"/> : <UnicodeIcon icon="rightCaret"/>}
             </h3>
-            <h3 className="ml-2" style={{ backgroundColor: "#32baaf40" }}>{title}</h3>
+            <h3 className="ml-2" style={{ marginBottom: "0" }}>{title}</h3>
         </div>
     );
 }
