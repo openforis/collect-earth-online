@@ -183,6 +183,10 @@ class InstitutionDescription extends React.Component {
         fetch(`/update-institution?institutionId=${this.props.institutionId}`,
               {
                   method: "POST",
+                  headers: {
+                      "Accept": "application/json",
+                      "Content-Type": "application/json",
+                  },
                   body: JSON.stringify(this.state.newInstitutionDetails),
               }
         )
@@ -380,6 +384,10 @@ class ImageryList extends React.Component {
             fetch("/archive-institution-imagery",
                   {
                       method: "POST",
+                      headers: {
+                          "Accept": "application/json",
+                          "Content-Type": "application/json",
+                      },
                       body: JSON.stringify({
                           institutionId: this.props.institutionId,
                           imageryId: imageryId,
@@ -522,6 +530,10 @@ class NewImagery extends React.Component {
             fetch(isNew ? "/add-institution-imagery" : "/update-institution-imagery",
                   {
                       method: "POST",
+                      headers: {
+                          "Accept": "application/json",
+                          "Content-Type": "application/json",
+                      },
                       body: JSON.stringify({
                           institutionId: this.props.institutionId,
                           imageryId: this.props.imageryToEdit.id,
@@ -1067,6 +1079,10 @@ class UserList extends React.Component {
         fetch("/update-user-institution-role",
               {
                   method: "POST",
+                  headers: {
+                      "Accept": "application/json",
+                      "Content-Type": "application/json",
+                  },
                   body: JSON.stringify({
                       userId: newUserId,
                       institutionId: this.props.institutionId,
@@ -1089,6 +1105,10 @@ class UserList extends React.Component {
         fetch("/request-institution-membership",
               {
                   method: "POST",
+                  headers: {
+                      "Accept": "application/json",
+                      "Content-Type": "application/json",
+                  },
                   body: JSON.stringify({
                       institutionId: this.props.institutionId,
                       userId: this.props.userId,

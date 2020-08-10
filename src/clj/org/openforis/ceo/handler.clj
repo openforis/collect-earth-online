@@ -144,7 +144,7 @@
 (defn wrap-request-logging [handler]
   (fn [request]
     (let [{:keys [uri request-method params]} request
-          param-str (pr-str (dissoc params :password :passwordConfirmation))]
+          param-str (pr-str (dissoc params :password :passwordConfirmation :base64Image))]
       (log-str "Request(" (name request-method) "): \"" uri "\" " param-str)
       (handler request))))
 
