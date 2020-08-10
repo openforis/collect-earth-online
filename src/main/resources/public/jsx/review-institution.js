@@ -1005,7 +1005,8 @@ class UserList extends React.Component {
     }
 
     componentDidUpdate(prevProps, prevState) {
-        if (this.state.institutionUserList.length !== prevState.institutionUserList.length) {
+        if (this.state.institutionUserList.length !== prevState.institutionUserList.length
+            || this.props.isAdmin !== prevProps.isAdmin) {
             this.props.setUsersCount(
                 this.props.isAdmin
                     ? this.state.institutionUserList.length
@@ -1105,19 +1106,18 @@ class UserList extends React.Component {
                     updateUserInstitutionRole={this.updateUserInstitutionRole}
                     userId={this.props.userId}
                 />
-                {this.props.userId > 0 &&
-                    this.state.institutionUserList
-                        .filter(iu => this.props.isAdmin || iu.institutionRole !== "pending")
-                        .sort((a, b) => sortAlphabetically(a.email, b.email))
-                        .sort((a, b) => sortAlphabetically(a.institutionRole, b.institutionRole))
-                        .map((iu, uid) =>
-                            <User
-                                key={uid}
-                                user={iu}
-                                isAdmin={this.props.isAdmin}
-                                updateUserInstitutionRole={this.updateUserInstitutionRole}
-                            />
-                        )
+                {this.state.institutionUserList
+                    .filter(iu => iu.id === this.props.userId || this.props.isAdmin)
+                    .sort((a, b) => sortAlphabetically(a.email, b.email))
+                    .sort((a, b) => sortAlphabetically(a.institutionRole, b.institutionRole))
+                    .map((iu, uid) =>
+                        <User
+                            key={uid}
+                            user={iu}
+                            isAdmin={this.props.isAdmin}
+                            updateUserInstitutionRole={this.updateUserInstitutionRole}
+                        />
+                    )
                 }
             </Fragment>;
     }
