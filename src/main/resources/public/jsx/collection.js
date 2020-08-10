@@ -935,7 +935,6 @@ class Collection extends React.Component {
                     imageryAttribution={this.state.imageryAttribution}
                     projectId={this.props.projectId}
                     plotId={plotId}
-                    KMLFeatures={this.state.KMLFeatures}
                     loader={this.state.loading}
                 />
                 <div
@@ -979,6 +978,7 @@ class Collection extends React.Component {
                         showGeoDash={this.showGeoDash}
                         currentPlot={this.state.currentPlot}
                         projectOptions={this.state.currentProject.projectOptions}
+                        KMLFeatures={this.state.KMLFeatures}
                     />
                     {this.state.currentPlot.id && this.state.currentProject.projectOptions.showPlotInformation &&
                         <PlotInformation extraPlotInfo={this.state.currentPlot.extraPlotInfo}/>
@@ -1033,27 +1033,14 @@ class Collection extends React.Component {
     }
 }
 
-function ImageAnalysisPane(props) {
+function ImageAnalysisPane({ loader, imageryAttribution }) {
     return (
         // Mercator hooks into image-analysis-pane
         <div id="image-analysis-pane" className="col-xl-9 col-lg-9 col-md-12 pl-0 pr-0 full-height">
-            {props.loader ? <div id="spinner" style={{ top: "45%", zIndex: "5000", visibility: "visible" }}></div> : null }
-            <div id="imagery-info" className="row">
-                <p className="col small" style={{ transform: "translateY(25%)" }}>{ props.imageryAttribution }</p>
+            {loader ? <div id="spinner" style={{ top: "45%", zIndex: "5000", visibility: "visible" }}></div> : null }
+            <div id="imagery-info" className="row" style={{ justifyContent: "center" }}>
+                <p style={{ fontSize: ".9rem", marginBottom: "0" }}>{imageryAttribution}</p>
             </div>
-            {props.plotId &&
-                <div id="download-kml" className="row">
-                    <a
-                        className="col"
-                        style={{ color: "white", fontWeight: "bold" }}
-                        href={"data:earth.kml+xml application/vnd.google-earth.kmz, "
-                        + encodeURIComponent(props.KMLFeatures)}
-                        download={"ceo_" + props.projectId + "_" + props.plotId + ".kml"}
-                    >
-                        Download Plot KML
-                    </a>
-                </div>
-            }
         </div>
     );
 }
@@ -1274,7 +1261,19 @@ class ExternalTools extends React.Component {
         />
     );
 
+    kmlButton = () => (
+        <a
+            className="btn btn-outline-lightgreen btn-sm btn-block my-2"
+            href={"data:earth.kml+xml application/vnd.google-earth.kmz, "
+                + encodeURIComponent(this.props.KMLFeatures)}
+            download={"ceo_" + this.props.projectId + "_" + this.props.plotId + ".kml"}
+        >
+            Download Plot KML
+        </a>
+    );
+
     render() {
+        console.log(this.props.KMLFeatures);
         return this.props.currentPlot.id ? (
             <>
                 <CollapsibleTitle
@@ -1285,6 +1284,7 @@ class ExternalTools extends React.Component {
                 {this.state.showExternalTools &&
                     <div className="mx-1">
                         {this.geoButtons()}
+                        {this.props.KMLFeatures && this.kmlButton()}
                         {this.props.projectOptions.showGEEScript && this.geeButton()}
                     </div>
                 }
