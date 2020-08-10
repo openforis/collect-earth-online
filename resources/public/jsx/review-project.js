@@ -642,7 +642,6 @@ export function pageInit(args) {
     ReactDOM.render(
         <NavigationBar userName={args.userName} userId={args.userId}>
             <Project
-                userId={args.userId}
                 projectId={args.projectId || "0"}
             />
         </NavigationBar>,

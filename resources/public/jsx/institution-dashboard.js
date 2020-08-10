@@ -98,7 +98,6 @@ export function pageInit(args) {
     ReactDOM.render(
         <NavigationBar userName={args.userName} userId={args.userId}>
             <InstitutionDashboard
-                userId={args.userId}
                 institutionId={args.institutionId || "0"}
             />
         </NavigationBar>,
