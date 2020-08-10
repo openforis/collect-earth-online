@@ -50,7 +50,7 @@
   (let [institution-id       (tc/str->int (:institutionId params))
         imagery-title        (:imageryTitle params)
         imagery-attribution  (:imageryAttribution params)
-        source-config        (tc/json->jsonb (:sourceConfig params))
+        source-config        (tc/clj->jsonb (:sourceConfig params))
         add-to-all-projects? (tc/str->bool (:addToAllProjects params) true)]
     (if (sql-primitive (call-sql "imagery_name_taken" institution-id imagery-title -1))
       (data-response "The title you have chosen is already taken.")
@@ -91,10 +91,10 @@
   (let [imagery-id           (tc/str->int (:imageryId params))
         imagery-title        (:imageryTitle params)
         imagery-attribution  (:imageryAttribution params)
-        source-config        (tc/json->jsonb (:sourceConfig params))
+        source-config        (tc/clj->jsonb (:sourceConfig params))
         add-to-all-projects? (tc/str->bool (:addToAllProjects params) true)
-        institution-id       (:institution_rid (get-imagery-by-id imagery-id))]
-    (if (call-sql "imagery_name_taken" institution-id imagery-title imagery-id)
+        institution-id       (:institution_id (get-imagery-by-id imagery-id))]
+    (if (sql-primitive (call-sql "imagery_name_taken" institution-id imagery-title imagery-id))
       (data-response "The title you have chosen is already taken.")
       (do
         (call-sql "update_institution_imagery"
