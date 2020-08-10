@@ -1273,7 +1273,6 @@ class ExternalTools extends React.Component {
     );
 
     render() {
-        console.log(this.props.KMLFeatures);
         return this.props.currentPlot.id ? (
             <>
                 <CollapsibleTitle
