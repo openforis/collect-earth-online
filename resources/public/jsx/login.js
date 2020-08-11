@@ -92,7 +92,7 @@ export function pageInit(args) {
     ReactDOM.render(
         <NavigationBar userName={args.userName} userId={args.userId}>
             <Login
-                returnurl={args.returnurl}
+                returnurl={args.returnurl || ""}
             />
         </NavigationBar>,
         document.getElementById("app")
