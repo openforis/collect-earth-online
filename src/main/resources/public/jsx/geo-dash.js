@@ -1,7 +1,7 @@
 import React from "react";
 import ReactDOM from "react-dom";
 import { mercator } from "../js/mercator.js";
-import { UnicodeIcon } from "./utils/textUtils";
+import { UnicodeIcon, deepCopy } from "./utils/textUtils";
 import { formatDateISO } from "./utils/dateUtils";
 import { getGatewayPath } from "./utils/geodashUtils";
 import { GeoDashNavigationBar } from "./components/PageComponents";
@@ -1216,34 +1216,34 @@ class GraphWidget extends React.Component {
             graphRef: null,
             selectSarGraphBand: "VV",
             chartDataSeriesLandsat: [],
-            chartDataSeriesSar: {},
+            chartDataSeriesSar: [],
             nonDegChartData: [],
         };
     }
 
     componentDidMount() {
-        this.loadGraph(this.props.widget);
+        this.loadGraph();
     }
 
     componentDidUpdate(prevProps, prevState) {
         if (this.props.degDataType
             && (prevProps.degDataType !== this.props.degDataType
                 || prevState.selectSarGraphBand !== this.state.selectSarGraphBand)) {
-            this.loadGraph(this.props.widget);
+            this.loadGraph();
         }
         this.handleResize();
     }
 
-    loadGraph = (widget) => {
+    loadGraph = () => {
         const { chartDataSeriesLandsat, chartDataSeriesSar, selectSarGraphBand, graphRef } = this.state;
-        const { degDataType, getParameterByName, projPairAOI, handleSelectDate } = this.props;
+        const { widget, degDataType, getParameterByName, projPairAOI, handleSelectDate } = this.props;
 
         if (degDataType === "landsat" && chartDataSeriesLandsat.length > 0) {
-            graphRef.update({ series: [...chartDataSeriesLandsat] });
+            graphRef.update({ series: deepCopy(chartDataSeriesLandsat) });
         } else if (degDataType === "sar"
             && chartDataSeriesSar.hasOwnProperty(selectSarGraphBand)
             && chartDataSeriesSar[selectSarGraphBand].length > 0) {
-            graphRef.update({ series: [...chartDataSeriesSar[selectSarGraphBand]] });
+            graphRef.update({ series: deepCopy(chartDataSeriesSar[selectSarGraphBand]) });
         } else {
             const centerPoint = JSON.parse(getParameterByName("bcenter")).coordinates;
             const widgetType = widget.type || "";
@@ -1475,12 +1475,12 @@ class GraphWidget extends React.Component {
             series:
                 widget.type === "DegradationTool"
                     ? degDataType === "landsat" && chartDataSeriesLandsat.length > 0
-                        ? [...chartDataSeriesLandsat]
+                        ? deepCopy(chartDataSeriesLandsat)
                         : degDataType === "sar" && chartDataSeriesSar.hasOwnProperty(selectSarGraphBand)
                             && chartDataSeriesSar[selectSarGraphBand].length > 0
-                            ? [...chartDataSeriesSar[selectSarGraphBand]]
+                            ? deepCopy(chartDataSeriesSar[selectSarGraphBand])
                             : []
-                    : [...nonDegChartData],
+                    : deepCopy(nonDegChartData),
         };
     }
 
