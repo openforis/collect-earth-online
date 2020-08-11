@@ -1067,8 +1067,12 @@ class UserList extends React.Component {
         fetch("/update-user-institution-role",
               {
                   method: "POST",
+                  headers: {
+                      "Accept": "application/json",
+                      "Content-Type": "application/json",
+                  },
                   body: JSON.stringify({
-                      userId: newUserId,
+                      accountId: newUserId,
                       institutionId: this.props.institutionId,
                       role: role,
                   }),
@@ -1086,13 +1090,9 @@ class UserList extends React.Component {
     };
 
     requestMembership = () => {
-        fetch("/request-institution-membership",
+        fetch("/request-institution-membership?institutionId=" + this.props.institutionId,
               {
                   method: "POST",
-                  body: JSON.stringify({
-                      institutionId: this.props.institutionId,
-                      userId: this.props.userId,
-                  }),
               })
             .then(response => {
                 if (response.ok) {
@@ -1164,7 +1164,7 @@ function User({ user, isAdmin, updateUserInstitutionRole }) {
                     type="button"
                     className="btn btn-sm btn-outline-lightgreen btn-block text-truncate"
                     title={user.email}
-                    onClick={() => window.location = `/account?userId=${user.id}`}
+                    onClick={() => window.location = `/account?accountId=${user.id}`}
                 >
                     {user.email}
                 </button>

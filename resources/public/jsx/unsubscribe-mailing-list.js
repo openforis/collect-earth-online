@@ -18,6 +18,10 @@ class UnsubscribeMailingList extends React.Component {
         if (confirm("Are you sure you want to unsubscribe from mailing list?")) {
             fetch("/unsubscribe-mailing-list", {
                 method: "POST",
+                headers: {
+                    "Accept": "application/json",
+                    "Content-Type": "application/json",
+                },
                 body: JSON.stringify(this.state),
             })
                 .then(response => Promise.all([response.ok, response.text()]))
