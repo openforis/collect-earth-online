@@ -400,6 +400,17 @@ a:hover{
     white-space: normal;
 }
 
+.visit-btn {
+    border: 1px solid white;
+    color: white;
+    background-color: #31bab0;
+}
+
+.visit-btn:hover {
+    color: black;
+    background-color: #f1c00f;
+}
+
 /* map popover */
 /*************/
 /* .ol-popup{ */

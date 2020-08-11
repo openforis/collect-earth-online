@@ -35,6 +35,24 @@ class ReviewInstitution extends React.Component {
             });
     }
 
+    archiveProject = (projectId) => {
+        if (confirm("Do you REALLY want to delete this project? This operation cannot be undone.")) {
+            fetch(`/archive-project?projectId=${projectId}`,
+                  {
+                      method: "POST",
+                  })
+                .then(response => {
+                    if (response.ok) {
+                        this.getProjectList();
+                        alert("Project " + projectId + " has been deleted.");
+                    } else {
+                        console.log(response);
+                        alert("Error deleting project. See console for details.");
+                    }
+                });
+        }
+    };
+
     setImageryCount = (newCount) => this.setState({ imageryCount: newCount });
 
     setUsersCount = (newCount) => this.setState({ usersCount: newCount });
@@ -81,6 +99,7 @@ class ReviewInstitution extends React.Component {
                             projectList={this.state.projectList}
                             isLoggedIn={this.props.userId > 0}
                             isVisible={this.state.selectedTab === 0}
+                            deleteProject={this.archiveProject}
                         />
                         <ImageryList
                             isAdmin={this.state.isAdmin}
@@ -474,11 +493,12 @@ class NewImagery extends React.Component {
                 geoserverParams: JSON.stringify(cleanGeoserverParams),
             };
         } else if (type === "SecureWatch") {
-            const { geoserverParams: { CONNECTID }, startDate, endDate } = imageryParams;
+            const { geoserverParams: { CONNECTID }, startDate, endDate, baseUrl } = imageryParams;
             return {
                 connectid: CONNECTID,
                 startDate,
                 endDate,
+                baseUrl,
             };
         } else {
             return imageryParams;
@@ -547,7 +567,7 @@ class NewImagery extends React.Component {
     // TODO this shouldn't be needed if SecureWatch is defined correctly in imageryOptions
     buildSecureWatch = (sourceConfig) => {
         if (sourceConfig.type === "SecureWatch") {
-            sourceConfig["geoserverUrl"] = "https://securewatch.digitalglobe.com/mapservice/wmsaccess";
+            sourceConfig["geoserverUrl"] = `${sourceConfig.baseUrl}/mapservice/wmsaccess`;
             const geoserverParams = {
                 "VERSION": "1.1.1",
                 "STYLES": "",
@@ -726,7 +746,7 @@ class NewImagery extends React.Component {
                 newImageryAttribution: "Google Earth Engine | © Google LLC",
                 newImageryParams: { bandCombination: imageryOptions[val]["params"].filter(param => param.key === "bandCombination")[0].options[0].value },
             });
-        } else if (imageryOptions[val].type.includes("Mapbox")) {
+        } else if (imageryOptions[val].type.includes("MapBox")) {
             this.setState({
                 newImageryAttribution: "© Mapbox",
                 newImageryParams: {},
@@ -760,7 +780,11 @@ class NewImagery extends React.Component {
                     </select>
                 </div>
                 {/* Add fields. Include same for all and unique to selected type. */}
-                {this.formInput("Title", "text", this.state.newImageryTitle, e => this.setState({ newImageryTitle: e.target.value }))}
+                {this.formInput("Title",
+                                "text",
+                                this.state.newImageryTitle,
+                                e => this.setState({ newImageryTitle: e.target.value })
+                )}
                 {/* This should be generalized into the imageryOptions */}
                 {imageryOptions[this.state.selectedType].type === "GeoServer"
                     && this.formInput(
@@ -855,7 +879,7 @@ function Imagery({ isAdmin, title, selectEditImagery, deleteImagery, isInstituti
     );
 }
 
-function ProjectList({ isAdmin, isLoggedIn, institutionId, projectList, isVisible }) {
+function ProjectList({ isAdmin, isLoggedIn, institutionId, projectList, isVisible, deleteProject }) {
     return (
         <div style={!isVisible ? { display: "none" } : {}}>
             <div className="mb-3">
@@ -887,6 +911,7 @@ function ProjectList({ isAdmin, isLoggedIn, institutionId, projectList, isVisibl
                             isLoggedIn={isLoggedIn}
                             key={uid}
                             project={project}
+                            deleteProject={deleteProject}
                         />
                     )}
         </div>
@@ -942,14 +967,24 @@ class Project extends React.Component {
                 </button>
             </div>
             {isAdmin &&
-            <div className="mr-3">
-                <a
-                    className="edit-project btn btn-sm btn-outline-yellow btn-block px-3"
-                    href={`/review-project?projectId=${project.id}`}
-                >
-                    <UnicodeIcon icon="edit"/>
-                </a>
-            </div>
+            <>
+                <div className="mr-3">
+                    <a
+                        className="edit-project btn btn-sm btn-outline-yellow btn-block px-3"
+                        href={`/review-project?projectId=${project.id}`}
+                    >
+                        <UnicodeIcon icon="edit"/>
+                    </a>
+                </div>
+                <div className="mr-3">
+                    <a
+                        className="delete-project btn btn-sm btn-outline-danger btn-block px-3"
+                        onClick={() => this.props.deleteProject(project.id)}
+                    >
+                        <UnicodeIcon icon="trash"/>
+                    </a>
+                </div>
+            </>
             }
         </div>;
     }
@@ -970,7 +1005,8 @@ class UserList extends React.Component {
     }
 
     componentDidUpdate(prevProps, prevState) {
-        if (this.state.institutionUserList.length !== prevState.institutionUserList.length) {
+        if (this.state.institutionUserList.length !== prevState.institutionUserList.length
+            || this.props.isAdmin !== prevProps.isAdmin) {
             this.props.setUsersCount(
                 this.props.isAdmin
                     ? this.state.institutionUserList.length
@@ -1070,19 +1106,18 @@ class UserList extends React.Component {
                     updateUserInstitutionRole={this.updateUserInstitutionRole}
                     userId={this.props.userId}
                 />
-                {this.props.userId > 0 &&
-                    this.state.institutionUserList
-                        .filter(iu => this.props.isAdmin || iu.institutionRole !== "pending")
-                        .sort((a, b) => sortAlphabetically(a.email, b.email))
-                        .sort((a, b) => sortAlphabetically(a.institutionRole, b.institutionRole))
-                        .map((iu, uid) =>
-                            <User
-                                key={uid}
-                                user={iu}
-                                isAdmin={this.props.isAdmin}
-                                updateUserInstitutionRole={this.updateUserInstitutionRole}
-                            />
-                        )
+                {this.state.institutionUserList
+                    .filter(iu => iu.id === this.props.userId || this.props.isAdmin)
+                    .sort((a, b) => sortAlphabetically(a.email, b.email))
+                    .sort((a, b) => sortAlphabetically(a.institutionRole, b.institutionRole))
+                    .map((iu, uid) =>
+                        <User
+                            key={uid}
+                            user={iu}
+                            isAdmin={this.props.isAdmin}
+                            updateUserInstitutionRole={this.updateUserInstitutionRole}
+                        />
+                    )
                 }
             </Fragment>;
     }

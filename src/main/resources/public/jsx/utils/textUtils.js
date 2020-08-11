@@ -49,3 +49,7 @@ export function UnicodeIcon({ icon, backgroundColor }) {
 export function getQueryString(params) {
     return Object.keys(params).map(k => encodeURIComponent(k) + "=" + encodeURIComponent(params[k])).join("&");
 }
+
+export function formatNumberWithCommas (number) {
+    return number.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+}

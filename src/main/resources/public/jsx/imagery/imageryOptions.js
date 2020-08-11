@@ -5,11 +5,11 @@ export const imageryOptions = [
         type: "GeoServer",
         label: "WMS Imagery",
         params: [
-            { key: "geoserverUrl", display: "GeoServer URL" },
-            { key: "LAYERS", display: "GeoServer Layer Name", parent: "geoserverParams" },
+            { key: "geoserverUrl", display: "WMS URL" },
+            { key: "LAYERS", display: "WMS Layer Name", parent: "geoserverParams" },
             {
                 key: "geoserverParams",
-                display: "Additional GeoServer Params (as JSON object)", // TODO, add {} around params if missing
+                display: "Additional WMS Params (as JSON object)", // TODO, add {} around params if missing
                 required: false,
                 type: "JSON",
             },
@@ -56,6 +56,15 @@ export const imageryOptions = [
     {
         type: "SecureWatch",
         params: [
+            {
+                key: "baseUrl",
+                display: "Base URL",
+                type: "select",
+                options: [
+                    { label: "https://securewatch.digitalglobe.com", value: "https://securewatch.digitalglobe.com" },
+                    { label: "https://services.digitalglobe.com", value: "https://services.digitalglobe.com" },
+                ],
+            },
             { key: "connectid", display: "Connect ID" },
             {
                 key: "startDate",
@@ -67,7 +76,6 @@ export const imageryOptions = [
                 key: "endDate",
                 display: "End Date",
                 type: "date",
-                options: { max: new Date().toJSON().split("T")[0] },
             },
         ],
     },
