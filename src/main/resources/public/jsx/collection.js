@@ -993,7 +993,7 @@ class Collection extends React.Component {
                         currentPlot={this.state.currentPlot}
                         currentProject={this.state.currentProject}
                         currentProjectBoundary={this.state.currentProject.boundary}
-                        showPlanetDaily={this.state.currentPlot != null}
+                        showPlanetDaily={this.state.currentPlot.plotId}
                         loadingImages={this.state.imageryList.length === 0}
                     />
                     {this.state.currentPlot.id
@@ -1182,9 +1182,11 @@ class PlotNavigation extends React.Component {
         const { props } = this;
         return (
             <div className="text-center mt-2">
-                {props.loadingPlots ? <h3>Loading plot data...</h3>
-                    : this.props.showNavButtons ? this.navButtons()
-                    : this.gotoButton()
+                {props.loadingPlots
+                    ? <h3>Loading plot data...</h3>
+                    : this.props.showNavButtons
+                        ? this.navButtons()
+                        : this.gotoButton()
                 }
                 <div className="PlotNavigation__review-option row justify-content-center mb-1">
                     <div className="form-check">
@@ -1230,21 +1232,24 @@ class ExternalTools extends React.Component {
     );
 
     loadGEEScript = () => {
-        const urlParams = this.props.currentPlot.geom ? "geoJson=" + this.props.currentPlot.geom
+        const urlParams = this.props.currentPlot.geom
+            ? "geoJson=" + this.props.currentPlot.geom
             : this.props.currentProject.plotShape === "circle"
-                    ? "center=["
-                    + mercator.parseGeoJson(this.props.currentPlot.center).getCoordinates()
-                    + "];radius=" + this.props.currentProject.plotSize / 2
-            : "geoJson=" + mercator.geometryToGeoJSON(
-                mercator.getPlotPolygon(
-                    this.props.currentPlot.center,
-                    this.props.currentProject.plotSize,
-                    this.props.currentProject.plotShape
-                ),
-                "EPSG:4326",
-                "EPSG:3857",
-                5
-            );
+                ?
+                    "center=["
+                        + mercator.parseGeoJson(this.props.currentPlot.center).getCoordinates()
+                        + "];radius=" + this.props.currentProject.plotSize / 2
+                :
+                    "geoJson=" + mercator.geometryToGeoJSON(
+                        mercator.getPlotPolygon(
+                            this.props.currentPlot.center,
+                            this.props.currentProject.plotSize,
+                            this.props.currentProject.plotShape
+                        ),
+                        "EPSG:4326",
+                        "EPSG:3857",
+                        5
+                    );
         if (this.state.auxWindow) this.state.auxWindow.close();
         this.setState({
             auxWindow: window.open("https://billyz313.users.earthengine.app/view/ceoplotancillary#" + urlParams,
