@@ -64,6 +64,7 @@
         "ogr2ogr": "^1.4.0",
         "ol": "^5.3.3",
         "react": "^16.13.1",
+        "react-grid-layout": "^0.16.6",
         "react-dom": "^16.13.1"
     },
     "devDependencies": {
@@ -79,7 +80,6 @@
         "eslint": "^5.14.1",
         "eslint-plugin-react": "^7.20.4",
         "file-loader": "^2.0.0",
-        "react-grid-layout": "^0.16.6",
         "style-loader": "^0.23.1",
         "tern": "^0.23.0",
         "webpack": "^4.44.0",

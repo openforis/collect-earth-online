@@ -54,3 +54,8 @@
 (def clj->json json/write-str)
 
 (def jsonb->json str)
+
+(defn str->pg-uuid [string]
+  (doto (PGobject.)
+    (.setType "uuid")
+    (.setValue string)))
