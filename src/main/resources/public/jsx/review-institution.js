@@ -945,6 +945,14 @@ class Project extends React.Component {
             .catch(response => console.log(response));
     };
 
+    downloadPlotData = () => {
+        window.open(`/dump-project-aggregate-data?projectId=${this.props.project.id}`, "_blank");
+    };
+
+    downloadSampleData = () => {
+        window.open(`/dump-project-raw-data?projectId=${this.props.project.id}`, "_blank");
+    };
+
     render() {
         const { project, isAdmin } = this.props;
         return <div className="row mb-1 d-flex">
@@ -983,6 +991,24 @@ class Project extends React.Component {
                     >
                         <UnicodeIcon icon="trash"/>
                     </a>
+                </div>
+                <div className="mr-3">
+                    <div
+                        className="btn btn-sm btn-outline-lightgreen btn-block px-3"
+                        title="Download Plot Data"
+                        onClick={this.downloadPlotData}
+                    >
+                        P
+                    </div>
+                </div>
+                <div className="mr-3">
+                    <div
+                        className="btn btn-sm btn-outline-lightgreen btn-block px-3"
+                        title="Download Sample Data"
+                        onClick={this.downloadSampleData}
+                    >
+                        S
+                    </div>
                 </div>
             </>
             }
