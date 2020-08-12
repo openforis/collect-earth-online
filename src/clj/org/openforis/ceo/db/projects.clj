@@ -3,7 +3,7 @@
            java.util.Date)
   (:require [clojure.string :as str]
             [clojure.set    :as set]
-            [org.openforis.ceo.database :refer [call-sql]]
+            [org.openforis.ceo.database :refer [call-sql sql-primitive]]
             [org.openforis.ceo.views    :refer [data-response]]
             [org.openforis.ceo.utils.type-conversion :as tc]
             [org.openforis.ceo.utils.part-utils      :as pu]))
@@ -22,6 +22,9 @@
 
 (defn is-proj-admin? [{:keys [params]}]
   (data-response (check-auth-common params "can_user_edit")))
+
+;; TODO add settings that are new since we forked
+(def default-options {:showGEEScript false})
 
 (defn- single-project-object [project]
   {:id                   (:project_id project)
@@ -46,7 +49,7 @@
    :validBoundary        (:valid_boundary project)
    :sampleValues         (tc/jsonb->clj (:survey_questions project)) ; TODO why dont these names match
    :surveyRules          (tc/jsonb->clj (:survey_rules project))
-   :projectOptions       (tc/jsonb->clj (:options project))})
+   :projectOptions       (or (tc/jsonb->clj (:options project)) default-options)})
 
 (defn- get-project-list [sql-results]
   (mapv single-project-object
@@ -105,7 +108,26 @@
     (call-sql "archive_project" project-id)
     (data-response "")))
 
-(defn update-project [request])
+(defn- get-first-public-imagery []
+  (sql-primitive (call-sql "select_first_public_imagery")))
+
+;; TODO use bulk instert statement
+(defn- insert-project-imagery [project-id imagery-list]
+  (doseq [imagery imagery-list]
+    (call-sql "insert_project_imagery" project-id imagery)))
+
+(defn update-project [{:keys [params]}]
+  (let [project-id      (tc/str->int (:projectId params))
+        name            (:name params)
+        description     (:description params)
+        privacy-level   (:privacyLevel params)
+        imagery-id      (or (:imageryId params nil) (get-first-public-imagery))
+        project-options (tc/clj->jsonb (:projectOptions params default-options))]
+    (call-sql "update_project" project-id name description privacy-level imagery-id project-options)
+    (when-let [imagery-list (:projectImageryList params)]
+      (call-sql "delete_project_imagery" project-id)
+      (insert-project-imagery project-id imagery-list))
+    (data-response "")))
 
 (defn create-project [request])
 
