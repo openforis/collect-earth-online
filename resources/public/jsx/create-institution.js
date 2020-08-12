@@ -45,7 +45,6 @@ class CreateInstitution extends React.Component {
                           "Content-Type": "application/json",
                       },
                       body: JSON.stringify({
-                          userId: this.props.userId,
                           name: this.state.newInstitutionDetails.name,
                           logo: this.state.newInstitutionDetails.logo,
                           base64Image: this.state.newInstitutionDetails.base64Image,
@@ -104,9 +103,7 @@ class CreateInstitution extends React.Component {
 export function pageInit(args) {
     ReactDOM.render(
         <NavigationBar userName={args.userName} userId={args.userId}>
-            <CreateInstitution
-                userId={args.userId === "" ? -1 : parseInt(args.userId)}
-            />
+            <CreateInstitution/>
         </NavigationBar>,
         document.getElementById("app")
     );
