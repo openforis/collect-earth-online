@@ -485,84 +485,59 @@ class Collection extends React.Component {
         nextPlotButtonDisabled: false,
     });
 
-    flagPlotInDB = () => {
-        if (this.state.currentPlot.id) {
-            fetch("/flag-plot",
-                  {
-                      method: "POST",
-                      body: JSON.stringify({
-                          projectId: this.props.projectId,
-                          plotId: this.state.currentPlot.id,
-                          userId: this.props.userId,
-                          userName: this.props.userName,
-                      }),
-                  })
-                .then(response => {
-                    if (response.ok) {
-                        this.nextPlot();
-                    } else {
-                        console.log(response);
-                        alert("Error flagging plot as bad. See console for details.");
-                    }
-                });
-        }
-    };
-
-    unflagPlotInDB = () => {
-        console.log(1);
-        if (this.state.currentPlot.id) {
-            fetch("/unflag-plot",
-                  {
-                      method: "POST",
-                      body: JSON.stringify({
-                          projectId: this.props.projectId,
-                          plotId: this.state.currentPlot.id,
-                          userId: this.props.userId,
-                      }),
-                  })
-                .then(response => {
-                    if (response.ok) {
-                        this.nextPlot();
-                    } else {
-                        console.log(response);
-                        alert("Error unflagging plot as bad. See console for details.");
-                    }
-                });
-        }
-    };
-
     postValuesToDB = () => {
         if (this.state.currentProject.availability === "unpublished") {
             alert("Please publish the project before starting the survey.");
         } else if (this.state.currentProject.availability === "closed") {
             alert("This project has been closed and is no longer accepting survey input.");
         } else {
-            fetch("/add-user-samples",
-                  {
-                      method: "post",
-                      headers: {
-                          "Accept": "application/json",
-                          "Content-Type": "application/json",
-                      },
-                      body: JSON.stringify({
-                          projectId: this.props.projectId,
-                          plotId: this.state.currentPlot.id,
-                          userName: this.props.userName,
-                          userId: this.props.userId,
-                          confidence: -1,
-                          collectionStart: this.state.collectionStart,
-                          userSamples: this.state.userSamples,
-                          userImages: this.state.userImages,
-                      }),
-                  })
-                .then(response => {
-                    if (response.ok) {
-                        this.nextPlot();
-                    } else {
-                        console.log(response);
-                        alert("Error saving your assignments to the database. See console for details.");
-                    }
-                });
+            if (this.state.currentPlot.flagged) {
+                fetch("/flag-plot",
+                      {
+                          method: "POST",
+                          body: JSON.stringify({
+                              projectId: this.props.projectId,
+                              plotId: this.state.currentPlot.id,
+                              userId: this.props.userId,
+                              userName: this.props.userName,
+                          }),
+                      })
+                    .then(response => {
+                        if (response.ok) {
+                            this.nextPlot();
+                        } else {
+                            console.log(response);
+                            alert("Error flagging plot as bad. See console for details.");
+                        }
+                    });
+            } else {
+                fetch("/add-user-samples",
+                      {
+                          method: "post",
+                          headers: {
+                              "Accept": "application/json",
+                              "Content-Type": "application/json",
+                          },
+                          body: JSON.stringify({
+                              projectId: this.props.projectId,
+                              plotId: this.state.currentPlot.id,
+                              userName: this.props.userName,
+                              userId: this.props.userId,
+                              confidence: -1,
+                              collectionStart: this.state.collectionStart,
+                              userSamples: this.state.userSamples,
+                              userImages: this.state.userImages,
+                          }),
+                      })
+                    .then(response => {
+                        if (response.ok) {
+                            this.nextPlot();
+                        } else {
+                            console.log(response);
+                            alert("Error saving your assignments to the database. See console for details.");
+                        }
+                    });
+            }
         }
     };
 
@@ -947,6 +922,13 @@ class Collection extends React.Component {
 
     toggleQuitModal = () => this.setState({ showQuitModal: !this.state.showQuitModal });
 
+    toggleFlagged = () => {
+        const newPlot = this.state.currentPlot;
+        newPlot.flagged = !newPlot.flagged;
+        this.setState({ currentPlot: newPlot });
+        //this.setState(prevState => ({ currentPlot: { ...prevState.currentPlot, flagged: !prevState.currentPlot.flagged }}));
+    };
+
     render() {
         const plotId = this.state.currentPlot.plotId ? this.state.currentPlot.plotId : this.state.currentPlot.id;
         return (
@@ -970,8 +952,6 @@ class Collection extends React.Component {
                 <SideBar
                     projectId={this.props.projectId}
                     plotId={plotId}
-                    flagPlotInDB={this.flagPlotInDB}
-                    unflagPlotInDB={this.unflagPlotInDB}
                     postValuesToDB={this.postValuesToDB}
                     projectName={this.state.currentProject.name}
                     clearAnswers={() => this.resetPlotValues(this.state.currentPlot)}
@@ -979,6 +959,7 @@ class Collection extends React.Component {
                     userName={this.props.userName}
                     isFlagged={this.state.currentPlot && this.state.currentPlot.flagged}
                     isAnalyzed={this.state.currentPlot && this.state.currentPlot.analyses > 0}
+                    toggleFlagged={this.toggleFlagged}
                     toggleQuitModal={this.toggleQuitModal}
                 >
                     <PlotNavigation
@@ -1095,22 +1076,12 @@ function SideBar(props) {
                 disabled={!saveValuesButtonEnabled}
             />
             <div className="my-2 d-flex justify-content-between">
-                {props.isFlagged
-                    ?
-                        <input
-                            className="btn btn-outline-danger btn-sm col mr-1"
-                            type="button"
-                            value="Unflag Plot"
-                            onClick={props.unflagPlotInDB}
-                        />
-                    :
-                        <input
-                            className="btn btn-outline-danger btn-sm col mr-1"
-                            type="button"
-                            value="Flag Plot"
-                            onClick={props.flagPlotInDB}
-                        />
-                }
+                <input
+                    className="btn btn-outline-danger btn-sm col mr-1"
+                    type="button"
+                    value={props.isFlagged ? "Unflag Plot" : "Flag Plot"}
+                    onClick={props.toggleFlagged}
+                />
                 <input
                     className="btn btn-outline-danger btn-sm col"
                     type="button"

@@ -12,7 +12,6 @@ public interface Plots {
     String getPrevPlot(Request req, Response res);
     String addUserSamples(Request req, Response res);
     String flagPlot(Request req, Response res);
-    String unflagPlot(Request req, Response res);
     String resetPlotLock(Request req, Response res);
     String releasePlotLocks(Request req, Response res);
 

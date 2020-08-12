@@ -427,29 +427,4 @@ public class PostgresPlots implements Plots {
             return "";
         }
     }
-
-    public String unflagPlot(Request req, Response res) {
-        var jsonInputs =        parseJson(req.body()).getAsJsonObject();
-        var plotId =            jsonInputs.get("plotId").getAsString();
-        var userId =            jsonInputs.get("userId").getAsInt();
-
-        try (var conn = connect();
-            var pstmt = conn.prepareStatement("SELECT * FROM unflag_plot(?,?)")) {
-
-            pstmt.setInt(1,Integer.parseInt(plotId));
-            pstmt.setInt(2,userId);
-            pstmt.executeQuery();
-            try (var rs = pstmt.executeQuery()) {
-                var idReturn = 0;
-                if (rs.next()) {
-                    unlockPlots(userId);
-                    idReturn = rs.getInt("unflag_plot");
-                }
-                return Integer.toString(idReturn);
-            }
-        } catch (SQLException e) {
-            System.out.println(e.getMessage());
-            return "";
-        }
-    }
 }
