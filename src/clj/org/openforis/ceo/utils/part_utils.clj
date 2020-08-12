@@ -6,6 +6,14 @@
 (defn- decode64 [to-decode]
   (.decode (Base64/getDecoder) (second (str/split to-decode #","))))
 
+(defn mapm [f coll]
+  (persistent!
+   (reduce (fn [acc cur]
+             (conj! acc (f cur)))
+           (transient {})
+           coll)))
+
+;; FIXME: stub
 (defn write-file-part-base64 [input-file-name encoded-file output-directory output-file-prefix]
   (when input-file-name
     (let [ext      (subs input-file-name (str/last-index-of input-file-name "."))

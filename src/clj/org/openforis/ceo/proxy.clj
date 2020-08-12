@@ -2,15 +2,9 @@
   (:require [clojure.string  :as str]
             [clj-http.client :as client]
             [org.openforis.ceo.utils.type-conversion :as tc]
+            [org.openforis.ceo.utils.part-utils      :as pu]
             [org.openforis.ceo.db.imagery  :refer [get-imagery-source-config]]
             [org.openforis.ceo.views       :refer [data-response]]))
-
-(defn mapm [f coll]
-  (persistent!
-   (reduce (fn [acc cur]
-             (conj! acc (f cur)))
-           (transient {})
-           coll)))
 
 (defn- planet-url [source-config params]
   (let [{:keys [year month tile x y z]} params]
@@ -37,11 +31,11 @@
   [(keyword (str/upper-case (name key))) val])
 
 (defn- wms-url [source-config query-params]
-  (let [geoserver-params (mapm keys-upper-case (:geoserverParams source-config))
+  (let [geoserver-params (pu/mapm keys-upper-case (:geoserverParams source-config))
         source-url       (:geoserverUrl source-config)]
     (str source-url
          (when-not (str/includes? source-url "?") "?")
-         (as-> (mapm keys-upper-case query-params) params
+         (as-> (pu/mapm keys-upper-case query-params) params
            (remove-extra-params params)
            (merge params geoserver-params)
            (default-styles params geoserver-params)
@@ -67,12 +61,15 @@
   (client/get (build-url req) {:as :stream}))
 
 (defn get-secure-watch-dates [req]
-  (let [source-config (get-imagery-source-config (tc/str->int (get-in req [:params :imageryId])))
-        url           (str (:geoserverUrl source-config)
+  (let [imagery-id    (tc/str->int (get-in req [:params :imageryId]))
+        source-config (get-imagery-source-config imagery-id)
+        base-url      (:geoserverUrl source-config)
+        url           (str base-url
+                           (when-not (str/includes? base-url "?") "?")
                            (->> (dissoc (:query-params req) :imageryId)
                                 (map (fn [[key val]] (str (name key) "=" val)))
                                 (str/join "&"))
                            "&CONNECTID="
                            (get-in source-config [:geoserverParams :CONNECTID]))]
-    ;; TODO check for XML and parse error
-    (data-response (:body (client/get url {:as :json})))))
+    ;; TODO check for XML and parse error (front end)
+    (client/get url)))
