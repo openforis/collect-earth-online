@@ -10,7 +10,7 @@
   (sql-primitive (call-sql "is_institution_user_admin" user-id institution-id)))
 
 (defn is-inst-admin? [{:keys [params]}]
-  (let [user-id        (tc/str->int (:userId params))
+  (let [user-id        (:userId params -1)
         institution-id (tc/str->int (:institutionId params))]
     (and (pos? user-id)
          (pos? institution-id)
@@ -51,7 +51,7 @@
     (data-response (get-institution-by-id institution-id))))
 
 (defn create-institution [{:keys [params]}]
-  (let [user-id      (tc/str->int (:userId params))
+  (let [user-id      (:userId params -1)
         name         (:name params)
         url          (:url params)
         logo         (:logo params)

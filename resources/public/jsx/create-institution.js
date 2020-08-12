@@ -45,7 +45,6 @@ class CreateInstitution extends React.Component {
                           "Content-Type": "application/json",
                       },
                       body: JSON.stringify({
-                          userId: this.props.userId,
                           name: this.state.newInstitutionDetails.name,
                           logo: this.state.newInstitutionDetails.logo,
                           base64Image: this.state.newInstitutionDetails.base64Image,
