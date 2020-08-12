@@ -3,8 +3,7 @@
             [clj-http.client :as client]
             [org.openforis.ceo.utils.type-conversion :as tc]
             [org.openforis.ceo.utils.part-utils      :as pu]
-            [org.openforis.ceo.db.imagery  :refer [get-imagery-source-config]]
-            [org.openforis.ceo.views       :refer [data-response]]))
+            [org.openforis.ceo.db.imagery  :refer [get-imagery-source-config]]))
 
 (defn- planet-url [source-config params]
   (let [{:keys [year month tile x y z]} params]
