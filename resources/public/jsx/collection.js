@@ -60,10 +60,8 @@ class Collection extends React.Component {
         // Wait to get imagery list until project is loaded
         if (this.state.currentProject.institution !== prevState.currentProject.institution) {
             // release any locks in case of user hitting refresh
-            fetch(
-                `/release-plot-locks?userId=${this.props.userId}` +
-                `&projectId=${this.state.currentProject.id}`,
-                { method: "POST" }
+            fetch(`/release-plot-locks?projectId=${this.state.currentProject.id}`,
+                  { method: "POST" }
             );
             this.getImageryList();
         }
@@ -255,8 +253,6 @@ class Collection extends React.Component {
                   getUserPlots: this.state.reviewPlots,
                   plotId: plotId,
                   projectId: this.props.projectId,
-                  userId: this.props.userId,
-                  userName: this.props.userName,
               }))
             .then(response => response.ok ? response.text() : Promise.reject(response))
             .then(data => {
@@ -290,8 +286,6 @@ class Collection extends React.Component {
                   plotId: plotId,
                   projectId: this.props.projectId,
                   institutionId: this.state.currentProject.institution,
-                  userId: this.props.userId,
-                  userName: this.props.userName,
               }))
             .then(response => response.ok ? response.text() : Promise.reject(response))
             .then(data => {
@@ -327,8 +321,6 @@ class Collection extends React.Component {
                   plotId: plotId,
                   projectId: this.props.projectId,
                   institutionId: this.state.currentProject.institution,
-                  userId: this.props.userId,
-                  userName: this.props.userName,
               }))
             .then(response => response.ok ? response.text() : Promise.reject(response))
             .then(data => {
@@ -357,11 +349,13 @@ class Collection extends React.Component {
         fetch("/reset-plot-lock",
               {
                   method: "POST",
+                  headers: {
+                      "Accept": "application/json",
+                      "Content-Type": "application/json",
+                  },
                   body: JSON.stringify({
                       plotId: this.state.currentPlot.id,
                       projectId: this.props.projectId,
-                      userId: this.props.userId,
-                      userName: this.props.userName,
                   }),
               })
             .then(response => {
@@ -497,13 +491,15 @@ class Collection extends React.Component {
             if (this.state.currentPlot.flagged) {
                 fetch("/flag-plot",
                       {
-                          method: "POST",
-                          body: JSON.stringify({
-                              projectId: this.props.projectId,
-                              plotId: this.state.currentPlot.id,
-                              userId: this.props.userId,
-                              userName: this.props.userName,
-                          }),
+                        method: "POST",
+                        headers: {
+                            "Accept": "application/json",
+                            "Content-Type": "application/json",
+                        },
+                        body: JSON.stringify({
+                            projectId: this.props.projectId,
+                            plotId: this.state.currentPlot.id,
+                        }),
                       })
                     .then(response => {
                         if (response.ok) {
@@ -516,21 +512,19 @@ class Collection extends React.Component {
             } else {
                 fetch("/add-user-samples",
                       {
-                          method: "post",
-                          headers: {
-                              "Accept": "application/json",
-                              "Content-Type": "application/json",
-                          },
-                          body: JSON.stringify({
-                              projectId: this.props.projectId,
-                              plotId: this.state.currentPlot.id,
-                              userName: this.props.userName,
-                              userId: this.props.userId,
-                              confidence: -1,
-                              collectionStart: this.state.collectionStart,
-                              userSamples: this.state.userSamples,
-                              userImages: this.state.userImages,
-                          }),
+                        method: "post",
+                        headers: {
+                            "Accept": "application/json",
+                            "Content-Type": "application/json",
+                        },
+                        body: JSON.stringify({
+                            projectId: this.props.projectId,
+                            plotId: this.state.currentPlot.id,
+                            confidence: -1,
+                            collectionStart: this.state.collectionStart,
+                            userSamples: this.state.userSamples,
+                            userImages: this.state.userImages,
+                        }),
                       })
                     .then(response => {
                         if (response.ok) {
@@ -1024,7 +1018,6 @@ class Collection extends React.Component {
                 </SideBar>
                 {this.state.showQuitModal &&
                     <QuitMenu
-                        userId={this.props.userId}
                         projectId={this.props.projectId}
                         toggleQuitModal={this.toggleQuitModal}
                     />
@@ -1553,7 +1546,7 @@ class ProjectStats extends React.Component {
 }
 
 // remains hidden, shows a styled menu when the quit button is clicked
-function QuitMenu({ userId, projectId, toggleQuitModal }) {
+function QuitMenu({ projectId, toggleQuitModal }) {
     return (
         <div
             className="modal fade show"
@@ -1595,7 +1588,7 @@ function QuitMenu({ userId, projectId, toggleQuitModal }) {
                             id="quit-button"
                             onClick={() =>
                                 fetch(
-                                    `/release-plot-locks?userId=${userId}&projectId=${projectId}`,
+                                    `/release-plot-locks?projectId=${projectId}`,
                                     { method: "POST" }
                                 )
                                     .then(() => window.location = "/home")
