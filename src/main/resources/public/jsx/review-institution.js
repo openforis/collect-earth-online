@@ -995,6 +995,7 @@ class Project extends React.Component {
                 <div className="mr-3">
                     <div
                         className="btn btn-sm btn-outline-lightgreen btn-block px-3"
+                        title="Download Plot Data"
                         onClick={this.downloadPlotData}
                     >
                         P
@@ -1003,6 +1004,7 @@ class Project extends React.Component {
                 <div className="mr-3">
                     <div
                         className="btn btn-sm btn-outline-lightgreen btn-block px-3"
+                        title="Download Sample Data"
                         onClick={this.downloadSampleData}
                     >
                         S
