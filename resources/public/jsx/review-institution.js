@@ -1010,7 +1010,6 @@ class UserList extends React.Component {
                       "Content-Type": "application/json",
                   },
                   body: JSON.stringify({
-                      userId: newUserId,
                       institutionId: this.props.institutionId,
                       role: role,
                   }),
@@ -1037,7 +1036,6 @@ class UserList extends React.Component {
                   },
                   body: JSON.stringify({
                       institutionId: this.props.institutionId,
-                      userId: this.props.userId,
                   }),
               })
             .then(response => {
