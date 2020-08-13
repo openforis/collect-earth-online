@@ -93,7 +93,7 @@ class Collection extends React.Component {
         //
 
         // Initialize when new plot
-        if (this.state.currentPlot.id && this.state.currentPlot !== prevState.currentPlot) {
+        if (this.state.currentPlot.id && this.state.currentPlot.id !== prevState.currentPlot.id) {
             this.showProjectPlot();
             if (this.state.hasGeoDash) this.showGeoDash();
             clearInterval(this.state.storedInterval);
@@ -923,10 +923,7 @@ class Collection extends React.Component {
     toggleQuitModal = () => this.setState({ showQuitModal: !this.state.showQuitModal });
 
     toggleFlagged = () => {
-        const newPlot = this.state.currentPlot;
-        newPlot.flagged = !newPlot.flagged;
-        this.setState({ currentPlot: newPlot });
-        //this.setState(prevState => ({ currentPlot: { ...prevState.currentPlot, flagged: !prevState.currentPlot.flagged }}));
+        this.setState({ currentPlot: { ...this.state.currentPlot, flagged: !this.state.currentPlot.flagged }});
     };
 
     render() {
