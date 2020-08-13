@@ -1189,7 +1189,7 @@ class WidgetLayoutEditor extends React.PureComponent {
     </div>;
 
     getInstitutionImageryInfo = () => <div>
-        Adding imagery to basemaps is available on the institution review page in the imagery tab
+        Adding imagery to basemaps is available on the institution review page in the imagery tab.
     </div>
 
     getNextStepButton = () => this.state.selectedWidgetType === "DualImageCollection"
