@@ -1058,63 +1058,87 @@ function ImageAnalysisPane(props) {
     );
 }
 
-function SideBar(props) {
-    const saveValuesButtonEnabled = props.surveyQuestions
-        .every(sq => sq.visible && sq.visible.length === sq.answered.length);
+class SideBar extends React.Component {
+    constructor(props) {
+        super(props);
+        this.state = {
+            isFlagButtonClicked: false,
+        };
+    }
 
-    const saveButtonGroup = () => (
-        <>
-            <input
-                className="btn btn-outline-lightgreen btn-sm btn-block"
-                type="button"
-                value="Save"
-                onClick={props.postValuesToDB}
-                style={{ opacity: saveValuesButtonEnabled ? "1.0" : ".25" }}
-                disabled={!saveValuesButtonEnabled}
-            />
-            <div className="my-2 d-flex justify-content-between">
+    componentWillReceiveProps(nextProps) {
+        if (nextProps.plotId !== this.props.plotId) {
+            this.setState({
+                isFlagButtonClicked: false,
+            });
+        }
+    }
+
+    saveButtonGroup = () => {
+        const { props } = this;
+        const isSurveyAnswered = props.surveyQuestions.every(sq => sq.visible && sq.visible.length === sq.answered.length);
+        const saveButtonEnabled = isSurveyAnswered || this.state.isFlagButtonClicked;
+        return (
+            <>
                 <input
-                    className="btn btn-outline-danger btn-sm col mr-1"
+                    className="btn btn-outline-lightgreen btn-sm btn-block"
                     type="button"
-                    value={props.isFlagged ? "Unflag Plot" : "Flag Plot"}
-                    onClick={props.toggleFlagged}
+                    value="Save"
+                    onClick={props.postValuesToDB}
+                    style={{ opacity: saveButtonEnabled ? "1.0" : ".25" }}
+                    disabled={!saveButtonEnabled}
                 />
-                <input
-                    className="btn btn-outline-danger btn-sm col"
-                    type="button"
-                    value={props.isAnalyzed ? "Clear Changes" : "Clear All"}
-                    onClick={props.clearAnswers}
-                />
-            </div>
-        </>
-    );
-
-    return (
-        <div id="sidebar" className="col-xl-3 border-left full-height" style={{ overflowY: "scroll", overflowX: "hidden" }}>
-            <ProjectTitle
-                projectId={props.projectId}
-                plotId={props.plotId}
-                userName={props.userName}
-                projectName={props.projectName || ""}
-            />
-            {props.children}
-
-            <div className="row">
-                <div className="col-sm-12 btn-block">
-                    {props.plotId && saveButtonGroup()}
-                    <button
-                        id="collection-quit-button"
-                        className="btn btn-outline-danger btn-block btn-sm mb-4"
+                <div className="my-2 d-flex justify-content-between">
+                    <input
+                        className="btn btn-outline-danger btn-sm col mr-1"
                         type="button"
-                        name="collection-quit"
-                        onClick={props.toggleQuitModal}
-                    >
-                        Quit
-                    </button>
+                        value={props.isFlagged ? "Unflag Plot" : "Flag Plot"}
+                        onClick={() => {
+                            this.setState({
+                                isFlagButtonClicked: true,
+                            }, props.toggleFlagged());
+                        }}
+                    />
+                    <input
+                        className="btn btn-outline-danger btn-sm col"
+                        type="button"
+                        value={props.isAnalyzed ? "Clear Changes" : "Clear All"}
+                        onClick={props.clearAnswers}
+                    />
+                </div>
+            </>
+        );
+    };
+
+    render() {
+        const { props } = this;
+        return (
+            <div id="sidebar" className="col-xl-3 border-left full-height" style={{ overflowY: "scroll", overflowX: "hidden" }}>
+                <ProjectTitle
+                    projectId={props.projectId}
+                    plotId={props.plotId}
+                    userName={props.userName}
+                    projectName={props.projectName || ""}
+                />
+                {props.children}
+
+                <div className="row">
+                    <div className="col-sm-12 btn-block">
+                        {props.plotId && this.saveButtonGroup()}
+                        <button
+                            id="collection-quit-button"
+                            className="btn btn-outline-danger btn-block btn-sm mb-4"
+                            type="button"
+                            name="collection-quit"
+                            onClick={props.toggleQuitModal}
+                        >
+                            Quit
+                        </button>
+                    </div>
                 </div>
             </div>
-        </div>
-    );
+        );
+    }
 }
 
 function CollapsibleTitle({ title, showGroup, toggleShow }) {
