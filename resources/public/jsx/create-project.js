@@ -141,7 +141,10 @@ class Project extends React.Component {
         fetch("/create-project",
               {
                   method: "POST",
-                  contentType: "application/json; charset=utf-8",
+                  headers: {
+                      "Accept": "application/json",
+                      "Content-Type": "application/json",
+                  },
                   body: JSON.stringify({
                       institutionId: this.props.institutionId,
                       imageryId: this.state.projectDetails.imageryId,
@@ -178,16 +181,15 @@ class Project extends React.Component {
         )
             .then(response => Promise.all([response.ok, response.json()]))
             .then(data => {
-                const isInteger = n => !isNaN(parseInt(n)) && isFinite(n) && !n.includes(".");
-                if (data[0] && isInteger(data[1].projectId)) {
+                if (data[0] && Number.isInteger(data[1].projectId)) {
                     window.location = `/review-project?projectId=${data[1].projectId}`;
                     return Promise.resolve();
                 } else {
-                    return Promise.reject(data[1].errorMessage);
+                    return Promise.reject(data[1]);
                 }
             })
             .catch(message => {
-                alert("Error creating project.\n\n" + message);
+                alert("Error creating project:\n" + message);
                 this.setState({ showModal: false });
             });
 
