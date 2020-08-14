@@ -49,3 +49,12 @@ export function UnicodeIcon({ icon, backgroundColor }) {
 export function getQueryString(params) {
     return Object.keys(params).map(k => encodeURIComponent(k) + "=" + encodeURIComponent(params[k])).join("&");
 }
+
+export function formatNumberWithCommas (number) {
+    return number.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+}
+
+// TODO we dont need so many util files.  this isn't a "text" util but I dont want to create a new file.
+export function deepCopy(obj) {
+    return JSON.parse(JSON.stringify(obj));
+}

@@ -2,6 +2,7 @@ import React, { Fragment } from "react";
 
 import { removeEnumerator } from "../utils/surveyUtils";
 import { UnicodeIcon } from "../utils/textUtils";
+import { CollapsibleTitle } from "./FormComponents";
 
 export class SurveyCollection extends React.Component {
     constructor(props) {
@@ -9,6 +10,7 @@ export class SurveyCollection extends React.Component {
         this.state = {
             currentNodeIndex: 0,
             topLevelNodeIds: [],
+            showSurveyQuestions: true,
         };
     }
 
@@ -90,53 +92,58 @@ export class SurveyCollection extends React.Component {
 
     render() {
         return (
-            <fieldset className="mb-3 justify-content-center text-center">
-                <h3>Survey Questions</h3>
-                {this.props.surveyQuestions.length > 0
-                ?
-                    <div className="SurveyQuestions__questions">
-                        <div className="SurveyQuestions__top-questions">
-                            <button
-                                type="button"
-                                id="prev-survey-question"
-                                className="btn btn-outline-lightgreen m-2"
-                                onClick={this.prevSurveyQuestionTree}
-                                disabled={this.state.currentNodeIndex === 0}
-                                style={{ opacity: this.state.currentNodeIndex === 0 ? "0.25" : "1.0" }}
-                            >
-                                {"<"}
-                            </button>
-                            {this.state.topLevelNodeIds.map((node, i) =>
+            <fieldset className="justify-content-center text-center">
+                <CollapsibleTitle
+                    title="Survey Questions"
+                    showGroup={this.state.showSurveyQuestions}
+                    toggleShow={() => this.setState({ showSurveyQuestions: !this.state.showSurveyQuestions })}
+                />
+                {this.state.showSurveyQuestions
+                ? this.props.surveyQuestions.length > 0
+                    ?
+                        <div className="SurveyQuestions__questions mx-1">
+                            <div className="SurveyQuestions__top-questions">
                                 <button
                                     type="button"
-                                    id="top-select"
-                                    key={i}
+                                    id="prev-survey-question"
                                     className="btn btn-outline-lightgreen m-2"
-                                    title={removeEnumerator(this.getNodeById(node).question)}
-                                    onClick={() => this.setSurveyQuestionTree(i)}
-                                    style={{
-                                        boxShadow: `${(i === this.state.currentNodeIndex)
-                                                        ? "0px 0px 2px 2px black inset,"
-                                                        : ""}
+                                    onClick={this.prevSurveyQuestionTree}
+                                    disabled={this.state.currentNodeIndex === 0}
+                                    style={{ opacity: this.state.currentNodeIndex === 0 ? "0.25" : "1.0" }}
+                                >
+                                    {"<"}
+                                </button>
+                                {this.state.topLevelNodeIds.map((node, i) =>
+                                    <button
+                                        type="button"
+                                        id="top-select"
+                                        key={i}
+                                        className="btn btn-outline-lightgreen m-2"
+                                        title={removeEnumerator(this.getNodeById(node).question)}
+                                        onClick={() => this.setSurveyQuestionTree(i)}
+                                        style={{
+                                            boxShadow: `${(i === this.state.currentNodeIndex)
+                                                ? "0px 0px 2px 2px black inset,"
+                                                : ""}
                                                     ${this.getTopColor(this.getNodeById(node))}
                                                     `,
-                                    }}
+                                        }}
+                                    >
+                                        {i + 1}
+                                    </button>
+                                )}
+                                <button
+                                    type="button"
+                                    id="next-survey-question"
+                                    className="btn btn-outline-lightgreen"
+                                    onClick={this.nextSurveyQuestionTree}
+                                    disabled={this.state.currentNodeIndex === this.state.topLevelNodeIds.length - 1}
+                                    style={{ opacity: this.state.currentNodeIndex === this.state.topLevelNodeIds.length - 1 ? "0.25" : "1.0" }}
                                 >
-                                    {i + 1}
+                                    {">"}
                                 </button>
-                            )}
-                            <button
-                                type="button"
-                                id="next-survey-question"
-                                className="btn btn-outline-lightgreen"
-                                onClick={this.nextSurveyQuestionTree}
-                                disabled={this.state.currentNodeIndex === this.state.topLevelNodeIds.length - 1}
-                                style={{ opacity: this.state.currentNodeIndex === this.state.topLevelNodeIds.length - 1 ? "0.25" : "1.0" }}
-                            >
-                                {">"}
-                            </button>
-                        </div>
-                        {this.props.isFlagged
+                            </div>
+                            {this.props.isFlagged
                             ?
                                 <div style={{ color: "red" }}>FLAGGED</div>
                             : this.state.topLevelNodeIds.length > 0 &&
@@ -151,10 +158,11 @@ export class SurveyCollection extends React.Component {
                                     setSelectedQuestion={this.props.setSelectedQuestion}
                                     getRulesById={this.getRulesById}
                                 />
-                        }
-                    </div>
-                :
-                    <h3>This project is missing survey questions!</h3>
+                            }
+                        </div>
+                    :
+                        <h3>This project is missing survey questions!</h3>
+                : ""
                 }
             </fieldset>
         );

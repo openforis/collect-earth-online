@@ -1,4 +1,3 @@
-
 export function convertSampleValuesToSurveyQuestions(sampleValues) {
     return (sampleValues || []).map(sv => {
         const newAnswers = (sv.answers || sv.values).map(value => ({

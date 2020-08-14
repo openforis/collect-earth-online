@@ -945,6 +945,14 @@ class Project extends React.Component {
             .catch(response => console.log(response));
     };
 
+    downloadPlotData = () => {
+        window.open(`/dump-project-aggregate-data?projectId=${this.props.project.id}`, "_blank");
+    };
+
+    downloadSampleData = () => {
+        window.open(`/dump-project-raw-data?projectId=${this.props.project.id}`, "_blank");
+    };
+
     render() {
         const { project, isAdmin } = this.props;
         return <div className="row mb-1 d-flex">
@@ -984,6 +992,24 @@ class Project extends React.Component {
                         <UnicodeIcon icon="trash"/>
                     </a>
                 </div>
+                <div className="mr-3">
+                    <div
+                        className="btn btn-sm btn-outline-lightgreen btn-block px-3"
+                        title="Download Plot Data"
+                        onClick={this.downloadPlotData}
+                    >
+                        P
+                    </div>
+                </div>
+                <div className="mr-3">
+                    <div
+                        className="btn btn-sm btn-outline-lightgreen btn-block px-3"
+                        title="Download Sample Data"
+                        onClick={this.downloadSampleData}
+                    >
+                        S
+                    </div>
+                </div>
             </>
             }
         </div>;
@@ -1005,7 +1031,8 @@ class UserList extends React.Component {
     }
 
     componentDidUpdate(prevProps, prevState) {
-        if (this.state.institutionUserList.length !== prevState.institutionUserList.length) {
+        if (this.state.institutionUserList.length !== prevState.institutionUserList.length
+            || this.props.isAdmin !== prevProps.isAdmin) {
             this.props.setUsersCount(
                 this.props.isAdmin
                     ? this.state.institutionUserList.length
@@ -1105,19 +1132,18 @@ class UserList extends React.Component {
                     updateUserInstitutionRole={this.updateUserInstitutionRole}
                     userId={this.props.userId}
                 />
-                {this.props.userId > 0 &&
-                    this.state.institutionUserList
-                        .filter(iu => this.props.isAdmin || iu.institutionRole !== "pending")
-                        .sort((a, b) => sortAlphabetically(a.email, b.email))
-                        .sort((a, b) => sortAlphabetically(a.institutionRole, b.institutionRole))
-                        .map((iu, uid) =>
-                            <User
-                                key={uid}
-                                user={iu}
-                                isAdmin={this.props.isAdmin}
-                                updateUserInstitutionRole={this.updateUserInstitutionRole}
-                            />
-                        )
+                {this.state.institutionUserList
+                    .filter(iu => iu.id === this.props.userId || this.props.isAdmin)
+                    .sort((a, b) => sortAlphabetically(a.email, b.email))
+                    .sort((a, b) => sortAlphabetically(a.institutionRole, b.institutionRole))
+                    .map((iu, uid) =>
+                        <User
+                            key={uid}
+                            user={iu}
+                            isAdmin={this.props.isAdmin}
+                            updateUserInstitutionRole={this.updateUserInstitutionRole}
+                        />
+                    )
                 }
             </Fragment>;
     }
