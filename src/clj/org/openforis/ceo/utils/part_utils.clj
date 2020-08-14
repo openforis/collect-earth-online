@@ -23,9 +23,13 @@
 ;; FIXME: stub
 (defn write-file-part-base64 [input-file-name encoded-file output-directory output-file-prefix]
   (when input-file-name
-    (let [ext      (subs input-file-name (str/last-index-of input-file-name "."))
-          out-name (str output-file-prefix ext)
-          data     (decode64 encoded-file)]
-      (with-open [os (io/output-stream (str (io/resource output-directory) out-name))]
+    (let [ext       (subs input-file-name (str/last-index-of input-file-name "."))
+          out-name  (str output-file-prefix ext)
+          full-path (str output-directory
+                         (when-not (str/ends-with? output-directory "/") "/")
+                         out-name)
+          data      (decode64 encoded-file)]
+      (io/make-parents full-path)
+      (with-open [os (io/output-stream full-path)]
         (.write os data 0 (count data)))
       out-name)))
