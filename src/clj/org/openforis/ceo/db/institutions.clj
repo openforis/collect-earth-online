@@ -1,6 +1,7 @@
 (ns org.openforis.ceo.db.institutions
   (:import java.util.Date)
   (:require [clojure.string :as str]
+            [clojure.java.io :as io]
             [org.openforis.ceo.utils.type-conversion :as tc]
             [org.openforis.ceo.database         :refer [call-sql sql-primitive]]
             [org.openforis.ceo.views            :refer [data-response]]
@@ -62,7 +63,7 @@
         (when-not (str/blank? logo)
           (let [logo-file-name (write-file-part-base64 logo
                                                        base64-image
-                                                       "public/img/institution-logos/"
+                                                       (io/resource "public/img/institution-logos/")
                                                        (str "institution-" institution-id))]
             (call-sql "update_institution_logo" institution-id (str "img/institution-logos/" logo-file-name))))
         (doseq [admin-id (conj #{1} user-id)]
@@ -83,7 +84,7 @@
                              (str "img/institution-logos/"
                                   (write-file-part-base64 logo
                                                           base64-image
-                                                          "public/img/institution-logos/"
+                                                          (io/resource "public/img/institution-logos/")
                                                           (str "institution-" institution-id))))]
         (call-sql "update_institution" institution-id name logo-file-name description url)
         (data-response ""))
