@@ -218,24 +218,6 @@ class WidgetLayoutEditor extends React.PureComponent {
             </div>);
     };
 
-    addInstitutionImagery = imagery => {
-        fetch("/add-institution-imagery",
-              {
-                  method: "POST",
-                  headers: {
-                      "Accept": "application/json",
-                      "Content-Type": "application/json",
-                  },
-                  body: JSON.stringify(imagery),
-              })
-            .then(response => {
-                if (!response.ok) {
-                    alert("Error adding custom imagery to institution. See console for details.");
-                    console.log(response);
-                }
-            });
-    };
-
     buildImageryObject = img => {
         const gatewayUrl = "/geo-dash/gateway-request";
         let title = this.state.widgetTitle !== "" ? this.state.widgetTitle : img.filterType.replace(/\w\S*/g, function (word) {
@@ -458,8 +440,6 @@ class WidgetLayoutEditor extends React.PureComponent {
                     max: this.state.widgetMax,
                     cloudLessThan: this.state.widgetCloudScore,
                 };
-                this.addInstitutionImagery(this.buildImageryObject(img1));
-
             }
             if (["LANDSAT5", "LANDSAT7", "LANDSAT8", "Sentinel2"].includes(this.state.selectedDataTypeDual)) {
                 img2.filterType = this.state.selectedDataTypeDual !== null ? this.state.selectedDataTypeDual : "";
@@ -469,63 +449,26 @@ class WidgetLayoutEditor extends React.PureComponent {
                     max: this.state.widgetMaxDual,
                     cloudLessThan: this.state.widgetCloudScoreDual,
                 };
-                this.addInstitutionImagery(this.buildImageryObject(img2));
             }
             if (this.state.selectedDataType === "imageAsset") {
                 //add image asset parameters
                 img1.visParams = JSON.parse(this.state.imageParams);
                 img1.imageAsset = this.state.imageCollection;
-                this.addInstitutionImagery(this.buildImageryObject({
-                    ImageAsset: this.state.imageCollection,
-                    startDate: "",
-                    endDate: "",
-                    filterType: "",
-                    visParams: img1.visParams,
-                }));
-
             }
             if (this.state.selectedDataType === "imageCollectionAsset") {
                 //add image asset parameters
                 img1.visParams = JSON.parse(this.state.imageParams);
                 img1.ImageCollectionAsset = this.state.imageCollection;
-
-                this.addInstitutionImagery(this.buildImageryObject({
-                    ImageCollectionAsset: img1.ImageCollectionAsset,
-                    startDate: "",
-                    endDate: "",
-                    filterType: "",
-                    visParams: JSON.parse(this.state.imageParams),
-                }));
             }
             if (this.state.selectedDataTypeDual === "imageAsset") {
                 //add dual image asset parameters
                 img2.visParams = JSON.parse(this.state.imageParamsDual);
                 img2.imageAsset = this.state.imageCollectionDual;
-                setTimeout( () => {
-                    this.addInstitutionImagery(this.buildImageryObject({
-                        ImageAsset: this.state.imageCollectionDual,
-                        startDate: "",
-                        endDate: "",
-                        filterType: "",
-                        visParams: JSON.parse(this.state.imageParamsDual),
-                    }));
-                }, 500);
-
             }
             if (this.state.selectedDataTypeDual === "imageCollectionAsset") {
                 //add dual image asset parameters
                 img2.visParams = JSON.parse(this.state.imageParamsDual);
                 img2.ImageCollectionAsset = this.state.imageCollectionDual;
-                setTimeout(() => {
-                    this.addInstitutionImagery(this.buildImageryObject({
-                        ImageCollectionAsset: img2.ImageCollectionAsset,
-                        startDate: "",
-                        endDate: "",
-                        filterType: "",
-                        visParams: img2.visParams,
-                    }));
-                }, 500);
-
             }
             widget.dualImageCollection.push(img1);
             widget.dualImageCollection.push(img2);
@@ -534,27 +477,11 @@ class WidgetLayoutEditor extends React.PureComponent {
             widget.filterType = "";
             widget.visParams = this.state.imageParams === "" ? {} : JSON.parse(this.state.imageParams);
             widget.ImageAsset = this.state.imageCollection;
-            if (this.state.selectedWidgetType === "imageAsset") {
-                this.addInstitutionImagery(this.buildImageryObject({
-                    ImageAsset: widget.ImageAsset,
-                    startDate: "",
-                    endDate: "",
-                    filterType: "",
-                    visParams: widget.visParams,
-                }));
-            }
         } else if (this.state.selectedWidgetType === "imageCollectionAsset") {
             widget.properties = ["", "", "", "", ""];
             widget.filterType = "";
             widget.visParams = JSON.parse(this.state.imageParams);
             widget.ImageCollectionAsset = this.state.imageCollection;
-            this.addInstitutionImagery(this.buildImageryObject({
-                ImageCollectionAsset: widget.ImageCollectionAsset,
-                startDate: "",
-                endDate: "",
-                filterType: "",
-                visParams: widget.visParams,
-            }));
         } else if (this.state.selectedWidgetType === "DegradationTool") {
             widget.type = "DegradationTool";
             widget.properties = ["DegradationTool", "", "", "", ""];
@@ -601,14 +528,6 @@ class WidgetLayoutEditor extends React.PureComponent {
                     max: this.state.widgetMax,
                     cloudLessThan: this.state.widgetCloudScore,
                 };
-
-                this.addInstitutionImagery(this.buildImageryObject({
-                    collectionType:"ImageCollection" + this.state.selectedDataType,
-                    startDate: this.state.startDate,
-                    endDate: this.state.endDate,
-                    filterType: widget.filterType,
-                    visParams: widget.visParams,
-                }));
             }
             widget.dualLayer = this.state.dualLayer;
             if (widget.dualLayer) {
@@ -1189,7 +1108,9 @@ class WidgetLayoutEditor extends React.PureComponent {
     </div>;
 
     getInstitutionImageryInfo = () => <div>
-        Adding imagery to basemaps is available on the institution review page in the imagery tab.
+        <a href={`/review-institution?institutionId=${this.state.institutionID}`} target="_blank" rel="noreferrer noopener">
+            Adding imagery to basemaps is available on the institution review page in the imagery tab.
+        </a>
     </div>
 
     getNextStepButton = () => this.state.selectedWidgetType === "DualImageCollection"
