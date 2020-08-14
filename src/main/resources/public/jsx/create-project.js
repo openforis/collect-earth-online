@@ -443,6 +443,7 @@ class Project extends React.Component {
         const displayDragBoxBounds = (dragBox) => {
             const extent = dragBox.getGeometry().clone().transform("EPSG:3857", "EPSG:4326").getExtent();
             mercator.removeLayerById(this.state.mapConfig, "currentAOI");
+            mercator.setLayerVisibilityByLayerId(this.state.mapConfig, "dragBoxLayer", true);
             this.setState({
                 coordinates: {
                     lonMin: extent[0],
@@ -476,6 +477,18 @@ class Project extends React.Component {
                                 ceoMapStyles.yellowPolygon);
         mercator.zoomMapToLayer(this.state.mapConfig, "currentAOI");
     };
+
+    showBounds = (boundary) => {
+        mercator.removeLayerById(this.state.mapConfig, "currentAOI");
+        mercator.setLayerVisibilityByLayerId(this.state.mapConfig, "dragBoxLayer", false);
+
+        // Display a bounding box with the project's AOI on the map and zoom to it
+        mercator.addVectorLayer(this.state.mapConfig,
+                                "currentAOI",
+                                mercator.geometryToVectorSource(mercator.parseGeoJson(boundary, true)),
+                                ceoMapStyles.yellowPolygon);
+        //mercator.zoomMapToLayer(this.state.mapConfig, "currentAOI");
+    }
 
     showTemplatePlots = () => {
         mercator.addVectorLayer(this.state.mapConfig,
@@ -559,6 +572,32 @@ class Project extends React.Component {
         });
     };
 
+    updateCoordinates = (name, value) => {
+        const coordinates = this.state.coordinates;
+        coordinates[name] = parseFloat(value);
+
+        const y1 = coordinates.latMin;
+        const y2 = coordinates.latMax;
+        const x1 = coordinates.lonMin;
+        const x2 = coordinates.lonMax;
+
+        const boundary = {
+            type: "Polygon",
+            coordinates: [[
+                [x1, y1],
+                [x1, y2],
+                [x2, y2],
+                [x2, y1],
+                [x1, y1],
+            ]],
+        };
+
+        this.setState({
+            coordinates,
+        });
+        this.showBounds(boundary);
+    };
+
     render() {
         return (
             <FormLayout id="project-design" title="Create Project">
@@ -567,6 +606,7 @@ class Project extends React.Component {
                     <Fragment>
                         <ProjectDesignForm
                             coordinates={this.state.coordinates}
+                            updateCoordinates={this.updateCoordinates}
                             imageryList={this.state.imageryList}
                             projectDetails={this.state.projectDetails}
                             projectList={this.state.projectList}
@@ -612,6 +652,7 @@ function ProjectDesignForm(props) {
             />
             <ProjectAOI
                 coordinates={props.coordinates}
+                updateCoordinates={props.updateCoordinates}
                 inDesignMode
                 imageryId={props.projectDetails.imageryId}
                 imageryList={props.imageryList}

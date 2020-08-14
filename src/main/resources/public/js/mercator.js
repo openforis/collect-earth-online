@@ -897,6 +897,15 @@ mercator.removeLayerById = function (mapConfig, layerId) {
     return mapConfig;
 };
 
+// [Side Effects] Hides/Shows the layer with id === layerId from mapConfig's map object.
+mercator.setLayerVisibilityByLayerId = function (mapConfig, layerId, visibility) {
+    const layer = mercator.getLayerById(mapConfig, layerId);
+    if (layer) {
+        layer.setVisible(visibility);
+    }
+    return mapConfig;
+};
+
 // [Pure] Returns a geometry object representing the shape described
 // in the passed in GeoJSON string. If reprojectToMap is true,
 // reproject the created geometry from WGS84 to Web Mercator before returning.
