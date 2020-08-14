@@ -10,6 +10,16 @@
      (Integer/parseInt string)
      (catch Exception _ default))))
 
+(defn str->float
+  ([string]
+   (str->int string -1))
+  ([string default]
+   (if (number? string)
+     string
+     (try
+       (Float/parseFloat string)
+       (catch Exception _ default)))))
+
 (defn str->bool
   ([string]
    (str->bool string false))
