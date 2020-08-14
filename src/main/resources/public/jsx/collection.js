@@ -1059,8 +1059,7 @@ function ImageAnalysisPane(props) {
 }
 
 function SideBar(props) {
-    const saveValuesButtonEnabled = props.surveyQuestions
-        .every(sq => sq.visible && sq.visible.length === sq.answered.length);
+    const saveValuesButtonEnabled = props.isFlagged || props.surveyQuestions.every(sq => sq.visible && sq.visible.length === sq.answered.length);
 
     const saveButtonGroup = () => (
         <>
