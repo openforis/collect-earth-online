@@ -1,12 +1,22 @@
 (ns org.openforis.ceo.db.projects
   (:import java.text.SimpleDateFormat
-           java.util.Date)
-  (:require [clojure.string :as str]
-            [clojure.set    :as set]
-            [org.openforis.ceo.database :refer [call-sql sql-primitive]]
-            [org.openforis.ceo.views    :refer [data-response]]
+           java.util.Date
+           java.util.UUID)
+  (:require [clojure.string     :as str]
+            [clojure.set        :as set]
+            [clojure.java.io    :as io]
+            [clojure.java.shell :as sh]
+            [org.openforis.ceo.database         :refer [call-sql call-sql-opts sql-primitive]]
+            [org.openforis.ceo.views            :refer [data-response]]
             [org.openforis.ceo.utils.type-conversion :as tc]
             [org.openforis.ceo.utils.part-utils      :as pu]))
+
+;;; Constants
+
+(def tmp-dir  (System/getProperty "java.io.tmpdir"))
+(def path-env (System/getenv "PATH"))
+
+;;; Auth Functions
 
 (defn- check-auth-common [params sql-query]
   (let [user-id    (:userId params -1)
@@ -22,6 +32,8 @@
 
 (defn is-proj-admin? [{:keys [params]}]
   (data-response (check-auth-common params "can_user_edit")))
+
+;;; Data Functions
 
 ;; TODO add settings that are new since we forked
 (def default-options {:showGEEScript false})
@@ -108,6 +120,8 @@
     (call-sql "archive_project" project-id)
     (data-response "")))
 
+;;; Project Common
+
 (defn- get-first-public-imagery []
   (sql-primitive (call-sql "select_first_public_imagery")))
 
@@ -115,6 +129,8 @@
 (defn- insert-project-imagery [project-id imagery-list]
   (doseq [imagery imagery-list]
     (call-sql "insert_project_imagery" project-id imagery)))
+
+;;; Update Project
 
 (defn update-project [{:keys [params]}]
   (let [project-id      (tc/str->int (:projectId params))
@@ -129,7 +145,460 @@
       (insert-project-imagery project-id imagery-list))
     (data-response "")))
 
-(defn create-project [request])
+;;; Create Project
+
+(defn- init-throw [message]
+  (throw (ex-info message {:causes [message]})))
+
+(defn- try-catch-throw [try-fn message]
+  (try (try-fn)
+       (catch Exception e
+         (let [causes (conj (:causes (ex-data e) []) message)]
+           (throw (ex-info message {:causes causes}))))))
+
+;;; Check plot limits
+
+(defn- count-gridded-points [left bottom right top spacing]
+  (let [x-range (- right left)
+        y-range (- top bottom)
+        x-steps (+ (Math/floor (/ x-range spacing)) 1)
+        y-steps (+ (Math/floor (/ y-range spacing)) 1)]
+    (* x-steps y-steps)))
+
+(defn- count-gridded-sample-set [plot-size sample-resolution]
+  (Math/pow (Math/floor (/ plot-size sample-resolution)) 2))
+
+(defn- check-plot-limits [plots plot-limit per-plot per-plot-limit sample-limit]
+  (cond
+    (> plots plot-limit)
+    (init-throw (str "This action will create "
+                     plots
+                     " plots. The maximum allowed for the selected plot distribution is "
+                     plot-limit
+                     "."))
+
+    (> per-plot per-plot-limit)
+    (init-throw (str "This action will create "
+                     per-plot
+                     " samples per plot. The maximum allowed for the selected sample distribution is "
+                     per-plot-limit
+                     "."))
+
+    (> (* plots per-plot) sample-limit)
+    (init-throw (str "This action will create "
+                     (* plots per-plot)
+                     " total samples. The maximum allowed for the selected distribution types is "
+                     sample-limit
+                     "."))))
+
+;;; Geo JSON
+
+(defn- make-geo-json-point [lon lat]
+  (tc/clj->jsonb {:type        "Point"
+                  :coordinates [lon lat]}))
+
+(defn- make-geo-json-polygon [lon-min lat-min lon-max lat-max]
+  (tc/clj->jsonb {:type        "Polygon"
+                  :coordinates [[[lon-min lat-min]
+                                 [lon-min lat-max]
+                                 [lon-max lat-max]
+                                 [lon-max lat-min]
+                                 [lon-min lat-min]]]}))
+
+;;; Create random and gridded points
+
+(defn- random-with-buffer [side size buffer]
+  (+ side (* (Math/floor (* (Math/random) size (/ buffer))) buffer) (/ buffer 2.0)))
+
+(defn- distance [x1 y1 x2 y2]
+  (Math/sqrt (+ (Math/pow (- x2 x1) 2) (Math/pow (- y2 y1) 2))))
+
+(defn- pad-bounds [left bottom right top buffer]
+  [(+ left buffer) (+ bottom buffer) (- right buffer) (- top buffer)])
+
+;; TODO Use postGIS so arbitrary bounds can be uploaded
+(defn- create-random-points-in-bounds [left bottom right top num-points]
+  (let [x-range (- right left)
+        y-range (- top bottom)
+        buffer  (/ x-range 50.0)]
+    (->> (repeatedly (fn [] [(random-with-buffer left x-range buffer) (random-with-buffer bottom y-range buffer)]))
+         (take num-points)
+         (map #(pu/mercator->wgs84 %)))))
+
+;; TODO Use postGIS so arbitrary bounds can be set
+(defn- create-gridded-points-in-bounds [left bottom right top spacing]
+  (let [x-range   (- right left)
+        y-range   (- top bottom)
+        x-steps   (Math/floor (/ x-range spacing))
+        y-steps   (Math/floor (/ y-range spacing))
+        x-padding (/ (- x-range (* x-steps spacing)) 2.0)
+        y-padding (/ (- y-range (* y-steps spacing)) 2.0)]
+    (->> (for [x (range (+ 1 x-steps))
+               y (range (+ 1 y-steps))]
+           [(+ (* x spacing) left x-padding) (+ (* y spacing) bottom y-padding)])
+         (map #(pu/mercator->wgs84 %)))))
+
+;; TODO Use postGIS so can be dont with shp files
+(defn- create-random-sample-set [plot-center plot-shape plot-size samples-per-plot]
+  (let [[center-x center-y] (pu/wgs84->mercator plot-center)
+        radius (/ plot-size 2.0)
+        left   (- center-x radius)
+        right  (+ center-x radius)
+        top    (+ center-y radius)
+        bottom (- center-y radius)
+        buffer (/ radius 50.0)]
+    (if (= "circle" plot-shape)
+      (->> (repeatedly (fn [] [(random-with-buffer left plot-size buffer) (random-with-buffer bottom plot-size buffer)]))
+           (take (* 10 samples-per-plot)) ; just as a safety net, so no thread can get stuck
+           (filter (fn [[x y]]
+                     (< (distance center-x center-y x y)
+                        (- radius (/ buffer 2.0)))))
+           (take samples-per-plot)
+           (map #(pu/mercator->wgs84 %)))
+      (create-random-points-in-bounds left bottom right top samples-per-plot))))
+
+(defn- create-gridded-sample-set [plot-center plot-shape plot-size sample-resolution]
+  (if (>= sample-resolution plot-size)
+    [plot-center]
+    (let [[center-x center-y] (pu/wgs84->mercator plot-center)
+          radius  (/ plot-size 2.0)
+          left    (- center-x radius)
+          bottom  (- center-y radius)
+          steps   (Math/floor (/ plot-size sample-resolution))
+          padding (/ (- plot-size (* steps sample-resolution)) 2.0)]
+      (->> (for [x (range (+ 1 steps))
+                 y (range (+ 1 steps))]
+             [(+ (* x sample-resolution) left padding) (+ (* y sample-resolution) bottom padding)])
+           (filter (fn [[x y]] (or (= "square" plot-shape)
+                                   (< (distance center-x center-y x y) radius))))
+           (map #(pu/mercator->wgs84 %))))))
+
+;;; Upload files
+
+(defn find-file-by-ext [folder-name ext]
+  (->> (io/file folder-name)
+       (file-seq)
+       (map #(.getName %))
+       (filter #(not= folder-name %))
+       (filter #(= ext (peek (str/split % #"\."))))
+       (first)))
+
+(defn format-simple
+  "Use any char after % for format."
+  [f-str & args]
+  (apply format (str/replace f-str #"(%[^ ])" "%s") args))
+
+(defn parse-as-sh-cmd
+  "Split string into an array for use with clojure.java.shell/sh."
+  [s]
+  (loop [chars (seq s)
+         acc   []]
+    (if (empty? chars)
+      acc
+      (if (= \` (first chars))
+        (recur (->> chars (rest) (drop-while #(not= \` %)) (rest))
+               (->> chars (rest) (take-while #(not= \` %)) (apply str) (str/trim) (conj acc)))
+        (recur (->> chars (drop-while #(not= \` %)))
+               (->> chars (take-while #(not= \` %)) (apply str) (str/trim) (#(str/split % #" ")) (remove str/blank?) (into acc)))))))
+
+(defn sh-wrapper [dir env & commands]
+  (sh/with-sh-dir dir
+    (sh/with-sh-env (merge {:PATH path-env} env)
+      (doseq [cmd commands]
+        (let [{:keys [exit err]} (apply sh/sh (parse-as-sh-cmd cmd))]
+          (when-not (= 0 exit)
+            (init-throw err)))))))
+
+(defn- type-columns [headers]
+  (->> headers
+       (map #(cond
+               (#{"LON" "LAT" "LATITUDE" "LONGITUDE" "LONG" "CENTER_X" "CENTER_Y"} %)
+               (str % " float")
+
+               (#{"PLOTID" "SAMPLEID"} %)
+               (str % " integer")
+
+               :else
+               (str % " text")))
+       (str/join ",")))
+
+(defn- get-csv-headers [ext-file must-include]
+  (let [data (slurp ext-file)]
+    (if-let [header-row (re-find #".+\n?" data)]
+      (let [headers (as-> header-row hr
+                      (str/split hr #",")
+                      (mapv #(-> %
+                                 (str/upper-case)
+                                 (str/replace #"LONGITUDE|LONG|CENTER_X" "LON")
+                                 (str/replace #"LATITUDE|CENTER_Y" "LAT"))
+                            hr))]
+        (if (every? (set headers) must-include)
+          (do
+            (spit ext-file (str/replace data header-row (str/join "," headers)))
+            (type-columns headers))
+          (init-throw (str "Error while checking headers. Fields must include LON,LAT,"
+                           (str/join "," must-include)
+                           ".\n"))))
+      (init-throw "CSV File is empty.\n"))))
+
+(defn- load-extrenal-data [distribution project-id ext-file type must-include]
+  (let [folder-name (str tmp-dir "/ceo-tmp-" project-id "/")]
+    (try-catch-throw #(if (= "shp" distribution)
+                        (do (sh-wrapper folder-name {} (str "7z e -y " ext-file))
+                            (let [table-name (str "project_" project-id "_" type "_shp")
+                                  shp-name   (find-file-by-ext folder-name "shp")]
+                              (sh-wrapper folder-name
+                                          {:PASSWORD "ceo"}
+                                          (format-simple "sh -c `shp2pgsql -s 4326 %1 ext_tables.%2 | psql -h localhost -U ceo -d ceo`"
+                                                         shp-name table-name))
+                              table-name))
+                      ;; TODO Explore loading CSVs with a bulk insert
+                        (let [table-name (str "project_" project-id "_" type "_csv")]
+                          (call-sql "create_new_table"
+                                    table-name
+                                    (get-csv-headers ext-file must-include))
+                          (sh-wrapper folder-name
+                                      {:PASSWORD "ceo"}
+                                      (format-simple "psql -h localhost -U ceo -d ceo -c `\\copy ext_tables.%1 FROM %2 DELIMITER ',' CSV HEADER`"
+                                                     table-name ext-file))
+                          (call-sql "add_index_col" table-name) ; add index for reference
+                          table-name))
+                     "Error importing file into SQL.\n")))
+
+(defn- check-load-ext [distribution project-id ext-file type must-include]
+  (when (#{"csv" "shp"} distribution)
+    (try-catch-throw (fn []
+                       (let [table (load-extrenal-data distribution
+                                                       project-id
+                                                       ext-file
+                                                       type
+                                                       must-include)]
+                         (try-catch-throw #(if (= "plots" type)
+                                             (call-sql "select_partial_table_by_name" table)
+                                             (call-sql "select_partial_sample_table_by_name" table))
+                                          (str (str/capitalize type) " file failed to load.\n"))
+                         table))
+                     (if (= "csv" distribution)
+                       (str "Malformed " type " CSV. Fields must include LON,LAT," (str/join "," must-include) ".\n")
+                       (str "Malformed "
+                            type
+                            " Shapefile. All features must be of type polygon and include "
+                            (str/join "," must-include)
+                            " field(s).\n")))))
+
+(defn- create-project-samples [plot-id
+                               sample-distribution
+                               plot-center
+                               plot-shape
+                               plot-size
+                               samples-per-plot
+                               sample-resolution]
+  ;; TODO Right now you have to have a sample shape or csv file if you have a plot shape file, allow "center" as an option
+  ;; TODO update create random / gridded to work on boundary so any plot type can have random, gridded, center
+  (doseq [[x y] (cond
+                  (= "center" sample-distribution)
+                  [plot-center]
+
+                  (= "random" sample-distribution)
+                  (create-random-sample-set plot-center plot-shape plot-size samples-per-plot)
+
+                  :else
+                  (create-gridded-sample-set plot-center plot-shape plot-size sample-resolution))]
+    (call-sql-opts "create_project_plot_sample"
+                   {:log? false}
+                   plot-id
+                   (make-geo-json-point x y))))
+
+(defn- create-project-plots [project-id
+                             lon-min
+                             lat-min
+                             lon-max
+                             lat-max
+                             plot-distribution
+                             num-plots
+                             plot-spacing
+                             plot-shape
+                             plot-size
+                             sample-distribution
+                             samples-per-plot
+                             sample-resolution
+                             plots-file
+                             samples-file]
+  (if (#{"csv" "shp"} plot-distribution)
+    (do (try-catch-throw  #(call-sql "update_project_tables"
+                                     project-id
+                                     (check-load-ext plot-distribution project-id plots-file "plots" ["PLOTID"])
+                                     (check-load-ext sample-distribution project-id samples-file "samples" ["PLOTID" "SAMPLEID"]))
+                          "Error updating project table.")
+        (try-catch-throw #(call-sql "cleanup_project_tables" project-id plot-size)
+                         "Error cleaning external tables.")
+        (let [counts (try-catch-throw #(first (call-sql "ext_table_count" project-id))
+                                      "Error counting data.")
+              ext-plot-count   (:plot_count counts)
+              ext-sample-count (:sample_count counts)]
+          (if (pos? ext-plot-count)
+            (check-plot-limits ext-plot-count
+                               50000
+                               (condp = sample-distribution
+                                 "gridded" (count-gridded-sample-set plot-size sample-resolution)
+                                 "random"  samples-per-plot
+                                 "center"  1
+                                 (/ ext-sample-count ext-plot-count))
+                               200
+                               350000)
+            (init-throw "Plot file is empty.")))
+        (if (#{"csv" "shp"} sample-distribution)
+          (try-catch-throw #(call-sql "samples_from_plots_with_files" project-id)
+                           "Error merging both files.")
+          (try-catch-throw #(doseq [plot (call-sql "add_file_plots" project-id)]
+                              (create-project-samples (:plot_uid plot)
+                                                      sample-distribution
+                                                      [(:lon plot) (:lat plot)]
+                                                      plot-shape
+                                                      plot-size
+                                                      samples-per-plot
+                                                      sample-resolution))
+                           "Error adding plot file with generated samples."))
+        ;; The SQL function only checks agains plots with external tables.
+        (let [bad-plots (map :plot_id (call-sql "plots_missing_samples" project-id))]
+          (when (seq bad-plots)
+            (init-throw (str "The uploaded plot and sample files do not have correctly overlapping data. "
+                             (count bad-plots)
+                             " plots have no samples. The first 10 are: ["
+                             (str/join "," (take 10 bad-plots))
+                             "]")))))
+    (let [[[left bottom] [top right]] (pu/wgs84->mercator [lon-min lat-min] [lon-max lat-max])
+          [left bottom right top] (pad-bounds left bottom top right (/ 2.0 plot-size))
+          total-plots      (if (= "gridded" plot-distribution)
+                             (count-gridded-points left bottom right top plot-spacing)
+                             num-plots)]
+      (if (pos? total-plots)
+        (check-plot-limits total-plots
+                           5000 (condp = sample-distribution
+                                  "gridded" (count-gridded-sample-set plot-size sample-resolution)
+                                  "center"  1
+                                  samples-per-plot)
+                           200
+                           50000)
+        (init-throw "You cannot create a project with 0 plots."))
+      (doseq [plot-center (if (= "random" plot-distribution)
+                            (create-random-points-in-bounds left bottom right top num-plots)
+                            (create-gridded-points-in-bounds left bottom right top plot-spacing))]
+        (let [plot-id (sql-primitive (call-sql-opts "create_project_plot"
+                                                    {:log? false}
+                                                    project-id
+                                                    (make-geo-json-point (first plot-center) (second plot-center))))]
+          (create-project-samples plot-id
+                                  sample-distribution
+                                  plot-center
+                                  plot-shape
+                                  plot-size
+                                  samples-per-plot
+                                  sample-resolution)))))
+  (call-sql "update_project_counts" project-id)
+  (when-not (sql-primitive (call-sql "valid_project_boundary" project-id))
+    (init-throw "The project boundary is invalid. This can come from improper coordinates or projection when uploading shape or csv data.")))
+
+(defn create-project [{:keys [params]}]
+  (let [institution-id       (tc/str->int (:institutionId params))
+        imagery-id           (or (:imageryId params nil) (get-first-public-imagery))
+        name                 (:name params)
+        description          (:description params)
+        privacy-level        (:privacyLevel params)
+        lon-min              (:lonMin params)
+        lat-min              (:latMin params)
+        lon-max              (:lonMax params)
+        lat-max              (:latMax params)
+        boundary             (make-geo-json-polygon lon-min
+                                                    lat-min
+                                                    lon-max
+                                                    lat-max)
+        plot-distribution    (:plotDistribution params)
+        num-plots            (tc/str->int (:numPlots params))
+        plot-spacing         (tc/str->float (:plotSpacing params))
+        plot-shape           (:plotShape params)
+        plot-size            (tc/str->float (:plotSize params))
+        sample-distribution  (:sampleDistribution params)
+        samples-per-plot     (tc/str->int (:samplesPerPlot params))
+        sample-resolution    (tc/str->float (:sampleResolution params))
+        sample-values        (tc/clj->jsonb (:sampleValues params))
+        survey-rules         (tc/clj->jsonb (:surveyRules params))
+        project-options      (tc/clj->jsonb (:projectOptions params default-options))
+        project-template     (tc/str->int (:projectTemplate params))
+        use-template-plots   (tc/str->bool (:useTemplatePlots params))
+        use-template-widgets (tc/str->bool (:useTemplateWidgets params))
+        plot-file-name       (:plotFileName params)
+        plot-file-base64     (:plotFileBase64 params)
+        sample-file-name     (:sampleFileName params)
+        sample-file-base64   (:sampleFileBase64 params)
+        token-key            (str (UUID/randomUUID))
+        project-id           (sql-primitive (call-sql "create_project"
+                                                      institution-id
+                                                      imagery-id
+                                                      "unpublished"
+                                                      name
+                                                      description
+                                                      privacy-level
+                                                      boundary
+                                                      plot-distribution
+                                                      num-plots
+                                                      plot-spacing
+                                                      plot-shape
+                                                      plot-size
+                                                      sample-distribution
+                                                      samples-per-plot
+                                                      sample-resolution
+                                                      sample-values
+                                                      survey-rules
+                                                      (tc/clj->jsonb nil) ; TODO classification times is unused. Drop this column.
+                                                      token-key
+                                                      project-options))]
+    (try (if-let [imagery-list (:projectImageryList params)]
+           (insert-project-imagery project-id imagery-list)
+           (call-sql "add_all_institution_imagery" project-id))
+         ;; TODO this can be a simple SQL query once we drop the dashboard ID
+         (when (and (pos? project-template) use-template-widgets)
+           (doseq [{:keys [widget]} (call-sql "get_project_widgets_by_project_id" project-template)]
+             (call-sql "add_project_widget"
+                       project-id
+                       (tc/str->pg-uuid (str (UUID/randomUUID)))
+                       widget)))
+         (if (and (pos? project-template) use-template-plots)
+           (call-sql "copy_template_plots" project-template project-id)
+           (let [write-dir (str tmp-dir "/ceo-tmp-" project-id "/")
+                 plots-file   (and (#{"csv" "shp"} plot-distribution)
+                                   (str write-dir
+                                        (pu/write-file-part-base64 plot-file-name
+                                                                   plot-file-base64
+                                                                   write-dir
+                                                                   (str "project-" project-id "-plots"))))
+                 samples-file (and (#{"csv" "shp"} sample-distribution)
+                                   (str write-dir
+                                        (pu/write-file-part-base64 sample-file-name
+                                                                   sample-file-base64
+                                                                   write-dir
+                                                                   (str "project-" project-id "-samples"))))]
+             (create-project-plots project-id
+                                   lon-min
+                                   lat-min
+                                   lon-max
+                                   lat-max
+                                   plot-distribution
+                                   num-plots
+                                   plot-spacing
+                                   plot-shape
+                                   plot-size
+                                   sample-distribution
+                                   samples-per-plot
+                                   sample-resolution
+                                   plots-file
+                                   samples-file)))
+         (data-response {:projectId project-id
+                         :tokenKey  token-key})
+         (catch Exception e
+          ;;  (println e)
+           (try (call-sql "delete_project" project-id))
+           (data-response (or (:causes (ex-data e)) "Unknown server error."))))))
 
 ;;; Dump Data common
 
@@ -197,7 +666,7 @@
 
 (defn- count-answer [sample-size answers]
   (pu/mapm (fn [[question answers]]
-             [question (* 100.0 (count answers) (/ 1 sample-size))])
+             [question (* 100.0 (count answers) (/ sample-size))])
            (group-by str answers)))
 
 (defn- get-value-distribution
