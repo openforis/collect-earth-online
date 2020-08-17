@@ -2,7 +2,7 @@
   (:require [clojure.data.json :as json]
             [clojure.edn       :as edn]
             [clojure.string    :as str]
-            [clojure.set       :refer [intersection]]
+            [clojure.set       :as set]
             [ring.middleware.absolute-redirects :refer [wrap-absolute-redirects]]
             [ring.middleware.content-type       :refer [wrap-content-type]]
             [ring.middleware.default-charset    :refer [wrap-default-charset]]
@@ -191,12 +191,21 @@
         (handler (assoc request :params (merge params get-params post-params))))
       (handler request))))
 
-(defn wrap-merge-session [handler]
-  (fn [{:keys [params session] :as request}]
-    (let [intersection (intersection (set (keys params)) (set (keys session)))]
+(def updateable-session-keys [:tokenKey])
+
+(defn wrap-persistent-session [handler]
+  (fn [request]
+    (let [{:keys [params session]} request
+          to-update    (select-keys params updateable-session-keys)
+          session      (apply dissoc session (keys to-update))
+          intersection (set/intersection (set (keys params)) (set (keys session)))
+          response     (handler (update request :params merge session))]
       (when-not (empty? intersection)
-        (log-str "WARNING! The following params are being overwritten by session values: " intersection)))
-    (handler (update request :params merge session))))
+        (log-str "WARNING! The following params are being overwritten by session values: " intersection))
+      (if (and (contains? response :session)
+               (nil? (:session response)))
+        response
+        (update response :session #(merge session % to-update))))))
 
 (defn wrap-exceptions [handler]
   (fn [request]
@@ -211,7 +220,7 @@
 (defn wrap-common [handler]
   (-> handler
       wrap-request-logging
-      wrap-merge-session
+      wrap-persistent-session
       wrap-keyword-params
       wrap-edn-params
       wrap-json-params
