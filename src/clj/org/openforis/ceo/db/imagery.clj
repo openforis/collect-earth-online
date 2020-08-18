@@ -9,7 +9,7 @@
     (dissoc source-config [:geoserverParams :accessToken])
     source-config))
 
-(defn- prepare-imagery [imagery admin?]
+(defn- prepare-imagery [imagery inst-admin?]
   (mapv (fn [{:keys [imagery_id institution_id visibility title attribution extent source_config]}]
           (let [source-config (tc/jsonb->clj source_config)]
             {:id           imagery_id
@@ -18,7 +18,7 @@
              :title        title
              :attribution  attribution
              :extent       (tc/jsonb->clj extent)
-             :sourceConfig (if admin? source-config (clean-source source-config))}))
+             :sourceConfig (if inst-admin? source-config (clean-source source-config))}))
         imagery))
 
 (defn get-institution-imagery [{:keys [params]}]
