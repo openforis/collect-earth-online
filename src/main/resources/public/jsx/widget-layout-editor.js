@@ -218,48 +218,6 @@ class WidgetLayoutEditor extends React.PureComponent {
             </div>);
     };
 
-    buildImageryObject = img => {
-        const gatewayUrl = "/geo-dash/gateway-request";
-        let title = this.state.widgetTitle !== "" ? this.state.widgetTitle : img.filterType.replace(/\w\S*/g, function (word) {
-            return word.charAt(0) + word.slice(1).toLowerCase();
-        }) + ": " + img.startDate + " to " + img.endDate;
-        const ImageAsset = img.ImageAsset ? img.ImageAsset : "";
-        const ImageCollectionAsset = img.ImageCollectionAsset ? img.ImageCollectionAsset : "";
-        const sourceConfig = {
-            type: "GeeGateway",
-            geeUrl: gatewayUrl,
-            geeParams: {
-                collectionType: img.collectionType,
-                startDate: img.startDate,
-                endDate: img.endDate,
-                filterType: img.filterType,
-                visParams: img.visParams,
-                ImageAsset: ImageAsset,
-                ImageCollectionAsset: ImageCollectionAsset,
-                path: getGatewayPath(img),
-            },
-        };
-        const iObject = {
-            institutionId: this.state.institutionID,
-            imageryTitle: title,
-            imageryAttribution: "Google Earth Engine",
-            sourceConfig,
-            addToAllProjects: false,
-        };
-        if (img.ImageAsset && img.ImageAsset.length > 0) {
-            title = this.state.widgetTitle !== "" ? this.state.widgetTitle : img.ImageAsset.substr(img.ImageAsset.lastIndexOf("/") + 1).replace(new RegExp("_", "g"), " ");
-            iObject.imageryTitle = title;
-            iObject.ImageAsset = img.ImageAsset;
-        }
-        if (img.ImageCollectionAsset && img.ImageCollectionAsset.length > 0) {
-            title = this.state.widgetTitle !== "" ? this.state.widgetTitle : img.ImageCollectionAsset.substr(img.ImageCollectionAsset.lastIndexOf("/") + 1).replace(new RegExp("_", "g"), " ");
-            iObject.imageryTitle = title;
-            iObject.ImageCollectionAsset = img.ImageCollectionAsset;
-        }
-        return iObject;
-
-    };
-
     onWidgetTypeSelectChanged = event => {
         this.setState({
             selectedWidgetType: event.target.value,
@@ -1108,9 +1066,11 @@ class WidgetLayoutEditor extends React.PureComponent {
     </div>;
 
     getInstitutionImageryInfo = () => <div>
+        Adding imagery to basemaps is available on the&nbsp;
         <a href={`/review-institution?institutionId=${this.state.institutionID}`} target="_blank" rel="noreferrer noopener">
-            Adding imagery to basemaps is available on the institution review page in the imagery tab.
+            institution review page
         </a>
+        &nbsp;in the imagery tab.
     </div>
 
     getNextStepButton = () => this.state.selectedWidgetType === "DualImageCollection"
