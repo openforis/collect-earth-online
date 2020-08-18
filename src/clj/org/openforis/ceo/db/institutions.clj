@@ -17,6 +17,7 @@
          (pos? institution-id)
          (is-inst-admin-query? user-id institution-id))))
 
+;; TODO the front end uses get-institution-members, don't return members here.
 (defn- prepare-institution [{:keys [institution_id name logo description url archived members admins pending]}]
   {:id          institution_id
    :name        name
