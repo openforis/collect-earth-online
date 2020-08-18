@@ -44,11 +44,11 @@
   ([string]
    (str->bool string false))
   ([string default]
-   (if string
+   (if (boolean? string)
+     string
      (try
        (Boolean/parseBoolean string)
-       (catch Exception _ default))
-     default)))
+       (catch Exception _ default)))))
 
 (defn json->clj
   ([string]
