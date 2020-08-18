@@ -146,19 +146,28 @@ public class PostgresImagery implements Imagery {
                 var pstmt = conn.prepareStatement(
                     "SELECT * FROM add_institution_imagery(?, ?, ?, ?, ?::JSONB, ?::JSONB)");
                 var pstmt_add = conn.prepareStatement(
-                    "SELECT * FROM add_imagery_to_all_institution_projects(?)")) {
+                    "SELECT * FROM add_imagery_to_all_institution_projects(?)");
+                var pstmt_check = conn.prepareStatement(
+                        "SELECT * FROM check_institution_imagery(?,?)")) {
 
-                pstmt.setInt(1, institutionId);
-                pstmt.setString(2, "private");
-                pstmt.setString(3, imageryTitle);
-                pstmt.setString(4, imageryAttribution);
-                pstmt.setString(5, "null"); // no where to add extent in UI
-                pstmt.setString(6, sourceConfig.toString());
-                try (var rs = pstmt.executeQuery()) {
-                    if (addToAllProjects && rs.next()) {
-                        var imageryId = rs.getInt("add_institution_imagery");
-                        pstmt_add.setInt(1, imageryId);
-                        pstmt_add.execute();
+                pstmt_check.setInt(1, institutionId);
+                pstmt_check.setString(2, imageryTitle);
+                try (var rs_check = pstmt_check.executeQuery()) {
+                    if (rs_check.next() && !rs_check.getBoolean("check_institution_imagery")){
+
+                        pstmt.setInt(1, institutionId);
+                        pstmt.setString(2, "private");
+                        pstmt.setString(3, imageryTitle);
+                        pstmt.setString(4, imageryAttribution);
+                        pstmt.setString(5, "null"); // no where to add extent in UI
+                        pstmt.setString(6, sourceConfig.toString());
+                        try (var rs = pstmt.executeQuery()) {
+                            if (addToAllProjects && rs.next()) {
+                                var imageryId = rs.getInt("add_institution_imagery");
+                                pstmt_add.setInt(1, imageryId);
+                                pstmt_add.execute();
+                            }
+                        }
                     }
                 }
 
@@ -205,51 +214,6 @@ public class PostgresImagery implements Imagery {
                 System.out.println(e.getMessage());
             }
 
-        } catch (Exception e) {
-            // Indicate that an error occurred with imagery creation
-            throw new RuntimeException(e);
-        }
-        return "";
-    }
-
-    public String addGeoDashImagery(Request req, Response res) {
-        try {
-            var jsonInputs         = parseJson(req.body()).getAsJsonObject();
-            var institutionId      = jsonInputs.get("institutionId").getAsInt();
-            var imageryTitle       = jsonInputs.get("imageryTitle").getAsString();
-            var imageryAttribution = jsonInputs.get("imageryAttribution").getAsString();
-            var geeUrl             = jsonInputs.get("geeUrl").getAsString();
-            var geeParams          = jsonInputs.get("geeParams").getAsJsonObject();
-
-            try (var conn = connect();
-                 var pstmt_check = conn.prepareStatement(
-                    "SELECT * FROM check_institution_imagery(?,?)")) {
-
-                pstmt_check.setInt(1, institutionId);
-                pstmt_check.setString(2, imageryTitle);
-                try (var rs_check = pstmt_check.executeQuery()) {
-                    if (rs_check.next() && !rs_check.getBoolean("check_institution_imagery")){
-                        try (var pstmt = conn.prepareStatement(
-                                "SELECT * FROM add_institution_imagery(?,?,?,?,?::JSONB,?::JSONB)")) {
-
-                            var sourceConfig = new JsonObject();
-                            sourceConfig.addProperty("type",   "GeeGateway");
-                            sourceConfig.addProperty("geeUrl", geeUrl);
-                            sourceConfig.add("geeParams", geeParams);
-
-                            pstmt.setInt(1, institutionId);
-                            pstmt.setString(2, "private");
-                            pstmt.setString(3, imageryTitle);
-                            pstmt.setString(4, imageryAttribution);
-                            pstmt.setString(5, "null"); // no where to add extent in UI
-                            pstmt.setString(6, sourceConfig.toString());
-                            pstmt.execute();
-                        }
-                    }
-                }
-            } catch (SQLException e) {
-                System.out.println(e.getMessage());
-            }
         } catch (Exception e) {
             // Indicate that an error occurred with imagery creation
             throw new RuntimeException(e);

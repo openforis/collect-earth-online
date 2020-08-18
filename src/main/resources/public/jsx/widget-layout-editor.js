@@ -3,7 +3,6 @@ import ReactDOM from "react-dom";
 import _ from "lodash";
 import RGL, { WidthProvider } from "react-grid-layout";
 const ReactGridLayout = WidthProvider(RGL);
-import { getGatewayPath } from "./utils/geodashUtils";
 import { GeoDashNavigationBar } from "./components/PageComponents";
 
 class WidgetLayoutEditor extends React.PureComponent {
@@ -16,7 +15,6 @@ class WidgetLayoutEditor extends React.PureComponent {
             selectedProjectId: 0,
             projectList: [],
             projectFilter:"",
-            addCustomImagery: false,
             selectedWidgetType: "-1",
             selectedDataType: "-1",
             widgetTitle: "",
@@ -219,67 +217,9 @@ class WidgetLayoutEditor extends React.PureComponent {
             </div>);
     };
 
-    addCustomImagery = imagery => {
-        if (this.state.addCustomImagery === true) {
-            fetch("/add-geodash-imagery",
-                  {
-                      method: "POST",
-                      headers: {
-                          "Accept": "application/json",
-                          "Content-Type": "application/json",
-                      },
-                      body: JSON.stringify(imagery),
-                  })
-                .then(response => {
-                    if (!response.ok) {
-                        alert("Error adding custom imagery to institution. See console for details.");
-                        console.log(response);
-                    }
-                });
-        }
-    };
-
-    buildImageryObject = img => {
-        const gatewayUrl = "/geo-dash/gateway-request";
-        let title = this.state.widgetTitle !== "" ? this.state.widgetTitle : img.filterType.replace(/\w\S*/g, function (word) {
-            return word.charAt(0) + word.slice(1).toLowerCase();
-        }) + ": " + img.startDate + " to " + img.endDate;
-        const ImageAsset = img.ImageAsset ? img.ImageAsset : "";
-        const ImageCollectionAsset = img.ImageCollectionAsset ? img.ImageCollectionAsset : "";
-        const iObject = {
-            institutionId: this.state.institutionID,
-            imageryTitle: title,
-            imageryAttribution: "Google Earth Engine",
-            geeUrl: gatewayUrl,
-            geeParams: {
-                collectionType: img.collectionType,
-                startDate: img.startDate,
-                endDate: img.endDate,
-                filterType: img.filterType,
-                visParams: img.visParams,
-                ImageAsset: ImageAsset,
-                ImageCollectionAsset: ImageCollectionAsset,
-                path: getGatewayPath(img),
-            },
-        };
-        if (img.ImageAsset && img.ImageAsset.length > 0) {
-            title = this.state.widgetTitle !== "" ? this.state.widgetTitle : img.ImageAsset.substr(img.ImageAsset.lastIndexOf("/") + 1).replace(new RegExp("_", "g"), " ");
-            iObject.imageryTitle = title;
-            iObject.ImageAsset = img.ImageAsset;
-        }
-        if (img.ImageCollectionAsset && img.ImageCollectionAsset.length > 0) {
-            title = this.state.widgetTitle !== "" ? this.state.widgetTitle : img.ImageCollectionAsset.substr(img.ImageCollectionAsset.lastIndexOf("/") + 1).replace(new RegExp("_", "g"), " ");
-            iObject.imageryTitle = title;
-            iObject.ImageCollectionAsset = img.ImageCollectionAsset;
-        }
-        return iObject;
-
-    };
-
     onWidgetTypeSelectChanged = event => {
         this.setState({
             selectedWidgetType: event.target.value,
-            addCustomImagery: false,
             selectedDataType: "-1",
             widgetTitle: "",
             imageCollection: event.target.value === "ImageElevation" ? "USGS/SRTMGL1_003" : "",
@@ -370,7 +310,6 @@ class WidgetLayoutEditor extends React.PureComponent {
         this.props.closeDialogs();
         this.setState({
             selectedWidgetType: "-1",
-            addCustomImagery: false,
             selectedDataTypeDual: "-1",
             selectedDataType: "-1",
             widgetTitle: "",
@@ -458,8 +397,6 @@ class WidgetLayoutEditor extends React.PureComponent {
                     max: this.state.widgetMax,
                     cloudLessThan: this.state.widgetCloudScore,
                 };
-                this.addCustomImagery(this.buildImageryObject(img1));
-
             }
             if (["LANDSAT5", "LANDSAT7", "LANDSAT8", "Sentinel2"].includes(this.state.selectedDataTypeDual)) {
                 img2.filterType = this.state.selectedDataTypeDual !== null ? this.state.selectedDataTypeDual : "";
@@ -469,63 +406,26 @@ class WidgetLayoutEditor extends React.PureComponent {
                     max: this.state.widgetMaxDual,
                     cloudLessThan: this.state.widgetCloudScoreDual,
                 };
-                this.addCustomImagery(this.buildImageryObject(img2));
             }
             if (this.state.selectedDataType === "imageAsset") {
                 //add image asset parameters
                 img1.visParams = JSON.parse(this.state.imageParams);
                 img1.imageAsset = this.state.imageCollection;
-                this.addCustomImagery(this.buildImageryObject({
-                    ImageAsset: this.state.imageCollection,
-                    startDate: "",
-                    endDate: "",
-                    filterType: "",
-                    visParams: img1.visParams,
-                }));
-
             }
             if (this.state.selectedDataType === "imageCollectionAsset") {
                 //add image asset parameters
                 img1.visParams = JSON.parse(this.state.imageParams);
                 img1.ImageCollectionAsset = this.state.imageCollection;
-
-                this.addCustomImagery(this.buildImageryObject({
-                    ImageCollectionAsset: img1.ImageCollectionAsset,
-                    startDate: "",
-                    endDate: "",
-                    filterType: "",
-                    visParams: JSON.parse(this.state.imageParams),
-                }));
             }
             if (this.state.selectedDataTypeDual === "imageAsset") {
                 //add dual image asset parameters
                 img2.visParams = JSON.parse(this.state.imageParamsDual);
                 img2.imageAsset = this.state.imageCollectionDual;
-                setTimeout( () => {
-                    this.addCustomImagery(this.buildImageryObject({
-                        ImageAsset: this.state.imageCollectionDual,
-                        startDate: "",
-                        endDate: "",
-                        filterType: "",
-                        visParams: JSON.parse(this.state.imageParamsDual),
-                    }));
-                }, 500);
-
             }
             if (this.state.selectedDataTypeDual === "imageCollectionAsset") {
                 //add dual image asset parameters
                 img2.visParams = JSON.parse(this.state.imageParamsDual);
                 img2.ImageCollectionAsset = this.state.imageCollectionDual;
-                setTimeout(() => {
-                    this.addCustomImagery(this.buildImageryObject({
-                        ImageCollectionAsset: img2.ImageCollectionAsset,
-                        startDate: "",
-                        endDate: "",
-                        filterType: "",
-                        visParams: img2.visParams,
-                    }));
-                }, 500);
-
             }
             widget.dualImageCollection.push(img1);
             widget.dualImageCollection.push(img2);
@@ -534,27 +434,11 @@ class WidgetLayoutEditor extends React.PureComponent {
             widget.filterType = "";
             widget.visParams = this.state.imageParams === "" ? {} : JSON.parse(this.state.imageParams);
             widget.ImageAsset = this.state.imageCollection;
-            if (this.state.selectedWidgetType === "imageAsset") {
-                this.addCustomImagery(this.buildImageryObject({
-                    ImageAsset: widget.ImageAsset,
-                    startDate: "",
-                    endDate: "",
-                    filterType: "",
-                    visParams: widget.visParams,
-                }));
-            }
         } else if (this.state.selectedWidgetType === "imageCollectionAsset") {
             widget.properties = ["", "", "", "", ""];
             widget.filterType = "";
             widget.visParams = JSON.parse(this.state.imageParams);
             widget.ImageCollectionAsset = this.state.imageCollection;
-            this.addCustomImagery(this.buildImageryObject({
-                ImageCollectionAsset: widget.ImageCollectionAsset,
-                startDate: "",
-                endDate: "",
-                filterType: "",
-                visParams: widget.visParams,
-            }));
         } else if (this.state.selectedWidgetType === "DegradationTool") {
             widget.type = "DegradationTool";
             widget.properties = ["DegradationTool", "", "", "", ""];
@@ -601,14 +485,6 @@ class WidgetLayoutEditor extends React.PureComponent {
                     max: this.state.widgetMax,
                     cloudLessThan: this.state.widgetCloudScore,
                 };
-
-                this.addCustomImagery(this.buildImageryObject({
-                    collectionType:"ImageCollection" + this.state.selectedDataType,
-                    startDate: this.state.startDate,
-                    endDate: this.state.endDate,
-                    filterType: widget.filterType,
-                    visParams: widget.visParams,
-                }));
             }
             widget.dualLayer = this.state.dualLayer;
             if (widget.dualLayer) {
@@ -635,7 +511,6 @@ class WidgetLayoutEditor extends React.PureComponent {
                     this.props.closeDialogs();
                     this.setState({
                         widgets: [...this.state.widgets, widget],
-                        addCustomImagery: false,
                         selectedWidgetType: "-1",
                         selectedDataTypeDual: "-1",
                         selectedDataType: "-1",
@@ -671,10 +546,6 @@ class WidgetLayoutEditor extends React.PureComponent {
 
     onWidgetTitleChange = event => {
         this.setState({ widgetTitle: event.target.value });
-    };
-
-    onaddCustomImageryChange = event => {
-        this.setState({ addCustomImagery: event.target.checked });
     };
 
     onImageCollectionChange = event => {
@@ -1193,19 +1064,13 @@ class WidgetLayoutEditor extends React.PureComponent {
         />
     </div>;
 
-    getCustomImageryCheckbox = () => <div className="form-group">
-        <label htmlFor="addCustomImagery">Add Asset to institution basemaps</label>
-        <input
-            type="checkbox"
-            name="addCustomImagery"
-            id="addCustomImagery"
-            value={this.state.addCustomImagery}
-            className="form-control"
-            onChange={() => this.setState({ addCustomImagery: event.target.checked })}
-            style={{ width:"auto", display: "inline-block", marginLeft: "8px" }}
-            title={"Make this imagery available in the collection page for the entire institution"}
-        />
-    </div>;
+    getInstitutionImageryInfo = () => <div>
+        Adding imagery to basemaps is available on the&nbsp;
+        <a href={`/review-institution?institutionId=${this.state.institutionID}`} target="_blank" rel="noreferrer noopener">
+            institution review page
+        </a>
+        &nbsp;in the imagery tab.
+    </div>
 
     getNextStepButton = () => this.state.selectedWidgetType === "DualImageCollection"
         ?
@@ -1378,7 +1243,7 @@ class WidgetLayoutEditor extends React.PureComponent {
                 </div>
                 {this.getAvailableBandsControl()}
                 {this.getImageParamsBlock()}
-                {this.getCustomImageryCheckbox()}
+                {this.getInstitutionImageryInfo()}
             </React.Fragment>;
         } else if (this.state.selectedDataType === "-1") {
             return "";
@@ -1548,7 +1413,7 @@ class WidgetLayoutEditor extends React.PureComponent {
                             style={{ overflow: "hidden", overflowWrap: "break-word", resize: "vertical" }}
                         />
                     </div>
-                    {this.getCustomImageryCheckbox()}
+                    {this.getInstitutionImageryInfo()}
                     {this.getNextStepButton()}
                 </React.Fragment>;
             } else if (((this.state.selectedDataType === "imageCollectionAsset"
@@ -1580,7 +1445,7 @@ class WidgetLayoutEditor extends React.PureComponent {
                             style={{ overflow: "hidden", overflowWrap: "break-word", resize: "vertical" }}
                         />
                     </div>
-                    {this.getCustomImageryCheckbox()}
+                    {this.getInstitutionImageryInfo()}
                     <button
                         type="button"
                         className="btn btn-secondary"
@@ -1623,7 +1488,7 @@ class WidgetLayoutEditor extends React.PureComponent {
                     </div>
                     <label>Select the Date Range you would like</label>
                     {this.getDateRangeControl()}
-                    {this.getCustomImageryCheckbox()}
+                    {this.getInstitutionImageryInfo()}
                     {this.getNextStepButton()}
                 </React.Fragment>;
             } else if ((this.state.selectedWidgetType === "ImageCollection"
@@ -1676,7 +1541,7 @@ class WidgetLayoutEditor extends React.PureComponent {
                             id="eDate_new_cookedDual"
                         />
                     </div>
-                    {this.getCustomImageryCheckbox()}
+                    {this.getInstitutionImageryInfo()}
                     <button
                         type="button"
                         className="btn btn-secondary"
