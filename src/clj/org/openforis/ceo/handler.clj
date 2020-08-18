@@ -53,17 +53,19 @@
   (not (str/includes? (get headers "referer" "") (get headers "host" ""))))
 
 (defn- wrap-authentication [request auth-type auth-action handler]
-  (if (condp = auth-type
-        :user       (pos? (get-in request [:params :userId] -1))
-        :collect    (can-collect? request)
-        :proj-admin (is-proj-admin? request)
-        :inst-admin (is-inst-admin? request)
-        :no-cross   (is-cross-traffic? request)
-        true)
-    handler
-    (if (= :redirect auth-action)
-      (redirect-auth (get-in request [:params :userId] -1))
-      forbidden-response)))
+  (let [user-id (get-in request [:params :userId] -1)]
+    (if (condp = auth-type
+          :user       (pos? user-id)
+          :super      (= 1  user-id)
+          :collect    (can-collect? request)
+          :proj-admin (is-proj-admin? request)
+          :inst-admin (is-inst-admin? request)
+          :no-cross   (is-cross-traffic? request)
+          true)
+      handler
+      (if (= :redirect auth-action)
+        (redirect-auth user-id)
+        forbidden-response))))
 
 (defn routing-handler [{:keys [uri request-method] :as request}]
   (let [{:keys [auth-type auth-action handler] :as route} (get routes [request-method uri])
