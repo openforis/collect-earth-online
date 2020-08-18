@@ -64,7 +64,7 @@
                                         (assoc :status 400)
                                         (update :message #(conj % (:message response)))))))
                               {}))]
-    (data-response (str/join "\n" (:message res-map ""))
+    (data-response (str/join "\n" (:message res-map []))
                    {:status (:status res-map 200)})))
 
 ;; TODO its probably cleaner to handle the interval in send-to-mailing-list instead of in user.js
