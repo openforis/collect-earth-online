@@ -240,7 +240,7 @@ export function ProjectAOI({
 }
 
 export function ProjectOptions( { projectOptions, setProjectDetail } ) {
-    const { showGEEScript, showPlotInformation } = projectOptions;
+    const { showGEEScript, showPlotInformation, autoLaunchGeoDash } = projectOptions;
     return (
         <SectionBlock title="Project Options">
             <div className="form-check">
@@ -271,6 +271,21 @@ export function ProjectOptions( { projectOptions, setProjectDetail } ) {
                 />
                 <label htmlFor="showPlotInformation" className="form-check-label">
                     Show Extra Plot Columns on Collection Page
+                </label>
+            </div>
+            <div className="form-check">
+                <input
+                    id="autoLaunchGeoDash"
+                    className="form-check-input"
+                    type="checkbox"
+                    checked={autoLaunchGeoDash}
+                    onChange={() => setProjectDetail(
+                        "projectOptions",
+                        { ...projectOptions, autoLaunchGeoDash: !autoLaunchGeoDash }
+                    )}
+                />
+                <label htmlFor="autoLaunchGeoDash" className="form-check-label">
+                    Auto-launch Geo-Dash
                 </label>
             </div>
         </SectionBlock>

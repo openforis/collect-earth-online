@@ -1,4 +1,4 @@
-import React, { Fragment } from "react";
+import React from "react";
 import ReactDOM from "react-dom";
 import { mercator, ceoMapStyles } from "../js/mercator.js";
 import { NavigationBar } from "./components/PageComponents";
@@ -13,6 +13,7 @@ import {
 } from "./imagery/collectionMenuControls";
 import { convertSampleValuesToSurveyQuestions } from "./utils/surveyUtils";
 import { UnicodeIcon, getQueryString } from "./utils/textUtils";
+import { CollapsibleTitle } from "./components/FormComponents";
 
 class Collection extends React.Component {
     constructor(props) {
@@ -93,11 +94,13 @@ class Collection extends React.Component {
         //
 
         // Initialize when new plot
-        if (this.state.currentPlot.id && this.state.currentPlot !== prevState.currentPlot) {
+        if (this.state.currentPlot.id && this.state.currentPlot.id !== prevState.currentPlot.id) {
             this.showProjectPlot();
-            if (this.state.hasGeoDash) this.showGeoDash();
+            if (this.state.hasGeoDash && this.state.currentProject.projectOptions.autoLaunchGeoDash) {
+                this.showGeoDash();
+            }
             clearInterval(this.state.storedInterval);
-            this.setState({ storedInterval: setInterval(() => this.resetPlotLock, 2.3 * 60 * 1000) });
+            this.setState({ storedInterval: setInterval(this.resetPlotLock, 2.3 * 60 * 1000) });
         }
 
         // Conditions required for samples to be shown
@@ -485,61 +488,59 @@ class Collection extends React.Component {
         nextPlotButtonDisabled: false,
     });
 
-    flagPlotInDB = () => {
-        if (this.state.currentPlot.id) {
-            fetch("/flag-plot",
-                  {
-                      method: "POST",
-                      body: JSON.stringify({
-                          projectId: this.props.projectId,
-                          plotId: this.state.currentPlot.id,
-                          userId: this.props.userId,
-                          userName: this.props.userName,
-                      }),
-                  })
-                .then(response => {
-                    if (response.ok) {
-                        this.nextPlot();
-                    } else {
-                        console.log(response);
-                        alert("Error flagging plot as bad. See console for details.");
-                    }
-                });
-        }
-    };
-
     postValuesToDB = () => {
         if (this.state.currentProject.availability === "unpublished") {
             alert("Please publish the project before starting the survey.");
         } else if (this.state.currentProject.availability === "closed") {
             alert("This project has been closed and is no longer accepting survey input.");
         } else {
-            fetch("/add-user-samples",
-                  {
-                      method: "post",
-                      headers: {
-                          "Accept": "application/json",
-                          "Content-Type": "application/json",
-                      },
-                      body: JSON.stringify({
-                          projectId: this.props.projectId,
-                          plotId: this.state.currentPlot.id,
-                          userName: this.props.userName,
-                          userId: this.props.userId,
-                          confidence: -1,
-                          collectionStart: this.state.collectionStart,
-                          userSamples: this.state.userSamples,
-                          userImages: this.state.userImages,
-                      }),
-                  })
-                .then(response => {
-                    if (response.ok) {
-                        this.nextPlot();
-                    } else {
-                        console.log(response);
-                        alert("Error saving your assignments to the database. See console for details.");
-                    }
-                });
+            if (this.state.currentPlot.flagged) {
+                fetch("/flag-plot",
+                      {
+                          method: "POST",
+                          body: JSON.stringify({
+                              projectId: this.props.projectId,
+                              plotId: this.state.currentPlot.id,
+                              userId: this.props.userId,
+                              userName: this.props.userName,
+                          }),
+                      })
+                    .then(response => {
+                        if (response.ok) {
+                            this.nextPlot();
+                        } else {
+                            console.log(response);
+                            alert("Error flagging plot as bad. See console for details.");
+                        }
+                    });
+            } else {
+                fetch("/add-user-samples",
+                      {
+                          method: "post",
+                          headers: {
+                              "Accept": "application/json",
+                              "Content-Type": "application/json",
+                          },
+                          body: JSON.stringify({
+                              projectId: this.props.projectId,
+                              plotId: this.state.currentPlot.id,
+                              userName: this.props.userName,
+                              userId: this.props.userId,
+                              confidence: -1,
+                              collectionStart: this.state.collectionStart,
+                              userSamples: this.state.userSamples,
+                              userImages: this.state.userImages,
+                          }),
+                      })
+                    .then(response => {
+                        if (response.ok) {
+                            this.nextPlot();
+                        } else {
+                            console.log(response);
+                            alert("Error saving your assignments to the database. See console for details.");
+                        }
+                    });
+            }
         }
     };
 
@@ -887,7 +888,7 @@ class Collection extends React.Component {
     };
 
     unansweredColor = () => (
-        <div className="PlotNavigation__change-color row justify-content-center">
+        <div className="PlotNavigation__change-color row justify-content-center mb-2">
             Unanswered Color
             <div className="form-check form-check-inline">
                 <input
@@ -924,6 +925,10 @@ class Collection extends React.Component {
 
     toggleQuitModal = () => this.setState({ showQuitModal: !this.state.showQuitModal });
 
+    toggleFlagged = () => {
+        this.setState({ currentPlot: { ...this.state.currentPlot, flagged: !this.state.currentPlot.flagged }});
+    };
+
     render() {
         const plotId = this.state.currentPlot.plotId ? this.state.currentPlot.plotId : this.state.currentPlot.id;
         return (
@@ -932,7 +937,6 @@ class Collection extends React.Component {
                     imageryAttribution={this.state.imageryAttribution}
                     projectId={this.props.projectId}
                     plotId={plotId}
-                    KMLFeatures={this.state.KMLFeatures}
                     loader={this.state.loading}
                 />
                 <div
@@ -947,7 +951,6 @@ class Collection extends React.Component {
                 <SideBar
                     projectId={this.props.projectId}
                     plotId={plotId}
-                    flagPlotInDB={this.flagPlotInDB}
                     postValuesToDB={this.postValuesToDB}
                     projectName={this.state.currentProject.name}
                     clearAnswers={() => this.resetPlotValues(this.state.currentPlot)}
@@ -955,27 +958,29 @@ class Collection extends React.Component {
                     userName={this.props.userName}
                     isFlagged={this.state.currentPlot && this.state.currentPlot.flagged}
                     isAnalyzed={this.state.currentPlot && this.state.currentPlot.analyses > 0}
+                    toggleFlagged={this.toggleFlagged}
                     toggleQuitModal={this.toggleQuitModal}
                 >
                     <PlotNavigation
                         plotId={plotId}
-                        projectId={this.props.projectId}
-                        navButtonsShown={this.state.currentPlot.id}
+                        showNavButtons={this.state.currentPlot.id}
                         nextPlotButtonDisabled={this.state.nextPlotButtonDisabled}
                         prevPlotButtonDisabled={this.state.prevPlotButtonDisabled}
                         reviewPlots={this.state.reviewPlots}
-                        showGeoDash={this.showGeoDash}
                         goToFirstPlot={this.goToFirstPlot}
                         goToPlot={this.goToPlot}
                         nextPlot={this.nextPlot}
                         prevPlot={this.prevPlot}
                         setReviewPlots={this.setReviewPlots}
                         loadingPlots={this.state.plotList.length === 0}
-                        KMLFeatures={this.state.KMLFeatures}
-                        zoomMapToPlot={() => mercator.zoomMapToLayer(this.state.mapConfig, "currentPlot")}
-                        projectOptions={this.state.currentProject.projectOptions}
                         currentPlot={this.state.currentPlot}
-                        currentProject={this.state.currentProject}
+                    />
+                    <ExternalTools
+                        zoomMapToPlot={() => mercator.zoomMapToLayer(this.props.mapConfig, "currentPlot")}
+                        showGeoDash={this.showGeoDash}
+                        currentPlot={this.state.currentPlot}
+                        projectOptions={this.state.currentProject.projectOptions}
+                        KMLFeatures={this.state.KMLFeatures}
                     />
                     {this.state.currentPlot.id && this.state.currentProject.projectOptions.showPlotInformation &&
                         <PlotInformation extraPlotInfo={this.state.currentPlot.extraPlotInfo}/>
@@ -990,23 +995,24 @@ class Collection extends React.Component {
                         currentPlot={this.state.currentPlot}
                         currentProject={this.state.currentProject}
                         currentProjectBoundary={this.state.currentProject.boundary}
-                        showPlanetDaily={this.state.currentPlot != null}
+                        showPlanetDaily={this.state.currentPlot.plotId}
                         loadingImages={this.state.imageryList.length === 0}
                     />
                     {this.state.currentPlot.id
                         ?
                             <>
-                                {this.unansweredColor()}
                                 <SurveyCollection
                                     selectedQuestion={this.state.selectedQuestion}
                                     surveyQuestions={this.state.currentProject.surveyQuestions}
                                     surveyRules={this.state.currentProject.surveyRules}
+                                    isFlagged={this.state.currentPlot && this.state.currentPlot.flagged}
                                     setCurrentValue={this.setCurrentValue}
                                     setSelectedQuestion={this.setSelectedQuestion}
                                     selectedSampleId={Object.keys(this.state.userSamples).length === 1
                                         ? parseInt(Object.keys(this.state.userSamples)[0])
                                         : this.state.selectedSampleId}
                                 />
+                                {this.unansweredColor()}
                             </>
                         :
                             <fieldset className="mb-3 justify-content-center text-center">
@@ -1030,42 +1036,26 @@ class Collection extends React.Component {
     }
 }
 
-function ImageAnalysisPane(props) {
+function ImageAnalysisPane({ loader, imageryAttribution }) {
     return (
         // Mercator hooks into image-analysis-pane
         <div id="image-analysis-pane" className="col-xl-9 col-lg-9 col-md-12 pl-0 pr-0 full-height">
-            {props.loader ? <div id="spinner" style={{ top: "45%", zIndex: "5000", visibility: "visible" }}></div> : null }
-            <div id="imagery-info" className="row">
-                <p className="col small" style={{ transform: "translateY(25%)" }}>{ props.imageryAttribution }</p>
+            {loader ? <div id="spinner" style={{ top: "45%", zIndex: "5000", visibility: "visible" }}></div> : null }
+            <div id="imagery-info" className="row" style={{ justifyContent: "center" }}>
+                <p style={{ fontSize: ".9rem", marginBottom: "0" }}>{imageryAttribution}</p>
             </div>
-            {props.plotId &&
-                <div id="download-kml" className="row">
-                    <a
-                        className="col"
-                        style={{ color: "white", fontWeight: "bold" }}
-                        href={"data:earth.kml+xml application/vnd.google-earth.kmz, "
-                        + encodeURIComponent(props.KMLFeatures)}
-                        download={"ceo_" + props.projectId + "_" + props.plotId + ".kml"}
-                    >
-                        Download Plot KML
-                    </a>
-                </div>
-            }
         </div>
     );
 }
 
 function SideBar(props) {
-    const saveValuesButtonEnabled = props.surveyQuestions
-        .every(sq => sq.visible && sq.visible.length === sq.answered.length);
+    const saveValuesButtonEnabled = props.isFlagged || props.surveyQuestions.every(sq => sq.visible && sq.visible.length === sq.answered.length);
 
     const saveButtonGroup = () => (
         <>
             <input
-                id="save-values-button"
                 className="btn btn-outline-lightgreen btn-sm btn-block"
                 type="button"
-                name="save-values"
                 value="Save"
                 onClick={props.postValuesToDB}
                 style={{ opacity: saveValuesButtonEnabled ? "1.0" : ".25" }}
@@ -1073,19 +1063,14 @@ function SideBar(props) {
             />
             <div className="my-2 d-flex justify-content-between">
                 <input
-                    id="save-values-button"
                     className="btn btn-outline-danger btn-sm col mr-1"
                     type="button"
-                    name="save-values"
-                    value="Flag Plot"
-                    onClick={props.flagPlotInDB}
-                    disabled={props.isFlagged}
+                    value={props.isFlagged ? "Unflag Plot" : "Flag Plot"}
+                    onClick={props.toggleFlagged}
                 />
                 <input
-                    id="save-values-button"
                     className="btn btn-outline-danger btn-sm col"
                     type="button"
-                    name="save-values"
                     value={props.isAnalyzed ? "Clear Changes" : "Clear All"}
                     onClick={props.clearAnswers}
                 />
@@ -1121,43 +1106,22 @@ function SideBar(props) {
     );
 }
 
-function CollapsibleTitle({ title, showGroup, toggleShow }) {
-    const buttonDownStyle = { width: "1.5rem", height: "1.5rem", paddingTop: "1px", paddingLeft: "3px" };
-    const buttonRightStyle = { width: "1.5rem", height: "1.5rem", paddingTop: "0px", paddingLeft: "6px", fontSize: ".8rem" };
-    return (
-        <div className="PlotNavigation__Title row">
-            <h3
-                className="ml-3 btn btn-sm btn-outline-darkgray"
-                style={showGroup ? buttonDownStyle : buttonRightStyle}
-                onClick={toggleShow}
-            >
-                {showGroup ? <UnicodeIcon icon="downCaret"/> : <UnicodeIcon icon="rightCaret"/>}
-            </h3>
-            <h3 className="ml-2">{title}</h3>
-        </div>
-    );
-}
-
 class PlotNavigation extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
             newPlotInput: "",
-            showNav: true,
-            auxWindow: null,
         };
     }
 
     componentDidUpdate(prevProps) {
-        if (this.props.plotId !== prevProps.plotId) {
-            this.setState({ newPlotInput: this.props.plotId });
-        }
+        if (this.props.plotId !== prevProps.plotId) this.setState({ newPlotInput: this.props.plotId });
     }
 
     updateNewPlotId = (value) => this.setState({ newPlotInput: value });
 
     gotoButton = () => (
-        <div className="PlotNavigation__first row" id="go-to-first-plot">
+        <div className="PlotNavigation__first row mb-2" id="go-to-first-plot">
             <div className="col">
                 <input
                     id="go-to-first-plot-button"
@@ -1165,10 +1129,7 @@ class PlotNavigation extends React.Component {
                     type="button"
                     name="new-plot"
                     value="Go to first plot"
-                    onClick={() => {
-                        this.setState({ showNav: false });
-                        this.props.goToFirstPlot();
-                    }}
+                    onClick={this.props.goToFirstPlot}
                 />
             </div>
         </div>
@@ -1177,7 +1138,7 @@ class PlotNavigation extends React.Component {
     navButtons = () => (
         <div className="PlotNavigation__nav-buttons row justify-content-center" id="plot-nav">
             <button
-                className="btn btn-outline-lightgreen"
+                className="btn btn-outline-lightgreen btn-sm"
                 type="button"
                 onClick={this.props.prevPlot}
                 style={{ opacity: this.props.prevPlotButtonDisabled ? "0.25" : "1.0" }}
@@ -1186,7 +1147,7 @@ class PlotNavigation extends React.Component {
                 <UnicodeIcon icon="leftCaret"/>
             </button>
             <button
-                className="btn btn-outline-lightgreen mx-1"
+                className="btn btn-outline-lightgreen btn-sm mx-1"
                 type="button"
                 onClick={this.props.nextPlot}
                 style={{ opacity: this.props.nextPlotButtonDisabled ? "0.25" : "1.0" }}
@@ -1203,7 +1164,7 @@ class PlotNavigation extends React.Component {
                 onChange={e => this.updateNewPlotId(e.target.value)}
             />
             <button
-                className="btn btn-outline-lightgreen"
+                className="btn btn-outline-lightgreen btn-sm"
                 type="button"
                 onClick={() => this.props.goToPlot(this.state.newPlotInput)}
             >
@@ -1212,8 +1173,44 @@ class PlotNavigation extends React.Component {
         </div>
     );
 
+    render() {
+        const { props } = this;
+        return (
+            <div className="text-center mt-2">
+                {props.loadingPlots
+                    ? <h3>Loading plot data...</h3>
+                    : this.props.showNavButtons
+                        ? this.navButtons()
+                        : this.gotoButton()
+                }
+                <div className="PlotNavigation__review-option row justify-content-center mb-1">
+                    <div className="form-check">
+                        <input
+                            className="form-check-input"
+                            checked={props.reviewPlots}
+                            id="reviewCheck"
+                            onChange={props.setReviewPlots}
+                            type="checkbox"
+                        />
+                        <label htmlFor="reviewCheck" className="form-check-label">Review your analyzed plots</label>
+                    </div>
+                </div>
+            </div>
+        );
+    }
+}
+
+class ExternalTools extends React.Component {
+    constructor(props) {
+        super(props);
+        this.state = {
+            showExternalTools: true,
+            auxWindow: null,
+        };
+    }
+
     geoButtons = () => (
-        <div className="PlotNavigation__geo-buttons d-flex justify-content-between my-2" id="plot-nav">
+        <div className="ExternalTools__geo-buttons d-flex justify-content-between mb-2" id="plot-nav">
             <input
                 className="btn btn-outline-lightgreen btn-sm col-6 mr-1"
                 type="button"
@@ -1230,21 +1227,24 @@ class PlotNavigation extends React.Component {
     );
 
     loadGEEScript = () => {
-        const urlParams = this.props.currentPlot.geom ? "geoJson=" + this.props.currentPlot.geom
+        const urlParams = this.props.currentPlot.geom
+            ? "geoJson=" + this.props.currentPlot.geom
             : this.props.currentProject.plotShape === "circle"
-                    ? "center=["
-                    + mercator.parseGeoJson(this.props.currentPlot.center).getCoordinates()
-                    + "];radius=" + this.props.currentProject.plotSize / 2
-            : "geoJson=" + mercator.geometryToGeoJSON(
-                mercator.getPlotPolygon(
-                    this.props.currentPlot.center,
-                    this.props.currentProject.plotSize,
-                    this.props.currentProject.plotShape
-                ),
-                "EPSG:4326",
-                "EPSG:3857",
-                5
-            );
+                ?
+                    "center=["
+                        + mercator.parseGeoJson(this.props.currentPlot.center).getCoordinates()
+                        + "];radius=" + this.props.currentProject.plotSize / 2
+                :
+                    "geoJson=" + mercator.geometryToGeoJSON(
+                        mercator.getPlotPolygon(
+                            this.props.currentPlot.center,
+                            this.props.currentProject.plotSize,
+                            this.props.currentProject.plotShape
+                        ),
+                        "EPSG:4326",
+                        "EPSG:3857",
+                        5
+                    );
         if (this.state.auxWindow) this.state.auxWindow.close();
         this.setState({
             auxWindow: window.open("https://billyz313.users.earthengine.app/view/ceoplotancillary#" + urlParams,
@@ -1261,39 +1261,34 @@ class PlotNavigation extends React.Component {
         />
     );
 
+    kmlButton = () => (
+        <a
+            className="btn btn-outline-lightgreen btn-sm btn-block my-2"
+            href={"data:earth.kml+xml application/vnd.google-earth.kmz, "
+                + encodeURIComponent(this.props.KMLFeatures)}
+            download={"ceo_" + this.props.projectId + "_" + this.props.plotId + ".kml"}
+        >
+            Download Plot KML
+        </a>
+    );
+
     render() {
-        const { props } = this;
-        return (
-            <div className="text-center mt-2">
+        return this.props.currentPlot.id ? (
+            <>
                 <CollapsibleTitle
-                    title={`Plot Navigation ${this.props.plotId ? `- ID: ${this.props.plotId}` : ""}`}
-                    showGroup={this.state.showNav}
-                    toggleShow={() => this.setState({ showNav: !this.state.showNav })}
+                    title={"External Tools"}
+                    showGroup={this.state.showExternalTools}
+                    toggleShow={() => this.setState({ showExternalTools: !this.state.showExternalTools })}
                 />
-                {props.loadingPlots && <h3>Loading plot data...</h3>}
-                {this.state.showNav && !props.loadingPlots &&
-                    <Fragment>
-                        {!props.navButtonsShown ? this.gotoButton() : this.navButtons()}
-                        <div className="PlotNavigation__review-option row justify-content-center mb-3">
-                            <div className="form-check">
-                                <input
-                                    className="form-check-input"
-                                    checked={props.reviewPlots}
-                                    id="reviewCheck"
-                                    onChange={props.setReviewPlots}
-                                    type="checkbox"
-                                />
-                                <label htmlFor="reviewCheck" className="form-check-label">Review your analyzed plots</label>
-                            </div>
-                        </div>
-                        {props.plotId && this.geoButtons()}
-                        {props.plotId
-                            && props.projectOptions.hasOwnProperty("showGEEScript")
-                            && props.projectOptions.showGEEScript && this.geeButton()}
-                    </Fragment>
+                {this.state.showExternalTools &&
+                    <div className="mx-1">
+                        {this.geoButtons()}
+                        {this.props.KMLFeatures && this.kmlButton()}
+                        {this.props.projectOptions.showGEEScript && this.geeButton()}
+                    </div>
                 }
-            </div>
-        );
+            </>
+        ) : null;
     }
 }
 
@@ -1318,7 +1313,7 @@ class PlotInformation extends React.Component {
                 {this.state.showInfo
                     ? hasExtraInfo
                         ?
-                            <ul className="mb-3">
+                            <ul className="mb-3 mx-1">
                                 {Object.entries(this.props.extraPlotInfo)
                                     .filter(([key, value]) => value && !(value instanceof Object))
                                     .map(([key, value]) => <li key={key}>{key} - {value}</li>)}
@@ -1349,6 +1344,13 @@ class ImageryOptions extends React.Component {
             setImageryAttributes: props.setImageryAttributes,
             currentPlot: props.currentPlot,
             currentProjectBoundary: props.currentProjectBoundary,
+            extent: props.currentPlot.id && props.currentProject.id
+                ? props.currentPlot.geom
+                    ? mercator.parseGeoJson(props.currentPlot.geom, true).getExtent()
+                    : mercator.getPlotPolygon(props.currentPlot.center,
+                                              props.currentProject.plotSize,
+                                              props.currentProject.plotShape).getExtent()
+                : [],
         };
         const filteredImageryList = props.showPlanetDaily
             ? props.imageryList
@@ -1361,101 +1363,39 @@ class ImageryOptions extends React.Component {
                     showGroup={this.state.showImageryOptions}
                     toggleShow={() => this.setState({ showImageryOptions: !this.state.showImageryOptions })}
                 />
-                {props.loadingImages && <h3>Loading imagery data...</h3>}
-                {this.state.showImageryOptions && !props.loadingImages && props.currentImageryId &&
-                    <select
-                        className="form-control form-control-sm"
-                        id="base-map-source"
-                        name="base-map-source"
-                        size="1"
-                        value={props.currentImageryId || ""}
-                        onChange={e => props.setBaseMapSource(parseInt(e.target.value))}
-                    >
-                        {filteredImageryList
-                            .map((imagery, uid) => <option key={uid} value={imagery.id}>{imagery.title}</option>)}
-                    </select>
-                }
-                {props.currentImageryId && filteredImageryList.map((imagery, uid) => {
-                    if (imagery.sourceConfig.type === "Planet") {
-                        return (
-                            <PlanetMenus
-                                {...commonProps}
-                                key={uid}
-                                thisImageryId={imagery.id}
-                                sourceConfig={imagery.sourceConfig}
-                                visible={props.currentImageryId === imagery.id && this.state.showImageryOptions}
-                            />
-                        );
-                    } else if (imagery.sourceConfig.type === "PlanetDaily") {
-                        return (
-                            <PlanetDailyMenus
-                                {...commonProps}
-                                key={uid}
-                                thisImageryId={imagery.id}
-                                sourceConfig={imagery.sourceConfig}
-                                visible={props.currentImageryId === imagery.id && this.state.showImageryOptions}
-                            />
-                        );
-                    } else if (imagery.sourceConfig.type === "SecureWatch") {
-                        return (
-                            <SecureWatchMenus
-                                {...commonProps}
-                                key={uid}
-                                thisImageryId={imagery.id}
-                                sourceConfig={imagery.sourceConfig}
-                                extent={props.currentPlot.id && props.currentProject.id
-                                        ? props.currentPlot.geom
-                                            ? mercator.parseGeoJson(props.currentPlot.geom, true).getExtent()
-                                            : mercator.getPlotPolygon(props.currentPlot.center,
-                                                                      props.currentProject.plotSize,
-                                                                      props.currentProject.plotShape).getExtent()
-                                        : []
-                                }
-                                visible={props.currentImageryId === imagery.id && this.state.showImageryOptions}
-                            />
-                        );
-                    } else if (imagery.sourceConfig.type === "Sentinel1") {
-                        return (
-                            <SentinelMenus
-                                {...commonProps}
-                                key={uid}
-                                thisImageryId={imagery.id}
-                                sourceConfig={imagery.sourceConfig}
-                                visible={props.currentImageryId === imagery.id && this.state.showImageryOptions}
-                            />
-                        );
-                    } else if (imagery.sourceConfig.type === "Sentinel2") {
-                        return (
-                            <SentinelMenus
-                                {...commonProps}
-                                key={uid}
-                                thisImageryId={imagery.id}
-                                sourceConfig={imagery.sourceConfig}
-                                visible={props.currentImageryId === imagery.id && this.state.showImageryOptions}
-                            />
-                        );
-                    } else if (imagery.sourceConfig.type === "GEEImage") {
-                        return (
-                            <GEEImageMenus
-                                {...commonProps}
-                                key={uid}
-                                thisImageryId={imagery.id}
-                                sourceConfig={imagery.sourceConfig}
-                                visible={props.currentImageryId === imagery.id && this.state.showImageryOptions}
-                            />
-                        );
-                    } else if (imagery.sourceConfig.type === "GEEImageCollection") {
-                        return (
-                            <GEEImageCollectionMenus
-                                {...commonProps}
-                                key={uid}
-                                thisImageryId={imagery.id}
-                                sourceConfig={imagery.sourceConfig}
-                                visible={props.currentImageryId === imagery.id && this.state.showImageryOptions}
-                            />
-                        );
+                <div className="mx-1">
+                    {props.loadingImages && <h3>Loading imagery data...</h3>}
+                    {this.state.showImageryOptions && !props.loadingImages && props.currentImageryId &&
+                        <select
+                            className="form-control form-control-sm mb-2"
+                            id="base-map-source"
+                            name="base-map-source"
+                            size="1"
+                            value={props.currentImageryId || ""}
+                            onChange={e => props.setBaseMapSource(parseInt(e.target.value))}
+                        >
+                            {filteredImageryList
+                                .map(imagery => <option key={imagery.id} value={imagery.id}>{imagery.title}</option>)}
+                        </select>
                     }
-                })}
+                    {props.currentImageryId && filteredImageryList.map(imagery => {
+                        const individualProps = {
+                            ...commonProps,
+                            key: imagery.id,
+                            thisImageryId: imagery.id,
+                            sourceConfig: imagery.sourceConfig,
+                            visible: props.currentImageryId === imagery.id && this.state.showImageryOptions,
+                        };
+                        return imagery.sourceConfig.type === "Planet" ? <PlanetMenus {...individualProps}/>
+                            : imagery.sourceConfig.type === "PlanetDaily" ? <PlanetDailyMenus {...individualProps}/>
+                            : imagery.sourceConfig.type === "SecureWatch" ? <SecureWatchMenus {...individualProps}/>
+                            : imagery.sourceConfig.type === "Sentinel1" ? <SentinelMenus {...individualProps}/>
+                            : imagery.sourceConfig.type === "Sentinel2" ? <SentinelMenus {...individualProps}/>
+                            : imagery.sourceConfig.type === "GEEImage" ? <GEEImageMenus {...individualProps}/>
+                            : imagery.sourceConfig.type === "GEEImageCollection" ? <GEEImageCollectionMenus {...individualProps}/>
+                            : null;
+                    })}
+                </div>
             </div>
         );
     }

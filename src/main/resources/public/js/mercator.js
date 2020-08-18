@@ -739,9 +739,10 @@ mercator.updateLayerSource = function (mapConfig, imageryId, projectBoundary, tr
 //                                                  {COVERAGE_CQL_FILTER: "(acquisitionDate>='" + imageryYear + "-01-01')"
 //                                                                   + "AND(acquisitionDate<='" + imageryYear + "-12-31')",
 //                                                  FEATUREPROFILE: stackingProfile});
-mercator.updateLayerWmsParams = function (mapConfig, layerId, newParams) {
+mercator.updateLayerWmsParams = function (mapConfig, layerId, newParams, url = null) {
     const layer = mercator.getLayerById(mapConfig, layerId);
     if (layer) {
+        if (url) layer.getSource().urls[0] = url;
         const mergedParams = Object.assign({}, layer.getSource().getParams(), newParams);
         layer.getSource().updateParams(mergedParams);
     }
@@ -751,7 +752,10 @@ mercator.updateLayerWmsParams = function (mapConfig, layerId, newParams) {
 // [Side Effects] Zooms the map view to contain the passed in extent.
 mercator.zoomMapToExtent = function (mapConfig, extent, maxZoom) {
     if (extent) {
-        if (extent[0] <= -13630599.62775418 && extent[1] <= -291567.89923496445 && extent[2] >= 20060974.510472793 && extent[3] >= 10122013.145404479) {
+        if (extent[0] <= -13630599.62775418
+                && extent[1] <= -291567.89923496445
+                && extent[2] >= 20060974.510472793
+                && extent[3] >= 10122013.145404479) {
             extent = [-13630599.62775418, -291567.89923496445, 20060974.510472793, 10122013.145404479];
         }
     }
@@ -957,9 +961,8 @@ mercator.plotsToVectorSource = function (plots) {
     return new VectorSource({ features: features });
 };
 
-// [Side Effects] Adds three vector layers to the mapConfig's map
-// object: "flaggedPlots" in red, "analyzedPlots" in green, and
-// "unanalyzedPlots" in yellow.
+// [Side Effects] Adds three vector layers to the mapConfig's map object:
+// "flaggedPlots" in red, "analyzedPlots" in green, and "unanalyzedPlots" in yellow.
 mercator.addPlotOverviewLayers = function (mapConfig, plots, shape) {
     mercator.addVectorLayer(mapConfig,
                             "flaggedPlots",
@@ -1252,6 +1255,11 @@ mercator.getClusterExtent = function (clusterFeature) {
     return (new LineString(clusterPoints)).getExtent();
 };
 
+// [Pure] Construct a point from x and y and perform transformation
+mercator.transformPoint = function (x, y, fromEPSG, toEPSG) {
+    return new Point([x, y]).transform(fromEPSG, toEPSG);
+};
+
 // [Pure] Returns a new vector source containing points for each of
 // the centers of the passed in projects. Features are constructed
 // from each project using its id, name, description, and numPlots fields.
@@ -1265,7 +1273,7 @@ mercator.projectsToVectorSource = function (projects) {
             const maxY = bounds[3];
             const centerX = (minX + maxX) / 2;
             const centerY = (minY + maxY) / 2;
-            const geometry = new Point([centerX, centerY]).transform("EPSG:4326", "EPSG:3857");
+            const geometry = mercator.transformPoint(centerX, centerY, "EPSG:4326", "EPSG:3857");
             return new Feature({
                 geometry:    geometry,
                 projectId:   project.id,

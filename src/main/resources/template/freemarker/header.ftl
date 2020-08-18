@@ -27,9 +27,6 @@
         <link rel="stylesheet" type="text/css" href="${root}/css/bootstrap.min.css">
         <script type="text/javascript" src="${root}/js/bootstrap.min.js"></script>
 
-        <!-- Highcharts -->
-        <script type="text/javascript" src="${root}/js/highcharts.js"></script>
-
         <!-- Jerome's custom styles and scripts -->
         <link rel="stylesheet" type="text/css" href="${root}/css/custom.css">
 

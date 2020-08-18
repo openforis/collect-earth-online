@@ -5,11 +5,11 @@ export const imageryOptions = [
         type: "GeoServer",
         label: "WMS Imagery",
         params: [
-            { key: "geoserverUrl", display: "GeoServer URL" },
-            { key: "LAYERS", display: "GeoServer Layer Name", parent: "geoserverParams" },
+            { key: "geoserverUrl", display: "WMS URL" },
+            { key: "LAYERS", display: "WMS Layer Name", parent: "geoserverParams" },
             {
                 key: "geoserverParams",
-                display: "Additional GeoServer Params (as JSON object)", // TODO, add {} around params if missing
+                display: "Additional WMS Params (as JSON object)", // TODO, add {} around params if missing
                 required: false,
                 type: "JSON",
             },
