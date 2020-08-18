@@ -1,13 +1,14 @@
 (ns org.openforis.ceo.db.plots
   (:import java.sql.Timestamp)
-  (:require [org.openforis.ceo.database :refer [call-sql sql-primitive]]
+  (:require [org.openforis.ceo.utils.type-conversion :as tc]
+            [org.openforis.ceo.database        :refer [call-sql sql-primitive]]
             [org.openforis.ceo.db.institutions :refer [is-inst-admin-query?]]
-            [org.openforis.ceo.utils.type-conversion :as tc]
-            [org.openforis.ceo.views :refer [data-response]]))
+            [org.openforis.ceo.views           :refer [data-response]]))
 
 (defn- time-plus-five-min []
   (Timestamp. (+ (System/currentTimeMillis) (* 5 60 1000))))
 
+;; TODO if we use a more efficient SQL call, we can return more plots.
 (defn get-project-plots [{:keys [params]}]
   (let [project-id (tc/str->int (:projectId params))
         max-plots  (tc/str->int (:max params) 1000)]
@@ -18,18 +19,20 @@
                             :analyses assigned})
                          (call-sql "select_limited_project_plots" project-id max-plots)))))
 
-(defn- clean-extra-plot-info [extra-plot-info]
-  (or (dissoc (tc/jsonb->clj extra-plot-info) :gid :lat :lon :plotid)
-      {}))
-
 (defn- prepare-sample-object [plot-id project-id]
   (mapv (fn [{:keys [sample_id point sampleId geom value]}]
           {:id       sample_id
            :point    point
-           :sampleId sampleId ;TODO I dont think we we distinguish between sample_id and sampleId so this could go away
+           :sampleId sampleId ;TODO I don't think we we distinguish between sample_id and sampleId so this could go away
            :geom     (tc/jsonb->clj geom)
-           :value    (if (< 2 (count (str value))) (tc/jsonb->clj value) {})})
+           :value    (if (< 2 (count (str value)))
+                       (tc/jsonb->clj value)
+                       {})})
         (call-sql "select_plot_samples" plot-id project-id)))
+
+(defn- clean-extra-plot-info [extra-plot-info]
+  (or (dissoc (tc/jsonb->clj extra-plot-info) :gid :lat :lon :plotid)
+      {}))
 
 (defn- build-plot-object [plot-info project-id]
   (let [{:keys [plot_id center flagged plotId geom extra_plot_info]} plot-info]
