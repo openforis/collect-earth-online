@@ -5,7 +5,9 @@
            java.util.UUID)
   (:require [clojure.string :as str]
             [org.openforis.ceo.utils.type-conversion :as tc]
-            [org.openforis.ceo.database   :refer [call-sql sql-primitive]]
+            [org.openforis.ceo.database   :refer [call-sql
+                                                  call-sql-opts
+                                                  sql-primitive]]
             [org.openforis.ceo.utils.mail :refer [email?
                                                   send-mail
                                                   send-to-mailing-list
@@ -17,7 +19,7 @@
 
 (defn login [{:keys [params]}]
   (let [{:keys [email password]} params]
-    (if-let [user (first (call-sql "check_login" email password))]
+    (if-let [user (first (call-sql-opts "check_login" {:log? false} email password))]
       (data-response ""
                      {:session {:userId   (:user_id user)
                                 :userName email
@@ -88,7 +90,7 @@
 
         :else nil))
 
-(defn update-account [{:keys [params session]}]
+(defn update-account [{:keys [params]}]
   (let [user-id               (:userId params -1)
         current-email         (:userName params)
         current-password      (:currentPassword params)
@@ -100,12 +102,13 @@
                                                   new-email password password-confirmation)]
       (data-response error-msg)
       ;; TODO: Create a single "update_user_information" sql function, use userid instead of email
-      (let [updated-email? (when-not (or (str/blank? new-email) (= new-email current-email))
-                             (sql-primitive (call-sql "set_user_email" current-email new-email)))]
+      (let [updated-email (if (or (str/blank? new-email) (= new-email current-email))
+                            current-email
+                            (sql-primitive (call-sql "set_user_email" current-email new-email)))]
         (when-not (str/blank? password)
-          (call-sql "update_password" (or updated-email? current-email) password))
+          (call-sql "update_password" updated-email password))
         (call-sql "set_mailing_list" user-id on-mailing-list?)
-        (data-response "" (when updated-email? {:session (assoc session :userName new-email)}))))))
+        (data-response "" {:session {:userName updated-email}})))))
 
 (defn get-password-reset-key [{:keys [params]}]
   (let [reset-key (str (UUID/randomUUID))
@@ -149,22 +152,18 @@
 
 ;; FIXME, remove this route and check if a user exists directly when adding
 (defn get-all-users [_]
-  (let [all-users (mapv (fn [{:keys [user_id email administrator]}]
+  (let [all-users (mapv (fn [{:keys [user_id email]}]
                           {:id    user_id
-                           :email email
-                           :role  (if administrator "admin" "user")})
+                           :email email})
                         (call-sql "get_all_users"))]
     (data-response all-users)))
 
-;; FIXME: We might not want to pass the reset key to the front end.
-;; FIXME: Update get_all_users_by_institution to rename user_id to id and return role instead of administrator.
+;; FIXME: Update get_all_users_by_institution to remove unused values.
 (defn get-institution-users [{:keys [params]}]
   (let [institution-id (tc/str->int (:institutionId params))
-        all-users      (mapv (fn [{:keys [user_id email administrator reset_key institution_role]}]
+        all-users      (mapv (fn [{:keys [user_id email institution_role]}]
                                {:id              user_id
                                 :email           email
-                                :role            (if administrator "admin" "user")
-                                :resetKey        reset_key
                                 :institutionRole institution_role})
                              (call-sql "get_all_users_by_institution_id" institution-id))]
     (data-response all-users)))
@@ -190,20 +189,23 @@
 (defn update-institution-role [{:keys [params]}]
   (let [account-id       (tc/str->int (:accountId params))
         institution-id   (tc/str->int (:institutionId params))
-        role             (:role params)]
-    (if (= role "not-member")
+        institution-role (:role params)] ; TODO rename param to institutionRole
+    (if (= institution-role "not-member")
       (call-sql "remove_institution_user_role" institution-id account-id)
       (let [email            (:email (first (call-sql "get_user_by_id" account-id)))
             institution-name (:name (first (call-sql "select_institution_by_id" institution-id)))
             timestamp        (-> (DateTimeFormatter/ofPattern "yyyy/MM/dd HH:mm:ss")
                                  (.format (LocalDateTime/now)))
-            inst-user-id     (sql-primitive (call-sql "update_institution_user_role" institution-id account-id role))
+            inst-user-id     (sql-primitive (call-sql "update_institution_user_role"
+                                                      institution-id
+                                                      account-id
+                                                      institution-role))
             email-msg        (format (str "Dear %s,\n\n"
                                           "You have been assigned the role of %s for %s on %s.\n\n"
                                           "Kind Regards,\n"
                                           "  The CEO Team")
-                                     email role institution-name timestamp)]
-        (when-not inst-user-id (call-sql "add_institution_user" institution-id account-id role))
+                                     email institution-role institution-name timestamp)]
+        (when-not inst-user-id (call-sql "add_institution_user" institution-id account-id institution-role))
         (send-mail email nil nil "User Role Assignment" email-msg "text/plain")))
     (data-response "")))
 
