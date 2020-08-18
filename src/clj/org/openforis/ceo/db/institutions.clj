@@ -1,22 +1,23 @@
 (ns org.openforis.ceo.db.institutions
   (:import java.util.Date)
-  (:require [clojure.string    :as str]
+  (:require [clojure.string :as str]
+            [clojure.java.io :as io]
             [org.openforis.ceo.utils.type-conversion :as tc]
             [org.openforis.ceo.database         :refer [call-sql sql-primitive]]
             [org.openforis.ceo.views            :refer [data-response]]
-            [org.openforis.ceo.utils.json-utils :refer [expand-resource-path]]
             [org.openforis.ceo.utils.part-utils :refer [write-file-part-base64]]))
 
 (defn is-inst-admin-query? [user-id institution-id]
   (sql-primitive (call-sql "is_institution_user_admin" user-id institution-id)))
 
 (defn is-inst-admin? [{:keys [params]}]
-  (let [user-id        (tc/str->int (:userId params))
+  (let [user-id        (:userId params -1)
         institution-id (tc/str->int (:institutionId params))]
     (and (pos? user-id)
          (pos? institution-id)
          (is-inst-admin-query? user-id institution-id))))
 
+;; TODO the front end uses get-institution-members, don't return members here.
 (defn- prepare-institution [{:keys [institution_id name logo description url archived members admins pending]}]
   {:id          institution_id
    :name        name
@@ -52,7 +53,7 @@
     (data-response (get-institution-by-id institution-id))))
 
 (defn create-institution [{:keys [params]}]
-  (let [user-id      (tc/str->int (:userId params))
+  (let [user-id      (:userId params -1)
         name         (:name params)
         url          (:url params)
         logo         (:logo params)
@@ -63,13 +64,13 @@
         (when-not (str/blank? logo)
           (let [logo-file-name (write-file-part-base64 logo
                                                        base64-image
-                                                       (expand-resource-path "/public/img/institution-logos")
+                                                       (io/resource "public/img/institution-logos/")
                                                        (str "institution-" institution-id))]
             (call-sql "update_institution_logo" institution-id (str "img/institution-logos/" logo-file-name))))
-        (doseq [admin-id #{user-id 1}]
+        (doseq [admin-id (conj #{1} user-id)]
           (call-sql "add_institution_user" institution-id admin-id 1))
         (data-response institution-id))
-      (data-response "")))) ; FIXME: Return "Error creating institution." and update front-end code accordingly.
+      (data-response ""))))
 
 (defn update-institution [{:keys [params]}]
   (let [institution-id (tc/str->int (:institutionId params))
@@ -84,7 +85,7 @@
                              (str "img/institution-logos/"
                                   (write-file-part-base64 logo
                                                           base64-image
-                                                          (expand-resource-path "/public/img/institution-logos")
+                                                          (io/resource "public/img/institution-logos/")
                                                           (str "institution-" institution-id))))]
         (call-sql "update_institution" institution-id name logo-file-name description url)
         (data-response ""))

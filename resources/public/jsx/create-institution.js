@@ -40,8 +40,11 @@ class CreateInstitution extends React.Component {
             fetch(this.props.documentRoot + "/create-institution",
                   {
                       method: "POST",
+                      headers: {
+                          "Accept": "application/json",
+                          "Content-Type": "application/json",
+                      },
                       body: JSON.stringify({
-                          userId: this.props.userId,
                           name: this.state.newInstitutionDetails.name,
                           logo: this.state.newInstitutionDetails.logo,
                           base64Image: this.state.newInstitutionDetails.base64Image,
@@ -52,8 +55,7 @@ class CreateInstitution extends React.Component {
             )
                 .then(response => Promise.all([response.ok, response.json()]))
                 .then(data => {
-                    const isInteger = n => !isNaN(parseInt(n)) && isFinite(n) && !n.includes(".");
-                    if (data[0] && isInteger(data[1])) {
+                    if (data[0] && Number.isInteger(data[1])) {
                         window.location = this.props.documentRoot + "/review-institution?institutionId=" + data[1];
                         return Promise.resolve();
                     } else {
@@ -102,7 +104,6 @@ export function pageInit(args) {
         <NavigationBar userName={args.userName} userId={args.userId}>
             <CreateInstitution
                 documentRoot=""
-                userId={args.userId === "" ? -1 : parseInt(args.userId)}
             />
         </NavigationBar>,
         document.getElementById("app")

@@ -17,6 +17,10 @@ class MailingList extends React.Component {
         if (confirm("Are you sure you want to send to this mailing list?")) {
             fetch("/send-to-mailing-list", {
                 method: "POST",
+                headers: {
+                    "Accept": "application/json",
+                    "Content-Type": "application/json",
+                },
                 body: JSON.stringify(this.state),
             })
                 .then(response => Promise.all([response.ok, response.json()]))

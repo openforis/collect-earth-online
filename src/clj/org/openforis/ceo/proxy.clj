@@ -2,15 +2,8 @@
   (:require [clojure.string  :as str]
             [clj-http.client :as client]
             [org.openforis.ceo.utils.type-conversion :as tc]
-            [org.openforis.ceo.db.imagery  :refer [get-imagery-source-config]]
-            [org.openforis.ceo.views       :refer [data-response]]))
-
-(defn mapm [f coll]
-  (persistent!
-   (reduce (fn [acc cur]
-             (conj! acc (f cur)))
-           (transient {})
-           coll)))
+            [org.openforis.ceo.utils.part-utils      :as pu]
+            [org.openforis.ceo.db.imagery  :refer [get-imagery-source-config]]))
 
 (defn- planet-url [source-config params]
   (let [{:keys [year month tile x y z]} params]
@@ -42,9 +35,9 @@
     (str source-url
          (when-not (str/includes? source-url "?") "?")
          (as-> (:query-params req) params
-           (mapm keys-upper-case params)
+           (pu/mapm keys-upper-case params)
            (remove-extra-params params)
-           (merge params (mapm keys-upper-case geoserver-params))
+           (merge params (pu/mapm keys-upper-case geoserver-params))
            (default-styles params geoserver-params)
            (map (fn [[key val]]
                   (str (name key) "=" val))
@@ -70,11 +63,13 @@
 (defn get-secure-watch-dates [req]
   (let [imagery-id    (tc/str->int (get-in req [:params :imageryId]))
         source-config (get-imagery-source-config imagery-id)
-        url           (str (:geoserverUrl source-config)
+        base-url      (:geoserverUrl source-config)
+        url           (str base-url
+                           (when-not (str/includes? base-url "?") "?")
                            (->> (dissoc (:query-params req) :imageryId)
                                 (map (fn [[key val]] (str (name key) "=" val)))
                                 (str/join "&"))
                            "&CONNECTID="
                            (get-in source-config [:geoserverParams :CONNECTID]))]
-    ;; TODO check for XML and parse error
-    (data-response (:body (client/get url {:as :json})))))
+    ;; TODO check for XML and parse error (front end)
+    (client/get url)))

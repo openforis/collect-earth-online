@@ -9,7 +9,7 @@
     (dissoc source-config [:geoserverParams :accessToken])
     source-config))
 
-(defn- prepare-imagery [imagery admin?]
+(defn- prepare-imagery [imagery inst-admin?]
   (mapv (fn [{:keys [imagery_id institution_id visibility title attribution extent source_config]}]
           (let [source-config (tc/jsonb->clj source_config)]
             {:id           imagery_id
@@ -18,18 +18,18 @@
              :title        title
              :attribution  attribution
              :extent       (tc/jsonb->clj extent)
-             :sourceConfig (if admin? source-config (clean-source source-config))}))
+             :sourceConfig (if inst-admin? source-config (clean-source source-config))}))
         imagery))
 
 (defn get-institution-imagery [{:keys [params]}]
   (let [institution-id (tc/str->int (:institutionId params))
-        user-id        (:userId params)]
+        user-id        (:userId params -1)]
     (data-response (prepare-imagery (call-sql "select_imagery_by_institution" institution-id user-id)
                                     (is-inst-admin-query? user-id institution-id)))))
 
 (defn get-project-imagery [{:keys [params]}]
   (let [project-id (tc/str->int (:projectId params))
-        user-id    (:userId params)
+        user-id    (:userId params -1)
         token-key  (:tokenKey params)]
     (data-response (prepare-imagery (call-sql "select_imagery_by_project" project-id user-id token-key)
                                     false))))
@@ -50,7 +50,7 @@
   (let [institution-id       (tc/str->int (:institutionId params))
         imagery-title        (:imageryTitle params)
         imagery-attribution  (:imageryAttribution params)
-        source-config        (tc/json->jsonb (:sourceConfig params))
+        source-config        (tc/clj->jsonb (:sourceConfig params))
         add-to-all-projects? (tc/str->bool (:addToAllProjects params) true)]
     (if (sql-primitive (call-sql "imagery_name_taken" institution-id imagery-title -1))
       (data-response "The title you have chosen is already taken.")
@@ -91,10 +91,10 @@
   (let [imagery-id           (tc/str->int (:imageryId params))
         imagery-title        (:imageryTitle params)
         imagery-attribution  (:imageryAttribution params)
-        source-config        (tc/json->jsonb (:sourceConfig params))
+        source-config        (tc/clj->jsonb (:sourceConfig params))
         add-to-all-projects? (tc/str->bool (:addToAllProjects params) true)
-        institution-id       (:institution_rid (get-imagery-by-id imagery-id))]
-    (if (call-sql "imagery_name_taken" institution-id imagery-title imagery-id)
+        institution-id       (:institution_id (get-imagery-by-id imagery-id))]
+    (if (sql-primitive (call-sql "imagery_name_taken" institution-id imagery-title imagery-id))
       (data-response "The title you have chosen is already taken.")
       (do
         (call-sql "update_institution_imagery"

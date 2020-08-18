@@ -1,4 +1,3 @@
-import "../../css/bootstrap.min.css";
 import "../../css/custom.css";
 
 import React from "react";
@@ -65,10 +64,10 @@ export function NavigationBar ({ userName, userId, children }) {
                         )}
                         {!loggedOut &&
                             <li className={"nav-item" + ("/account" === uri && " active")}>
-                                <a className="nav-link" href={"/account?userId=" + userId}>Account</a>
+                                <a className="nav-link" href={"/account?accountId=" + userId}>Account</a>
                             </li>
                         }
-                        {userId === "1" &&
+                        {userId === 1 &&
                             <li className={"nav-item" + ("/mailing-list" === uri && " active")}>
                                 <a className="nav-link" href={"/mailing-list"}>Mailing List</a>
                             </li>

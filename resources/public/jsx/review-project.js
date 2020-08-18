@@ -31,8 +31,7 @@ class Project extends React.Component {
     }
 
     componentDidUpdate(prevProps, prevState) {
-        if (this.state.projectDetails.id
-                && this.state.projectDetails !== prevState.projectDetails) {
+        if (this.state.projectDetails.id !== prevState.projectDetails.id) {
             this.getProjectImageryList();
             this.getImageryList();
             this.getProjectPlots();
@@ -69,7 +68,10 @@ class Project extends React.Component {
             fetch(this.props.documentRoot + "/update-project",
                   {
                       method: "POST",
-                      contentType: "application/json; charset=utf-8",
+                      headers: {
+                          "Accept": "application/json",
+                          "Content-Type": "application/json",
+                      },
                       body: JSON.stringify({
                           projectId: this.state.projectDetails.id,
                           imageryId: this.state.projectDetails.imageryId,
@@ -645,7 +647,6 @@ export function pageInit(args) {
         <NavigationBar userName={args.userName} userId={args.userId}>
             <Project
                 documentRoot=""
-                userId={args.userId}
                 projectId={args.projectId || "0"}
             />
         </NavigationBar>,

@@ -36,7 +36,7 @@ class UserStats extends React.Component {
     }
 
     getUserStats = () => {
-        fetch("/get-user-stats?userId=" + this.props.accountId)
+        fetch("/get-user-stats?accountId=" + this.props.accountId)
             .then(response => response.ok ? response.json() : Promise.reject(response))
             .then(stats => this.setState({ stats: stats }))
             .catch(response => {
@@ -123,9 +123,8 @@ class AccountForm extends React.Component {
             .then(response => Promise.all([response.ok, response.json()]))
             .then(data => {
                 if (data[0] && data[1] === "") {
-                    this.setState({ email: "", password: "", passwordConfirmation: "", currentPassword: "" });
-                    this.getUserDetails();
                     alert("Your account details have been updated.");
+                    location.reload();
                 } else {
                     alert(data[1]);
                 }
@@ -225,7 +224,7 @@ export function pageInit(args) {
         <NavigationBar userName={args.userName} userId={args.userId}>
             <Account
                 userId={args.userId}
-                accountId={args.accountId}
+                accountId={parseInt(args.accountId || args.userId)}
                 userName={args.userName}
             />
         </NavigationBar>,
