@@ -3,7 +3,6 @@ import ReactDOM from "react-dom";
 import _ from "lodash";
 import RGL, { WidthProvider } from "react-grid-layout";
 const ReactGridLayout = WidthProvider(RGL);
-import { getGatewayPath } from "./utils/geodashUtils";
 import { GeoDashNavigationBar } from "./components/PageComponents";
 
 class WidgetLayoutEditor extends React.PureComponent {
