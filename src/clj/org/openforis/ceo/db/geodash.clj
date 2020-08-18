@@ -55,8 +55,8 @@
   (let [path (:path params)
         url  (if (str/includes? server-name "local")
                "https://ceodev.servirglobal.net"
-               "https://localhost")] ; TODO I cant get the gatway to run on my machine, test this on the server
-    (data-response (tc/json->clj (:body (client/post (str url ":8888/" path)
-                                                     {:body (tc/clj->json json-params)
-                                                      :content-type :json
-                                                      :accept :json}))))))
+               "https://localhost")]
+    (client/post (str url ":8888/" path)
+                 {:body (tc/clj->json json-params)
+                  :content-type :json
+                  :accept :json})))
