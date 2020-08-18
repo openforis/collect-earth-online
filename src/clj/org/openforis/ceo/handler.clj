@@ -191,12 +191,12 @@
         (handler (assoc request :params (merge params get-params post-params))))
       (handler request))))
 
-(def updateable-session-keys [:tokenKey])
+(def updatable-session-keys [:tokenKey])
 
 (defn wrap-persistent-session [handler]
   (fn [request]
     (let [{:keys [params session]} request
-          to-update    (select-keys params updateable-session-keys)
+          to-update    (select-keys params updatable-session-keys)
           session      (apply dissoc session (keys to-update))
           intersection (set/intersection (set (keys params)) (set (keys session)))
           response     (handler (update request :params merge session))]
@@ -205,7 +205,7 @@
       (if (and (contains? response :session)
                (nil? (:session response)))
         response
-        (update response :session #(merge session % to-update))))))
+        (update response :session #(merge session to-update %))))))
 
 (defn wrap-exceptions [handler]
   (fn [request]
