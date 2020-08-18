@@ -96,7 +96,7 @@
    [:post "/close-project"]                  {:auth-type   :proj-admin
                                               :auth-action :block
                                               :handler     (api-handler projects/close-project)}
-   [:post "/create-project"]                 {:auth-type   :proj-admin
+   [:post "/create-project"]                 {:auth-type   :inst-admin
                                               :auth-action :block
                                               :handler     (api-handler projects/create-project)}
    [:post "/publish-project"]                {:auth-type   :proj-admin
