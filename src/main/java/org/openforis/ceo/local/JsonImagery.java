@@ -116,55 +116,6 @@ public class JsonImagery implements Imagery {
         }
     }
 
-    public String addGeoDashImagery(Request req, Response res) {
-        try {
-            var jsonInputs         = parseJson(req.body()).getAsJsonObject();
-            var institutionId      = jsonInputs.get("institutionId").getAsInt();
-            var imageryTitle       = jsonInputs.get("imageryTitle").getAsString();
-            var imageryAttribution = jsonInputs.get("imageryAttribution").getAsString();
-            var geeUrl             = jsonInputs.get("geeUrl").getAsString();
-            var geeParams          = jsonInputs.get("geeParams").getAsJsonObject();
-
-            // Read in the existing imagery list
-            var imageryList = elementToArray(readJsonFile("imagery-list.json"));
-
-            // Check to see if this imagery has already been added to this institution
-            var matchingImagery = findInJsonArray(imageryList, imagery -> imagery.get("title").getAsString().equals(imageryTitle));
-
-            if (matchingImagery.isPresent() && matchingImagery.get().get("institution").getAsInt() == institutionId) {
-                return "";
-            } else {
-                // Generate a new imagery id
-                var newImageryId = getNextId(imageryList);
-
-                // Create a new source configuration for this imagery
-                var sourceConfig = new JsonObject();
-                sourceConfig.addProperty("type", "GeeGateway");
-                sourceConfig.addProperty("geeUrl", geeUrl);
-                sourceConfig.add("geeParams", geeParams);
-
-                // Create a new imagery object
-                var newImagery = new JsonObject();
-                newImagery.addProperty("id", newImageryId);
-                newImagery.addProperty("institution", institutionId);
-                newImagery.addProperty("visibility", "private");
-                newImagery.addProperty("title", imageryTitle);
-                newImagery.addProperty("attribution", imageryAttribution);
-                newImagery.add("extent", null);
-                newImagery.add("sourceConfig", sourceConfig);
-
-                // Write the new entry to imagery-list.json
-                imageryList.add(newImagery);
-                writeJsonFile("imagery-list.json", imageryList);
-
-                return "";
-            }
-        } catch (Exception e) {
-            // Indicate that an error occurred with imagery creation
-            throw new RuntimeException(e);
-        }
-    }
-
     public String archiveInstitutionImagery(Request req, Response res) {
         var jsonInputs = parseJson(req.body()).getAsJsonObject();
         var imageryId = jsonInputs.get("imageryId").getAsString();

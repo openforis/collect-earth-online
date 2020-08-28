@@ -21,6 +21,9 @@ function Support() {
                         <a className="btn btn-outline-lightgreen btn-block" href="/downloads/CEO_Manual_InstitutionProject_20200708_espanol.pdf" role="button">
                             &#x1F4BE; Manual de creación de instituciones y proyectos (Para el administrador)
                         </a>
+                        <a className="btn btn-outline-lightgreen btn-block" href="/downloads/downloads/CEO_Manual_InstitutionProject_20200826_francais.pdf" role="button">
+                            &#x1F4BE; Manuel de création de projets et de profils d’institution (pour l'administrateur)
+                        </a>
                         <a className="btn btn-outline-lightgreen btn-block" href="/downloads/CEO_Theoretical_Manual.pdf" role="button">
                             &#x1F4BE; Project Development Theory
                         </a>

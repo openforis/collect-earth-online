@@ -494,10 +494,6 @@ a.list-inline.panel-actions.panel-fullscreen{
     height: -moz-calc(100% - 124px);
     height: calc(100% - 124px);
 }
-.highcharts-credits{
-    display:none;
-}
-
 .minmapwidget {
     width: 100%;
     min-height: 200px;

@@ -1,7 +1,7 @@
 import React from "react";
 import ReactDOM from "react-dom";
 import { mercator } from "../js/mercator.js";
-import { UnicodeIcon } from "./utils/textUtils";
+import { UnicodeIcon, deepCopy } from "./utils/textUtils";
 import { formatDateISO } from "./utils/dateUtils";
 import { getGatewayPath } from "./utils/geodashUtils";
 import { GeoDashNavigationBar } from "./components/PageComponents";
@@ -13,6 +13,8 @@ import { transform as projTransform } from "ol/proj";
 import { OSM, Vector, XYZ } from "ol/source";
 import { Style, Stroke } from "ol/style";
 import { getArea as sphereGetArea } from "ol/sphere";
+import Highcharts from "highcharts";
+import HighchartsReact from "highcharts-react-official";
 
 class Geodash extends React.Component {
     constructor(props) {
@@ -271,28 +273,29 @@ class Widget extends React.Component {
         }
     };
 
-    getCommonWidgetLayout = (widget, onSliderChange, onSwipeChange) => <div className="panel panel-default" id={"widget_" + widget.id}>
-        <div className="panel-heading">
-            <ul className="list-inline panel-actions pull-right">
-                <li style={{ display: "inline" }}>{widget.name}</li>
-                <li style={{ display: "inline" }}>
-                    <a
-                        className="list-inline panel-actions panel-fullscreen"
-                        onClick={() => this.props.onFullScreen(this.props.widget)}
-                        style={{ color: "#31BAB0" }}
-                        role="button"
-                        title="Toggle Fullscreen"
-                    >
-                        {widget.isFull ? <UnicodeIcon icon="collapse"/> : <UnicodeIcon icon="expand"/>}
-                    </a>
-                </li>
-                {this.getResetMapButton(widget)}
-            </ul>
+    getCommonWidgetLayout = (widget, onSliderChange, onSwipeChange) =>
+        <div className="panel panel-default" id={"widget_" + widget.id}>
+            <div className="panel-heading">
+                <ul className="list-inline panel-actions pull-right">
+                    <li style={{ display: "inline" }}>{widget.name}</li>
+                    <li style={{ display: "inline" }}>
+                        <a
+                            className="list-inline panel-actions panel-fullscreen"
+                            onClick={() => this.props.onFullScreen(this.props.widget)}
+                            style={{ color: "#31BAB0" }}
+                            role="button"
+                            title="Toggle Fullscreen"
+                        >
+                            {widget.isFull ? <UnicodeIcon icon="collapse"/> : <UnicodeIcon icon="expand"/>}
+                        </a>
+                    </li>
+                    {this.getResetMapButton(widget)}
+                </ul>
+            </div>
+            <div id={"widget-container_" + widget.id} className="widget-container">
+                {this.getWidgetInnerHtml(widget, onSliderChange, onSwipeChange)}
+            </div>
         </div>
-        <div id={"widget-container_" + widget.id} className="widget-container">
-            {this.getWidgetInnerHtml(widget, onSliderChange, onSwipeChange)}
-        </div>
-    </div>;
 
     getResetMapButton = widget => {
         if (this.isMapWidget(widget)) {
@@ -363,7 +366,13 @@ class Widget extends React.Component {
                 />
             </div>;
         } else {
-            return <img src="data:image/gif;base64,R0lGODlhAQABAIAAAHd3dwAAACH5BAAAAAAALAAAAAABAAEAAAICRAEAOw==" width ="200" height ="200" className="img-responsive" alt="Blank Widget"/>;
+            return <img
+                src="data:image/gif;base64,R0lGODlhAQABAIAAAHd3dwAAACH5BAAAAAAALAAAAAABAAEAAAICRAEAOw=="
+                width="200"
+                height="200"
+                className="img-responsive"
+                alt="Blank Widget"
+            />;
         }
     };
 
@@ -375,7 +384,11 @@ class Widget extends React.Component {
 
     render() {
         const { widget } = this.props;
-        return (<React.Fragment>{ this.getWidgetHtml(widget, this.props.onSliderChange, this.props.onSwipeChange) }</React.Fragment>);
+        return (
+            <React.Fragment>
+                { this.getWidgetHtml(widget, this.props.onSliderChange, this.props.onSwipeChange) }
+            </React.Fragment>
+        );
     }
 }
 
@@ -436,7 +449,6 @@ class DegradationWidget extends React.Component {
                                     initCenter={this.props.initCenter}
                                     handleSelectDate={this.handleSelectDate}
                                     degDataType={this.state.degDataType}
-                                    isDegradation
                                 />
                             </div>
                         </div>
@@ -1145,7 +1157,7 @@ class MapWidget extends React.Component {
 
     setStretch = evt => this.setState({ stretch: parseInt(evt.target.value) });
 
-    toggleDegDataType = evt => this.props.handleDegDataType(evt.target.checked ? "sar" : "landsat");
+    toggleDegDataType = checked => this.props.handleDegDataType(checked ? "sar" : "landsat");
 
     getStretchToggle = () => this.props.degDataType === "landsat"
         ?
@@ -1174,18 +1186,16 @@ class MapWidget extends React.Component {
                 </div>
         : "";
 
-    getDegDataTypeToggle = () => this.props.isDegradation
-        ?
-            <div className="col-6">
-                <span className="ctrlText font-weight-bold">Data: </span>
-                <span className="ctrlText">LANDSAT </span>
-                <label className="switch">
-                    <input type="checkbox" onChange={evt => this.toggleDegDataType(evt)}/>
-                    <span className="switchslider round"/>
-                </label>
-                <span className="ctrlText"> SAR</span>
-            </div>
-        : "";
+    getDegDataTypeToggle = () =>
+        <div className="col-6" style={{ display: this.props.isDegradation ? "block" : "none" }}>
+            <span className="ctrlText font-weight-bold">Data: </span>
+            <span className="ctrlText">LANDSAT </span>
+            <label className="switch">
+                <input type="checkbox" onChange={evt => this.toggleDegDataType(evt.target.checked)} />
+                <span className="switchslider round"/>
+            </label>
+            <span className="ctrlText"> SAR</span>
+        </div>
 
     render() {
         return <React.Fragment>
@@ -1205,53 +1215,44 @@ class GraphWidget extends React.Component {
         this.state = {
             graphRef: null,
             selectSarGraphBand: "VV",
-            graphLoading: true,
-            chartData: {
-                landsat:{ data:[] },
-                sar:{ data:[] },
-            },
+            chartDataSeriesLandsat: [],
+            chartDataSeriesSar: [],
+            nonDegChartData: [],
         };
     }
 
     componentDidMount() {
-        this.loadGraph(this.props.widget);
+        this.loadGraph();
     }
 
     componentDidUpdate(prevProps, prevState) {
         if (this.props.degDataType
             && (prevProps.degDataType !== this.props.degDataType
                 || prevState.selectSarGraphBand !== this.state.selectSarGraphBand)) {
-            if (this.state.graphLoading !== true) {
-                this.setState({
-                    graphLoading: this.state.chartData[this.props.degDataType]
-                        && this.state.chartData[this.props.degDataType].data.length === 0,
-                }, this.loadGraph(this.props.widget));
-            }
+            this.loadGraph();
         }
         this.handleResize();
     }
 
-    loadGraph = (widget) =>{
-        const centerPoint = JSON.parse(this.props.getParameterByName("bcenter")).coordinates;
-        const widgetType = widget.type || "";
-        const collectionName = widget.properties[1];
-        const indexName = widget.properties[4];
-        const path = widgetType === "DegradationTool" ? "getImagePlotDegradition"
-            : collectionName.trim() === "timeSeriesAssetForPoint" ? "timeSeriesAssetForPoint"
-            : collectionName.trim().length > 0 ? "timeSeriesIndex"
-            : "timeSeriesIndex2";
-        if (this.state.chartData[this.props.degDataType] && this.state.chartData[this.props.degDataType].data.length > 0) {
-            this.setState({
-                graphRef: this.createChart(
-                    widget.id,
-                    widget.graphBand || indexName,
-                    this.state.chartData[this.props.degDataType].data
-                ),
-                graphLoading: false,
-            });
+    loadGraph = () => {
+        const { chartDataSeriesLandsat, chartDataSeriesSar, selectSarGraphBand, graphRef } = this.state;
+        const { widget, degDataType, getParameterByName, projPairAOI, handleSelectDate } = this.props;
+
+        if (degDataType === "landsat" && chartDataSeriesLandsat.length > 0) {
+            graphRef.update({ series: deepCopy(chartDataSeriesLandsat) });
+        } else if (degDataType === "sar"
+            && chartDataSeriesSar.hasOwnProperty(selectSarGraphBand)
+            && chartDataSeriesSar[selectSarGraphBand].length > 0) {
+            graphRef.update({ series: deepCopy(chartDataSeriesSar[selectSarGraphBand]) });
         } else {
-            // check if this.props.degDataType is landsat, sar, or ""
-            // if "" fetch is needed else check the new state variable chartData.landsat.data
+            const centerPoint = JSON.parse(getParameterByName("bcenter")).coordinates;
+            const widgetType = widget.type || "";
+            const collectionName = widget.properties[1];
+            const indexName = widget.properties[4];
+            const path = widgetType === "DegradationTool" ? "getImagePlotDegradition"
+                : collectionName.trim() === "timeSeriesAssetForPoint" ? "timeSeriesAssetForPoint"
+                    : collectionName.trim().length > 0 ? "timeSeriesIndex"
+                        : "timeSeriesIndex2";
             fetch("/geo-dash/gateway-request", {
                 method: "POST",
                 headers: {
@@ -1260,10 +1261,14 @@ class GraphWidget extends React.Component {
                 },
                 body: JSON.stringify({
                     collectionNameTimeSeries: collectionName,
-                    geometry: JSON.parse(this.props.projPairAOI),
+                    geometry: JSON.parse(projPairAOI),
                     indexName: widget.graphBand || indexName,
-                    dateFromTimeSeries: widget.properties[2].trim().length === 10 ? widget.properties[2].trim() : "2000-01-01",
-                    dateToTimeSeries: widget.properties[3].trim().length === 10 ? widget.properties[3].trim() : formatDateISO(new Date()),
+                    dateFromTimeSeries: widget.properties[2].trim().length === 10
+                        ? widget.properties[2].trim()
+                        : "2000-01-01",
+                    dateToTimeSeries: widget.properties[3].trim().length === 10
+                        ? widget.properties[3].trim()
+                        : formatDateISO(new Date()),
                     reducer: widget.graphReducer != null ? widget.graphReducer.toLowerCase() : "",
                     scale: 30,
                     path: path,
@@ -1271,7 +1276,7 @@ class GraphWidget extends React.Component {
                     start: widget.startDate || "",
                     end: widget.endDate || "",
                     band: widget.graphBand || "",
-                    dataType: this.props.degDataType || "",
+                    dataType: degDataType || "",
                 }),
             })
                 .then(res => res.json())
@@ -1280,17 +1285,16 @@ class GraphWidget extends React.Component {
                         console.warn(res.errMsg);
                     } else {
                         if (res.hasOwnProperty("timeseries")) {
-                            let chartStorage = {};
-                            const pData = [];
                             if (res.timeseries.length === 0) {
                                 console.log("no data");
                             } else if (Object.keys(res.timeseries[0][1]).length === 0) {
-                                pData.push({
+                                const thisDataSeries = {
                                     type: "area",
                                     name: widget.graphBand || indexName,
                                     data: res.timeseries.filter(v => v[0]).map(v => [v[0], v[1]]).sort((a, b) => a[0] - b[0]),
                                     color: "#31bab0",
-                                });
+                                };
+                                this.setState({ nonDegChartData : [thisDataSeries] });
                             } else {
                                 // this is where degData ends up
                                 const theKeys = Object.keys(res.timeseries[0][1]);
@@ -1310,42 +1314,41 @@ class GraphWidget extends React.Component {
                                 });
                                 compiledData.forEach((d, index) => {
                                     const cdata = this.convertData(d);
-                                    if (widgetType !== "DegradationTool"
-                                        || this.props.degDataType !== "sar"
-                                        || (this.props.degDataType === "sar" && theKeys[index] === this.state.selectSarGraphBand)) {
-                                        pData.push({
-                                            type: widgetType === "DegradationTool" ? "scatter" : "area",
-                                            name: theKeys[index],
-                                            data: this.sortMultiData(cdata),
-                                            valueDecimals: 20,
-                                            connectNulls: widgetType !== "DegradationTool",
-                                            color: "#31bab0",
-                                            allowPointSelect: true,
-                                            point: {
-                                                events: {
-                                                    select: e => {
-                                                        this.props.handleSelectDate(formatDateISO(new Date(e.target.x)));
-                                                    },
-                                                },
+                                    const mSortData = this.sortMultiData(cdata);
+                                    const thisDataSeries = {
+                                        type: "scatter",
+                                        name: theKeys[index],
+                                        data: mSortData,
+                                        valueDecimals: 20,
+                                        connectNulls: true,
+                                        color: "#31bab0",
+                                        allowPointSelect: true,
+                                        point: {
+                                            events: {
+                                                select: e => handleSelectDate(formatDateISO(new Date(e.target.x))),
                                             },
-                                            tooltip: {
-                                                pointFormat: "<span style=\"color:{series.color}\">{point.x:%Y-%m-%d}</span>: <b>{point.y:.6f}</b><br/>",
-                                                valueDecimals: 20,
-                                                split: false,
-                                                xDateFormat: "%Y-%m-%d",
+                                        },
+                                        tooltip: {
+                                            pointFormat: "<span style=\"color:{series.color}\">{point.x:%Y-%m-%d}</span>: <b>{point.y:.6f}</b><br/>",
+                                            valueDecimals: 20,
+                                            split: false,
+                                            xDateFormat: "%Y-%m-%d",
+                                        },
+                                    };
+                                    if (degDataType === "landsat") {
+                                        this.setState({
+                                            chartDataSeriesLandsat: [...this.state.chartDataSeriesLandsat, thisDataSeries],
+                                        });
+                                    } else {
+                                        this.setState({
+                                            chartDataSeriesSar: {
+                                                ...this.state.chartDataSeriesSar,
+                                                [theKeys[index]]: [thisDataSeries],
                                             },
                                         });
                                     }
                                 });
-
-                                chartStorage = this.state.chartData;
-                                chartStorage[this.props.degDataType].data = pData;
                             }
-                            this.setState({
-                                graphLoading: false,
-                                graphRef: this.createChart(widget.id, indexName, pData),
-                                chartData: chartStorage,
-                            });
                         } else {
                             console.warn("Wrong Data Returned");
                         }
@@ -1372,13 +1375,40 @@ class GraphWidget extends React.Component {
                 this.state.graphRef.setSize(gwidget.clientWidth, gwidget.clientHeight, true);
             }
         } catch (e) {
+            console.log("handleResize error:");
             console.log(e.message);
         }
     };
 
-    createChart = (wIndex, wText, series) => {
-        "use strict";
-        return Highcharts.chart("graphcontainer_" + wIndex, {
+    onSelectSarGraphBand = newValue => this.setState({ selectSarGraphBand: newValue });
+
+    getSarBandOption = () => {
+        const selectOptions = [
+            { label: "VV", value: "VV" },
+            { label: "VH", value: "VH" },
+            { label: "VV/VH", value: "VV/VH" },
+        ];
+        return (
+            <select
+                className={"form-control"}
+                style={{
+                    maxWidth: "85%",
+                    display: this.props.widget.type === "DegradationTool" && this.props.degDataType === "sar"
+                        ? "inline-block" : "none",
+                    fontSize: ".9rem",
+                    height: "30px",
+                }}
+                onChange={evt => this.onSelectSarGraphBand(evt.target.value)}
+            >
+                {selectOptions.map(el => <option value={el.value} key={el.value}>{el.label}</option>)}
+            </select>
+        );
+    };
+
+    getChartOptions = () => {
+        const { widget, degDataType } = this.props;
+        const { chartDataSeriesLandsat, chartDataSeriesSar, selectSarGraphBand, nonDegChartData } = this.state;
+        return {
             chart: {
                 zoomType: "x",
             },
@@ -1395,15 +1425,18 @@ class GraphWidget extends React.Component {
             },
             yAxis: {
                 title: {
-                    text: wText,
+                    text: widget.properties[4],
                 },
             },
             legend: {
                 enabled: true,
             },
+            credits: {
+                enabled: false,
+            },
             plotOptions: {
                 area: {
-                    connectNulls: wText.toLowerCase() === "custom",
+                    connectNulls: widget.properties[4].toLowerCase() === "custom",
                     fillColor: {
                         linearGradient: {
                             x1: 0,
@@ -1439,52 +1472,54 @@ class GraphWidget extends React.Component {
                 split: false,
                 xDateFormat: "%Y-%m-%d",
             },
-            series: series,
-        }, () => {
-            document.getElementById("widgettitle_" + wIndex).innerHTML = wText;
-        });
-    };
-
-    selectSarGraphBand = evt => {
-        this.setState({
-            selectSarGraphBand: evt.target.value,
-            graphLoading: this.state.chartData[this.props.degDataType] && this.state.chartData[this.props.degDataType].data.length === 0,
-        }, this.loadGraph(this.props.widget));
-    };
-
-    getLoading = () => this.state.graphLoading
-        ? <img
-            src={"img/ceo-loading.gif"}
-            alt={"Loading"}
-            style={{ position: "absolute", bottom: "50%", left: "50%" }}
-        />
-        : "";
-    getSarBandOption = () => this.props.widget.type === "DegradationTool" && this.props.degDataType === "sar"
-        ? <select
-            className={"form-control"}
-            style={{
-                maxWidth: "85%",
-                display: "inline-block",
-                fontSize: ".9rem",
-                height: "30px",
-            }}
-            onChange={evt => this.selectSarGraphBand(evt)}
-        >
-            <option>VV</option>
-            <option>VH</option>
-            <option>VV/VH</option>
-        </select>
-        : "";
+            series:
+                widget.type === "DegradationTool"
+                    ? degDataType === "landsat" && chartDataSeriesLandsat.length > 0
+                        ? deepCopy(chartDataSeriesLandsat)
+                        : degDataType === "sar" && chartDataSeriesSar.hasOwnProperty(selectSarGraphBand)
+                            && chartDataSeriesSar[selectSarGraphBand].length > 0
+                            ? deepCopy(chartDataSeriesSar[selectSarGraphBand])
+                            : []
+                    : deepCopy(nonDegChartData),
+        };
+    }
 
     render() {
-        const widget = this.props.widget;
-        return <div id={"widgetgraph_" + widget.id} className="minmapwidget">
-            <div id={"graphcontainer_" + widget.id} className="minmapwidget graphwidget normal">
+        const { widget, degDataType } = this.props;
+        const { chartDataSeriesSar, chartDataSeriesLandsat, selectSarGraphBand, nonDegChartData } = this.state;
+        return (
+            <div id={"widgetgraph_" + widget.id} className="minmapwidget">
+                <div id={"graphcontainer_" + widget.id} className="minmapwidget graphwidget normal">
+                    {(widget.type === "DegradationTool"
+                        && degDataType === "sar"
+                        && chartDataSeriesSar.hasOwnProperty(selectSarGraphBand)
+                        && chartDataSeriesSar[selectSarGraphBand].length > 0)
+                    || (widget.type === "DegradationTool"
+                        && degDataType === "landsat"
+                        && chartDataSeriesLandsat.length > 0)
+                    || nonDegChartData.length > 0
+                        ?
+                            <HighchartsReact
+                                highcharts={Highcharts}
+                                options={this.getChartOptions()}
+                                callback={thisChart => this.setState({ graphRef: thisChart })}
+                            />
+                        :
+                            <img
+                                src={"img/ceo-loading.gif"}
+                                alt={"Loading"}
+                                style={{
+                                    position: "absolute",
+                                    bottom: "50%",
+                                    left: "50%",
+                                }}
+                            />
+                    }
+                </div>
+                <h3 id={"widgettitle_" + widget.id}>{widget.properties[4]}</h3>
+                {this.getSarBandOption()}
             </div>
-            {this.getLoading()}
-            <h3 id={"widgettitle_" + widget.id} />
-            {this.getSarBandOption()}
-        </div>;
+        );
     }
 }
 class StatsWidget extends React.Component {
