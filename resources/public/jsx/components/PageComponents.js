@@ -64,7 +64,7 @@ export function NavigationBar ({ userName, userId, children }) {
                         )}
                         {!loggedOut &&
                             <li className={"nav-item" + ("/account" === uri && " active")}>
-                                <a className="nav-link" href={"/account?userId=" + userId}>Account</a>
+                                <a className="nav-link" href={"/account?accountId=" + userId}>Account</a>
                             </li>
                         }
                         {userId === 1 &&
