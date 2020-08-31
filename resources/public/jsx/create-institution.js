@@ -53,7 +53,7 @@ class CreateInstitution extends React.Component {
                       }),
                   }
             )
-                .then(response => Promise.all([response.ok, response.text()]))
+                .then(response => Promise.all([response.ok, response.json()]))
                 .then(data => {
                     const isInteger = n => !isNaN(parseInt(n)) && isFinite(n) && !n.includes(".");
                     if (data[0] && isInteger(data[1])) {

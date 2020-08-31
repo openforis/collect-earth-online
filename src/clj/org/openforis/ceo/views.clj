@@ -3,30 +3,23 @@
             [clojure.string :as str]
             [clojure.java.io :as io]
             [cognitect.transit :as transit]
-            [hiccup.page :refer [html5 include-js]])
+            [hiccup.page :refer [html5 include-js include-css]])
   (:import java.io.ByteArrayOutputStream))
 
-(defn page->js [page]
-  (let [webpack-files (->> (io/file "target/public/js")
-                           (file-seq)
-                           (map #(str "/js/" (.getName %)))
-                           (filter #(and (or (str/includes? % page)
-                                             (str/includes? % "common"))
-                                         (not (str/ends-with? % ".map"))))
-                           (sort-by #(cond
-                                       (str/includes? % "common") -1
-                                       (str/includes? % "~")      0
-                                       :else                      1)))]
-    (concat webpack-files
-            (case page
-              "geoDash"            ["/js/highcharts.js"       ; TODO Use the npm version.
-                                    "/js/jquery-3.4.1.min.js" ; TODO Remove jquery as a dependency.
-                                    "/js/jquery-ui.min.js"]   ; TODO Remove jquery-ui as a dependency.
-              "widgetLayoutEditor" ["/js/jquery-3.4.1.min.js"
-                                    "/js/jquery-ui.min.js"]
-              []))))
+(defn kebab->camel [kebab]
+  (let [pieces (str/split kebab #"-")]
+    (apply str (first pieces) (map str/capitalize (rest pieces)))))
 
-(defn head [page]
+(defn page->js [page]
+  (case page
+    "geoDash"            ["/js/highcharts.js"       ; TODO Use the npm version.
+                          "/js/jquery-3.4.1.min.js" ; TODO Remove jquery as a dependency.
+                          "/js/jquery-ui.min.js"]   ; TODO Remove jquery-ui as a dependency.
+    "widgetLayoutEditor" ["/js/jquery-3.4.1.min.js"
+                          "/js/jquery-ui.min.js"]
+    []))
+
+(defn head [extra-js]
   [:head
    [:title "Collect Earth Online"]
    [:meta {:charset "utf-8"}]
@@ -34,11 +27,8 @@
    [:meta {:name "description" :content "Collect Earth Online is an Image Analysis Crowdsourcing Platform by OpenForis and Spatial Informatics Group"}]
    [:meta {:name "keywords"    :content "collect earth online image analysis crowdsourcing platform openforis SIG spatial informatics group"}]
    [:link {:rel "shortcut icon" :href "favicon.ico"}]
-   (apply include-js "/js/bootstrap.min.js" (page->js page))]) ; TODO Remove bootstrap.min.js as a dependency. Only used in header, find a react method.
-
-(defn kebab->camel [kebab]
-  (let [pieces (str/split kebab #"-")]
-    (apply str (first pieces) (map str/capitalize (rest pieces)))))
+   (include-css "/css/bootstrap.min.css")
+   (apply include-js "/js/bootstrap.min.js" extra-js)]) ; TODO Remove bootstrap.min.js as a dependency. Only used in header, find a react method.
 
 ;; TODO There will be no part two if we can flatten the route names for geo-dash (geo-dash/geo-dash -> geo-dash).
 (defn uri->page [uri]
@@ -52,22 +42,45 @@
     [:script {:type "text/javascript"}
      (str "window.onload = function () { " page ".pageInit(" js-params "); };")]))
 
+(defn find-webpack-files [page]
+  (->> (io/file "target/public/js")
+       (file-seq)
+       (map #(str "/js/" (.getName %)))
+       (filter #(and (or (str/includes? % page)
+                         (str/includes? % "common"))
+                     (str/ends-with? % "bundle.js")))
+       (sort-by #(cond
+                   (str/includes? % "common") -1
+                   (str/includes? % "~")      0
+                   :else                      1))))
+
 (defn render-page [uri]
   (fn [request]
-    (let [page (uri->page uri)]
+    (let [page          (uri->page uri)
+          webpack-files (find-webpack-files page)]
       {:status  200
        :headers {"Content-Type" "text/html"}
        :body    (html5
-                 (head page)
+                 (head (concat webpack-files (page->js page)))
                  [:body {:style {:padding-top "60px"}}
-                  [:section {:id "content" :class "container-fluid"} ; TODO This seems out of order with the app div, should the container class be inside each page?
-                   (when-let [flash-message (get-in request [:params :flash_message])]
-                     [:p {:class "alert"} flash-message])            ; TODO This will be moved to the front end for better UX.
-                   (let [announcement (slurp "announcement.txt")]
-                     (when (pos? (count announcement))
-                       [:p {:style {:color "#eec922" :background-color "#e63232" :text-align "center" :padding "5px" :margin "0px"}}
-                        announcement]))
-                   [:div#app]]
+                  (if (seq webpack-files)
+                    [:section {:id "content" :class "container-fluid"}
+                     (when-let [flash-message (get-in request [:params :flash_message])]
+                       [:p {:class "alert"} flash-message])            ; TODO This will be moved to the front end for better UX.
+                     (let [announcement (slurp "announcement.txt")]    ; TODO This will be moved to the front end for better UX.
+                       (when (and (= page "home")(pos? (count announcement)))
+                         [:p {:style {:color            "#eec922"
+                                      :background-color "#e63232"
+                                      :text-align       "center"
+                                      :padding          "5px"
+                                      :margin           "0px"
+                                      :position         "fixed"
+                                      :top              "61px"
+                                      :width            "100vw"
+                                      :z-index           100}}
+                          announcement]))
+                     [:div#app]]
+                    [:label "No webpack files found. Check if webpack is running, or wait for it to finish compiling."])
                   (js-init page (:params request))])})))
 
 (defn not-found-page [request]

@@ -19,7 +19,7 @@ class MailingList extends React.Component {
                 method: "POST",
                 body: JSON.stringify(this.state),
             })
-                .then(response => Promise.all([response.ok, response.text()]))
+                .then(response => Promise.all([response.ok, response.json()]))
                 .then(data => {
                     if (data[0] && data[1] === "") {
                         this.setState({ subject: "", body: "" });

@@ -191,7 +191,7 @@ mercator.__sendGEERequest = function (theJson, sourceConfig, attribution, docume
             }
         })
         .then(data => {
-            if (data.hasOwnProperty("url")) {
+            if (data && data.hasOwnProperty("url")) {
                 const geeLayer = new XYZ({
                     url: data.url,
                     attributions: attribution,
@@ -305,7 +305,7 @@ mercator.createSource = function (sourceConfig, imageryId, attribution, document
     } else if (sourceConfig.type === "GeoServer") {
         return new TileWMS({
             url: documentRoot + "/get-tile",
-            params: { LAYERS: "none", imageryId: imageryId },
+            params: { imageryId: imageryId },
             attributions: attribution,
         });
     } else if (sourceConfig.type === "SecureWatch") {

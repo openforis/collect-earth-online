@@ -69,7 +69,10 @@ class Project extends React.Component {
             fetch(this.props.documentRoot + "/update-project",
                   {
                       method: "POST",
-                      contentType: "application/json; charset=utf-8",
+                      headers: {
+                          "Accept": "application/json",
+                          "Content-Type": "application/json",
+                      },
                       body: JSON.stringify({
                           projectId: this.state.projectDetails.id,
                           imageryId: this.state.projectDetails.imageryId,
@@ -644,8 +647,6 @@ export function pageInit(args) {
     ReactDOM.render(
         <NavigationBar userName={args.userName} userId={args.userId}>
             <Project
-                documentRoot=""
-                userId={args.userId}
                 projectId={args.projectId || "0"}
             />
         </NavigationBar>,
