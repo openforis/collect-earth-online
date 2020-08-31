@@ -157,7 +157,7 @@ class Project extends React.Component {
             .then(response => Promise.all([response.ok, response.json()]))
             .then(data => {
                 if (data[0] && Number.isInteger(data[1].projectId)) {
-                    window.open( "/review-project?projectId=" + data[1].projectId);
+                    window.location = "/review-project?projectId=" + data[1].projectId;
                     this.setState({ showModal: false });
                     return Promise.resolve();
                 } else {

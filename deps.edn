@@ -1,6 +1,7 @@
 {:paths ["src/clj" "resources" "target"]
 
  :deps {bk/ring-gzip              {:mvn/version "0.3.0"}
+        clj-http/clj-http         {:mvn/version "3.10.1"}
         com.draines/postal        {:mvn/version "2.0.3"}
         com.cognitect/transit-clj {:mvn/version "1.0.324"}
         hiccup/hiccup             {:mvn/version "2.0.0-alpha2"}
@@ -19,9 +20,3 @@
                          :main-opts  ["-m" "rebel-readline.main"]}
            :production  {:jvm-opts  ["-Xmx4096m" "-XX:+PrintFlagsFinal"]}
            :run-server  {:main-opts ["-m" "org.openforis.ceo.server"]}}}
-
-;; FIXME: Merge in these params from pom.xml/build.gradle
-;; :repositories "https://repo.osgeo.org/repository/release/"
-;; :deps {org.geotools/gt-shapefile {:mvn/version "19.2"}
-;;        org.geotools/gt-epsg-hsql {:mvn/version "19.2"}
-;; :jvm-opts ["-Xlint:unchecked"]
