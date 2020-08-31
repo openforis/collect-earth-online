@@ -64,7 +64,7 @@
                  (head (concat webpack-files (page->js page)))
                  [:body {:style {:padding-top "60px"}}
                   (if (seq webpack-files)
-                    [:section {:id "content" :class "container-fluid"} ; TODO This seems out of order with the app div, should the container class be inside each page?
+                    [:section {:id "content" :class "container-fluid"}
                      (when-let [flash-message (get-in request [:params :flash_message])]
                        [:p {:class "alert"} flash-message])            ; TODO This will be moved to the front end for better UX.
                      (let [announcement (slurp "announcement.txt")]    ; TODO This will be moved to the front end for better UX.

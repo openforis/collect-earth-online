@@ -39,8 +39,7 @@
 (defn- redirect-auth [user-id]
   (fn [request]
     (let [{:keys [query-string uri]} request
-          full-url (str uri
-                        (when query-string (str "?" query-string)))]
+          full-url (str uri (when query-string (str "?" query-string)))]
       (if (pos? user-id)
         (redirect (str "/home?flash_message=You do not have permission to access "
                        full-url))
