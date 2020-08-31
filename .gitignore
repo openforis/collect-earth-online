@@ -30,6 +30,6 @@ package-lock.json
 build.gradle
 pom.xml
 /test_data/
-.gradle/
-bin/
+/bin/
+/.gradle/
 .classpath

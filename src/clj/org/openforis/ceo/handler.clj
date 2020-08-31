@@ -49,8 +49,6 @@
                    "/mailing-list"
                    "/unsubscribe-mailing-list"})
 
-(def proxy-routes #{"/get-tile"
-                    "/get-securewatch-dates"})
 
                  ;; Users API
 (def api-routes {"/get-all-users"                  :get
@@ -108,7 +106,10 @@
                  "/geo-dash/create-widget"   :post
                  "/geo-dash/delete-widget"   :post
                  "/geo-dash/gateway-request" :post
-                 "/geo-dash/update-widget"   :post})
+                 "/geo-dash/update-widget"   :post
+                 ;; Proxy Routes
+                 "/get-tile"              :get
+                 "/get-securewatch-dates" :get})
 
 ;; FIXME: Add any conditions you want for URLs you want to exclude up front.
 (defn bad-uri? [uri] (str/includes? (str/lower-case uri) "php"))
@@ -130,10 +131,6 @@
 
                        (= request-method (api-routes uri))
                        (api-handler uri)
-
-                       (and (contains? proxy-routes uri)
-                            (= request-method :get))
-                       (data-response "") ; FIXME missing proxy implementation
 
                        :else
                        not-found-page)]
