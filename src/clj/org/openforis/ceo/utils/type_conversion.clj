@@ -22,14 +22,6 @@
        (Long/parseLong string)
        (catch Exception _ default)))))
 
-(defn str->long
-  ([string]
-   (str->int string -1))
-  ([string default]
-   (try
-     (Long/parseLong string)
-     (catch Exception _ default))))
-
 (defn str->float
   ([string]
    (str->int string -1))
