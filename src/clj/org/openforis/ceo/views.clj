@@ -3,7 +3,7 @@
             [clojure.string :as str]
             [clojure.java.io :as io]
             [cognitect.transit :as transit]
-            [hiccup.page :refer [html5 include-js]])
+            [hiccup.page :refer [html5 include-js include-css]])
   (:import java.io.ByteArrayOutputStream))
 
 (defn page->js [page]
@@ -34,6 +34,7 @@
    [:meta {:name "description" :content "Collect Earth Online is an Image Analysis Crowdsourcing Platform by OpenForis and Spatial Informatics Group"}]
    [:meta {:name "keywords"    :content "collect earth online image analysis crowdsourcing platform openforis SIG spatial informatics group"}]
    [:link {:rel "shortcut icon" :href "favicon.ico"}]
+   (include-css "/css/bootstrap.min.css")
    (apply include-js "/js/bootstrap.min.js" (page->js page))]) ; TODO Remove bootstrap.min.js as a dependency. Only used in header, find a react method.
 
 (defn kebab->camel [kebab]
