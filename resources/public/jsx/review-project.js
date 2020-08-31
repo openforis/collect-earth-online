@@ -31,8 +31,7 @@ class Project extends React.Component {
     }
 
     componentDidUpdate(prevProps, prevState) {
-        if (this.state.projectDetails.id
-                && this.state.projectDetails !== prevState.projectDetails) {
+        if (this.state.projectDetails.id !== prevState.projectDetails.id) {
             this.getProjectImageryList();
             this.getImageryList();
             this.getProjectPlots();

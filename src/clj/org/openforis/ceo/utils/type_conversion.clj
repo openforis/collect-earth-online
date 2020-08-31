@@ -44,7 +44,7 @@
 
 (defn json->clj
   ([string]
-   (json->clj string {}))
+   (json->clj string nil))
   ([string default]
    (try
      (json/read-str string :key-fn keyword)
