@@ -3,8 +3,7 @@
   (:require [clojure.edn :as edn]
             [clojure.string :as str]
             [postal.core :refer [send-message]]
-            [org.openforis.ceo.logging :refer [log-str]]
-            [org.openforis.ceo.views   :refer [data-response]]))
+            [org.openforis.ceo.logging :refer [log-str]]))
 
 ;; Example value:
 ;; {:host                  "smtp.gmail.com"
@@ -34,9 +33,6 @@
     :body    [{:type    (or content-type "text/plain")
                :content body}]}))
 
-;; TODO verify that the user exists before sending a message
-;;      This is done in some routes (for example get-password-reset-key)
-;;      but not all (for example update-institution-role)
 (defn send-mail [to-addresses cc-addresses bcc-addresses subject body content-type]
   (let [{:keys [message error]} (send-postal to-addresses
                                              cc-addresses
@@ -52,20 +48,18 @@
                       "<br><hr><p><a href=\""
                       base-url
                       (when-not (str/ends-with? base-url "/") "/")
-                      "\">Unsubscribe</a></p>")
-        res-map  (->> bcc-addresses
-                      (filter email?)
-                      (partition-all (:recipient-limit @mail-config))
-                      (reduce (fn [acc cur]
-                                (let [response (send-postal cur nil nil subject new-body content-type)]
-                                  (if (= :SUCCESS (:error response))
-                                    cur
-                                    (-> acc
-                                        (assoc :status 400)
-                                        (update :message #(conj % (:message response)))))))
-                              {}))]
-    (data-response (str/join "\n" (:message res-map []))
-                   {:status (:status res-map 200)})))
+                      "\">Unsubscribe</a></p>")]
+    (->> bcc-addresses
+         (filter email?)
+         (partition-all (:recipient-limit @mail-config))
+         (reduce (fn [acc cur]
+                   (let [response (send-postal cur nil nil subject new-body content-type)]
+                     (if (= :SUCCESS (:error response))
+                       cur
+                       (-> acc
+                           (assoc :status 400)
+                           (update :messages #(conj % (:message response)))))))
+                 {}))))
 
 ;; TODO its probably cleaner to handle the interval in send-to-mailing-list instead of in user.js
 (defn get-mailing-list-interval []

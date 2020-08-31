@@ -232,9 +232,11 @@
                             (- (get-mailing-list-interval)))]
     (if-let [error-msg (get-mailing-list-errors subject body remaining-time)]
       (data-response error-msg)
-      (let [emails (mapv :email (call-sql "get_all_mailing_list_users"))]
-        (set-mailing-list-last-sent! (LocalDateTime/now))
-        (send-to-mailing-list emails subject body "text/html")))))
+      (do (set-mailing-list-last-sent! (LocalDateTime/now))
+          (let [emails     (mapv :email (call-sql "get_all_mailing_list_users"))
+                response (send-to-mailing-list emails subject body "text/html")]
+            (data-response (str/join "\n" (:messages response []))
+                           {:status (:status response 200)}))))))
 
 (defn unsubscribe-from-mailing-list [{:keys [params]}]
   (let [email (:email params)]
