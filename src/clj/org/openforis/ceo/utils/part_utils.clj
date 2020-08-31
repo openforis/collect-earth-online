@@ -26,7 +26,7 @@
         (.write os data 0 (count data)))
       out-name)))
 
-(defn wgs84->mercator
+(defn EPSG:4326->3857
   "Convert wgs84(4326) lon/lat to mercator(3857) coordinates x/y"
   [& points]
   (let [points (mapv (fn [[lon lat]]
@@ -37,7 +37,7 @@
       (first points)
       points)))
 
-(defn mercator->wgs84
+(defn EPSG:3857->4326
   "Convert mercator(3857) coordinates x/y to wgs84(4326) lon/lat"
   [& points]
   (let [points (mapv (fn [[x y]]

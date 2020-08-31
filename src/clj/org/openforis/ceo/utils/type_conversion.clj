@@ -26,7 +26,7 @@
   ([string default]
    (try
      (Long/parseLong string)
-     (catch default))))
+     (catch Exception _ default))))
 
 (defn str->bool
   ([string]
