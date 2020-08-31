@@ -16,17 +16,27 @@
   ([string default]
    (try
      (Long/parseLong string)
-     (catch default))))
+     (catch Exception _ default))))
+
+(defn str->float
+  ([string]
+   (str->int string -1))
+  ([string default]
+   (if (number? string)
+     string
+     (try
+       (Float/parseFloat string)
+       (catch Exception _ default)))))
 
 (defn str->bool
   ([string]
    (str->bool string false))
   ([string default]
-   (if string
+   (if (boolean? string)
+     string
      (try
        (Boolean/parseBoolean string)
-       (catch Exception _ default))
-     default)))
+       (catch Exception _ default)))))
 
 (defn json->clj
   ([string]

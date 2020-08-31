@@ -146,7 +146,12 @@
 (defn wrap-request-logging [handler]
   (fn [request]
     (let [{:keys [uri request-method params]} request
-          param-str (pr-str (dissoc params :password :passwordConfirmation))]
+          param-str (pr-str (dissoc params
+                                    :password
+                                    :passwordConfirmation
+                                    :base64Image
+                                    :plotFileBase64
+                                    :sampleFileBase64))]
       (log-str "Request(" (name request-method) "): \"" uri "\" " param-str)
       (handler request))))
 
@@ -156,9 +161,6 @@
           content-type (headers "Content-Type")]
       (log-str "Response(" status "): "
                (cond
-                 (str/includes? content-type "text/html")
-                 "<html>...</html>"
-
                  (= content-type "application/edn")
                  (binding [*print-length* 2] (print-str (edn/read-string body)))
 
@@ -166,7 +168,7 @@
                  (binding [*print-length* 2] (print-str (json/read-str body)))
 
                  :else
-                 body))
+                 (str content-type " response")))
       response)))
 
 (defn parse-query-string [query-string]
