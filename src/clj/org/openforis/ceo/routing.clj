@@ -76,7 +76,7 @@
    [:post "/password-reset"]                 {:handler (api-handler users/get-password-reset-key)}
    [:post "/register"]                       {:handler (api-handler users/register)}
    [:post "/unsubscribe-mailing-list"]       {:handler (api-handler users/unsubscribe-from-mailing-list)}
-             ;; Projects API
+   ;; Projects API
    [:get "/dump-project-aggregate-data"]     {:handler     (api-handler projects/dump-project-aggregate-data)
                                               :auth-type   :proj-admin
                                               :auth-action :block}
