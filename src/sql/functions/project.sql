@@ -1262,7 +1262,7 @@ CREATE OR REPLACE FUNCTION select_prev_user_plot_by_admin(_project_id integer, _
 $$ LANGUAGE SQL;
 
 -- Returns unanalyzed plots by plot id
-CREATE OR REPLACE FUNCTION select_unassigned_plot_by_id(_project_id integer, _plot_id integer)
+CREATE OR REPLACE FUNCTION select_by_id_unassigned_plot(_project_id integer, _plot_id integer)
  RETURNS setOf plot_collection_return AS $$
 
     WITH tablenames AS (
@@ -1285,7 +1285,7 @@ CREATE OR REPLACE FUNCTION select_unassigned_plot_by_id(_project_id integer, _pl
 $$ LANGUAGE SQL;
 
 -- Returns user analyzed plots by plot id
-CREATE OR REPLACE FUNCTION select_user_plot_by_id(_project_id integer, _plot_id integer, _username text)
+CREATE OR REPLACE FUNCTION select_by_id_user_plot(_project_id integer, _plot_id integer, _username text)
  RETURNS setOf plot_collection_return AS $$
 
     WITH tablenames AS (
@@ -1399,7 +1399,7 @@ $$ LANGUAGE SQL;
 -- FIXME this can probably be eliminate with a rewrite to update_user_samples
 -- Returns user plots table id if available
 CREATE OR REPLACE FUNCTION check_user_plots(_project_id integer, _plot_id integer, _user_id integer)
- RETURNS TABLE (user_plot_id integer) AS $$
+ RETURNS TABLE integer AS $$
 
     SELECT user_plot_uid
     FROM plots p
