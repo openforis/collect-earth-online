@@ -22,15 +22,33 @@
        (Long/parseLong string)
        (catch Exception _ default)))))
 
+(defn str->long
+  ([string]
+   (str->int string -1))
+  ([string default]
+   (try
+     (Long/parseLong string)
+     (catch Exception _ default))))
+
+(defn str->float
+  ([string]
+   (str->int string -1))
+  ([string default]
+   (if (number? string)
+     string
+     (try
+       (Float/parseFloat string)
+       (catch Exception _ default)))))
+
 (defn str->bool
   ([string]
    (str->bool string false))
   ([string default]
-   (if string
+   (if (boolean? string)
+     string
      (try
        (Boolean/parseBoolean string)
-       (catch Exception _ default))
-     default)))
+       (catch Exception _ default)))))
 
 (defn json->clj
   ([string]
@@ -54,3 +72,8 @@
 (def clj->json json/write-str)
 
 (def jsonb->json str)
+
+(defn str->pg-uuid [string]
+  (doto (PGobject.)
+    (.setType "uuid")
+    (.setValue string)))

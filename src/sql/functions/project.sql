@@ -196,7 +196,7 @@ CREATE OR REPLACE FUNCTION create_project(
     _name                    text,
     _description             text,
     _privacy_level           text,
-    _boundary                geometry,
+    _boundary                text,
     _plot_distribution       text,
     _num_plots               integer,
     _plot_spacing            float,
@@ -207,7 +207,6 @@ CREATE OR REPLACE FUNCTION create_project(
     _sample_resolution       float,
     _survey_questions        jsonb,
     _survey_rules            jsonb,
-    _created_date            date,
     _classification_times    jsonb,
     _token_key               text,
     _options                 jsonb
@@ -234,7 +233,7 @@ CREATE OR REPLACE FUNCTION create_project(
         _plot_shape,             _plot_size,
         _sample_distribution,    _samples_per_plot,
         _sample_resolution,      _survey_questions,
-        _survey_rules,           _created_date,
+        _survey_rules,           now(),
         _classification_times,   _token_key,
         _options
     ) RETURNING project_uid
@@ -518,7 +517,7 @@ $$ LANGUAGE SQL;
 
 -- Update tables for external data after project is created
 CREATE OR REPLACE FUNCTION update_project_tables(
-    _project_id          integer,
+    _project_id           integer,
     _plots_ext_table      text,
     _samples_ext_table    text
  ) RETURNS void AS $$
@@ -638,6 +637,7 @@ $$ LANGUAGE SQL;
 -- VALIDATIONS
 
 -- Check if a project was created where plots have no samples
+-- This only checks plots with external data. It asssumes that auto generated samples generate correctly
 CREATE OR REPLACE FUNCTION plots_missing_samples(_project_id integer)
  RETURNS TABLE (plot_id integer) AS $$
 
@@ -708,6 +708,13 @@ CREATE OR REPLACE FUNCTION valid_boundary(_boundary geometry)
                 OR ST_XMax(_boundary) <= ST_XMin(_boundary)
                 OR ST_YMax(_boundary) <= ST_YMin(_boundary))
     )
+
+$$ LANGUAGE SQL;
+
+CREATE OR REPLACE FUNCTION valid_project_boundary(_project_id integer)
+ RETURNS boolean AS $$
+
+    SELECT * FROM valid_boundary((SELECT boundary FROM projects WHERE project_uid = _project_id))
 
 $$ LANGUAGE SQL;
 
@@ -919,11 +926,16 @@ CREATE OR REPLACE FUNCTION select_project_statistics(_project_id integer)
         SELECT COUNT(distinct user_uid) as members
         FROM select_project_users(_project_id)
     ), plotsum AS (
-        SELECT plot_rid,
-               SUM(flagged::int) > 0 as flagged,
-               cast(COUNT(user_rid) as int) > 0 and SUM(flagged::int) = 0 as assigned
-        FROM user_plots
-        GROUP BY plot_rid
+        SELECT SUM(coalesce(flagged::int, 0)) as flagged,
+            SUM((user_plot_uid IS NOT NULL)::int) as assigned,
+            plot_uid
+        FROM projects prj
+        INNER JOIN plots pl
+          ON project_uid = pl.project_rid
+        LEFT JOIN user_plots ps
+            ON ps.plot_rid = plot_uid
+        GROUP BY project_uid, plot_uid
+        HAVING project_uid = _project_id
     ), sums AS (
         SELECT MAX(prj.created_date) as created_date,
             MAX(prj.published_date) as published_date,
@@ -931,12 +943,12 @@ CREATE OR REPLACE FUNCTION select_project_statistics(_project_id integer)
             MAX(prj.archived_date) as archived_date,
             (CASE WHEN SUM(ps.flagged::int) IS NULL THEN 0 ELSE SUM(ps.flagged::int) END) as flagged,
             (CASE WHEN SUM(ps.assigned::int) IS NULL THEN 0 ELSE SUM(ps.assigned::int) END) as assigned,
-            COUNT(distinct plot_uid) as plots
+            COUNT(distinct pl.plot_uid) as plots
         FROM projects prj
         INNER JOIN plots pl
           ON project_uid = pl.project_rid
         LEFT JOIN plotsum ps
-          ON ps.plot_rid = plot_uid
+          ON ps.plot_uid = pl.plot_uid
         WHERE project_uid = _project_id
     ), users_count AS (
         SELECT COUNT (DISTINCT user_rid) as users
@@ -964,13 +976,13 @@ $$ LANGUAGE SQL;
 --
 
 -- Create a single project plot with no external file data
-CREATE OR REPLACE FUNCTION create_project_plot(_project_id integer, _center geometry(Point, 4326))
+CREATE OR REPLACE FUNCTION create_project_plot(_project_id integer, _center jsonb)
  RETURNS integer AS $$
 
     INSERT INTO plots
         (project_rid, center)
     VALUES
-        (_project_id, _center)
+        (_project_id, ST_SetSRID(ST_GeomFromGeoJSON(_center), 4326))
     RETURNING plot_uid
 
 $$ LANGUAGE SQL;
@@ -1262,7 +1274,7 @@ CREATE OR REPLACE FUNCTION select_prev_user_plot_by_admin(_project_id integer, _
 $$ LANGUAGE SQL;
 
 -- Returns unanalyzed plots by plot id
-CREATE OR REPLACE FUNCTION select_unassigned_plot_by_id(_project_id integer, _plot_id integer)
+CREATE OR REPLACE FUNCTION select_by_id_unassigned_plot(_project_id integer, _plot_id integer)
  RETURNS setOf plot_collection_return AS $$
 
     WITH tablenames AS (
@@ -1285,7 +1297,7 @@ CREATE OR REPLACE FUNCTION select_unassigned_plot_by_id(_project_id integer, _pl
 $$ LANGUAGE SQL;
 
 -- Returns user analyzed plots by plot id
-CREATE OR REPLACE FUNCTION select_user_plot_by_id(_project_id integer, _plot_id integer, _username text)
+CREATE OR REPLACE FUNCTION select_by_id_user_plot(_project_id integer, _plot_id integer, _username text)
  RETURNS setOf plot_collection_return AS $$
 
     WITH tablenames AS (
@@ -1344,13 +1356,13 @@ $$ LANGUAGE SQL;
 --
 
 -- Create project plot sample with no external file data
-CREATE OR REPLACE FUNCTION create_project_plot_sample(_plot_id integer, _sample_point geometry(Point, 4326))
+CREATE OR REPLACE FUNCTION create_project_plot_sample(_plot_id integer, _sample_point jsonb)
  RETURNS integer AS $$
 
     INSERT INTO samples
         (plot_rid, point)
     VALUES
-        (_plot_id, _sample_point)
+        (_plot_id, ST_SetSRID(ST_GeomFromGeoJSON(_sample_point), 4326))
     RETURNING sample_uid
 
 $$ LANGUAGE SQL;
@@ -1399,7 +1411,7 @@ $$ LANGUAGE SQL;
 -- FIXME this can probably be eliminate with a rewrite to update_user_samples
 -- Returns user plots table id if available
 CREATE OR REPLACE FUNCTION check_user_plots(_project_id integer, _plot_id integer, _user_id integer)
- RETURNS TABLE (user_plot_id integer) AS $$
+ RETURNS integer AS $$
 
     SELECT user_plot_uid
     FROM plots p

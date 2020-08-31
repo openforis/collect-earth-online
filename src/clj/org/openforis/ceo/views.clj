@@ -3,7 +3,7 @@
             [clojure.string :as str]
             [clojure.java.io :as io]
             [cognitect.transit :as transit]
-            [hiccup.page :refer [html5 include-js]])
+            [hiccup.page :refer [html5 include-js include-css]])
   (:import java.io.ByteArrayOutputStream))
 
 (defn kebab->camel [kebab]
@@ -27,6 +27,7 @@
    [:meta {:name "description" :content "Collect Earth Online is an Image Analysis Crowdsourcing Platform by OpenForis and Spatial Informatics Group"}]
    [:meta {:name "keywords"    :content "collect earth online image analysis crowdsourcing platform openforis SIG spatial informatics group"}]
    [:link {:rel "shortcut icon" :href "favicon.ico"}]
+   (include-css "/css/bootstrap.min.css")
    (apply include-js "/js/bootstrap.min.js" extra-js)]) ; TODO Remove bootstrap.min.js as a dependency. Only used in header, find a react method.
 
 ;; TODO There will be no part two if we can flatten the route names for geo-dash (geo-dash/geo-dash -> geo-dash).
