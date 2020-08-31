@@ -1,7 +1,0 @@
-{:host                  "smtp.gmail.com"
- :user                  "mail@gmail.com"
- :pass                  "fddf"
- :ssl                   true
- :base-url              "https://collect.earth/"
- :recipient-limit       100
- :mailing-list-interval 600} ; seconds
