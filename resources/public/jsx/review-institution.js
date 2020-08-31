@@ -1028,17 +1028,8 @@ class UserList extends React.Component {
     };
 
     requestMembership = () => {
-        fetch(this.props.documentRoot + "/request-institution-membership",
-              {
-                  method: "POST",
-                  headers: {
-                      "Accept": "application/json",
-                      "Content-Type": "application/json",
-                  },
-                  body: JSON.stringify({
-                      institutionId: this.props.institutionId,
-                  }),
-              })
+        fetch("/request-institution-membership?institutionId=" + this.props.institutionId,
+              { method: "POST" })
             .then(response => {
                 if (response.ok) {
                     alert("Membership requested for user " + this.props.userId + ".");

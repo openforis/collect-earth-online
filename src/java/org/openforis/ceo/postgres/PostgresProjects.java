@@ -1,6 +1,5 @@
 package org.openforis.ceo.postgres;
 
-import static javax.servlet.http.HttpServletResponse.SC_NO_CONTENT;
 import static org.openforis.ceo.utils.DatabaseUtils.connect;
 import static org.openforis.ceo.utils.JsonUtils.expandResourcePath;
 import static org.openforis.ceo.utils.JsonUtils.getBodyParam;
@@ -28,8 +27,6 @@ import static org.openforis.ceo.utils.ProjectUtils.deleteShapeFileDirectories;
 import static org.openforis.ceo.utils.ProjectUtils.runBashScriptForProject;
 import static org.openforis.ceo.utils.SessionUtils.getSessionUserId;
 
-import com.google.gson.JsonArray;
-import com.google.gson.JsonObject;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.sql.PreparedStatement;
@@ -43,208 +40,11 @@ import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.UUID;
-import javax.servlet.http.HttpServletResponse;
-import org.openforis.ceo.db_api.Projects;
-import spark.Request;
-import spark.Response;
 
 public class PostgresProjects implements Projects {
 
     private static String valueOrBlank(String input) {
         return input == null || input.equals("null") ? "" : input;
-    }
-
-    private static ArrayList<String> getPlotHeaders(Connection conn, Integer projectId) {
-        var plotHeaders  = new ArrayList<String>();
-        try (var pstmt = conn.prepareStatement("SELECT * FROM get_plot_headers(?)")) {
-            pstmt.setInt(1, projectId);
-            try (var rs = pstmt.executeQuery()) {
-                while (rs.next()) {
-                    if (!List.of("GID", "GEOM", "PLOT_GEOM", "LAT", "LON").contains(rs.getString("column_names").toUpperCase())) {
-                        plotHeaders.add(rs.getString("column_names"));
-                    }
-                }
-            }
-        } catch (SQLException e) {
-            System.out.println(e.getMessage());
-        }
-        return plotHeaders;
-    }
-
-    private static ArrayList<String> getSampleHeaders(Connection conn, Integer projectId) {
-        var sampleHeaders = new ArrayList<String>();
-        try (var pstmt = conn.prepareStatement("SELECT * FROM get_sample_headers(?)")) {
-            pstmt.setInt(1, projectId);
-            try (var rs = pstmt.executeQuery()) {
-                while (rs.next()) {
-                    if (!List.of("GID", "GEOM", "LAT", "LON", "SAMPLE_GEOM").contains(rs.getString("column_names").toUpperCase())) {
-                        sampleHeaders.add(rs.getString("column_names"));
-                    }
-                }
-            }
-        } catch (SQLException e) {
-            System.out.println(e.getMessage());
-        }
-        return sampleHeaders;
-    }
-
-    public HttpServletResponse dumpProjectAggregateData(Request req, Response res) {
-        var projectId = Integer.parseInt(req.queryParams("projectId"));
-
-        try (var conn = connect();
-             var pstmt = conn.prepareStatement("SELECT * FROM select_project(?)")) {
-            // check if project exists
-            pstmt.setInt(1, projectId);
-            try (var rs = pstmt.executeQuery()) {
-                if (rs.next()) {
-                    var plotSummaries = new JsonArray();
-                    final var sampleValueGroups = parseJson(rs.getString("survey_questions")).getAsJsonArray();
-                    final var projectName = rs.getString("name").replace(" ", "-").replace(",", "").toLowerCase();
-                    var plotHeaders = getPlotHeaders(conn, projectId);
-
-                    try (var pstmtDump = conn.prepareStatement("SELECT * FROM dump_project_plot_data(?)")) {
-                        pstmtDump.setInt(1, projectId);
-
-                        try (var rsDump = pstmtDump.executeQuery()) {
-
-                            while (rsDump.next()) {
-                                var plotSummary = new JsonObject();
-                                plotSummary.addProperty("plot_id", rsDump.getString("plot_id"));
-                                plotSummary.addProperty("center_lon", rsDump.getString("lon"));
-                                plotSummary.addProperty("center_lat", rsDump.getString("lat"));
-                                plotSummary.addProperty("size_m", rsDump.getDouble("plot_size"));
-                                plotSummary.addProperty("shape", rsDump.getString("plot_shape"));
-                                plotSummary.addProperty("flagged", rsDump.getInt("flagged") > 0);
-                                plotSummary.addProperty("analyses", rsDump.getInt("assigned"));
-                                var samples = parseJson(rsDump.getString("samples")).getAsJsonArray();
-                                plotSummary.addProperty("sample_points", samples.size());
-                                plotSummary.addProperty("user_id", valueOrBlank(rsDump.getString("email")));
-                                plotSummary.addProperty("analysis_duration", valueOrBlank(rsDump.getString("analysis_duration")));
-                                plotSummary.addProperty("collection_time", valueOrBlank(rsDump.getString("collection_time")));
-                                plotSummary.addProperty("common_securewatch_date", valueOrBlank(rsDump.getString("common_securewatch_date")));
-                                plotSummary.addProperty("total_securewatch_dates", rsDump.getInt("total_securewatch_dates"));
-                                plotSummary.add("distribution",
-                                        getValueDistribution(samples, getSampleValueTranslations(sampleValueGroups)));
-
-                                if (valueOrBlank(rsDump.getString("ext_plot_data")) != "") {
-                                    var ext_plot_data = parseJson(rsDump.getString("ext_plot_data")).getAsJsonObject();
-
-                                    plotHeaders.forEach(head ->
-                                        plotSummary.addProperty("pl_" + head, getOrEmptyString(ext_plot_data, head).getAsString())
-                                    );
-                                }
-
-                                plotSummaries.add(plotSummary);
-                            }
-                        }
-                        var combinedHeaders = plotHeaders.stream()
-                            .map(head -> !head.toString().contains("pl_") ? "pl_" + head : head)
-                            .toArray(String[]::new);
-
-                        return outputAggregateCsv(res, sampleValueGroups, plotSummaries, projectName, combinedHeaders);
-                    }
-                }
-            }
-        } catch (SQLException e) {
-            System.out.println(e.getMessage());
-            return res.raw();
-        }
-        res.raw().setStatus(SC_NO_CONTENT);
-        return res.raw();
-    }
-
-    public HttpServletResponse dumpProjectRawData(Request req, Response res) {
-        var projectId =Integer.parseInt( req.queryParams("projectId"));
-
-        try (var conn = connect();
-             var pstmt = conn.prepareStatement("SELECT * FROM select_project(?)")) {
-            // check if project exists
-            pstmt.setInt(1,projectId);
-            try (var rs = pstmt.executeQuery()) {
-                if (rs.next()) {
-                    var sampleSummaries = new JsonArray();
-                    final var sampleValueGroups = parseJson(rs.getString("survey_questions")).getAsJsonArray();
-                    final var projectName = rs.getString("name").replace(" ", "-").replace(",", "").toLowerCase();
-                    final var plotHeaders = getPlotHeaders(conn, projectId);
-                    final var sampleHeaders = getSampleHeaders(conn, projectId);
-                    var optionalHeaders = new ArrayList<String>();
-
-                    try (var pstmtDump = conn.prepareStatement("SELECT * FROM dump_project_sample_data(?)")) {
-                        pstmtDump.setInt(1, projectId);
-
-                        try (var rsDump = pstmtDump.executeQuery()) {
-                            while (rsDump.next()) {
-                                var plotSummary = new JsonObject();
-                                plotSummary.addProperty("plot_id", rsDump.getString("plot_id"));
-                                plotSummary.addProperty("sample_id", rsDump.getString("sample_id"));
-                                plotSummary.addProperty("lon", rsDump.getString("lon"));
-                                plotSummary.addProperty("lat", rsDump.getString("lat"));
-                                plotSummary.addProperty("flagged", rsDump.getInt("flagged") > 0);
-                                plotSummary.addProperty("analyses", rsDump.getInt("assigned"));
-                                plotSummary.addProperty("user_id", valueOrBlank(rsDump.getString("email")));
-                                if (rsDump.getString("value") != null && parseJson(rsDump.getString("value")).isJsonPrimitive()) {
-                                    plotSummary.addProperty("value", rsDump.getString("value"));
-                                } else {
-                                    plotSummary.add("value", rsDump.getString("value") == null ? null : parseJson(rsDump.getString("value")).getAsJsonObject());
-                                }
-                                if (!valueOrBlank(rsDump.getString("collection_time")).equals("")) {
-                                    plotSummary.addProperty("collection_time", valueOrBlank(rsDump.getString("collection_time")));
-                                    if (!optionalHeaders.contains("collection_time")) optionalHeaders.add("collection_time");
-                                }
-                                if (!valueOrBlank(rsDump.getString("analysis_duration")).equals("")) {
-                                    plotSummary.addProperty("analysis_duration", valueOrBlank(rsDump.getString("analysis_duration")));
-                                    if (!optionalHeaders.contains("analysis_duration")) optionalHeaders.add("analysis_duration");
-                                }
-
-                                if (valueOrBlank(rsDump.getString("imagery_title")) != "") {
-                                    plotSummary.addProperty("imagery_title", rsDump.getString("imagery_title"));
-                                    if (!optionalHeaders.contains("imagery_title")) optionalHeaders.add("imagery_title");
-
-                                    if (valueOrBlank(rsDump.getString("imagery_attributes")).length() > 2) {
-                                        var attributes = parseJson(rsDump.getString("imagery_attributes")).getAsJsonObject();
-                                        attributes.keySet().forEach(key -> {
-                                            plotSummary.addProperty(key, attributes.get(key).getAsString());
-                                            if (!optionalHeaders.contains(key)) optionalHeaders.add(key);
-                                        });
-                                    }
-                                }
-
-                                if (valueOrBlank(rsDump.getString("ext_plot_data")) != "") {
-                                    var ext_plot_data = parseJson(rsDump.getString("ext_plot_data")).getAsJsonObject();
-                                    plotHeaders.forEach(head ->
-                                        plotSummary.addProperty("pl_" + head, getOrEmptyString(ext_plot_data, head).getAsString())
-                                    );
-                                }
-
-                                if (valueOrBlank(rsDump.getString("ext_sample_data")) != "") {
-                                    var ext_sample_data = parseJson(rsDump.getString("ext_sample_data")).getAsJsonObject();
-                                    sampleHeaders.forEach(head ->
-                                        plotSummary.addProperty("smpl_" + head, getOrEmptyString(ext_sample_data, head).getAsString())
-                                    );
-                                }
-                                sampleSummaries.add(plotSummary);
-                            }
-                        }
-                        var combinedHeaders =
-                        Stream.concat(
-                            optionalHeaders.stream(),
-                            Stream.concat(
-                                    plotHeaders.stream()
-                                    .map(head -> !head.toString().contains("pl_") ? "pl_" + head : head),
-                                    sampleHeaders.stream()
-                                    .map(head -> !head.toString().contains("smpl_") ? "smpl_" + head : head)
-                                )
-                        ).toArray(String[]::new);
-                        return outputRawCsv(res, sampleValueGroups, sampleSummaries, projectName, combinedHeaders);
-                    }
-            }
-        }
-        } catch (SQLException e) {
-            System.out.println(e.getMessage());
-            return res.raw();
-        }
-        res.raw().setStatus(SC_NO_CONTENT);
-        return res.raw();
     }
 
     public Integer getFirstPublicImageryId() {

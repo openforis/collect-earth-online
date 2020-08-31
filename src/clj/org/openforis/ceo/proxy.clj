@@ -3,7 +3,7 @@
             [clj-http.client :as client]
             [org.openforis.ceo.utils.type-conversion :as tc]
             [org.openforis.ceo.utils.part-utils      :as pu]
-            [org.openforis.ceo.db.imagery  :refer [get-imagery-source-config]]))
+            [org.openforis.ceo.db.imagery :refer [get-imagery-source-config]]))
 
 (defn- planet-url [source-config params]
   (let [{:keys [year month tile x y z]} params]
@@ -13,9 +13,8 @@
          "_mosaic/gmap/" z "/" x "/" y ".png?api_key="
          (:accessToken source-config))))
 
-;; TODO since we dropped STYLE=default for SecureWatch, we can drop STYLE= in buildSecureWatch
 (defn- default-styles [params geoserver-params]
-  (update params :STYLES #(if (= 0 (count %))
+  (update params :STYLES #(if (= "" %)
                             (str/join ","
                                       (take (count (str/split (:LAYERS  geoserver-params) #","))
                                             (repeat "")))
@@ -29,22 +28,21 @@
 (defn keys-upper-case [[key val]]
   [(keyword (str/upper-case (name key))) val])
 
-(defn- wms-url [source-config req]
-  (let [{geoserver-params :geoserverParams
-         source-url       :geoserverUrl} source-config]
+(defn- wms-url [source-config query-params]
+  (let [geoserver-params (pu/mapm keys-upper-case (:geoserverParams source-config))
+        source-url       (:geoserverUrl source-config)]
     (str source-url
          (when-not (str/includes? source-url "?") "?")
-         (as-> (:query-params req) params
-           (pu/mapm keys-upper-case params)
+         (as-> (pu/mapm keys-upper-case query-params) params
            (remove-extra-params params)
-           (merge params (pu/mapm keys-upper-case geoserver-params))
+           (merge params geoserver-params)
            (default-styles params geoserver-params)
            (map (fn [[key val]]
                   (str (name key) "=" val))
                 params)
            (str/join "&" params)))))
 
-(defn- build-url [{:keys [params] :as req}]
+(defn- build-url [{:keys [params query-params]}]
   (let [source-config (get-imagery-source-config (tc/str->int (:imageryId params)))
         source-type   (:type source-config "")]
     (cond
@@ -52,7 +50,7 @@
       (planet-url source-config params)
 
       (#{"GeoServer", "SecureWatch"} source-type)
-      (wms-url source-config req)
+      (wms-url source-config query-params)
 
       :else
       "")))

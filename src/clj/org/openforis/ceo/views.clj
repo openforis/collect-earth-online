@@ -13,7 +13,8 @@
 (defn page->js [page]
   (case page
     "geoDash"            ["/js/highcharts.js"       ; TODO Use the npm version.
-                          ]   ; TODO Remove jquery-ui as a dependency.
+                          "/js/jquery-3.4.1.min.js" ; TODO Remove jquery as a dependency.
+                          "/js/jquery-ui.min.js"]   ; TODO Remove jquery-ui as a dependency.
     "widgetLayoutEditor" ["/js/jquery-3.4.1.min.js"
                           "/js/jquery-ui.min.js"]
     []))
@@ -47,7 +48,7 @@
        (map #(str "/js/" (.getName %)))
        (filter #(and (or (str/includes? % page)
                          (str/includes? % "common"))
-                     (not (str/ends-with? % ".map"))))
+                     (str/ends-with? % "bundle.js")))
        (sort-by #(cond
                    (str/includes? % "common") -1
                    (str/includes? % "~")      0
@@ -63,7 +64,7 @@
                  (head (concat webpack-files (page->js page)))
                  [:body {:style {:padding-top "60px"}}
                   (if (seq webpack-files)
-                    [:section {:id "content" :class "container-fluid"} ; TODO This seems out of order with the app div, should the container class be inside each page?
+                    [:section {:id "content" :class "container-fluid"}
                      (when-let [flash-message (get-in request [:params :flash_message])]
                        [:p {:class "alert"} flash-message])            ; TODO This will be moved to the front end for better UX.
                      (let [announcement (slurp "announcement.txt")]    ; TODO This will be moved to the front end for better UX.
