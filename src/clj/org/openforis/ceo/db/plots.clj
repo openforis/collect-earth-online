@@ -21,7 +21,7 @@
                             :analyses assigned})
                          (call-sql "select_limited_project_plots" project-id max-plots)))))
 
-(defn- prepare-sample-object [plot-id project-id]
+(defn- prepare-samples-object [plot-id project-id]
   (mapv (fn [{:keys [sample_id point sampleId geom value]}]
           {:id       sample_id
            :point    point
@@ -36,7 +36,7 @@
   (or (dissoc (tc/jsonb->clj extra-plot-info) :gid :lat :lon :plotid)
       {}))
 
-(defn- build-plot-object [plot-info project-id]
+(defn- prepare-plot-object [plot-info project-id]
   (let [{:keys [plot_id center flagged plotId geom extra_plot_info]} plot-info]
     {:id            plot_id
      :projectId     project-id ;TODO why do we need to return a value that is already known
@@ -45,15 +45,15 @@
      :plotId        plotId
      :geom          (tc/jsonb->clj geom)
      :extraPlotInfo (clean-extra-plot-info extra_plot_info)
-     :samples       (prepare-sample-object plot_id project-id)}))
+     :samples       (prepare-samples-object plot_id project-id)}))
 
 (defn get-project-plot [{:keys [params]}]
   (let [project-id (tc/str->int (:projectId params))
         plot-id    (tc/str->int (:plotId params))]
-    (data-response (build-plot-object (first (call-sql "select_plot_by_id"
-                                                       project-id
-                                                       plot-id))
-                                      project-id))))
+    (data-response (prepare-plot-object (first (call-sql "select_plot_by_id"
+                                                         project-id
+                                                         plot-id))
+                                        project-id))))
 
 (defn- unlock_plots [user-id]
   (call-sql-opts "unlock_plots" {:log? false} user-id))
@@ -93,7 +93,7 @@
                                  (:plot_id plot-info)
                                  user-id
                                  (time-plus-five-min))
-                       (build-plot-object plot-info project-id))
+                       (prepare-plot-object plot-info project-id))
                      "done"))))
 
 (defn get-plot-by-id [{:keys [params]}]
