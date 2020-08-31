@@ -20,7 +20,7 @@ class UnsubscribeMailingList extends React.Component {
                 },
                 body: JSON.stringify(this.state),
             })
-                .then(response => Promise.all([response.ok, response.text()]))
+                .then(response => Promise.all([response.ok, response.json()]))
                 .then(data => {
                     if (data[0] && data[1] === "") {
                         alert("You have been unsubscribed from mailing list.");
