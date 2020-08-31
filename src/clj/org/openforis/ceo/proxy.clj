@@ -3,7 +3,7 @@
             [clj-http.client :as client]
             [org.openforis.ceo.utils.type-conversion :as tc]
             [org.openforis.ceo.utils.part-utils      :as pu]
-            [org.openforis.ceo.db.imagery  :refer [get-imagery-source-config]]))
+            [org.openforis.ceo.db.imagery :refer [get-imagery-source-config]]))
 
 (defn- planet-url [source-config params]
   (let [{:keys [year month tile x y z]} params]
@@ -13,7 +13,6 @@
          "_mosaic/gmap/" z "/" x "/" y ".png?api_key="
          (:accessToken source-config))))
 
-;; TODO since we dropped STYLE=default for SecureWatch, we can drop STYLE= in buildSecureWatch
 (defn- default-styles [params geoserver-params]
   (update params :STYLES #(if (= "" %)
                             (str/join ","
