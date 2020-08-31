@@ -1,8 +1,8 @@
 (ns org.openforis.ceo.database
   (:require [clojure.data.json :as json]
-            [clojure.string :as str]
+            [clojure.string    :as str]
             [org.openforis.ceo.logging :refer [log-str]]
-            [org.openforis.ceo.views :refer [data-response]]
+            [org.openforis.ceo.views   :refer [data-response]]
             [next.jdbc :as jdbc]
             [next.jdbc.result-set :as rs]))
 
@@ -28,14 +28,16 @@
 
 ;;; Select Queries
 
-(defn run-call-sql [use-vec? sql-fn-name & args]
-  (let [query           (format-simple "SELECT * FROM %1(%2)"
+(defn run-call-sql [sql-fn-name opts & args]
+  (let [{:keys [use-vec? log?]
+         :or {use-vec? false log? true}} opts
+        query           (format-simple "SELECT * FROM %1(%2)"
                                        sql-fn-name
                                        (str/join "," (repeat (count args) "?")))
         query-with-args (format-simple "SELECT * FROM %1(%2)"
                                        sql-fn-name
                                        (str/join "," (map pr-str args)))]
-    (log-str "SQL Call: " query-with-args)
+    (when log? (log-str "SQL Call: " query-with-args))
     (jdbc/execute! (jdbc/get-datasource pg-db)
                    (into [query] (map #(condp = (type %)
                                          java.lang.Long (int %)
@@ -47,10 +49,10 @@
                                   rs/as-unqualified-lower-maps)})))
 
 (defn call-sql [sql-fn-name & args]
-  (apply run-call-sql false sql-fn-name args))
+  (apply run-call-sql sql-fn-name {} args))
 
-(defn call-sql-vec [sql-fn-name & args]
-  (apply run-call-sql true sql-fn-name args))
+(defn call-sql-opts [sql-fn-name opts & args]
+  (apply run-call-sql sql-fn-name opts args))
 
 (defn sql-handler [{:keys [uri params content-type]}]
   (let [[schema function] (->> (str/split uri #"/")
