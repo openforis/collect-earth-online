@@ -63,7 +63,7 @@
 
 ;; TODO its probably cleaner to handle the interval in send-to-mailing-list instead of in user.js
 (defn get-mailing-list-interval []
-     (:mailing-list-interval @mail-config))
+  (:mailing-list-interval @mail-config))
 
 (defn get-mailing-list-last-sent []
   (or (:mailing-list-last-sent @mail-config)
