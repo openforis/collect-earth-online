@@ -58,3 +58,7 @@ export function formatNumberWithCommas (number) {
 export function deepCopy(obj) {
     return JSON.parse(JSON.stringify(obj));
 }
+
+export function isNumber(value) {
+    return typeof value === "number" && isFinite(value);
+}

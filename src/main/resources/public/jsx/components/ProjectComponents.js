@@ -103,6 +103,7 @@ export function ProjectInfo({ name, description, privacyLevel, setProjectDetail 
 
 export function ProjectAOI({
     coordinates: { latMax, lonMin, lonMax, latMin },
+    updateCoordinates,
     inDesignMode,
     imageryId,
     imageryList,
@@ -141,12 +142,12 @@ export function ProjectAOI({
                             <input
                                 className="form-control form-control-sm"
                                 type="number"
-                                defaultValue={latMax}
+                                value={latMax}
                                 placeholder="North"
                                 min="-90.0"
                                 max="90.0"
                                 step="any"
-                                disabled
+                                onChange={(e) => updateCoordinates("latMax", e.target.value)}
                             />
                         </div>
                     </div>
@@ -155,24 +156,24 @@ export function ProjectAOI({
                             <input
                                 className="form-control form-control-sm"
                                 type="number"
-                                defaultValue={lonMin}
+                                value={lonMin}
                                 placeholder="West"
                                 min="-180.0"
                                 max="180.0"
                                 step="any"
-                                disabled
+                                onChange={(e) => updateCoordinates("lonMin", e.target.value)}
                             />
                         </div>
                         <div className="col-md-6">
                             <input
                                 className="form-control form-control-sm"
                                 type="number"
-                                defaultValue={lonMax}
+                                value={lonMax}
                                 placeholder="East"
                                 min="-180.0"
                                 max="180.0"
                                 step="any"
-                                disabled
+                                onChange={(e) => updateCoordinates("lonMax", e.target.value)}
                             />
                         </div>
                     </div>
@@ -181,12 +182,12 @@ export function ProjectAOI({
                             <input
                                 className="form-control form-control-sm"
                                 type="number"
-                                defaultValue={latMin}
+                                value={latMin}
                                 placeholder="South"
                                 min="-90.0"
                                 max="90.0"
                                 step="any"
-                                disabled
+                                onChange={(e) => updateCoordinates("latMin", e.target.value)}
                             />
                         </div>
                     </div>
