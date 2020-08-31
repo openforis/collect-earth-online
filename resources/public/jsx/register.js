@@ -23,7 +23,7 @@ class Register extends React.Component {
                   },
                   body: getQueryString(this.state),
               })
-            .then(response => Promise.all([response.ok, response.text()]))
+            .then(response => Promise.all([response.ok, response.json()]))
             .then(data => {
                 if (data[0] && data[1] === "") {
                     alert("You have successfully created an accout.");

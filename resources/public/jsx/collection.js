@@ -664,7 +664,7 @@ class Collection extends React.Component {
                   plotId: plotId,
                   projectId: this.props.projectId,
               }))
-            .then(response => response.ok ? response.text() : Promise.reject(response))
+            .then(response => response.ok ? response.json() : Promise.reject(response))
             .then(data => {
                 if (data === "done") {
                     alert(this.state.reviewPlots
@@ -673,14 +673,13 @@ class Collection extends React.Component {
                 } else if (data === "not found") {
                     alert("Plot " + plotId + " not found.");
                 } else {
-                    const newPlot = JSON.parse(data);
                     this.setState({
-                        currentPlot: newPlot,
-                        ...this.newPlotValues(newPlot),
+                        currentPlot: data,
+                        ...this.newPlotValues(data),
                         prevPlotButtonDisabled: false,
                         nextPlotButtonDisabled: false,
                     });
-                    this.plotHasSamples(newPlot);
+                    this.plotHasSamples(data);
                 }
             })
             .catch(response => {
@@ -697,7 +696,7 @@ class Collection extends React.Component {
                   projectId: this.props.projectId,
                   institutionId: this.state.currentProject.institution,
               }))
-            .then(response => response.ok ? response.text() : Promise.reject(response))
+            .then(response => response.ok ? response.json() : Promise.reject(response))
             .then(data => {
                 if (data === "done") {
                     if (plotId === -1) {
@@ -709,13 +708,12 @@ class Collection extends React.Component {
                         alert("You have reached the end of the plot list.");
                     }
                 } else {
-                    const newPlot = JSON.parse(data);
                     this.setState({
-                        currentPlot: newPlot,
-                        ...this.newPlotValues(newPlot),
+                        currentPlot: data,
+                        ...this.newPlotValues(data),
                         prevPlotButtonDisabled: plotId === -1,
                     });
-                    this.plotHasSamples(newPlot);
+                    this.plotHasSamples(data);
                 }
             })
             .catch(response => {
@@ -732,7 +730,7 @@ class Collection extends React.Component {
                   projectId: this.props.projectId,
                   institutionId: this.state.currentProject.institution,
               }))
-            .then(response => response.ok ? response.text() : Promise.reject(response))
+            .then(response => response.ok ? response.json() : Promise.reject(response))
             .then(data => {
                 if (data === "done") {
                     this.setState({ prevPlotButtonDisabled: true });
@@ -740,13 +738,12 @@ class Collection extends React.Component {
                           ? "No previous plots were analyzed by you. You are logged in as " + this.props.userName + "."
                           : "All previous plots have been analyzed.");
                 } else {
-                    const newPlot = JSON.parse(data);
                     this.setState({
-                        currentPlot: newPlot,
-                        ...this.newPlotValues(newPlot),
+                        currentPlot: data,
+                        ...this.newPlotValues(data),
                         nextPlotButtonDisabled: false,
                     });
-                    this.plotHasSamples(newPlot);
+                    this.plotHasSamples(data);
                 }
             })
             .catch(response => {
