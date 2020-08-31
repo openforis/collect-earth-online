@@ -119,7 +119,7 @@
     (call-sql "archive_project" project-id)
     (data-response "")))
 
-;;; Project Common
+;;; Create/Update Common
 
 (defn- get-first-public-imagery []
   (sql-primitive (call-sql "select_first_public_imagery")))
@@ -155,7 +155,7 @@
          (let [causes (conj (:causes (ex-data e) []) message)]
            (throw (ex-info message {:causes causes}))))))
 
-;;; Check plot limits
+;; Check plot limits
 
 (defn- count-gridded-points [left bottom right top spacing]
   (let [x-range (- right left)
@@ -196,7 +196,7 @@
                      sample-limit
                      "."))))
 
-;;; Geo JSON
+;; Geo JSON
 
 (defn- make-geo-json-point [lon lat]
   (tc/clj->jsonb {:type        "Point"
@@ -210,7 +210,7 @@
                                  [lon-max lat-min]
                                  [lon-min lat-min]]]}))
 
-;;; Create random and gridded points
+;; Create random and gridded points
 
 (defn- random-with-buffer [side size buffer]
   (+ side
@@ -218,8 +218,8 @@
      (/ buffer 2.0)))
 
 (defn- distance [x1 y1 x2 y2]
-  (Math/sqrt (+ (Math/pow (- x2 x1) 2)
-                (Math/pow (- y2 y1) 2))))
+  (Math/sqrt (+ (Math/pow (- x2 x1) 2.0)
+                (Math/pow (- y2 y1) 2.0))))
 
 (defn- pad-bounds [left bottom right top buffer]
   [(+ left buffer) (+ bottom buffer) (- right buffer) (- top buffer)])
@@ -231,7 +231,7 @@
         buffer  (/ x-range 50.0)]
     (->> (repeatedly (fn [] [(random-with-buffer left x-range buffer) (random-with-buffer bottom y-range buffer)]))
          (take num-points)
-         (map #(pu/mercator->wgs84 %)))))
+         (map #(pu/EPSG:3857->4326 %)))))
 
 ;; TODO Use postGIS so arbitrary bounds can be set
 (defn- create-gridded-points-in-bounds [left bottom right top spacing]
@@ -244,11 +244,11 @@
     (->> (for [x (range (+ 1 x-steps))
                y (range (+ 1 y-steps))]
            [(+ (* x spacing) left x-padding) (+ (* y spacing) bottom y-padding)])
-         (map #(pu/mercator->wgs84 %)))))
+         (map #(pu/EPSG:3857->4326 %)))))
 
 ;; TODO Use postGIS so can be done with shp files
 (defn- create-random-sample-set [plot-center plot-shape plot-size samples-per-plot]
-  (let [[center-x center-y] (pu/wgs84->mercator plot-center)
+  (let [[center-x center-y] (pu/EPSG:4326->3857 plot-center)
         radius (/ plot-size 2.0)
         left   (- center-x radius)
         right  (+ center-x radius)
@@ -262,13 +262,13 @@
                      (< (distance center-x center-y x y)
                         (- radius (/ buffer 2.0)))))
            (take samples-per-plot)
-           (map #(pu/mercator->wgs84 %)))
+           (map #(pu/EPSG:3857->4326 %)))
       (create-random-points-in-bounds left bottom right top samples-per-plot))))
 
 (defn- create-gridded-sample-set [plot-center plot-shape plot-size sample-resolution]
   (if (>= sample-resolution plot-size)
     [plot-center]
-    (let [[center-x center-y] (pu/wgs84->mercator plot-center)
+    (let [[center-x center-y] (pu/EPSG:4326->3857 plot-center)
           radius  (/ plot-size 2.0)
           left    (- center-x radius)
           bottom  (- center-y radius)
@@ -279,9 +279,9 @@
              [(+ (* x sample-resolution) left padding) (+ (* y sample-resolution) bottom padding)])
            (filter (fn [[x y]] (or (= "square" plot-shape)
                                    (< (distance center-x center-y x y) radius))))
-           (map #(pu/mercator->wgs84 %))))))
+           (map #(pu/EPSG:3857->4326 %))))))
 
-;;; Upload files
+;; Upload files
 
 (defn find-file-by-ext [folder-name ext]
   (->> (io/file folder-name)
@@ -317,38 +317,42 @@
           (when-not (= 0 exit)
             (init-throw err)))))))
 
+(defn sh-wrapper-pipe
+  ([dir env cmd1 cmd2]
+   (sh/with-sh-dir dir
+     (sh/with-sh-env (merge {:PATH path-env} env)
+       (let [{:keys [exit err]} (apply sh/sh (conj (parse-as-sh-cmd cmd2)
+                                                   :in
+                                                   (:out (apply sh/sh (parse-as-sh-cmd cmd1)))))]
+         (when-not (= 0 exit)
+           (init-throw err)))))))
+
 (defn- type-columns [headers]
   (->> headers
-       (map #(cond
-               (#{"LON" "LAT" "LATITUDE" "LONGITUDE" "LONG" "CENTER_X" "CENTER_Y"} %)
-               (str % " float")
-
-               (#{"PLOTID" "SAMPLEID"} %)
-               (str % " integer")
-
-               :else
-               (str % " text")))
-       (str/join ",")))
+       (map #(str % (cond
+                      (#{"LON" "LAT"} %)         " float"
+                      (#{"PLOTID" "SAMPLEID"} %) " integer"
+                      :else                      " text"))
+            (str/join ","))))
 
 (defn- get-csv-headers [ext-file must-include]
   (let [data (slurp ext-file)]
     (if-let [header-row (re-find #".+\n?" data)]
-      (do (println header-row)
-          (let [headers (as-> header-row hr
-                          (str/split hr #",")
-                          (mapv #(-> %
-                                     (str/upper-case)
-                                     (str/replace #"-| |," "_")
-                                     (str/replace #"X|LONGITUDE|LONG|CENTER_X" "LON")
-                                     (str/replace #"Y|LATITUDE|CENTER_Y" "LAT"))
-                                hr))]
-            (if (every? (set headers) must-include)
-              (do
-                (spit ext-file (str/replace data header-row (str/join "," headers)))
-                (type-columns headers))
-              (init-throw (str "Error while checking headers. Fields must include LON,LAT,"
-                               (str/join "," must-include)
-                               ".\n")))))
+      (let [headers (as-> header-row hr
+                      (str/split hr #",")
+                      (mapv #(-> %
+                                 (str/upper-case)
+                                 (str/replace #"-| |," "_")
+                                 (str/replace #"X|LONGITUDE|LONG|CENTER_X" "LON")
+                                 (str/replace #"Y|LATITUDE|CENTER_Y" "LAT"))
+                            hr))]
+        (if (every? (set headers) must-include)
+          (do
+            (spit ext-file (str/replace-first data header-row (str/join "," headers)))
+            (type-columns headers))
+          (init-throw (str "Error while checking headers. Fields must include LON,LAT,"
+                           (str/join "," must-include)
+                           ".\n"))))
       (init-throw "CSV File is empty.\n"))))
 
 (defn- load-external-data [distribution project-id ext-file type must-include]
@@ -357,10 +361,11 @@
                         (do (sh-wrapper folder-name {} (str "7z e -y " ext-file))
                             (let [table-name (str "project_" project-id "_" type "_shp")
                                   shp-name   (find-file-by-ext folder-name "shp")]
-                              (sh-wrapper folder-name
-                                          {:PASSWORD "ceo"}
-                                          (format-simple "sh -c `shp2pgsql -s 4326 %1 ext_tables.%2 | psql -h localhost -U ceo -d ceo`"
-                                                         shp-name table-name))
+                              (sh-wrapper-pipe folder-name
+                                               {:PASSWORD "ceo"}
+                                               (format-simple "shp2pgsql -s 4326 %1 ext_tables.%2"
+                                                              shp-name table-name)
+                                               (format-simple "psql -h localhost -U ceo -d ceo"))
                               table-name))
                         ;; TODO Explore loading CSVs with a bulk insert
                         (let [table-name (str "project_" project-id "_" type "_csv")]
@@ -371,7 +376,7 @@
                                       {:PASSWORD "ceo"}
                                       (format-simple "psql -h localhost -U ceo -d ceo -c `\\copy ext_tables.%1 FROM %2 DELIMITER ',' CSV HEADER`"
                                                      table-name ext-file))
-                          (call-sql "add_index_col" table-name) ; add index for reference
+                          (call-sql "add_index_col" table-name) ; Add index for reference
                           table-name))
                      "Error importing file into SQL.\n")))
 
@@ -386,10 +391,10 @@
                          (try-catch-throw #(if (= "plots" type)
                                              (call-sql "select_partial_table_by_name" table)
                                              (call-sql "select_partial_sample_table_by_name" table))
-                                          (str (str/capitalize type) " file failed to load.\n"))
+                                          (str (str/capitalize type) " " distribution " file failed to load.\n"))
                          table))
                      (if (= "csv" distribution)
-                       (str "Malformed " type " CSV. Fields must include LON,LAT," (str/join "," must-include) ".\n")
+                       (str "Malformed " type " CSV. Fields must include LON,LAT," (str/join "," must-include) " columns.\n")
                        (str "Malformed "
                             type
                             " Shapefile. All features must be of type polygon and include "
@@ -403,8 +408,8 @@
                                plot-size
                                samples-per-plot
                                sample-resolution]
-  ;; TODO Right now you have to have a sample shape or csv file if you have a plot shape file, allow "center" as an option
-  ;; TODO update create random / gridded to work on boundary so any plot type can have random, gridded, center
+  ;; TODO Right now you have to have a sample shape or csv file if you have a plot shape file.
+  ;;      Update create random / gridded to work on boundary so any plot type can have random, gridded, center.
   (doseq [[x y] (cond
                   (= "center" sample-distribution)
                   [plot-center]
@@ -442,19 +447,19 @@
                           "SQL Error: cannot update project table.")
         (try-catch-throw #(call-sql "cleanup_project_tables" project-id plot-size)
                          "SQL Error: cannot clean external tables.")
-        (let [counts (try-catch-throw #(first (call-sql "ext_table_count" project-id))
-                                      "SQL Error: cannot count data.")
+        (let [counts           (try-catch-throw #(first (call-sql "ext_table_count" project-id))
+                                                "SQL Error: cannot count data.")
               ext-plot-count   (:plot_count counts)
               ext-sample-count (:sample_count counts)]
           (check-plot-limits ext-plot-count
-                             50000
+                             50000.0
                              (condp = sample-distribution
                                "gridded" (count-gridded-sample-set plot-size sample-resolution)
                                "random"  samples-per-plot
-                               "center"  1
+                               "center"  1.0
                                (/ ext-sample-count ext-plot-count))
-                             200
-                             350000))
+                             200.0
+                             350000.0))
         (if (#{"csv" "shp"} sample-distribution)
           (try-catch-throw #(call-sql "samples_from_plots_with_files" project-id)
                            "Error importing samples file after importing plots file.")
@@ -475,18 +480,18 @@
                              " plots have no samples. The first 10 are: ["
                              (str/join "," (take 10 bad-plots))
                              "]")))))
-    (let [[[left bottom] [top right]] (pu/wgs84->mercator [lon-min lat-min] [lon-max lat-max])
+    (let [[[left bottom] [top right]] (pu/EPSG:4326->3857 [lon-min lat-min] [lon-max lat-max])
           [left bottom right top] (pad-bounds left bottom top right (/ 2.0 plot-size))]
       (check-plot-limits (if (= "gridded" plot-distribution)
                            (count-gridded-points left bottom right top plot-spacing)
                            num-plots)
-                         5000
+                         5000.0
                          (condp = sample-distribution
                            "gridded" (count-gridded-sample-set plot-size sample-resolution)
-                           "center"  1
+                           "center"  1.0
                            samples-per-plot)
-                         200
-                         50000)
+                         200.0
+                         50000.0)
       ;; TODO use bulk insert, or use postGIS to generate points.
       (doseq [plot-center (if (= "gridded" plot-distribution)
                             (create-gridded-points-in-bounds left bottom right top plot-spacing)
@@ -504,7 +509,8 @@
                                   sample-resolution)))))
   (call-sql "update_project_counts" project-id)
   (when-not (sql-primitive (call-sql "valid_project_boundary" project-id))
-    (init-throw "The project boundary is invalid. This can come from improper coordinates or projection when uploading shape or csv data.")))
+    (init-throw (str "The project boundary is invalid. "
+                     "This can come from improper coordinates or projection when uploading shape or csv data."))))
 
 (defn create-project [{:keys [params]}]
   (let [institution-id       (tc/str->int (:institutionId params))
@@ -512,10 +518,10 @@
         name                 (:name params)
         description          (:description params)
         privacy-level        (:privacyLevel params)
-        lon-min              (:lonMin params)
-        lat-min              (:latMin params)
-        lon-max              (:lonMax params)
-        lat-max              (:latMax params)
+        lon-min              (tc/str->float (:lonMin params))
+        lat-min              (tc/str->float (:latMin params))
+        lon-max              (tc/str->float (:lonMax params))
+        lat-max              (tc/str->float (:latMax params))
         boundary             (make-geo-json-polygon lon-min
                                                     lat-min
                                                     lon-max
@@ -574,7 +580,7 @@
                       widget))))
       (if (and (pos? project-template) use-template-plots)
         (call-sql "copy_template_plots" project-template project-id)
-        (let [write-dir (str tmp-dir "/ceo-tmp-" project-id "/")
+        (let [write-dir    (str tmp-dir "/ceo-tmp-" project-id "/")
               plots-file   (and (#{"csv" "shp"} plot-distribution)
                                 (str write-dir
                                      (pu/write-file-part-base64 plot-file-name
@@ -606,7 +612,9 @@
                       :tokenKey  token-key})
       (catch Exception e
         (try (call-sql "delete_project" project-id))
-        (data-response (or (:causes (ex-data e)) "Unknown server error."))))))
+        (data-response (if-let [causes (:causes (ex-data e))]
+                         (str/join "\n" causes)
+                         "Unknown server error."))))))
 
 ;;; Dump Data common
 
@@ -651,7 +659,7 @@
          (reduce (fn [acc cur]
                    (assoc acc (:id cur) (str first-group-name ":" (name (get cur c)))))))))
 
-(defn- get-file-name [project-name data-type]
+(defn- prepare-file-name [project-name data-type]
   (str/join "-"
             ["ceo"
              (str/replace project-name #"[ |,]" "-")
@@ -752,7 +760,7 @@
                                     (call-sql "dump_project_plot_data" project-id))]
         {:headers {"Content-Type" "text/csv"
                    "Content-Disposition" (str "attachment; filename="
-                                              (get-file-name (:name project-info) "plot")
+                                              (prepare-file-name (:name project-info) "plot")
                                               ".csv")}
          :body (str/join "\n" (conj data-rows headers-out))})
       (data-response "Project not found."))))
@@ -776,8 +784,6 @@
 (def sample-key-names {:assigned :analyses})
 
 ;; TODO why did we move collection_time and analysis duration to the sample level when they are plot details?
-;; TODO collection_time analysis_duration imagery_title imagery_attributes are not really "optional" anymore
-;;      They are a part of every project for a year now, I think we should just leave them in.
 (def sample-base-headers [:plot_id
                           :sample_id
                           :lon
@@ -790,6 +796,8 @@
                           :imagery_title
                           :imagery_attributions])
 
+;; TODO collection_time analysis_duration imagery_title imagery_attributes are not really "optional" anymore
+;;      They are a part of every project for a year now, I think we should just leave them in.
 (defn dump-project-raw-data [{:keys [params]}]
   (let [project-id (tc/str->int (:projectId params))]
     (if-let [project-info (first (call-sql "select_project" project-id))]
@@ -823,7 +831,7 @@
                                     (call-sql "dump_project_sample_data" project-id))]
         {:headers {"Content-Type" "text/csv"
                    "Content-Disposition" (str "attachment; filename="
-                                              (get-file-name (:name project-info) "sample")
+                                              (prepare-file-name (:name project-info) "sample")
                                               ".csv")}
          :body (str/join "\n" (conj data-rows headers-out))})
       (data-response "Project not found."))))
