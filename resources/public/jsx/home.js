@@ -664,8 +664,8 @@ export function pageInit(args) {
         <NavigationBar userName={args.userName} userId={args.userId}>
             <Home
                 documentRoot=""
-                userId={args.userId === "" ? -1 : parseInt(args.userId)}
-                userRole={args.userRole}
+                userId={args.userId || -1}
+                userRole={args.userRole || ""}
             />
         </NavigationBar>,
         document.getElementById("app")

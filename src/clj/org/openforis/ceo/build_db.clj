@@ -57,17 +57,19 @@
           {}
           file-params))
 
-(defn requires? [[ns1 deps1] [ns2 deps2]]
+(defn requires? [[_ deps1] [ns2 deps2]]
   (or (contains? deps1 ns2)
       (empty? deps2)))
 
 (defn topo-sort-namespaces [dep-tree]
-  (map first
+  (->> dep-tree
+       (sort (fn [[_ deps1] [_ deps2]]
+               (- (count deps1) (count deps2))))
        (sort (fn [file1 file2]
                (cond (requires? file1 file2)  1
                      (requires? file2 file1) -1
-                     :else                    0))
-             dep-tree)))
+                     :else                    0)))
+       (map first)))
 
 (defn warn-namespace [parsed file]
   (when-not (:namespace parsed)

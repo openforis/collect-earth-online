@@ -1646,7 +1646,7 @@ class StatsWidget extends React.Component {
 export function pageInit(args) {
     ReactDOM.render(
         <GeoDashNavigationBar
-            userName={args.userName}
+            userName={args.userName || "geust"}
             page={() => <Geodash documentRoot=""/>}
         />,
         document.getElementById("app")

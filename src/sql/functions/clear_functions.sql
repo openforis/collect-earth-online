@@ -5,7 +5,7 @@ DO $$
    _sql text;
  BEGIN
     SELECT INTO _sql
-        string_agg(format('DROP FUNCTION %s;', oid::regprocedure), E'\n')
+        string_agg(format('DROP FUNCTION %s CASCADE;', oid::regprocedure), E'\n')
     FROM pg_proc
     WHERE (proowner = 'ceo'::regrole)
         AND prokind = 'f';

@@ -223,7 +223,7 @@ export function pageInit(args) {
         <NavigationBar userName={args.userName} userId={args.userId}>
             <ProjectDashboard
                 documentRoot=""
-                projectId={args.projectId || "0"}
+                projectId={args.projectId || 0}
                 project_stats_visibility={args.projectId ? "visible" : "d-none"}
                 project_template_visibility={args.projectId ? "d-none" : "visible"}
             />

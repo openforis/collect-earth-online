@@ -1198,8 +1198,8 @@ export function pageInit(args) {
         <NavigationBar userName={args.userName} userId={args.userId}>
             <ReviewInstitution
                 documentRoot=""
-                userId={args.userId === "" ? -1 : parseInt(args.userId)}
-                institutionId={args.institutionId === "" ? -1 : parseInt(args.institutionId)}
+                userId={args.userId || -1}
+                institutionId={args.institutionId || -1}
             />
         </NavigationBar>,
         document.getElementById("app")
