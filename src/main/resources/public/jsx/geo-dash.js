@@ -61,7 +61,7 @@ class Geodash extends React.Component {
                     .then(data => data.widgets.map(widget => {
                         widget.isFull = false;
                         widget.opacity = "0.9";
-                        widget.sliderType = "opacity";
+                        widget.sliderType = widget.swipeAsDefault ? "swipe" : "opacity";
                         widget.swipeValue = "1.0";
                         return widget;
                     }))
@@ -579,6 +579,7 @@ class MapWidget extends React.Component {
             dualImageObject.collectionName = this.convertCollectionName(dualImageObject.collectionName);
             dualImageObject.dateFrom = secondImage.startDate;
             dualImageObject.dateTo = secondImage.endDate;
+            dualImageObject.geometry = JSON.parse(projPairAOI);
 
             const shortWidget2 = {};
             shortWidget2.filterType = secondImage.filterType;
@@ -587,7 +588,7 @@ class MapWidget extends React.Component {
             shortWidget2.ImageAsset = secondImage.imageAsset;
             shortWidget2.ImageCollectionAsset = secondImage.ImageCollectionAsset;
             dualImageObject.url = "/geo-dash/gateway-request";
-            dualImageObject. path = getGatewayPath(shortWidget2, dualImageObject.collectionName);
+            dualImageObject.path = getGatewayPath(shortWidget2, dualImageObject.collectionName);
             shortWidget2.visParams = secondImage.visParams;
             shortWidget2.min = secondImage.min != null ? secondImage.min : "";
             shortWidget2.max = secondImage.max != null ? secondImage.max : "";
@@ -927,8 +928,19 @@ class MapWidget extends React.Component {
         if (widget.dualLayer || widget.dualImageCollection) {
             const oStyle = { display: widget.sliderType === "opacity" ? "block" : "none" };
             const sStyle = { display: widget.sliderType === "swipe" ? "block" : "none" };
+            const oChecked = {
+                opacity: widget.sliderType === "opacity" ? "1.0" : "0.25",
+                cursor: "pointer"
+            };
+            const sChecked = {
+                opacity: widget.sliderType === "swipe" ? "1.0" : "0.25",
+                cursor: "pointer"
+            };
             return <div>
-                <input type="button" value={this.props.widget.sliderType === "opacity" ? "swipe" : "opacity"} style={{ width: "80px", float: "left", margin: "8px 0 0 5px" }} onClick={() => onSliderChange(widget)}/>
+                <div className="toggle-switch-container">
+                    <img src={"img/opacity.png"} style={oChecked} height="20px" width="40px" title="Opacity" alt="Opacity" onClick={() => onSliderChange(widget)}/><br/>
+                    <img src={"img/swipe.png"} style={sChecked} height="20px" width="40px" title="Swipe" alt="Swipe" onClick={() => onSliderChange(widget)}/>
+                </div>
                 <input
                     type = "range"
                     className = "mapRange dual"

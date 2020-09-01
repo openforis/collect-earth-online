@@ -169,6 +169,13 @@ input:checked+.switchslider:before {
     transform: translateX(38px);
 }
 
+.toggle-switch-container {
+    align-content: center;
+    padding: 5px;
+    width: 80px;
+    float: left;
+}
+
 /* Rounded sliders */
 
 .switchslider.round {
@@ -303,7 +310,7 @@ input:checked+.switchslider:before {
     cursor: default;
     min-height: 26px;
 }
-input#widgetDualLayer {
+.widgetWizardCheckbox {
     display: inline-block;
     margin-left: 10px;
     width: 20px;
