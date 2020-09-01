@@ -10,15 +10,6 @@
   (let [pieces (str/split kebab #"-")]
     (apply str (first pieces) (map str/capitalize (rest pieces)))))
 
-(defn page->js [page]
-  (case page
-    "geoDash"            ["/js/highcharts.js"       ; TODO Use the npm version.
-                          "/js/jquery-3.4.1.min.js" ; TODO Remove jquery as a dependency.
-                          "/js/jquery-ui.min.js"]   ; TODO Remove jquery-ui as a dependency.
-    "widgetLayoutEditor" ["/js/jquery-3.4.1.min.js"
-                          "/js/jquery-ui.min.js"]
-    []))
-
 (defn head [extra-js]
   [:head
    [:title "Collect Earth Online"]
@@ -61,7 +52,7 @@
       {:status  200
        :headers {"Content-Type" "text/html"}
        :body    (html5
-                 (head (concat webpack-files (page->js page)))
+                 (head webpack-files)
                  [:body {:style {:padding-top "60px"}}
                   (if (seq webpack-files)
                     [:section {:id "content" :class "container-fluid"}

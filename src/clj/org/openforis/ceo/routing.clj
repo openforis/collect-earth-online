@@ -149,7 +149,6 @@
    [:get "/get-institution-imagery"]         {:handler (api-handler imagery/get-institution-imagery)}
    [:get "/get-project-imagery"]             {:handler (api-handler imagery/get-project-imagery)}
    [:get "/get-public-imagery"]              {:handler (api-handler imagery/get-public-imagery)}
-   [:post "/add-geodash-imagery"]            {:handler (api-handler imagery/add-geodash-imagery)}
    [:post "/add-institution-imagery"]        {:handler     (api-handler imagery/add-institution-imagery)
                                               :auth-type   :inst-admin
                                               :auth-action :block}

@@ -34,8 +34,9 @@
 
 ;;; Data Functions
 
-;; TODO add settings that are new since we forked
-(def default-options {:showGEEScript false})
+(def default-options {:showGEEScript       false
+                      :showPlotInformation false
+                      :autoLaunchGeoDash   true})
 
 (defn- single-project-object [project]
   {:id                   (:project_id project)
