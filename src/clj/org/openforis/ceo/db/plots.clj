@@ -21,41 +21,38 @@
                             :analyses assigned})
                          (call-sql "select_limited_project_plots" project-id max-plots)))))
 
-(defn- prepare-samples-object [plot-id project-id]
+(defn- prepare-samples-array [plot-id project-id]
   (mapv (fn [{:keys [sample_id point sampleId geom value]}]
-          {:id       sample_id
-           :point    point
-           :sampleId sampleId ;TODO I don't think we we distinguish between sample_id and sampleId so this could go away
-           :geom     (tc/jsonb->clj geom)
-           :value    (if (< 2 (count (str value)))
-                       (tc/jsonb->clj value)
-                       {})})
+          (merge {:id       sample_id
+                  :point    point
+                  :sampleId sampleId ;TODO I don't think we distinguish between sample_id and sampleId so this could go away
+                  :geom     (tc/jsonb->clj geom)}
+                 (when (< 2 (count (str value)))
+                   {:value (tc/jsonb->clj value)})))
         (call-sql "select_plot_samples" plot-id project-id)))
 
-(defn- clean-extra-plot-info [extra-plot-info]
-  (or (dissoc (tc/jsonb->clj extra-plot-info) :gid :lat :lon :plotid)
-      {}))
-
 (defn- prepare-plot-object [plot-info project-id]
-  (let [{:keys [plot_id center flagged plotId geom extra_plot_info]} plot-info]
+  (let [{:keys [plot_id center flagged assigned plotId geom extra_plot_info]} plot-info]
     {:id            plot_id
      :projectId     project-id ;TODO why do we need to return a value that is already known
      :center        center
      :flagged       (< 0 (or flagged -1))
+     :analyses      assigned
      :plotId        plotId
      :geom          (tc/jsonb->clj geom)
-     :extraPlotInfo (clean-extra-plot-info extra_plot_info)
-     :samples       (prepare-samples-object plot_id project-id)}))
+     :extraPlotInfo (dissoc (tc/jsonb->clj extra_plot_info) :gid :lat :lon :plotid)
+     :samples       (prepare-samples-array plot_id project-id)}))
 
 (defn get-project-plot [{:keys [params]}]
   (let [project-id (tc/str->int (:projectId params))
         plot-id    (tc/str->int (:plotId params))]
-    (data-response (prepare-plot-object (first (call-sql "select_plot_by_id"
-                                                         project-id
-                                                         plot-id))
-                                        project-id))))
+    (data-response (if-let [plot-info (first (call-sql "select_plot_by_id"
+                                                       project-id
+                                                       plot-id))]
+                     (prepare-plot-object plot-info project-id)
+                     ""))))
 
-(defn- unlock_plots [user-id]
+(defn- unlock-plots [user-id]
   (call-sql-opts "unlock_plots" {:log? false} user-id))
 
 (defn reset-plot-lock [{:keys [params]}]
@@ -65,7 +62,7 @@
     (data-response "")))
 
 (defn release-plot-locks [{:keys [params]}]
-  (unlock_plots (:userId params -1))
+  (unlock-plots (:userId params -1))
   (data-response ""))
 
 (defn- get-collection-plot [params method]
@@ -88,7 +85,7 @@
                                                :else
                                                (sql2 (str "select_" method "unassigned_plot"))))]
                      (do
-                       (unlock_plots user-id)
+                       (unlock-plots user-id)
                        (call-sql "lock_plot"
                                  (:plot_id plot-info)
                                  user-id
@@ -129,12 +126,12 @@
                     (Timestamp. collection-start)
                     user-samples
                     user-images]))
-    (unlock_plots user-id)
+    (unlock-plots user-id)
     (data-response "")))
 
 (defn flag-plot [{:keys [params]}]
   (let [plot-id (tc/str->int (:plotId params))
         user-id (:userId params -1)]
     (call-sql "flag_plot" plot-id user-id nil)
-    (unlock_plots user-id)
+    (unlock-plots user-id)
     (data-response "")))
