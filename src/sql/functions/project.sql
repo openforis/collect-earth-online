@@ -740,7 +740,7 @@ CREATE OR REPLACE FUNCTION valid_project_boundary(_project_id integer)
 $$ LANGUAGE SQL;
 
 CREATE VIEW project_boundary AS
-SELECT
+ SELECT
     project_uid,
     institution_rid,
     imagery_rid,

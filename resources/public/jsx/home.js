@@ -633,8 +633,8 @@ export function pageInit(args) {
     ReactDOM.render(
         <NavigationBar userName={args.userName} userId={args.userId}>
             <Home
-                userId={args.userId === "" ? -1 : parseInt(args.userId)}
-                userRole={args.userRole}
+                userId={args.userId || -1}
+                userRole={args.userRole || ""}
             />
         </NavigationBar>,
         document.getElementById("app")

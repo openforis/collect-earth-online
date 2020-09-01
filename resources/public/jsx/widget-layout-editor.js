@@ -1783,7 +1783,7 @@ class WidgetLayoutEditor extends React.PureComponent {
 export function pageInit(args) {
     ReactDOM.render(
         <GeoDashNavigationBar
-            userName={args.userName}
+            userName={args.userName || ""}
             page={(addDialog, copyDialog, closeDialogs) =>
                 <WidgetLayoutEditor
                     addDialog={addDialog}
