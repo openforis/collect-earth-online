@@ -169,7 +169,7 @@ input:checked+.switchslider:before {
     transform: translateX(38px);
 }
 
-.toggle-switch-container {
+.toggleSwitchContainer {
     align-content: center;
     padding: 5px;
     width: 80px;

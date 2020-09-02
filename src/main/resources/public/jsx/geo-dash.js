@@ -926,20 +926,33 @@ class MapWidget extends React.Component {
         const onSwipeChange = this.props.onSwipeChange;
 
         if (widget.dualLayer || widget.dualImageCollection) {
-            const oStyle = { display: widget.sliderType === "opacity" ? "block" : "none" };
-            const sStyle = { display: widget.sliderType === "swipe" ? "block" : "none" };
-            const oChecked = {
-                opacity: widget.sliderType === "opacity" ? "1.0" : "0.25",
-                cursor: "pointer"
-            };
-            const sChecked = {
-                opacity: widget.sliderType === "swipe" ? "1.0" : "0.25",
-                cursor: "pointer"
-            };
             return <div>
-                <div className="toggle-switch-container">
-                    <img src={"img/opacity.png"} style={oChecked} height="20px" width="40px" title="Opacity" alt="Opacity" onClick={() => onSliderChange(widget)}/><br/>
-                    <img src={"img/swipe.png"} style={sChecked} height="20px" width="40px" title="Swipe" alt="Swipe" onClick={() => onSliderChange(widget)}/>
+                <div className="toggleSwitchContainer">
+                    <img
+                        src={"img/opacity.png"}
+                        style={{
+                            opacity: widget.sliderType === "opacity" ? "1.0" : "0.25",
+                            cursor: "pointer"
+                        }}
+                        height="20px"
+                        width="40px"
+                        title="Opacity"
+                        alt="Opacity"
+                        onClick={() => onSliderChange(widget)}
+                    />
+                    <br/>
+                    <img
+                        src={"img/swipe.png"}
+                        style={{
+                            opacity: widget.sliderType === "swipe" ? "1.0" : "0.25",
+                            cursor: "pointer"
+                        }}
+                        height="20px"
+                        width="40px"
+                        title="Swipe"
+                        alt="Swipe"
+                        onClick={() => onSliderChange(widget)}
+                    />
                 </div>
                 <input
                     type = "range"
@@ -951,7 +964,7 @@ class MapWidget extends React.Component {
                     step = ".01"
                     onChange = {evt => this.onOpacityChange(evt)}
                     onInput = {evt => this.onOpacityChange(evt)}
-                    style={oStyle}
+                    style={{ display: widget.sliderType === "opacity" ? "block" : "none" }}
                 />
                 <input
                     type="range"
@@ -963,7 +976,7 @@ class MapWidget extends React.Component {
                     value={this.props.widget.swipeValue}
                     onChange = {evt => onSwipeChange(widget, widget.id, evt )}
                     onInput = {evt => onSwipeChange(widget, widget.id, evt )}
-                    style={sStyle}
+                    style={{ display: widget.sliderType === "swipe" ? "block" : "none" }}
                 />
             </div>;
         } else {
