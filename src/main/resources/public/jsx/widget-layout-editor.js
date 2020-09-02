@@ -26,6 +26,7 @@ class WidgetLayoutEditor extends React.PureComponent {
             graphReducer: "Min",
             imageParams: "",
             dualLayer: false,
+            swipeAsDefault: false,
             widgetBaseMap: "osm",
             startDate: "",
             endDate: "",
@@ -231,6 +232,7 @@ class WidgetLayoutEditor extends React.PureComponent {
             imageParams: "",
             widgetBaseMap: "osm",
             dualLayer: false,
+            swipeAsDefault: false,
             startDate:"",
             endDate:"",
             startDate2:"",
@@ -322,6 +324,7 @@ class WidgetLayoutEditor extends React.PureComponent {
             imageParams: "",
             widgetBaseMap: "osm",
             dualLayer: false,
+            swipeAsDefault: false,
             startDate:"",
             endDate:"",
             startDate2:"",
@@ -381,6 +384,7 @@ class WidgetLayoutEditor extends React.PureComponent {
             widget.filterType = "";
             widget.visParams = {};
             widget.dualImageCollection = [];
+            widget.swipeAsDefault = this.state.swipeAsDefault;
             const img1 = {};
             const img2 = {};
             img1.collectionType = "ImageCollection" + this.state.selectedDataType;
@@ -524,6 +528,7 @@ class WidgetLayoutEditor extends React.PureComponent {
                         imageParams: "",
                         widgetBaseMap: "osm",
                         dualLayer: false,
+                        swipeAsDefault: false,
                         startDate:"",
                         endDate:"",
                         startDate2:"",
@@ -581,6 +586,10 @@ class WidgetLayoutEditor extends React.PureComponent {
 
     onImageParamsChange = event => {
         this.setState({ imageParams: event.target.value.replace(/\s/g, "") });
+    };
+
+    onswipeAsDefaultChange = event => {
+        this.setState({ swipeAsDefault: event.target.checked });
     };
 
     onWidgetDualLayerChange = event => {
@@ -814,6 +823,7 @@ class WidgetLayoutEditor extends React.PureComponent {
                                         </div>
                                         {this.getBaseMapSelector()}
                                         {this.getDataTypeSelectionControl()}
+                                        {this.getSwipeOpacityDefault()}
                                         {this.getDataForm()}
                                     </form>
                                 </div>
@@ -1052,6 +1062,19 @@ class WidgetLayoutEditor extends React.PureComponent {
         />
     </div>;
 
+    getSwipeOpacityDefault = () => this.state.selectedWidgetType === "DualImageCollection"
+        ? <div className="form-group">
+            <label htmlFor="SwipeOpacityDefault">Swipe as default</label>
+            <input
+                type="checkbox"
+                id="SwipeOpacityDefault"
+                checked={this.state.swipeAsDefault}
+                className="form-control widgetWizardCheckbox"
+                onChange={this.onswipeAsDefaultChange}
+            />
+        </div>
+        : "";
+
     getImageParamsBlock = () => <div className="form-group">
         <label htmlFor="imageParams">Image Parameters (json format)</label>
         <textarea
@@ -1094,7 +1117,7 @@ class WidgetLayoutEditor extends React.PureComponent {
                     name="widgetDualLayer"
                     id="widgetDualLayer"
                     checked={this.state.dualLayer}
-                    className="form-control"
+                    className="form-control widgetWizardCheckbox"
                     onChange={this.onWidgetDualLayerChange}
                 />
             </div>;
