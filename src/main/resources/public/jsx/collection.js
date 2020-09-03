@@ -976,7 +976,7 @@ class Collection extends React.Component {
                         currentPlot={this.state.currentPlot}
                     />
                     <ExternalTools
-                        zoomMapToPlot={() => mercator.zoomMapToLayer(this.props.mapConfig, "currentPlot")}
+                        zoomMapToPlot={() => mercator.zoomMapToLayer(this.state.mapConfig, "currentPlot")}
                         showGeoDash={this.showGeoDash}
                         currentPlot={this.state.currentPlot}
                         projectId={this.props.projectId}
