@@ -1,7 +1,7 @@
 import React from "react";
 import ReactDOM from "react-dom";
 import { mercator } from "../js/mercator.js";
-import { UnicodeIcon, deepCopy } from "./utils/textUtils";
+import { UnicodeIcon } from "./utils/textUtils";
 import { formatDateISO } from "./utils/dateUtils";
 import { getGatewayPath } from "./utils/geodashUtils";
 import { GeoDashNavigationBar } from "./components/PageComponents";
@@ -15,6 +15,7 @@ import { Style, Stroke } from "ol/style";
 import { getArea as sphereGetArea } from "ol/sphere";
 import Highcharts from "highcharts";
 import HighchartsReact from "highcharts-react-official";
+import _ from "lodash";
 
 class Geodash extends React.Component {
     constructor(props) {
@@ -1264,11 +1265,11 @@ class GraphWidget extends React.Component {
         const { widget, degDataType, getParameterByName, projPairAOI, handleSelectDate } = this.props;
 
         if (degDataType === "landsat" && chartDataSeriesLandsat.length > 0) {
-            graphRef.update({ series: deepCopy(chartDataSeriesLandsat) });
+            graphRef.update({ series: _.cloneDeep(chartDataSeriesLandsat) });
         } else if (degDataType === "sar"
             && chartDataSeriesSar.hasOwnProperty(selectSarGraphBand)
             && chartDataSeriesSar[selectSarGraphBand].length > 0) {
-            graphRef.update({ series: deepCopy(chartDataSeriesSar[selectSarGraphBand]) });
+            graphRef.update({ series: _.cloneDeep(chartDataSeriesSar[selectSarGraphBand]) });
         } else {
             const centerPoint = JSON.parse(getParameterByName("bcenter")).coordinates;
             const widgetType = widget.type || "";
@@ -1349,8 +1350,11 @@ class GraphWidget extends React.Component {
                                         color: "#31bab0",
                                         allowPointSelect: true,
                                         point: {
+                                            cursor: "pointer",
                                             events: {
-                                                select: e => handleSelectDate(formatDateISO(new Date(e.target.x))),
+                                                select: e => {
+                                                    handleSelectDate(formatDateISO(new Date(e.target.x)));
+                                                },
                                             },
                                         },
                                         tooltip: {
@@ -1500,12 +1504,12 @@ class GraphWidget extends React.Component {
             series:
                 widget.type === "DegradationTool"
                     ? degDataType === "landsat" && chartDataSeriesLandsat.length > 0
-                        ? deepCopy(chartDataSeriesLandsat)
+                        ? _.cloneDeep(chartDataSeriesLandsat)
                         : degDataType === "sar" && chartDataSeriesSar.hasOwnProperty(selectSarGraphBand)
                             && chartDataSeriesSar[selectSarGraphBand].length > 0
-                            ? deepCopy(chartDataSeriesSar[selectSarGraphBand])
+                            ? _.cloneDeep(chartDataSeriesSar[selectSarGraphBand])
                             : []
-                    : deepCopy(nonDegChartData),
+                    : _.cloneDeep(nonDegChartData),
         };
     }
 
