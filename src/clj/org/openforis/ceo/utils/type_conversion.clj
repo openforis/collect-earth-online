@@ -4,7 +4,7 @@
 
 (defn str->int
   ([string]
-   (str->int string -1))
+   (str->int string (int -1)))
   ([string default]
    (if (int? string)
      string
@@ -14,7 +14,7 @@
 
 (defn str->long
   ([string]
-   (str->long string -1))
+   (str->long string (long -1)))
   ([string default]
    (if (number? string)
      string
@@ -24,7 +24,7 @@
 
 (defn str->float
   ([string]
-   (str->float string -1))
+   (str->float string (float -1.0)))
   ([string default]
    (if (number? string)
      string
@@ -32,13 +32,15 @@
        (Float/parseFloat string)
        (catch Exception _ default)))))
 
-(defn str->long
+(defn str->double
   ([string]
-   (str->int string -1))
+   (str->double string (double -1.0)))
   ([string default]
-   (try
-     (Long/parseLong string)
-     (catch Exception _ default))))
+   (if (number? string)
+     string
+     (try
+       (Double/parseDouble string)
+       (catch Exception _ default)))))
 
 (defn str->bool
   ([string]
@@ -58,20 +60,20 @@
      (json/read-str string :key-fn keyword)
      (catch Exception _ default))))
 
+(def jsonb->json str)
+
 (defn jsonb->clj [jsonb]
-  (json->clj (str jsonb)))
+  (-> jsonb jsonb->json json->clj))
+
+(def clj->json json/write-str)
 
 (defn clj->jsonb [data]
   (doto (PGobject.)
     (.setType "jsonb")
-    (.setValue (json/write-str data))))
+    (.setValue (clj->json data))))
 
 (defn json->jsonb [json]
   (-> json json->clj clj->jsonb))
-
-(def clj->json json/write-str)
-
-(def jsonb->json str)
 
 (defn str->pg-uuid [string]
   (doto (PGobject.)

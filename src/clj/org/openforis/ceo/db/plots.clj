@@ -1,9 +1,7 @@
 (ns org.openforis.ceo.db.plots
   (:import java.sql.Timestamp)
   (:require [org.openforis.ceo.utils.type-conversion :as tc]
-            [org.openforis.ceo.database        :refer [call-sql
-                                                       call-sql-opts
-                                                       sql-primitive]]
+            [org.openforis.ceo.database        :refer [call-sql sql-primitive]]
             [org.openforis.ceo.db.institutions :refer [is-inst-admin-query?]]
             [org.openforis.ceo.views           :refer [data-response]]))
 
@@ -53,12 +51,12 @@
                      ""))))
 
 (defn- unlock-plots [user-id]
-  (call-sql-opts "unlock_plots" {:log? false} user-id))
+  (call-sql "unlock_plots" {:log? false} user-id))
 
 (defn reset-plot-lock [{:keys [params]}]
   (let [plot-id (tc/str->int (:plotId params))
         user-id (:userId params -1)]
-    (call-sql-opts "lock_plot_reset" {:log? false} plot-id user-id (time-plus-five-min))
+    (call-sql "lock_plot_reset" {:log? false} plot-id user-id (time-plus-five-min))
     (data-response "")))
 
 (defn release-plot-locks [{:keys [params]}]

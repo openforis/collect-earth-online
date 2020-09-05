@@ -68,7 +68,7 @@
                      (when-let [flash-message (get-in request [:params :flash_message])]
                        [:p {:class "alert"} flash-message])            ; TODO This will be moved to the front end for better UX.
                      (let [announcement (slurp "announcement.txt")]    ; TODO This will be moved to the front end for better UX.
-                       (when (and (= page "home")(pos? (count announcement)))
+                       (when (and (= page "home") (pos? (count announcement)))
                          [:p {:style {:color            "#eec922"
                                       :background-color "#e63232"
                                       :text-align       "center"
@@ -77,7 +77,7 @@
                                       :position         "fixed"
                                       :top              "61px"
                                       :width            "100vw"
-                                      :z-index           100}}
+                                      :z-index          100}}
                           announcement]))
                      [:div#app]]
                     [:label "No webpack files found. Check if webpack is running, or wait for it to finish compiling."])
