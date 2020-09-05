@@ -5,9 +5,7 @@
            java.util.UUID)
   (:require [clojure.string :as str]
             [org.openforis.ceo.utils.type-conversion :as tc]
-            [org.openforis.ceo.database   :refer [call-sql
-                                                  call-sql-opts
-                                                  sql-primitive]]
+            [org.openforis.ceo.database   :refer [call-sql sql-primitive]]
             [org.openforis.ceo.utils.mail :refer [email?
                                                   send-mail
                                                   send-to-mailing-list
@@ -19,7 +17,7 @@
 
 (defn login [{:keys [params]}]
   (let [{:keys [email password]} params]
-    (if-let [user (first (call-sql-opts "check_login" {:log? false} email password))]
+    (if-let [user (first (call-sql "check_login" {:log? false} email password))]
       (data-response ""
                      {:session {:userId   (:user_id user)
                                 :userName email

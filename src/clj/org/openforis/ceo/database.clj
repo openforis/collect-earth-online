@@ -28,9 +28,11 @@
 
 ;;; Select Queries
 
-(defn run-call-sql [sql-fn-name opts & args]
-  (let [{:keys [use-vec? log?]
-         :or {use-vec? false log? true}} opts
+(defn call-sql [sql-fn-name & opts+args]
+  (let [[opts args] (if (map? (first opts+args))
+                      [(first opts+args) (rest opts+args)]
+                      [{} opts+args])
+        {:keys [use-vec? log?] :or {use-vec? false log? true}} opts
         query           (format-simple "SELECT * FROM %1(%2)"
                                        sql-fn-name
                                        (str/join "," (repeat (count args) "?")))
@@ -47,12 +49,6 @@
                    {:builder-fn (if use-vec?
                                   rs/as-unqualified-lower-arrays
                                   rs/as-unqualified-lower-maps)})))
-
-(defn call-sql [sql-fn-name & args]
-  (apply run-call-sql sql-fn-name {} args))
-
-(defn call-sql-opts [sql-fn-name opts & args]
-  (apply run-call-sql sql-fn-name opts args))
 
 (defn sql-handler [{:keys [uri params content-type]}]
   (let [[schema function] (->> (str/split uri #"/")

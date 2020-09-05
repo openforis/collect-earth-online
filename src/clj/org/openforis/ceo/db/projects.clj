@@ -8,7 +8,7 @@
             [clojure.java.shell :as sh]
             [org.openforis.ceo.utils.type-conversion :as tc]
             [org.openforis.ceo.utils.part-utils      :as pu]
-            [org.openforis.ceo.database :refer [call-sql call-sql-opts sql-primitive]]
+            [org.openforis.ceo.database :refer [call-sql sql-primitive]]
             [org.openforis.ceo.views    :refer [data-response]]))
 
 ;;; Constants
@@ -23,7 +23,7 @@
         project-id (tc/str->int (:projectId params))
         token-key  (:tokenKey params)]
     (or (and token-key
-             (= token-key (:token_key (first (call-sql-opts "select_project" {:log? false} project-id)))))
+             (= token-key (:token_key (first (call-sql "select_project" {:log? false} project-id)))))
         (sql-primitive (call-sql sql-query user-id project-id)))))
 
 (defn can-collect? [{:keys [params]}]
@@ -419,10 +419,10 @@
 
                   :else
                   (create-gridded-sample-set plot-center plot-shape plot-size sample-resolution))]
-    (call-sql-opts "create_project_plot_sample"
-                   {:log? false}
-                   plot-id
-                   (make-geo-json-point x y))))
+    (call-sql "create_project_plot_sample"
+              {:log? false}
+              plot-id
+              (make-geo-json-point x y))))
 
 (defn- create-project-plots [project-id
                              lon-min
@@ -496,10 +496,10 @@
       (doseq [plot-center (if (= "gridded" plot-distribution)
                             (create-gridded-points-in-bounds left bottom right top plot-spacing)
                             (create-random-points-in-bounds left bottom right top num-plots))]
-        (let [plot-id (sql-primitive (call-sql-opts "create_project_plot"
-                                                    {:log? false}
-                                                    project-id
-                                                    (make-geo-json-point (first plot-center) (second plot-center))))]
+        (let [plot-id (sql-primitive (call-sql "create_project_plot"
+                                               {:log? false}
+                                               project-id
+                                               (make-geo-json-point (first plot-center) (second plot-center))))]
           (create-project-samples plot-id
                                   sample-distribution
                                   plot-center
