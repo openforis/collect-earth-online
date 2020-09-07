@@ -15,6 +15,11 @@ function Support() {
                         <a className="btn btn-outline-lightgreen btn-block" href="/downloads/CEO_Manual_DataCollector_20200520_espanol.pdf" role="button">
                             &#x1F4BE; Manual de Recolección de Datos (Español)
                         </a>
+                        <a className="btn btn-outline-lightgreen btn-block" href="/downloads/CEO_Manual_DataCollector_20200831_francais.pdf" role="button">
+                            &#x1F4BE; Manuel pour la collecte de données (Français)
+                        </a>
+                    </div>
+                    <div className="btn-group-vertical btn-block mb-4">
                         <a className="btn btn-outline-lightgreen btn-block" href="/downloads/CEO_Manual_InstitutionProject_20200520.pdf" role="button">
                             &#x1F4BE; Institution & Project Creation Manual (For Admin)
                         </a>
@@ -24,6 +29,8 @@ function Support() {
                         <a className="btn btn-outline-lightgreen btn-block" href="/downloads/CEO_Manual_InstitutionProject_20200826_francais.pdf" role="button">
                             &#x1F4BE; Manuel de création de projets et de profils d’institution (pour l'administrateur)
                         </a>
+                    </div>
+                    <div className="btn-group-vertical btn-block mb-4">
                         <a className="btn btn-outline-lightgreen btn-block" href="/downloads/CEO_Theoretical_Manual.pdf" role="button">
                             &#x1F4BE; Project Development Theory
                         </a>
