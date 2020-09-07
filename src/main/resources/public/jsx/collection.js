@@ -979,8 +979,8 @@ class Collection extends React.Component {
                         zoomMapToPlot={() => mercator.zoomMapToLayer(this.state.mapConfig, "currentPlot")}
                         showGeoDash={this.showGeoDash}
                         currentPlot={this.state.currentPlot}
-                        projectId={this.props.projectId}
-                        projectOptions={this.state.currentProject.projectOptions}
+                        currentProject={this.state.currentProject}
+                        plotId={plotId}
                         KMLFeatures={this.state.KMLFeatures}
                     />
                     {this.state.currentPlot.id && this.state.currentProject.projectOptions.showPlotInformation &&
@@ -1267,7 +1267,7 @@ class ExternalTools extends React.Component {
             className="btn btn-outline-lightgreen btn-sm btn-block my-2"
             href={"data:earth.kml+xml application/vnd.google-earth.kmz, "
                 + encodeURIComponent(this.props.KMLFeatures)}
-            download={"ceo_" + this.props.projectId + "_" + this.props.plotId + ".kml"}
+            download={"ceo_projectId-" + this.props.currentProject.id + "_plotId-" + this.props.plotId + ".kml"}
         >
             Download Plot KML
         </a>
@@ -1285,7 +1285,7 @@ class ExternalTools extends React.Component {
                     <div className="mx-1">
                         {this.geoButtons()}
                         {this.props.KMLFeatures && this.kmlButton()}
-                        {this.props.projectOptions.showGEEScript && this.geeButton()}
+                        {this.props.currentProject.projectOptions.showGEEScript && this.geeButton()}
                     </div>
                 }
             </>
