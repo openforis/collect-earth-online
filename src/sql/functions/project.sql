@@ -196,7 +196,7 @@ CREATE OR REPLACE FUNCTION create_project(
     _name                    text,
     _description             text,
     _privacy_level           text,
-    _boundary                text,
+    _boundary                jsonb,
     _plot_distribution       text,
     _num_plots               integer,
     _plot_spacing            float,
@@ -213,30 +213,51 @@ CREATE OR REPLACE FUNCTION create_project(
  ) RETURNS integer AS $$
 
     INSERT INTO projects (
-        institution_rid,        imagery_rid,
-        availability,           name,
-        description,            privacy_level,
-        boundary,               plot_distribution,
-        num_plots,              plot_spacing,
-        plot_shape,             plot_size,
-        sample_distribution,    samples_per_plot,
-        sample_resolution,      survey_questions,
-        survey_rules,           created_date,
-        classification_times,   token_key,
+        institution_rid,
+        imagery_rid,
+        availability,
+        name,
+        description,
+        privacy_level,
+        boundary,
+        plot_distribution,
+        num_plots,
+        plot_spacing,
+        plot_shape,
+        plot_size,
+        sample_distribution,
+        samples_per_plot,
+        sample_resolution,
+        survey_questions,
+        survey_rules,
+        created_date,
+        classification_times,
+        token_key,
         options
     ) VALUES (
-        _institution_id,         _imagery_id,
-        _availability,           _name,
-        _description,            _privacy_level,
-        _boundary,               _plot_distribution,
-        _num_plots,              _plot_spacing,
-        _plot_shape,             _plot_size,
-        _sample_distribution,    _samples_per_plot,
-        _sample_resolution,      _survey_questions,
-        _survey_rules,           now(),
-        _classification_times,   _token_key,
+        _institution_id,
+        _imagery_id,
+        _availability,
+        _name,
+        _description,
+        _privacy_level,
+        ST_SetSRID(ST_GeomFromGeoJSON(_boundary), 4326),
+        _plot_distribution,
+        _num_plots,
+        _plot_spacing,
+        _plot_shape,
+        _plot_size,
+        _sample_distribution,
+        _samples_per_plot,
+        _sample_resolution,
+        _survey_questions,
+        _survey_rules,
+        now(),
+        _classification_times,
+        _token_key,
         _options
-    ) RETURNING project_uid
+    )
+    RETURNING project_uid
 
 $$ LANGUAGE SQL;
 
@@ -932,8 +953,8 @@ CREATE OR REPLACE FUNCTION select_project_statistics(_project_id integer)
         FROM projects prj
         INNER JOIN plots pl
           ON project_uid = pl.project_rid
-        LEFT JOIN user_plots ps
-            ON ps.plot_rid = plot_uid
+        LEFT JOIN user_plots up
+            ON up.plot_rid = plot_uid
         GROUP BY project_uid, plot_uid
         HAVING project_uid = _project_id
     ), sums AS (
