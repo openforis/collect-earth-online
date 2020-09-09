@@ -131,7 +131,7 @@ class AccountForm extends React.Component {
                 if (data[0] && data[1] === "") {
                     alert("Your account details have been updated.");
                     // userName comes from the session, so we need to reload to update the props.
-                    location.reload();
+                    window.location.reload();
                 } else {
                     alert(data[1]);
                 }

@@ -1102,7 +1102,7 @@ class UserList extends React.Component {
     };
 
     requestMembership = () => {
-        fetch("/request-institution-membership?",
+        fetch("/request-institution-membership",
               {
                   method: "POST",
                   headers: {
