@@ -14,7 +14,7 @@
 
 (defn str->long
   ([string]
-   (str->int string -1))
+   (str->long string -1))
   ([string default]
    (if (number? string)
      string
@@ -24,7 +24,7 @@
 
 (defn str->float
   ([string]
-   (str->int string -1))
+   (str->float string -1))
   ([string default]
    (if (number? string)
      string
