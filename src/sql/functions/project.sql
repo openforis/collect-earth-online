@@ -954,7 +954,7 @@ CREATE OR REPLACE FUNCTION select_project_statistics(_project_id integer)
         INNER JOIN plots pl
           ON project_uid = pl.project_rid
         LEFT JOIN user_plots up
-            ON up.plot_rid = plot_uid
+            ON up.plot_rid = pl.plot_uid
         GROUP BY project_uid, plot_uid
         HAVING project_uid = _project_id
     ), sums AS (
