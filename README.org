@@ -38,7 +38,7 @@ named `mail-server.edn` in the root directory of the application. Add
 the following EDN object containing server details to the file,
 replacing the values with your own:
 
-```clojure
+#+begin_src clojure
 {:host                  "smtp.gmail.com"
  :user                  "support-my-domain@gmail.com"
  :pass                  "foobarbaz200"
@@ -46,7 +46,7 @@ replacing the values with your own:
  :base-url              "https://my.domain/"
  :recipient-limit       100
  :mailing-list-interval 600}
-```
+#+end_src
 
 ** Enabling https
 
