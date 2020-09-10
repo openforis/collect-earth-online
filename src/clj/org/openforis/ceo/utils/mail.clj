@@ -9,7 +9,8 @@
 ;; {:host                  "smtp.gmail.com"
 ;;  :user                  "mail@gmail.com"
 ;;  :pass                  "mail"
-;;  :ssl                   true
+;;  :tls                   true
+;;  :port                  587
 ;;  :base-url              "https://collect.earth/"
 ;;  :recipient-limit       100
 ;;  :mailing-list-interval 600}
@@ -42,26 +43,26 @@
                                              content-type)]
     (when-not (= :SUCCESS error) (log-str message))))
 
-(defn send-to-mailing-list [bcc-addresses subject body content-type]
+(defn send-to-mailing-list [bcc-addresses subject body]
   (let [base-url (get-base-url)
         new-body (str body
                       "<br><hr><p><a href=\""
                       base-url
                       (when-not (str/ends-with? base-url "/") "/")
-                      "\">Unsubscribe</a></p>")]
+                      "unsubscribe-mailing-list\">Unsubscribe</a></p>")]
     (->> bcc-addresses
          (filter email?)
          (partition-all (:recipient-limit @mail-config))
          (reduce (fn [acc cur]
-                   (let [response (send-postal cur nil nil subject new-body content-type)]
+                   (let [response (send-postal nil nil cur subject new-body "text/html")]
                      (if (= :SUCCESS (:error response))
-                       cur
+                       acc
                        (-> acc
                            (assoc :status 400)
                            (update :messages #(conj % (:message response)))))))
                  {}))))
 
-;; TODO its probably cleaner to handle the interval in send-to-mailing-list instead of in user.js
+;; TODO it's probably cleaner to handle the interval in mail.clj with send-to-mailing-list instead of in user.js
 (defn get-mailing-list-interval []
   (:mailing-list-interval @mail-config))
 
