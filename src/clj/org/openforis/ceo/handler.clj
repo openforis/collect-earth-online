@@ -30,9 +30,6 @@
 ;; Routing Handler
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-;; TODO: Add any conditions you want for URLs you want to exclude up front.
-(defn- bad-uri? [uri] (str/includes? (str/lower-case uri) "php"))
-
 (defn- forbidden-response [_]
   (data-response "Forbidden" {:status 403}))
 
@@ -48,40 +45,39 @@
                        "&flash_message=You must login to see "
                        full-url))))))
 
-(defn- is-cross-traffic? [{:keys [headers]}]
-  (not (str/includes? (get headers "referer" "") (get headers "host" ""))))
+(defn- no-cross-traffic? [{:keys [headers]}]
+  (when-let [referer (get headers "referer")]
+    (when-let [host (get headers "host")]
+      (not (str/includes? referer host)))))
 
-(defn- wrap-authentication [request auth-type auth-action handler]
-  (let [user-id (get-in request [:params :userId] -1)]
-    (if (condp = auth-type
-          :user       (pos? user-id)
-          :super      (= 1  user-id)
-          :collect    (can-collect? request)
-          :proj-admin (is-proj-admin? request)
-          :inst-admin (is-inst-admin? request)
-          :no-cross   (is-cross-traffic? request)
-          true)
-      handler
-      (if (= :redirect auth-action)
-        (redirect-auth user-id)
-        forbidden-response))))
-
-(defn routing-handler [{:keys [uri request-method] :as request}]
+(defn authenticated-routing-handler [{:keys [uri request-method] :as request}]
   (let [{:keys [auth-type auth-action handler] :as route} (get routes [request-method uri])
-        next-handler (cond
-                       (bad-uri? uri)
-                       forbidden-response
-
-                       route
-                       (wrap-authentication request auth-type auth-action handler)
-
-                       :else
+        user-id      (get-in request [:params :userId] -1)
+        next-handler (if route
+                       (if (condp = auth-type
+                             :user       (pos? user-id)
+                             :super      (= 1  user-id)
+                             :collect    (can-collect? request)
+                             :proj-admin (is-proj-admin? request)
+                             :inst-admin (is-inst-admin? request)
+                             :no-cross   (no-cross-traffic? request)
+                             true)
+                         handler
+                         (if (= :redirect auth-action)
+                           (redirect-auth user-id)
+                           forbidden-response))
                        not-found-page)]
     (next-handler request)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Custom Middlewares
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defn wrap-bad-uri [handler]
+  (fn [request]
+    (if (str/includes? (str/lower-case (:uri request)) "php")
+      (forbidden-response nil)
+      (handler request))))
 
 (defn wrap-request-logging [handler]
   (fn [request]
@@ -161,6 +157,7 @@
 
 (defn wrap-common [handler]
   (-> handler
+      wrap-bad-uri
       wrap-request-logging
       wrap-persistent-session
       wrap-keyword-params
@@ -186,10 +183,10 @@
 ;; Handler Stacks
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(def production-app (-> routing-handler
+(def production-app (-> authenticated-routing-handler
                         wrap-ssl-redirect
                         wrap-common))
 
-(defonce development-app (-> routing-handler
+(defonce development-app (-> authenticated-routing-handler
                              wrap-common
                              wrap-reload))
