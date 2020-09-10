@@ -5,49 +5,47 @@
             [org.openforis.ceo.utils.part-utils      :as pu]
             [org.openforis.ceo.db.imagery :refer [get-imagery-source-config]]))
 
-(defn- planet-url [source-config params]
-  (let [{:keys [year month tile x y z]} params]
+(defn- planet-url [source-config query-params]
+  (let [{:keys [year month tile x y z]} query-params]
     (str "https://tiles" tile
          ".planet.com/basemaps/v1/planet-tiles/global_monthly_"
          year "_" month
          "_mosaic/gmap/" z "/" x "/" y ".png?api_key="
          (:accessToken source-config))))
 
-(defn- default-styles [params geoserver-params]
+(defn- apply-default-styles [params geoserver-params]
   (update params :STYLES #(if (= "" %)
-                            (str/join ","
-                                      (take (count (str/split (:LAYERS  geoserver-params) #","))
-                                            (repeat "")))
+                            (str/join "," (map (constantly "") (str/split (:LAYERS geoserver-params) #",")))
                             %)))
 
 (defn- remove-extra-params [params]
   (cond-> params
-    (= "" (:FEATUREPROFILE params)) (dissoc :FEATUREPROFILE) ; TODO where is featureprofile coming from?
-    :always (dissoc :imageryId)))
+    (= "" (:FEATUREPROFILE params)) (dissoc :FEATUREPROFILE) ; TODO verify that this is no longer needed and remove.
+    :always (dissoc :IMAGERYID)))
 
-(defn keys-upper-case [[key val]]
+(defn upcase-key [[key val]]
   [(keyword (str/upper-case (name key))) val])
 
 (defn- wms-url [source-config query-params]
-  (let [geoserver-params (pu/mapm keys-upper-case (:geoserverParams source-config))
+  (let [geoserver-params (pu/mapm upcase-key (:geoserverParams source-config))
         source-url       (:geoserverUrl source-config)]
     (str source-url
-         (when-not (str/includes? source-url "?") "?")
-         (as-> (pu/mapm keys-upper-case query-params) params
-           (remove-extra-params params)
-           (merge params geoserver-params)
-           (default-styles params geoserver-params)
+         (when-not (str/ends-with? source-url "?") "?")
+         (as-> (pu/mapm upcase-key query-params) new-query-params
+           (remove-extra-params new-query-params)
+           (merge new-query-params geoserver-params)
+           (apply-default-styles new-query-params geoserver-params)
            (map (fn [[key val]]
                   (str (name key) "=" val))
-                params)
-           (str/join "&" params)))))
+                new-query-params)
+           (str/join "&" new-query-params)))))
 
-(defn- build-url [{:keys [params query-params]}]
-  (let [source-config (get-imagery-source-config (tc/str->int (:imageryId params)))
+(defn- build-url [{:keys [query-params]}]
+  (let [source-config (get-imagery-source-config (tc/str->int (:imageryId query-params)))
         source-type   (:type source-config "")]
     (cond
       (= "Planet" source-type)
-      (planet-url source-config params)
+      (planet-url source-config query-params)
 
       (#{"GeoServer", "SecureWatch"} source-type)
       (wms-url source-config query-params)
@@ -58,16 +56,15 @@
 (defn proxy-imagery [req]
   (client/get (build-url req) {:as :stream}))
 
-(defn get-securewatch-dates [req]
-  (let [imagery-id    (tc/str->int (get-in req [:params :imageryId]))
-        source-config (get-imagery-source-config imagery-id)
+(defn get-securewatch-dates [{:keys [query-params]}]
+  (let [source-config (get-imagery-source-config (tc/str->int (:imageryId query-params)))
         base-url      (:geoserverUrl source-config)
         url           (str base-url
-                           (when-not (str/includes? base-url "?") "?")
-                           (->> (dissoc (:query-params req) :imageryId)
+                           (when-not (str/ends-with? base-url "?") "?")
+                           (->> (dissoc query-params :imageryId)
                                 (map (fn [[key val]] (str (name key) "=" val)))
                                 (str/join "&"))
                            "&CONNECTID="
                            (get-in source-config [:geoserverParams :CONNECTID]))]
-    ;; TODO check for XML and parse error (front end)
+    ;; TODO check JSON for errors and parse (front end) using "&EXCEPTIONS=application/json"
     (client/get url)))
