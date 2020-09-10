@@ -58,7 +58,7 @@
 (defn proxy-imagery [req]
   (client/get (build-url req) {:as :stream}))
 
-(defn get-secure-watch-dates [req]
+(defn get-securewatch-dates [req]
   (let [imagery-id    (tc/str->int (get-in req [:params :imageryId]))
         source-config (get-imagery-source-config imagery-id)
         base-url      (:geoserverUrl source-config)
