@@ -42,7 +42,8 @@ replacing the values with your own:
 {:host                  "smtp.gmail.com"
  :user                  "support-my-domain@gmail.com"
  :pass                  "foobarbaz200"
- :ssl                   true
+ :tls                   true
+ :port                  587
  :base-url              "https://my.domain/"
  :recipient-limit       100
  :mailing-list-interval 600}
