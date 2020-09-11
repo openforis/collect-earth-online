@@ -67,7 +67,7 @@
                                                        (io/resource "public/img/institution-logos/")
                                                        (str "institution-" institution-id))]
             (call-sql "update_institution_logo" institution-id (str "img/institution-logos/" logo-file-name))))
-        (doseq [admin-id (conj #{1} user-id)]
+        (doseq [admin-id (set [user-id 1])]
           (call-sql "add_institution_user" institution-id admin-id 1))
         (data-response institution-id))
       (data-response ""))))

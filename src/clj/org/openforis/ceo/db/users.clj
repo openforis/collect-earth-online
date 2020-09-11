@@ -150,7 +150,7 @@
         (call-sql "update_password" email password)
         (data-response "")))))
 
-;; FIXME, remove this route and check if a user exists directly when adding
+;; FIXME: Remove this route and check if a user exists directly when adding
 (defn get-all-users [_]
   (let [all-users (mapv (fn [{:keys [user_id email]}]
                           {:id    user_id
@@ -233,10 +233,10 @@
     (if-let [error-msg (get-mailing-list-errors subject body remaining-time)]
       (data-response error-msg)
       (do (set-mailing-list-last-sent! (LocalDateTime/now))
-          (let [emails     (mapv :email (call-sql "get_all_mailing_list_users"))
+          (let [emails   (mapv :email (call-sql "get_all_mailing_list_users"))
                 response (send-to-mailing-list emails subject body "text/html")]
             (data-response (str/join "\n" (:messages response []))
-                           {:status (:status response 200)}))))))
+                           {:status (:status response)}))))))
 
 (defn unsubscribe-from-mailing-list [{:keys [params]}]
   (let [email (:email params)]
