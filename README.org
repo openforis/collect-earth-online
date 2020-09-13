@@ -4,24 +4,24 @@ Crowd-sourced visual interpretation of on-demand satellite imagery
 
 ** Installation Requirements
 
-- [[https://www.oracle.com/technetwork/java/javase/downloads/index.html][Java Development Kit (version 14)]]
+- [[https://jdk.java.net][Java Development Kit (version 14)]]
 - [[https://clojure.org/guides/getting_started][Clojure CLI tools]]
 - [[https://www.postgresql.org/download][Postgresql (version 12)]]
-- [[https://postgis.net/install/][Postgis (version 3)]]
+- [[https://postgis.net/install/][PostGIS (version 3)]]
 - [[https://www.7-zip.org/][p7zip]]
-- [[https://www.sqlite.org/download.html][sqlite3]]
+- [[https://www.npmjs.com/][npm]]
 - [[https://certbot.eff.org/][certbot]]
 - [[https://www.openssl.org/source/][openssl]]
 
 ** Postgresql Database Setup
 
-*PostgreSQL* needs to be installed on the machine that will be hosting
+*Postgresql* needs to be installed on the machine that will be hosting
 this website. Once the Postgresql database server is running on your
 machine, you should navigate to the toplevel directory and run the
 database build command as follows:
 
 #+begin_src sh
-$ clojure -A:build-db build-all
+clojure -A:build-db build-all
 #+end_src
 
 This will begin by creating a new database and role called
@@ -34,7 +34,7 @@ is necessary for the website to function properly.
 ** Email Server
 
 To set up the email server for system emails, start by creating a file
-named `mail-server.edn` in the root directory of the application. Add
+named `mail-config.edn` in the root directory of the application. Add
 the following EDN object containing server details to the file,
 replacing the values with your own:
 
@@ -60,8 +60,8 @@ running in dev mode to allow http access to certbot.
 An example process for an Ubuntu Linux system is as follows:
 
 #+begin_src sh
-$ sudo certbot certonly --webroot -w ./resources/public -d mydomain.com
-$ sudo openssl pkcs12 -export -out ./.key/keystore.pkcs12
+sudo certbot certonly --webroot -w ./resources/public -d mydomain.com
+sudo openssl pkcs12 -export -out ./.key/keystore.pkcs12
        -in /etc/letsencrypt/live/mydomain.com/fullchain.pem
        -inkey /etc/letsencrypt/live/mydomain.com/privkey.pem
        -passout pass:foobar
@@ -70,7 +70,7 @@ $ sudo openssl pkcs12 -export -out ./.key/keystore.pkcs12
 The cert creation and renewal can be run automatically with the following command:
 
 #+begin_src sh
-$ clojure -A:ssl-key-gen mydomain.com
+clojure -A:ssl-key-gen mydomain.com
 #+end_src
 
 ** Forwarding Ports
@@ -81,10 +81,10 @@ iptables-persistent after setting up the routing will automatically save
 the rules persistently.
 
 #+begin_src sh
-$ iptables -t nat -A PREROUTING -p tcp --dport 80 -j REDIRECT --to-ports 8080
-$ iptables -t nat -I PREROUTING -p tcp --dport 443 -j REDIRECT --to-ports 8443
-$ iptables-save
-$ apt -y install iptables-persistent
+sudo iptables -t nat -A PREROUTING -p tcp --dport 80 -j REDIRECT --to-ports 8080
+sudo iptables -t nat -I PREROUTING -p tcp --dport 443 -j REDIRECT --to-ports 8443
+sudo iptables-save
+sudo apt -y install iptables-persistent
 #+end_src
 
 ** Web Server
@@ -93,16 +93,25 @@ To compile and run the web application, navigate to the toplevel
 project directory and run:
 
 #+begin_src sh
-$ npm run webpack-[dev|prod]
-$ clojure -A:run-server [port] [dev|prod]
+npm run webpack-[dev|prod]
+clojure -A:run-server [port] [dev|prod]
 #+end_src
 
-The website will then be available at http://localhost:8080 or on
-whichever port you specified. In dev mode, server-side exceptions will
-be displayed in the browser and Clojure source files will be reloaded
+The website will then be available at http://localhost:8080 in prod mode
+or http://localhost:8080 or in dev mode. If a different port is specified
+the site will be available on that port. In dev mode, server-side exceptions
+will be displayed in the browser and Clojure source files will be reloaded
 whenever you refresh the page. These features are disabled in prod
 mode. If the second argument to run-server is omitted, it will default
 to prod mode.
+
+** Building GEE-Gateway
+
+In order to use the Geo-Dash portion of CEO, we need to install an
+application to communicate with Google Earth Engine called
+GEE-Gateway. To build and launch GEE-Gateway, download its source code
+from https://github.com/openforis/gee-gateway and follow the steps in
+its README file.
 
 ** Contact
 
@@ -116,3 +125,10 @@ to prod mode.
 - [[mailto:alfonso.sanchezpausdiaz@fao.org][Alfonso SanchezPausDiaz (FAO)]]
 - [[mailto:mspencer@sig-gis.com][Matt Spencer (SIG)]]
 - [[mailto:bbhandari@sig-gis.com][Biplov Bhandari (SIG)]]
+
+** License and Distribution
+
+Copyright © 2016-2020 FAO.
+
+Collect Earth Online is distributed by FAO under the terms of the MIT
+License. See LICENSE in this directory for more information.
