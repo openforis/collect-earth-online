@@ -1199,7 +1199,7 @@ export function pageInit(args) {
             <ReviewInstitution
                 documentRoot=""
                 userId={args.userId || -1}
-                institutionId={args.institutionId || -1}
+                institutionId={parseInt(args.institutionId || "-1")}
             />
         </NavigationBar>,
         document.getElementById("app")
