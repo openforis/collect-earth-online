@@ -53,7 +53,7 @@
 
 (defn gateway-request [{:keys [params json-params server-name]}]
   (let [path (:path params)
-        url  (if (str/includes? server-name "local")
+        url  (if (str/starts-with? server-name "local")
                "https://ceodev.servirglobal.net"
                "https://localhost")]
     (client/post (str url ":8888/" path)
