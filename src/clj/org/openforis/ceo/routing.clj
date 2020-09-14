@@ -53,129 +53,129 @@
                                               :auth-action :redirect}
    [:get  "/unsubscribe-mailing-list"]       {:handler (render-page "/unsubscribe-mailing-list")}
    ;; Users API
-   [:get  "/get-all-users"]                  {:handler (users/get-all-users)}
-   [:get  "/get-institution-users"]          {:handler     (users/get-institution-users)
+   [:get  "/get-all-users"]                  {:handler users/get-all-users}
+   [:get  "/get-institution-users"]          {:handler     users/get-institution-users
                                               :auth-type   :user
                                               :auth-action :block}
-   [:get  "/get-user-details"]               {:handler     (users/get-user-details)
+   [:get  "/get-user-details"]               {:handler     users/get-user-details
                                               :auth-type   :user
                                               :auth-action :block}
-   [:get  "/get-user-stats"]                 {:handler     (users/get-user-stats)
+   [:get  "/get-user-stats"]                 {:handler     users/get-user-stats
                                               :auth-type   :user
                                               :auth-action :block}
-   [:post "/account"]                        {:handler     (users/update-account)
+   [:post "/account"]                        {:handler     users/update-account
                                               :auth-type   :user
                                               :auth-action :block}
-   [:post "/login"]                          {:handler (users/login)}
-   [:post "/logout"]                         {:handler (users/logout)}
-   [:post "/update-user-institution-role"]   {:handler     (users/update-institution-role)
+   [:post "/login"]                          {:handler users/login}
+   [:post "/logout"]                         {:handler users/logout}
+   [:post "/update-user-institution-role"]   {:handler     users/update-institution-role
                                               :auth-type   :inst-admin
                                               :auth-action :block}
-   [:post "/request-institution-membership"] {:handler     (users/request-institution-membership)
+   [:post "/request-institution-membership"] {:handler     users/request-institution-membership
                                               :auth-type   :user
                                               :auth-action :block}
-   [:post "/send-to-mailing-list"]           {:handler     (users/submit-email-for-mailing-list)
+   [:post "/send-to-mailing-list"]           {:handler     users/submit-email-for-mailing-list
                                               :auth-type   :super
                                               :auth-action :block}
-   [:post "/password-request"]               {:handler (users/reset-password)}
-   [:post "/password-reset"]                 {:handler (users/get-password-reset-key)}
-   [:post "/register"]                       {:handler (users/register)}
-   [:post "/unsubscribe-mailing-list"]       {:handler (users/unsubscribe-from-mailing-list)}
+   [:post "/password-request"]               {:handler users/reset-password}
+   [:post "/password-reset"]                 {:handler users/get-password-reset-key}
+   [:post "/register"]                       {:handler users/register}
+   [:post "/unsubscribe-mailing-list"]       {:handler users/unsubscribe-from-mailing-list}
    ;; Projects API
-   [:get  "/dump-project-aggregate-data"]    {:handler     (projects/dump-project-aggregate-data)
+   [:get  "/dump-project-aggregate-data"]    {:handler     projects/dump-project-aggregate-data
                                               :auth-type   :proj-admin
                                               :auth-action :block}
-   [:get  "/dump-project-raw-data"]          {:handler     (projects/dump-project-raw-data)
+   [:get  "/dump-project-raw-data"]          {:handler     projects/dump-project-raw-data
                                               :auth-type   :proj-admin
                                               :auth-action :block}
-   [:get  "/get-all-projects"]               {:handler (projects/get-all-projects)}
-   [:get  "/get-project-by-id"]              {:handler     (projects/get-project-by-id)
+   [:get  "/get-all-projects"]               {:handler projects/get-all-projects}
+   [:get  "/get-project-by-id"]              {:handler     projects/get-project-by-id
                                               :auth-type   :collect
                                               :auth-action :block}
-   [:get  "/get-project-stats"]              {:handler     (projects/get-project-stats)
+   [:get  "/get-project-stats"]              {:handler     projects/get-project-stats
                                               :auth-type   :collect
                                               :auth-action :block}
-   [:post "/archive-project"]                {:handler     (projects/archive-project)
+   [:post "/archive-project"]                {:handler     projects/archive-project
                                               :auth-type   :proj-admin
                                               :auth-action :block}
-   [:post "/close-project"]                  {:handler     (projects/close-project)
+   [:post "/close-project"]                  {:handler     projects/close-project
                                               :auth-type   :proj-admin
                                               :auth-action :block}
-   [:post "/create-project"]                 {:handler     (projects/create-project)
+   [:post "/create-project"]                 {:handler     projects/create-project
                                               :auth-type   :inst-admin
                                               :auth-action :block}
-   [:post "/publish-project"]                {:handler     (projects/publish-project)
+   [:post "/publish-project"]                {:handler     projects/publish-project
                                               :auth-type   :proj-admin
                                               :auth-action :block}
-   [:post "/update-project"]                 {:handler     (projects/update-project)
+   [:post "/update-project"]                 {:handler     projects/update-project
                                               :auth-type   :proj-admin
                                               :auth-action :block}
    ;; Plots API
-   [:get  "/get-next-plot"]                  {:handler     (plots/get-next-plot)
+   [:get  "/get-next-plot"]                  {:handler     plots/get-next-plot
                                               :auth-type   :collect
                                               :auth-action :block}
-   [:get  "/get-plot-by-id"]                 {:handler     (plots/get-plot-by-id)
+   [:get  "/get-plot-by-id"]                 {:handler     plots/get-plot-by-id
                                               :auth-type   :collect
                                               :auth-action :block}
-   [:get  "/get-prev-plot"]                  {:handler     (plots/get-prev-plot)
+   [:get  "/get-prev-plot"]                  {:handler     plots/get-prev-plot
                                               :auth-type   :collect
                                               :auth-action :block}
-   [:get  "/get-project-plots"]              {:handler     (plots/get-project-plots)
+   [:get  "/get-project-plots"]              {:handler     plots/get-project-plots
                                               :auth-type   :collect
                                               :auth-action :block}
-   [:get  "/get-proj-plot"]                  {:handler     (plots/get-project-plot)
+   [:get  "/get-proj-plot"]                  {:handler     plots/get-project-plot
                                               :auth-type   :collect
                                               :auth-action :block}
-   [:post "/add-user-samples"]               {:handler      (plots/add-user-samples)
+   [:post "/add-user-samples"]               {:handler      plots/add-user-samples
                                               :auth-type   :collect
                                               :auth-action :block}
-   [:post "/flag-plot"]                      {:handler     (plots/flag-plot)
+   [:post "/flag-plot"]                      {:handler     plots/flag-plot
                                               :auth-type   :collect
                                               :auth-action :block}
-   [:post "/release-plot-locks"]             {:handler     (plots/release-plot-locks)
+   [:post "/release-plot-locks"]             {:handler     plots/release-plot-locks
                                               :auth-type   :collect
                                               :auth-action :block}
-   [:post "/reset-plot-lock"]                {:handler     (plots/reset-plot-lock)
+   [:post "/reset-plot-lock"]                {:handler     plots/reset-plot-lock
                                               :auth-type   :collect
                                               :auth-action :block}
    ;; Institutions API
-   [:get  "/get-all-institutions"]           {:handler (institutions/get-all-institutions)}
-   [:get  "/get-institution-details"]        {:handler (institutions/get-institution-details)}
-   [:post "/archive-institution"]            {:handler     (institutions/archive-institution)
+   [:get  "/get-all-institutions"]           {:handler institutions/get-all-institutions}
+   [:get  "/get-institution-details"]        {:handler institutions/get-institution-details}
+   [:post "/archive-institution"]            {:handler     institutions/archive-institution
                                               :auth-type   :inst-admin
                                               :auth-action :block}
-   [:post "/create-institution"]             {:handler     (institutions/create-institution)
+   [:post "/create-institution"]             {:handler     institutions/create-institution
                                               :auth-type   :user
                                               :auth-action :block}
-   [:post "/update-institution"]             {:handler     (institutions/update-institution)
+   [:post "/update-institution"]             {:handler     institutions/update-institution
                                               :auth-type   :inst-admin
                                               :auth-action :block}
    ;; Imagery API
-   [:get  "/get-institution-imagery"]        {:handler (imagery/get-institution-imagery)}
-   [:get  "/get-project-imagery"]            {:handler     (imagery/get-project-imagery)
+   [:get  "/get-institution-imagery"]        {:handler imagery/get-institution-imagery}
+   [:get  "/get-project-imagery"]            {:handler     imagery/get-project-imagery
                                               :auth-type   :collect
                                               :auth-action :block}
-   [:get  "/get-public-imagery"]             {:handler (imagery/get-public-imagery)}
-   [:post "/add-geodash-imagery"]            {:handler (imagery/add-geodash-imagery)}
-   [:post "/add-institution-imagery"]        {:handler     (imagery/add-institution-imagery)
+   [:get  "/get-public-imagery"]             {:handler imagery/get-public-imagery}
+   [:post "/add-geodash-imagery"]            {:handler imagery/add-geodash-imagery}
+   [:post "/add-institution-imagery"]        {:handler     imagery/add-institution-imagery
                                               :auth-type   :inst-admin
                                               :auth-action :block}
-   [:post "/update-institution-imagery"]     {:handler     (imagery/update-institution-imagery)
+   [:post "/update-institution-imagery"]     {:handler     imagery/update-institution-imagery
                                               :auth-type   :inst-admin
                                               :auth-action :block}
-   [:post "/archive-institution-imagery"]    {:handler     (imagery/archive-institution-imagery)
+   [:post "/archive-institution-imagery"]    {:handler     imagery/archive-institution-imagery
                                               :auth-type   :inst-admin
                                               :auth-action :block}
    ;; GeoDash API
-   [:get  "/geo-dash/get-by-projid"]         {:handler (geodash/geodash-id)}
-   [:post "/geo-dash/create-widget"]         {:handler (geodash/create-dashboard-widget-by-id)}
-   [:post "/geo-dash/delete-widget"]         {:handler (geodash/delete-dashboard-widget-by-id)}
-   [:post "/geo-dash/gateway-request"]       {:handler (geodash/gateway-request)}
-   [:post "/geo-dash/update-widget"]         {:handler (geodash/update-dashboard-widget-by-id)}
+   [:get  "/geo-dash/get-by-projid"]         {:handler geodash/geodash-id}
+   [:post "/geo-dash/create-widget"]         {:handler geodash/create-dashboard-widget-by-id}
+   [:post "/geo-dash/delete-widget"]         {:handler geodash/delete-dashboard-widget-by-id}
+   [:post "/geo-dash/gateway-request"]       {:handler geodash/gateway-request}
+   [:post "/geo-dash/update-widget"]         {:handler geodash/update-dashboard-widget-by-id}
    ;; Proxy Routes
-   [:get  "/get-tile"]                       {:handler     (proxy/proxy-imagery)
+   [:get  "/get-tile"]                       {:handler     proxy/proxy-imagery
                                               :auth-type   :no-cross
                                               :auth-action :block}
-   [:get  "/get-securewatch-dates"]          {:handler     (proxy/get-securewatch-dates)
+   [:get  "/get-securewatch-dates"]          {:handler     proxy/get-securewatch-dates
                                               :auth-type   :no-cross
                                               :auth-action :block}})

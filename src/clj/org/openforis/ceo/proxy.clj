@@ -13,9 +13,9 @@
          "_mosaic/gmap/" z "/" x "/" y ".png?api_key="
          (:accessToken source-config))))
 
-(defn- apply-default-styles [params geoserver-params]
+(defn- apply-default-styles [params]
   (update params :STYLES #(if (= "" %)
-                            (str/join "," (map (constantly "") (str/split (:LAYERS geoserver-params) #",")))
+                            (str/join "," (map (constantly "") (str/split (:LAYERS params) #",")))
                             %)))
 
 (defn- remove-extra-params [params]
@@ -34,7 +34,7 @@
          (as-> (pu/mapm upcase-key query-params) new-query-params
            (remove-extra-params new-query-params)
            (merge new-query-params geoserver-params)
-           (apply-default-styles new-query-params geoserver-params)
+           (apply-default-styles new-query-params)
            (map (fn [[key val]]
                   (str (name key) "=" val))
                 new-query-params)
