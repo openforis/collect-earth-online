@@ -65,28 +65,6 @@
           (call-sql "add_imagery_to_all_institution_projects" new-imagery-id))
         (data-response "")))))
 
-;; TODO this should not be needed. Just build the source config on the front end and reuse add-institution-imagery
-(defn add-geodash-imagery [{:keys [params]}]
-  (let [institution-id      (tc/str->int (:institutionId params))
-        imagery-title       (:imageryTitle params)
-        imagery-attribution (:imageryAttribution params)
-        gee-url             (:geeUrl params)
-        gee-params          (tc/json->clj (:geeParams params))
-        source-config       (tc/clj->jsonb {:type      "GeeGateway"
-                                            :geeUrl    gee-url
-                                            :geeParams gee-params})]
-    (if (sql-primitive (call-sql "imagery_name_taken" institution-id imagery-title -1))
-      (data-response "The title you have chosen is already taken.")
-      (do
-        (call-sql "add_institution_imagery"
-                  institution-id
-                  "private"
-                  imagery-title
-                  imagery-attribution
-                  nil
-                  source-config)
-        (data-response "")))))
-
 (defn update-institution-imagery [{:keys [params]}]
   (let [imagery-id           (tc/str->int (:imageryId params))
         imagery-title        (:imageryTitle params)

@@ -488,15 +488,15 @@ class Collection extends React.Component {
             if (this.state.currentPlot.flagged) {
                 fetch("/flag-plot",
                       {
-                        method: "POST",
-                        headers: {
-                            "Accept": "application/json",
-                            "Content-Type": "application/json",
-                        },
-                        body: JSON.stringify({
-                            projectId: this.props.projectId,
-                            plotId: this.state.currentPlot.id,
-                        }),
+                          method: "POST",
+                          headers: {
+                              "Accept": "application/json",
+                              "Content-Type": "application/json",
+                          },
+                          body: JSON.stringify({
+                              projectId: this.props.projectId,
+                              plotId: this.state.currentPlot.id,
+                          }),
                       })
                     .then(response => {
                         if (response.ok) {
@@ -509,19 +509,19 @@ class Collection extends React.Component {
             } else {
                 fetch("/add-user-samples",
                       {
-                        method: "post",
-                        headers: {
-                            "Accept": "application/json",
-                            "Content-Type": "application/json",
-                        },
-                        body: JSON.stringify({
-                            projectId: this.props.projectId,
-                            plotId: this.state.currentPlot.id,
-                            confidence: -1,
-                            collectionStart: this.state.collectionStart,
-                            userSamples: this.state.userSamples,
-                            userImages: this.state.userImages,
-                        }),
+                          method: "post",
+                          headers: {
+                              "Accept": "application/json",
+                              "Content-Type": "application/json",
+                          },
+                          body: JSON.stringify({
+                              projectId: this.props.projectId,
+                              plotId: this.state.currentPlot.id,
+                              confidence: -1,
+                              collectionStart: this.state.collectionStart,
+                              userSamples: this.state.userSamples,
+                              userImages: this.state.userImages,
+                          }),
                       })
                     .then(response => {
                         if (response.ok) {
