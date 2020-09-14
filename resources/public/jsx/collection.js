@@ -1604,7 +1604,6 @@ export function pageInit(args) {
     ReactDOM.render(
         <NavigationBar userName={args.userName} userId={args.userId}>
             <Collection
-                userId={args.userId === "" ? -1 : parseInt(args.userId)}
                 userName={args.userName || "guest"}
                 projectId={args.projectId}
             />
