@@ -174,10 +174,10 @@ class Project extends React.Component {
     configureGeoDash = () => {
         if (this.state.plotList != null && this.state.projectDetails != null) {
             window.open(
-                "/widget-layout-editor?editable=true&" +
-                encodeURIComponent(
-                    `institutionId=${this.state.projectDetails.institution}` +
-                    `&projectId=${this.state.projectDetails.id}`
+                "/widget-layout-editor?editable=true&"
+                + encodeURIComponent(
+                    `institutionId=${this.state.projectDetails.institution}`
+                    + `&projectId=${this.state.projectDetails.id}`
                 ),
                 "_geo-dash");
         }
