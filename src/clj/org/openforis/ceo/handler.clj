@@ -121,18 +121,6 @@
             {}
             keyvals)))
 
-(defn wrap-edn-params [handler]
-  (fn [{:keys [content-type request-method query-string body params] :as request}]
-    (if (= content-type "application/edn")
-      (let [get-params (when (and (= request-method :get)
-                                  (not (str/blank? query-string)))
-                         (parse-query-string query-string))
-            post-params (when (and (= request-method :post)
-                                   (not (nil? body)))
-                          (edn/read-string (slurp body)))]
-        (handler (assoc request :params (merge params get-params post-params))))
-      (handler request))))
-
 (def updatable-session-keys [:tokenKey])
 
 (defn wrap-persistent-session [handler]
@@ -164,7 +152,6 @@
       wrap-request-logging
       wrap-persistent-session
       wrap-keyword-params
-      wrap-edn-params
       wrap-json-params
       wrap-nested-params
       wrap-multipart-params
