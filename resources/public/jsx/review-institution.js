@@ -1284,7 +1284,7 @@ export function pageInit(args) {
         <NavigationBar userName={args.userName} userId={args.userId}>
             <ReviewInstitution
                 userId={args.userId || -1}
-                institutionId={args.institutionId || -1}
+                institutionId={parseInt(args.institutionId || "-1")}
             />
         </NavigationBar>,
         document.getElementById("app")
