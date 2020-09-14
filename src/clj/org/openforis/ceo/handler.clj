@@ -48,11 +48,11 @@
 (defn- no-cross-traffic? [{:keys [headers]}]
   (when-let [referer (get headers "referer")]
     (when-let [host (get headers "host")]
-      (not (str/includes? referer host)))))
+      (str/includes? referer host))))
 
-(defn authenticated-routing-handler [{:keys [uri request-method] :as request}]
+(defn authenticated-routing-handler [{:keys [uri request-method params] :as request}]
   (let [{:keys [auth-type auth-action handler] :as route} (get routes [request-method uri])
-        user-id      (get-in request [:params :userId] -1)
+        user-id      (:userId params -1)
         next-handler (if route
                        (if (condp = auth-type
                              :user       (pos? user-id)
