@@ -34,7 +34,7 @@ is necessary for the website to function properly.
 ** Email Server
 
 To set up the email server for system emails, start by creating a file
-named `mail-config.edn` in the root directory of the application. Add
+named "mail-config.edn" in the root directory of the application. Add
 the following EDN object containing server details to the file,
 replacing the values with your own:
 
@@ -61,10 +61,11 @@ An example process for an Ubuntu Linux system is as follows:
 
 #+begin_src sh
 sudo certbot certonly --webroot -w ./resources/public -d mydomain.com
-sudo openssl pkcs12 -export -out ./.key/keystore.pkcs12
-       -in /etc/letsencrypt/live/mydomain.com/fullchain.pem
-       -inkey /etc/letsencrypt/live/mydomain.com/privkey.pem
-       -passout pass:foobar
+sudo openssl pkcs12 -export \
+             -in /etc/letsencrypt/live/mydomain.com/fullchain.pem \
+             -inkey /etc/letsencrypt/live/mydomain.com/privkey.pem \
+             -out ./.key/keystore.pkcs12 \
+             -passout pass:foobar
 #+end_src
 
 The cert creation and renewal can be run automatically with the following command:
@@ -97,13 +98,13 @@ npm run webpack-[dev|prod]
 clojure -A:run-server [port] [dev|prod]
 #+end_src
 
-The website will then be available at http://localhost:8080 in prod mode
-or http://localhost:8080 or in dev mode. If a different port is specified
-the site will be available on that port. In dev mode, server-side exceptions
-will be displayed in the browser and Clojure source files will be reloaded
-whenever you refresh the page. These features are disabled in prod
-mode. If the second argument to run-server is omitted, it will default
-to prod mode.
+The website will then be available at https://localhost:8080 in prod
+mode or at http://localhost:8080 in dev mode. If a different port is
+specified the site will be available on that port. In dev mode,
+server-side exceptions will be displayed in the browser and Clojure
+source files will be reloaded whenever you refresh the page. These
+features are disabled in prod mode. If the second argument to
+run-server is omitted, it will default to prod mode.
 
 ** Building GEE-Gateway
 
