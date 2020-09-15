@@ -1,6 +1,6 @@
 import React from "react";
 import ReactDOM from "react-dom";
-import { NavigationBar } from "./components/PageComponents";
+import {NavigationBar} from "./components/PageComponents";
 
 class UnsubscribeMailingList extends React.Component {
     constructor(props) {
@@ -11,7 +11,7 @@ class UnsubscribeMailingList extends React.Component {
     }
 
     componentDidMount() {
-        this.setState({ email: this.props.userName });
+        this.setState({email: this.props.userName});
     }
 
     submitUnsubscribe = () => {
@@ -57,7 +57,7 @@ class UnsubscribeMailingList extends React.Component {
                                     type="email"
                                     value={this.state.email}
                                     className="form-control"
-                                    onChange={e => this.setState({ email: e.target.value })}
+                                    onChange={e => this.setState({email: e.target.value})}
                                 />
                             </div>
                             <button className="btn bg-lightgreen float-right mb-2" type="submit">Unsubscribe</button>

@@ -1,15 +1,15 @@
-import React, { Fragment } from "react";
+import React, {Fragment} from "react";
 import ReactDOM from "react-dom";
 
-import { FormLayout, SectionBlock } from "./components/FormComponents";
-import { NavigationBar } from "./components/PageComponents";
-import { ProjectInfo, ProjectAOI, ProjectOptions, PlotReview, SampleReview } from "./components/ProjectComponents";
-import { mercator, ceoMapStyles } from "./utils/mercator.js";
-import { SurveyDesign } from "./components/SurveyDesign";
-import { plotLimit, perPlotLimit, sampleLimit } from "./utils/projectUtils";
-import { convertSampleValuesToSurveyQuestions } from "./utils/surveyUtils";
-import { encodeFileAsBase64 } from "./utils/fileUtils";
-import { formatNumberWithCommas, isNumber } from "./utils/textUtils";
+import {FormLayout, SectionBlock} from "./components/FormComponents";
+import {NavigationBar} from "./components/PageComponents";
+import {ProjectInfo, ProjectAOI, ProjectOptions, PlotReview, SampleReview} from "./components/ProjectComponents";
+import {mercator, ceoMapStyles} from "./utils/mercator.js";
+import {SurveyDesign} from "./components/SurveyDesign";
+import {plotLimit, perPlotLimit, sampleLimit} from "./utils/projectUtils";
+import {convertSampleValuesToSurveyQuestions} from "./utils/surveyUtils";
+import {encodeFileAsBase64} from "./utils/fileUtils";
+import {formatNumberWithCommas, isNumber} from "./utils/textUtils";
 
 const blankProject = {
     archived: false,
@@ -106,7 +106,7 @@ class Project extends React.Component {
 
         // Set sample distribution to a valid choice based on plot selection
         if (this.state.projectDetails.plotDistribution !== prevState.projectDetails.plotDistribution) {
-            const { plotDistribution, sampleDistribution } = this.state.projectDetails;
+            const {plotDistribution, sampleDistribution} = this.state.projectDetails;
             this.setProjectDetail("sampleDistribution", ["random", "gridded"].includes(plotDistribution)
                                       && ["csv", "shp"].includes(sampleDistribution) ? "random"
                                         : plotDistribution === "shp"
@@ -133,7 +133,7 @@ class Project extends React.Component {
 
     createProject = () => {
         if (this.validateProject() && confirm("Do you REALLY want to create this project?")) {
-            this.setState({ showModal: true }, this.createProjectApi);
+            this.setState({showModal: true}, this.createProjectApi);
         }
     };
 
@@ -190,11 +190,11 @@ class Project extends React.Component {
             })
             .catch(message => {
                 alert("Error creating project:\n" + message);
-                this.setState({ showModal: false });
+                this.setState({showModal: false});
             });
 
     validateProject = () => {
-        const { projectDetails, imageryList, projectImageryList } = this.state;
+        const {projectDetails, imageryList, projectImageryList} = this.state;
 
         // FIXME Disable for now until we can add a type specifically meant to have 1 or 0 answers
         // const minAnswers = (componentType) => (componentType || "").toLowerCase() === "input" ? 1 : 2;
@@ -230,7 +230,7 @@ class Project extends React.Component {
     };
 
     validatePlotData = () => {
-        const { projectDetails, plotSampleLimitVals } = this.state;
+        const {projectDetails, plotSampleLimitVals} = this.state;
         if (["random", "gridded"].includes(projectDetails.plotDistribution) && !this.isValidBounds()) {
             alert("Please select a valid boundary");
             return false;
@@ -302,7 +302,7 @@ class Project extends React.Component {
     };
 
     isValidBounds = () => {
-        const { latMin, latMax, lonMin, lonMax } = this.state.coordinates;
+        const {latMin, latMax, lonMin, lonMax} = this.state.coordinates;
         return isNumber(latMin)
             && isNumber(latMax)
             && isNumber(lonMin)
@@ -390,25 +390,25 @@ class Project extends React.Component {
                 },
             });
         } else {
-            this.setState({ useTemplatePlots: false });
+            this.setState({useTemplatePlots: false});
         }
     };
 
-    toggleTemplateWidgets = () => this.setState({ useTemplateWidgets: !this.state.useTemplateWidgets });
+    toggleTemplateWidgets = () => this.setState({useTemplateWidgets: !this.state.useTemplateWidgets});
 
     setProjectDetail = (key, newValue) =>
-        this.setState({ projectDetails: { ...this.state.projectDetails, [key]: newValue }});
+        this.setState({projectDetails: {...this.state.projectDetails, [key]: newValue}});
 
     setSurveyQuestions = (newSurveyQuestions) =>
-        this.setState({ projectDetails: { ...this.state.projectDetails, surveyQuestions: newSurveyQuestions }});
+        this.setState({projectDetails: {...this.state.projectDetails, surveyQuestions: newSurveyQuestions}});
 
     setSurveyRules = (newSurveyRules) =>
-        this.setState({ projectDetails: { ...this.state.projectDetails, surveyRules: newSurveyRules }});
+        this.setState({projectDetails: {...this.state.projectDetails, surveyRules: newSurveyRules}});
 
     getProjectList = () => {
         fetch("/get-all-projects")
             .then(response => response.ok ? response.json() : Promise.reject(response))
-            .then(data => this.setState({ projectList: data }))
+            .then(data => this.setState({projectList: data}))
             .catch(response => {
                 console.log(response);
                 alert("Error retrieving the project list. See console for details.");
@@ -416,7 +416,7 @@ class Project extends React.Component {
     };
 
     getImageryList = () => {
-        const { institutionId } = this.props;
+        const {institutionId} = this.props;
         fetch(`/get-institution-imagery?institutionId=${institutionId}`)
             .then(response => response.ok ? response.json() : Promise.reject(response))
             .then(data => {
@@ -439,16 +439,16 @@ class Project extends React.Component {
     initProjectMap = () => {
         const newMapConfig = mercator.createMap("project-map", [0.0, 0.0], 1, this.state.imageryList);
         mercator.setVisibleLayer(newMapConfig, this.state.imageryList[0].id);
-        this.setState({ mapConfig: newMapConfig });
+        this.setState({mapConfig: newMapConfig});
     };
 
     getProjectPlots = () => {
         const maxPlots = 300;
         fetch(`/get-project-plots?projectId=${this.state.projectDetails.id}&max=${maxPlots}`)
             .then(response => response.ok ? response.json() : Promise.reject(response))
-            .then(data => this.setState({ plotList: data }))
+            .then(data => this.setState({plotList: data}))
             .catch(response => {
-                this.setState({ plotList: [] });
+                this.setState({plotList: []});
                 console.log(response);
                 alert("Error retrieving plot list. See console for details.");
             });
@@ -473,7 +473,7 @@ class Project extends React.Component {
     };
 
     showBounds = () => {
-        const { latMin, latMax, lonMin, lonMax } = this.state.coordinates;
+        const {latMin, latMax, lonMin, lonMax} = this.state.coordinates;
         const geoJsonBoundary = {
             type: "Polygon",
             coordinates: [[
@@ -528,10 +528,10 @@ class Project extends React.Component {
     };
 
     setProjectImageryList = (newProjectImageryList) =>
-        this.setState({ projectImageryList: newProjectImageryList });
+        this.setState({projectImageryList: newProjectImageryList});
 
     getTotalPlots = () => {
-        const { projectDetails, coordinates } = this.state;
+        const {projectDetails, coordinates} = this.state;
         if (projectDetails.plotDistribution === "random"
             && projectDetails.numPlots) {
             return Number(projectDetails.numPlots);
@@ -564,7 +564,7 @@ class Project extends React.Component {
     }
 
     getSamplesPerPlot = () => {
-        const { projectDetails, coordinates } = this.state;
+        const {projectDetails, coordinates} = this.state;
         if (projectDetails.sampleDistribution === "random"
             && projectDetails.samplesPerPlot) {
             return Number(projectDetails.samplesPerPlot);
@@ -721,7 +721,7 @@ class ProjectTemplateVisibility extends React.Component {
                             id="project-filter"
                             type="text"
                             value={this.state.projectFilter}
-                            onChange={e => this.setState({ projectFilter: e.target.value })}
+                            onChange={e => this.setState({projectFilter: e.target.value})}
                         />
                         <h3 className="mt-2" htmlFor="project-template">Select Project</h3>
                         <select
@@ -866,7 +866,7 @@ function PlotDesign ({
                                         setProjectDetail("plotFileName", e.target.files[0].name);
                                         encodeFileAsBase64(e.target.files[0], base64 => setProjectDetail("plotFileBase64", base64));
                                     }}
-                                    style={{ display: "none" }}
+                                    style={{display: "none"}}
                                     disabled={plotDistribution !== "csv"}
                                 />
                             </label>
@@ -897,7 +897,7 @@ function PlotDesign ({
                                         setProjectDetail("plotFileName", e.target.files[0].name);
                                         encodeFileAsBase64(e.target.files[0], base64 => setProjectDetail("plotFileBase64", base64));
                                     }}
-                                    style={{ display: "none" }}
+                                    style={{display: "none"}}
                                     disabled={plotDistribution !== "shp"}
                                 />
                             </label>
@@ -1092,7 +1092,7 @@ function SampleDesign ({
                     />
                     <label
                         className="btn btn-sm btn-block btn-outline-lightgreen btn-file py-0 my-0"
-                        style={{ opacity: plotDistribution === "random" || plotDistribution === "gridded" ? "0.25" : "1.0" }}
+                        style={{opacity: plotDistribution === "random" || plotDistribution === "gridded" ? "0.25" : "1.0"}}
                         id="sample-custom-csv-upload"
                         htmlFor="sample-distribution-csv-file"
                     >
@@ -1107,7 +1107,7 @@ function SampleDesign ({
                                 setProjectDetail("sampleFileName", e.target.files[0].name);
                                 encodeFileAsBase64(e.target.files[0], base64 => setProjectDetail("sampleFileBase64", base64));
                             }}
-                            style={{ display: "none" }}
+                            style={{display: "none"}}
                             disabled={sampleDistribution !== "csv"}
                         />
                     </label>
@@ -1125,7 +1125,7 @@ function SampleDesign ({
                     />
                     <label
                         className="btn btn-sm btn-block btn-outline-lightgreen btn-file py-0 my-0"
-                        style={{ opacity: plotDistribution === "random" || plotDistribution === "gridded" ? "0.25" : "1.0" }}
+                        style={{opacity: plotDistribution === "random" || plotDistribution === "gridded" ? "0.25" : "1.0"}}
                         id="sample-custom-shp-upload"
                         htmlFor="sample-distribution-shp-file"
                     >
@@ -1140,7 +1140,7 @@ function SampleDesign ({
                                 setProjectDetail("sampleFileName", e.target.files[0].name);
                                 encodeFileAsBase64(e.target.files[0], base64 => setProjectDetail("sampleFileBase64", base64));
                             }}
-                            style={{ display: "none" }}
+                            style={{display: "none"}}
                             disabled={sampleDistribution !== "shp"}
                         />
                     </label>
@@ -1245,7 +1245,7 @@ function SampleDesign ({
     );
 }
 
-function ProjectManagement({ createProject }) {
+function ProjectManagement({createProject}) {
     return (
         <SectionBlock title="Project Management">
             <div id="project-management">
@@ -1267,8 +1267,26 @@ function ProjectManagement({ createProject }) {
 
 function LoadingModal() {
     return (
-        <div style={{ position: "fixed", zIndex: "100", left: "0", top: "0", width: "100%", height: "100%", backgroundColor: "rgba(0,0,0,0.4)" }}>
-            <div style={{ width: "fit-content", margin: "20% auto", border: "1.5px solid", borderRadius: "5px", backgroundColor: "white" }}>
+        <div
+            style={{
+                position: "fixed",
+                zIndex: "100",
+                left: "0",
+                top: "0",
+                width: "100%",
+                height: "100%",
+                backgroundColor: "rgba(0,0,0,0.4)",
+            }}
+        >
+            <div
+                style={{
+                    width: "fit-content",
+                    margin: "20% auto",
+                    border: "1.5px solid",
+                    borderRadius: "5px",
+                    backgroundColor: "white",
+                }}
+            >
                 <label className="m-4">Please wait while project is being created.</label>
             </div>
         </div>

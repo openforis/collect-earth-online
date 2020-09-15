@@ -2,11 +2,11 @@ import "../../css/custom.css";
 
 import React from "react";
 
-function LogOutButton({ userName, uri }) {
+function LogOutButton({userName, uri}) {
     const fullUri = uri + window.location.search;
     const loggedOut = !userName || userName === "" || userName === "guest";
 
-    const logout = () => fetch("/logout", { method: "POST" })
+    const logout = () => fetch("/logout", {method: "POST"})
         .then(() => window.location = "/home");
 
     return loggedOut
@@ -34,13 +34,13 @@ function LogOutButton({ userName, uri }) {
             </>;
 }
 
-export function NavigationBar ({ userName, userId, children }) {
+export function NavigationBar ({userName, userId, children}) {
     const uri = window.location.pathname;
     const loggedOut = !userName || userName === "" || userName === "guest";
 
     return (
         <>
-            <nav className="navbar navbar-expand-lg navbar-light fixed-top py-0" style={{ backgroundColor: "white" }} id="main-nav">
+            <nav className="navbar navbar-expand-lg navbar-light fixed-top py-0" style={{backgroundColor: "white"}} id="main-nav">
                 <a className="navbar-brand pt-1 pb-1" href="/home">
                     <img className="img-fluid" id="ceo-site-logo" src="/img/ceo-logo.png" />
                 </a>
@@ -98,14 +98,14 @@ export class GeoDashNavigationBar extends React.Component {
     });
 
     render() {
-        const { userName, page } = this.props;
+        const {userName, page} = this.props;
         const uri = window.location.pathname;
 
         return (
             <>
                 <nav
                     className="navbar navbar-expand-lg navbar-light fixed-top pt-0 pb-0"
-                    style={{ backgroundColor: "white" }}
+                    style={{backgroundColor: "white"}}
                     id="geodash-nav"
                 >
                     <div className="container-fluid">
@@ -136,7 +136,7 @@ export class GeoDashNavigationBar extends React.Component {
                                         <button
                                             className="btn btn-outline-lightgreen btn-sm"
                                             type="button"
-                                            onClick={() => this.setState({ copyDialog: true })}
+                                            onClick={() => this.setState({copyDialog: true})}
                                             alt="This will remove any existing widgets currently configured."
                                             title="This will remove any existing widgets currently configured."
                                         >
@@ -147,7 +147,7 @@ export class GeoDashNavigationBar extends React.Component {
                                         <button
                                             className="btn btn-outline-lightgreen btn-sm"
                                             type="button"
-                                            onClick={() => this.setState({ addDialog : true })}
+                                            onClick={() => this.setState({addDialog : true})}
                                         >
                                             Add Widget
                                         </button>
@@ -232,7 +232,7 @@ export function LogoBanner() {
                 </div>
 
                 <div className="col-sm-4 text-center my-auto">
-                    <img className="img-fluid" id="usfs" style={{ width: "60vh" }} src="/img/usfs.png" />
+                    <img className="img-fluid" id="usfs" style={{width: "60vh"}} src="/img/usfs.png" />
                 </div>
 
                 <div className="col-sm-4 text-center my-auto">
@@ -253,16 +253,16 @@ export class SafeImage extends React.Component {
 
     componentDidUpdate(prevProps) {
         if (prevProps.src !== this.props.src) {
-            this.setState({ error: false });
+            this.setState({error: false});
         }
     }
 
     render() {
-        const { src, fallbackSrc, ...extraProps } = this.props;
+        const {src, fallbackSrc, ...extraProps} = this.props;
         return (
             <img
                 src={this.state.error ? fallbackSrc : src}
-                onError={() => this.setState({ error: true })}
+                onError={() => this.setState({error: true})}
                 {...extraProps}
             />
         );

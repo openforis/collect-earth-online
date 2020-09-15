@@ -1,6 +1,6 @@
-import React, { Fragment } from "react";
-import { removeEnumerator } from "../utils/surveyUtils";
-import { UnicodeIcon } from "../utils/textUtils";
+import React, {Fragment} from "react";
+import {removeEnumerator} from "../utils/surveyUtils";
+import {UnicodeIcon} from "../utils/textUtils";
 
 export default function SurveyCardList(props) {
     const topLevelNodes = props.surveyQuestions
@@ -55,7 +55,7 @@ class SurveyCard extends React.Component {
     };
 
     render() {
-        const { cardNumber, surveyQuestion, inDesignMode, topLevelNodeIds } = this.props;
+        const {cardNumber, surveyQuestion, inDesignMode, topLevelNodeIds} = this.props;
         return (
             <div className="SurveyCard border rounded border-dark">
                 <div className="container">
@@ -64,7 +64,7 @@ class SurveyCard extends React.Component {
                             <button
                                 type="button"
                                 className="btn btn-outline-lightgreen my-1 px-3 py-0"
-                                onClick={() => this.setState({ showQuestions: !this.state.showQuestions })}
+                                onClick={() => this.setState({showQuestions: !this.state.showQuestions})}
                             >
                                 <span className="font-weight-bold">{this.state.showQuestions ? "-" : "+"}</span>
                             </button>
@@ -84,7 +84,7 @@ class SurveyCard extends React.Component {
                                     className="btn btn-outline-lightgreen my-1 px-3 py-0"
                                     onClick={() => this.swapQuestionIds(-1)}
                                     disabled={surveyQuestion.id === topLevelNodeIds[0]}
-                                    style={{ opacity: surveyQuestion.id === topLevelNodeIds[0] ? "0.25" : "1.0" }}
+                                    style={{opacity: surveyQuestion.id === topLevelNodeIds[0] ? "0.25" : "1.0"}}
                                 >
                                     <UnicodeIcon icon="upCaret"/>
                                 </button>
@@ -93,7 +93,7 @@ class SurveyCard extends React.Component {
                                     className="btn btn-outline-lightgreen my-1 px-3 py-0"
                                     onClick={() => this.swapQuestionIds(1)}
                                     disabled={surveyQuestion.id === topLevelNodeIds[topLevelNodeIds.length - 1]}
-                                    style={{ opacity: surveyQuestion.id === topLevelNodeIds[topLevelNodeIds.length - 1] ? "0.25" : "1.0" }}
+                                    style={{opacity: surveyQuestion.id === topLevelNodeIds[topLevelNodeIds.length - 1] ? "0.25" : "1.0"}}
                                 >
                                     <UnicodeIcon icon="downCaret"/>
                                 </button>
@@ -235,7 +235,7 @@ function SurveyQuestionTree({
     );
 }
 
-function ExistingAnswer({ answer, color, removeAnswer }) {
+function ExistingAnswer({answer, color, removeAnswer}) {
     return (
         <div className="ExistingAnswer">
             <div className="col d-flex">
@@ -251,7 +251,7 @@ function ExistingAnswer({ answer, color, removeAnswer }) {
                 <div className="ExistingAnswer__circle">
                     <div
                         className="circle mt-1 mr-3"
-                        style={{ backgroundColor: color, border: "solid 1px" }}
+                        style={{backgroundColor: color, border: "solid 1px"}}
                     >
                     </div>
                 </div>

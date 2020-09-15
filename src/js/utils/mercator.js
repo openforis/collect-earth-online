@@ -17,19 +17,19 @@
 *****************************************************************************/
 
 import "ol/ol.css";
-import { Feature, Map, Overlay, View } from "ol";
-import { Control, ScaleLine, Attribution, Zoom, Rotate } from "ol/control";
-import { platformModifierKeyOnly } from "ol/events/condition";
-import { Circle, LineString, Point } from "ol/geom";
-import { DragBox, Select } from "ol/interaction";
-import { GeoJSON, KML } from "ol/format";
-import { Tile as TileLayer, Vector as VectorLayer, Group as LayerGroup } from "ol/layer";
-import { BingMaps, Cluster, TileWMS, Vector as VectorSource, XYZ } from "ol/source";
-import { Circle as CircleStyle, Icon, Fill, Stroke, Style, Text as StyleText, RegularShape } from "ol/style";
-import { fromLonLat, transform, transformExtent } from "ol/proj";
-import { fromExtent, fromCircle } from "ol/geom/Polygon";
-import { formatDateISO } from "./dateUtils";
-import { mapboxAttributionText } from "./mapbox-attribution";
+import {Feature, Map, Overlay, View} from "ol";
+import {Control, ScaleLine, Attribution, Zoom, Rotate} from "ol/control";
+import {platformModifierKeyOnly} from "ol/events/condition";
+import {Circle, LineString, Point} from "ol/geom";
+import {DragBox, Select} from "ol/interaction";
+import {GeoJSON, KML} from "ol/format";
+import {Tile as TileLayer, Vector as VectorLayer, Group as LayerGroup} from "ol/layer";
+import {BingMaps, Cluster, TileWMS, Vector as VectorSource, XYZ} from "ol/source";
+import {Circle as CircleStyle, Icon, Fill, Stroke, Style, Text as StyleText, RegularShape} from "ol/style";
+import {fromLonLat, transform, transformExtent} from "ol/proj";
+import {fromExtent, fromCircle} from "ol/geom/Polygon";
+import {formatDateISO} from "./dateUtils";
+import {mapboxAttributionText} from "./mapbox-attribution";
 
 /******************************************************************************
 ***
@@ -101,7 +101,7 @@ class PlanetLayerSwitcher extends Control {
 
     constructor(options) {
 
-        const { layers, target } = options;
+        const {layers, target} = options;
         const element = document.createElement("div");
         super({
             element: element,
@@ -172,7 +172,7 @@ mercator.__sendGEERequest = function (theJson, sourceConfig, imageryId, attribut
         id: imageryId,
         attributions: attribution,
     });
-    geeLayer.setProperties({ id: imageryId });
+    geeLayer.setProperties({id: imageryId});
     fetch("/geo-dash/gateway-request", {
         method: "POST",
         headers: {
@@ -236,7 +236,7 @@ mercator.createSource = function (sourceConfig, imageryId, attribution,
             url: "https://tiles0.planet.com/data/v1/layers/DkTnYnMW_G7i-E6Nj6lb9s7PaG8PG-Hy23Iyug/{z}/{x}/{y}.png",
             attributions: attribution,
         });
-        planetLayer.setProperties({ id: imageryId });
+        planetLayer.setProperties({id: imageryId});
         console.log("Calling out to /geo-dash/gateway-request with this JSON:\n\n" + JSON.stringify(theJson));
         fetch("/geo-dash/gateway-request", {
             method: "POST",
@@ -286,7 +286,7 @@ mercator.createSource = function (sourceConfig, imageryId, attribution,
                 const layerGroupArrays = layerGroup.getLayers().getArray();
                 if (layerGroupArrays.length > 0) {
                     mercator.currentMap.addControl(
-                        new PlanetLayerSwitcher({ layers: layerGroupArrays })
+                        new PlanetLayerSwitcher({layers: layerGroupArrays})
                     );
                 }
             }).catch(response => {
@@ -305,14 +305,14 @@ mercator.createSource = function (sourceConfig, imageryId, attribution,
     } else if (sourceConfig.type === "GeoServer") {
         return new TileWMS({
             url: "/get-tile",
-            params: { imageryId: imageryId },
+            params: {imageryId: imageryId},
             attributions: attribution,
         });
     } else if (sourceConfig.type === "SecureWatch") {
         return new TileWMS({
             serverType: "geoserver",
             url: "/get-tile",
-            params: { imageryId: imageryId },
+            params: {imageryId: imageryId},
             attributions: attribution,
         });
     } else if (sourceConfig.type === "Sentinel2" || sourceConfig.type === "Sentinel1") {
@@ -387,7 +387,7 @@ mercator.createSource = function (sourceConfig, imageryId, attribution,
             id: theID,
             attributions: attribution,
         });
-        geeLayer.setProperties({ id: theID });
+        geeLayer.setProperties({id: theID});
         if (sourceConfig.create) {
             fetch(url, {
                 method: "POST",
@@ -446,7 +446,7 @@ mercator.createSource = function (sourceConfig, imageryId, attribution,
             attributionsCollapsible: false,
         });
     } else {
-        return new XYZ({ url: "img/source-not-found.png" });
+        return new XYZ({url: "img/source-not-found.png"});
     }
 };
 
@@ -588,7 +588,7 @@ mercator.createMap = function (divName, centerCoords, zoomLevel, layerConfigs, p
             .map(layerConfig => mercator.createLayer(layerConfig, projectAOI));
 
         // Add a scale line to the default map controls
-        const controls = [new ScaleLine(), new Attribution({ collapsed: false }), new Zoom(), new Rotate()];
+        const controls = [new ScaleLine(), new Attribution({collapsed: false}), new Zoom(), new Rotate()];
 
         // Create the map view using the passed in centerCoords and zoomLevel
         const view = new View({
@@ -710,7 +710,7 @@ mercator.updateLayerSource = function (mapConfig, imageryId, projectBoundary, tr
             // This is a LayerGroup
             console.log("LayerGroup detected.");
             mapConfig.map.removeLayer(layer);
-            mapConfig.map.addLayer(mercator.createLayer({ ...layerConfig, sourceConfig: newSourceConfig },
+            mapConfig.map.addLayer(mercator.createLayer({...layerConfig, sourceConfig: newSourceConfig},
                                                         projectAOI,
                                                         true));
         } else {
@@ -723,7 +723,7 @@ mercator.updateLayerSource = function (mapConfig, imageryId, projectBoundary, tr
         }
     } else if (layerConfig.sourceConfig.type === "PlanetDaily") {
         // since PlanetDaily layer is not created when collection page is loaded
-        mapConfig.map.addLayer(mercator.createLayer({ ...layerConfig, sourceConfig: newSourceConfig },
+        mapConfig.map.addLayer(mercator.createLayer({...layerConfig, sourceConfig: newSourceConfig},
                                                     projectAOI,
                                                     true));
     }
@@ -760,7 +760,7 @@ mercator.zoomMapToExtent = function (mapConfig, extent, maxZoom) {
     }
     mapConfig.view.fit(extent,
                        mapConfig.map.getSize(),
-                       { maxZoom: maxZoom || 19 });
+                       {maxZoom: maxZoom || 19});
     return mapConfig;
 };
 
@@ -781,7 +781,7 @@ mercator.zoomMapToLayer = function (mapConfig, layerId, maxZoom) {
 
 // [Pure] Returns a style object that displays the image at imageSrc.
 mercator.getIconStyle = function (imageSrc) {
-    return new Style({ image: new Icon({ src: imageSrc }) });
+    return new Style({image: new Icon({src: imageSrc})});
 };
 
 // [Pure] Returns a style object that displays a circle with the
@@ -793,7 +793,7 @@ mercator.getCircleStyle = function (radius, fillColor, borderColor, borderWidth,
         return new Style({
             image: new CircleStyle({
                 radius: radius,
-                fill: fillColor ? new Fill({ color: fillColor }) : null,
+                fill: fillColor ? new Fill({color: fillColor}) : null,
                 stroke: new Stroke({
                     color: borderColor,
                     width: borderWidth,
@@ -804,7 +804,7 @@ mercator.getCircleStyle = function (radius, fillColor, borderColor, borderWidth,
         return new Style({
             image: new CircleStyle({
                 radius: radius,
-                fill: fillColor ? new Fill({ color: fillColor }) : null,
+                fill: fillColor ? new Fill({color: fillColor}) : null,
                 stroke: new Stroke({
                     color: borderColor,
                     width: borderWidth,
@@ -812,7 +812,7 @@ mercator.getCircleStyle = function (radius, fillColor, borderColor, borderWidth,
             }),
             text: new StyleText({
                 text: text.toString(),
-                fill: new Fill({ color: textFillColor }),
+                fill: new Fill({color: textFillColor}),
             }),
         });
     }
@@ -828,7 +828,7 @@ mercator.getRegularShapeStyle = function (radius, points, rotation, fillColor, b
             radius: radius,
             points: points,
             rotation: rotation || 0,
-            fill: fillColor ? new Fill({ color: fillColor }) : null,
+            fill: fillColor ? new Fill({color: fillColor}) : null,
             stroke: new Stroke({
                 color: borderColor,
                 width: borderWidth,
@@ -841,7 +841,7 @@ mercator.getRegularShapeStyle = function (radius, points, rotation, fillColor, b
 // is applied wth the specified fillColor, borderColor, and borderWidth.
 mercator.getPolygonStyle = function (fillColor, borderColor, borderWidth) {
     return new Style({
-        fill: fillColor ? new Fill({ color: fillColor }) : null,
+        fill: fillColor ? new Fill({color: fillColor}) : null,
         stroke: new Stroke({
             color: borderColor,
             width: borderWidth,
@@ -930,7 +930,7 @@ mercator.parseGeoJson = function (geoJson, reprojectToMap) {
 mercator.geometryToVectorSource = function (geometry) {
     return new VectorSource({
         features: [
-            new Feature({ geometry: geometry }),
+            new Feature({geometry: geometry}),
         ],
     });
 };
@@ -963,10 +963,10 @@ mercator.plotsToVectorSource = function (plots) {
     const features = plots.map(
         function (plot) {
             const geometry = mercator.parseGeoJson(plot.center, true);
-            return new Feature({ plotId: plot.id, geometry: geometry });
+            return new Feature({plotId: plot.id, geometry: geometry});
         }
     );
-    return new VectorSource({ features: features });
+    return new VectorSource({features: features});
 };
 
 // [Side Effects] Adds three vector layers to the mapConfig's map object:
@@ -1025,7 +1025,7 @@ mercator.removeInteractionByTitle = function (mapConfig, interactionTitle) {
 // then cleared on the map. When a feature is deselected, its saved
 // style is restored on the map.
 mercator.makeClickSelect = function (interactionTitle, layer, featureStyles, setSampleId) {
-    const select = new Select({ layers: [layer] });
+    const select = new Select({layers: [layer]});
     select.set("title", interactionTitle);
     const action = function (event) {
         setSampleId(event.selected.length === 1 ? event.selected[0].get("sampleId") : -1);
@@ -1047,7 +1047,7 @@ mercator.makeClickSelect = function (interactionTitle, layer, featureStyles, set
 // then cleared on the map. When a feature is deselected, its saved
 // style is restored on the map.
 mercator.makeDragBoxSelect = function (interactionTitle, layer, featureStyles, selectedFeatures, setSampleId) {
-    const dragBox = new DragBox({ condition: platformModifierKeyOnly });
+    const dragBox = new DragBox({condition: platformModifierKeyOnly});
     dragBox.set("title", interactionTitle);
     const boxstartAction = function () {
         selectedFeatures.forEach(function (feature) {
@@ -1123,7 +1123,7 @@ mercator.samplesToVectorSource = function (samples) {
             });
         }
     );
-    return new VectorSource({ features: features });
+    return new VectorSource({features: features});
 };
 
 // [Pure] Returns an ol.Collection containing the features selected by
@@ -1177,7 +1177,7 @@ mercator.makeDragBoxDraw = function (interactionTitle, layer, callBack) {
     });
     const boxendAction = function () {
         layer.getSource().clear();
-        layer.getSource().addFeature(new Feature({ geometry: dragBox.getGeometry() }));
+        layer.getSource().addFeature(new Feature({geometry: dragBox.getGeometry()}));
         if (callBack != null) {
             callBack.call(null, dragBox);
         }
@@ -1193,7 +1193,7 @@ mercator.makeDragBoxDraw = function (interactionTitle, layer, callBack) {
 mercator.enableDragBoxDraw = function (mapConfig, callBack) {
     const drawLayer = new VectorLayer({
         id: "dragBoxLayer",
-        source: new VectorSource({ features: [] }),
+        source: new VectorSource({features: []}),
         style: ceoMapStyles.yellowPolygon,
     });
     const dragBox = mercator.makeDragBoxDraw("dragBoxDraw", drawLayer, callBack);
@@ -1291,7 +1291,7 @@ mercator.projectsToVectorSource = function (projects) {
             });
         }
     );
-    return new VectorSource({ features: features });
+    return new VectorSource({features: features});
 };
 
 // [Side Effects] Adds a new vector layer called "currentPlots" to
@@ -1327,7 +1327,7 @@ mercator.addPlotLayer = function (mapConfig, plots, callBack) {
                                                         callBack.call(null, feature);
                                                     }
                                                 }
-                                            }, { hitTolerance:10 });
+                                            }, {hitTolerance:10});
     };
     mapConfig.map.on("click", clickHandler);
 
@@ -1342,12 +1342,12 @@ mercator.addPlotLayer = function (mapConfig, plots, callBack) {
 
 mercator.asPolygonFeature = function (feature) {
     return feature.getGeometry().getType() === "Circle"
-        ? new Feature({ geometry: fromCircle(feature.getGeometry()) })
+        ? new Feature({geometry: fromCircle(feature.getGeometry())})
         : feature;
 };
 
 mercator.getKMLFromFeatures = function (features) {
-    return (new KML()).writeFeatures(features, { featureProjection: "EPSG:3857" });
+    return (new KML()).writeFeatures(features, {featureProjection: "EPSG:3857"});
 };
 
 /*****************************************************************************

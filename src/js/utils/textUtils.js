@@ -14,7 +14,7 @@ export function capitalizeFirst(str) {
     }
 }
 
-export function UnicodeIcon({ icon, backgroundColor }) {
+export function UnicodeIcon({icon, backgroundColor}) {
     return (
         icon === "leftCaret" ? "\u25C0"
         : icon === "rightCaret" ? "\u25B6"
@@ -22,7 +22,7 @@ export function UnicodeIcon({ icon, backgroundColor }) {
         : icon === "downCaret" ? "\u25BC"
         : icon === "rightArrow" ? "\u27A1"
         : icon === "edit" ? "\u270D"
-        : icon === "trash" ? <span style={{ fontWeight: "normal" }}>{"\uD83D\uDDD1"}</span>
+        : icon === "trash" ? <span style={{fontWeight: "normal"}}>{"\uD83D\uDDD1"}</span>
         : icon === "noAction" ? <span className="ml-2 mr-3">{"\u20E0"}</span>
         : icon === "magnify" ? "\uD83D\uDD0D"
         : icon === "info" ? "\u24D8"

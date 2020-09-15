@@ -1,7 +1,7 @@
 import React from "react";
 import ReactDOM from "react-dom";
 import InstitutionEditor from "./components/InstitutionEditor";
-import { NavigationBar } from "./components/PageComponents";
+import {NavigationBar} from "./components/PageComponents";
 
 class CreateInstitution extends React.Component {
     constructor(props) {
@@ -24,7 +24,7 @@ class CreateInstitution extends React.Component {
 
     getInstitutions = () => fetch("/get-all-institutions")
         .then(response => response.ok ? response.json() : Promise.reject(response))
-        .then(data => this.setState({ institutions: data }))
+        .then(data => this.setState({institutions: data}))
         .catch(response => {
             console.log(response);
             alert("Error downloading institution list. See console for details.");

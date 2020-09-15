@@ -1,6 +1,6 @@
 import React from "react";
 import ReactDOM from "react-dom";
-import { NavigationBar } from "./components/PageComponents";
+import {NavigationBar} from "./components/PageComponents";
 import CKEditor from "@ckeditor/ckeditor5-react";
 import ClassicEditor from "@ckeditor/ckeditor5-build-classic";
 
@@ -26,7 +26,7 @@ class MailingList extends React.Component {
                 .then(response => Promise.all([response.ok, response.json()]))
                 .then(data => {
                     if (data[0] && data[1] === "") {
-                        this.setState({ subject: "", body: "" });
+                        this.setState({subject: "", body: ""});
                         alert("Your message has been sent to the mailing list.");
                     } else {
                         alert(data[1]);
@@ -54,7 +54,7 @@ class MailingList extends React.Component {
                                     placeholder="Subject"
                                     type="text"
                                     value={this.state.subject}
-                                    onChange={e => this.setState({ subject: e.target.value })}
+                                    onChange={e => this.setState({subject: e.target.value})}
                                 />
                             </div>
                             <div className="form-group">
@@ -62,7 +62,7 @@ class MailingList extends React.Component {
                                 <CKEditor
                                     editor={ClassicEditor}
                                     data={this.state.body}
-                                    onChange={(e, editor) => this.setState({ body: editor.getData() })}
+                                    onChange={(e, editor) => this.setState({body: editor.getData()})}
                                 />
                             </div>
                             <button

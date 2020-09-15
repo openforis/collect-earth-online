@@ -2,19 +2,19 @@ import "../css/geo-dash.css";
 
 import React from "react";
 import ReactDOM from "react-dom";
-import { mercator } from "./utils/mercator.js";
-import { UnicodeIcon } from "./utils/textUtils";
-import { formatDateISO } from "./utils/dateUtils";
-import { getGatewayPath } from "./utils/geodashUtils";
-import { GeoDashNavigationBar } from "./components/PageComponents";
-import { Feature, Map, View } from "ol";
-import { buffer as ExtentBuffer } from "ol/extent";
-import { Circle, Polygon, Point } from "ol/geom";
-import { Tile as TileLayer, Vector as VectorLayer } from "ol/layer";
-import { transform as projTransform } from "ol/proj";
-import { OSM, Vector, XYZ } from "ol/source";
-import { Style, Stroke } from "ol/style";
-import { getArea as sphereGetArea } from "ol/sphere";
+import {mercator} from "./utils/mercator.js";
+import {UnicodeIcon} from "./utils/textUtils";
+import {formatDateISO} from "./utils/dateUtils";
+import {getGatewayPath} from "./utils/geodashUtils";
+import {GeoDashNavigationBar} from "./components/PageComponents";
+import {Feature, Map, View} from "ol";
+import {buffer as ExtentBuffer} from "ol/extent";
+import {Circle, Polygon, Point} from "ol/geom";
+import {Tile as TileLayer, Vector as VectorLayer} from "ol/layer";
+import {transform as projTransform} from "ol/proj";
+import {OSM, Vector, XYZ} from "ol/source";
+import {Style, Stroke} from "ol/style";
+import {getArea as sphereGetArea} from "ol/sphere";
 import Highcharts from "highcharts";
 import HighchartsReact from "highcharts-react-official";
 import _ from "lodash";
@@ -57,7 +57,7 @@ class Geodash extends React.Component {
     componentDidMount() {
         fetch(`/get-institution-imagery?institutionId=${this.state.institutionId}`)
             .then(response => response.ok ? response.json() : Promise.reject(response))
-            .then(data => this.setState({ imageryList: data }))
+            .then(data => this.setState({imageryList: data}))
             .then(() =>
                 fetch(`/geo-dash/get-by-projid?projectId=${this.state.projectId}`)
                     .then(response => response.json())
@@ -68,7 +68,7 @@ class Geodash extends React.Component {
                         widget.swipeValue = "1.0";
                         return widget;
                     }))
-                    .then(data => this.setState({ widgets: data, callbackComplete: true }))
+                    .then(data => this.setState({widgets: data, callbackComplete: true}))
             );
     }
 
@@ -85,9 +85,9 @@ class Geodash extends React.Component {
     handleFullScreen = (widget) => {
         const widgets = [...this.state.widgets];
         const index = widgets.indexOf(widget);
-        widgets[index] = { ...widget };
+        widgets[index] = {...widget};
         widgets[index].isFull = !widgets[index].isFull;
-        this.setState({ widgets },
+        this.setState({widgets},
                       () => {
                           this.updateSize(widget);
                       }
@@ -97,17 +97,17 @@ class Geodash extends React.Component {
     handleSliderChange = widget => {
         const widgets = [...this.state.widgets];
         const index = widgets.indexOf(widget);
-        widgets[index] = { ...widget };
+        widgets[index] = {...widget};
         widgets[index].sliderType = widgets[index].sliderType === "opacity" ? "swipe" : "opacity";
-        this.setState({ widgets });
+        this.setState({widgets});
     };
 
     handleSwipeChange = (widget, id, evt) => {
         const widgets = [...this.state.widgets];
         const index = widgets.indexOf(widget);
-        widgets[index] = { ...widget };
+        widgets[index] = {...widget};
         widgets[index].swipeValue = evt.target.value;
-        this.setState({ widgets });
+        this.setState({widgets});
     };
 
     setCenterAndZoom = (center, zoom) => {
@@ -133,9 +133,9 @@ class Geodash extends React.Component {
         const doc = document.documentElement;
         if ((window.pageXOffset || doc.scrollLeft) - (doc.clientLeft || 0) === 0 && (window.pageYOffset || doc.scrollTop) - (doc.clientTop || 0) === 0) {
             window.scrollTo(this.state.left, this.state.ptop);
-            this.setState({ left: 0, ptop: 0 });
+            this.setState({left: 0, ptop: 0});
         } else {
-            this.setState({ left: (window.pageXOffset || doc.scrollLeft) - (doc.clientLeft || 0), ptop: (window.pageYOffset || doc.scrollTop) - (doc.clientTop || 0) });
+            this.setState({left: (window.pageXOffset || doc.scrollLeft) - (doc.clientLeft || 0), ptop: (window.pageYOffset || doc.scrollTop) - (doc.clientTop || 0)});
             window.scrollTo(0, 0);
         }
     };
@@ -193,7 +193,7 @@ class Widgets extends React.Component {
         } else {
             return (
                 <div className="row placeholders">
-                    <div className="placeholder columnSpan3 rowSpan2" style={{ gridArea: "1 / 1 / span 2 / span 12" }}>
+                    <div className="placeholder columnSpan3 rowSpan2" style={{gridArea: "1 / 1 / span 2 / span 12"}}>
                         <h1 id="noWidgetMessage">
                             {this.props.callbackComplete
                                 ? "The Administrator has not configured any Geo-Dash Widgets for this project"
@@ -280,12 +280,12 @@ class Widget extends React.Component {
         <div className="panel panel-default" id={"widget_" + widget.id}>
             <div className="panel-heading">
                 <ul className="list-inline panel-actions pull-right">
-                    <li style={{ display: "inline" }}>{widget.name}</li>
-                    <li style={{ display: "inline" }}>
+                    <li style={{display: "inline"}}>{widget.name}</li>
+                    <li style={{display: "inline"}}>
                         <a
                             className="list-inline panel-actions panel-fullscreen"
                             onClick={() => this.props.onFullScreen(this.props.widget)}
-                            style={{ color: "#31BAB0" }}
+                            style={{color: "#31BAB0"}}
                             role="button"
                             title="Toggle Fullscreen"
                         >
@@ -302,13 +302,13 @@ class Widget extends React.Component {
 
     getResetMapButton = widget => {
         if (this.isMapWidget(widget)) {
-            return <li style={{ display: "inline" }}>
+            return <li style={{display: "inline"}}>
                 <a
                     className="list-inline panel-actions panel-fullscreen"
                     onClick={() => this.props.resetCenterAndZoom()}
                     role="button"
                     title="Recenter"
-                    style={{ marginRight: "10px" }}
+                    style={{marginRight: "10px"}}
                 >
                     <img src={"img/ceoicon.png"} alt="Collect Earth Online"/>
                 </a>
@@ -386,7 +386,7 @@ class Widget extends React.Component {
         || (widget.featureCollection && widget.featureCollection.length > 0);
 
     render() {
-        const { widget } = this.props;
+        const {widget} = this.props;
         return (
             <React.Fragment>
                 { this.getWidgetHtml(widget, this.props.onSliderChange, this.props.onSwipeChange) }
@@ -411,15 +411,15 @@ class DegradationWidget extends React.Component {
     };
 
     handleSelectDate = (date) => {
-        this.setState({ selectedDate: date });
+        this.setState({selectedDate: date});
     };
 
     render() {
         return <React.Fragment>
-            <div id={"degradation_" + this.props.widget.id} style={{ width: "100%", minHeight: "200px" }}>
-                <div style={{ display: "table", position: "absolute", width: "100%", height: "calc(100% - 45px)" }}>
-                    <div style={{ display: "table-row", height: "65%" }}>
-                        <div style={{ display: "table-cell", position: "relative" }}>
+            <div id={"degradation_" + this.props.widget.id} style={{width: "100%", minHeight: "200px"}}>
+                <div style={{display: "table", position: "absolute", width: "100%", height: "calc(100% - 45px)"}}>
+                    <div style={{display: "table-row", height: "65%"}}>
+                        <div style={{display: "table-cell", position: "relative"}}>
                             <div className="front">
                                 <MapWidget
                                     widget={this.props.widget}
@@ -442,8 +442,8 @@ class DegradationWidget extends React.Component {
                             </div>
                         </div>
                     </div>
-                    <div style={{ display: "table-row" }}>
-                        <div style={{ display: "table-cell", position: "relative" }}>
+                    <div style={{display: "table-row"}}>
+                        <div style={{display: "table-cell", position: "relative"}}>
                             <div className="front">
                                 <GraphWidget
                                     widget={this.props.widget}
@@ -935,7 +935,7 @@ class MapWidget extends React.Component {
                         src={"img/opacity.png"}
                         style={{
                             opacity: widget.sliderType === "opacity" ? "1.0" : "0.25",
-                            cursor: "pointer"
+                            cursor: "pointer",
                         }}
                         height="20px"
                         width="40px"
@@ -948,7 +948,7 @@ class MapWidget extends React.Component {
                         src={"img/swipe.png"}
                         style={{
                             opacity: widget.sliderType === "swipe" ? "1.0" : "0.25",
-                            cursor: "pointer"
+                            cursor: "pointer",
                         }}
                         height="20px"
                         width="40px"
@@ -967,7 +967,7 @@ class MapWidget extends React.Component {
                     step = ".01"
                     onChange = {evt => this.onOpacityChange(evt)}
                     onInput = {evt => this.onOpacityChange(evt)}
-                    style={{ display: widget.sliderType === "opacity" ? "block" : "none" }}
+                    style={{display: widget.sliderType === "opacity" ? "block" : "none"}}
                 />
                 <input
                     type="range"
@@ -979,7 +979,7 @@ class MapWidget extends React.Component {
                     value={this.props.widget.swipeValue}
                     onChange = {evt => onSwipeChange(widget, widget.id, evt )}
                     onInput = {evt => onSwipeChange(widget, widget.id, evt )}
-                    style={{ display: widget.sliderType === "swipe" ? "block" : "none" }}
+                    style={{display: widget.sliderType === "swipe" ? "block" : "none"}}
                 />
             </div>;
         } else {
@@ -1000,7 +1000,7 @@ class MapWidget extends React.Component {
 
     onOpacityChange = evt => {
         try {
-            this.setState({ opacity: evt.target.value });
+            this.setState({opacity: evt.target.value});
             this.state.mapRef.getLayers().forEach(lyr => {
                 if ("widgetmap_" + this.props.widget.id === lyr.get("id") || "widgetmap_" + this.props.widget.id + "_dual" === lyr.get("id")) {
                     lyr.setOpacity(evt.target.value);
@@ -1023,7 +1023,7 @@ class MapWidget extends React.Component {
         try {
             if (this.state && this.state.geeTimeOut) {
                 window.clearTimeout(this.state.geeTimeOut);
-                this.setState({ geeTimeOut: null });
+                this.setState({geeTimeOut: null});
             }
             this.setState({
                 geeTimeOut: window.setTimeout(() => {
@@ -1183,7 +1183,7 @@ class MapWidget extends React.Component {
         }
     };
 
-    setStretch = evt => this.setState({ stretch: parseInt(evt.target.value) });
+    setStretch = evt => this.setState({stretch: parseInt(evt.target.value)});
 
     toggleDegDataType = checked => this.props.handleDegDataType(checked ? "sar" : "landsat");
 
@@ -1215,7 +1215,7 @@ class MapWidget extends React.Component {
         : "";
 
     getDegDataTypeToggle = () =>
-        <div className="col-6" style={{ display: this.props.isDegradation ? "block" : "none" }}>
+        <div className="col-6" style={{display: this.props.isDegradation ? "block" : "none"}}>
             <span className="ctrlText font-weight-bold">Data: </span>
             <span className="ctrlText">LANDSAT </span>
             <label className="switch">
@@ -1227,7 +1227,7 @@ class MapWidget extends React.Component {
 
     render() {
         return <React.Fragment>
-            <div id={"widgetmap_" + this.props.widget.id} className="minmapwidget" style={{ width:"100%", minHeight:"200px" }}/>
+            <div id={"widgetmap_" + this.props.widget.id} className="minmapwidget" style={{width:"100%", minHeight:"200px"}}/>
             {this.getSliderControl()}
             <div className="row">
                 {this.getStretchToggle()}
@@ -1263,15 +1263,15 @@ class GraphWidget extends React.Component {
     }
 
     loadGraph = () => {
-        const { chartDataSeriesLandsat, chartDataSeriesSar, selectSarGraphBand, graphRef } = this.state;
-        const { widget, degDataType, getParameterByName, projPairAOI, handleSelectDate } = this.props;
+        const {chartDataSeriesLandsat, chartDataSeriesSar, selectSarGraphBand, graphRef} = this.state;
+        const {widget, degDataType, getParameterByName, projPairAOI, handleSelectDate} = this.props;
 
         if (degDataType === "landsat" && chartDataSeriesLandsat.length > 0) {
-            graphRef.update({ series: _.cloneDeep(chartDataSeriesLandsat) });
+            graphRef.update({series: _.cloneDeep(chartDataSeriesLandsat)});
         } else if (degDataType === "sar"
             && chartDataSeriesSar.hasOwnProperty(selectSarGraphBand)
             && chartDataSeriesSar[selectSarGraphBand].length > 0) {
-            graphRef.update({ series: _.cloneDeep(chartDataSeriesSar[selectSarGraphBand]) });
+            graphRef.update({series: _.cloneDeep(chartDataSeriesSar[selectSarGraphBand])});
         } else {
             const centerPoint = JSON.parse(getParameterByName("bcenter")).coordinates;
             const widgetType = widget.type || "";
@@ -1322,7 +1322,7 @@ class GraphWidget extends React.Component {
                                     data: res.timeseries.filter(v => v[0]).map(v => [v[0], v[1]]).sort((a, b) => a[0] - b[0]),
                                     color: "#31bab0",
                                 };
-                                this.setState({ nonDegChartData : [thisDataSeries] });
+                                this.setState({nonDegChartData : [thisDataSeries]});
                             } else {
                                 // this is where degData ends up
                                 const theKeys = Object.keys(res.timeseries[0][1]);
@@ -1411,13 +1411,13 @@ class GraphWidget extends React.Component {
         }
     };
 
-    onSelectSarGraphBand = newValue => this.setState({ selectSarGraphBand: newValue });
+    onSelectSarGraphBand = newValue => this.setState({selectSarGraphBand: newValue});
 
     getSarBandOption = () => {
         const selectOptions = [
-            { label: "VV", value: "VV" },
-            { label: "VH", value: "VH" },
-            { label: "VV/VH", value: "VV/VH" },
+            {label: "VV", value: "VV"},
+            {label: "VH", value: "VH"},
+            {label: "VV/VH", value: "VV/VH"},
         ];
         return (
             <select
@@ -1437,8 +1437,8 @@ class GraphWidget extends React.Component {
     };
 
     getChartOptions = () => {
-        const { widget, degDataType } = this.props;
-        const { chartDataSeriesLandsat, chartDataSeriesSar, selectSarGraphBand, nonDegChartData } = this.state;
+        const {widget, degDataType} = this.props;
+        const {chartDataSeriesLandsat, chartDataSeriesSar, selectSarGraphBand, nonDegChartData} = this.state;
         return {
             chart: {
                 zoomType: "x",
@@ -1516,8 +1516,8 @@ class GraphWidget extends React.Component {
     }
 
     render() {
-        const { widget, degDataType } = this.props;
-        const { chartDataSeriesSar, chartDataSeriesLandsat, selectSarGraphBand, nonDegChartData } = this.state;
+        const {widget, degDataType} = this.props;
+        const {chartDataSeriesSar, chartDataSeriesLandsat, selectSarGraphBand, nonDegChartData} = this.state;
         return (
             <div id={"widgetgraph_" + widget.id} className="minmapwidget">
                 <div id={"graphcontainer_" + widget.id} className="minmapwidget graphwidget normal">
@@ -1533,7 +1533,7 @@ class GraphWidget extends React.Component {
                             <HighchartsReact
                                 highcharts={Highcharts}
                                 options={this.getChartOptions()}
-                                callback={thisChart => this.setState({ graphRef: thisChart })}
+                                callback={thisChart => this.setState({graphRef: thisChart})}
                             />
                         :
                             <img
@@ -1556,7 +1556,7 @@ class GraphWidget extends React.Component {
 class StatsWidget extends React.Component {
     constructor(props) {
         super(props);
-        this.state = { totalPop:"", area:"", elevation:"" };
+        this.state = {totalPop:"", area:"", elevation:""};
     }
 
     componentDidMount() {
@@ -1620,7 +1620,7 @@ class StatsWidget extends React.Component {
         const stats = this.state.totalPop;
         const area = this.state.area;
         const elevation = this.state.elevation;
-        return <div id={"widgetstats_" + widget.id} className="minmapwidget" style={{ padding: "20px" }}>
+        return <div id={"widgetstats_" + widget.id} className="minmapwidget" style={{padding: "20px"}}>
             <div>
                 <div className="form-group">
                     <div className="input-group">
@@ -1636,7 +1636,7 @@ class StatsWidget extends React.Component {
                                 alt="Population"
                             />
                         </div>
-                        <label htmlFor={"totalPop_" + widget.id} style={{ color: "#787878", padding: "10px 20px" }}>Total population</label>
+                        <label htmlFor={"totalPop_" + widget.id} style={{color: "#787878", padding: "10px 20px"}}>Total population</label>
                         <h3
                             id={"totalPop_" + widget.id}
                             style={{
@@ -1662,7 +1662,7 @@ class StatsWidget extends React.Component {
                                 alt="Area"
                             />
                         </div>
-                        <label htmlFor={"totalArea_" + widget.id} style={{ color: "#787878", padding: "10px 20px" }}>Area</label>
+                        <label htmlFor={"totalArea_" + widget.id} style={{color: "#787878", padding: "10px 20px"}}>Area</label>
                         <h3
                             id={"totalArea_" + widget.id}
                             style={{
@@ -1688,8 +1688,8 @@ class StatsWidget extends React.Component {
                                 alt="Elevation"
                             />
                         </div>
-                        <label htmlFor={"elevationRange_" + widget.id} style={{ color: "#787878", padding: "10px 20px" }}>Elevation</label>
-                        <h3 id={"elevationRange_" + widget.id} style={{ color: "#606060", fontSize: "16px", fontWeight: "bold", paddingTop: "12px" }}>{elevation}</h3>
+                        <label htmlFor={"elevationRange_" + widget.id} style={{color: "#787878", padding: "10px 20px"}}>Elevation</label>
+                        <h3 id={"elevationRange_" + widget.id} style={{color: "#606060", fontSize: "16px", fontWeight: "bold", paddingTop: "12px"}}>{elevation}</h3>
                     </div>
                 </div>
             </div>

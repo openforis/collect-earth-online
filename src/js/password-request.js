@@ -1,7 +1,7 @@
 import React from "react";
 import ReactDOM from "react-dom";
-import { NavigationBar } from "./components/PageComponents";
-import { getQueryString } from "./utils/textUtils";
+import {NavigationBar} from "./components/PageComponents";
+import {getQueryString} from "./utils/textUtils";
 
 class PasswordRequest extends React.Component {
     constructor(props) {
@@ -53,7 +53,7 @@ class PasswordRequest extends React.Component {
                                     placeholder="Email"
                                     value={this.state.email}
                                     type="email"
-                                    onChange={e => this.setState({ email: e.target.value })}
+                                    onChange={e => this.setState({email: e.target.value})}
                                 />
                             </div>
                             <button className="btn bg-lightgreen float-right mb-2" type="submit">

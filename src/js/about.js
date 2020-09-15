@@ -1,6 +1,6 @@
 import React from "react";
 import ReactDOM from "react-dom";
-import { NavigationBar, LogoBanner } from "./components/PageComponents";
+import {NavigationBar, LogoBanner} from "./components/PageComponents";
 
 function About() {
     return (

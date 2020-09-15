@@ -1,20 +1,20 @@
 import React from "react";
 
-import { SectionBlock } from "./FormComponents";
+import {SectionBlock} from "./FormComponents";
 import SurveyCardList from "./SurveyCardList";
-import { removeEnumerator } from "../utils/surveyUtils";
+import {removeEnumerator} from "../utils/surveyUtils";
 
 const componentTypes = [
-    { componentType: "button", dataType: "text" },
-    { componentType: "button", dataType: "number" },
-    { componentType: "input", dataType: "number" },
-    { componentType: "input", dataType: "text" },
-    { componentType: "radiobutton", dataType: "boolean" },
-    { componentType: "radiobutton", dataType: "text" },
-    { componentType: "radiobutton", dataType: "number" },
-    { componentType: "dropdown", dataType: "boolean" },
-    { componentType: "dropdown", dataType: "text" },
-    { componentType: "dropdown", dataType: "number" },
+    {componentType: "button", dataType: "text"},
+    {componentType: "button", dataType: "number"},
+    {componentType: "input", dataType: "number"},
+    {componentType: "input", dataType: "text"},
+    {componentType: "radiobutton", dataType: "boolean"},
+    {componentType: "radiobutton", dataType: "text"},
+    {componentType: "radiobutton", dataType: "number"},
+    {componentType: "dropdown", dataType: "boolean"},
+    {componentType: "dropdown", dataType: "text"},
+    {componentType: "dropdown", dataType: "number"},
     // {componentType: "digitizer", dataType: "point"}
     // {componentType: "digitizer", dataType: "linestring"}
     // {componentType: "digitizer", dataType: "polygon"}
@@ -35,7 +35,7 @@ export class SurveyDesign extends React.Component {
 
         // Change to advanced/simple mode when changing project templates
         if (prevProps.templateProject !== this.props.templateProject) {
-            this.setState({ inSimpleMode: this.onlySimpleFeatures() });
+            this.setState({inSimpleMode: this.onlySimpleFeatures()});
         }
     };
 
@@ -44,7 +44,7 @@ export class SurveyDesign extends React.Component {
 
     convertToSimple = () => {
         const newSurveyQuestions = this.props.surveyQuestions
-            .map(question => ({ ...question, componentType: "button", dataType: "text" }));
+            .map(question => ({...question, componentType: "button", dataType: "text"}));
 
         this.props.setSurveyQuestions(newSurveyQuestions);
         this.props.setSurveyRules([]);
@@ -91,7 +91,7 @@ export class SurveyDesign extends React.Component {
             const surveyQuestion = this.props.surveyQuestions.find(sq => sq.id === questionId);
             const updatedAnswers = surveyQuestion.answers.filter(ans => ans.id !== answerId);
 
-            const updatedQuestion = { ...surveyQuestion, answers: updatedAnswers };
+            const updatedQuestion = {...surveyQuestion, answers: updatedAnswers};
 
             const newSurveyQuestions = this.props.surveyQuestions
                 .map(sq => sq.id === updatedQuestion.id ? updatedQuestion : sq);
@@ -144,11 +144,11 @@ export class SurveyDesign extends React.Component {
     }
 }
 
-function ModeButtons({ inSimpleMode, toggleSimpleMode }) {
+function ModeButtons({inSimpleMode, toggleSimpleMode}) {
     return (
         <div
             className="my-3"
-            style={{ overflow: "hidden", border: "1px solid #31BAB0", backgroundColor: "#f1f1f1" }}
+            style={{overflow: "hidden", border: "1px solid #31BAB0", backgroundColor: "#f1f1f1"}}
         >
             <input
                 type="button"
@@ -199,19 +199,19 @@ class NewQuestionDesigner extends React.Component {
     componentDidUpdate = (prevProps, prevState) => {
         if (this.props.surveyQuestions.length !== prevProps.surveyQuestions.length) {
             if (!this.props.surveyQuestions.find(question => question.id === this.state.selectedParent)) {
-                this.setState({ selectedParent: -1 });
+                this.setState({selectedParent: -1});
             }
         }
 
         if (this.state.selectedParent !== prevState.selectedParent) {
-            this.setState({ selectedAnswer: -1 });
+            this.setState({selectedAnswer: -1});
         }
     };
 
     addSurveyQuestion = () => {
         if (this.state.newQuestionText !== "") {
-            const { surveyQuestions } = this.props;
-            const { dataType, componentType } = componentTypes[this.props.inSimpleMode ? 0 : this.state.selectedType];
+            const {surveyQuestions} = this.props;
+            const {dataType, componentType} = componentTypes[this.props.inSimpleMode ? 0 : this.state.selectedType];
             const repeatedQuestions = surveyQuestions.filter(sq => removeEnumerator(sq.question) === this.state.newQuestionText).length;
 
             if (repeatedQuestions === 0
@@ -229,7 +229,7 @@ class NewQuestionDesigner extends React.Component {
                     componentType: componentType,
                 };
                 this.props.setSurveyQuestions([...surveyQuestions, newQuestion]);
-                this.setState({ selectedAnswer: -1, newQuestionText: "" });
+                this.setState({selectedAnswer: -1, newQuestionText: ""});
             }
         } else {
             alert("Please enter a survey question first.");
@@ -273,7 +273,7 @@ class NewQuestionDesigner extends React.Component {
                                     id="value-componenttype"
                                     className="form-control form-control-sm"
                                     size="1"
-                                    onChange={e => this.setState({ selectedType: parseInt(e.target.value) })}
+                                    onChange={e => this.setState({selectedType: parseInt(e.target.value)})}
                                     value={this.state.selectedType}
                                 >
                                     {componentTypes.map((type, index) =>
@@ -294,7 +294,7 @@ class NewQuestionDesigner extends React.Component {
                                     id="value-parent"
                                     className="form-control form-control-sm"
                                     size="1"
-                                    onChange={e => this.setState({ selectedParent: parseInt(e.target.value) })}
+                                    onChange={e => this.setState({selectedParent: parseInt(e.target.value)})}
                                     value={this.state.selectedParent}
                                 >
                                     <option key={-1} value={-1}>None</option>
@@ -319,7 +319,7 @@ class NewQuestionDesigner extends React.Component {
                                     id="value-answer"
                                     className="form-control form-control-sm"
                                     size="1"
-                                    onChange={e => this.setState({ selectedAnswer: parseInt(e.target.value) })}
+                                    onChange={e => this.setState({selectedAnswer: parseInt(e.target.value)})}
                                     value={this.state.selectedAnswer}
                                 >
                                     <option key={-1} value={-1}>Any</option>
@@ -346,7 +346,7 @@ class NewQuestionDesigner extends React.Component {
                                         type="text"
                                         autoComplete="off"
                                         value={this.state.newQuestionText}
-                                        onChange={e => this.setState({ newQuestionText: e.target.value })}
+                                        onChange={e => this.setState({newQuestionText: e.target.value})}
                                     />
                                 </div>
                             </td>
@@ -468,7 +468,7 @@ class NewAnswerDesigner extends React.Component {
     }
 
     addSurveyAnswer = () => {
-        const { surveyQuestion } = this.props;
+        const {surveyQuestion} = this.props;
         if (this.state.newAnswerText.length > 0) {
             const newAnswer = {
                 id: surveyQuestion.answers.reduce((a, c) => Math.max(a, c.id), 0) + 1,
@@ -476,12 +476,12 @@ class NewAnswerDesigner extends React.Component {
                 color: this.state.selectedColor,
             };
             const updatedAnswers = [...surveyQuestion.answers, newAnswer];
-            const updatedQuestion = { ...surveyQuestion, answers: updatedAnswers };
+            const updatedQuestion = {...surveyQuestion, answers: updatedAnswers};
             const newSurveyQuestions = this.props.surveyQuestions
                 .map(sq => sq.id === updatedQuestion.id ? updatedQuestion : sq);
 
             this.props.setSurveyQuestions(newSurveyQuestions);
-            this.setState({ selectedColor: "#1527F6", newAnswerText: "" });
+            this.setState({selectedColor: "#1527F6", newAnswerText: ""});
         } else {
             alert("A survey answer must possess both an answer and a color.");
         }
@@ -501,14 +501,14 @@ class NewAnswerDesigner extends React.Component {
                     type="color"
                     className="value-color mx-2 mt-1"
                     value={this.state.selectedColor}
-                    onChange={e => this.setState({ selectedColor: e.target.value })}
+                    onChange={e => this.setState({selectedColor: e.target.value})}
                 />
                 <input
                     type={this.props.surveyQuestion.dataType === "number" ? "number" : "text"}
                     className="value-name"
                     autoComplete="off"
                     value={this.state.newAnswerText}
-                    onChange={e => this.setState({ newAnswerText: e.target.value })}
+                    onChange={e => this.setState({newAnswerText: e.target.value})}
                 />
             </div>
         </div>;
@@ -547,23 +547,23 @@ class SurveyRules extends React.Component {
     }
 
     setNewRule = (ruleType) => {
-        this.setState({ selectedRuleType: ruleType });
+        this.setState({selectedRuleType: ruleType});
     };
 
     updateMin = (min) => {
-        this.setState({ min: min });
+        this.setState({min: min});
     };
 
     updateMax = (max) => {
-        this.setState({ max: max });
+        this.setState({max: max});
     };
 
     updateRegex = (expression) => {
-        this.setState({ regex: expression });
+        this.setState({regex: expression});
     };
 
     updateMaxSum = (sum) => {
-        this.setState({ validSum: sum });
+        this.setState({validSum: sum});
     };
 
     updateOptions = (target, type) => {
@@ -593,11 +593,11 @@ class SurveyRules extends React.Component {
                 } else if (target.id === "answer1") {
                     const currentQuestion = this.props.surveyQuestions.find(ques => ques.id === this.state.question1);
                     const answer = currentQuestion.answers.find(ans => ans.id === questionId);
-                    this.setState({ answer1: questionId, answerText1: answer.answer });
+                    this.setState({answer1: questionId, answerText1: answer.answer});
                 } else if (target.id === "answer2") {
                     const currentQuestion = this.props.surveyQuestions.find(ques => ques.id === this.state.question2);
                     const answer = currentQuestion.answers.find(ans => ans.id === questionId);
-                    this.setState({ answer2: questionId, answerText2: answer.answer });
+                    this.setState({answer2: questionId, answerText2: answer.answer});
                 }
             });
         } else if (this.state.selectedRuleType === "matching-sums" && selection.length > 1) {
@@ -621,7 +621,7 @@ class SurveyRules extends React.Component {
                 const question = this.props.surveyQuestions.find(surveyQuestion => surveyQuestion.id === parseInt(option.value));
                 return question.question;
             });
-            this.setState({ questionIds: selection.map(option => parseInt(option.value)), questions: questions });
+            this.setState({questionIds: selection.map(option => parseInt(option.value)), questions: questions});
         }
 
     };
@@ -632,17 +632,17 @@ class SurveyRules extends React.Component {
         const rules = this.props.surveyRules.map(rule =>
             (rule.ruleType === "numeric-range"
                 && rule.questionId === this.state.questionIds[0])
-                ? { ...rule, min: this.state.min, max: this.state.max }
+                ? {...rule, min: this.state.min, max: this.state.max}
             : (rule.ruleType === "text-match"
                 && rule.questionId === this.state.questionIds[0])
-                ? { ...rule, regex: this.state.regex }
+                ? {...rule, regex: this.state.regex}
             : (rule.ruleType === "sum-of-answers"
                 && this.state.questionIds.every(qId => rule.questions.includes(qId)))
-                ? { ...rule, validSum: this.state.validSum }
+                ? {...rule, validSum: this.state.validSum}
             : (rule.ruleType === "matching-sums"
                 && this.state.questionSetIds1.every(qId => rule.questionSetIds1.includes(qId))
                 && this.state.questionSetIds2.every(qId => rule.questionSetIds2.includes(qId)))
-                ? { ...rule }
+                ? {...rule}
             : rule);
 
         const numExists = this.props.surveyRules.some(rule => rule.ruleType === "numeric-range" && rule.questionId === this.state.questionIds[0]);

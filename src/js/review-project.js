@@ -1,12 +1,12 @@
-import React, { Fragment } from "react";
+import React, {Fragment} from "react";
 import ReactDOM from "react-dom";
 
-import { FormLayout, SectionBlock, StatsCell, StatsRow } from "./components/FormComponents";
-import { NavigationBar } from "./components/PageComponents";
-import { ProjectInfo, ProjectAOI, PlotReview, SampleReview, ProjectOptions } from "./components/ProjectComponents";
+import {FormLayout, SectionBlock, StatsCell, StatsRow} from "./components/FormComponents";
+import {NavigationBar} from "./components/PageComponents";
+import {ProjectInfo, ProjectAOI, PlotReview, SampleReview, ProjectOptions} from "./components/ProjectComponents";
 import SurveyCardList from "./components/SurveyCardList";
-import { convertSampleValuesToSurveyQuestions } from "./utils/surveyUtils";
-import { mercator, ceoMapStyles } from "./utils/mercator.js";
+import {convertSampleValuesToSurveyQuestions} from "./utils/surveyUtils";
+import {mercator, ceoMapStyles} from "./utils/mercator.js";
 
 class Project extends React.Component {
     constructor(props) {
@@ -94,7 +94,7 @@ class Project extends React.Component {
     };
 
     validateProject = () => {
-        const { projectDetails, imageryList, projectImageryList } = this.state;
+        const {projectDetails, imageryList, projectImageryList} = this.state;
         if (projectDetails.name === "" || projectDetails.description === "") {
             alert("A project must contain a name and description.");
             return false;
@@ -117,7 +117,7 @@ class Project extends React.Component {
             )
                 .then(response => {
                     if (response.ok) {
-                        this.setState({ projectDetails: { ...this.state.projectDetails, availability: "published" }});
+                        this.setState({projectDetails: {...this.state.projectDetails, availability: "published"}});
                     } else {
                         console.log(response);
                         alert("Error publishing project. See console for details.");
@@ -134,7 +134,7 @@ class Project extends React.Component {
                   })
                 .then(response => {
                     if (response.ok) {
-                        this.setState({ projectDetails: { ...this.state.projectDetails, availability: "closed" }});
+                        this.setState({projectDetails: {...this.state.projectDetails, availability: "closed"}});
                     } else {
                         console.log(response);
                         alert("Error closing project. See console for details.");
@@ -192,7 +192,7 @@ class Project extends React.Component {
     };
 
     getProjectById = () => {
-        const { projectId } = this.props;
+        const {projectId} = this.props;
         fetch(`/get-project-by-id?projectId=${projectId}`)
             .then(response => response.ok ? response.json() : Promise.reject(response))
             .then(data => {
@@ -201,7 +201,7 @@ class Project extends React.Component {
                     window.location = "/home";
                 } else {
                     const newSurveyQuestions = convertSampleValuesToSurveyQuestions(data.sampleValues);
-                    this.setState({ projectDetails: { ...data, surveyQuestions: newSurveyQuestions }});
+                    this.setState({projectDetails: {...data, surveyQuestions: newSurveyQuestions}});
                 }
             })
             .catch(response => {
@@ -213,7 +213,7 @@ class Project extends React.Component {
     getImageryList = () => {
         fetch(`/get-institution-imagery?institutionId=${this.state.projectDetails.institution}`)
             .then(response => response.ok ? response.json() : Promise.reject(response))
-            .then(data => this.setState({ imageryList: data }))
+            .then(data => this.setState({imageryList: data}))
             .catch(response => {
                 console.log(response);
                 alert("Error retrieving the imagery list. See console for details.");
@@ -223,7 +223,7 @@ class Project extends React.Component {
     getProjectImageryList = () => {
         fetch(`/get-project-imagery?projectId=${this.props.projectId}`)
             .then(response => response.ok ? response.json() : Promise.reject(response))
-            .then(data => this.setState({ projectImageryList: data.map(imagery => imagery.id) }))
+            .then(data => this.setState({projectImageryList: data.map(imagery => imagery.id)}))
             .catch(response => {
                 console.log(response);
                 alert("Error retrieving the project imagery list. See console for details.");
@@ -233,7 +233,7 @@ class Project extends React.Component {
     getProjectPlots = () => {
         fetch(`/get-project-plots?projectId=${this.props.projectId}&max=300`)
             .then(response => response.ok ? response.json() : Promise.reject(response))
-            .then(data => this.setState({ plotList: data }))
+            .then(data => this.setState({plotList: data}))
             .catch(response => {
                 console.log(response);
                 alert("Error retrieving plot list. See console for details.");
@@ -241,7 +241,7 @@ class Project extends React.Component {
     };
 
     initProjectMap = () => {
-        this.setState({ mapConfig: mercator.createMap("project-map", [0.0, 0.0], 1, this.state.imageryList) });
+        this.setState({mapConfig: mercator.createMap("project-map", [0.0, 0.0], 1, this.state.imageryList)});
     };
 
     showProjectMap = () => {
@@ -277,7 +277,7 @@ class Project extends React.Component {
     };
 
     setProjectDetail = (key, newValue) =>
-        this.setState({ projectDetails: { ...this.state.projectDetails, [key]: newValue }});
+        this.setState({projectDetails: {...this.state.projectDetails, [key]: newValue}});
 
     projectNotFound = (projectId) => (
         <SectionBlock title="Project Information">
@@ -286,7 +286,7 @@ class Project extends React.Component {
     );
 
     setProjectImageryList = (newProjectImageryList) =>
-        this.setState({ projectImageryList: newProjectImageryList });
+        this.setState({projectImageryList: newProjectImageryList});
 
     render() {
         return (
@@ -332,7 +332,7 @@ class ProjectStatsGroup extends React.Component {
         };
     }
 
-    updateShown = () => this.setState({ showStats: !this.state.showStats });
+    updateShown = () => this.setState({showStats: !this.state.showStats});
 
     render() {
         return (
@@ -365,7 +365,7 @@ class ProjectStats extends React.Component {
     getProjectStats = () => {
         fetch(`/get-project-stats?projectId=${this.props.projectId}`)
             .then(response => response.ok ? response.json() : Promise.reject(response))
-            .then(data => this.setState({ stats: data }))
+            .then(data => this.setState({stats: data}))
             .catch(response => {
                 console.log(response);
                 alert("Error getting project stats. See console for details.");
@@ -386,7 +386,7 @@ class ProjectStats extends React.Component {
                 userStats,
             },
         } = this.state;
-        const { availability } = this.props;
+        const {availability} = this.props;
         const numPlots = flaggedPlots + analyzedPlots + unanalyzedPlots;
         return numPlots ?
             <div className="row mb-3">
@@ -576,7 +576,7 @@ function SurveyRules(props) {
 }
 
 function ProjectManagement(props) {
-    const { project } = props;
+    const {project} = props;
     const stateTransitions = {
         nonexistent: "Create",
         unpublished: "Publish",
@@ -600,7 +600,7 @@ function ProjectManagement(props) {
                         className="btn btn-outline-danger btn-sm col-6"
                         value="Update Project"
                         onClick={props.updateProject}
-                        style={{ display:"block" }}
+                        style={{display:"block"}}
                     />
                 </div>
                 <div className="d-flex justify-content-between mb-2">
@@ -609,7 +609,7 @@ function ProjectManagement(props) {
                         className="btn btn-outline-lightgreen btn-sm col-6 mr-2"
                         value="Project Dashboard"
                         onClick={props.gotoProjectDashboard}
-                        style={{ display:"block" }}
+                        style={{display:"block"}}
                     />
                     <input
                         type="button"
@@ -620,7 +620,7 @@ function ProjectManagement(props) {
                 </div>
                 <div
                     className="d-flex justify-content-between mb-2"
-                    style={{ display: ["published", "closed"].includes(project.projectDetails.availability) ? "block" : "none !important" }}
+                    style={{display: ["published", "closed"].includes(project.projectDetails.availability) ? "block" : "none !important"}}
                 >
                     <input
                         type="button"

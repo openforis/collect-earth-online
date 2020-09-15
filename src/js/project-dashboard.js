@@ -1,8 +1,8 @@
 import React from "react";
 import ReactDOM from "react-dom";
-import { mercator, ceoMapStyles } from "./utils/mercator.js";
-import { NavigationBar } from "./components/PageComponents";
-import { convertSampleValuesToSurveyQuestions } from "./utils/surveyUtils";
+import {mercator, ceoMapStyles} from "./utils/mercator.js";
+import {NavigationBar} from "./components/PageComponents";
+import {convertSampleValuesToSurveyQuestions} from "./utils/surveyUtils";
 
 class ProjectDashboard extends React.Component {
     constructor(props) {
@@ -65,7 +65,7 @@ class ProjectDashboard extends React.Component {
                     window.location = "/home";
                 } else {
                     const newSurveyQuestions = convertSampleValuesToSurveyQuestions(data.sampleValues);
-                    this.setState({ projectDetails: { ...data, surveyQuestions: newSurveyQuestions }});
+                    this.setState({projectDetails: {...data, surveyQuestions: newSurveyQuestions}});
                 }
             });
     }
@@ -81,7 +81,7 @@ class ProjectDashboard extends React.Component {
                 }
             })
             .then(data => {
-                this.setState({ stats: data });
+                this.setState({stats: data});
             });
     }
 
@@ -96,7 +96,7 @@ class ProjectDashboard extends React.Component {
                 }
             })
             .then(data => {
-                this.setState({ imageryList: data });
+                this.setState({imageryList: data});
             });
     }
 
@@ -111,7 +111,7 @@ class ProjectDashboard extends React.Component {
                 }
             })
             .then(data => {
-                this.setState({ plotList: data });
+                this.setState({plotList: data});
             });
     }
 
@@ -129,7 +129,7 @@ class ProjectDashboard extends React.Component {
                                 ceoMapStyles.yellowPolygon);
         mercator.zoomMapToLayer(mapConfig, "currentAOI");
         // Show the plot centers on the map (but constrain to <= 100 points)
-        this.setState({ mapConfig: mapConfig });
+        this.setState({mapConfig: mapConfig});
     }
 
     render() {
@@ -138,16 +138,16 @@ class ProjectDashboard extends React.Component {
                 <div
                     id="project-design"
                     className="col-xl-6 col-lg-8 border bg-lightgray mb-5"
-                    style={{ display: "contents" }}
+                    style={{display: "contents"}}
                 >
-                    <div className="bg-darkgreen mb-3 no-container-margin" style={{ width: "100%", margin: "0 10px 0 10px" }}>
+                    <div className="bg-darkgreen mb-3 no-container-margin" style={{width: "100%", margin: "0 10px 0 10px"}}>
                         <h1>Project Dashboard</h1>
                     </div>
-                    <div style={{ display: "inline-flex", width: "100%", margin: "0 10px 0 10px" }}>
-                        <div className="bg-lightgray" style={{ margin: "20px", width: "70%" }}>
+                    <div style={{display: "inline-flex", width: "100%", margin: "0 10px 0 10px"}}>
+                        <div className="bg-lightgray" style={{margin: "20px", width: "70%"}}>
                             <ProjectAOI/>
                         </div>
-                        <div className="bg-lightgray" style={{ margin: "20px", width: "30%" }}>
+                        <div className="bg-lightgray" style={{margin: "20px", width: "30%"}}>
                             <ProjectStats
                                 project={this.state}
                                 project_stats_visibility={this.props.project_stats_visibility}

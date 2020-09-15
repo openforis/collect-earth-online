@@ -1,7 +1,7 @@
 import React from "react";
-import { UnicodeIcon } from "../utils/textUtils";
+import {UnicodeIcon} from "../utils/textUtils";
 
-export function FormLayout({ title, children }) {
+export function FormLayout({title, children}) {
     return (
         <div className="row justify-content-center">
             <div className="col-xl-6 col-lg-8 border bg-lightgray mb-5">
@@ -14,11 +14,11 @@ export function FormLayout({ title, children }) {
     );
 }
 
-export function SectionBlock({ title, children }) {
+export function SectionBlock({title, children}) {
     return (
         <div className={title === "Survey Rules Design" ? "row m-1" : "row mb-3"}>
             <div className="col">
-                <h2 className="header px-0" style={{ fontSize: "1.25rem", padding: ".75rem" }}>{title}</h2>
+                <h2 className="header px-0" style={{fontSize: "1.25rem", padding: ".75rem"}}>{title}</h2>
                 {children}
             </div>
         </div>
@@ -37,11 +37,11 @@ export class CollapsibleSectionBlock extends React.Component {
 
     componentDidUpdate(prevProps, prevState) {
         if (prevState.height === "auto" && this.state.height !== "auto") {
-            setTimeout(() => this.setState({ height: "0px" }), 1);
+            setTimeout(() => this.setState({height: "0px"}), 1);
         }
     }
 
-    setInnerRef = (ref) => this.setState({ myRef: ref });
+    setInnerRef = (ref) => this.setState({myRef: ref});
 
     toggleOpenClose = () => this.setState({
         showContent: !this.state.showContent,
@@ -50,17 +50,17 @@ export class CollapsibleSectionBlock extends React.Component {
 
     updateAfterTransition = () => {
         if (this.state.showContent) {
-            this.setState({ height: "auto" });
+            this.setState({height: "auto"});
         }
     };
 
     render() {
-        const { title, children } = this.props;
+        const {title, children} = this.props;
         return (
             <div>
                 <h2
                     className="header px-0"
-                    style={{ fontSize: "1.25rem", padding: ".75rem", cursor: "pointer" }}
+                    style={{fontSize: "1.25rem", padding: ".75rem", cursor: "pointer"}}
                     onClick={() => this.toggleOpenClose()}
                 >
                     {title}
@@ -91,7 +91,7 @@ export class CollapsibleSectionBlock extends React.Component {
     }
 }
 
-export function StatsCell({ title, children }) {
+export function StatsCell({title, children}) {
     return (
         <div className="row mb-2">
             <div className="col-7">
@@ -104,7 +104,7 @@ export function StatsCell({ title, children }) {
     );
 }
 
-export function StatsRow({ title, plots, analysisTime, titleHref }) {
+export function StatsRow({title, plots, analysisTime, titleHref}) {
     return (
         <div className="StatsRow row mx-1 py-1 border-bottom">
             <div className="col-8">
@@ -176,11 +176,11 @@ export class ExpandableImage extends React.Component {
         };
 
     render() {
-        const { src } = this.props;
+        const {src} = this.props;
         return (
             <div
                 className="ExpandableImage"
-                onClick={() => this.setState({ fullSize: !this.state.fullSize })}
+                onClick={() => this.setState({fullSize: !this.state.fullSize})}
                 style={this.getMainDivStyle()}
             >
                 <img
@@ -193,14 +193,14 @@ export class ExpandableImage extends React.Component {
     }
 }
 
-export function CollapsibleTitle({ title, showGroup, toggleShow }) {
-    const commonStyle = { width: "1.5rem", height: "1.5rem", marginBottom: "0" };
-    const buttonDownStyle = { ...commonStyle, paddingTop: "1px", paddingLeft: "3px" };
-    const buttonRightStyle = { ...commonStyle, paddingTop: "0px", paddingLeft: "6px", fontSize: ".8rem" };
+export function CollapsibleTitle({title, showGroup, toggleShow}) {
+    const commonStyle = {width: "1.5rem", height: "1.5rem", marginBottom: "0"};
+    const buttonDownStyle = {...commonStyle, paddingTop: "1px", paddingLeft: "3px"};
+    const buttonRightStyle = {...commonStyle, paddingTop: "0px", paddingLeft: "6px", fontSize: ".8rem"};
     return (
         <div
             className="CollapsibleTitle__Title row p-1"
-            style={{ borderBottom: "2px solid black", margin: "0 0 .5rem 0" }}
+            style={{borderBottom: "2px solid black", margin: "0 0 .5rem 0"}}
         >
             <h3
                 className="btn btn-sm btn-outline-darkgray"
@@ -209,7 +209,7 @@ export function CollapsibleTitle({ title, showGroup, toggleShow }) {
             >
                 {showGroup ? <UnicodeIcon icon="downCaret"/> : <UnicodeIcon icon="rightCaret"/>}
             </h3>
-            <h3 className="ml-2" style={{ marginBottom: "0" }}>{title}</h3>
+            <h3 className="ml-2" style={{marginBottom: "0"}}>{title}</h3>
         </div>
     );
 }

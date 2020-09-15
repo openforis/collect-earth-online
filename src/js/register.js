@@ -1,7 +1,7 @@
 import React from "react";
 import ReactDOM from "react-dom";
-import { NavigationBar } from "./components/PageComponents";
-import { getQueryString } from "./utils/textUtils";
+import {NavigationBar} from "./components/PageComponents";
+import {getQueryString} from "./utils/textUtils";
 
 class Register extends React.Component {
     constructor(props) {
@@ -56,7 +56,7 @@ class Register extends React.Component {
                                     placeholder="Email"
                                     value={this.state.email}
                                     type="email"
-                                    onChange={e => this.setState({ email: e.target.value })}
+                                    onChange={e => this.setState({email: e.target.value})}
                                 />
                             </div>
                             <div className="form-group">
@@ -68,7 +68,7 @@ class Register extends React.Component {
                                     placeholder="Password"
                                     value={this.state.password}
                                     type="password"
-                                    onChange={e => this.setState({ password: e.target.value })}
+                                    onChange={e => this.setState({password: e.target.value})}
                                 />
                             </div>
                             <div className="form-group">
@@ -80,7 +80,7 @@ class Register extends React.Component {
                                     placeholder="Password confirmation"
                                     value={this.state.passwordConfirmation}
                                     type="password"
-                                    onChange={e => this.setState({ passwordConfirmation: e.target.value })}
+                                    onChange={e => this.setState({passwordConfirmation: e.target.value})}
                                 />
                             </div>
                             <div className="form-check mb-3">
@@ -89,7 +89,7 @@ class Register extends React.Component {
                                     type="checkbox"
                                     className="form-check-input"
                                     checked={this.state.onMailingList}
-                                    onChange={() => this.setState({ onMailingList: !this.state.onMailingList })}
+                                    onChange={() => this.setState({onMailingList: !this.state.onMailingList})}
                                 />
                                 <label className="form-check-label" htmlFor="on-mailing-list">
                                     Subscribe To Mailinglist

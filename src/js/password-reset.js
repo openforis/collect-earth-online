@@ -1,7 +1,7 @@
 import React from "react";
 import ReactDOM from "react-dom";
-import { NavigationBar } from "./components/PageComponents";
-import { getQueryString } from "./utils/textUtils";
+import {NavigationBar} from "./components/PageComponents";
+import {getQueryString} from "./utils/textUtils";
 
 class PasswordReset extends React.Component {
     constructor(props) {
@@ -15,7 +15,7 @@ class PasswordReset extends React.Component {
     }
 
     componentDidMount() {
-        this.setState({ email: this.props.email, passwordResetKey: this.props.passwordResetKey });
+        this.setState({email: this.props.email, passwordResetKey: this.props.passwordResetKey});
     }
 
     resetPassword = () => {
@@ -60,7 +60,7 @@ class PasswordReset extends React.Component {
                                     placeholder="Enter email"
                                     type="email"
                                     value={this.state.email}
-                                    onChange={e => this.setState({ email: e.target.value })}
+                                    onChange={e => this.setState({email: e.target.value})}
                                 />
                             </div>
                             <div className="form-group">
@@ -72,7 +72,7 @@ class PasswordReset extends React.Component {
                                     placeholder="Enter password reset key"
                                     type="text"
                                     value={this.state.passwordResetKey}
-                                    onChange={e => this.setState({ passwordResetKey: e.target.value })}
+                                    onChange={e => this.setState({passwordResetKey: e.target.value})}
                                 />
                             </div>
                             <div className="form-group">
@@ -84,7 +84,7 @@ class PasswordReset extends React.Component {
                                     placeholder="Enter new password"
                                     type="password"
                                     value={this.state.password}
-                                    onChange={e => this.setState({ password: e.target.value })}
+                                    onChange={e => this.setState({password: e.target.value})}
                                 />
                             </div>
                             <div className="form-group">
@@ -96,7 +96,7 @@ class PasswordReset extends React.Component {
                                     placeholder="Enter new password confirmation"
                                     type="password"
                                     value={this.state.passwordConfirmation}
-                                    onChange={e => this.setState({ passwordConfirmation: e.target.value })}
+                                    onChange={e => this.setState({passwordConfirmation: e.target.value})}
                                 />
                             </div>
                             <button className="btn bg-lightgreen float-right mb-2" type="submit">

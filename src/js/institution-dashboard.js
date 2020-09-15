@@ -1,6 +1,6 @@
 import React from "react";
 import ReactDOM from "react-dom";
-import { NavigationBar } from "./components/PageComponents";
+import {NavigationBar} from "./components/PageComponents";
 
 class InstitutionDashboard extends React.Component {
     constructor(props) {
@@ -42,7 +42,7 @@ class InstitutionDashboard extends React.Component {
                         contributors: data.contributors,
                         members: data.members,
                     });
-                    this.setState({ details: details });
+                    this.setState({details: details});
                 })
                 .catch(response => {
                     console.log(response);
@@ -54,10 +54,10 @@ class InstitutionDashboard extends React.Component {
     render() {
         return (
             <div className="row justify-content-center">
-                <div className="bg-darkgreen mb-3 no-container-margin" style={{ width: "100%", margin: "0 10px 0 10px" }}>
+                <div className="bg-darkgreen mb-3 no-container-margin" style={{width: "100%", margin: "0 10px 0 10px"}}>
                     <h1>Institution Dashboard</h1>
                 </div>
-                <table id="srd" style={{ width: "1000px", margin: "10px", color: "rgb(49, 186, 176)" }}>
+                <table id="srd" style={{width: "1000px", margin: "10px", color: "rgb(49, 186, 176)"}}>
                     <thead>
                         <tr>
                             <th>Project Id</th>

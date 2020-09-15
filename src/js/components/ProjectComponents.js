@@ -1,8 +1,8 @@
-import React, { Fragment } from "react";
+import React, {Fragment} from "react";
 
-import { SectionBlock } from "./FormComponents";
+import {SectionBlock} from "./FormComponents";
 
-export function ProjectInfo({ name, description, privacyLevel, setProjectDetail }) {
+export function ProjectInfo({name, description, privacyLevel, setProjectDetail}) {
     return (
         <SectionBlock title="Project Info">
             <div id="project-info">
@@ -102,7 +102,7 @@ export function ProjectInfo({ name, description, privacyLevel, setProjectDetail 
 }
 
 export function ProjectAOI({
-    coordinates: { latMax, lonMin, lonMax, latMin },
+    coordinates: {latMax, lonMin, lonMax, latMin},
     updateCoordinates,
     inDesignMode,
     imageryId,
@@ -244,8 +244,8 @@ export function ProjectAOI({
     );
 }
 
-export function ProjectOptions( { projectOptions, setProjectDetail } ) {
-    const { showGEEScript, showPlotInformation, autoLaunchGeoDash } = projectOptions;
+export function ProjectOptions( {projectOptions, setProjectDetail} ) {
+    const {showGEEScript, showPlotInformation, autoLaunchGeoDash} = projectOptions;
     return (
         <SectionBlock title="Project Options">
             <div className="form-check">
@@ -255,7 +255,7 @@ export function ProjectOptions( { projectOptions, setProjectDetail } ) {
                     checked={showGEEScript}
                     onChange={() => setProjectDetail(
                         "projectOptions",
-                        { ...projectOptions, showGEEScript: !showGEEScript }
+                        {...projectOptions, showGEEScript: !showGEEScript}
                     )}
                     type="checkbox"
                 />
@@ -271,7 +271,7 @@ export function ProjectOptions( { projectOptions, setProjectDetail } ) {
                     checked={showPlotInformation}
                     onChange={() => setProjectDetail(
                         "projectOptions",
-                        { ...projectOptions, showPlotInformation: !showPlotInformation }
+                        {...projectOptions, showPlotInformation: !showPlotInformation}
                     )}
                 />
                 <label htmlFor="showPlotInformation" className="form-check-label">
@@ -286,7 +286,7 @@ export function ProjectOptions( { projectOptions, setProjectDetail } ) {
                     checked={autoLaunchGeoDash}
                     onChange={() => setProjectDetail(
                         "projectOptions",
-                        { ...projectOptions, autoLaunchGeoDash: !autoLaunchGeoDash }
+                        {...projectOptions, autoLaunchGeoDash: !autoLaunchGeoDash}
                     )}
                 />
                 <label htmlFor="autoLaunchGeoDash" className="form-check-label">
@@ -297,7 +297,7 @@ export function ProjectOptions( { projectOptions, setProjectDetail } ) {
     );
 }
 
-export function PlotReview({ projectDetails: { plotDistribution, numPlots, plotSpacing, plotShape, plotSize }}) {
+export function PlotReview({projectDetails: {plotDistribution, numPlots, plotSpacing, plotShape, plotSize}}) {
     return (
         <SectionBlock title="Plot Review">
             <div id="plot-design">
@@ -350,7 +350,7 @@ export function PlotReview({ projectDetails: { plotDistribution, numPlots, plotS
     );
 }
 
-export function SampleReview({ projectDetails: { sampleDistribution, samplesPerPlot, sampleResolution }}) {
+export function SampleReview({projectDetails: {sampleDistribution, samplesPerPlot, sampleResolution}}) {
     return (
         <SectionBlock title="Sample Design">
             <div id="sample-design">

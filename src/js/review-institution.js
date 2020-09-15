@@ -1,10 +1,10 @@
-import React, { Fragment } from "react";
+import React, {Fragment} from "react";
 import ReactDOM from "react-dom";
 
 import InstitutionEditor from "./components/InstitutionEditor";
-import { NavigationBar, SafeImage } from "./components/PageComponents";
-import { sortAlphabetically, capitalizeFirst, UnicodeIcon } from "./utils/textUtils";
-import { imageryOptions } from "./imagery/imageryOptions";
+import {NavigationBar, SafeImage} from "./components/PageComponents";
+import {sortAlphabetically, capitalizeFirst, UnicodeIcon} from "./utils/textUtils";
+import {imageryOptions} from "./imagery/imageryOptions";
 
 class ReviewInstitution extends React.Component {
     constructor(props) {
@@ -28,7 +28,7 @@ class ReviewInstitution extends React.Component {
         fetch(`/get-all-projects?institutionId=${this.props.institutionId}`
         )
             .then(response => response.ok ? response.json() : Promise.reject(response))
-            .then(data => this.setState({ projectList: data }))
+            .then(data => this.setState({projectList: data}))
             .catch(response => {
                 console.log(response);
                 alert("Error retrieving the project info. See console for details.");
@@ -53,19 +53,19 @@ class ReviewInstitution extends React.Component {
         }
     };
 
-    setImageryCount = (newCount) => this.setState({ imageryCount: newCount });
+    setImageryCount = (newCount) => this.setState({imageryCount: newCount});
 
-    setUsersCount = (newCount) => this.setState({ usersCount: newCount });
+    setUsersCount = (newCount) => this.setState({usersCount: newCount});
 
-    setIsAdmin = (isAdmin) => this.setState({ isAdmin: isAdmin });
+    setIsAdmin = (isAdmin) => this.setState({isAdmin: isAdmin});
 
     headerTab = (name, count, index, disabled = false) =>
         <div className="col-lg-4 col-xs-12">
             <div
                 className={disabled ? "disabled-group" : ""}
-                onClick={() => this.setState({ selectedTab: index })}
+                onClick={() => this.setState({selectedTab: index})}
             >
-                <h2 className="header" style={{ borderRadius: "5px", cursor: disabled ? "not-allowed" : "pointer" }}>
+                <h2 className="header" style={{borderRadius: "5px", cursor: disabled ? "not-allowed" : "pointer"}}>
                     {name}
                     <span className="badge badge-pill badge-light ml-2">
                         {count}
@@ -170,8 +170,8 @@ class InstitutionDescription extends React.Component {
             })
             .catch(response => {
                 this.setState({
-                    institutionDetails: { id: "-1", name: "", logo: "", url: "", description: "", admins: [] },
-                    newInstitutionDetails: { id: "-1", name: "", logo: "", url: "", description: "", base64Image: "" },
+                    institutionDetails: {id: "-1", name: "", logo: "", url: "", description: "", admins: []},
+                    newInstitutionDetails: {id: "-1", name: "", logo: "", url: "", description: "", base64Image: ""},
                 });
                 this.props.setIsAdmin(false);
                 console.log(response);
@@ -193,7 +193,7 @@ class InstitutionDescription extends React.Component {
             .then(response => {
                 if (response.ok) {
                     this.getInstitutionDetails();
-                    this.setState({ editMode: false });
+                    this.setState({editMode: false});
                 } else {
                     console.log(response);
                     alert("Error updating institution details. See console for details.");
@@ -201,7 +201,7 @@ class InstitutionDescription extends React.Component {
             });
     };
 
-    toggleEditMode = () => this.setState({ editMode: !this.state.editMode });
+    toggleEditMode = () => this.setState({editMode: !this.state.editMode});
 
     updateNewInstitutionDetails = (key, newValue) => this.setState({
         newInstitutionDetails: {
@@ -290,7 +290,7 @@ class InstitutionDescription extends React.Component {
                                 </a>
                             </h1>
                             <hr />
-                            <p className="pt-2" style={{ textIndent: "25px" }}>
+                            <p className="pt-2" style={{textIndent: "25px"}}>
                                 {this.state.institutionDetails.description}
                             </p>
                         </div>
@@ -360,20 +360,20 @@ class ImageryList extends React.Component {
     getImageryList = () => {
         fetch(`/get-institution-imagery?institutionId=${this.props.institutionId}`)
             .then(response => response.ok ? response.json() : Promise.reject(response))
-            .then(data => this.setState({ imageryList: data }))
+            .then(data => this.setState({imageryList: data}))
             .catch(response => {
-                this.setState({ imageryList: [] });
+                this.setState({imageryList: []});
                 console.log(response);
                 alert("Error retrieving the imagery list. See console for details.");
             });
     };
 
-    selectAddImagery = () => this.setState({ imageryToEdit: { id: -1 }});
+    selectAddImagery = () => this.setState({imageryToEdit: {id: -1}});
 
     selectEditImagery = (imageryId) => {
         const imagery = this.state.imageryList.find(i => i.id === imageryId);
         if (imageryOptions.find(io => io.type === imagery.sourceConfig.type)) {
-            this.setState({ imageryToEdit: imagery });
+            this.setState({imageryToEdit: imagery});
         } else {
             alert("This imagery type is no longer supported and connot be edited.");
         }
@@ -408,7 +408,7 @@ class ImageryList extends React.Component {
 
     //    State Modifications    //
 
-    hideEditMode = () => this.setState({ imageryToEdit: null });
+    hideEditMode = () => this.setState({imageryToEdit: null});
 
     //    Helper Functions    //
 
@@ -477,9 +477,9 @@ class NewImagery extends React.Component {
     }
 
     componentDidMount() {
-        const { imageryToEdit } = this.props;
+        const {imageryToEdit} = this.props;
         if (imageryToEdit.id !== -1) {
-            const { type, ...imageryParams } = imageryToEdit.sourceConfig;
+            const {type, ...imageryParams} = imageryToEdit.sourceConfig;
             const selectedType = imageryOptions.findIndex(io => io.type === type);
             this.setState({
                 newImageryTitle: imageryToEdit.title,
@@ -494,14 +494,14 @@ class NewImagery extends React.Component {
         // TODO, this should be made generic based on parent / child relationship
         // SecureWatch is not defined in imageryOptions in a way that will facilitate this.
         if (type === "GeoServer") {
-            const { geoserverUrl, geoserverParams: { LAYERS, ...cleanGeoserverParams }} = imageryParams;
+            const {geoserverUrl, geoserverParams: {LAYERS, ...cleanGeoserverParams}} = imageryParams;
             return {
                 geoserverUrl,
                 LAYERS,
                 geoserverParams: JSON.stringify(cleanGeoserverParams),
             };
         } else if (type === "SecureWatch") {
-            const { geoserverParams: { CONNECTID }, startDate, endDate, baseUrl } = imageryParams;
+            const {geoserverParams: {CONNECTID}, startDate, endDate, baseUrl} = imageryParams;
             return {
                 connectid: CONNECTID,
                 startDate,
@@ -566,11 +566,11 @@ class NewImagery extends React.Component {
                     const parentStr = imageryParams.find(p => p.key === c).parent;
                     if (parentStr) {
                         const parentObj = JSON.parse(a[parentStr] || "{}");
-                        return { ...a, [parentStr]: { ...parentObj, [c]: this.state.newImageryParams[c] }};
+                        return {...a, [parentStr]: {...parentObj, [c]: this.state.newImageryParams[c]}};
                     } else {
-                        return { ...a, [c]: this.state.newImageryParams[c] };
+                        return {...a, [c]: this.state.newImageryParams[c]};
                     }
-                }, { type: imageryOptions[this.state.selectedType].type });
+                }, {type: imageryOptions[this.state.selectedType].type});
         } catch (e) {
             return {};
         }
@@ -715,7 +715,7 @@ class NewImagery extends React.Component {
                 o.display,
                 this.state.newImageryParams[o.key],
                 e => this.setState({
-                    newImageryParams: { ...this.state.newImageryParams, [o.key]: e.target.value },
+                    newImageryParams: {...this.state.newImageryParams, [o.key]: e.target.value},
                 }),
                 this.accessTokenLink(imageryOptions[this.state.selectedType].url, o.key),
                 o.options ? o.options : {}
@@ -725,7 +725,7 @@ class NewImagery extends React.Component {
             o.type || "text",
             this.state.newImageryParams[o.key],
             e => this.setState({
-                newImageryParams: { ...this.state.newImageryParams, [o.key]: e.target.value },
+                newImageryParams: {...this.state.newImageryParams, [o.key]: e.target.value},
             }),
             this.accessTokenLink(imageryOptions[this.state.selectedType].url, o.key),
             o.options ? o.options : {}
@@ -737,11 +737,11 @@ class NewImagery extends React.Component {
     // TODO, this can be generalized back into imageryOptions
     imageryTypeChangeHandler = (e) => {
         const val = e.target.value;
-        this.setState({ selectedType: val });
+        this.setState({selectedType: val});
         if (imageryOptions[val].type === "BingMaps") {
             this.setState({
                 newImageryAttribution: "Bing Maps API: " + imageryOptions[val]["params"][0]["options"][0] + " | © Microsoft Corporation",
-                newImageryParams: { imageryId: imageryOptions[val]["params"].filter(param => param.key === "imageryId")[0].options[0].value },
+                newImageryParams: {imageryId: imageryOptions[val]["params"].filter(param => param.key === "imageryId")[0].options[0].value},
             });
         } else if (imageryOptions[val].type === "Planet" || imageryOptions[val].type === "PlanetDaily") {
             this.setState({
@@ -756,7 +756,7 @@ class NewImagery extends React.Component {
         } else if (imageryOptions[val].type === "Sentinel1" || imageryOptions[val].type === "Sentinel2") {
             this.setState({
                 newImageryAttribution: "Google Earth Engine | © Google LLC",
-                newImageryParams: { bandCombination: imageryOptions[val]["params"].filter(param => param.key === "bandCombination")[0].options[0].value },
+                newImageryParams: {bandCombination: imageryOptions[val]["params"].filter(param => param.key === "bandCombination")[0].options[0].value},
             });
         } else if (imageryOptions[val].type.includes("MapBox")) {
             this.setState({
@@ -769,7 +769,7 @@ class NewImagery extends React.Component {
                 newImageryParams: {},
             });
         } else {
-            this.setState({ newImageryAttribution: "", newImageryParams: {}});
+            this.setState({newImageryAttribution: "", newImageryParams: {}});
         }
     };
 
@@ -795,7 +795,7 @@ class NewImagery extends React.Component {
                 {this.formInput("Title",
                                 "text",
                                 this.state.newImageryTitle,
-                                e => this.setState({ newImageryTitle: e.target.value })
+                                e => this.setState({newImageryTitle: e.target.value})
                 )}
                 {/* This should be generalized into the imageryOptions */}
                 {imageryOptions[this.state.selectedType].type === "GeoServer"
@@ -803,7 +803,7 @@ class NewImagery extends React.Component {
                         "Attribution",
                         "text",
                         this.state.newImageryAttribution,
-                        e => this.setState({ newImageryAttribution: e.target.value }))
+                        e => this.setState({newImageryAttribution: e.target.value}))
                 }
                 {imageryOptions[this.state.selectedType].params.map(o => this.formTemplate(o))}
                 {/* Action buttons for save and quit */}
@@ -814,7 +814,7 @@ class NewImagery extends React.Component {
                             className="mr-3"
                             type="checkbox"
                             checked={this.state.addToAllProjects}
-                            onChange={() => this.setState({ addToAllProjects: !this.state.addToAllProjects })}
+                            onChange={() => this.setState({addToAllProjects: !this.state.addToAllProjects})}
                         />
                         <label
                             htmlFor="add-to-all"
@@ -846,7 +846,7 @@ class NewImagery extends React.Component {
     }
 }
 
-function Imagery({ isAdmin, title, selectEditImagery, deleteImagery, isInstitutionImage }) {
+function Imagery({isAdmin, title, selectEditImagery, deleteImagery, isInstitutionImage}) {
     return (
         <div className="row mb-1 d-flex">
             <div className="col-2 pr-0">
@@ -891,9 +891,9 @@ function Imagery({ isAdmin, title, selectEditImagery, deleteImagery, isInstituti
     );
 }
 
-function ProjectList({ isAdmin, isLoggedIn, institutionId, projectList, isVisible, deleteProject }) {
+function ProjectList({isAdmin, isLoggedIn, institutionId, projectList, isVisible, deleteProject}) {
     return (
-        <div style={!isVisible ? { display: "none" } : {}}>
+        <div style={!isVisible ? {display: "none"} : {}}>
             <div className="mb-3">
                 This is a list of all institution projects. The color around the name shows its progress.
                 Red indicates that it has no plots collected, yellow indicates that some plots have been
@@ -966,7 +966,7 @@ class Project extends React.Component {
     };
 
     render() {
-        const { project, isAdmin } = this.props;
+        const {project, isAdmin} = this.props;
         return <div className="row mb-1 d-flex">
             <div className="col-2 pr-0">
                 <div className="btn btn-sm btn-outline-lightgreen btn-block">
@@ -1056,9 +1056,9 @@ class UserList extends React.Component {
     getInstitutionUserList = () => {
         fetch(`/get-institution-users?institutionId=${this.props.institutionId}`)
             .then(response => response.ok ? response.json() : Promise.reject(response))
-            .then(data => this.setState({ institutionUserList: data }))
+            .then(data => this.setState({institutionUserList: data}))
             .catch(response => {
-                this.setState({ institutionUserList: [] });
+                this.setState({institutionUserList: []});
                 console.log(response);
                 alert("Error retrieving the user list. See console for details.");
             });
@@ -1067,9 +1067,9 @@ class UserList extends React.Component {
     getActiveUserList = () => {
         fetch("/get-all-users")
             .then(response => response.ok ? response.json() : Promise.reject(response))
-            .then(data => this.setState({ activeUserList: data }))
+            .then(data => this.setState({activeUserList: data}))
             .catch(response => {
-                this.setState({ activeUserList: [] });
+                this.setState({activeUserList: []});
                 console.log(response);
                 alert("Error retrieving the complete user list. See console for details.");
             });
@@ -1168,7 +1168,7 @@ class UserList extends React.Component {
     }
 }
 
-function User({ user, isAdmin, updateUserInstitutionRole }) {
+function User({user, isAdmin, updateUserInstitutionRole}) {
     return (
         <div className="row">
             {!isAdmin &&
@@ -1248,7 +1248,7 @@ class NewUserButtons extends React.Component {
                             type="email"
                             autoComplete="off"
                             placeholder="Email"
-                            onChange={e => this.setState({ newUserEmail: e.target.value })}
+                            onChange={e => this.setState({newUserEmail: e.target.value})}
                             value={this.state.newUserEmail}
                         />
                     </div>

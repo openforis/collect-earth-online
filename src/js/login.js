@@ -1,7 +1,7 @@
 import React from "react";
 import ReactDOM from "react-dom";
-import { NavigationBar } from "./components/PageComponents";
-import { getQueryString } from "./utils/textUtils";
+import {NavigationBar} from "./components/PageComponents";
+import {getQueryString} from "./utils/textUtils";
 
 class Login extends React.Component {
     constructor(props) {
@@ -16,7 +16,7 @@ class Login extends React.Component {
         fetch("/login",
               {
                   method: "POST",
-                  headers: { "Content-Type": "application/x-www-form-urlencoded" },
+                  headers: {"Content-Type": "application/x-www-form-urlencoded"},
                   body: getQueryString(this.state),
               })
             .then(response => Promise.all([response.ok, response.json()]))
@@ -50,7 +50,7 @@ class Login extends React.Component {
                                     placeholder="Enter email"
                                     type="email"
                                     value={this.state.email}
-                                    onChange={e => this.setState({ email: e.target.value })}
+                                    onChange={e => this.setState({email: e.target.value})}
                                 />
                             </div>
                             <div className="form-group">
@@ -61,7 +61,7 @@ class Login extends React.Component {
                                     type="password"
                                     className="form-control"
                                     value={this.state.password}
-                                    onChange={e => this.setState({ password: e.target.value })}
+                                    onChange={e => this.setState({password: e.target.value})}
                                 />
                             </div>
                             <div className="d-flex justify-content-between align-items-center">

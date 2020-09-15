@@ -1,6 +1,6 @@
 import React from "react";
-import { mercator } from "../utils/mercator";
-import { monthlyMapping } from "../utils/dateUtils";
+import {mercator} from "../utils/mercator";
+import {monthlyMapping} from "../utils/dateUtils";
 
 export class PlanetMenus extends React.Component {
     constructor(props) {
@@ -36,7 +36,7 @@ export class PlanetMenus extends React.Component {
     };
 
     setStateAndUpdate = (key, newValue) =>
-        this.setState({ [key]: newValue }, () => this.updatePlanetLayer());
+        this.setState({[key]: newValue}, () => this.updatePlanetLayer());
 
     updatePlanetLayer = () => {
         this.updateImageryInformation();
@@ -53,7 +53,7 @@ export class PlanetMenus extends React.Component {
 
     render() {
         return (
-            <div className="PlanetsMenu my-2" style={{ display: this.props.visible ? "block" : "none" }}>
+            <div className="PlanetsMenu my-2" style={{display: this.props.visible ? "block" : "none"}}>
                 <div className="slidecontainer form-control form-control-sm">
                     <input
                         type="range"
@@ -120,11 +120,11 @@ export class PlanetDailyMenus extends React.Component {
     };
 
     setStateAndUpdate = (key, newValue) =>
-        this.setState({ [key]: newValue }, () => this.updatePlanetDailyLayer());
+        this.setState({[key]: newValue}, () => this.updatePlanetDailyLayer());
 
     updatePlanetDailyLayer = () => {
         if (this.props.visible) {
-            const { startDate, endDate } = this.state;
+            const {startDate, endDate} = this.state;
             if (new Date(startDate) > new Date(endDate)) {
                 alert("Start date must be smaller than the end date.");
             } else {
@@ -150,7 +150,7 @@ export class PlanetDailyMenus extends React.Component {
 
     render () {
         return (
-            <div className="PlanetsDailyMenu my-2" style={{ display: this.props.visible ? "block" : "none" }}>
+            <div className="PlanetsDailyMenu my-2" style={{display: this.props.visible ? "block" : "none"}}>
                 <label>Start Date</label>
                 <div className="slidecontainer form-control form-control-sm">
                     <input
@@ -158,7 +158,7 @@ export class PlanetDailyMenus extends React.Component {
                         id="planetDailyStartDate"
                         value={this.state.startDate || ""}
                         max={new Date().toJSON().split("T")[0]}
-                        style={{ width: "100%" }}
+                        style={{width: "100%"}}
                         onChange={e => this.setStateAndUpdate("startDate", e.target.value)}
                     />
                 </div>
@@ -169,7 +169,7 @@ export class PlanetDailyMenus extends React.Component {
                         id="planetDailyEndDate"
                         value={this.state.endDate || ""}
                         max={new Date().toJSON().split("T")[0]}
-                        style={{ width: "100%" }}
+                        style={{width: "100%"}}
                         onChange={e => this.setStateAndUpdate("endDate", e.target.value)}
                     />
                 </div>
@@ -197,7 +197,7 @@ export class SecureWatchMenus extends React.Component {
     }
 
     componentDidUpdate(prevProps) {
-        const { extent, mapConfig, thisImageryId, visible } = this.props;
+        const {extent, mapConfig, thisImageryId, visible} = this.props;
         if (extent.length > 0
              && JSON.stringify(extent) !== JSON.stringify(prevProps.extent)) {
             this.getAvailableDates();
@@ -210,7 +210,7 @@ export class SecureWatchMenus extends React.Component {
 
     updateImageryInformation = () => {
         if (this.props.visible) {
-            const { featureId, imageryDate, imageryCloudCover } = this.state;
+            const {featureId, imageryDate, imageryCloudCover} = this.state;
             this.props.setImageryAttribution((featureId
                 ? ` | ${imageryDate}`
                 + ` (${(imageryCloudCover * 100).toFixed(2)}% cloudy)`
@@ -243,7 +243,7 @@ export class SecureWatchMenus extends React.Component {
         );
 
     getAvailableDates = () => {
-        const { thisImageryId, sourceConfig, visible, extent, setImageryAttribution } = this.props;
+        const {thisImageryId, sourceConfig, visible, extent, setImageryAttribution} = this.props;
         if (visible) setImageryAttribution(" | Loading...");
         const secureWatchFeatureInfoUrl = "SERVICE=WMS"
             + "&VERSION=1.1.1"
@@ -260,7 +260,7 @@ export class SecureWatchMenus extends React.Component {
             + "&INFO_FORMAT=application/json"
             + "&imageryId=" + thisImageryId;
         this.setState(
-            { availableDates: [] },
+            {availableDates: []},
             () => {
                 fetch(`/get-securewatch-dates?${secureWatchFeatureInfoUrl}`)
                     .then(response => {
@@ -268,13 +268,13 @@ export class SecureWatchMenus extends React.Component {
                             return response.json(); // if no layers are found, the response is XML. This will fail.
                         } else {
                             alert("Error retrieving SecureWatch dates. See console for details.");
-                            return { features: [] };
+                            return {features: []};
                         }
                     })
                     .catch(response => {
                         console.log(response);
                         alert("It is likely that your Connect ID for Securewatch imagery is expired. See console for more details.");
-                        return { features: [] };
+                        return {features: []};
                     })
                     .then(data => {
                         this.setState({
@@ -310,7 +310,7 @@ export class SecureWatchMenus extends React.Component {
 
     render() {
         return (
-            <div className="SecureWatchMenu my-2 mb-3" style={{ display: this.props.visible ? "block" : "none" }}>
+            <div className="SecureWatchMenu my-2 mb-3" style={{display: this.props.visible ? "block" : "none"}}>
                 <div className="form-control form-control-sm">
                     <label>Available Layers</label>
                     {this.state.availableDates
@@ -389,7 +389,7 @@ export class SentinelMenus extends React.Component {
     };
 
     setStateAndUpdate = (key, newValue) =>
-        this.setState({ [key]: newValue }, () => this.updateSentinelLayer());
+        this.setState({[key]: newValue}, () => this.updateSentinelLayer());
 
     updateSentinelLayer = () => {
         this.updateImageryInformation();
@@ -409,23 +409,23 @@ export class SentinelMenus extends React.Component {
         const bandCombinationOptions = this.props.sourceConfig.type === "Sentinel1"
             ?
             [
-                { label: "VH,VV,VH/VV", value: "VH,VV,VH/VV" },
-                { label: "VH,VV,VV/VH", value: "VH,VV,VV/VH" },
-                { label: "VV,VH,VV/VH", value: "VV,VH,VV/VH" },
-                { label: "VV,VH,VH/VV", value: "VV,VH,VH/VV" },
+                {label: "VH,VV,VH/VV", value: "VH,VV,VH/VV"},
+                {label: "VH,VV,VV/VH", value: "VH,VV,VV/VH"},
+                {label: "VV,VH,VV/VH", value: "VV,VH,VV/VH"},
+                {label: "VV,VH,VH/VV", value: "VV,VH,VH/VV"},
             ]
             :
             [
-                { label: "True Color", value: "TrueColor" },
-                { label: "False Color Infrared", value: "FalseColorInfrared" },
-                { label: "False Color Urban", value: "FalseColorUrban" },
-                { label: "Agriculture", value: "Agriculture" },
-                { label: "Healthy Vegetation", value: "HealthyVegetation" },
-                { label: "Short Wave Infrared", value: "ShortWaveInfrared" },
+                {label: "True Color", value: "TrueColor"},
+                {label: "False Color Infrared", value: "FalseColorInfrared"},
+                {label: "False Color Urban", value: "FalseColorUrban"},
+                {label: "Agriculture", value: "Agriculture"},
+                {label: "Healthy Vegetation", value: "HealthyVegetation"},
+                {label: "Short Wave Infrared", value: "ShortWaveInfrared"},
             ];
 
         return (
-            <div className="SentinelMenu my-2" style={{ display: this.props.visible ? "block" : "none" }}>
+            <div className="SentinelMenu my-2" style={{display: this.props.visible ? "block" : "none"}}>
                 <div className="slidecontainer form-control form-control-sm">
                     <input
                         type="range"
@@ -513,14 +513,14 @@ export class GEEImageMenus extends React.Component {
 
     render() {
         return (
-            <div className="GEEImageMenu my-2" style={{ display: this.props.visible ? "block" : "none" }}>
+            <div className="GEEImageMenu my-2" style={{display: this.props.visible ? "block" : "none"}}>
                 <div className="form-control form-control-sm">
                     <label>Visualization Parameters</label>
                     <textarea
                         className="form-control"
                         id="geeImageVisParams"
                         value={this.state.visParams}
-                        onChange={e => this.setState({ visParams: e.target.value })}
+                        onChange={e => this.setState({visParams: e.target.value})}
                     >
                         {this.state.visParams}
                     </textarea>
@@ -576,7 +576,7 @@ export class GEEImageCollectionMenus extends React.Component {
     };
 
     updateGEEImageCollection = () => {
-        const { startDate, endDate, visParams } = this.state;
+        const {startDate, endDate, visParams} = this.state;
         if (new Date(startDate) > new Date(endDate)) {
             alert("Start date must be smaller than the end date.");
         } else {
@@ -598,7 +598,7 @@ export class GEEImageCollectionMenus extends React.Component {
 
     render() {
         return (
-            <div className="GEEImageCollectionMenu my-2" style={{ display: this.props.visible ? "block" : "none" }}>
+            <div className="GEEImageCollectionMenu my-2" style={{display: this.props.visible ? "block" : "none"}}>
                 <div className="form-control form-control-sm">
                     <label>Start Date</label>
                     <div className="slidecontainer form-control form-control-sm">
@@ -607,8 +607,8 @@ export class GEEImageCollectionMenus extends React.Component {
                             id="geeImageCollectionStartDate"
                             value={this.state.startDate}
                             max={new Date().toJSON().split("T")[0]}
-                            style={{ width: "100%" }}
-                            onChange={e => this.setState({ startDate: e.target.value })}
+                            style={{width: "100%"}}
+                            onChange={e => this.setState({startDate: e.target.value})}
                         />
                     </div>
                     <label>End Date</label>
@@ -618,8 +618,8 @@ export class GEEImageCollectionMenus extends React.Component {
                             id="geeImageCollectionEndDate"
                             value={this.state.endDate}
                             max={new Date().toJSON().split("T")[0]}
-                            style={{ width: "100%" }}
-                            onChange={e => this.setState({ endDate: e.target.value })}
+                            style={{width: "100%"}}
+                            onChange={e => this.setState({endDate: e.target.value})}
                         />
                     </div>
                     <label>Visualization Parameters</label>
@@ -627,7 +627,7 @@ export class GEEImageCollectionMenus extends React.Component {
                         className="form-control"
                         id="geeImageCollectionVisParams"
                         value={this.state.visParams}
-                        onChange={e => this.setState({ visParams: e.target.value })}
+                        onChange={e => this.setState({visParams: e.target.value})}
                     >
                         {this.state.visParams}
                     </textarea>

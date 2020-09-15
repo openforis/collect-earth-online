@@ -1,8 +1,8 @@
-import React, { Fragment } from "react";
+import React, {Fragment} from "react";
 import ReactDOM from "react-dom";
-import { NavigationBar } from "./components/PageComponents";
-import { mercator, ceoMapStyles } from "./utils/mercator.js";
-import { sortAlphabetically, UnicodeIcon } from "./utils/textUtils";
+import {NavigationBar} from "./components/PageComponents";
+import {mercator, ceoMapStyles} from "./utils/mercator.js";
+import {sortAlphabetically, UnicodeIcon} from "./utils/textUtils";
 
 class Home extends React.Component {
     constructor(props) {
@@ -29,7 +29,7 @@ class Home extends React.Component {
         .then(response => response.ok ? response.json() : Promise.reject(response))
         .then(data => {
             if (data.length > 0) {
-                this.setState({ projects: data.filter(d => d.validBoundary) });
+                this.setState({projects: data.filter(d => d.validBoundary)});
                 return Promise.resolve();
             } else {
                 return Promise.reject("No projects found");
@@ -40,7 +40,7 @@ class Home extends React.Component {
         .then(response => response.ok ? response.json() : Promise.reject(response))
         .then(data => {
             if (data.length > 0) {
-                this.setState({ imagery: data });
+                this.setState({imagery: data});
                 return Promise.resolve();
             } else {
                 return Promise.reject("No imagery found");
@@ -51,8 +51,12 @@ class Home extends React.Component {
         .then(response => response.ok ? response.json() : Promise.reject(response))
         .then(data => {
             if (data.length > 0) {
-                const userInstitutions = (this.props.userRole !== "admin") ? data.filter(institution => institution.members.includes(this.props.userId)) : [];
-                const institutions = (userInstitutions.length > 0) ? data.filter(institution => !userInstitutions.includes(institution)) : data;
+                const userInstitutions = (this.props.userRole !== "admin")
+                    ? data.filter(institution => institution.members.includes(this.props.userId))
+                    : [];
+                const institutions = (userInstitutions.length > 0)
+                    ? data.filter(institution => !userInstitutions.includes(institution))
+                    : data;
                 this.setState({
                     institutions: institutions,
                     userInstitutions: userInstitutions,
@@ -63,7 +67,7 @@ class Home extends React.Component {
             }
         });
 
-    toggleSidebar = () => this.setState({ showSidePanel: !this.state.showSidePanel });
+    toggleSidebar = () => this.setState({showSidePanel: !this.state.showSidePanel});
 
     render() {
         return (
@@ -111,7 +115,7 @@ class MapPanel extends React.Component {
             ) || this.props.imagery[0];
             const mapConfig = mercator.createMap("home-map-pane", [70, 15], 2.1, [homePageLayer]);
             mercator.setVisibleLayer(mapConfig, homePageLayer.id);
-            this.setState({ mapConfig: mapConfig });
+            this.setState({mapConfig: mapConfig});
         }
         if (this.state.mapConfig && this.props.projects.length > 0
             && (!prevState.mapConfig || prevProps.projects.length === 0)) {
@@ -133,7 +137,14 @@ class MapPanel extends React.Component {
             mercator.addVectorLayer(mapConfig,
                                     "projectMarkers",
                                     mercator.makeClusterSource(projectSource, clusterDistance),
-                                    feature => mercator.getCircleStyle(10, "#3399cc", "#ffffff", 1, feature.get("features").length, "#ffffff"));
+                                    feature => mercator.getCircleStyle(
+                                        10,
+                                        "#3399cc",
+                                        "#ffffff",
+                                        1,
+                                        feature.get("features").length,
+                                        "#ffffff"
+                                    ));
         }
         mercator.addOverlay(mapConfig, "projectPopup", document.getElementById("projectPopUp"));
         const overlay = mercator.getOverlayByTitle(mapConfig, "projectPopup");
@@ -208,17 +219,17 @@ class SideBar extends React.Component {
         };
     }
 
-    toggleShowFilters = () => this.setState({ showFilters: !this.state.showFilters });
+    toggleShowFilters = () => this.setState({showFilters: !this.state.showFilters});
 
-    toggleFilterInstitution = () => this.setState({ filterInstitution: !this.state.filterInstitution });
+    toggleFilterInstitution = () => this.setState({filterInstitution: !this.state.filterInstitution});
 
-    toggleShowEmptyInstitutions = () => this.setState({ showEmptyInstitutions: !this.state.showEmptyInstitutions });
+    toggleShowEmptyInstitutions = () => this.setState({showEmptyInstitutions: !this.state.showEmptyInstitutions});
 
-    toggleSortByNumber = () => this.setState({ sortByNumber: !this.state.sortByNumber });
+    toggleSortByNumber = () => this.setState({sortByNumber: !this.state.sortByNumber});
 
-    toggleUseFirst = () => this.setState({ useFirstLetter: !this.state.useFirstLetter });
+    toggleUseFirst = () => this.setState({useFirstLetter: !this.state.useFirstLetter});
 
-    updateFilterText = (newText) => this.setState({ filterText: newText });
+    updateFilterText = (newText) => this.setState({filterText: newText});
 
     render() {
         return this.props.showSidePanel &&
@@ -325,33 +336,47 @@ function InstitutionList({
                                 - projects.filter(proj => a.id === proj.institution).length
                             : sortAlphabetically(a.name, b.name));
 
-    const userInstStyle = userInstitutionList ? { maxHeight: "fit-content" } : {};
+    const userInstStyle = userInstitutionList ? {maxHeight: "fit-content"} : {};
 
     return (
         filteredInstitutions.length > 0
-        ? <ul className="tree" style={{ overflowY: "scroll", overflowX: "hidden", minHeight: "3.5rem", flex: "1 1 0%", ...userInstStyle }}>
-            {filteredInstitutions.map((institution, uid) =>
-                <Institution
-                    key={uid}
-                    id={institution.id}
-                    name={institution.name}
-                    projects={filteredProjects
-                        .filter(project => project.institution === institution.id)}
-                    forceInstitutionExpand={!filterInstitution && filterText.length > 0}
-                />
-            )}
-        </ul>
-        : <h3 className="p-3">{filterInstitution
-            ? userInstitutionList ? "No affiliations Found..."
-                : "No Institutions Found..."
-            : "No Projects Found..."}</h3>
+        ?
+            <ul
+                className="tree"
+                style={{
+                    overflowY: "scroll",
+                    overflowX: "hidden",
+                    minHeight: "3.5rem",
+                    flex: "1 1 0%",
+                    ...userInstStyle,
+                }}
+            >
+                {filteredInstitutions.map((institution, uid) =>
+                    <Institution
+                        key={uid}
+                        id={institution.id}
+                        name={institution.name}
+                        projects={filteredProjects
+                            .filter(project => project.institution === institution.id)}
+                        forceInstitutionExpand={!filterInstitution && filterText.length > 0}
+                    />
+                )}
+            </ul>
+        :
+            <h3 className="p-3">
+                {filterInstitution
+                    ? userInstitutionList
+                        ? "No affiliations Found..."
+                        : "No Institutions Found..."
+                    : "No Projects Found..."}
+            </h3>
     );
 }
 
 function InstitutionFilter(props) {
     return (
         <div className="InstitutionFilter form-control">
-            <div id="filter-institution" style={{ display: "inline-flex", width: "100%" }}>
+            <div id="filter-institution" style={{display: "inline-flex", width: "100%"}}>
                 <input
                     type="text"
                     id="filterInstitution"
@@ -366,7 +391,7 @@ function InstitutionFilter(props) {
                         src={props.showFilters ? "/img/hidefilter.png" : "/img/showfilter.png"}
                         width="40"
                         height="40"
-                        style={{ padding: "5px" }}
+                        style={{padding: "5px"}}
                         alt="Show/Hide Filters"
                         title="show/hide filters"
                     />
@@ -456,7 +481,7 @@ function CreateInstitutionButton() {
         <div className="bg-yellow text-center p-2">
             <a
                 className="create-institution"
-                style={{ display:"block" }}
+                style={{display:"block"}}
                 href={"/create-institution"}
             >
                 <UnicodeIcon icon="add" backgroundColor="#31BAB0"/> Create New Institution
@@ -473,24 +498,24 @@ class Institution extends React.Component {
         };
     }
 
-    toggleShowProjectList = () => this.setState({ showProjectList: !this.state.showProjectList });
+    toggleShowProjectList = () => this.setState({showProjectList: !this.state.showProjectList});
 
     render() {
-        const { props } = this;
+        const {props} = this;
         return (
             <li>
                 <div
                     className="btn bg-lightgreen btn-block p-2 rounded-0"
-                    style={{ marginBottom: "2px" }}
+                    style={{marginBottom: "2px"}}
                     onClick={this.toggleShowProjectList}
                 >
                     <div className="d-flex justify-content-between align-items-center">
-                        <div style={{ flex: "0 0 1rem" }}>
+                        <div style={{flex: "0 0 1rem"}}>
                             {props.projects && props.projects.length > 0 && (
                                 props.forceInstitutionExpand || this.state.showProjectList ? "\u25BC" : "\u25BA"
                             )}
                         </div>
-                        <div style={{ flex: 1 }}>
+                        <div style={{flex: 1}}>
                             {props.name}
                         </div>
                         <div
@@ -570,17 +595,17 @@ class ProjectPopup extends React.Component {
 
     render() {
         return (
-            <div id="projectPopUp" className="d-flex flex-column" style={{ height: "100%" }}>
+            <div id="projectPopUp" className="d-flex flex-column" style={{height: "100%"}}>
                 <div className="cTitle">
                     <h1>{this.props.features.length > 1 ? "Cluster info" : "Project info"}</h1>
                 </div>
-                <div className="cContent" style={{ padding: "10px", overflow: "auto" }}>
+                <div className="cContent" style={{padding: "10px", overflow: "auto"}}>
                     <table className="table table-sm">
                         <tbody>
                             {
                                 this.props.features.map((feature, uid) =>
                                     <React.Fragment key={uid}>
-                                        <tr className="d-flex" style={{ borderTop: "1px solid gray" }}>
+                                        <tr className="d-flex" style={{borderTop: "1px solid gray"}}>
                                             <td className="small col-6 px-0 my-auto">Name</td>
                                             <td className="small col-6 pr-0">
                                                 <a
@@ -598,11 +623,11 @@ class ProjectPopup extends React.Component {
                                         </tr>
                                         <tr className="d-flex">
                                             <td className="small col-6 px-0 my-auto">Description</td>
-                                            <td className="small col-6 pr-0" style={{ wordBreak: "break-all" }}>
+                                            <td className="small col-6 pr-0" style={{wordBreak: "break-all"}}>
                                                 {feature.get("description")}
                                             </td>
                                         </tr>
-                                        <tr className="d-flex" style={{ borderBottom: "1px solid gray" }}>
+                                        <tr className="d-flex" style={{borderBottom: "1px solid gray"}}>
                                             <td className="small col-6 px-0 my-auto">Number of plots</td>
                                             <td className="small col-6 pr-0">{feature.get("numPlots")}</td>
                                         </tr>

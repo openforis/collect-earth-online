@@ -1,8 +1,8 @@
-import React, { Fragment } from "react";
+import React, {Fragment} from "react";
 
-import { removeEnumerator } from "../utils/surveyUtils";
-import { UnicodeIcon } from "../utils/textUtils";
-import { CollapsibleTitle } from "./FormComponents";
+import {removeEnumerator} from "../utils/surveyUtils";
+import {UnicodeIcon} from "../utils/textUtils";
+import {CollapsibleTitle} from "./FormComponents";
 
 export class SurveyCollection extends React.Component {
     constructor(props) {
@@ -31,13 +31,13 @@ export class SurveyCollection extends React.Component {
         } else if (this.props.selectedQuestion.id !== prevProps.selectedQuestion.id
             && this.props.selectedQuestion.parentQuestion === -1) {
 
-            this.setState({ currentNodeIndex: this.state.topLevelNodeIds.indexOf(this.props.selectedQuestion.id) });
+            this.setState({currentNodeIndex: this.state.topLevelNodeIds.indexOf(this.props.selectedQuestion.id)});
         }
     }
 
     prevSurveyQuestionTree = () => {
         if (this.state.currentNodeIndex > 0) {
-            this.setState({ currentNodeIndex: this.state.currentNodeIndex - 1 });
+            this.setState({currentNodeIndex: this.state.currentNodeIndex - 1});
         } else {
             alert("There are no previous questions.");
         }
@@ -45,17 +45,17 @@ export class SurveyCollection extends React.Component {
 
     nextSurveyQuestionTree = () => {
         if (this.state.currentNodeIndex < this.state.topLevelNodeIds.length - 1) {
-            this.setState({ currentNodeIndex: this.state.currentNodeIndex + 1 });
+            this.setState({currentNodeIndex: this.state.currentNodeIndex + 1});
         } else {
             alert("There are no more questions.");
         }
     };
 
-    setSurveyQuestionTree = (index) => this.setState({ currentNodeIndex: index });
+    setSurveyQuestionTree = (index) => this.setState({currentNodeIndex: index});
 
     checkAllSubAnswers = (currentQuestionId) => {
-        const { surveyQuestions } = this.props;
-        const { visible, answered } = surveyQuestions.find(sq => sq.id === currentQuestionId);
+        const {surveyQuestions} = this.props;
+        const {visible, answered} = surveyQuestions.find(sq => sq.id === currentQuestionId);
         const childQuestions = surveyQuestions.filter(sq => sq.parentQuestion === currentQuestionId);
 
         return visible.length === answered.length
@@ -96,7 +96,7 @@ export class SurveyCollection extends React.Component {
                 <CollapsibleTitle
                     title="Survey Questions"
                     showGroup={this.state.showSurveyQuestions}
-                    toggleShow={() => this.setState({ showSurveyQuestions: !this.state.showSurveyQuestions })}
+                    toggleShow={() => this.setState({showSurveyQuestions: !this.state.showSurveyQuestions})}
                 />
                 {this.state.showSurveyQuestions
                 ? this.props.surveyQuestions.length > 0
@@ -109,7 +109,7 @@ export class SurveyCollection extends React.Component {
                                     className="btn btn-outline-lightgreen m-2"
                                     onClick={this.prevSurveyQuestionTree}
                                     disabled={this.state.currentNodeIndex === 0}
-                                    style={{ opacity: this.state.currentNodeIndex === 0 ? "0.25" : "1.0" }}
+                                    style={{opacity: this.state.currentNodeIndex === 0 ? "0.25" : "1.0"}}
                                 >
                                     {"<"}
                                 </button>
@@ -138,14 +138,14 @@ export class SurveyCollection extends React.Component {
                                     className="btn btn-outline-lightgreen"
                                     onClick={this.nextSurveyQuestionTree}
                                     disabled={this.state.currentNodeIndex === this.state.topLevelNodeIds.length - 1}
-                                    style={{ opacity: this.state.currentNodeIndex === this.state.topLevelNodeIds.length - 1 ? "0.25" : "1.0" }}
+                                    style={{opacity: this.state.currentNodeIndex === this.state.topLevelNodeIds.length - 1 ? "0.25" : "1.0"}}
                                 >
                                     {">"}
                                 </button>
                             </div>
                             {this.props.isFlagged
                             ?
-                                <div style={{ color: "red" }}>FLAGGED</div>
+                                <div style={{color: "red"}}>FLAGGED</div>
                             : this.state.topLevelNodeIds.length > 0 &&
                                 <SurveyQuestionTree
                                     hierarchyLabel=""
@@ -177,7 +177,7 @@ class SurveyQuestionTree extends React.Component {
         };
     }
 
-    toggleShowAnswers = () => this.setState({ showAnswers: !this.state.showAnswers });
+    toggleShowAnswers = () => this.setState({showAnswers: !this.state.showAnswers});
 
     render() {
         const childNodes = this.props.surveyQuestions.filter(surveyNode => surveyNode.parentQuestion === this.props.surveyNode.id);
@@ -248,7 +248,7 @@ class SurveyQuestionTree extends React.Component {
     }
 }
 
-function AnswerButton({ surveyNode, surveyNode: { answers, answered }, selectedSampleId, setCurrentValue }) {
+function AnswerButton({surveyNode, surveyNode: {answers, answered}, selectedSampleId, setCurrentValue}) {
     return <ul className={"samplevalue justify-content-center"}>
         {answers.map((ans, uid) =>
             <li key={uid} className="mb-1">
@@ -283,7 +283,7 @@ function AnswerButton({ surveyNode, surveyNode: { answers, answered }, selectedS
     </ul>;
 }
 
-function AnswerRadioButton({ surveyNode, surveyNode: { answers, answered }, selectedSampleId, setCurrentValue }) {
+function AnswerRadioButton({surveyNode, surveyNode: {answers, answered}, selectedSampleId, setCurrentValue}) {
     return <ul className={"samplevalue justify-content-center"}>
         {answers.map((ans, uid) =>
             <li key={uid} className="mb-1">
@@ -332,7 +332,7 @@ class AnswerInput extends React.Component {
         if (this.props.surveyNode.id !== prevProps.surveyNode.id) {
             const matchingNode = this.props.surveyNode.answered
                 .find(a => a.answerId === this.props.surveyNode.answers[0].id);
-            this.setState({ newInput: matchingNode ? matchingNode.answerText : "" });
+            this.setState({newInput: matchingNode ? matchingNode.answerText : ""});
         }
         if (this.props.selectedSampleId !== prevProps.selectedSampleId) {
             this.resetInputText();
@@ -348,10 +348,10 @@ class AnswerInput extends React.Component {
         });
     }
 
-    updateInputValue = (value) => this.setState({ newInput: value });
+    updateInputValue = (value) => this.setState({newInput: value});
 
     render() {
-        const { surveyNode, surveyNode: { answers, dataType }, setCurrentValue } = this.props;
+        const {surveyNode, surveyNode: {answers, dataType}, setCurrentValue} = this.props;
         return (
             <div className="d-inline-flex">
                 <div className="pr-2 pt-2">
@@ -395,20 +395,20 @@ class AnswerDropDown extends React.Component {
 
     componentDidUpdate (prevProps) {
         if (this.props.surveyNode !== prevProps.surveyNode) {
-            this.setState({ showDropdown: false });
+            this.setState({showDropdown: false});
         }
     }
 
-    toggleDropDown = () => this.setState({ showDropdown: !this.state.showDropdown });
+    toggleDropDown = () => this.setState({showDropdown: !this.state.showDropdown});
 
     render () {
-        const { surveyNode, surveyNode: { answers, answered }, selectedSampleId, setCurrentValue } = this.props;
+        const {surveyNode, surveyNode: {answers, answered}, selectedSampleId, setCurrentValue} = this.props;
         const options = answers.map((ans, uid) =>
             <div
                 key={uid}
                 onMouseDown={() => setCurrentValue(surveyNode, ans.id, ans.answer)}
                 className="d-inline-flex py-2 border-bottom"
-                style={{ backgroundColor: answered.some(a => a.answerId === ans.id) ? "#e8e8e8" : "#f1f1f1" }}
+                style={{backgroundColor: answered.some(a => a.answerId === ans.id) ? "#e8e8e8" : "#f1f1f1"}}
             >
                 <div className="col-1">
                     <span
@@ -456,7 +456,7 @@ class AnswerDropDown extends React.Component {
                     <button
                         type="button"
                         onClick={this.toggleDropDown}
-                        onBlur={() => this.setState({ showDropdown: false })}
+                        onBlur={() => this.setState({showDropdown: false})}
                         className="dropbtn"
                         style={{
                             backgroundColor: "#31BAB0",

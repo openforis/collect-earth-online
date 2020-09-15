@@ -5,9 +5,9 @@ import "react-resizable/css/styles.css";
 import React from "react";
 import ReactDOM from "react-dom";
 import _ from "lodash";
-import RGL, { WidthProvider } from "react-grid-layout";
+import RGL, {WidthProvider} from "react-grid-layout";
 const ReactGridLayout = WidthProvider(RGL);
-import { GeoDashNavigationBar } from "./components/PageComponents";
+import {GeoDashNavigationBar} from "./components/PageComponents";
 
 class WidgetLayoutEditor extends React.PureComponent {
     constructor(props) {
@@ -123,7 +123,7 @@ class WidgetLayoutEditor extends React.PureComponent {
                     h = widget.gridrow.trim().split(" ")[3] !== undefined ? parseInt(widget.gridrow.trim().split(" ")[3]) : 1;
                 }
                 // create .layout
-                widget.layout = { x : x, y: y, w: w, h: h };
+                widget.layout = {x : x, y: y, w: w, h: h};
                 delete widget["gridcolumn"];
                 delete widget["gridrow"];
             } else if (widget.position) {
@@ -139,7 +139,7 @@ class WidgetLayoutEditor extends React.PureComponent {
                     column = parseInt(widget.width);
                     row += 1;
                 }
-                widget.layout = { x : x, y: row, w: parseInt(widget.width), h: h, i:i.toString() };
+                widget.layout = {x : x, y: row, w: parseInt(widget.width), h: h, i:i.toString()};
             } else {
                 changed = true;
                 let x;
@@ -152,11 +152,11 @@ class WidgetLayoutEditor extends React.PureComponent {
                     column = parseInt(widget.width);
                     row += 1;
                 }
-                widget.layout = { x : x, y: row, w: parseInt(widget.width), h: h, i:i.toString() };
+                widget.layout = {x : x, y: row, w: parseInt(widget.width), h: h, i:i.toString()};
             }
             return widget;
         });
-        this.setState({ widgets: widgets });
+        this.setState({widgets: widgets});
         if (changed) {
             this.updateServerWidgets();
         }
@@ -203,7 +203,7 @@ class WidgetLayoutEditor extends React.PureComponent {
                 key={widget.layout ? widget.layout.i : i}
                 data-grid={widget.layout}
                 className="front widgetEditor-widgetBackground"
-                style={{ backgroundImage: "url(" + this.getImageByType(widget.properties[0]) + ")" }}
+                style={{backgroundImage: "url(" + this.getImageByType(widget.properties[0]) + ")"}}
             >
                 <h3 className="widgetEditor title">{widget.name}
                     <span
@@ -353,11 +353,11 @@ class WidgetLayoutEditor extends React.PureComponent {
     };
 
     onNextWizardStep = () => {
-        this.setState({ wizardStep: 2 });
+        this.setState({wizardStep: 2});
     };
 
     onPrevWizardStep = () => {
-        this.setState({ wizardStep: 1 });
+        this.setState({wizardStep: 1});
     };
 
     onCreateNewWidget = () => {
@@ -550,11 +550,11 @@ class WidgetLayoutEditor extends React.PureComponent {
     };
 
     onDataBaseMapSelectChanged = event => {
-        this.setState({ widgetBaseMap: event.target.value });
+        this.setState({widgetBaseMap: event.target.value});
     };
 
     onWidgetTitleChange = event => {
-        this.setState({ widgetTitle: event.target.value });
+        this.setState({widgetTitle: event.target.value});
     };
 
     onImageCollectionChange = event => {
@@ -566,7 +566,7 @@ class WidgetLayoutEditor extends React.PureComponent {
     };
 
     onFeatureCollectionChange = event => {
-        this.setState({ featureCollection: event.target.value });
+        this.setState({featureCollection: event.target.value});
     };
 
     onMatchFieldChange = event => {
@@ -577,39 +577,39 @@ class WidgetLayoutEditor extends React.PureComponent {
     };
 
     onGraphBandChange = event => {
-        this.setState({ graphBand: event.target.value });
+        this.setState({graphBand: event.target.value});
     };
 
     onGraphBandDegChange = event => {
-        this.setState({ graphBandDeg: event.target.value });
+        this.setState({graphBandDeg: event.target.value});
     };
 
     onGraphReducerChanged = event => {
-        this.setState({ graphReducer: event.target.value });
+        this.setState({graphReducer: event.target.value});
     };
 
     onImageParamsChange = event => {
-        this.setState({ imageParams: event.target.value.replace(/\s/g, "") });
+        this.setState({imageParams: event.target.value.replace(/\s/g, "")});
     };
 
     onswipeAsDefaultChange = event => {
-        this.setState({ swipeAsDefault: event.target.checked });
+        this.setState({swipeAsDefault: event.target.checked});
     };
 
     onWidgetDualLayerChange = event => {
-        this.setState({ dualLayer: event.target.checked });
+        this.setState({dualLayer: event.target.checked});
     };
 
     onWidgetBandsChange = event => {
-        this.setState({ widgetBands: event.target.value.replace(/\s/g, "") });
+        this.setState({widgetBands: event.target.value.replace(/\s/g, "")});
     };
 
     onWidgetMinChange = event => {
-        this.setState({ widgetMin: event.target.value });
+        this.setState({widgetMin: event.target.value});
     };
 
     onWidgetMaxChange = event => {
-        this.setState({ widgetMax: event.target.value });
+        this.setState({widgetMax: event.target.value});
     };
 
     onStartDateChanged = event => {
@@ -625,7 +625,7 @@ class WidgetLayoutEditor extends React.PureComponent {
     };
 
     onWidgetCloudScoreChange = event => {
-        this.setState({ widgetCloudScore: event.target.value });
+        this.setState({widgetCloudScore: event.target.value});
     };
 
     onImageCollectionChangeDual = event => {
@@ -637,23 +637,23 @@ class WidgetLayoutEditor extends React.PureComponent {
     };
 
     onImageParamsChangeDual = event => {
-        this.setState({ imageParamsDual: event.target.value.replace(/\s/g, "") });
+        this.setState({imageParamsDual: event.target.value.replace(/\s/g, "")});
     };
 
     onWidgetBandsChangeDual = event => {
-        this.setState({ widgetBandsDual: event.target.value.replace(/\s/g, "") });
+        this.setState({widgetBandsDual: event.target.value.replace(/\s/g, "")});
     };
 
     onWidgetMinChangeDual = event => {
-        this.setState({ widgetMinDual: event.target.value });
+        this.setState({widgetMinDual: event.target.value});
     };
 
     onWidgetMaxChangeDual = event => {
-        this.setState({ widgetMaxDual: event.target.value });
+        this.setState({widgetMaxDual: event.target.value});
     };
 
     onWidgetCloudScoreChangeDual = event => {
-        this.setState({ widgetCloudScoreDual: event.target.value });
+        this.setState({widgetCloudScoreDual: event.target.value});
     };
 
     onStartDateChangedDual = event => {
@@ -698,7 +698,7 @@ class WidgetLayoutEditor extends React.PureComponent {
                             ? false : null;
         }
         if (isFormReady !== null) {
-            this.setState({ formReady: isFormReady });
+            this.setState({formReady: isFormReady});
         }
     };
 
@@ -717,7 +717,7 @@ class WidgetLayoutEditor extends React.PureComponent {
     getProjectList = () => {
         fetch("/get-all-projects")
             .then(response => response.ok ? response.json() : Promise.reject(response))
-            .then(data => this.setState({ projectList: data }))
+            .then(data => this.setState({projectList: data}))
             .catch(response => {
                 console.log(response);
                 alert("Error retrieving the project list. See console for details.");
@@ -725,7 +725,7 @@ class WidgetLayoutEditor extends React.PureComponent {
     };
 
     setWidgetLayoutTemplate = id => {
-        this.setState({ selectedProjectId: id });
+        this.setState({selectedProjectId: id});
         this.state.widgets.forEach( widget => {
             this.deleteWidgetFromServer( widget );
         });
@@ -793,7 +793,7 @@ class WidgetLayoutEditor extends React.PureComponent {
     getNewWidgetForm = () => this.props.addDialog
             ? (
                 <React.Fragment>
-                    <div className="modal fade show" style={{ display: "block" }}>
+                    <div className="modal fade show" style={{display: "block"}}>
                         <div className="modal-dialog" role="document">
                             <div className="modal-content">
                                 <div className="modal-header">
@@ -842,7 +842,7 @@ class WidgetLayoutEditor extends React.PureComponent {
             ) : this.props.copyDialog
                 ? (
                     <React.Fragment>
-                        <div className="modal fade show" style={{ display: "block" }}>
+                        <div className="modal fade show" style={{display: "block"}}>
                             <div className="modal-dialog" role="document">
                                 <div className="modal-content">
                                     <div className="modal-header">
@@ -860,7 +860,7 @@ class WidgetLayoutEditor extends React.PureComponent {
                                                     id="project-filter"
                                                     type="text"
                                                     value={this.state.projectFilter}
-                                                    onChange={e => this.setState({ projectFilter: e.target.value })}
+                                                    onChange={e => this.setState({projectFilter: e.target.value})}
                                                 />
                                             </div>
                                             <div className="form-group">
@@ -1087,7 +1087,7 @@ class WidgetLayoutEditor extends React.PureComponent {
             onChange={this.onImageParamsChange}
             rows="4"
             value={this.state.imageParams}
-            style={{ overflow: "hidden", overflowWrap: "break-word", resize: "vertical" }}
+            style={{overflow: "hidden", overflowWrap: "break-word", resize: "vertical"}}
         />
     </div>;
 
@@ -1437,7 +1437,7 @@ class WidgetLayoutEditor extends React.PureComponent {
                             onChange={this.onImageParamsChange}
                             rows="4"
                             value={this.state.imageParams}
-                            style={{ overflow: "hidden", overflowWrap: "break-word", resize: "vertical" }}
+                            style={{overflow: "hidden", overflowWrap: "break-word", resize: "vertical"}}
                         />
                     </div>
                     {this.getInstitutionImageryInfo()}
@@ -1469,7 +1469,7 @@ class WidgetLayoutEditor extends React.PureComponent {
                             onChange={this.onImageParamsChangeDual}
                             rows="4"
                             value={this.state.imageParamsDual}
-                            style={{ overflow: "hidden", overflowWrap: "break-word", resize: "vertical" }}
+                            style={{overflow: "hidden", overflowWrap: "break-word", resize: "vertical"}}
                         />
                     </div>
                     {this.getInstitutionImageryInfo()}
@@ -1509,7 +1509,7 @@ class WidgetLayoutEditor extends React.PureComponent {
                             onChange={this.onImageParamsChange}
                             rows="4"
                             value={this.state.imageParams}
-                            style={{ overflow: "hidden", overflowWrap: "break-word", resize: "vertical" }}
+                            style={{overflow: "hidden", overflowWrap: "break-word", resize: "vertical"}}
                         />
 
                     </div>
@@ -1544,7 +1544,7 @@ class WidgetLayoutEditor extends React.PureComponent {
                             onChange={this.onImageParamsChangeDual}
                             rows="4"
                             value={this.state.imageParamsDual}
-                            style={{ overflow: "hidden", overflowWrap: "break-word", resize: "vertical" }}
+                            style={{overflow: "hidden", overflowWrap: "break-word", resize: "vertical"}}
                         />
 
                     </div>
@@ -1751,12 +1751,12 @@ class WidgetLayoutEditor extends React.PureComponent {
             },
                           this.updateServerWidgets);
         } else {
-            this.setState({ layout: layout });
+            this.setState({layout: layout});
         }
     };
 
     render() {
-        const { layout } = this.state;
+        const {layout} = this.state;
         return (
             <React.Fragment>
                 <ReactGridLayout

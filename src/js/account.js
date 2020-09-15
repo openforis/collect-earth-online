@@ -1,9 +1,9 @@
-import React, { Fragment } from "react";
+import React, {Fragment} from "react";
 import ReactDOM from "react-dom";
 
-import { FormLayout, SectionBlock, StatsCell, StatsRow } from "./components/FormComponents";
-import { NavigationBar } from "./components/PageComponents";
-import { getQueryString } from "./utils/textUtils";
+import {FormLayout, SectionBlock, StatsCell, StatsRow} from "./components/FormComponents";
+import {NavigationBar} from "./components/PageComponents";
+import {getQueryString} from "./utils/textUtils";
 
 function Account(props) {
     const sameAsUser = props.userId === props.accountId;
@@ -38,7 +38,7 @@ class UserStats extends React.Component {
     getUserStats = () => {
         fetch("/get-user-stats?accountId=" + this.props.accountId)
             .then(response => response.ok ? response.json() : Promise.reject(response))
-            .then(stats => this.setState({ stats: stats }))
+            .then(stats => this.setState({stats: stats}))
             .catch(response => {
                 console.log(response);
                 alert("No user found with ID " + this.props.accountId);
@@ -47,7 +47,7 @@ class UserStats extends React.Component {
     };
 
     render () {
-        const { totalProjects, totalPlots, averageTime, perProject } = this.state.stats;
+        const {totalProjects, totalPlots, averageTime, perProject} = this.state.stats;
         return (
             <SectionBlock title="User Stats">
 
@@ -115,7 +115,7 @@ class AccountForm extends React.Component {
     getUserDetails = () => {
         fetch("/get-user-details")
             .then(response => response.ok ? response.json() : Promise.reject(response))
-            .then(details => this.setState({ onMailingList: details.onMailingList }))
+            .then(details => this.setState({onMailingList: details.onMailingList}))
             .catch(response => console.log(response));
     };
 
@@ -123,7 +123,7 @@ class AccountForm extends React.Component {
         fetch("/account",
               {
                   method: "POST",
-                  headers: { "Content-Type": "application/x-www-form-urlencoded" },
+                  headers: {"Content-Type": "application/x-www-form-urlencoded"},
                   body: getQueryString(this.state),
               })
             .then(response => Promise.all([response.ok, response.json()]))
@@ -159,7 +159,7 @@ class AccountForm extends React.Component {
                                 placeholder="New email"
                                 type="email"
                                 value={this.state.email}
-                                onChange={e => this.setState({ email: e.target.value })}
+                                onChange={e => this.setState({email: e.target.value})}
                             />
                         </div>
                         <div className="form-group">
@@ -173,7 +173,7 @@ class AccountForm extends React.Component {
                                         placeholder="New password"
                                         type="password"
                                         value={this.state.password}
-                                        onChange={e => this.setState({ password: e.target.value })}
+                                        onChange={e => this.setState({password: e.target.value})}
                                     />
                                 </div>
                                 <div className="col">
@@ -184,7 +184,7 @@ class AccountForm extends React.Component {
                                         placeholder="New password confirmation"
                                         type="password"
                                         value={this.state.passwordConfirmation}
-                                        onChange={e => this.setState({ passwordConfirmation: e.target.value })}
+                                        onChange={e => this.setState({passwordConfirmation: e.target.value})}
                                     />
                                 </div>
                             </div>
@@ -195,7 +195,7 @@ class AccountForm extends React.Component {
                                 type="checkbox"
                                 className="form-check-input"
                                 checked={this.state.onMailingList}
-                                onChange={() => this.setState({ onMailingList: !this.state.onMailingList })}
+                                onChange={() => this.setState({onMailingList: !this.state.onMailingList})}
                             />
                             <label className="form-check-label" htmlFor="on-mailing-list">
                                 Subscribe to Mailing List
@@ -210,7 +210,7 @@ class AccountForm extends React.Component {
                                 placeholder="Current password"
                                 type="password"
                                 value={this.state.currentPassword}
-                                onChange={e => this.setState({ currentPassword: e.target.value })}
+                                onChange={e => this.setState({currentPassword: e.target.value})}
                             />
                         </div>
                         <input
