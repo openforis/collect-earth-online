@@ -6,7 +6,7 @@ module.exports = {
             jsx: true
         }
     },
-    plugins: ["react"],
+    // plugins: ["react"],
     env: {
         es6: true,
         browser: true,
@@ -17,18 +17,6 @@ module.exports = {
             version: "16.7.0"
         }
       },
-    // globals: {
-    //     React: false,
-    //     ReactDOM: false
-    // },
-    // globals: {
-    //     ol: false,
-    //     angular: false,
-    //     map_utils: false,
-    //     mercator: false,
-    //     ceoMapStyles: false,
-    //     utils: false
-    // },
     extends: ["eslint:recommended", "plugin:react/recommended"],
     rules: {
         indent: [
@@ -77,7 +65,7 @@ module.exports = {
         "no-unused-vars": 1,
         "no-var": 2,
         "object-curly-newline": [1, { "multiline": true, "consistent": true }],
-        "object-curly-spacing": [1, "always", { "objectsInObjects": false }],
+        "object-curly-spacing": [1, "never"],
         "object-property-newline": ["error", { "allowAllPropertiesOnSameLine": true }],
         "prefer-const": 2,
         "react/button-has-type": 1,
