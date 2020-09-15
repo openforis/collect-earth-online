@@ -53,3 +53,7 @@ export function getQueryString(params) {
 export function formatNumberWithCommas (number) {
     return number.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
 }
+
+export function isNumber(value) {
+    return typeof value === "number" && isFinite(value);
+}
