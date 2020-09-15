@@ -156,7 +156,6 @@
                                               :auth-type   :collect
                                               :auth-action :block}
    [:get  "/get-public-imagery"]             {:handler     imagery/get-public-imagery}
-   [:post "/add-geodash-imagery"]            {:handler     imagery/add-geodash-imagery}
    [:post "/add-institution-imagery"]        {:handler     imagery/add-institution-imagery
                                               :auth-type   :inst-admin
                                               :auth-action :block}

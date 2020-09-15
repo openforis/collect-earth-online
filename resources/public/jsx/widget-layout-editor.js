@@ -1,6 +1,4 @@
 import "../css/geo-dash.css";
-import "../css/jquery-ui.css"; // TODO Remove jquery-ui as a dependency.
-import "../css/datepicker.css"; // TODO Remove jquery-ui as a dependency.
 import "react-grid-layout/css/styles.css";
 import "react-resizable/css/styles.css";
 
