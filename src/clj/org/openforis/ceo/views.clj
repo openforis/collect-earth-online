@@ -19,7 +19,10 @@
    [:meta {:name "keywords"    :content "collect earth online image analysis crowdsourcing platform openforis SIG spatial informatics group"}]
    [:link {:rel "shortcut icon" :href "favicon.ico"}]
    (include-css "/css/bootstrap.min.css")
-   (apply include-js "/js/bootstrap.min.js" extra-js)]) ; TODO Remove bootstrap.min.js as a dependency. Only used in header, find a react method.
+   (apply include-js
+          "/js/jquery-3.5.1.slim.min.js"
+          "/js/bootstrap.min.js" ; TODO Remove bootstrap.min.js as a dependency. Only used in header, find a react method.
+          extra-js)])
 
 ;; TODO There will be no part two if we can flatten the route names for geo-dash (geo-dash/geo-dash -> geo-dash).
 (defn uri->page [uri]
