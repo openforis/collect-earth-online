@@ -9,7 +9,7 @@ import { SurveyDesign } from "./components/SurveyDesign";
 import { plotLimit, perPlotLimit, sampleLimit } from "./utils/projectUtils";
 import { convertSampleValuesToSurveyQuestions } from "./utils/surveyUtils";
 import { encodeFileAsBase64 } from "./utils/fileUtils";
-import { formatNumberWithCommas } from "./utils/textUtils";
+import { formatNumberWithCommas, isNumber } from "./utils/textUtils";
 
 const blankProject = {
     archived: false,
@@ -230,9 +230,9 @@ class Project extends React.Component {
     };
 
     validatePlotData = () => {
-        const { projectDetails, coordinates, plotSampleLimitVals } = this.state;
-        if (["random", "gridded"].includes(projectDetails.plotDistribution) && coordinates.latMax === "") {
-            alert("Please select a boundary");
+        const { projectDetails, plotSampleLimitVals } = this.state;
+        if (["random", "gridded"].includes(projectDetails.plotDistribution) && !this.isValidBounds()) {
+            alert("Please select a valid boundary");
             return false;
 
         } else if (projectDetails.plotDistribution === "random"
@@ -300,6 +300,20 @@ class Project extends React.Component {
             return true;
         }
     };
+
+    isValidBounds = () => {
+        const { latMin, latMax, lonMin, lonMax } = this.state.coordinates;
+        return isNumber(latMin)
+            && isNumber(latMax)
+            && isNumber(lonMin)
+            && isNumber(lonMax)
+            && lonMax <= 180
+            && lonMin >= -180
+            && latMax <= 90
+            && latMin >= -90
+            && lonMax > lonMin
+            && latMax > latMin;
+    }
 
     getProjectImageryList = (projectId) => {
         fetch("/get-project-imagery?projectId=" + projectId)
@@ -445,6 +459,7 @@ class Project extends React.Component {
         const displayDragBoxBounds = (dragBox) => {
             const extent = dragBox.getGeometry().clone().transform("EPSG:3857", "EPSG:4326").getExtent();
             mercator.removeLayerById(this.state.mapConfig, "currentAOI");
+            mercator.setLayerVisibilityByLayerId(this.state.mapConfig, "dragBoxLayer", true);
             this.setState({
                 coordinates: {
                     lonMin: extent[0],
@@ -457,10 +472,32 @@ class Project extends React.Component {
         mercator.enableDragBoxDraw(this.state.mapConfig, displayDragBoxBounds);
     };
 
+    showBounds = () => {
+        const { latMin, latMax, lonMin, lonMax } = this.state.coordinates;
+        const geoJsonBoundary = {
+            type: "Polygon",
+            coordinates: [[
+                [lonMin, latMin],
+                [lonMin, latMax],
+                [lonMax, latMax],
+                [lonMax, latMin],
+                [lonMin, latMin],
+            ]],
+        };
+        mercator.removeLayerById(this.state.mapConfig, "currentAOI");
+        mercator.setLayerVisibilityByLayerId(this.state.mapConfig, "dragBoxLayer", false);
+        // Display a bounding box with the project's AOI on the map and zoom to it
+        if (this.isValidBounds()) {
+            mercator.addVectorLayer(this.state.mapConfig,
+                                    "currentAOI",
+                                    mercator.geometryToVectorSource(mercator.parseGeoJson(geoJsonBoundary, true)),
+                                    ceoMapStyles.yellowPolygon);
+            mercator.zoomMapToLayer(this.state.mapConfig, "currentAOI");
+        }
+    }
+
     showTemplateBounds = () => {
         mercator.disableDragBoxDraw(this.state.mapConfig);
-        mercator.removeLayerById(this.state.mapConfig, "currentAOI");
-        // Extract bounding box coordinates from the project boundary and show on the map
         const boundaryExtent = mercator.parseGeoJson(this.state.projectDetails.boundary, false).getExtent();
         this.setState({
             coordinates: {
@@ -469,14 +506,16 @@ class Project extends React.Component {
                 lonMax: boundaryExtent[2],
                 latMax: boundaryExtent[3],
             },
-        });
+        }, this.showBounds);
+    };
 
-        // Display a bounding box with the project's AOI on the map and zoom to it
-        mercator.addVectorLayer(this.state.mapConfig,
-                                "currentAOI",
-                                mercator.geometryToVectorSource(mercator.parseGeoJson(this.state.projectDetails.boundary, true)),
-                                ceoMapStyles.yellowPolygon);
-        mercator.zoomMapToLayer(this.state.mapConfig, "currentAOI");
+    updateCoordinates = (name, value) => {
+        this.setState({
+            coordinates: {
+                ...this.state.coordinates,
+                [name]: value === "" ? "" : parseFloat(value),
+            },
+        }, this.showBounds);
     };
 
     showTemplatePlots = () => {
@@ -569,6 +608,7 @@ class Project extends React.Component {
                     <Fragment>
                         <ProjectDesignForm
                             coordinates={this.state.coordinates}
+                            updateCoordinates={this.updateCoordinates}
                             imageryList={this.state.imageryList}
                             projectDetails={this.state.projectDetails}
                             projectList={this.state.projectList}
@@ -614,6 +654,7 @@ function ProjectDesignForm(props) {
             />
             <ProjectAOI
                 coordinates={props.coordinates}
+                updateCoordinates={props.updateCoordinates}
                 inDesignMode
                 imageryId={props.projectDetails.imageryId}
                 imageryList={props.imageryList}
