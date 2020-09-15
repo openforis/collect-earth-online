@@ -1,7 +1,7 @@
 import React, { Fragment } from "react";
 import ReactDOM from "react-dom";
 import { NavigationBar } from "./components/PageComponents";
-import { mercator, ceoMapStyles } from "../js/mercator.js";
+import { mercator, ceoMapStyles } from "./utils/mercator.js";
 import { sortAlphabetically, UnicodeIcon } from "./utils/textUtils";
 
 class Home extends React.Component {

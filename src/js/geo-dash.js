@@ -2,7 +2,7 @@ import "../css/geo-dash.css";
 
 import React from "react";
 import ReactDOM from "react-dom";
-import { mercator } from "../js/mercator.js";
+import { mercator } from "./utils/mercator.js";
 import { UnicodeIcon } from "./utils/textUtils";
 import { formatDateISO } from "./utils/dateUtils";
 import { getGatewayPath } from "./utils/geodashUtils";
