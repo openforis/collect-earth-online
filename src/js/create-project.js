@@ -4,7 +4,7 @@ import ReactDOM from "react-dom";
 import { FormLayout, SectionBlock } from "./components/FormComponents";
 import { NavigationBar } from "./components/PageComponents";
 import { ProjectInfo, ProjectAOI, ProjectOptions, PlotReview, SampleReview } from "./components/ProjectComponents";
-import { mercator, ceoMapStyles } from "../js/mercator.js";
+import { mercator, ceoMapStyles } from "./utils/mercator.js";
 import { SurveyDesign } from "./components/SurveyDesign";
 import { plotLimit, perPlotLimit, sampleLimit } from "./utils/projectUtils";
 import { convertSampleValuesToSurveyQuestions } from "./utils/surveyUtils";

@@ -1,6 +1,6 @@
 import React from "react";
 import ReactDOM from "react-dom";
-import { mercator, ceoMapStyles } from "../js/mercator.js";
+import { mercator, ceoMapStyles } from "./utils/mercator.js";
 import { NavigationBar } from "./components/PageComponents";
 import { convertSampleValuesToSurveyQuestions } from "./utils/surveyUtils";
 
