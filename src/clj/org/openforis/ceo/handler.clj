@@ -19,7 +19,7 @@
             [ring.middleware.ssl                :refer [wrap-ssl-redirect]]
             [ring.middleware.x-headers          :refer [wrap-frame-options wrap-content-type-options wrap-xss-protection]]
             [ring.util.response                 :refer [redirect]]
-            [ring.util.codec                    :refer [url-decode]]
+            [ring.util.codec                    :refer [url-encode url-decode]]
             [org.openforis.ceo.logging          :refer [log-str]]
             [org.openforis.ceo.routing          :refer [routes]]
             [org.openforis.ceo.views            :refer [not-found-page data-response]]
@@ -36,7 +36,7 @@
 (defn- redirect-auth [user-id]
   (fn [request]
     (let [{:keys [query-string uri]} request
-          full-url (str uri (when query-string (str "?" query-string)))]
+          full-url (url-encode (str uri (when query-string (str "?" query-string))))]
       (if (pos? user-id)
         (redirect (str "/home?flash_message=You do not have permission to access "
                        full-url))
