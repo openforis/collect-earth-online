@@ -57,3 +57,9 @@ export function formatNumberWithCommas (number) {
 export function isNumber(value) {
     return typeof value === "number" && isFinite(value);
 }
+
+export function getLanguage(acceptableLanguages) {
+    const locale = navigator.language || navigator.browserLanguage || navigator.systemLanguage || "en";
+    const language = locale.includes("-") ? locale.slice(0, 2) : locale;
+    return acceptableLanguages.includes(language) ? language : "en";
+}

@@ -97,6 +97,9 @@
           content-type (headers "Content-Type")]
       (log-str "Response(" status "): "
                (cond
+                 (instance? java.io.File body)
+                 (str content-type " file")
+
                  (= content-type "application/edn")
                  (binding [*print-length* 2] (print-str (edn/read-string body)))
 
