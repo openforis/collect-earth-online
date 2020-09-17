@@ -1,7 +1,7 @@
 import React from "react";
 import ReactDOM from "react-dom";
 import {NavigationBar} from "./components/PageComponents";
-import {getQueryString} from "./utils/textUtils";
+import {getQueryString} from "./utils/generalUtils";
 
 class Login extends React.Component {
     constructor(props) {

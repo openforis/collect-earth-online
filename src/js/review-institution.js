@@ -3,7 +3,7 @@ import ReactDOM from "react-dom";
 
 import InstitutionEditor from "./components/InstitutionEditor";
 import {NavigationBar, SafeImage} from "./components/PageComponents";
-import {sortAlphabetically, capitalizeFirst, UnicodeIcon} from "./utils/textUtils";
+import {sortAlphabetically, capitalizeFirst, UnicodeIcon} from "./utils/generalUtils";
 import {imageryOptions} from "./imagery/imageryOptions";
 
 class ReviewInstitution extends React.Component {

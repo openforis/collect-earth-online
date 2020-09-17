@@ -1,6 +1,6 @@
 import React from "react";
 import {mercator} from "../utils/mercator";
-import {monthlyMapping} from "../utils/dateUtils";
+import {monthlyMapping} from "../utils/generalUtils";
 
 export class PlanetMenus extends React.Component {
     constructor(props) {

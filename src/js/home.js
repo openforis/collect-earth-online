@@ -2,7 +2,7 @@ import React, {Fragment} from "react";
 import ReactDOM from "react-dom";
 import {NavigationBar} from "./components/PageComponents";
 import {mercator, ceoMapStyles} from "./utils/mercator.js";
-import {sortAlphabetically, UnicodeIcon} from "./utils/textUtils";
+import {sortAlphabetically, UnicodeIcon} from "./utils/generalUtils";
 
 class Home extends React.Component {
     constructor(props) {

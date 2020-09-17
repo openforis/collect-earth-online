@@ -12,7 +12,7 @@ import {
     GEEImageCollectionMenus,
 } from "./imagery/collectionMenuControls";
 import {convertSampleValuesToSurveyQuestions} from "./utils/surveyUtils";
-import {UnicodeIcon, getQueryString} from "./utils/textUtils";
+import {UnicodeIcon, getQueryString} from "./utils/generalUtils";
 import {CollapsibleTitle} from "./components/FormComponents";
 
 class Collection extends React.Component {

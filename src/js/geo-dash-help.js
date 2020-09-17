@@ -2,7 +2,7 @@ import React from "react";
 import ReactDOM from "react-dom";
 import {CollapsibleSectionBlock, ExpandableImage} from "./components/FormComponents";
 import {NavigationBar, LogoBanner} from "./components/PageComponents";
-import {getLanguage} from "./utils/textUtils";
+import {getLanguage} from "./utils/generalUtils";
 
 class GeoDashHelp extends React.Component {
     constructor(props) {
