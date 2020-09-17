@@ -367,8 +367,7 @@ a:hover{
 #toggle-map-button {
     position: absolute;
     top: 50%;
-    padding: 1rem 0;
-    font-size: 1.5rem;
+    padding: .5rem .2rem;
     z-index: 1;
     border-radius: 0 10% 10% 0;
     cursor: pointer;
