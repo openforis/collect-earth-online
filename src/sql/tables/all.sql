@@ -146,7 +146,7 @@ CREATE TABLE packet_plots (
 CREATE TABLE samples (
     sample_uid    SERIAL PRIMARY KEY,
     plot_rid      integer NOT NULL REFERENCES plots (plot_uid) ON DELETE CASCADE ON UPDATE CASCADE,
-    point         geometry(Point,4326),
+    sample_geom   geometry(geometry,4326),
     ext_id        integer
 );
 
