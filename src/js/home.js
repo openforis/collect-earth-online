@@ -1,7 +1,7 @@
 import React, {Fragment} from "react";
 import ReactDOM from "react-dom";
 import {NavigationBar} from "./components/PageComponents";
-import {mercator, ceoMapStyles} from "./utils/mercator.js";
+import {mercator} from "./utils/mercator.js";
 import {sortAlphabetically, UnicodeIcon} from "./utils/generalUtils";
 import {SvgIcon} from "./utils/svgIcons";
 
@@ -133,7 +133,7 @@ class MapPanel extends React.Component {
             mercator.addVectorLayer(mapConfig,
                                     "projectMarkers",
                                     projectSource,
-                                    ceoMapStyles.ceoIcon);
+                                    mercator.ceoMapStyles("circle", "yellow"));
         } else {
             mercator.addVectorLayer(mapConfig,
                                     "projectMarkers",

@@ -6,7 +6,7 @@ import {NavigationBar} from "./components/PageComponents";
 import {ProjectInfo, ProjectAOI, PlotReview, SampleReview, ProjectOptions} from "./components/ProjectComponents";
 import SurveyCardList from "./components/SurveyCardList";
 import {convertSampleValuesToSurveyQuestions} from "./utils/surveyUtils";
-import {mercator, ceoMapStyles} from "./utils/mercator.js";
+import {mercator} from "./utils/mercator.js";
 
 class Project extends React.Component {
     constructor(props) {
@@ -266,7 +266,7 @@ class Project extends React.Component {
             this.state.mapConfig,
             "currentAOI",
             mercator.geometryToVectorSource(mercator.parseGeoJson(this.state.projectDetails.boundary, true)),
-            ceoMapStyles.yellowPolygon);
+            mercator.ceoMapStyles("polygon", "yellow"));
         mercator.zoomMapToLayer(this.state.mapConfig, "currentAOI");
     };
 

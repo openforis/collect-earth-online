@@ -849,24 +849,24 @@ mercator.getPolygonStyle = function (fillColor, borderColor, borderWidth) {
     });
 };
 
-const ceoMapStyles = {
-    icon:          mercator.getIconStyle("favicon.ico"),
-    ceoIcon:       mercator.getIconStyle("img/ceoicon.png"),
-    redPoint:      mercator.getCircleStyle(5, null, "#8b2323", 2),
-    bluePoint:     mercator.getCircleStyle(5, null, "#23238b", 2),
-    yellowPoint:   mercator.getCircleStyle(5, null, "yellow", 2),
-    redCircle:     mercator.getCircleStyle(5, null, "red", 2),
-    yellowCircle:  mercator.getCircleStyle(5, null, "yellow", 2),
-    greenCircle:   mercator.getCircleStyle(5, null, "green", 2),
-    blackCircle:   mercator.getCircleStyle(6, null, "#000000", 2),
-    whiteCircle:   mercator.getCircleStyle(6, null, "white", 2),
-    redSquare:     mercator.getRegularShapeStyle(6, 4, Math.PI / 4, null, "red", 2),
-    yellowSquare:  mercator.getRegularShapeStyle(6, 4, Math.PI / 4, null, "yellow", 2),
-    greenSquare:   mercator.getRegularShapeStyle(6, 4, Math.PI / 4, null, "green", 2),
-    cluster:       mercator.getCircleStyle(5, "#8b2323", "#ffffff", 1),
-    yellowPolygon: mercator.getPolygonStyle(null, "yellow", 3),
-    blackPolygon:  mercator.getPolygonStyle(null, "#000000", 3),
-    whitePolygon:  mercator.getPolygonStyle(null, "#ffffff", 3),
+const ceoMapStyleColors = {
+    red: "#8b2323",
+    blue: "#23238b",
+    yellow: "yellow",
+    green: "green",
+    black: "#000000",
+    white: "#ffffff",
+};
+
+const ceoMapStyleFunctions = {
+    polygon: color => mercator.getPolygonStyle(null, color, 3),
+    circle: color => mercator.getCircleStyle(5, null, color, 2),
+    point: color => mercator.getCircleStyle(6, null, color, 2),
+    square: color => mercator.getRegularShapeStyle(6, 4, Math.PI / 4, null, (color), 2),
+};
+
+mercator.ceoMapStyles = function (type, color) {
+    return ceoMapStyleFunctions[type.toLowerCase()].call(null, ceoMapStyleColors[color]);
 };
 
 /*****************************************************************************
@@ -977,19 +977,19 @@ mercator.addPlotOverviewLayers = function (mapConfig, plots, shape) {
                             mercator.plotsToVectorSource(plots.filter(function (plot) {
                                 return plot.flagged === true;
                             })),
-                            shape === "circle" ? ceoMapStyles.redCircle : ceoMapStyles.redSquare);
+                            mercator.ceoMapStyles(shape, "red"));
     mercator.addVectorLayer(mapConfig,
                             "analyzedPlots",
                             mercator.plotsToVectorSource(plots.filter(function (plot) {
                                 return plot.analyses > 0 && plot.flagged === false;
                             })),
-                            shape === "circle" ? ceoMapStyles.greenCircle : ceoMapStyles.greenSquare);
+                            mercator.ceoMapStyles(shape, "green"));
     mercator.addVectorLayer(mapConfig,
                             "unanalyzedPlots",
                             mercator.plotsToVectorSource(plots.filter(function (plot) {
                                 return plot.analyses === 0 && plot.flagged === false;
                             })),
-                            shape === "circle" ? ceoMapStyles.yellowCircle : ceoMapStyles.yellowSquare);
+                            mercator.ceoMapStyles(shape, "yellow"));
     return mapConfig;
 };
 
@@ -1099,28 +1099,15 @@ mercator.disableSelection = function (mapConfig) {
 ***
 *****************************************************************************/
 
-// [Side Effects] Adds a new vector layer called
-// point:<longitude>:<latitude> to mapConfig's map object containing a
-// single point geometry feature at the passed in coordinates.
-mercator.addPointLayer = function (mapConfig, longitude, latitude) {
-    mercator.addVectorLayer(mapConfig,
-                            "point:" + longitude + ":" + latitude,
-                            mercator.geometryToVectorSource(new Point(mercator.reprojectToMap(longitude, latitude))),
-                            ceoMapStyles.redPoint);
-    return mapConfig;
-};
-
 // [Pure] Returns a new vector source containing the passed in
 // samples. Features are constructed from each sample using its id,
 // point, and geom fields.
 mercator.samplesToVectorSource = function (samples) {
     const features = samples.map(
         function (sample) {
-            // TODO: Account for sample.sample_geom not being a point
             return new Feature({
                 sampleId: sample.id,
-                geometry: mercator.parseGeoJson(sample.geom || sample.point, true),
-                shape: sample.geom ? "polygon" : "point",
+                geometry: mercator.parseGeoJson(sample.geom || sample.sample_geom, true),
             });
         }
     );
@@ -1151,7 +1138,7 @@ mercator.getAllFeatures = function (mapConfig, layerId) {
 // border and filled with the passed in color. If color is null, the
 // circle will be filled with gray.
 mercator.highlightSampleGeometry = function (sample, color) {
-    if (sample.get("shape") === "point") {
+    if (sample.getGeometry().getType() === "Point") {
         sample.setStyle(mercator.getCircleStyle(6, color, color, 2));
     } else {
         sample.setStyle(mercator.getPolygonStyle(null, color, 6));
@@ -1195,7 +1182,7 @@ mercator.enableDragBoxDraw = function (mapConfig, callBack) {
     const drawLayer = new VectorLayer({
         id: "dragBoxLayer",
         source: new VectorSource({features: []}),
-        style: ceoMapStyles.yellowPolygon,
+        style: mercator.ceoMapStyles("polygon", "yellow"),
     });
     const dragBox = mercator.makeDragBoxDraw("dragBoxDraw", drawLayer, callBack);
     mapConfig.map.addLayer(drawLayer);
@@ -1361,5 +1348,4 @@ mercator.getKMLFromFeatures = function (features) {
 
 export {
     mercator,
-    ceoMapStyles,
 };

@@ -4,7 +4,7 @@ import ReactDOM from "react-dom";
 import {FormLayout, SectionBlock} from "./components/FormComponents";
 import {NavigationBar} from "./components/PageComponents";
 import {ProjectInfo, ProjectAOI, ProjectOptions, PlotReview, SampleReview} from "./components/ProjectComponents";
-import {mercator, ceoMapStyles} from "./utils/mercator.js";
+import {mercator} from "./utils/mercator.js";
 import {SurveyDesign} from "./components/SurveyDesign";
 import {convertSampleValuesToSurveyQuestions} from "./utils/surveyUtils";
 import {formatNumberWithCommas, isNumber, encodeFileAsBase64} from "./utils/generalUtils";
@@ -493,7 +493,7 @@ class Project extends React.Component {
             mercator.addVectorLayer(this.state.mapConfig,
                                     "currentAOI",
                                     mercator.geometryToVectorSource(mercator.parseGeoJson(geoJsonBoundary, true)),
-                                    ceoMapStyles.yellowPolygon);
+                                    mercator.ceoMapStyles("polygon", "yellow"));
             mercator.zoomMapToLayer(this.state.mapConfig, "currentAOI");
         }
     }
@@ -524,9 +524,7 @@ class Project extends React.Component {
         mercator.addVectorLayer(this.state.mapConfig,
                                 "projectPlots",
                                 mercator.plotsToVectorSource(this.state.plotList),
-                                this.state.projectDetails.plotShape === "circle"
-                                    ? ceoMapStyles.yellowCircle
-                                    : ceoMapStyles.yellowSquare);
+                                mercator.ceoMapStyles(this.state.projectDetails.plotShape, "yellow"));
     };
 
     setProjectImageryList = (newProjectImageryList) =>
