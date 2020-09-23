@@ -62,31 +62,32 @@ module.exports = env => ({
                     "css-loader",
                 ],
             },
-            {
-                test: /\.(png|svg|jpg|gif)$/,
-                use: [
-                    "file-loader",
-                ],
-            },
-            {
-                test: /\.(woff|woff2|eot|ttf|otf)$/,
-                use: [
-                    "file-loader",
-                ],
-            },
         ],
     },
     plugins: [
         {
             apply: (compiler) => {
-                compiler.hooks.beforeCompile.tap("BeforeRunPlugin", () => {
+                compiler.hooks.beforeCompile.tap("BeforeCompilePlugin", () => {
                     // Ensure that outdir exists.
                     if (!fs.existsSync("./" + outdir)) {
-                        fs.mkdirSync("./" + outdir, { recursive: true });
+                        fs.mkdirSync("./" + outdir, {recursive: true});
                     }
                     // Remove old files to prevent conflicts.
-                    fs.readdirSync("./" + outdir)
-                        .forEach(f => fs.unlinkSync(path.join("./" + outdir, f)));
+                    // Dev will have the old files removed at the beginning
+                    // so a browser refresh does not show stale data.
+                    if (env.dev) {
+                        fs.readdirSync("./" + outdir)
+                            .forEach(f => fs.unlinkSync(path.join("./" + outdir, f)));
+                    }
+                });
+                compiler.hooks.emit.tap("EmitPlugin", () => {
+                    // Remove old files to prevent conflicts.
+                    // Production will have the old files remove immediately before
+                    // the new ones are created for less interruption.
+                    if (!env.dev) {
+                        fs.readdirSync("./" + outdir)
+                            .forEach(f => fs.unlinkSync(path.join("./" + outdir, f)));
+                    }
                 });
             },
         },
