@@ -138,14 +138,7 @@ class MapPanel extends React.Component {
             mercator.addVectorLayer(mapConfig,
                                     "projectMarkers",
                                     mercator.makeClusterSource(projectSource, clusterDistance),
-                                    feature => mercator.getCircleStyle(
-                                        10,
-                                        "#3399cc",
-                                        "#ffffff",
-                                        1,
-                                        feature.get("features").length,
-                                        "#ffffff"
-                                    ));
+                                    feature => mercator.ceoMapStyles("cluster", feature.get("features").length));
         }
         mercator.addOverlay(mapConfig, "projectPopup", document.getElementById("projectPopUp"));
         const overlay = mercator.getOverlayByTitle(mapConfig, "projectPopup");

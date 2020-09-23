@@ -785,37 +785,38 @@ mercator.getIconStyle = function (imageSrc) {
 };
 
 // [Pure] Returns a style object that displays a circle with the
-// specified radius, fillColor, borderColor, and borderWidth. If text
-// and textFillColor are also passed, they will be used to overlay
-// text on the circle.
-mercator.getCircleStyle = function (radius, fillColor, borderColor, borderWidth, text, textFillColor) {
-    if (!text || !textFillColor) {
-        return new Style({
-            image: new CircleStyle({
-                radius: radius,
-                fill: fillColor ? new Fill({color: fillColor}) : null,
-                stroke: new Stroke({
-                    color: borderColor,
-                    width: borderWidth,
-                }),
+// specified radius, fillColor, borderColor, and borderWidth. text
+// and textFillColor are used to overlay text on the circle.
+mercator.getClusterStyle = function (radius, fillColor, borderColor, borderWidth, text) {
+    return new Style({
+        image: new CircleStyle({
+            radius: radius,
+            fill: fillColor ? new Fill({color: fillColor}) : null,
+            stroke: new Stroke({
+                color: borderColor,
+                width: borderWidth,
             }),
-        });
-    } else {
-        return new Style({
-            image: new CircleStyle({
-                radius: radius,
-                fill: fillColor ? new Fill({color: fillColor}) : null,
-                stroke: new Stroke({
-                    color: borderColor,
-                    width: borderWidth,
-                }),
+        }),
+        text: new StyleText({
+            text: (text || "").toString(),
+            fill: new Fill({color: borderColor}),
+        }),
+    });
+};
+
+// [Pure] Returns a style object that displays a circle with the
+// specified radius, fillColor, borderColor, and borderWidth.
+mercator.getCircleStyle = function (radius, fillColor, borderColor, borderWidth) {
+    return new Style({
+        image: new CircleStyle({
+            radius: radius,
+            fill: fillColor ? new Fill({color: fillColor}) : null,
+            stroke: new Stroke({
+                color: borderColor,
+                width: borderWidth,
             }),
-            text: new StyleText({
-                text: text.toString(),
-                fill: new Fill({color: textFillColor}),
-            }),
-        });
-    }
+        }),
+    });
 };
 
 // [Pure] Returns a style object that displays a shape with the
@@ -849,7 +850,7 @@ mercator.getPolygonStyle = function (fillColor, borderColor, borderWidth) {
     });
 };
 
-const ceoMapStyleColors = {
+const ceoMapPresets = {
     red: "#8b2323",
     blue: "#23238b",
     yellow: "yellow",
@@ -863,10 +864,12 @@ const ceoMapStyleFunctions = {
     circle: color => mercator.getCircleStyle(5, null, color, 2),
     point: color => mercator.getCircleStyle(6, null, color, 2),
     square: color => mercator.getRegularShapeStyle(6, 4, Math.PI / 4, null, (color), 2),
+    cluster: numPlots => mercator.getClusterStyle(10, "#3399cc", "#ffffff", 1, numPlots),
 };
 
-mercator.ceoMapStyles = function (type, color) {
-    return ceoMapStyleFunctions[type.toLowerCase()].call(null, ceoMapStyleColors[color]);
+mercator.ceoMapStyles = function (type, option) {
+    return ceoMapStyleFunctions[type.toLowerCase()]
+        .call(null, ceoMapPresets[option] || option);
 };
 
 /*****************************************************************************
@@ -1298,8 +1301,7 @@ mercator.addPlotLayer = function (mapConfig, plots, callBack) {
                             "currentPlots",
                             clusterSource,
                             function (feature) {
-                                const numPlots = feature.get("features").length;
-                                return mercator.getCircleStyle(10, "#3399cc", "#ffffff", 1, numPlots, "#ffffff");
+                                return mercator.ceoMapStyles("cluster", feature.get("features").length);
                             });
 
     const clickHandler = function (event) {
@@ -1317,6 +1319,8 @@ mercator.addPlotLayer = function (mapConfig, plots, callBack) {
                                                 }
                                             }, {hitTolerance:10});
     };
+    // TODO: It looks like the clickHandler is only removed when the user clicks
+    //       a cluster of size 1. It is not removed if the user clicks "Go to first plot"
     mapConfig.map.on("click", clickHandler);
 
     return mapConfig;
