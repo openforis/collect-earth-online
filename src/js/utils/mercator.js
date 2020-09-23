@@ -841,7 +841,7 @@ mercator.getRegularShapeStyle = function (radius, points, rotation, fillColor, b
 // is applied wth the specified fillColor, borderColor, and borderWidth.
 mercator.getPolygonStyle = function (fillColor, borderColor, borderWidth) {
     return new Style({
-        fill: fillColor ? new Fill({color: fillColor}) : null,
+        fill: fillColor ? new Fill({color: fillColor}) : new Fill({color: "rgba(255, 255, 255, 0)"}),
         stroke: new Stroke({
             color: borderColor,
             width: borderWidth,
