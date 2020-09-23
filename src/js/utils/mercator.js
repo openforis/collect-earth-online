@@ -25,7 +25,7 @@ import {DragBox, Select} from "ol/interaction";
 import {GeoJSON, KML} from "ol/format";
 import {Tile as TileLayer, Vector as VectorLayer, Group as LayerGroup} from "ol/layer";
 import {BingMaps, Cluster, TileWMS, Vector as VectorSource, XYZ} from "ol/source";
-import {Circle as CircleStyle, Icon, Fill, Stroke, Style, Text as StyleText, RegularShape} from "ol/style";
+import {Circle as CircleStyle, Fill, Stroke, Style, Text as StyleText, RegularShape} from "ol/style";
 import {fromLonLat, transform, transformExtent} from "ol/proj";
 import {fromExtent, fromCircle} from "ol/geom/Polygon";
 import {formatDateISO} from "./generalUtils";
@@ -778,11 +778,6 @@ mercator.zoomMapToLayer = function (mapConfig, layerId, maxZoom) {
 *** Functions to create map styles
 ***
 *****************************************************************************/
-
-// [Pure] Returns a style object that displays the image at imageSrc.
-mercator.getIconStyle = function (imageSrc) {
-    return new Style({image: new Icon({src: imageSrc})});
-};
 
 // [Pure] Returns a style object that displays a circle with the
 // specified radius, fillColor, borderColor, and borderWidth. text
