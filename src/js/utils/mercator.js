@@ -861,8 +861,10 @@ const ceoMapPresets = {
 
 const ceoMapStyleFunctions = {
     polygon: color => mercator.getPolygonStyle(null, color, 3),
-    circle: color => mercator.getCircleStyle(5, null, color, 2),
+    selectedpolygon: color => mercator.getPolygonStyle(null, color, 6),
     point: color => mercator.getCircleStyle(6, null, color, 2),
+    selectedpoint: color => mercator.getCircleStyle(6, color, color, 2),
+    circle: color => mercator.getCircleStyle(5, null, color, 2),
     square: color => mercator.getRegularShapeStyle(6, 4, Math.PI / 4, null, (color), 2),
     cluster: numPlots => mercator.getClusterStyle(10, "#3399cc", "#ffffff", 1, numPlots),
 };
@@ -1141,11 +1143,7 @@ mercator.getAllFeatures = function (mapConfig, layerId) {
 // border and filled with the passed in color. If color is null, the
 // circle will be filled with gray.
 mercator.highlightSampleGeometry = function (sample, color) {
-    if (sample.getGeometry().getType() === "Point") {
-        sample.setStyle(mercator.getCircleStyle(6, color, color, 2));
-    } else {
-        sample.setStyle(mercator.getPolygonStyle(null, color, 6));
-    }
+    sample.setStyle(mercator.ceoMapStyles("selected" + sample.getGeometry().getType(), color));
     return sample;
 };
 
