@@ -827,6 +827,7 @@ class Collection extends React.Component {
 
                 mercator.highlightSampleGeometry(feature, color);
             });
+        this.setState({selectedSampleId: -1});
     };
 
     calcVisibleSamples = (currentQuestionId) => {

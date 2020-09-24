@@ -1022,68 +1022,51 @@ mercator.removeInteractionByTitle = function (mapConfig, interactionTitle) {
 };
 
 // [Pure] Returns a new click select interaction with title =
-// interactionTitle that is associated with the passed in layer. When
-// a feature is selected, its style is stored in featureStyles and
-// then cleared on the map. When a feature is deselected, its saved
-// style is restored on the map.
-mercator.makeClickSelect = function (interactionTitle, layer, featureStyles, setSampleId) {
+// interactionTitle that is associated with the passed in layer.
+mercator.makeClickSelect = function (interactionTitle, layer) {
     const select = new Select({layers: [layer]});
     select.set("title", interactionTitle);
-    const action = function (event) {
-        setSampleId(event.selected.length === 1 ? event.selected[0].get("sampleId") : -1);
-        event.selected.forEach(function (feature) {
-            console.log(feature);
-            console.log(feature.getStyle())
-            featureStyles[feature.get("sampleId")] = feature.getStyle() !== null ? feature.getStyle() : featureStyles[feature.get("sampleId")];
-            feature.setStyle(null);
-        });
-        event.deselected.forEach(function (feature) {
-            feature.setStyle(featureStyles[feature.get("sampleId")]);
-        });
-    };
-    select.on("select", action);
+    select.on("select");
     return select;
 };
 
 // [Pure] Returns a new dragBox select interaction with title =
-// interactionTitle that is associated with the passed in layer. When
-// a feature is selected, its style is stored in featureStyles and
-// then cleared on the map. When a feature is deselected, its saved
-// style is restored on the map.
-mercator.makeDragBoxSelect = function (interactionTitle, layer, featureStyles, selectedFeatures, setSampleId) {
+// interactionTitle that is associated with the passed in layer.
+mercator.makeDragBoxSelect = function (interactionTitle, layer, selectedFeatures) {
     const dragBox = new DragBox({condition: platformModifierKeyOnly});
     dragBox.set("title", interactionTitle);
     const boxstartAction = function () {
-        selectedFeatures.forEach(function (feature) {
-            feature.setStyle(featureStyles[feature.get("sampleId")]);
-        });
         selectedFeatures.clear();
     };
 
     const boxendAction = function () {
         const extent = dragBox.getGeometry().getExtent();
-        const saveStyle = function (feature) {
+        const selectFeatures = function (feature) {
             selectedFeatures.push(feature);
-            featureStyles[feature.get("sampleId")] = feature.getStyle() !== null ? feature.getStyle() : featureStyles[feature.get("sampleId")];
-            feature.setStyle(null);
             return false;
         };
-        layer.getSource().forEachFeatureIntersectingExtent(extent, saveStyle);
-
-        setSampleId(selectedFeatures.getLength() === 1 ? selectedFeatures.getArray()[0].get("sampleId") : -1);
+        layer.getSource().forEachFeatureIntersectingExtent(extent, selectFeatures);
     };
     dragBox.on("boxstart", boxstartAction);
     dragBox.on("boxend", boxendAction);
     return dragBox;
 };
+
+mercator.addAfterSelectionChange = function (selectedFeatures, setSampleId) {
+    const afterSelectionChange = function () {
+        setSampleId(selectedFeatures.getLength() === 1 ? selectedFeatures.getArray()[0].get("sampleId") : -1);
+    };
+    selectedFeatures.on(["add", "remove"], afterSelectionChange);
+};
+
 // [Side Effects] Adds a click select interaction and a dragBox select interaction
 // to mapConfig's map object associated with the layer with id === layerId.
 mercator.enableSelection = function (mapConfig, layerId, setSampleId) {
     const layer = mercator.getLayerById(mapConfig, layerId);
-    const featureStyles = {}; // holds saved styles for features selected by either interaction
-    const clickSelect = mercator.makeClickSelect("clickSelect", layer, featureStyles, setSampleId);
+    const clickSelect = mercator.makeClickSelect("clickSelect", layer);
     const selectedFeatures = clickSelect.getFeatures();
-    const dragBoxSelect = mercator.makeDragBoxSelect("dragBoxSelect", layer, featureStyles, selectedFeatures, setSampleId);
+    const dragBoxSelect = mercator.makeDragBoxSelect("dragBoxSelect", layer, selectedFeatures);
+    mercator.addAfterSelectionChange(selectedFeatures, setSampleId);
     mapConfig.map.addInteraction(clickSelect);
     mapConfig.map.addInteraction(dragBoxSelect);
     return mapConfig;
