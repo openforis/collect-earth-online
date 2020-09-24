@@ -6,7 +6,7 @@
             [org.openforis.ceo.db.imagery :refer [get-imagery-source-config]]))
 
 (defn- planet-url [source-config query-params]
-  (let [{:keys [year month tile x y z]} query-params]
+  (let [{:strs [year month tile x y z]} query-params]
     (str "https://tiles" tile
          ".planet.com/basemaps/v1/planet-tiles/global_monthly_"
          year "_" month
@@ -62,7 +62,7 @@
         url           (str base-url
                            (when-not (str/ends-with? base-url "?") "?")
                            (->> (dissoc query-params "imageryId")
-                                (map (fn [[key val]] (str (name key) "=" val)))
+                                (map #(str/join "=" %))
                                 (str/join "&"))
                            "&CONNECTID="
                            (get-in source-config [:geoserverParams :CONNECTID]))]
