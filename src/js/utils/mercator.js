@@ -749,7 +749,7 @@ mercator.updateLayerWmsParams = function (mapConfig, layerId, newParams, url = n
 };
 
 // [Side Effects] Zooms the map view to contain the passed in extent.
-mercator.zoomMapToExtent = function (mapConfig, extent, maxZoom) {
+mercator.zoomMapToExtent = function (mapConfig, extent, padding) {
     if (extent) {
         if (extent[0] <= -13630599.62775418
                 && extent[1] <= -291567.89923496445
@@ -759,16 +759,18 @@ mercator.zoomMapToExtent = function (mapConfig, extent, maxZoom) {
         }
     }
     mapConfig.view.fit(extent,
-                       mapConfig.map.getSize(),
-                       {maxZoom: maxZoom || 19});
+                       {
+                           size: mapConfig.map.getSize(),
+                           padding: padding ? [padding, padding, padding, padding] : [16, 16, 16, 16],
+                       });
     return mapConfig;
 };
 
 // [Side Effects] Zooms the map view to contain the layer with id === layerId.
-mercator.zoomMapToLayer = function (mapConfig, layerId, maxZoom) {
+mercator.zoomMapToLayer = function (mapConfig, layerId, padding) {
     const layer = mercator.getLayerById(mapConfig, layerId);
     if (layer) {
-        mercator.zoomMapToExtent(mapConfig, layer.getSource().getExtent(), maxZoom);
+        mercator.zoomMapToExtent(mapConfig, layer.getSource().getExtent(), padding);
     }
     return mapConfig;
 };
@@ -1030,6 +1032,8 @@ mercator.makeClickSelect = function (interactionTitle, layer, featureStyles, set
     const action = function (event) {
         setSampleId(event.selected.length === 1 ? event.selected[0].get("sampleId") : -1);
         event.selected.forEach(function (feature) {
+            console.log(feature);
+            console.log(feature.getStyle())
             featureStyles[feature.get("sampleId")] = feature.getStyle() !== null ? feature.getStyle() : featureStyles[feature.get("sampleId")];
             feature.setStyle(null);
         });
