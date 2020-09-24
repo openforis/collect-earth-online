@@ -350,35 +350,41 @@ export function PlotReview({projectDetails: {plotDistribution, numPlots, plotSpa
     );
 }
 
-export function SampleReview({projectDetails: {sampleDistribution, samplesPerPlot, sampleResolution}}) {
+export function SampleReview({projectDetails}) {
+    const {sampleDistribution, samplesPerPlot, sampleResolution, allowDrawnSamples} = projectDetails;
     return (
         <SectionBlock title="Sample Design">
             <div id="sample-design">
-                <table id="plot-review-table" className="table table-sm">
-                    <tbody>
-                        <tr>
-                            <td className="w-80">Spatial Distribution</td>
-                            <td className="w-20 text-center">
-                                <span className="badge badge-pill bg-lightgreen">{sampleDistribution} distribution</span>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td className="w-80">Samples Per Plot</td>
-                            <td className="w-20 text-center">
-                                <span className="badge badge-pill bg-lightgreen">{samplesPerPlot} /plot</span>
-                            </td>
-                        </tr>
-                        {sampleDistribution === "gridded" &&
+                {sampleDistribution === "none"
+                ? (
+                    <h3>No samples are predefined.</h3>
+                ) : (
+                    <table id="plot-review-table" className="table table-sm">
+                        <tbody>
                             <tr>
-                                <td className="w-80">Sample Resolution</td>
+                                <td className="w-80">Spatial Distribution</td>
                                 <td className="w-20 text-center">
-                                    <span className="badge badge-pill bg-lightgreen">{sampleResolution} m</span>
+                                    <span className="badge badge-pill bg-lightgreen">{sampleDistribution} distribution</span>
                                 </td>
                             </tr>
-                        }
-
-                    </tbody>
-                </table>
+                            <tr>
+                                <td className="w-80">Samples Per Plot</td>
+                                <td className="w-20 text-center">
+                                    <span className="badge badge-pill bg-lightgreen">{samplesPerPlot} /plot</span>
+                                </td>
+                            </tr>
+                            {sampleDistribution === "gridded" &&
+                                <tr>
+                                    <td className="w-80">Sample Resolution</td>
+                                    <td className="w-20 text-center">
+                                        <span className="badge badge-pill bg-lightgreen">{sampleResolution} m</span>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                )}
+                {allowDrawnSamples && <h3>Users can draw additional samples at collection time.</h3>}
             </div>
         </SectionBlock>
     );
