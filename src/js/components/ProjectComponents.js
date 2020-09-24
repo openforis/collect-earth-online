@@ -306,7 +306,7 @@ export function PlotReview({projectDetails: {plotDistribution, numPlots, plotSpa
                         <table id="plot-review-table" className="table table-sm">
                             <tbody>
                                 <tr>
-                                    <td className="w-80">Spatial Distribution</td>
+                                    <td className="w-80">Generated Plot Spatial Distribution</td>
                                     <td className="w-20 text-center">
                                         <span className="badge badge-pill bg-lightgreen">{plotDistribution} distribution</span>
                                     </td>
@@ -362,7 +362,7 @@ export function SampleReview({projectDetails}) {
                     <table id="plot-review-table" className="table table-sm">
                         <tbody>
                             <tr>
-                                <td className="w-80">Spatial Distribution</td>
+                                <td className="w-80">Generated Sample Spatial Distribution</td>
                                 <td className="w-20 text-center">
                                     <span className="badge badge-pill bg-lightgreen">{sampleDistribution} distribution</span>
                                 </td>

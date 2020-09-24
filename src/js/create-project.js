@@ -1208,23 +1208,26 @@ function SampleDesign ({
                         onChange={e => setProjectDetail("sampleResolution", e.target.value)}
                     />
                 </div>
-                {/* TODO during the redesign this might look better as a h3 when disabled */}
-                <div className="form-check form-check-inline my-3">
-                    <input
-                        className="form-check-input"
-                        type="checkbox"
-                        id="allow-drawn-samples"
-                        onChange={() => setProjectDetail("allowDrawnSamples", !allowDrawnSamples)}
-                        checked={allowDrawnSamples || sampleDistribution === "none"}
-                        disabled={sampleDistribution === "none"}
-                    />
-                    <label
-                        className="form-check-label"
-                        htmlFor="allow-drawn-samples"
-                    >
-                        Allow users to drawn their own plots
-                    </label>
-                </div>
+                {sampleDistribution === "none"
+                ? (
+                    <h3 className="my-3">Users will draw samples at collection time.</h3>
+                ) : (
+                    <div className="form-check form-check-inline my-3">
+                        <input
+                            className="form-check-input"
+                            type="checkbox"
+                            id="allow-drawn-samples"
+                            onChange={() => setProjectDetail("allowDrawnSamples", !allowDrawnSamples)}
+                            checked={allowDrawnSamples || sampleDistribution === "none"}
+                        />
+                        <label
+                            className="form-check-label"
+                            htmlFor="allow-drawn-samples"
+                        >
+                            Allow users to drawn their own plots
+                        </label>
+                    </div>
+                )}
                 <p
                     id="plots info-text"
                     className="font-italic ml-2 small"
