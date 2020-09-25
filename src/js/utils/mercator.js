@@ -869,7 +869,7 @@ mercator.getPolygonStyle = function (fillColor, borderColor, borderWidth) {
 mercator.getDrawStyle = function (lineColor, lineWith, pointColor, pointRadius, fillColor = null) {
     return new Style({
         fill: new Fill({
-            color: fillColor ? fillColor : "rgba(255, 255, 255, 0.2)",
+            color: fillColor || "rgba(255, 255, 255, 0.2)",
         }),
         stroke: new Stroke({
             color: lineColor,
