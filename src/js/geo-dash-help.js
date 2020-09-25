@@ -2,6 +2,7 @@ import React from "react";
 import ReactDOM from "react-dom";
 import {CollapsibleSectionBlock, ExpandableImage} from "./components/FormComponents";
 import {NavigationBar, LogoBanner} from "./components/PageComponents";
+import {getLanguage} from "./utils/textUtils";
 
 class GeoDashHelp extends React.Component {
     constructor(props) {
@@ -12,7 +13,7 @@ class GeoDashHelp extends React.Component {
     }
 
     componentDidMount() {
-        fetch(`/locale/geodashhelp_${this.props.browserLanguage}.json`)
+        fetch(`/locale/geodashhelp/${getLanguage(["en", "es"])}.json`)
             .then(res => res.json())
             .then(data => this.setState({lngObject: data}));
     }
@@ -280,7 +281,7 @@ class GeoDashHelp extends React.Component {
 export function pageInit(args) {
     ReactDOM.render(
         <NavigationBar userName={args.userName} userId={args.userId}>
-            <GeoDashHelp browserLanguage={args.browserLanguage}/>
+            <GeoDashHelp/>
         </NavigationBar>,
         document.getElementById("app")
     );
