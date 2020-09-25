@@ -34,8 +34,9 @@
 
 ;;; Data Functions
 
-;; TODO add settings that are new since we forked
-(def default-options {:showGEEScript false})
+(def default-options {:showGEEScript       false
+                      :showPlotInformation false
+                      :autoLaunchGeoDash   true})
 
 (defn- single-project-object [project]
   {:id                   (:project_id project)
@@ -60,7 +61,7 @@
    :validBoundary        (:valid_boundary project)
    :sampleValues         (tc/jsonb->clj (:survey_questions project)) ; TODO why don't these names match
    :surveyRules          (tc/jsonb->clj (:survey_rules project))
-   :projectOptions       (or (tc/jsonb->clj (:options project)) default-options)})
+   :projectOptions       (merge default-options (tc/jsonb->clj (:options project)))})
 
 (defn- get-project-list [sql-results]
   (mapv single-project-object
