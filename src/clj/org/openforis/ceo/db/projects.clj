@@ -332,12 +332,12 @@
        (map #(str % (cond
                       (#{"LON" "LAT"} %)         " float"
                       (#{"PLOTID" "SAMPLEID"} %) " integer"
-                      :else                      " text"))
-            (str/join ","))))
+                      :else                      " text")))
+       (str/join ",")))
 
 (defn- get-csv-headers [ext-file must-include]
   (let [data (slurp ext-file)]
-    (if-let [header-row (re-find #".+\n?" data)]
+    (if-let [header-row (re-find #".+(?=\n)" data)]
       (let [headers (as-> header-row hr
                       (str/split hr #",")
                       (mapv #(-> %
