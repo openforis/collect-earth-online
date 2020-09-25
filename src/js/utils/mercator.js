@@ -865,15 +865,15 @@ mercator.getPolygonStyle = function (fillColor, borderColor, borderWidth) {
 };
 
 // [Pure] Returns a style object that displays the different draw tools to which it
-// is applied wth the specified lineColor, lineWith, pointColor, pointRadius, fillColor.
-mercator.getDrawStyle = function (lineColor, lineWith, pointColor, pointRadius, fillColor = null) {
+// is applied wth the specified lineColor, lineWidth, pointColor, pointRadius, fillColor.
+mercator.getDrawStyle = function (lineColor, lineWidth, pointColor, pointRadius, fillColor = null) {
     return new Style({
         fill: new Fill({
             color: fillColor || "rgba(255, 255, 255, 0.2)",
         }),
         stroke: new Stroke({
             color: lineColor,
-            width: lineWith,
+            width: lineWidth,
         }),
         image: new CircleStyle({
             radius: pointRadius,
@@ -897,12 +897,12 @@ const ceoMapPresets = {
 const ceoMapStyleFunctions = {
     polygon: color => mercator.getPolygonStyle(null, color, 3),
     selectedpolygon: color => mercator.getPolygonStyle(null, color, 6),
-    point: color => mercator.getCircleStyle(6, null, color, 2),
-    selectedpoint: color => mercator.getCircleStyle(6, color, color, 2),
+    point: color => mercator.getCircleStyle(8, null, color, 2),
+    selectedpoint: color => mercator.getCircleStyle(8, color, color, 2),
     circle: color => mercator.getCircleStyle(5, null, color, 2),
-    square: color => mercator.getRegularShapeStyle(6, 4, Math.PI / 4, null, (color), 2),
+    square: color => mercator.getRegularShapeStyle(8, 4, Math.PI / 4, null, (color), 2),
     cluster: numPlots => mercator.getClusterStyle(10, "#3399cc", "#ffffff", 1, numPlots),
-    draw: color => mercator.getDrawStyle(color, 2, color, 7),
+    draw: color => mercator.getDrawStyle(color, 3, color, 8),
 };
 
 mercator.ceoMapStyles = function (type, option) {
