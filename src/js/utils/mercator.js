@@ -21,7 +21,7 @@ import {Feature, Map, Overlay, View} from "ol";
 import {Control, ScaleLine, Attribution, Zoom, Rotate} from "ol/control";
 import {platformModifierKeyOnly} from "ol/events/condition";
 import {Circle, LineString, Point} from "ol/geom";
-import {DragBox, Select} from "ol/interaction";
+import {DragBox, Select, Draw, Modify, Snap} from "ol/interaction";
 import {GeoJSON, KML} from "ol/format";
 import {Tile as TileLayer, Vector as VectorLayer, Group as LayerGroup} from "ol/layer";
 import {BingMaps, Cluster, TileWMS, Vector as VectorSource, XYZ} from "ol/source";
@@ -96,6 +96,12 @@ mercator.getViewRadius = function (mapConfig) {
     return Math.min(width, height) / 2.0;
 };
 
+/*****************************************************************************
+***
+*** Create map controls
+***
+*****************************************************************************/
+
 // Layer switcher for planet daily maps
 class PlanetLayerSwitcher extends Control {
 
@@ -147,7 +153,6 @@ class PlanetLayerSwitcher extends Control {
     };
 }
 
-//
 mercator.getTopVisiblePlanetLayerDate = (mapConfig, layerId) => {
     const layer = mercator.getLayerById(mapConfig, layerId);
     if (layer && layer instanceof LayerGroup) {
@@ -162,7 +167,7 @@ mercator.getTopVisiblePlanetLayerDate = (mapConfig, layerId) => {
 
 /*****************************************************************************
 ***
-*** Create map source and layer objects from JSON descriptions
+*** Create map source and layer objects
 ***
 *****************************************************************************/
 // Helper function
@@ -208,7 +213,6 @@ mercator.__sendGEERequest = function (theJson, sourceConfig, imageryId, attribut
         });
     return geeLayer;
 };
-
 
 // [Pure] Returns a new ol.source.* object or null if the sourceConfig is invalid.
 mercator.createSource = function (sourceConfig, imageryId, attribution,
@@ -480,6 +484,18 @@ mercator.createLayer = function (layerConfig, projectAOI, show = false) {
     }
 };
 
+// [Side Effects] Adds a new vector layer to the mapConfig's map object.
+mercator.addVectorLayer = function (mapConfig, layerId, vectorSource, style) {
+    const vectorLayer = new VectorLayer({
+        id: layerId,
+        source: vectorSource || new VectorSource(),
+        style: style,
+        zIndex: 1,
+    });
+    mapConfig.map.addLayer(vectorLayer);
+    return mapConfig;
+};
+
 /*****************************************************************************
 ***
 *** Functions to verify map input arguments
@@ -528,6 +544,7 @@ mercator.verifyLayerConfigs = function (layerConfigs) {
 };
 
 mercator.currentMap = null;
+
 // [Pure] Returns the first error message generated while testing the
 // input arguments or null if all tests pass.
 mercator.verifyMapInputs = function (divName, centerCoords, zoomLevel, layerConfigs) {
@@ -662,7 +679,7 @@ mercator.resetMap = function (mapConfig) {
 ***
 *****************************************************************************/
 
-// [Side Effects] Hides all raster layers in mapConfig except those with id === layerId.
+// [Side Effects] Hides all layers in mapConfig except those with id === layerId.
 mercator.setVisibleLayer = function (mapConfig, layerId) {
     mapConfig.layers.forEach(
         function (layer) {
@@ -847,13 +864,34 @@ mercator.getPolygonStyle = function (fillColor, borderColor, borderWidth) {
     });
 };
 
+// [Pure] Returns a style object that displays the different draw tools to which it
+// is applied wth the specified lineColor, lineWith, pointColor, pointRadius, fillColor.
+mercator.getDrawStyle = function (lineColor, lineWith, pointColor, pointRadius, fillColor = null) {
+    return new Style({
+        fill: new Fill({
+            color: fillColor ? fillColor : "rgba(255, 255, 255, 0.2)",
+        }),
+        stroke: new Stroke({
+            color: lineColor,
+            width: lineWith,
+        }),
+        image: new CircleStyle({
+            radius: pointRadius,
+            fill: new Fill({
+                color: pointColor,
+            }),
+        }),
+    });
+};
+
 const ceoMapPresets = {
-    red: "#8b2323",
-    blue: "#23238b",
-    yellow: "yellow",
-    green: "green",
     black: "#000000",
+    blue: "#23238b",
+    green: "green",
+    orange: "#ffcc33",
+    red: "#8b2323",
     white: "#ffffff",
+    yellow: "yellow",
 };
 
 const ceoMapStyleFunctions = {
@@ -864,6 +902,7 @@ const ceoMapStyleFunctions = {
     circle: color => mercator.getCircleStyle(5, null, color, 2),
     square: color => mercator.getRegularShapeStyle(6, 4, Math.PI / 4, null, (color), 2),
     cluster: numPlots => mercator.getClusterStyle(10, "#3399cc", "#ffffff", 1, numPlots),
+    draw: color => mercator.getDrawStyle(color, 2, color, 7),
 };
 
 mercator.ceoMapStyles = function (type, option) {
@@ -873,21 +912,9 @@ mercator.ceoMapStyles = function (type, option) {
 
 /*****************************************************************************
 ***
-*** Functions to draw project boundaries and plot buffers
+*** Functions to show project boundaries and plot buffers
 ***
 *****************************************************************************/
-
-// [Side Effects] Adds a new vector layer to the mapConfig's map object.
-mercator.addVectorLayer = function (mapConfig, layerId, vectorSource, style) {
-    const vectorLayer = new VectorLayer({
-        id: layerId,
-        source: vectorSource,
-        style: style,
-        zIndex: 1,
-    });
-    mapConfig.map.addLayer(vectorLayer);
-    return mapConfig;
-};
 
 // [Side Effects] Removes the layer with id === layerId from mapConfig's map object.
 mercator.removeLayerById = function (mapConfig, layerId) {
@@ -997,7 +1024,7 @@ mercator.addPlotOverviewLayers = function (mapConfig, plots, shape) {
 
 /*****************************************************************************
 ***
-*** Functions to setup select interactions for click and click-and-drag events
+*** Functions for interactions
 ***
 *****************************************************************************/
 
@@ -1020,6 +1047,12 @@ mercator.removeInteractionByTitle = function (mapConfig, interactionTitle) {
     }
     return mapConfig;
 };
+
+/*****************************************************************************
+***
+*** Functions to setup select interactions for click and click-and-drag events
+***
+*****************************************************************************/
 
 // [Pure] Returns a new click select interaction with title =
 // interactionTitle that is associated with the passed in layer.
@@ -1082,7 +1115,78 @@ mercator.disableSelection = function (mapConfig) {
 
 /*****************************************************************************
 ***
-*** Functions to draw sample points inside a plot
+*** Functions to setup select interactions for drawing samples
+***
+*****************************************************************************/
+
+// [Pure] Returns a new Draw interaction with a type of drawTool
+// for the source. A function to remove features on right click is
+// added for layer
+mercator.makeDraw = function (layer, source, drawTool) {
+    const removeFeature = function (e) {
+        layer.getFeatures(e.pixel)
+            .then((features) => {
+                if (features.length) layer.getSource().removeFeature(features[0]);
+            });
+    };
+    const draw = new Draw({
+        source: source,
+        type: drawTool,
+        condition: (e) => {
+            if (e.originalEvent.buttons === 2) removeFeature(e);
+            return e.originalEvent.buttons === 1;
+        },
+    });
+    draw.set("title", "draw");
+    return draw;
+};
+
+// [Pure] Returns a new Snap interaction for source.
+mercator.makeSnap = function (source) {
+    const snap = new Snap({source: source});
+    snap.set("title", "snap");
+    return snap;
+};
+
+// [Pure] Returns a new Modify interaction for source.
+mercator.makeModify = function (source) {
+    const modify = new Modify({
+        source: source,
+    });
+    modify.set("title", "modify");
+    return modify;
+};
+
+// [Side Effects] Adds a Draw, Snap, and Modify interaction
+// to mapConfig's map object associated with the layer with id === layerId.
+mercator.enableDrawing = function (mapConfig, layerId, drawTool) {
+    const layer = mercator.getLayerById(mapConfig, layerId);
+    const source = layer.getSource();
+    mapConfig.map.addInteraction(mercator.makeDraw(layer, source, drawTool));
+    mapConfig.map.addInteraction(mercator.makeSnap(source));
+    mapConfig.map.addInteraction(mercator.makeModify(source));
+    return mapConfig;
+};
+
+// [Side Effects] Removes the Draw, Snap, and Modify
+// interactions from mapConfig's map object.
+mercator.disableDrawing = function (mapConfig) {
+    mercator.removeInteractionByTitle(mapConfig, "draw");
+    mercator.removeInteractionByTitle(mapConfig, "snap");
+    mercator.removeInteractionByTitle(mapConfig, "modify");
+    return mapConfig;
+};
+
+// [Side Effects] Changes the draw type to drawTool.
+mercator.changeDrawTool = function (mapConfig, layerId, drawTool) {
+    mercator.disableDrawing(mapConfig);
+    mercator.enableDrawing(mapConfig, layerId, drawTool);
+    return mapConfig;
+};
+
+/*****************************************************************************
+***
+*** Functions to show sample points inside a plot
 ***
 *****************************************************************************/
 
@@ -1131,11 +1235,11 @@ mercator.highlightSampleGeometry = function (sample, color) {
 
 /*****************************************************************************
 ***
-*** Bounding Box Selector for Admin Page
+*** Bounding Box Selector for create-project.js
 ***
 *****************************************************************************/
 
-// [Pure] Returns a new dragBox draw interaction with title =
+// [Pure] Returns a new dragBox interaction with title =
 // interactionTitle that is associated with the passed in layer. When
 // a new box is dragged on the map, any previous dragBox polygons are
 // removed, and the current box is added to the map layer as a new
@@ -1158,7 +1262,7 @@ mercator.makeDragBoxDraw = function (interactionTitle, layer, callBack) {
     return dragBox;
 };
 
-// [Side Effects] Adds a dragBox draw interaction to mapConfig's map
+// [Side Effects] Adds a dragBox interaction to mapConfig's map
 // object associated with a newly created empty vector layer called
 // "dragBoxLayer".
 mercator.enableDragBoxDraw = function (mapConfig, callBack) {
@@ -1173,7 +1277,7 @@ mercator.enableDragBoxDraw = function (mapConfig, callBack) {
     return mapConfig;
 };
 
-// [Side Effects] Removes the dragBox draw interaction and its
+// [Side Effects] Removes the dragBox interaction and its
 // associated layer from mapConfig's map object.
 mercator.disableDragBoxDraw = function (mapConfig) {
     mercator.removeInteractionByTitle(mapConfig, "dragBoxDraw");
@@ -1189,7 +1293,7 @@ mercator.getDragBoxExtent = function (dragBox) {
 
 /*****************************************************************************
 ***
-*** Functions to draw project markers on an overview map
+*** Functions to show cluster markers on an overview map
 ***
 *****************************************************************************/
 
@@ -1321,14 +1425,6 @@ mercator.asPolygonFeature = function (feature) {
 mercator.getKMLFromFeatures = function (features) {
     return (new KML()).writeFeatures(features, {featureProjection: "EPSG:3857"});
 };
-
-/*****************************************************************************
-***
-*** FIXMEs
-***
-*****************************************************************************/
-//
-// FIXME: Move ceoMapStyles out of Mercator.js
 
 export {
     mercator,

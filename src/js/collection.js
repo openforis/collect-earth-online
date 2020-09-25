@@ -33,7 +33,7 @@ class Collection extends React.Component {
             plotList: [],
             prevPlotButtonDisabled: false,
             reviewPlots: false,
-            sampleOutlineBlack: true,
+            unansweredColor: "black",
             selectedQuestion: {id: 0, question: "", answers: []},
             selectedSampleId: -1,
             userSamples: {},
@@ -108,7 +108,7 @@ class Collection extends React.Component {
 
             // Changing conditions for which samples need to be re-drawn
             if (this.state.selectedQuestion.id !== prevState.selectedQuestion.id
-                || this.state.sampleOutlineBlack !== prevState.sampleOutlineBlack
+                || this.state.unansweredColor !== prevState.unansweredColor
                 || this.state.userSamples !== prevState.userSamples
                 || !prevState.selectedQuestion.visible) {
                 this.showPlotSamples();
@@ -239,7 +239,7 @@ class Collection extends React.Component {
     getImageryById = (imageryId) => this.state.imageryList.find(imagery => imagery.id === imageryId);
 
     plotHasSamples = (plotData) => {
-        if (plotData.samples.length === 0) {
+        if (plotData.samples.length === 0 && !this.state.currentProject.allowDrawnSamples) {
             alert("This plot has no samples. Please flag the plot.");
             return false;
         } else {
@@ -386,7 +386,7 @@ class Collection extends React.Component {
             visible: null,
         },
         collectionStart: Date.now(),
-        sampleOutlineBlack: true,
+        unansweredColor: "black",
     });
 
     zoomToPlot = () => mercator.zoomMapToLayer(this.state.mapConfig, "currentPlot", 36);
@@ -422,7 +422,7 @@ class Collection extends React.Component {
                                 mercator.samplesToVectorSource(visible),
                                 feature => mercator.ceoMapStyles(
                                     feature.getGeometry().getType(),
-                                    this.state.sampleOutlineBlack ? "black" : "white"
+                                    this.state.unansweredColor
                                 ));
         mercator.enableSelection(mapConfig,
                                  "currentSamples",
@@ -878,47 +878,13 @@ class Collection extends React.Component {
         });
     };
 
-    unansweredColor = () => (
-        <div className="PlotNavigation__change-color row justify-content-center mb-2">
-            Unanswered Color
-            <div className="form-check form-check-inline">
-                <input
-                    className="form-check-input ml-2"
-                    checked={this.state.sampleOutlineBlack}
-                    id="radio1"
-                    onChange={() => this.setState({sampleOutlineBlack: true})}
-                    type="radio"
-                    name="color-radios"
-                />
-                <label htmlFor="radio1" className="form-check-label">Black</label>
-            </div>
-            <div className="form-check form-check-inline">
-                <input
-                    className="form-check-input"
-                    checked={!this.state.sampleOutlineBlack}
-                    id="radio2"
-                    onChange={() => this.setState({sampleOutlineBlack: false})}
-                    type="radio"
-                    name="color-radios"
-                />
-                <label htmlFor="radio2" className="form-check-label">White</label>
-            </div>
-        </div>
-    );
-
-    toggleShowSidebar = () => {
-        this.setState(prevState => ({
-            showSidebar: !prevState.showSidebar,
-        }), () => {
-            window.location = this.state.showSidebar ? "#sidebar" : "#image-analysis-pane";
-        });
-    };
-
     toggleQuitModal = () => this.setState({showQuitModal: !this.state.showQuitModal});
 
     toggleFlagged = () => {
         this.setState({currentPlot: {...this.state.currentPlot, flagged: !this.state.currentPlot.flagged}});
     };
+
+    setUnansweredColor = (newColor) => this.setState({unansweredColor: newColor});
 
     render() {
         const plotId = this.state.currentPlot.plotId ? this.state.currentPlot.plotId : this.state.currentPlot.id;
@@ -931,9 +897,22 @@ class Collection extends React.Component {
                     loader={this.state.loading}
                 />
                 <div
-                    onClick={this.toggleShowSidebar}
+                    onClick={() => this.setState({showSidebar: !this.state.showSidebar}, () => {
+                        if (this.state.showSidebar) {
+                            window.location = "#sidebar";
+                        } else {
+                            document.body.scrollTop = 0;
+                            document.documentElement.scrollTop = 0;
+                        }
+                    })}
                     className="d-xl-none btn bg-lightgreen"
-                    style={{position: "absolute", zIndex: 99999, right: "2rem", lineHeight: "1rem"}}
+                    style={{
+                        position: "fixed",
+                        zIndex: 99999,
+                        right: "1rem",
+                        top: "calc(60px + 1rem)",
+                        lineHeight: "1rem",
+                    }}
                 >
                     <div style={{padding: ".5rem", color: "white"}}>
                         {this.state.showSidebar ? <UnicodeIcon icon="upCaret"/> : <UnicodeIcon icon="downCaret"/>}
@@ -1003,8 +982,11 @@ class Collection extends React.Component {
                                     selectedSampleId={Object.keys(this.state.userSamples).length === 1
                                         ? parseInt(Object.keys(this.state.userSamples)[0])
                                         : this.state.selectedSampleId}
+                                    mapConfig={this.state.mapConfig}
+                                    allowDrawnSamples={this.state.currentProject.allowDrawnSamples}
+                                    unansweredColor={this.state.unansweredColor}
+                                    setUnansweredColor={this.setUnansweredColor}
                                 />
-                                {this.unansweredColor()}
                             </>
                         :
                             <fieldset className="mb-3 justify-content-center text-center">

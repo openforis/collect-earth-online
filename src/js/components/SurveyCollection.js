@@ -3,6 +3,8 @@ import React, {Fragment} from "react";
 import {removeEnumerator} from "../utils/surveyUtils";
 import {UnicodeIcon} from "../utils/generalUtils";
 import {CollapsibleTitle} from "./FormComponents";
+import {SvgIcon} from "../utils/svgIcons";
+import {mercator} from "../utils/mercator";
 
 export class SurveyCollection extends React.Component {
     constructor(props) {
@@ -11,6 +13,8 @@ export class SurveyCollection extends React.Component {
             currentNodeIndex: 0,
             topLevelNodeIds: [],
             showSurveyQuestions: true,
+            answerMode: "question",
+            drawTool: "Point",
         };
     }
 
@@ -90,6 +94,165 @@ export class SurveyCollection extends React.Component {
                             : "Rule: " + r.ruleType + " | 'Question1: " + r.questionText1 + ", Answer1: " + r.answerText1 + "' is not compatible with 'Question2: " + r.questionText2 + ", Answer2: " + r.answerText2 + "'.")
             .join("\n");
 
+    showDrawTools = () => {
+        const {mapConfig} = this.props;
+        if (!mercator.getLayerById(mapConfig, "drawLayer")) {
+            mercator.addVectorLayer(mapConfig,
+                                    "drawLayer",
+                                    null,
+                                    mercator.ceoMapStyles("draw", "orange"));
+        }
+        mercator.enableDrawing(mapConfig, "drawLayer", this.state.drawTool);
+    };
+
+    hideDrawTools = () => {
+        mercator.disableDrawing(this.props.mapConfig);
+    }
+
+    setAnswerMode = (newMode) => {
+        if (this.state.answerMode !== newMode) {
+            if (newMode === "draw") {
+                this.showDrawTools();
+            } else {
+                this.hideDrawTools();
+            }
+            this.setState({answerMode: newMode});
+        }
+    }
+
+    setDrawTool = (newTool) => {
+        this.setState({drawTool: newTool});
+        mercator.changeDrawTool(this.props.mapConfig, "drawLayer", newTool);
+    }
+
+    buttonStyle = (selected) => Object.assign(
+        {padding: "4px", margin: ".25rem"},
+        selected ? {border: "2px solid black", borderRadius: "4px"} : {}
+    );
+
+    unansweredColor = () => (
+        <div className="PlotNavigation__change-color row justify-content-center mb-2">
+            Unanswered Color
+            <div className="form-check form-check-inline">
+                <input
+                    className="form-check-input ml-2"
+                    checked={this.props.unansweredColor === "black"}
+                    id="radio1"
+                    onChange={() => this.props.setUnansweredColor("black")}
+                    type="radio"
+                    name="color-radios"
+                />
+                <label htmlFor="radio1" className="form-check-label">Black</label>
+            </div>
+            <div className="form-check form-check-inline">
+                <input
+                    className="form-check-input"
+                    checked={this.props.unansweredColor === "white"}
+                    id="radio2"
+                    onChange={() => this.props.setUnansweredColor("white")}
+                    type="radio"
+                    name="color-radios"
+                />
+                <label htmlFor="radio2" className="form-check-label">White</label>
+            </div>
+        </div>
+    );
+
+    renderQuestions = () => (
+        <div className="SurveyQuestions__questions mx-1">
+            {this.unansweredColor()}
+            <div className="SurveyQuestions__top-questions">
+                <button
+                    type="button"
+                    id="prev-survey-question"
+                    className="btn btn-outline-lightgreen m-2"
+                    onClick={this.prevSurveyQuestionTree}
+                    disabled={this.state.currentNodeIndex === 0}
+                    style={{opacity: this.state.currentNodeIndex === 0 ? "0.25" : "1.0"}}
+                >
+                    {"<"}
+                </button>
+                {this.state.topLevelNodeIds.map((node, i) =>
+                    <button
+                        type="button"
+                        id="top-select"
+                        key={i}
+                        className="btn btn-outline-lightgreen m-2"
+                        title={removeEnumerator(this.getNodeById(node).question)}
+                        onClick={() => this.setSurveyQuestionTree(i)}
+                        style={{
+                            boxShadow: `${(i === this.state.currentNodeIndex)
+                                ? "0px 0px 2px 2px black inset,"
+                                : ""}
+                                    ${this.getTopColor(this.getNodeById(node))}
+                                    `,
+                        }}
+                    >
+                        {i + 1}
+                    </button>
+                )}
+                <button
+                    type="button"
+                    id="next-survey-question"
+                    className="btn btn-outline-lightgreen"
+                    onClick={this.nextSurveyQuestionTree}
+                    disabled={this.state.currentNodeIndex === this.state.topLevelNodeIds.length - 1}
+                    style={{opacity: this.state.currentNodeIndex === this.state.topLevelNodeIds.length - 1 ? "0.25" : "1.0"}}
+                >
+                    {">"}
+                </button>
+            </div>
+            {this.props.isFlagged
+            ?
+                <div style={{color: "red"}}>FLAGGED</div>
+            : this.state.topLevelNodeIds.length > 0 &&
+                <SurveyQuestionTree
+                    hierarchyLabel=""
+                    surveyNode={this.getNodeById(this.state.topLevelNodeIds[this.state.currentNodeIndex])}
+                    surveyQuestions={this.props.surveyQuestions}
+                    surveyRules={this.props.surveyRules}
+                    setCurrentValue={this.props.setCurrentValue}
+                    selectedQuestion={this.props.selectedQuestion}
+                    selectedSampleId={this.props.selectedSampleId}
+                    setSelectedQuestion={this.props.setSelectedQuestion}
+                    getRulesById={this.getRulesById}
+                />
+            }
+        </div>);
+
+    renderDrawTools = () => (
+        <div style={{display: "flex", flexDirection: "column"}}>
+            <div
+                style={{alignItems: "center", cursor: "pointer", display: "flex"}}
+                onClick={() => this.setDrawTool("Point")}
+            >
+                <span style={this.buttonStyle(this.state.drawTool === "Point")}>
+                    <SvgIcon icon="point" size="2rem"/>
+                </span>
+                Single point tool
+            </div>
+            <div
+                style={{alignItems: "center", cursor: "pointer", display: "flex"}}
+                onClick={() => this.setDrawTool("Polygon")}
+            >
+                <span style={this.buttonStyle(this.state.drawTool === "Polygon")}>
+                    <SvgIcon icon="polygon" size="2rem"/>
+                </span>
+                Polygon tool
+            </div>
+            <div
+                style={{alignItems: "center", cursor: "pointer", display: "flex"}}
+                onClick={() => this.setDrawTool("LineString")}
+            >
+                <span style={this.buttonStyle(this.state.drawTool === "LineString")}>
+                    <SvgIcon icon="lineString" size="2rem"/>
+                </span>
+                LineString tool
+            </div>
+            <p>To modify an existing feature, click on it and drag. To delete a feature, right click on it.</p>
+        </div>
+    );
+
     render() {
         return (
             <fieldset className="justify-content-center text-center">
@@ -98,71 +261,32 @@ export class SurveyCollection extends React.Component {
                     showGroup={this.state.showSurveyQuestions}
                     toggleShow={() => this.setState({showSurveyQuestions: !this.state.showSurveyQuestions})}
                 />
+                {this.props.allowDrawnSamples &&
+                    <div style={{display: "flex", justifyContent: "center"}}>
+                        <span
+                            style={this.buttonStyle(this.state.answerMode === "question")}
+                            title="Answer questions"
+                            onClick={() => this.setAnswerMode("question")}
+                        >
+                            <SvgIcon icon="question" size="2rem"/>
+                        </span>
+                        <span
+                            style={this.buttonStyle(this.state.answerMode === "draw")}
+                            title="Draw sample points"
+                            onClick={() => this.setAnswerMode("draw")}
+                        >
+                            <SvgIcon icon="draw" size="2rem"/>
+                        </span>
+                    </div>
+                }
                 {this.state.showSurveyQuestions
                 ? this.props.surveyQuestions.length > 0
-                    ?
-                        <div className="SurveyQuestions__questions mx-1">
-                            <div className="SurveyQuestions__top-questions">
-                                <button
-                                    type="button"
-                                    id="prev-survey-question"
-                                    className="btn btn-outline-lightgreen m-2"
-                                    onClick={this.prevSurveyQuestionTree}
-                                    disabled={this.state.currentNodeIndex === 0}
-                                    style={{opacity: this.state.currentNodeIndex === 0 ? "0.25" : "1.0"}}
-                                >
-                                    {"<"}
-                                </button>
-                                {this.state.topLevelNodeIds.map((node, i) =>
-                                    <button
-                                        type="button"
-                                        id="top-select"
-                                        key={i}
-                                        className="btn btn-outline-lightgreen m-2"
-                                        title={removeEnumerator(this.getNodeById(node).question)}
-                                        onClick={() => this.setSurveyQuestionTree(i)}
-                                        style={{
-                                            boxShadow: `${(i === this.state.currentNodeIndex)
-                                                ? "0px 0px 2px 2px black inset,"
-                                                : ""}
-                                                    ${this.getTopColor(this.getNodeById(node))}
-                                                    `,
-                                        }}
-                                    >
-                                        {i + 1}
-                                    </button>
-                                )}
-                                <button
-                                    type="button"
-                                    id="next-survey-question"
-                                    className="btn btn-outline-lightgreen"
-                                    onClick={this.nextSurveyQuestionTree}
-                                    disabled={this.state.currentNodeIndex === this.state.topLevelNodeIds.length - 1}
-                                    style={{opacity: this.state.currentNodeIndex === this.state.topLevelNodeIds.length - 1 ? "0.25" : "1.0"}}
-                                >
-                                    {">"}
-                                </button>
-                            </div>
-                            {this.props.isFlagged
-                            ?
-                                <div style={{color: "red"}}>FLAGGED</div>
-                            : this.state.topLevelNodeIds.length > 0 &&
-                                <SurveyQuestionTree
-                                    hierarchyLabel=""
-                                    surveyNode={this.getNodeById(this.state.topLevelNodeIds[this.state.currentNodeIndex])}
-                                    surveyQuestions={this.props.surveyQuestions}
-                                    surveyRules={this.props.surveyRules}
-                                    setCurrentValue={this.props.setCurrentValue}
-                                    selectedQuestion={this.props.selectedQuestion}
-                                    selectedSampleId={this.props.selectedSampleId}
-                                    setSelectedQuestion={this.props.setSelectedQuestion}
-                                    getRulesById={this.getRulesById}
-                                />
-                            }
-                        </div>
+                    ? this.state.answerMode === "question"
+                        ? this.renderQuestions()
+                        : this.renderDrawTools()
                     :
                         <h3>This project is missing survey questions!</h3>
-                : ""
+                : null
                 }
             </fieldset>
         );
