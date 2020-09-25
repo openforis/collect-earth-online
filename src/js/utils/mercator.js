@@ -805,7 +805,7 @@ mercator.getCircleStyle = function (radius, borderColor, borderWidth, fillColor 
     return new Style({
         image: new CircleStyle({
             radius: radius,
-            fill: fillColor ? new Fill({color: fillColor}) : new Fill({color: "rgba(255, 255, 255, 0)"}),
+            fill: new Fill({color: fillColor || "rgba(255, 255, 255, 0)"}),
             stroke: new Stroke({
                 color: borderColor,
                 width: borderWidth,
@@ -824,7 +824,7 @@ mercator.getRegularShapeStyle = function (radius, points, rotation, borderColor,
             radius: radius,
             points: points,
             rotation: rotation || 0,
-            fill: fillColor ? new Fill({color: fillColor}) : new Fill({color: "rgba(255, 255, 255, 0)"}),
+            fill: new Fill({color: fillColor || "rgba(255, 255, 255, 0)"}),
             stroke: new Stroke({
                 color: borderColor,
                 width: borderWidth,
@@ -837,7 +837,7 @@ mercator.getRegularShapeStyle = function (radius, points, rotation, borderColor,
 // is applied wth the specified fillColor, borderColor, and borderWidth.
 mercator.getPolygonStyle = function (borderColor, borderWidth, fillColor = null) {
     return new Style({
-        fill: fillColor ? new Fill({color: fillColor}) : new Fill({color: "rgba(255, 255, 255, 0)"}),
+        fill: new Fill({color: fillColor || "rgba(255, 255, 255, 0)"}),
         stroke: new Stroke({
             color: borderColor,
             width: borderWidth,
