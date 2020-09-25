@@ -229,16 +229,7 @@ export class SurveyCollection extends React.Component {
                 <span style={this.buttonStyle(this.state.drawTool === "Point")}>
                     <SvgIcon icon="point" size="2rem"/>
                 </span>
-                Single point tool
-            </div>
-            <div
-                style={{alignItems: "center", cursor: "pointer", display: "flex"}}
-                onClick={() => this.setDrawTool("Polygon")}
-            >
-                <span style={this.buttonStyle(this.state.drawTool === "Polygon")}>
-                    <SvgIcon icon="polygon" size="2rem"/>
-                </span>
-                Polygon tool
+                Point tool
             </div>
             <div
                 style={{alignItems: "center", cursor: "pointer", display: "flex"}}
@@ -248,6 +239,15 @@ export class SurveyCollection extends React.Component {
                     <SvgIcon icon="lineString" size="2rem"/>
                 </span>
                 LineString tool
+            </div>
+            <div
+                style={{alignItems: "center", cursor: "pointer", display: "flex"}}
+                onClick={() => this.setDrawTool("Polygon")}
+            >
+                <span style={this.buttonStyle(this.state.drawTool === "Polygon")}>
+                    <SvgIcon icon="polygon" size="2rem"/>
+                </span>
+                Polygon tool
             </div>
             <p>To modify an existing feature, click on it and drag. To delete a feature, right click on it.</p>
         </div>
