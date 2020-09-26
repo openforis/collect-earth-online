@@ -133,10 +133,10 @@ export class NavigationBar extends React.Component {
     }
 
     componentDidMount () {
-        const page = window.location.pathname.slice(1);
         fetch("/locale/help.json")
             .then(response => response.ok ? response.json() : Promise.reject(response))
             .then(data => {
+                const page = window.location.pathname.slice(1);
                 const availableLanguages = data[page];
                 if (availableLanguages) this.getHelpSlides(availableLanguages, page);
             })

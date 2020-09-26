@@ -852,6 +852,17 @@ mercator.getRegularShapeStyle = function (radius, points, rotation, fillColor, b
     });
 };
 
+// [Pure] Returns a style object that displays a line string to which it
+// is applied wth the specified lineColor.
+mercator.getLineStringStyle = function (lineColor, lineWidth) {
+    return new Style({
+        stroke: new Stroke({
+            color: lineColor,
+            width: lineWidth,
+        }),
+    });
+};
+
 // [Pure] Returns a style object that displays any shape to which it
 // is applied wth the specified fillColor, borderColor, and borderWidth.
 mercator.getPolygonStyle = function (fillColor, borderColor, borderWidth) {
@@ -865,15 +876,15 @@ mercator.getPolygonStyle = function (fillColor, borderColor, borderWidth) {
 };
 
 // [Pure] Returns a style object that displays the different draw tools to which it
-// is applied wth the specified lineColor, lineWith, pointColor, pointRadius, fillColor.
-mercator.getDrawStyle = function (lineColor, lineWith, pointColor, pointRadius, fillColor = null) {
+// is applied wth the specified lineColor, lineWidth, pointColor, pointRadius, fillColor.
+mercator.getDrawStyle = function (lineColor, lineWidth, pointColor, pointRadius, fillColor = null) {
     return new Style({
         fill: new Fill({
             color: fillColor || "rgba(255, 255, 255, 0.2)",
         }),
         stroke: new Stroke({
             color: lineColor,
-            width: lineWith,
+            width: lineWidth,
         }),
         image: new CircleStyle({
             radius: pointRadius,
@@ -897,6 +908,8 @@ const ceoMapPresets = {
 const ceoMapStyleFunctions = {
     polygon: color => mercator.getPolygonStyle(null, color, 3),
     selectedpolygon: color => mercator.getPolygonStyle(null, color, 6),
+    linestring: color => mercator.getLineStringStyle(color, 3),
+    selectedlinestring: color => mercator.getLineStringStyle(color, 6),
     point: color => mercator.getCircleStyle(6, null, color, 2),
     selectedpoint: color => mercator.getCircleStyle(6, color, color, 2),
     circle: color => mercator.getCircleStyle(5, null, color, 2),
@@ -964,13 +977,13 @@ mercator.geometryToVectorSource = function (geometry) {
     });
 };
 
-mercator.geometryToGeoJSON = function (geometry, dataProjection, featureProjection = null, decimals = 10) {
+mercator.geometryToGeoJSON = function (geometry, toProjection, fromProjection = null, decimals = 10) {
     const format = new GeoJSON;
     return format.writeGeometry(
         geometry,
         {
-            dataProjection: dataProjection,
-            featureProjection: featureProjection || dataProjection,
+            dataProjection: toProjection,
+            featureProjection: fromProjection || toProjection,
             decimals: decimals,
         });
 };
@@ -1150,9 +1163,7 @@ mercator.makeSnap = function (source) {
 
 // [Pure] Returns a new Modify interaction for source.
 mercator.makeModify = function (source) {
-    const modify = new Modify({
-        source: source,
-    });
+    const modify = new Modify({source: source});
     modify.set("title", "modify");
     return modify;
 };
@@ -1198,7 +1209,7 @@ mercator.samplesToVectorSource = function (samples) {
         function (sample) {
             return new Feature({
                 sampleId: sample.id,
-                geometry: mercator.parseGeoJson(sample.geom || sample.sample_geom, true),
+                geometry: mercator.parseGeoJson(sample.geom || sample.sampleGeom, true),
             });
         }
     );
