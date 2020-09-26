@@ -1107,7 +1107,7 @@ mercator.samplesToVectorSource = function (samples) {
         function (sample) {
             return new Feature({
                 sampleId: sample.id,
-                geometry: mercator.parseGeoJson(sample.geom || sample.sample_geom, true),
+                geometry: mercator.parseGeoJson(sample.geom || sample.sampleGeom, true),
             });
         }
     );
