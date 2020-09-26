@@ -1116,10 +1116,10 @@ mercator.addPointLayer = function (mapConfig, longitude, latitude) {
 mercator.samplesToVectorSource = function (samples) {
     const features = samples.map(
         function (sample) {
-            // TODO: Account for sample.sample_geom not being a point
+            // TODO: Account for sample.sampleGeom not being a point
             return new Feature({
                 sampleId: sample.id,
-                geometry: mercator.parseGeoJson(sample.geom || sample.point, true),
+                geometry: mercator.parseGeoJson(sample.geom || sample.sampleGeom, true),
                 shape: sample.geom ? "polygon" : "point",
             });
         }
