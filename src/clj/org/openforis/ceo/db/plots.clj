@@ -1,7 +1,6 @@
 (ns org.openforis.ceo.db.plots
   (:import java.sql.Timestamp)
   (:require [clojure.set :as set]
-            [org.openforis.ceo.logging :refer [log-str]]
             [org.openforis.ceo.utils.type-conversion :as tc]
             [org.openforis.ceo.database        :refer [call-sql sql-primitive]]
             [org.openforis.ceo.db.institutions :refer [is-inst-admin-query?]]

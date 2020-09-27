@@ -908,7 +908,7 @@ class Collection extends React.Component {
 
     updateQuestionStatus = () => {
         const newSurveyQuestions = this.state.currentProject.surveyQuestions.map(sq => {
-            const visibleSamples = this.calcVisibleSamples(sq.id);
+            const visibleSamples = this.calcVisibleSamples(sq.id) || [];
             return ({
                 ...sq,
                 visible: visibleSamples,
