@@ -1652,6 +1652,7 @@ CREATE OR REPLACE FUNCTION dump_project_sample_data(_project_id integer)
         analysis_duration     numeric,
         imagery_title         text,
         imagery_attributes    text,
+        sample_geom           text,
         value                 jsonb,
         ext_plot_data         jsonb,
         ext_sample_data       jsonb
@@ -1668,20 +1669,21 @@ CREATE OR REPLACE FUNCTION dump_project_sample_data(_project_id integer)
     )
 
     SELECT p.plot_id,
-       sample_uid,
-       ST_X(sample_geom) AS lon, -- TODO: This will no longer be valid once we start adding geoms
-       ST_Y(sample_geom) AS lat,
-       p.username,
-       p.confidence,
-       p.flagged,
-       p.assigned,
-       p.collection_time::timestamp,
-       p.analysis_duration,
-       title AS imagery_title,
-       imagery_attributes::text,
-       value,
-       pfd.rem_data,
-       sfd.rem_data
+        sample_uid,
+        CASE WHEN ST_GeometryType(sample_geom) = 'ST_Point' THEN ST_X(sample_geom) ELSE -1 END AS lon,
+        CASE WHEN ST_GeometryType(sample_geom) = 'ST_Point' THEN ST_Y(sample_geom) ELSE -1 END AS lat,
+        p.username,
+        p.confidence,
+        p.flagged,
+        p.assigned,
+        p.collection_time::timestamp,
+        p.analysis_duration,
+        title AS imagery_title,
+        imagery_attributes::text,
+        ST_AsText(sample_geom),
+        value,
+        pfd.rem_data,
+        sfd.rem_data
     FROM select_all_project_plots(_project_id) p
     INNER JOIN samples s
         ON s.plot_rid = plot_id

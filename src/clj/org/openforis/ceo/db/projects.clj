@@ -801,7 +801,8 @@
                           :collection_time
                           :analysis_duration
                           :imagery_title
-                          :imagery_attributions])
+                          :imagery_attributions
+                          :sample_geom])
 
 ;; TODO collection_time analysis_duration imagery_title imagery_attributes are not really "optional" anymore
 ;;      They are a part of every project for a year now, I think we should just leave them in.
