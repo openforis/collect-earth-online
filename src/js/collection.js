@@ -446,7 +446,7 @@ class Collection extends React.Component {
         const {mapConfig} = this.state;
         mercator.disableDrawing(mapConfig);
         const allFeatures = mercator.getAllFeatures(this.state.mapConfig, "drawLayer") || [];
-        const getMin = (samples) => Math.min(0, ...samples.map(s => s.id));
+        const getMax = (samples) => Math.max(...samples.map(s => s.id));
         const newSamples = allFeatures.reduce((acc, cur) => {
             const sampleId = cur.get("sampleId");
             if (sampleId) {
@@ -456,7 +456,7 @@ class Collection extends React.Component {
                             sampleGeom: mercator.geometryToGeoJSON(cur.getGeometry(), "EPSG:4326", "EPSG:3857"),
                         }];
             } else {
-                const nextId = getMin(acc) - 1;
+                const nextId = getMax(acc) + 1;
                 return [...acc,
                         {
                             id: nextId,
@@ -571,6 +571,7 @@ class Collection extends React.Component {
                               collectionStart: this.state.collectionStart,
                               userSamples: this.state.userSamples,
                               userImages: this.state.userImages,
+                              plotSamples: this.state.currentPlot.samples,
                           }),
                       })
                     .then(response => {
