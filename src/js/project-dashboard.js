@@ -126,7 +126,7 @@ class ProjectDashboard extends React.Component {
         mercator.addVectorLayer(mapConfig,
                                 "currentAOI",
                                 mercator.geometryToVectorSource(mercator.parseGeoJson(this.state.projectDetails.boundary, true)),
-                                mercator.ceoMapStyles("polygon", "yellow"));
+                                mercator.ceoMapStyles("geom", "yellow"));
         mercator.zoomMapToLayer(mapConfig, "currentAOI");
         // Show the plot centers on the map (but constrain to <= 100 points)
         this.setState({mapConfig: mapConfig});

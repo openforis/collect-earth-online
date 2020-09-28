@@ -494,7 +494,7 @@ class Project extends React.Component {
             mercator.addVectorLayer(this.state.mapConfig,
                                     "currentAOI",
                                     mercator.geometryToVectorSource(mercator.parseGeoJson(geoJsonBoundary, true)),
-                                    mercator.ceoMapStyles("polygon", "yellow"));
+                                    mercator.ceoMapStyles("geom", "yellow"));
             mercator.zoomMapToLayer(this.state.mapConfig, "currentAOI");
         }
     }

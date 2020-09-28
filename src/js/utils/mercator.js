@@ -852,35 +852,12 @@ mercator.getRegularShapeStyle = function (radius, points, rotation, borderColor,
     });
 };
 
-// [Pure] Returns a style object that displays a line string to which it
-// is applied wth the specified lineColor.
-mercator.getLineStringStyle = function (lineColor, lineWidth) {
-    return new Style({
-        stroke: new Stroke({
-            color: lineColor,
-            width: lineWidth,
-        }),
-    });
-};
-
-// [Pure] Returns a style object that displays any shape to which it
-// is applied wth the specified fillColor, borderColor, and borderWidth.
-mercator.getPolygonStyle = function (borderColor, borderWidth, fillColor = null) {
-    return new Style({
-        fill: new Fill({color: fillColor || "rgba(255, 255, 255, 0)"}),
-        stroke: new Stroke({
-            color: borderColor,
-            width: borderWidth,
-        }),
-    });
-};
-
-// [Pure] Returns a style object that displays the different draw tools to which it
-// is applied wth the specified lineColor, lineWidth, pointColor, pointRadius, fillColor.
-mercator.getDrawStyle = function (lineColor, lineWidth, pointColor, pointRadius, fillColor = null) {
+// [Pure] Returns a style object that displays all geometry types to which it
+// is applied wth the specified lineColor, lineWidth, pointColor, pointRadius, pointFillColor, fillColor.
+mercator.getGeomStyle = function (lineColor, lineWidth, pointColor, pointRadius, pointFillColor = null, fillColor = null) {
     return new Style({
         fill: new Fill({
-            color: fillColor || "rgba(255, 255, 255, 0.2)",
+            color: fillColor || "rgba(255, 255, 255, 0)",
         }),
         stroke: new Stroke({
             color: lineColor,
@@ -888,8 +865,10 @@ mercator.getDrawStyle = function (lineColor, lineWidth, pointColor, pointRadius,
         }),
         image: new CircleStyle({
             radius: pointRadius,
-            fill: new Fill({
+            fill: new Fill({color: pointFillColor || "rgba(255, 255, 255, 0)"}),
+            stroke: new Stroke({
                 color: pointColor,
+                width: lineWidth,
             }),
         }),
     });
@@ -906,16 +885,12 @@ const ceoMapPresets = {
 };
 
 const ceoMapStyleFunctions = {
-    polygon: color => mercator.getPolygonStyle(color, 3),
-    answeredpolygon: color => mercator.getPolygonStyle(color, 6),
-    linestring: color => mercator.getLineStringStyle(color, 3),
-    answeredlinestring: color => mercator.getLineStringStyle(color, 6),
-    point: color => mercator.getCircleStyle(8, color, 2),
-    answeredpoint: color => mercator.getCircleStyle(8, color, color, 2),
+    geom: color => mercator.getGeomStyle(color, 4, color, 6),
+    answered: color => mercator.getGeomStyle(color, 6, color, 6, color),
+    draw: color => mercator.getGeomStyle(color, 4, color, 6, null, "rgba(255, 255, 255, 0.2)"),
     circle: color => mercator.getCircleStyle(5, color, 2),
-    square: color => mercator.getRegularShapeStyle(8, 4, Math.PI / 4, color, 2),
+    square: color => mercator.getRegularShapeStyle(6, 4, Math.PI / 4, color, 2),
     cluster: numPlots => mercator.getClusterStyle(10, "#3399cc", "#ffffff", 1, numPlots),
-    draw: color => mercator.getDrawStyle(color, 3, color, 8),
 };
 
 mercator.ceoMapStyles = function (type, option) {
@@ -1019,19 +994,19 @@ mercator.addPlotOverviewLayers = function (mapConfig, plots, shape) {
                             mercator.plotsToVectorSource(plots.filter(function (plot) {
                                 return plot.flagged === true;
                             })),
-                            mercator.ceoMapStyles(shape, "red"));
+                            mercator.ceoMapStyles(shape || "circle", "red"));
     mercator.addVectorLayer(mapConfig,
                             "analyzedPlots",
                             mercator.plotsToVectorSource(plots.filter(function (plot) {
                                 return plot.analyses > 0 && plot.flagged === false;
                             })),
-                            mercator.ceoMapStyles(shape, "green"));
+                            mercator.ceoMapStyles(shape || "circle", "green"));
     mercator.addVectorLayer(mapConfig,
                             "unanalyzedPlots",
                             mercator.plotsToVectorSource(plots.filter(function (plot) {
                                 return plot.analyses === 0 && plot.flagged === false;
                             })),
-                            mercator.ceoMapStyles(shape, "yellow"));
+                            mercator.ceoMapStyles(shape || "circle", "yellow"));
     return mapConfig;
 };
 
@@ -1240,7 +1215,7 @@ mercator.getAllFeatures = function (mapConfig, layerId) {
 // border and filled with the passed in color. If color is null, the
 // circle will be filled with gray.
 mercator.highlightSampleGeometry = function (sample, color) {
-    sample.setStyle(mercator.ceoMapStyles("answered" + sample.getGeometry().getType(), color));
+    sample.setStyle(mercator.ceoMapStyles("answered", color));
     return sample;
 };
 
@@ -1280,7 +1255,7 @@ mercator.enableDragBoxDraw = function (mapConfig, callBack) {
     const drawLayer = new VectorLayer({
         id: "dragBoxLayer",
         source: new VectorSource({features: []}),
-        style: mercator.ceoMapStyles("polygon", "yellow"),
+        style: mercator.ceoMapStyles("geom", "yellow"),
     });
     const dragBox = mercator.makeDragBoxDraw("dragBoxDraw", drawLayer, callBack);
     mapConfig.map.addLayer(drawLayer);
