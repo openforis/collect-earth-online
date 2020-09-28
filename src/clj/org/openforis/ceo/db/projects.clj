@@ -359,12 +359,12 @@
 (defn- load-external-data [distribution project-id ext-file type must-include]
   (let [folder-name (str tmp-dir "/ceo-tmp-" project-id "/")]
     (try-catch-throw #(if (= "shp" distribution)
-                        (do (sh-wrapper folder-name {} (str "7z e -y " ext-file))
+                        (do (sh-wrapper folder-name {} (str "7z e -y " ext-file " -o" type))
                             (let [table-name (str "project_" project-id "_" type "_shp")
-                                  shp-name   (find-file-by-ext folder-name "shp")]
-                              (sh-wrapper-pipe folder-name
+                                  shp-name   (find-file-by-ext (str folder-name type) "shp")]
+                              (sh-wrapper-pipe (str folder-name type)
                                                {:PASSWORD "ceo"}
-                                               (format-simple "shp2pgsql -s 4326 %1 ext_tables.%2"
+                                               (format-simple "shp2pgsql -s -t 2D 4326 %1 ext_tables.%2"
                                                               shp-name table-name)
                                                (format-simple "psql -h localhost -U ceo -d ceo"))
                               table-name))

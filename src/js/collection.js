@@ -202,7 +202,7 @@ class Collection extends React.Component {
                                 "currentAOI",
                                 mercator.geometryToVectorSource(mercator.parseGeoJson(this.state.currentProject.boundary,
                                                                                       true)),
-                                mercator.ceoMapStyles("polygon", "yellow"));
+                                mercator.ceoMapStyles("geom", "yellow"));
         mercator.zoomMapToLayer(mapConfig, "currentAOI", 48);
         this.setState({mapConfig: mapConfig});
     };
@@ -409,7 +409,7 @@ class Collection extends React.Component {
                                                                   currentProject.plotSize,
                                                                   currentProject.plotShape)
                                 ),
-                                mercator.ceoMapStyles("polygon", "yellow"));
+                                mercator.ceoMapStyles("geom", "yellow"));
 
         this.zoomToPlot();
     };
@@ -422,10 +422,7 @@ class Collection extends React.Component {
         mercator.addVectorLayer(mapConfig,
                                 "currentSamples",
                                 mercator.samplesToVectorSource(visible),
-                                feature => mercator.ceoMapStyles(
-                                    feature.getGeometry().getType(),
-                                    this.state.unansweredColor
-                                ));
+                                mercator.ceoMapStyles("geom", this.state.unansweredColor));
         mercator.enableSelection(mapConfig,
                                  "currentSamples",
                                  (sampleId) => this.setState({selectedSampleId: sampleId}));
