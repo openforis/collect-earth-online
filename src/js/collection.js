@@ -75,7 +75,7 @@ class Collection extends React.Component {
         if (this.state.mapConfig && this.state.plotList.length > 0
             && (this.state.mapConfig !== prevState.mapConfig
                 || prevState.plotList.length === 0)) {
-            this.showProjectPlots();
+            this.showProjectOverview();
         }
         // initialize current imagery to project default
         if (this.state.mapConfig && this.state.currentProject
@@ -110,7 +110,7 @@ class Collection extends React.Component {
             if (this.state.selectedQuestion.id !== prevState.selectedQuestion.id
                 || this.state.unansweredColor !== prevState.unansweredColor
                 || this.state.userSamples !== prevState.userSamples
-                || !prevState.selectedQuestion.visible) {
+                || this.state.selectedQuestion.visible !== prevState.selectedQuestion.visible) {
                 this.showPlotSamples();
                 this.highlightSamplesByQuestion();
                 this.createPlotKML();
@@ -207,7 +207,7 @@ class Collection extends React.Component {
         this.setState({mapConfig: mapConfig});
     };
 
-    showProjectPlots = () => {
+    showProjectOverview = () => {
         mercator.addPlotLayer(this.state.mapConfig,
                               this.state.plotList,
                               feature => {
@@ -238,7 +238,7 @@ class Collection extends React.Component {
 
     getImageryById = (imageryId) => this.state.imageryList.find(imagery => imagery.id === imageryId);
 
-    plotHasSamples = (plotData) => {
+    warnOnNoSamples = (plotData) => {
         if (plotData.samples.length === 0 && !this.state.currentProject.allowDrawnSamples) {
             alert("This plot has no samples. Please flag the plot.");
             return false;
@@ -269,7 +269,7 @@ class Collection extends React.Component {
                         prevPlotButtonDisabled: false,
                         nextPlotButtonDisabled: false,
                     });
-                    this.plotHasSamples(data);
+                    this.warnOnNoSamples(data);
                 }
             })
             .catch(response => {
@@ -303,7 +303,7 @@ class Collection extends React.Component {
                         ...this.newPlotValues(data),
                         prevPlotButtonDisabled: plotId === -1,
                     });
-                    this.plotHasSamples(data);
+                    this.warnOnNoSamples(data);
                 }
             })
             .catch(response => {
@@ -333,7 +333,7 @@ class Collection extends React.Component {
                         ...this.newPlotValues(data),
                         nextPlotButtonDisabled: false,
                     });
-                    this.plotHasSamples(data);
+                    this.warnOnNoSamples(data);
                 }
             })
             .catch(response => {
@@ -398,6 +398,7 @@ class Collection extends React.Component {
         mercator.removeLayerById(mapConfig, "currentPlots");
         mercator.removeLayerById(mapConfig, "currentPlot");
         mercator.removeLayerById(mapConfig, "currentSamples");
+        mercator.removeLayerById(mapConfig, "drawLayer");
 
         mercator.addVectorLayer(mapConfig,
                                 "currentPlot",
@@ -417,6 +418,7 @@ class Collection extends React.Component {
         const {mapConfig, selectedQuestion: {visible}} = this.state;
         mercator.disableSelection(mapConfig);
         mercator.removeLayerById(mapConfig, "currentSamples");
+        mercator.removeLayerById(mapConfig, "drawLayer");
         mercator.addVectorLayer(mapConfig,
                                 "currentSamples",
                                 mercator.samplesToVectorSource(visible),
@@ -428,6 +430,55 @@ class Collection extends React.Component {
                                  "currentSamples",
                                  (sampleId) => this.setState({selectedSampleId: sampleId}));
     };
+
+    featuresToDrawLayer = (drawTool) => {
+        const {mapConfig} = this.state;
+        mercator.removeLayerById(mapConfig, "currentSamples");
+        mercator.removeLayerById(mapConfig, "drawLayer");
+        mercator.addVectorLayer(mapConfig,
+                                "drawLayer",
+                                mercator.samplesToVectorSource(this.state.currentPlot.samples),
+                                mercator.ceoMapStyles("draw", "orange"));
+        mercator.enableDrawing(mapConfig, "drawLayer", drawTool);
+    };
+
+    featuresToSampleLayer = () => {
+        const {mapConfig} = this.state;
+        mercator.disableDrawing(mapConfig);
+        const allFeatures = mercator.getAllFeatures(this.state.mapConfig, "drawLayer") || [];
+        const getMin = (samples) => Math.min(0, ...samples.map(s => s.id));
+        const newSamples = allFeatures.reduce((acc, cur) => {
+            const sampleId = cur.get("sampleId");
+            if (sampleId) {
+                return [...acc,
+                        {
+                            id: sampleId,
+                            sampleGeom: mercator.geometryToGeoJSON(cur.getGeometry(), "EPSG:4326", "EPSG:3857"),
+                        }];
+            } else {
+                const nextId = getMin(acc) - 1;
+                return [...acc,
+                        {
+                            id: nextId,
+                            sampleGeom: mercator.geometryToGeoJSON(cur.getGeometry(), "EPSG:4326", "EPSG:3857"),
+                        }];
+            }
+        }
+        , []);
+
+        const {userSamples, userImages} = this.state;
+        this.setState({
+            currentPlot: {...this.state.currentPlot, samples: newSamples},
+            userSamples: newSamples.reduce((obj, s) => {
+                obj[s.id] = userSamples[s.id] || {};
+                return obj;
+            }, {}),
+            userImages: newSamples.reduce((obj, s) => {
+                obj[s.id] = userImages[s.id] || {};
+                return obj;
+            }, {}),
+        });
+    }
 
     showGeoDash = () => {
         const {currentPlot, mapConfig, currentProject} = this.state;
@@ -553,7 +604,8 @@ class Collection extends React.Component {
 
     getSelectedSampleIds = (question) => {
         const allFeatures = mercator.getAllFeatures(this.state.mapConfig, "currentSamples") || [];
-        const selectedFeatures = mercator.getSelectedSamples(this.state.mapConfig) ? mercator.getSelectedSamples(this.state.mapConfig).getArray() : [];
+        const selectedSamples = mercator.getSelectedSamples(this.state.mapConfig);
+        const selectedFeatures = selectedSamples ? selectedSamples.getArray() : [];
 
         return (
             (selectedFeatures.length === 0 && question.answered.length === 0)
@@ -715,7 +767,7 @@ class Collection extends React.Component {
             .find(msg => msg);
 
     checkSelection = (sampleIds, ruleError, questionToSet) => {
-        if (!this.plotHasSamples(this.state.currentPlot)) {
+        if (!this.warnOnNoSamples(this.state.currentPlot)) {
             return false;
         } else if (sampleIds.some(sid => questionToSet.visible.every(vs => vs.id !== sid))) {
             alert("Invalid Selection. Try selecting the question before answering.");
@@ -986,6 +1038,8 @@ class Collection extends React.Component {
                                     allowDrawnSamples={this.state.currentProject.allowDrawnSamples}
                                     unansweredColor={this.state.unansweredColor}
                                     setUnansweredColor={this.setUnansweredColor}
+                                    featuresToDrawLayer={this.featuresToDrawLayer}
+                                    featuresToSampleLayer={this.featuresToSampleLayer}
                                 />
                             </>
                         :

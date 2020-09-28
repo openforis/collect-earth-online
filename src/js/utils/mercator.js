@@ -852,6 +852,17 @@ mercator.getRegularShapeStyle = function (radius, points, rotation, borderColor,
     });
 };
 
+// [Pure] Returns a style object that displays a line string to which it
+// is applied wth the specified lineColor.
+mercator.getLineStringStyle = function (lineColor, lineWidth) {
+    return new Style({
+        stroke: new Stroke({
+            color: lineColor,
+            width: lineWidth,
+        }),
+    });
+};
+
 // [Pure] Returns a style object that displays any shape to which it
 // is applied wth the specified fillColor, borderColor, and borderWidth.
 mercator.getPolygonStyle = function (borderColor, borderWidth, fillColor = null) {
@@ -897,6 +908,8 @@ const ceoMapPresets = {
 const ceoMapStyleFunctions = {
     polygon: color => mercator.getPolygonStyle(color, 3),
     answeredpolygon: color => mercator.getPolygonStyle(color, 6),
+    linestring: color => mercator.getLineStringStyle(color, 3),
+    answeredlinestring: color => mercator.getLineStringStyle(color, 6),
     point: color => mercator.getCircleStyle(8, color, 2),
     answeredpoint: color => mercator.getCircleStyle(8, color, color, 2),
     circle: color => mercator.getCircleStyle(5, color, 2),
@@ -964,13 +977,13 @@ mercator.geometryToVectorSource = function (geometry) {
     });
 };
 
-mercator.geometryToGeoJSON = function (geometry, dataProjection, featureProjection = null, decimals = 10) {
+mercator.geometryToGeoJSON = function (geometry, toProjection, fromProjection = null, decimals = 10) {
     const format = new GeoJSON;
     return format.writeGeometry(
         geometry,
         {
-            dataProjection: dataProjection,
-            featureProjection: featureProjection || dataProjection,
+            dataProjection: toProjection,
+            featureProjection: fromProjection || toProjection,
             decimals: decimals,
         });
 };
@@ -1150,9 +1163,7 @@ mercator.makeSnap = function (source) {
 
 // [Pure] Returns a new Modify interaction for source.
 mercator.makeModify = function (source) {
-    const modify = new Modify({
-        source: source,
-    });
+    const modify = new Modify({source: source});
     modify.set("title", "modify");
     return modify;
 };
