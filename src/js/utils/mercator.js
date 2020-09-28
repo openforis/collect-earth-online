@@ -8,7 +8,7 @@
 ***
 *** Description: This library provides a set of functions for
 *** interacting with embedded web maps in an API agnostic manner. This
-*** file contains the OpenLayers 5 implementation.
+*** file contains the OpenLayers 6 implementation.
 ***
 ******************************************************************************
 ***
