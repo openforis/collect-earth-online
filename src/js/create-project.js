@@ -1224,7 +1224,7 @@ function SampleDesign ({
                             className="form-check-label"
                             htmlFor="allow-drawn-samples"
                         >
-                            Allow users to drawn their own plots
+                            Allow users to draw their own samples
                         </label>
                     </div>
                 )}
