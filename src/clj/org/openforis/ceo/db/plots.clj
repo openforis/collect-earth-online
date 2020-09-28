@@ -1,6 +1,7 @@
 (ns org.openforis.ceo.db.plots
   (:import java.sql.Timestamp)
-  (:require [org.openforis.ceo.utils.type-conversion :as tc]
+  (:require [clojure.set :as set]
+            [org.openforis.ceo.utils.type-conversion :as tc]
             [org.openforis.ceo.database        :refer [call-sql sql-primitive]]
             [org.openforis.ceo.db.institutions :refer [is-inst-admin-query?]]
             [org.openforis.ceo.views           :refer [data-response]]))
@@ -110,9 +111,21 @@
         user-id          (:userId params -1)
         confidence       (tc/str->int (:confidence params))
         collection-start (tc/str->long (:collectionStart params))
-        user-samples     (tc/clj->jsonb (:userSamples params))
-        user-images      (tc/clj->jsonb (:userImages params))
-        user-plot-id     (sql-primitive (call-sql "check_user_plots" project-id plot-id user-id))]
+        user-samples     (:userSamples params)
+        user-images      (:userImages params)
+        plot-samples     (:plotSamples params)
+        user-plot-id     (when (not plot-samples)
+                           (sql-primitive (call-sql "check_user_plots" project-id plot-id user-id)))
+        id-translation   (when plot-samples
+                           (call-sql "delete_saved_samples" plot-id)
+                           (reduce (fn [acc {:keys [id sampleGeom]}]
+                                     (let [new-id (sql-primitive (call-sql "create_project_plot_sample"
+                                                                           {:log? false}
+                                                                           plot-id
+                                                                           (tc/json->jsonb sampleGeom)))]
+                                       (assoc acc (str id) (str new-id))))
+                                   {}
+                                   plot-samples))]
     (apply call-sql
            (concat (if user-plot-id
                      ["update_user_samples" user-plot-id]
@@ -122,8 +135,8 @@
                     user-id
                     (when (pos? confidence) confidence)
                     (Timestamp. collection-start)
-                    user-samples
-                    user-images]))
+                    (tc/clj->jsonb (set/rename-keys user-samples id-translation))
+                    (tc/clj->jsonb (set/rename-keys user-images id-translation))]))
     (unlock-plots user-id)
     (data-response "")))
 
