@@ -1,6 +1,6 @@
 import React from "react";
 import ReactDOM from "react-dom";
-import {mercator, ceoMapStyles} from "./utils/mercator.js";
+import {mercator} from "./utils/mercator.js";
 import {NavigationBar} from "./components/PageComponents";
 import {SurveyCollection} from "./components/SurveyCollection";
 import {
@@ -202,7 +202,7 @@ class Collection extends React.Component {
                                 "currentAOI",
                                 mercator.geometryToVectorSource(mercator.parseGeoJson(this.state.currentProject.boundary,
                                                                                       true)),
-                                ceoMapStyles.yellowPolygon);
+                                mercator.ceoMapStyles("polygon", "yellow"));
         mercator.zoomMapToLayer(mapConfig, "currentAOI");
         this.setState({mapConfig: mapConfig});
     };
@@ -406,7 +406,7 @@ class Collection extends React.Component {
                                                                   currentProject.plotSize,
                                                                   currentProject.plotShape)
                                 ),
-                                ceoMapStyles.yellowPolygon);
+                                mercator.ceoMapStyles("polygon", "yellow"));
 
         mercator.zoomMapToLayer(mapConfig, "currentPlot");
     };
@@ -418,13 +418,10 @@ class Collection extends React.Component {
         mercator.addVectorLayer(mapConfig,
                                 "currentSamples",
                                 mercator.samplesToVectorSource(visible),
-                                this.state.sampleOutlineBlack
-                                ? visible[0].geom
-                                    ? ceoMapStyles.blackPolygon
-                                    : ceoMapStyles.blackCircle
-                                : visible[0].geom
-                                    ? ceoMapStyles.whitePolygon
-                                    : ceoMapStyles.whiteCircle);
+                                feature => mercator.ceoMapStyles(
+                                    feature.getGeometry().getType(),
+                                    this.state.sampleOutlineBlack ? "black" : "white"
+                                ));
         mercator.enableSelection(mapConfig,
                                  "currentSamples",
                                  (sampleId) => this.setState({selectedSampleId: sampleId}));

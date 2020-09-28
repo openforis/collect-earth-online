@@ -1,6 +1,6 @@
 import React from "react";
 import ReactDOM from "react-dom";
-import {mercator, ceoMapStyles} from "./utils/mercator.js";
+import {mercator} from "./utils/mercator.js";
 import {NavigationBar} from "./components/PageComponents";
 import {convertSampleValuesToSurveyQuestions} from "./utils/surveyUtils";
 
@@ -126,7 +126,7 @@ class ProjectDashboard extends React.Component {
         mercator.addVectorLayer(mapConfig,
                                 "currentAOI",
                                 mercator.geometryToVectorSource(mercator.parseGeoJson(this.state.projectDetails.boundary, true)),
-                                ceoMapStyles.yellowPolygon);
+                                mercator.ceoMapStyles("polygon", "yellow"));
         mercator.zoomMapToLayer(mapConfig, "currentAOI");
         // Show the plot centers on the map (but constrain to <= 100 points)
         this.setState({mapConfig: mapConfig});

@@ -25,7 +25,7 @@ import {DragBox, Select} from "ol/interaction";
 import {GeoJSON, KML} from "ol/format";
 import {Tile as TileLayer, Vector as VectorLayer, Group as LayerGroup} from "ol/layer";
 import {BingMaps, Cluster, TileWMS, Vector as VectorSource, XYZ} from "ol/source";
-import {Circle as CircleStyle, Icon, Fill, Stroke, Style, Text as StyleText, RegularShape} from "ol/style";
+import {Circle as CircleStyle, Fill, Stroke, Style, Text as StyleText, RegularShape} from "ol/style";
 import {fromLonLat, transform, transformExtent} from "ol/proj";
 import {fromExtent, fromCircle} from "ol/geom/Polygon";
 import {formatDateISO} from "./generalUtils";
@@ -779,56 +779,52 @@ mercator.zoomMapToLayer = function (mapConfig, layerId, maxZoom) {
 ***
 *****************************************************************************/
 
-// [Pure] Returns a style object that displays the image at imageSrc.
-mercator.getIconStyle = function (imageSrc) {
-    return new Style({image: new Icon({src: imageSrc})});
+// [Pure] Returns a style object that displays a circle with the
+// specified radius, fillColor, borderColor, and borderWidth. text
+// and textFillColor are used to overlay text on the circle.
+mercator.getClusterStyle = function (radius, fillColor, borderColor, borderWidth, text) {
+    return new Style({
+        image: new CircleStyle({
+            radius: radius,
+            fill: fillColor ? new Fill({color: fillColor}) : null,
+            stroke: new Stroke({
+                color: borderColor,
+                width: borderWidth,
+            }),
+        }),
+        text: new StyleText({
+            text: (text || "").toString(),
+            fill: new Fill({color: borderColor}),
+        }),
+    });
 };
 
 // [Pure] Returns a style object that displays a circle with the
-// specified radius, fillColor, borderColor, and borderWidth. If text
-// and textFillColor are also passed, they will be used to overlay
-// text on the circle.
-mercator.getCircleStyle = function (radius, fillColor, borderColor, borderWidth, text, textFillColor) {
-    if (!text || !textFillColor) {
-        return new Style({
-            image: new CircleStyle({
-                radius: radius,
-                fill: fillColor ? new Fill({color: fillColor}) : null,
-                stroke: new Stroke({
-                    color: borderColor,
-                    width: borderWidth,
-                }),
+// specified radius, fillColor, borderColor, and borderWidth.
+mercator.getCircleStyle = function (radius, borderColor, borderWidth, fillColor = null) {
+    return new Style({
+        image: new CircleStyle({
+            radius: radius,
+            fill: new Fill({color: fillColor || "rgba(255, 255, 255, 0)"}),
+            stroke: new Stroke({
+                color: borderColor,
+                width: borderWidth,
             }),
-        });
-    } else {
-        return new Style({
-            image: new CircleStyle({
-                radius: radius,
-                fill: fillColor ? new Fill({color: fillColor}) : null,
-                stroke: new Stroke({
-                    color: borderColor,
-                    width: borderWidth,
-                }),
-            }),
-            text: new StyleText({
-                text: text.toString(),
-                fill: new Fill({color: textFillColor}),
-            }),
-        });
-    }
+        }),
+    });
 };
 
 // [Pure] Returns a style object that displays a shape with the
 // specified number of points, radius, rotation, fillColor,
 // borderColor, and borderWidth. A triangle has 3 points. A square has
 // 4 points with rotation pi/4. A star has 5 points.
-mercator.getRegularShapeStyle = function (radius, points, rotation, fillColor, borderColor, borderWidth) {
+mercator.getRegularShapeStyle = function (radius, points, rotation, borderColor, borderWidth, fillColor = null) {
     return new Style({
         image: new RegularShape({
             radius: radius,
             points: points,
             rotation: rotation || 0,
-            fill: fillColor ? new Fill({color: fillColor}) : null,
+            fill: new Fill({color: fillColor || "rgba(255, 255, 255, 0)"}),
             stroke: new Stroke({
                 color: borderColor,
                 width: borderWidth,
@@ -839,9 +835,9 @@ mercator.getRegularShapeStyle = function (radius, points, rotation, fillColor, b
 
 // [Pure] Returns a style object that displays any shape to which it
 // is applied wth the specified fillColor, borderColor, and borderWidth.
-mercator.getPolygonStyle = function (fillColor, borderColor, borderWidth) {
+mercator.getPolygonStyle = function (borderColor, borderWidth, fillColor = null) {
     return new Style({
-        fill: fillColor ? new Fill({color: fillColor}) : null,
+        fill: new Fill({color: fillColor || "rgba(255, 255, 255, 0)"}),
         stroke: new Stroke({
             color: borderColor,
             width: borderWidth,
@@ -849,24 +845,28 @@ mercator.getPolygonStyle = function (fillColor, borderColor, borderWidth) {
     });
 };
 
-const ceoMapStyles = {
-    icon:          mercator.getIconStyle("favicon.ico"),
-    ceoIcon:       mercator.getIconStyle("img/ceoicon.png"),
-    redPoint:      mercator.getCircleStyle(5, null, "#8b2323", 2),
-    bluePoint:     mercator.getCircleStyle(5, null, "#23238b", 2),
-    yellowPoint:   mercator.getCircleStyle(5, null, "yellow", 2),
-    redCircle:     mercator.getCircleStyle(5, null, "red", 2),
-    yellowCircle:  mercator.getCircleStyle(5, null, "yellow", 2),
-    greenCircle:   mercator.getCircleStyle(5, null, "green", 2),
-    blackCircle:   mercator.getCircleStyle(6, null, "#000000", 2),
-    whiteCircle:   mercator.getCircleStyle(6, null, "white", 2),
-    redSquare:     mercator.getRegularShapeStyle(6, 4, Math.PI / 4, null, "red", 2),
-    yellowSquare:  mercator.getRegularShapeStyle(6, 4, Math.PI / 4, null, "yellow", 2),
-    greenSquare:   mercator.getRegularShapeStyle(6, 4, Math.PI / 4, null, "green", 2),
-    cluster:       mercator.getCircleStyle(5, "#8b2323", "#ffffff", 1),
-    yellowPolygon: mercator.getPolygonStyle(null, "yellow", 3),
-    blackPolygon:  mercator.getPolygonStyle(null, "#000000", 3),
-    whitePolygon:  mercator.getPolygonStyle(null, "#ffffff", 3),
+const ceoMapPresets = {
+    red: "#8b2323",
+    blue: "#23238b",
+    yellow: "yellow",
+    green: "green",
+    black: "#000000",
+    white: "#ffffff",
+};
+
+const ceoMapStyleFunctions = {
+    polygon: color => mercator.getPolygonStyle(color, 3),
+    answeredpolygon: color => mercator.getPolygonStyle(color, 6),
+    point: color => mercator.getCircleStyle(6, color, 2),
+    answeredpoint: color => mercator.getCircleStyle(6, color, color, 2),
+    circle: color => mercator.getCircleStyle(5, color, 2),
+    square: color => mercator.getRegularShapeStyle(6, 4, Math.PI / 4, color, 2),
+    cluster: numPlots => mercator.getClusterStyle(10, "#3399cc", "#ffffff", 1, numPlots),
+};
+
+mercator.ceoMapStyles = function (type, option) {
+    return ceoMapStyleFunctions[type.toLowerCase()]
+        .call(null, ceoMapPresets[option] || option);
 };
 
 /*****************************************************************************
@@ -977,19 +977,19 @@ mercator.addPlotOverviewLayers = function (mapConfig, plots, shape) {
                             mercator.plotsToVectorSource(plots.filter(function (plot) {
                                 return plot.flagged === true;
                             })),
-                            shape === "circle" ? ceoMapStyles.redCircle : ceoMapStyles.redSquare);
+                            mercator.ceoMapStyles(shape, "red"));
     mercator.addVectorLayer(mapConfig,
                             "analyzedPlots",
                             mercator.plotsToVectorSource(plots.filter(function (plot) {
                                 return plot.analyses > 0 && plot.flagged === false;
                             })),
-                            shape === "circle" ? ceoMapStyles.greenCircle : ceoMapStyles.greenSquare);
+                            mercator.ceoMapStyles(shape, "green"));
     mercator.addVectorLayer(mapConfig,
                             "unanalyzedPlots",
                             mercator.plotsToVectorSource(plots.filter(function (plot) {
                                 return plot.analyses === 0 && plot.flagged === false;
                             })),
-                            shape === "circle" ? ceoMapStyles.yellowCircle : ceoMapStyles.yellowSquare);
+                            mercator.ceoMapStyles(shape, "yellow"));
     return mapConfig;
 };
 
@@ -1099,28 +1099,15 @@ mercator.disableSelection = function (mapConfig) {
 ***
 *****************************************************************************/
 
-// [Side Effects] Adds a new vector layer called
-// point:<longitude>:<latitude> to mapConfig's map object containing a
-// single point geometry feature at the passed in coordinates.
-mercator.addPointLayer = function (mapConfig, longitude, latitude) {
-    mercator.addVectorLayer(mapConfig,
-                            "point:" + longitude + ":" + latitude,
-                            mercator.geometryToVectorSource(new Point(mercator.reprojectToMap(longitude, latitude))),
-                            ceoMapStyles.redPoint);
-    return mapConfig;
-};
-
 // [Pure] Returns a new vector source containing the passed in
 // samples. Features are constructed from each sample using its id,
 // point, and geom fields.
 mercator.samplesToVectorSource = function (samples) {
     const features = samples.map(
         function (sample) {
-            // TODO: Account for sample.sampleGeom not being a point
             return new Feature({
                 sampleId: sample.id,
                 geometry: mercator.parseGeoJson(sample.geom || sample.sampleGeom, true),
-                shape: sample.geom ? "polygon" : "point",
             });
         }
     );
@@ -1151,11 +1138,7 @@ mercator.getAllFeatures = function (mapConfig, layerId) {
 // border and filled with the passed in color. If color is null, the
 // circle will be filled with gray.
 mercator.highlightSampleGeometry = function (sample, color) {
-    if (sample.get("shape") === "point") {
-        sample.setStyle(mercator.getCircleStyle(6, color, color, 2));
-    } else {
-        sample.setStyle(mercator.getPolygonStyle(null, color, 6));
-    }
+    sample.setStyle(mercator.ceoMapStyles("answered" + sample.getGeometry().getType(), color));
     return sample;
 };
 
@@ -1195,7 +1178,7 @@ mercator.enableDragBoxDraw = function (mapConfig, callBack) {
     const drawLayer = new VectorLayer({
         id: "dragBoxLayer",
         source: new VectorSource({features: []}),
-        style: ceoMapStyles.yellowPolygon,
+        style: mercator.ceoMapStyles("polygon", "yellow"),
     });
     const dragBox = mercator.makeDragBoxDraw("dragBoxDraw", drawLayer, callBack);
     mapConfig.map.addLayer(drawLayer);
@@ -1311,8 +1294,7 @@ mercator.addPlotLayer = function (mapConfig, plots, callBack) {
                             "currentPlots",
                             clusterSource,
                             function (feature) {
-                                const numPlots = feature.get("features").length;
-                                return mercator.getCircleStyle(10, "#3399cc", "#ffffff", 1, numPlots, "#ffffff");
+                                return mercator.ceoMapStyles("cluster", feature.get("features").length);
                             });
 
     const clickHandler = function (event) {
@@ -1330,6 +1312,8 @@ mercator.addPlotLayer = function (mapConfig, plots, callBack) {
                                                 }
                                             }, {hitTolerance:10});
     };
+    // TODO: It looks like the clickHandler is only removed when the user clicks
+    //       a cluster of size 1. It is not removed if the user clicks "Go to first plot"
     mapConfig.map.on("click", clickHandler);
 
     return mapConfig;
@@ -1361,5 +1345,4 @@ mercator.getKMLFromFeatures = function (features) {
 
 export {
     mercator,
-    ceoMapStyles,
 };
