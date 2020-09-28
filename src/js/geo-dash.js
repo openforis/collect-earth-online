@@ -3,9 +3,7 @@ import "../css/geo-dash.css";
 import React from "react";
 import ReactDOM from "react-dom";
 import {mercator} from "./utils/mercator.js";
-import {UnicodeIcon} from "./utils/textUtils";
-import {formatDateISO} from "./utils/dateUtils";
-import {getGatewayPath} from "./utils/geodashUtils";
+import {UnicodeIcon, formatDateISO} from "./utils/generalUtils";
 import {GeoDashNavigationBar} from "./components/PageComponents";
 import {Feature, Map, View} from "ol";
 import {buffer as ExtentBuffer} from "ol/extent";
@@ -18,6 +16,28 @@ import {getArea as sphereGetArea} from "ol/sphere";
 import Highcharts from "highcharts";
 import HighchartsReact from "highcharts-react-official";
 import _ from "lodash";
+
+function getGatewayPath (widget, collectionName) {
+    const fts = {
+        "LANDSAT5": "Landsat5Filtered",
+        "LANDSAT7": "Landsat7Filtered",
+        "LANDSAT8": "Landsat8Filtered",
+        "Sentinel2": "FilteredSentinel",
+    };
+    return (widget.filterType && widget.filterType.length > 0)
+        ? fts[widget.filterType]
+        : (widget.ImageAsset && widget.ImageAsset.length > 0)
+            ? "image"
+            : (widget.ImageCollectionAsset && widget.ImageCollectionAsset.length > 0)
+                ? "ImageCollectionAsset"
+                : (widget.featureCollection && widget.featureCollection.length > 0)
+                    ? "getTileUrlFromFeatureCollection"
+                    : (widget.properties && "ImageCollectionCustom" === widget.properties[0])
+                        ? "meanImageByMosaicCollections"
+                        : (collectionName.trim().length > 0)
+                            ? "cloudMaskImageByMosaicCollection"
+                            : "ImageCollectionbyIndex";
+}
 
 class Geodash extends React.Component {
     constructor(props) {

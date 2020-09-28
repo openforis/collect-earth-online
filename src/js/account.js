@@ -3,7 +3,7 @@ import ReactDOM from "react-dom";
 
 import {FormLayout, SectionBlock, StatsCell, StatsRow} from "./components/FormComponents";
 import {NavigationBar} from "./components/PageComponents";
-import {getQueryString} from "./utils/textUtils";
+import {getQueryString} from "./utils/generalUtils";
 
 function Account(props) {
     const sameAsUser = props.userId === props.accountId;

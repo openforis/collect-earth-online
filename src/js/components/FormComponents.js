@@ -1,5 +1,5 @@
 import React from "react";
-import {UnicodeIcon} from "../utils/textUtils";
+import {UnicodeIcon} from "../utils/generalUtils";
 
 export function FormLayout({title, children}) {
     return (

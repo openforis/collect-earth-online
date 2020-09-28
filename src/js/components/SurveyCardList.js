@@ -1,6 +1,6 @@
 import React, {Fragment} from "react";
 import {removeEnumerator} from "../utils/surveyUtils";
-import {UnicodeIcon} from "../utils/textUtils";
+import {UnicodeIcon} from "../utils/generalUtils";
 
 export default function SurveyCardList(props) {
     const topLevelNodes = props.surveyQuestions

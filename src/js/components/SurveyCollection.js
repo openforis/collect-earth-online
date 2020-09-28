@@ -1,7 +1,7 @@
 import React, {Fragment} from "react";
 
 import {removeEnumerator} from "../utils/surveyUtils";
-import {UnicodeIcon} from "../utils/textUtils";
+import {UnicodeIcon} from "../utils/generalUtils";
 import {CollapsibleTitle} from "./FormComponents";
 
 export class SurveyCollection extends React.Component {
