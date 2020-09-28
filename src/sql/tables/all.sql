@@ -91,7 +91,8 @@ CREATE TABLE projects (
     ts_plot_size            integer DEFAULT 1,
     token_key               text DEFAULT NULL,
     options                 jsonb NOT NULL DEFAULT '{}'::jsonb,
-    imagery_rid             integer REFERENCES imagery (imagery_uid)
+    imagery_rid             integer REFERENCES imagery (imagery_uid),
+    allow_drawn_samples     boolean
 );
 
 -- Stores project imagery
@@ -273,6 +274,7 @@ CREATE INDEX vertex_project_plot_user_packet ON vertex USING btree(project_rid, 
 CREATE UNIQUE INDEX image_preference_project_plot_user_packet_year ON image_preference (project_rid, plot_rid, user_rid, packet_rid, image_year);
 
 -- Types and views, to be defined once
+-- TODO get rid of types or add them to the namespaces in a way they get rebuild each time.
 CREATE TYPE institution_return AS (
     institution_id    integer,
     name              text,
@@ -312,6 +314,7 @@ CREATE TYPE project_return AS (
     sample_distribution     text,
     samples_per_plot        integer,
     sample_resolution       float,
+    allow_drawn_samples     boolean,
     survey_questions        jsonb,
     survey_rules            jsonb,
     classification_times    jsonb,
