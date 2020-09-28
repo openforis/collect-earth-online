@@ -130,7 +130,7 @@ export function ProjectAOI({
     return (
         <SectionBlock title="Project AOI">
             <div id="project-aoi">
-                <div id="project-map"></div>
+                <div id="project-map" style={{height: "25rem", width: "100%"}}></div>
                 {inDesignMode &&
                     <div className="col small text-center mb-2">
                         Hold CTRL and click-and-drag a bounding box on the map

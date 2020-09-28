@@ -203,7 +203,7 @@ class Collection extends React.Component {
                                 mercator.geometryToVectorSource(mercator.parseGeoJson(this.state.currentProject.boundary,
                                                                                       true)),
                                 mercator.ceoMapStyles("polygon", "yellow"));
-        mercator.zoomMapToLayer(mapConfig, "currentAOI");
+        mercator.zoomMapToLayer(mapConfig, "currentAOI", 48);
         this.setState({mapConfig: mapConfig});
     };
 
@@ -389,6 +389,8 @@ class Collection extends React.Component {
         sampleOutlineBlack: true,
     });
 
+    zoomToPlot = () => mercator.zoomMapToLayer(this.state.mapConfig, "currentPlot", 36);
+
     showProjectPlot = () => {
         const {currentPlot, mapConfig, currentProject} = this.state;
 
@@ -408,7 +410,7 @@ class Collection extends React.Component {
                                 ),
                                 mercator.ceoMapStyles("polygon", "yellow"));
 
-        mercator.zoomMapToLayer(mapConfig, "currentPlot");
+        this.zoomToPlot();
     };
 
     showPlotSamples = () => {
@@ -825,6 +827,7 @@ class Collection extends React.Component {
 
                 mercator.highlightSampleGeometry(feature, color);
             });
+        this.setState({selectedSampleId: -1});
     };
 
     calcVisibleSamples = (currentQuestionId) => {
@@ -964,7 +967,7 @@ class Collection extends React.Component {
                         currentPlot={this.state.currentPlot}
                     />
                     <ExternalTools
-                        zoomMapToPlot={() => mercator.zoomMapToLayer(this.state.mapConfig, "currentPlot")}
+                        zoomMapToPlot={this.zoomToPlot}
                         showGeoDash={this.showGeoDash}
                         currentPlot={this.state.currentPlot}
                         currentProject={this.state.currentProject}
