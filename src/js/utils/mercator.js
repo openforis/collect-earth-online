@@ -894,8 +894,11 @@ const ceoMapStyleFunctions = {
 };
 
 mercator.ceoMapStyles = function (type, option) {
-    return ceoMapStyleFunctions[type.toLowerCase()]
-        .call(null, ceoMapPresets[option] || option);
+    const styleFunction = ceoMapStyleFunctions[type.toLowerCase()];
+    if (!styleFunction) console.log("type");
+    return styleFunction
+        ? styleFunction.call(null, ceoMapPresets[option] || option)
+        : new Style();
 };
 
 /*****************************************************************************

@@ -13,7 +13,6 @@ export class SurveyCollection extends React.Component {
             currentNodeIndex: 0,
             topLevelNodeIds: [],
             showSurveyQuestions: true,
-            answerMode: "question",
             drawTool: "Point",
         };
     }
@@ -93,17 +92,6 @@ export class SurveyCollection extends React.Component {
                             ? "Rule: " + r.ruleType + " | Sum of '" + r.questionSetText1 + "' should be equal to sum of  '" + r.questionSetText2 + "'."
                             : "Rule: " + r.ruleType + " | 'Question1: " + r.questionText1 + ", Answer1: " + r.answerText1 + "' is not compatible with 'Question2: " + r.questionText2 + ", Answer2: " + r.answerText2 + "'.")
             .join("\n");
-
-    setAnswerMode = (newMode) => {
-        if (this.state.answerMode !== newMode) {
-            if (newMode === "draw") {
-                this.props.featuresToDrawLayer(this.state.drawTool);
-            } else {
-                this.props.featuresToSampleLayer();
-            }
-            this.setState({answerMode: newMode});
-        }
-    }
 
     setDrawTool = (newTool) => {
         this.setState({drawTool: newTool});
@@ -234,7 +222,12 @@ export class SurveyCollection extends React.Component {
                 </span>
                 Polygon tool
             </div>
-            <p>To modify an existing feature, click on it and drag. To delete a feature, right click on it.</p>
+            <ul style={{textAlign: "left"}}>
+                How To:
+                <li>To modify an existing feature, click on it and drag</li>
+                <li>To delete a feature, right click on it</li>
+                <li>To save changes, switch back to question mode and answer remaining questions</li>
+            </ul>
         </div>
     );
 
@@ -249,16 +242,16 @@ export class SurveyCollection extends React.Component {
                 {this.props.allowDrawnSamples &&
                     <div style={{display: "flex", justifyContent: "center"}}>
                         <span
-                            style={this.buttonStyle(this.state.answerMode === "question")}
+                            style={this.buttonStyle(this.props.answerMode === "question")}
                             title="Answer questions"
-                            onClick={() => this.setAnswerMode("question")}
+                            onClick={() => this.props.setAnswerMode("question", this.state.drawTool)}
                         >
                             <SvgIcon icon="question" size="2rem"/>
                         </span>
                         <span
-                            style={this.buttonStyle(this.state.answerMode === "draw")}
+                            style={this.buttonStyle(this.props.answerMode === "draw")}
                             title="Draw sample points"
-                            onClick={() => this.setAnswerMode("draw")}
+                            onClick={() => this.props.setAnswerMode("draw", this.state.drawTool)}
                         >
                             <SvgIcon icon="draw" size="2rem"/>
                         </span>
@@ -266,7 +259,7 @@ export class SurveyCollection extends React.Component {
                 }
                 {this.state.showSurveyQuestions
                 ? this.props.surveyQuestions.length > 0
-                    ? this.state.answerMode === "question"
+                    ? this.props.answerMode === "question"
                         ? this.renderQuestions()
                         : this.renderDrawTools()
                     :

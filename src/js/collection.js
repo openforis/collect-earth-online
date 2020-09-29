@@ -44,6 +44,7 @@ class Collection extends React.Component {
             showSidebar: false,
             loading: false,
             showQuitModal: false,
+            answerMode: "question",
         };
     }
 
@@ -103,8 +104,7 @@ class Collection extends React.Component {
 
         // Conditions required for samples to be shown
         if (this.state.currentPlot.id
-            && this.state.selectedQuestion.visible
-            && this.state.selectedQuestion.visible.length > 0) {
+            && this.state.selectedQuestion.visible) {
 
             // Changing conditions for which samples need to be re-drawn
             if (this.state.selectedQuestion.id !== prevState.selectedQuestion.id
@@ -268,6 +268,7 @@ class Collection extends React.Component {
                         ...this.newPlotValues(data),
                         prevPlotButtonDisabled: false,
                         nextPlotButtonDisabled: false,
+                        answerMode: "question",
                     });
                     this.warnOnNoSamples(data);
                 }
@@ -302,6 +303,7 @@ class Collection extends React.Component {
                         currentPlot: data,
                         ...this.newPlotValues(data),
                         prevPlotButtonDisabled: plotId === -1,
+                        answerMode: "question",
                     });
                     this.warnOnNoSamples(data);
                 }
@@ -332,6 +334,7 @@ class Collection extends React.Component {
                         currentPlot: data,
                         ...this.newPlotValues(data),
                         nextPlotButtonDisabled: false,
+                        answerMode: "question",
                     });
                     this.warnOnNoSamples(data);
                 }
@@ -399,7 +402,6 @@ class Collection extends React.Component {
         mercator.removeLayerById(mapConfig, "currentPlot");
         mercator.removeLayerById(mapConfig, "currentSamples");
         mercator.removeLayerById(mapConfig, "drawLayer");
-
         mercator.addVectorLayer(mapConfig,
                                 "currentPlot",
                                 mercator.geometryToVectorSource(
@@ -417,6 +419,7 @@ class Collection extends React.Component {
     showPlotSamples = () => {
         const {mapConfig, selectedQuestion: {visible}} = this.state;
         mercator.disableSelection(mapConfig);
+        mercator.disableDrawing(mapConfig);
         mercator.removeLayerById(mapConfig, "currentSamples");
         mercator.removeLayerById(mapConfig, "drawLayer");
         mercator.addVectorLayer(mapConfig,
@@ -430,6 +433,7 @@ class Collection extends React.Component {
 
     featuresToDrawLayer = (drawTool) => {
         const {mapConfig} = this.state;
+        mercator.disableDrawing(mapConfig);
         mercator.removeLayerById(mapConfig, "currentSamples");
         mercator.removeLayerById(mapConfig, "drawLayer");
         mercator.addVectorLayer(mapConfig,
@@ -475,6 +479,17 @@ class Collection extends React.Component {
                 return obj;
             }, {}),
         });
+    }
+
+    setAnswerMode = (newMode, drawTool) => {
+        if (this.state.answerMode !== newMode) {
+            if (newMode === "draw") {
+                this.featuresToDrawLayer(drawTool);
+            } else {
+                this.featuresToSampleLayer();
+            }
+            this.setState({answerMode: newMode});
+        }
     }
 
     showGeoDash = () => {
@@ -976,10 +991,10 @@ class Collection extends React.Component {
                     clearAnswers={() => this.resetPlotValues(this.state.currentPlot)}
                     surveyQuestions={this.state.currentProject.surveyQuestions}
                     userName={this.props.userName}
-                    isFlagged={this.state.currentPlot && this.state.currentPlot.flagged}
-                    isAnalyzed={this.state.currentPlot && this.state.currentPlot.analyses > 0}
+                    currentPlot={this.state.currentPlot}
                     toggleFlagged={this.toggleFlagged}
                     toggleQuitModal={this.toggleQuitModal}
+                    answerMode={this.state.answerMode}
                 >
                     <PlotNavigation
                         plotId={plotId}
@@ -1036,8 +1051,8 @@ class Collection extends React.Component {
                                     allowDrawnSamples={this.state.currentProject.allowDrawnSamples}
                                     unansweredColor={this.state.unansweredColor}
                                     setUnansweredColor={this.setUnansweredColor}
-                                    featuresToDrawLayer={this.featuresToDrawLayer}
-                                    featuresToSampleLayer={this.featuresToSampleLayer}
+                                    answerMode={this.state.answerMode}
+                                    setAnswerMode={this.setAnswerMode}
                                 />
                             </>
                         :
@@ -1074,7 +1089,12 @@ function ImageAnalysisPane({loader, imageryAttribution}) {
 }
 
 function SideBar(props) {
-    const saveValuesButtonEnabled = props.isFlagged || props.surveyQuestions.every(sq => sq.visible && sq.visible.length === sq.answered.length);
+    const saveValuesButtonEnabled =
+        props.currentPlot.samples
+        && props.currentPlot.samples.length > 0
+        && props.answerMode === "question"
+        && (props.currentPlot.isFlagged
+            || props.surveyQuestions.every(sq => sq.visible && sq.answered && sq.visible.length === sq.answered.length));
 
     const saveButtonGroup = () => (
         <>
@@ -1090,14 +1110,15 @@ function SideBar(props) {
                 <input
                     className="btn btn-outline-danger btn-sm col mr-1"
                     type="button"
-                    value={props.isFlagged ? "Unflag Plot" : "Flag Plot"}
+                    value={props.currentPlot.isFlagged ? "Unflag Plot" : "Flag Plot"}
                     onClick={props.toggleFlagged}
                 />
                 <input
                     className="btn btn-outline-danger btn-sm col"
                     type="button"
-                    value={props.isAnalyzed ? "Clear Changes" : "Clear All"}
+                    value={props.currentPlot.analyses > 0 ? "Clear Changes" : "Clear All"}
                     onClick={props.clearAnswers}
+                    disabled={props.answerMode !== "question"}
                 />
             </div>
         </>
