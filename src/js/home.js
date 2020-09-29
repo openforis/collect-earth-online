@@ -228,12 +228,12 @@ class SideBar extends React.Component {
         return this.props.showSidePanel &&
             <div id="lPanel" className="col-lg-3 pr-0 pl-0 overflow-hidden full-height d-flex flex-column">
                 {(this.props.userRole === "admin" || this.props.userId === -1) &&
-                <div className="bg-darkgreen">
-                    <h1 className="tree_label" id="panelTitle">Institutions</h1>
-                </div>
+                    <div className="bg-darkgreen">
+                        <h1 className="tree_label" id="panelTitle">Institutions</h1>
+                    </div>
                 }
                 {this.props.userId > 0 &&
-                <CreateInstitutionButton/>
+                    <CreateInstitutionButton/>
                 }
                 <InstitutionFilter
                     updateFilterText={this.updateFilterText}
@@ -250,27 +250,28 @@ class SideBar extends React.Component {
                     toggleShowFilters={this.toggleShowFilters}
                 />
                 {this.props.userId > 0 && this.props.userRole !== "admin" &&
-                <Fragment>
-                    <div className="bg-darkgreen">
-                        <h2 className="tree_label" id="panelTitle">Your Affiliations</h2>
-                    </div>
-                    <InstitutionList
-                        userId={this.props.userId}
-                        institutions={this.props.userInstitutions}
-                        projects={this.props.projects}
-                        filterText={this.state.filterText}
-                        useFirstLetter={this.state.useFirstLetter}
-                        filterInstitution={this.state.filterInstitution}
-                        sortByNumber={this.state.sortByNumber}
-                        showEmptyInstitutions={this.state.showEmptyInstitutions}
-                        userInstitutionList
-                    />
-                    <div className="bg-darkgreen">
-                        <h2 className="tree_label" id="panelTitle">Other Institutions</h2>
-                    </div>
-                </Fragment>
+                    <Fragment>
+                        <div className="bg-darkgreen">
+                            <h2 className="tree_label" id="panelTitle">Your Affiliations</h2>
+                        </div>
+                        <InstitutionList
+                            userId={this.props.userId}
+                            institutions={this.props.userInstitutions}
+                            projects={this.props.projects}
+                            filterText={this.state.filterText}
+                            useFirstLetter={this.state.useFirstLetter}
+                            filterInstitution={this.state.filterInstitution}
+                            sortByNumber={this.state.sortByNumber}
+                            showEmptyInstitutions={this.state.showEmptyInstitutions}
+                            userInstitutionList
+                        />
+                        <div className="bg-darkgreen">
+                            <h2 className="tree_label" id="panelTitle">Other Institutions</h2>
+                        </div>
+                    </Fragment>
                 }
-                {this.props.institutions.length > 0 && this.props.projects.length > 0 ?
+                {this.props.institutions.length > 0 && this.props.projects.length > 0
+                ?
                     <InstitutionList
                         userId={this.props.userId}
                         institutions={this.props.institutions}
@@ -281,10 +282,11 @@ class SideBar extends React.Component {
                         sortByNumber={this.state.sortByNumber}
                         showEmptyInstitutions={this.state.showEmptyInstitutions}
                         userInstitutionList={false}
-                    /> :
-                 (this.props.userInstitutions.length > 0 ?
-                     <h3 className="p-3">No unaffiliated institutions found.</h3> :
-                     <h3 className="p-3">Loading data...</h3>)
+                    />
+                :
+                    (this.props.userInstitutions.length > 0 ?
+                        <h3 className="p-3">No unaffiliated institutions found.</h3> :
+                        <h3 className="p-3">Loading data...</h3>)
                 }
             </div>;
     }
@@ -368,12 +370,10 @@ function InstitutionList({
 
 function InstitutionFilter(props) {
     return (
-        <div className="InstitutionFilter form-control">
-            <div id="filter-institution" style={{display: "inline-flex", width: "100%"}}>
+        <div id="filter-institution" className="form-control" style={{height: "fit-content"}}>
+            <div style={{display: "inline-flex", width: "100%"}}>
                 <input
                     type="text"
-                    id="filterInstitution"
-                    autoComplete="off"
                     placeholder="Enter text to filter"
                     className="form-control"
                     value={props.filterText}
@@ -535,15 +535,14 @@ class Institution extends React.Component {
 
 function ProjectList(props) {
     return props.projects
-        .map(
-            (project, uid) =>
-                <Project
-                    key={uid}
-                    id={project.id}
-                    institutionId={props.id}
-                    editable={project.editable}
-                    name={project.name}
-                />
+        .map((project, uid) =>
+            <Project
+                key={uid}
+                id={project.id}
+                institutionId={props.id}
+                editable={project.editable}
+                name={project.name}
+            />
         );
 }
 
@@ -595,38 +594,36 @@ class ProjectPopup extends React.Component {
                 <div className="cContent" style={{padding: "10px", overflow: "auto"}}>
                     <table className="table table-sm">
                         <tbody>
-                            {
-                                this.props.features.map((feature, uid) =>
-                                    <React.Fragment key={uid}>
-                                        <tr className="d-flex" style={{borderTop: "1px solid gray"}}>
-                                            <td className="small col-6 px-0 my-auto">Name</td>
-                                            <td className="small col-6 pr-0">
-                                                <a
-                                                    href={`/collection?projectId=${feature.get("projectId")}`}
-                                                    className="btn btn-sm btn-block btn-outline-lightgreen"
-                                                    style={{
-                                                        whiteSpace: "nowrap",
-                                                        overflow: "hidden",
-                                                        textOverflow: "ellipsis",
-                                                    }}
-                                                >
-                                                    {feature.get("name")}
-                                                </a>
-                                            </td>
-                                        </tr>
-                                        <tr className="d-flex">
-                                            <td className="small col-6 px-0 my-auto">Description</td>
-                                            <td className="small col-6 pr-0" style={{wordBreak: "break-all"}}>
-                                                {feature.get("description")}
-                                            </td>
-                                        </tr>
-                                        <tr className="d-flex" style={{borderBottom: "1px solid gray"}}>
-                                            <td className="small col-6 px-0 my-auto">Number of plots</td>
-                                            <td className="small col-6 pr-0">{feature.get("numPlots")}</td>
-                                        </tr>
-                                    </React.Fragment>
-                                )
-                            }
+                            {this.props.features.map((feature, uid) =>
+                                <React.Fragment key={uid}>
+                                    <tr className="d-flex" style={{borderTop: "1px solid gray"}}>
+                                        <td className="small col-6 px-0 my-auto">Name</td>
+                                        <td className="small col-6 pr-0">
+                                            <a
+                                                href={`/collection?projectId=${feature.get("projectId")}`}
+                                                className="btn btn-sm btn-block btn-outline-lightgreen"
+                                                style={{
+                                                    whiteSpace: "nowrap",
+                                                    overflow: "hidden",
+                                                    textOverflow: "ellipsis",
+                                                }}
+                                            >
+                                                {feature.get("name")}
+                                            </a>
+                                        </td>
+                                    </tr>
+                                    <tr className="d-flex">
+                                        <td className="small col-6 px-0 my-auto">Description</td>
+                                        <td className="small col-6 pr-0" style={{wordBreak: "break-all"}}>
+                                            {feature.get("description")}
+                                        </td>
+                                    </tr>
+                                    <tr className="d-flex" style={{borderBottom: "1px solid gray"}}>
+                                        <td className="small col-6 px-0 my-auto">Number of plots</td>
+                                        <td className="small col-6 pr-0">{feature.get("numPlots")}</td>
+                                    </tr>
+                                </React.Fragment>
+                            )}
                         </tbody>
                     </table>
                 </div>
