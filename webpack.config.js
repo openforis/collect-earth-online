@@ -32,7 +32,8 @@ module.exports = env => ({
     },
     output: {
         path: path.resolve(__dirname, outdir),
-        filename: "[name].bundle.js",
+        filename: "[name].[hash].bundle.js",
+        chunkFilename: "[chunkhash].chunk.js",
         library: "[name]",
         libraryTarget: "var",
     },
@@ -76,6 +77,7 @@ module.exports = env => ({
                     // Dev will have the old files removed at the beginning
                     // so a browser refresh does not show stale data.
                     if (env.dev) {
+                        fs.unlinkSync("./target/entry-points.json");
                         fs.readdirSync("./" + outdir)
                             .forEach(f => fs.unlinkSync(path.join("./" + outdir, f)));
                     }
@@ -85,9 +87,20 @@ module.exports = env => ({
                     // Production will have the old files remove immediately before
                     // the new ones are created for less interruption.
                     if (!env.dev) {
+                        fs.unlinkSync("./target/entry-points.json");
                         fs.readdirSync("./" + outdir)
                             .forEach(f => fs.unlinkSync(path.join("./" + outdir, f)));
                     }
+                });
+                compiler.hooks.done.tap("DonePlugin", stats => {
+                    // Map entrypoint name to chunk files
+                    const entryPoints = Array.from(stats.compilation.entrypoints.entries());
+                    const newMap = entryPoints.reduce((acc, [name, ep]) =>
+                        ({...acc, [name]: ep.chunks.map(c => "/js/" + c.files[0])}),
+                                                      {});
+                    fs.writeFile("./target/entry-points.json", JSON.stringify(newMap), "utf8", (e) => {
+                        if (e) console.log(e);
+                    });
                 });
             },
         },
@@ -96,15 +109,6 @@ module.exports = env => ({
         minimize: true,
         splitChunks: {
             chunks: "all",
-            maxInitialRequests: Infinity,
-            minSize: 0,
-            cacheGroups: {
-                commons: {
-                    name: "common~chunk",
-                    chunks: "all",
-                    minChunks: 5, // Any more than 5 and we lose the route name in the file name
-                },
-            },
         },
     },
 });
