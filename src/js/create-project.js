@@ -5,7 +5,7 @@ import {FormLayout, SectionBlock} from "./components/FormComponents";
 import {NavigationBar} from "./components/PageComponents";
 import {ProjectInfo, ProjectAOI, ProjectOptions, PlotReview, SampleReview} from "./components/ProjectComponents";
 import {mercator} from "./utils/mercator.js";
-import {SurveyDesign} from "./components/SurveyDesign";
+import {SurveyDesign} from "./project/SurveyDesign";
 import {convertSampleValuesToSurveyQuestions} from "./utils/surveyUtils";
 import {formatNumberWithCommas, isNumber, encodeFileAsBase64} from "./utils/generalUtils";
 

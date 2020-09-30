@@ -1,6 +1,6 @@
 import React from "react";
 
-import {SectionBlock} from "./FormComponents";
+import {SectionBlock} from "../components/FormComponents";
 import SurveyCardList from "./SurveyCardList";
 import {removeEnumerator} from "../utils/surveyUtils";
 

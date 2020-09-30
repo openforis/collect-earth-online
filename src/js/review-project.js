@@ -4,7 +4,7 @@ import ReactDOM from "react-dom";
 import {FormLayout, SectionBlock, StatsCell, StatsRow} from "./components/FormComponents";
 import {NavigationBar} from "./components/PageComponents";
 import {ProjectInfo, ProjectAOI, PlotReview, SampleReview, ProjectOptions} from "./components/ProjectComponents";
-import SurveyCardList from "./components/SurveyCardList";
+import SurveyCardList from "./project/SurveyCardList";
 import {convertSampleValuesToSurveyQuestions} from "./utils/surveyUtils";
 import {mercator} from "./utils/mercator.js";
 
