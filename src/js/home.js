@@ -133,7 +133,7 @@ class MapPanel extends React.Component {
             mercator.addVectorLayer(mapConfig,
                                     "projectMarkers",
                                     projectSource,
-                                    mercator.ceoMapStyles("circle", "yellow"));
+                                    mercator.ceoMapStyles("cluster", 0));
         } else {
             mercator.addVectorLayer(mapConfig,
                                     "projectMarkers",

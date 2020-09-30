@@ -818,35 +818,16 @@ mercator.getClusterStyle = function (radius, fillColor, borderColor, borderWidth
     });
 };
 
-// [Pure] Returns a style object that displays a circle with the
-// specified radius, fillColor, borderColor, and borderWidth.
-mercator.getCircleStyle = function (radius, fillColor, borderColor, borderWidth) {
+// [Pure] Returns a style object that displays a solid point the
+// specified radius, fillColor
+mercator.getCircleStyle = function (radius, fillColor) {
     return new Style({
         image: new CircleStyle({
             radius: radius,
             fill: fillColor ? new Fill({color: fillColor}) : null,
             stroke: new Stroke({
-                color: borderColor,
-                width: borderWidth,
-            }),
-        }),
-    });
-};
-
-// [Pure] Returns a style object that displays a shape with the
-// specified number of points, radius, rotation, fillColor,
-// borderColor, and borderWidth. A triangle has 3 points. A square has
-// 4 points with rotation pi/4. A star has 5 points.
-mercator.getRegularShapeStyle = function (radius, points, rotation, fillColor, borderColor, borderWidth) {
-    return new Style({
-        image: new RegularShape({
-            radius: radius,
-            points: points,
-            rotation: rotation || 0,
-            fill: fillColor ? new Fill({color: fillColor}) : null,
-            stroke: new Stroke({
-                color: borderColor,
-                width: borderWidth,
+                color: "black",
+                width: 1,
             }),
         }),
     });
@@ -888,8 +869,7 @@ const ceoMapStyleFunctions = {
     geom: color => mercator.getGeomStyle(color, 4, color, 6),
     answered: color => mercator.getGeomStyle(color, 6, color, 6, color),
     draw: color => mercator.getGeomStyle(color, 4, color, 6, null, "rgba(255, 255, 255, 0.2)"),
-    circle: color => mercator.getCircleStyle(5, color, 2),
-    square: color => mercator.getRegularShapeStyle(6, 4, Math.PI / 4, color, 2),
+    overview: color => mercator.getCircleStyle(5, color),
     cluster: numPlots => mercator.getClusterStyle(10, "#3399cc", "#ffffff", 1, numPlots),
 };
 
@@ -988,25 +968,25 @@ mercator.plotsToVectorSource = function (plots) {
 
 // [Side Effects] Adds three vector layers to the mapConfig's map object:
 // "flaggedPlots" in red, "analyzedPlots" in green, and "unanalyzedPlots" in yellow.
-mercator.addPlotOverviewLayers = function (mapConfig, plots, shape) {
+mercator.addPlotOverviewLayers = function (mapConfig, plots) {
     mercator.addVectorLayer(mapConfig,
                             "flaggedPlots",
                             mercator.plotsToVectorSource(plots.filter(function (plot) {
                                 return plot.flagged === true;
                             })),
-                            mercator.ceoMapStyles(shape || "circle", "red"));
+                            mercator.ceoMapStyles("overview", "red"));
     mercator.addVectorLayer(mapConfig,
                             "analyzedPlots",
                             mercator.plotsToVectorSource(plots.filter(function (plot) {
                                 return plot.analyses > 0 && plot.flagged === false;
                             })),
-                            mercator.ceoMapStyles(shape || "circle", "green"));
+                            mercator.ceoMapStyles("overview", "green"));
     mercator.addVectorLayer(mapConfig,
                             "unanalyzedPlots",
                             mercator.plotsToVectorSource(plots.filter(function (plot) {
                                 return plot.analyses === 0 && plot.flagged === false;
                             })),
-                            mercator.ceoMapStyles(shape || "circle", "yellow"));
+                            mercator.ceoMapStyles("overview", "yellow"));
     return mapConfig;
 };
 

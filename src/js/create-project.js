@@ -525,7 +525,7 @@ class Project extends React.Component {
         mercator.addVectorLayer(this.state.mapConfig,
                                 "projectPlots",
                                 mercator.plotsToVectorSource(this.state.plotList),
-                                mercator.ceoMapStyles(this.state.projectDetails.plotShape, "yellow"));
+                                mercator.ceoMapStyles("overview", "yellow"));
     };
 
     setProjectImageryList = (newProjectImageryList) =>
