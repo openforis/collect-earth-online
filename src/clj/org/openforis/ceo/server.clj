@@ -40,6 +40,7 @@
                    #'development-app)
         config   (merge
                   {:port  (cond
+                            (= mode "prod") 4567 ; to match server redirects
                             (integer? port) port
                             (string? port)  (Integer/parseInt port)
                             (nil? port)     8080
@@ -47,7 +48,7 @@
                    :join? false}
                   (when (and has-key? (= mode "prod"))
                     {:ssl?          true
-                     :ssl-port      8443
+                     :ssl-port      (or port 8443)
                      :keystore      "./.key/keystore.pkcs12"
                      :keystore-type "pkcs12"
                      :key-password  "foobar"}))]
