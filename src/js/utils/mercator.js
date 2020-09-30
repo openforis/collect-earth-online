@@ -1141,7 +1141,10 @@ mercator.makeSnap = function (source) {
 
 // [Pure] Returns a new Modify interaction for source.
 mercator.makeModify = function (source) {
-    const modify = new Modify({source: source});
+    const modify = new Modify({
+        source: source,
+        condition: (e) => e.originalEvent.ctrlKey,
+    });
     modify.set("title", "modify");
     return modify;
 };

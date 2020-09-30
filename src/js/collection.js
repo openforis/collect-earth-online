@@ -447,7 +447,8 @@ class Collection extends React.Component {
         const {mapConfig} = this.state;
         mercator.disableDrawing(mapConfig);
         const allFeatures = mercator.getAllFeatures(this.state.mapConfig, "drawLayer") || [];
-        const getMax = (samples) => Math.max(0, ...samples.map(s => s.id));
+        const existingIds = allFeatures.map(f => f.get("sampleId")).filter(id => id);
+        const getMax = (samples) => Math.max(0, ...existingIds, ...samples.map(s => s.id));
         const newSamples = allFeatures.reduce((acc, cur) => {
             const sampleId = cur.get("sampleId");
             if (sampleId) {
