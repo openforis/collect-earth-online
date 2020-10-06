@@ -133,10 +133,12 @@ export class NavigationBar extends React.Component {
     }
 
     componentDidMount () {
-        fetch("/locale/help.json")
+        fetch("/locale/help.json",
+              {headers: {"Cache-Control": "no-cache", "Pragma": "no-cache", "Accept": "application/json"}})
             .then(response => response.ok ? response.json() : Promise.reject(response))
             .then(data => {
-                const page = window.location.pathname.slice(1);
+                const location = window.location.pathname.slice(1);
+                const page = location === "" ? "home" : location;
                 const availableLanguages = data[page];
                 if (availableLanguages) this.getHelpSlides(availableLanguages, page);
             })
@@ -144,7 +146,8 @@ export class NavigationBar extends React.Component {
     }
 
     getHelpSlides = (availableLanguages, page) => {
-        fetch(`/locale/${page}/${getLanguage(availableLanguages)}.json`)
+        fetch(`/locale/${page}/${getLanguage(availableLanguages)}.json`,
+              {headers: {"Cache-Control": "no-cache", "Pragma": "no-cache", "Accept": "application/json"}})
             .then(res => res.json())
             .then(data => this.setState({helpSlides: data, page: page}));
     }
