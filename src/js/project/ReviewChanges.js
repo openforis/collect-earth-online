@@ -139,7 +139,7 @@ export class ReviewChanges extends React.Component {
                     >
                         <h2 className="bg-lightgreen w-100 py-1">Project Details</h2>
                         <div className="p-3">
-                            {/* <ReviewForm/> */}
+                            <ReviewForm/>
                         </div>
                     </div>
                     <div className="col-4">

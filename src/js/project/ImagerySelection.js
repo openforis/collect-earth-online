@@ -74,3 +74,9 @@ export function ImagerySelection() {
         </ProjectContext.Consumer>
     );
 }
+
+export function ImageryReview() {
+    return (
+        <ProjectContext.Consumer>{context => <div></div>}</ProjectContext.Consumer>
+    );
+}

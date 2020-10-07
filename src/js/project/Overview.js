@@ -258,3 +258,9 @@ class ProjectTemplateSelection extends React.Component {
     }
 }
 ProjectTemplateSelection.contextType = ProjectContext;
+
+export function OverviewReview() {
+    return (
+        <ProjectContext.Consumer>{context => <div></div>}</ProjectContext.Consumer>
+    );
+}
