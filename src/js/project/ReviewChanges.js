@@ -41,8 +41,7 @@ export class ReviewChanges extends React.Component {
                               sampleDistribution: this.context.sampleDistribution,
                               samplesPerPlot: this.context.samplesPerPlot,
                               sampleResolution: this.context.sampleResolution,
-                              allowDrawnSamples: this.context.sampleDistribution === "none"
-                                    || this.context.allowDrawnSamples,
+                              allowDrawnSamples: this.context.allowDrawnSamples,
                               sampleValues: this.context.surveyQuestions,
                               surveyRules: this.context.surveyRules,
                               plotFileName: this.context.plotFileName,
