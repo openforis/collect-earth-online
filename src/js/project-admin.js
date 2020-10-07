@@ -49,12 +49,13 @@ class Project extends React.Component {
             wizard: CreateProjectWizard,
             changes: ReviewChanges,
             project: ReviewProject,
+            none: () => null,
         };
 
         this.state = {
             projectDetails: this.blankProject,
             institutionImagery: [],
-            designMode: "wizard",
+            designMode: "none",
         };
     }
 
@@ -64,7 +65,7 @@ class Project extends React.Component {
     // TODO: Consider include institutionId for review project to allow for parallel API calls
     componentDidMount() {
         if (this.props.projectId > 0) {
-            this.setState({designMode: "admin"});
+            this.setState({designMode: "project"});
             this.getProjectById(this.props.projectId);
             this.getProjectImagery(this.props.projectId);
         } else if (this.props.institutionId > 0) {
@@ -94,6 +95,8 @@ class Project extends React.Component {
         this.setState({projectDetails: {...this.state.projectDetails, ...newValue}}, callBack);
 
     resetProject = () => this.setState({projectDetails: this.blankProject});
+
+    setDesignMode = (newMode) => this.setState({designMode: newMode})
 
     /// API Calls
 
@@ -157,6 +160,7 @@ class Project extends React.Component {
                     institutionId: this.props.institutionId,
                     projectId: this.props.projectId,
                     setProjectState: this.setProjectState,
+                    setDesignMode: this.setDesignMode,
                     resetProject: this.resetProject,
                     processModal: this.processModal,
                 }}

@@ -345,7 +345,7 @@ export class CreateProjectWizard extends React.Component {
         if (failedStep) {
             this.setState({step: failedStep[0]});
         } else {
-            this.context.setProjectState({designMode: "changes"});
+            this.context.setDesignMode("changes");
         }
     }
 

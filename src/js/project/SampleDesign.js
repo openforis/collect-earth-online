@@ -223,12 +223,13 @@ export class SampleDesign extends React.Component {
 }
 SampleDesign.contextType = ProjectContext;
 
-export function SampleReview({projectDetails}) {
-    const {sampleDistribution, samplesPerPlot, sampleResolution, allowDrawnSamples} = projectDetails;
+export function SampleReview() {
     return (
-        <SectionBlock title="Sample Design">
-            <div id="sample-design">
-                {sampleDistribution === "none"
+        <ProjectContext.Consumer>
+            {({sampleDistribution, samplesPerPlot, sampleResolution, allowDrawnSamples}) =>
+                <SectionBlock title="Sample Design">
+                    <div id="sample-design">
+                        {sampleDistribution === "none"
                 ? (
                     <h3>No samples are predefined.</h3>
                 ) : (
@@ -257,8 +258,10 @@ export function SampleReview({projectDetails}) {
                         </tbody>
                     </table>
                 )}
-                {allowDrawnSamples && <h3>Users can draw additional samples at collection time.</h3>}
-            </div>
-        </SectionBlock>
+                        {allowDrawnSamples && <h3>Users can draw additional samples at collection time.</h3>}
+                    </div>
+                </SectionBlock>
+            }
+        </ProjectContext.Consumer>
     );
 }

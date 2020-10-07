@@ -15,14 +15,14 @@ export function ReviewForm() {
                 <div id="project-design-form" className="px-2 pb-2">
                     <OverviewReview/>
                     <div id="collection-review">
-                        <AOIMap/>
+                        <AOIMap context={context} canDrag={false}/>
                         <ImageryReview/>
                         <PlotReview/>
                         <SampleReview/>
                     </div>
                     <div id="survey-review">
-                        <SurveyCardList context={context}/>
-                        <SurveyRulesList context={context}/>
+                        <SurveyCardList {...context} inDesignMode={false}/>
+                        <SurveyRulesList {...context} inDesignMode={false}/>
                     </div>
 
                 </div>

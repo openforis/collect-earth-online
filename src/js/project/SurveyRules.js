@@ -193,7 +193,7 @@ export class SurveyRuleDesign extends React.Component {
             <SurveyRulesList
                 surveyRules={this.context.surveyRules}
                 setProjectState={this.context.setProjectState}
-                inDesginMode
+                inDesignMode
             >
                 <tr>
                     <td colSpan="2">

@@ -56,7 +56,7 @@ export class ReviewChanges extends React.Component {
                     .then(response => Promise.all([response.ok, response.json()]))
                     .then(data => {
                         if (data[0] && Number.isInteger(data[1].projectId)) {
-                            window.location = `/project-admin?projectId=${data[1].projectId}`;
+                            window.location = `/review-project?projectId=${data[1].projectId}`;
                             return Promise.resolve();
                         } else {
                             return Promise.reject(data[1]);
@@ -113,7 +113,7 @@ export class ReviewChanges extends React.Component {
                 type="button"
                 className="btn btn-outline-green btn-sm col-6"
                 value="Edit Project"
-                onClick={() => this.context.setProjectState({designMode: "wizard"})}
+                onClick={() => this.context.setDesignMode("wizard")}
             />
         </div>
     );

@@ -1,13 +1,13 @@
 import React from "react";
+import {ProjectContext} from "./ProjectContext";
 
 import {ReviewForm} from "./ReviewForm";
 
 export function ReviewProject() {
-
     return (
         <div
-            id=""
-            className="d-flex pb-5 full-height align-items-center flex-column"
+            id="review-project"
+            className="d-flex p-3 full-height align-items-center flex-column"
         >
             <div
                 style={{
@@ -57,7 +57,7 @@ export class ProjectStatsGroup extends React.Component {
                 >
                     Project Stats
                 </button>
-                {this.state.showStats && <ProjectStats {...this.props} />}
+                {this.state.showStats && <ProjectStats {...this.props}/>}
             </div>
         );
     }
@@ -188,34 +188,43 @@ class ProjectStats extends React.Component {
 class ProjectManagement extends React.Component {
     constructor(props) {
         super(props);
-        this.state = {
-            showStats: false,
-        };
         this.stateTransitions = {
-            nonexistent: "Create",
             unpublished: "Publish",
             published: "Close",
-            closed: "Delete",
-            archived: "Delete",
+            closed: "Publish",
+        };
+        this.projectStates = {
+            unpublished: {
+                button: "Publish",
+                update: this.publishProject,
+                description: "Admins can review, edit, and test collecting the project.  Publish the project in order for users to begin collection.",
+                canEdit: true,
+            },
+            published: {
+                button: "Close",
+                update: this.closeProject,
+                description: "Users can begin collecting.  Limited changes to the project details can be made.  Close the project to prevent anymore updates.",
+                canEdit: true,
+            },
+            closed: {
+                button: "Reopen",
+                update: this.publishProject,
+                description: "The project is closed to all changes.  Reopen the project for additional collection.",
+                canEdit: false,
+            },
         };
     }
 
-    gotoProjectDashboard = () => {
-        if (this.state.plotList != null && this.state.projectDetails != null) {
-            window.open(`/project-dashboard?projectId=${this.state.projectDetails.id}`);
-        }
-    };
+    /// API Calls
 
     publishProject = () => {
-        if (confirm("Do you REALLY want to publish this project?")) {
-            fetch(`/publish-project?projectId=${this.state.projectDetails.id}`,
-                  {
-                      method: "POST",
-                  }
+        if (confirm("Do you want to publish this project?")) {
+            fetch(`/publish-project?projectId=${this.context.id}`,
+                  {method: "POST"}
             )
                 .then(response => {
                     if (response.ok) {
-                        this.setState({projectDetails: {...this.state.projectDetails, availability: "published"}});
+                        this.context.setProjectState({availability: "published"});
                     } else {
                         console.log(response);
                         alert("Error publishing project. See console for details.");
@@ -225,14 +234,13 @@ class ProjectManagement extends React.Component {
     };
 
     closeProject = () => {
-        if (confirm("Do you REALLY want to close this project?")) {
-            fetch(`/close-project?projectId=${this.state.projectDetails.id}`,
-                  {
-                      method: "POST",
-                  })
+        if (confirm("Do you want to close this project?")) {
+            fetch(`/close-project?projectId=${this.context.id}`,
+                  {method: "POST"}
+            )
                 .then(response => {
                     if (response.ok) {
-                        this.setState({projectDetails: {...this.state.projectDetails, availability: "closed"}});
+                        this.context.setProjectState({availability: "closed"});
                     } else {
                         console.log(response);
                         alert("Error closing project. See console for details.");
@@ -241,16 +249,15 @@ class ProjectManagement extends React.Component {
         }
     };
 
-    archiveProject = () => {
-        if (confirm("Do you REALLY want to delete this project? This operation cannot be undone.")) {
-            fetch(`/archive-project?projectId=${this.state.projectDetails.id}`,
-                  {
-                      method: "POST",
-                  })
+    deleteProject = () => {
+        if (confirm("Do you want to delete this project? This operation cannot be undone.")) {
+            fetch(`/archive-project?projectId=${this.context.id}`,
+                  {method: "POST"}
+            )
                 .then(response => {
                     if (response.ok) {
-                        alert("Project " + this.state.projectDetails.id + " has been deleted.");
-                        window.location = "/home";
+                        alert("Project " + this.context.id + " has been deleted.");
+                        window.location = `/review-institution?institutionId=${this.extent.institution}`;
                     } else {
                         console.log(response);
                         alert("Error deleting project. See console for details.");
@@ -259,91 +266,73 @@ class ProjectManagement extends React.Component {
         }
     };
 
-    changeAvailability = () => {
-        if (this.state.projectDetails.availability === "unpublished") {
-            this.publishProject();
-        } else if (this.state.projectDetails.availability === "published") {
-            this.closeProject();
-        } else if (this.state.projectDetails.availability === "closed") {
-            this.archiveProject();
-        }
-    };
-
-    configureGeoDash = () => {
-        if (this.state.plotList != null && this.state.projectDetails != null) {
-            window.open(
-                "/widget-layout-editor?editable=true&"
-                + encodeURIComponent(
-                    `institutionId=${this.state.projectDetails.institution}`
-                    + `&projectId=${this.state.projectDetails.id}`
-                ),
-                "_geo-dash");
-        }
-    };
-
-    downloadPlotData = () => {
-        window.open(`/dump-project-aggregate-data?projectId=${this.state.projectDetails.id}`, "_blank");
-    };
-
-    downloadSampleData = () => {
-        window.open(`/dump-project-raw-data?projectId=${this.state.projectDetails.id}`, "_blank");
-    };
-
     render() {
+        const {button, update, description, canEdit} = this.projectStates[this.context.availability] || {};
         return (
-            <div id="project-management">
-                <h2 className="header px-0">Project Management</h2>
-                <div className="d-flex flex-column">
-                    <div className="d-flex justify-content-between mb-2">
-                        <input
-                            type="button"
-                            className="btn btn-outline-danger btn-sm col-6 mr-2"
-                            value={this.stateTransitions[this.context.availability] + " Project"}
-                            onClick={this.props.changeAvailability}
-                        />
-                        <input
-                            type="button"
-                            className="btn btn-outline-danger btn-sm col-6"
-                            value="Update Project"
-                            onClick={this.props.updateProject}
-                            style={{display:"block"}}
-                        />
-                    </div>
-                    <div className="d-flex justify-content-between mb-2">
-                        <input
-                            type="button"
-                            className="btn btn-outline-lightgreen btn-sm col-6 mr-2"
-                            value="Project Dashboard"
-                            onClick={this.props.gotoProjectDashboard}
-                            style={{display:"block"}}
-                        />
-                        <input
-                            type="button"
-                            className="btn btn-outline-lightgreen btn-sm col-6"
-                            value="Configure Geo-Dash"
-                            onClick={this.props.configureGeoDash}
-                        />
-                    </div>
-                    <div
-                        className="d-flex justify-content-between mb-2"
-                        style={{display: ["published", "closed"].includes(project.projectDetails.availability) ? "block" : "none !important"}}
-                    >
-                        <input
-                            type="button"
-                            className="btn btn-outline-lightgreen btn-sm col-6 mr-2"
-                            value="Download Plot Data"
-                            onClick={this.props.downloadPlotData}
-                        />
-                        <input
-                            type="button"
-                            className="btn btn-outline-lightgreen btn-sm col-6"
-                            value="Download Sample Data"
-                            onClick={this.props.downloadSampleData}
-                        />
-                    </div>
-                    <div id="spinner"></div>
+            <div id="project-management" className="d-flex flex-column">
+                <h2 className="px-0">Project Management</h2>
+                <p>This project is <b>{this.context.availability}</b>. {description}</p>
+                <div className="d-flex flex-column align-items-end">
+                    <h3 className="my-2">Modify Project Details</h3>
+                    <input
+                        type="button"
+                        className="btn btn-outline-danger btn-sm col-6"
+                        value={(button || "Close") + " Project"}
+                        onClick={() => update.call(this)}
+                    />
+                    <input
+                        className="btn btn-outline-danger btn-sm col-6"
+                        type="button"
+                        value="Edit Project"
+                        disabled={!canEdit}
+                        onClick={() => this.context.setDesignMode("wizard")}
+                    />
+                    <input
+                        className="btn btn-outline-danger btn-sm col-6"
+                        type="button"
+                        value="Delete Project"
+                        onClick={this.deleteProject}
+                    />
+                    <h3 className="my-2">External Links</h3>
+                    <input
+                        className="btn btn-outline-lightgreen btn-sm col-6"
+                        type="button"
+                        value="Configure Geo-Dash"
+                        onClick={() => window.open(
+                            "/widget-layout-editor?editable=true&"
+                            + `institutionId=${this.context.institution}`
+                            + `&projectId=${this.context.id}`,
+                            "_geo-dash"
+                        )}
+                    />
+                    <input
+                        className="btn btn-outline-lightgreen btn-sm col-6"
+                        type="button"
+                        value="Collect"
+                        onClick={() => window.open(`/collection?projectId=${this.context.id}`)}
+                    />
+                    <input
+                        className="btn btn-outline-lightgreen btn-sm col-6"
+                        type="button"
+                        value="Project Dashboard"
+                        onClick={() => window.open(`/project-dashboard?projectId=${this.context.id}`)}
+                    />
+                    <h3 className="my-2">Export Data</h3>
+                    <input
+                        className="btn btn-outline-lightgreen btn-sm col-6"
+                        type="button"
+                        value="Download Plot Data"
+                        onClick={() => window.open(`/dump-project-aggregate-data?projectId=${this.context.id}`, "_blank")}
+                    />
+                    <input
+                        className="btn btn-outline-lightgreen btn-sm col-6"
+                        type="button"
+                        value="Download Sample Data"
+                        onClick={() => window.open(`/dump-project-raw-data?projectId=${this.context.id}`, "_blank")}
+                    />
                 </div>
             </div>
         );
     }
 }
+ProjectManagement.contextType = ProjectContext;
