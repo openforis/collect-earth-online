@@ -177,7 +177,6 @@ class Collection extends React.Component {
             }
         });
 
-    // TODO, this can easily be a part of get-project-by-id
     getImageryList = () => {
         fetch(`/get-project-imagery?projectId=${this.props.projectId}`)
             .then(response => response.ok ? response.json() : Promise.reject(response))
