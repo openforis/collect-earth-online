@@ -389,13 +389,15 @@ class Widget extends React.Component {
                 />
             </div>;
         } else {
-            return <img
-                src="data:image/gif;base64,R0lGODlhAQABAIAAAHd3dwAAACH5BAAAAAAALAAAAAABAAEAAAICRAEAOw=="
-                width="200"
-                height="200"
-                className="img-responsive"
-                alt="Blank Widget"
-                   />;
+            return (
+                <img
+                    src="data:image/gif;base64,R0lGODlhAQABAIAAAHd3dwAAACH5BAAAAAAALAAAAAABAAEAAAICRAEAOw=="
+                    width="200"
+                    height="200"
+                    className="img-responsive"
+                    alt="Blank Widget"
+                />
+            );
         }
     };
 
