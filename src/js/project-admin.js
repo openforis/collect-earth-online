@@ -52,7 +52,7 @@ class Project extends React.Component {
         };
 
         this.state = {
-            ...this.blankProject,
+            projectDetails: this.blankProject,
             institutionImagery: [],
             designMode: "wizard",
         };
@@ -90,9 +90,10 @@ class Project extends React.Component {
 
     /// Updating State
 
-    setProjectState = (newValue, callBack = () => null) => this.setState(newValue, callBack);
+    setProjectState = (newValue, callBack = () => null) =>
+        this.setState({projectDetails: {...this.state.projectDetails, ...newValue}}, callBack);
 
-    resetProject = () => this.setState({...this.state, ...this.blankProject});
+    resetProject = () => this.setState({projectDetails: this.blankProject});
 
     /// API Calls
 
@@ -105,7 +106,7 @@ class Project extends React.Component {
             } else {
                 this.getInstitutionImagery(data.institution);
                 const newSurveyQuestions = convertSampleValuesToSurveyQuestions(data.sampleValues);
-                this.setState({...data, surveyQuestions: newSurveyQuestions});
+                this.setProjectState({...data, surveyQuestions: newSurveyQuestions});
             }
         })
         .catch(response => {
@@ -117,10 +118,10 @@ class Project extends React.Component {
     getProjectImagery = (projectId) => fetch("/get-project-imagery?projectId=" + projectId)
         .then(response => response.ok ? response.json() : Promise.reject(response))
         .then(data => {
-            this.setState({projectImageryList: data});
+            this.setProjectState({projectImageryList: data});
         })
         .catch(response => {
-            this.setState({projectImageryList: []});
+            this.setProjectState({projectImageryList: []});
             console.log("Error retrieving the project imagery list: ", response);
         });
 
@@ -129,10 +130,8 @@ class Project extends React.Component {
         .then(data => {
             const sorted = [...data.filter(a => a.title.toLocaleLowerCase().includes("mapbox")),
                             ...data.filter(a => !a.title.toLocaleLowerCase().includes("mapbox"))];
-            this.setState({
-                institutionImagery: sorted,
-                imageryId: sorted[0].id,
-            });
+            this.setState({institutionImagery: sorted});
+            this.setProjectState({imageryId: sorted[0].id});
         })
         .catch(response => {
             console.log(response);
@@ -152,7 +151,9 @@ class Project extends React.Component {
         return (
             <ProjectContext.Provider
                 value={{
-                    ...this.state,
+                    ...this.state.projectDetails,
+                    designMode:this.state.designMode,
+                    institutionImagery: this.state.institutionImagery,
                     institutionId: this.props.institutionId,
                     projectId: this.props.projectId,
                     setProjectState: this.setProjectState,
