@@ -8,7 +8,8 @@
             [org.openforis.ceo.db.users        :as users]
             [org.openforis.ceo.proxy           :as proxy]))
 
-;; TODO flatten url structure, conform name and fn, and rename geo-dash to geodash everywhere
+;; TODO: Flatten url structure, conform name and fn, and rename geo-dash to geodash everywhere.
+;; TODO: The call to render-page does not need the '/'.
 (def routes
   {;; Page Routes
    [:get  "/"]                               {:handler     (render-page "/home")}
@@ -22,7 +23,7 @@
    [:get  "/create-institution"]             {:handler     (render-page "/create-institution")
                                               :auth-type   :user
                                               :auth-action :redirect}
-   [:get  "/create-project"]                 {:handler     (render-page "/create-project")
+   [:get  "/create-project"]                 {:handler     (render-page "/project-admin")
                                               :auth-type   :inst-admin
                                               :auth-action :redirect}
    [:get  "/geo-dash"]                       {:handler     (render-page "/geo-dash")
@@ -41,7 +42,7 @@
                                               :auth-action :redirect}
    [:get  "/register"]                       {:handler     (render-page "/register")}
    [:get  "/review-institution"]             {:handler     (render-page "/review-institution")}
-   [:get  "/review-project"]                 {:handler     (render-page "/review-project")
+   [:get  "/review-project"]                 {:handler     (render-page "/project-admin")
                                               :auth-type   :proj-admin
                                               :auth-action :redirect}
    [:get  "/support"]                        {:handler     (render-page "/support")}
@@ -92,6 +93,8 @@
    [:get  "/get-project-by-id"]              {:handler     projects/get-project-by-id
                                               :auth-type   :collect
                                               :auth-action :block}
+   [:get  "/get-template-projects"]          {:handler     projects/get-template-projects}
+   [:get  "/get-template-by-id"]             {:handler     projects/get-template-by-id}
    [:get  "/get-project-stats"]              {:handler     projects/get-project-stats
                                               :auth-type   :collect
                                               :auth-action :block}

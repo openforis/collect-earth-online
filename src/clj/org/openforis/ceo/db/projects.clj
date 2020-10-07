@@ -39,30 +39,28 @@
                       :autoLaunchGeoDash   true})
 
 (defn- single-project-object [project]
-  {:id                   (:project_id project)
-   :institution          (:institution_id project) ; TODO legacy variable name, update to institutionId
-   :imageryId            (:imagery_id project)
-   :availability         (:availability project)
-   :name                 (:name project)
-   :description          (:description project)
-   :privacyLevel         (:privacy_level project)
-   :boundary             (:boundary project)
-   :plotDistribution     (:plot_distribution project)
-   :numPlots             (:num_plots project)
-   :plotSpacing          (:plot_spacing project)
-   :plotShape            (:plot_shape project)
-   :plotSize             (:plot_size project)
-   :archived             (= "archived" (:availability project)) ; TODO this is no longer used
-   :sampleDistribution   (:sample_distribution project)
-   :samplesPerPlot       (:samples_per_plot project)
-   :sampleResolution     (:sample_resolution project)
-   :allowDrawnSamples    (:allow_drawn_samples project)
-   :classification_times "" ; TODO this has never been used
-   :editable             (:editable project)
-   :validBoundary        (:valid_boundary project)
-   :sampleValues         (tc/jsonb->clj (:survey_questions project)) ; TODO why don't these names match
-   :surveyRules          (tc/jsonb->clj (:survey_rules project))
-   :projectOptions       (merge default-options (tc/jsonb->clj (:options project)))})
+  {:id                 (:project_id project)
+   :institution        (:institution_id project) ; TODO legacy variable name, update to institutionId
+   :imageryId          (:imagery_id project)
+   :availability       (:availability project)
+   :name               (:name project)
+   :description        (:description project)
+   :privacyLevel       (:privacy_level project)
+   :boundary           (:boundary project)
+   :plotDistribution   (:plot_distribution project)
+   :numPlots           (:num_plots project)
+   :plotSpacing        (:plot_spacing project)
+   :plotShape          (:plot_shape project)
+   :plotSize           (:plot_size project)
+   :sampleDistribution (:sample_distribution project)
+   :samplesPerPlot     (:samples_per_plot project)
+   :sampleResolution   (:sample_resolution project)
+   :allowDrawnSamples  (:allow_drawn_samples project)
+   :editable           (:editable project)
+   :validBoundary      (:valid_boundary project)
+   :sampleValues       (tc/jsonb->clj (:survey_questions project)) ; TODO why don't these names match
+   :surveyRules        (tc/jsonb->clj (:survey_rules project))
+   :projectOptions     (merge default-options (tc/jsonb->clj (:options project)))})
 
 (defn- get-project-list [sql-results]
   (mapv single-project-object
@@ -72,26 +70,52 @@
 (defn get-all-projects [{:keys [params]}]
   (let [user-id        (:userId params -1)
         institution-id (tc/str->int (:institutionId params))]
-    (data-response (cond
-                     (= -1 user-id institution-id)
-                     (get-project-list (call-sql "select_all_projects"))
+    (data-response (get-project-list (cond
+                                       (= -1 user-id institution-id)
+                                       (call-sql "select_all_projects")
 
-                     (and (neg? user-id) (pos? institution-id))
-                     (get-project-list (call-sql "select_all_institution_projects"
-                                                 institution-id))
+                                       (and (neg? user-id) (pos? institution-id))
+                                       (call-sql "select_all_institution_projects" institution-id)
 
-                     (and (pos? user-id) (neg? institution-id))
-                     (get-project-list (call-sql "select_all_user_projects"
-                                                 user-id))
+                                       (and (pos? user-id) (neg? institution-id))
+                                       (call-sql "select_all_user_projects" user-id)
 
-                     :else
-                     (get-project-list (call-sql "select_institution_projects_with_roles"
+                                       :else
+                                       (call-sql "select_institution_projects_with_roles"
                                                  user-id
                                                  institution-id))))))
 
 (defn get-project-by-id [{:keys [params]}]
   (let [project-id (tc/str->int (:projectId params))]
     (data-response (single-project-object (first (call-sql "select_project" project-id))))))
+
+;; TODO, this might not need to be a separate route when the project list queries get simplified.
+(defn get-template-projects [{:keys [params]}]
+  (let [user-id (tc/str->int (:userId params))]
+    (data-response (mapv (fn [{:keys [project_id name]}]
+                           {:id   project_id
+                            :name name})
+                         (call-sql "select_template_projects" user-id)))))
+
+(defn get-template-by-id [{:keys [params]}]
+  (let [project-id (tc/str->int (:projectId params))
+        project (first (call-sql "select_template_project" project-id))]
+    (data-response {:imageryId          (:imagery_id project)
+                    :name               (:name project)
+                    :description        (:description project)
+                    :boundary           (:boundary project)
+                    :plotDistribution   (:plot_distribution project)
+                    :numPlots           (:num_plots project)
+                    :plotSpacing        (:plot_spacing project)
+                    :plotShape          (:plot_shape project)
+                    :plotSize           (:plot_size project)
+                    :sampleDistribution (:sample_distribution project)
+                    :samplesPerPlot     (:samples_per_plot project)
+                    :sampleResolution   (:sample_resolution project)
+                    :allowDrawnSamples  (:allow_drawn_samples project)
+                    :sampleValues       (tc/jsonb->clj (:survey_questions project)) ; TODO why don't these names match
+                    :surveyRules        (tc/jsonb->clj (:survey_rules project))
+                    :projectOptions     (merge default-options (tc/jsonb->clj (:options project)))})))
 
 (defn get-project-stats [{:keys [params]}]
   (let [project-id (tc/str->int (:projectId params))
