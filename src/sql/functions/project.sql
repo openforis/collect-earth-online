@@ -832,13 +832,78 @@ CREATE OR REPLACE FUNCTION select_all_user_projects(_user_id integer)
 $$ LANGUAGE SQL;
 
 -- Returns all rows in projects for a user_id and institution_rid with roles
-CREATE OR REPLACE FUNCTION select_institution_projects_with_roles( _user_id integer, _institution_id integer)
+CREATE OR REPLACE FUNCTION select_institution_projects_with_roles(_user_id integer, _institution_id integer)
  RETURNS setOf project_return AS $$
 
     SELECT *
     FROM select_all_user_projects(_user_id)
     WHERE institution_id = _institution_id
     ORDER BY project_id
+
+$$ LANGUAGE SQL;
+
+-- Returns a row in projects by id
+CREATE OR REPLACE FUNCTION select_template_project(_project_id integer)
+ RETURNS table (
+    imagery_id             integer,
+    name                   text,
+    description            text,
+    boundary               text,
+    plot_distribution      text,
+    num_plots              integer,
+    plot_spacing           float,
+    plot_shape             text,
+    plot_size              float,
+    sample_distribution    text,
+    samples_per_plot       integer,
+    sample_resolution      float,
+    allow_drawn_samples    boolean,
+    survey_questions       jsonb,
+    survey_rules           jsonb,
+    options                jsonb
+ ) AS $$
+
+    SELECT imagery_rid,
+        name,
+        description,
+        ST_AsGeoJSON(boundary),
+        plot_distribution,
+        num_plots,
+        plot_spacing,
+        plot_shape,
+        plot_size,
+        sample_distribution,
+        samples_per_plot,
+        sample_resolution,
+        allow_drawn_samples,
+        survey_questions,
+        survey_rules,
+        options
+    FROM projects
+    WHERE project_uid = _project_id
+
+$$ LANGUAGE SQL;
+
+CREATE OR REPLACE FUNCTION select_template_projects(_user_id integer)
+ RETURNS table (
+     project_id    integer,
+     name          text
+ ) AS $$
+
+    SELECT project_uid, name
+    FROM projects as p
+    LEFT JOIN get_institution_user_roles(_user_id) AS roles
+        USING (institution_rid)
+    WHERE (role = 'admin' AND p.availability <> 'archived')
+        OR (role = 'member'
+            AND p.privacy_level IN ('public', 'institution', 'users')
+            AND p.availability = 'published')
+        OR (_user_id > 0
+            AND p.privacy_level IN ('public', 'users')
+            AND p.availability = 'published')
+        OR (p.privacy_level IN ('public')
+            AND p.availability = 'published')
+    ORDER BY project_uid
 
 $$ LANGUAGE SQL;
 

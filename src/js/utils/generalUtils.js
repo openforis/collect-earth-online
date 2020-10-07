@@ -104,3 +104,12 @@ export function encodeFileAsBase64(file, callback) {
     reader.onloadend = () => callback(reader.result);
     reader.readAsDataURL(file);
 }
+
+export function last(array) {
+    return array[array.length - 1];
+}
+
+export function removeFromSet(set, value) {
+    set.delete(value);
+    return set;
+}

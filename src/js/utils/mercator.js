@@ -28,7 +28,7 @@ import {BingMaps, Cluster, TileWMS, Vector as VectorSource, XYZ} from "ol/source
 import {Circle as CircleStyle, Fill, Stroke, Style, Text as StyleText} from "ol/style";
 import {fromLonLat, transform, transformExtent} from "ol/proj";
 import {fromExtent, fromCircle} from "ol/geom/Polygon";
-import {formatDateISO} from "./generalUtils";
+import {formatDateISO, isNumber} from "./generalUtils";
 import {mapboxAttributionText} from "../imagery/mapbox-attribution";
 
 /******************************************************************************
@@ -559,6 +559,19 @@ mercator.verifyMapInputs = function (divName, centerCoords, zoomLevel, layerConf
     } else {
         return null;
     }
+};
+
+mercator.hasValidBounds = function (latMin, latMax, lonMin, lonMax) {
+    return isNumber(latMin)
+        && isNumber(latMax)
+        && isNumber(lonMin)
+        && isNumber(lonMax)
+        && lonMax <= 180
+        && lonMin >= -180
+        && latMax <= 90
+        && latMin >= -90
+        && lonMax > lonMin
+        && latMax > latMin;
 };
 
 /*****************************************************************************
@@ -1242,6 +1255,7 @@ mercator.enableDragBoxDraw = function (mapConfig, callBack) {
         id: "dragBoxLayer",
         source: new VectorSource({features: []}),
         style: mercator.ceoMapStyles("geom", "yellow"),
+        visible: false,
     });
     const dragBox = mercator.makeDragBoxDraw("dragBoxDraw", drawLayer, callBack);
     mapConfig.map.addLayer(drawLayer);

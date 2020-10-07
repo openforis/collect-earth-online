@@ -409,3 +409,31 @@ export class SafeImage extends React.Component {
     }
 
 }
+
+export function LoadingModal({message}) {
+    return (
+        <div
+            style={{
+                position: "fixed",
+                zIndex: "100",
+                left: "0",
+                top: "0",
+                width: "100%",
+                height: "100%",
+                backgroundColor: "rgba(0,0,0,0.4)",
+            }}
+        >
+            <div
+                style={{
+                    width: "fit-content",
+                    margin: "20% auto",
+                    border: "1.5px solid",
+                    borderRadius: "5px",
+                    backgroundColor: "white",
+                }}
+            >
+                <label className="m-4">{message}</label>
+            </div>
+        </div>
+    );
+}
