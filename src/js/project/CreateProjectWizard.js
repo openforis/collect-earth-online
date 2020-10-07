@@ -102,6 +102,7 @@ export class CreateProjectWizard extends React.Component {
 
     componentDidMount() {
         this.getProjectList();
+        this.checkAllSteps();
     }
 
     /// API Calls
@@ -165,7 +166,7 @@ export class CreateProjectWizard extends React.Component {
                     this.setState({projectImageryList: []});
                     Promise.reject("Get project imagery failed.");
                 } else {
-                    this.setState({projectImageryList: data});
+                    this.setState({projectImageryList: data.map(imagery => imagery.id)});
 
                 }
             });

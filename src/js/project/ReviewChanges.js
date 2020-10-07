@@ -95,6 +95,7 @@ export class ReviewChanges extends React.Component {
                             console.log(response);
                             alert("Error updating project. See console for details.");
                         } else {
+                            this.context.setDesignMode("project");
                             alert("Project successfully updated!");
                         }
                     }));
@@ -103,16 +104,34 @@ export class ReviewChanges extends React.Component {
 
     renderButtons = () => (
         <div className="d-flex flex-column">
+            {this.context.projectId > 0
+            ? (
+                <>
+                    <input
+                        type="button"
+                        className="btn btn-outline-danger btn-sm col-6"
+                        value="Update Project"
+                        onClick={this.updateProject}
+                    />
+                    <input
+                        type="button"
+                        className="btn btn-outline-danger btn-sm col-6"
+                        value="Discard Changes"
+                        onClick={() => this.context.setDesignMode("project")}
+                    />
+                </>
+            ) : (
+                <input
+                    type="button"
+                    className="btn btn-outline-danger btn-sm col-6"
+                    value="Create Project"
+                    onClick={this.createProject}
+                />
+            )}
             <input
                 type="button"
-                className="btn btn-outline-danger btn-sm col-6"
-                value="Create Project"
-                onClick={this.createProject}
-            />
-            <input
-                type="button"
-                className="btn btn-outline-green btn-sm col-6"
-                value="Edit Project"
+                className="btn btn-outline-lightgreen btn-sm col-6"
+                value="Continue Editing"
                 onClick={() => this.context.setDesignMode("wizard")}
             />
         </div>

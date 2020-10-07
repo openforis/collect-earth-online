@@ -121,7 +121,7 @@ class Project extends React.Component {
     getProjectImagery = (projectId) => fetch("/get-project-imagery?projectId=" + projectId)
         .then(response => response.ok ? response.json() : Promise.reject(response))
         .then(data => {
-            this.setProjectState({projectImageryList: data});
+            this.setProjectState({projectImageryList: data.map(imagery => imagery.id)});
         })
         .catch(response => {
             this.setProjectState({projectImageryList: []});
