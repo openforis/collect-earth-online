@@ -13,16 +13,24 @@ export class AOIMap extends React.Component {
     }
 
     componentDidMount() {
-        this.initProjectMap();
+        if (this.props.context.institutionImagery.length > 0) this.initProjectMap();
     }
 
     componentDidUpdate(prevProps, prevState) {
-        if (prevProps.context.boundary !== this.props.context.boundary) {
-            this.updateBoundary();
+        if (this.props.context.institutionImagery.length > 0
+            && this.props.context.institutionImagery !== prevProps.context.institutionImagery) {
+            this.initProjectMap();
         }
 
-        if (this.state.mapConfig && this.props.context.imageryId !== prevProps.context.imageryId) {
-            this.updateBaseMapImagery();
+        const mapChange = prevState.mapConfig !== this.state.mapConfig;
+        if (this.state.mapConfig) {
+            if (mapChange || prevProps.context.boundary !== this.props.context.boundary) {
+                this.updateBoundary();
+            }
+
+            if (mapChange || this.props.context.imageryId !== prevProps.context.imageryId) {
+                this.updateBaseMapImagery();
+            }
         }
 
         // if (this.state.mapConfig && this.state.mapConfig !== prevState.mapConfig) {
