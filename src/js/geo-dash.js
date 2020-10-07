@@ -17,7 +17,7 @@ import Highcharts from "highcharts";
 import HighchartsReact from "highcharts-react-official";
 import _ from "lodash";
 
-function getGatewayPath (widget, collectionName) {
+function getGatewayPath(widget, collectionName) {
     const fts = {
         "LANDSAT5": "Landsat5Filtered",
         "LANDSAT7": "Landsat7Filtered",
@@ -395,7 +395,7 @@ class Widget extends React.Component {
                 height="200"
                 className="img-responsive"
                 alt="Blank Widget"
-            />;
+                   />;
         }
     };
 
