@@ -169,7 +169,11 @@ export class NavigationBar extends React.Component {
                         page={this.state.page}
                     />
                 }
-                <nav className="navbar navbar-expand-lg navbar-light fixed-top py-0" style={{backgroundColor: "white"}} id="main-nav">
+                <nav
+                    className="navbar navbar-expand-lg navbar-light fixed-top py-0"
+                    style={{backgroundColor: "white", borderBottom: "1px solid black"}}
+                    id="main-nav"
+                >
                     <a className="navbar-brand pt-1 pb-1" href="/home">
                         <img className="img-fluid" id="ceo-site-logo" src="/img/ceo-logo.png" />
                     </a>

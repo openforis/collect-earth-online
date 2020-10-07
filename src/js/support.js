@@ -5,7 +5,7 @@ import {NavigationBar} from "./components/PageComponents";
 function Support() {
     return (
         <section id="support" className="container">
-            <div className="row justify-content-center">
+            <div className="row justify-content-center pt-3">
                 <div className="col-xl-7 col-lg-10">
                     <h1>Collect Earth Online Manuals</h1>
                     <div className="btn-group-vertical btn-block mb-4">

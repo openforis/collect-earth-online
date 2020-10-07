@@ -4,7 +4,7 @@ import {NavigationBar, LogoBanner} from "./components/PageComponents";
 
 function About() {
     return (
-        <section id="about" className="container">
+        <section id="about" className="container pt-3">
             <div className="col-xl-8 offset-xl-2 col-lg-10 justify-content-center">
                 <h1>About Collect Earth Online</h1>
                 <p>

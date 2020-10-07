@@ -50,6 +50,9 @@ class Collection extends React.Component {
 
     componentDidMount() {
         window.name = "_ceocollection";
+        fetch(`/release-plot-locks?projectId=${this.props.projectId}`,
+              {method: "POST"}
+        );
         this.getProjectData();
     }
 
@@ -58,14 +61,6 @@ class Collection extends React.Component {
         // Initialize after apis return.
         //
 
-        // Wait to get imagery list until project is loaded
-        if (this.state.currentProject.institution !== prevState.currentProject.institution) {
-            // release any locks in case of user hitting refresh
-            fetch(`/release-plot-locks?projectId=${this.state.currentProject.id}`,
-                  {method: "POST"}
-            );
-            this.getImageryList();
-        }
         // Initialize map when imagery list is returned
         if (this.state.imageryList.length > 0
             && this.state.currentProject.boundary
@@ -137,7 +132,7 @@ class Collection extends React.Component {
     setImageryAttributes = (newImageryAttributes) => this.setState({imageryAttributes: newImageryAttributes});
 
     getProjectData = () => {
-        Promise.all([this.getProjectById(), this.getProjectPlots(), this.checkForGeodash()])
+        Promise.all([this.getProjectById(), this.getProjectPlots(), this.checkForGeodash(), this.getImageryList()])
             .catch(response => {
                 console.log(response);
                 alert("Error retrieving the project info. See console for details.");
@@ -158,6 +153,7 @@ class Collection extends React.Component {
             }
         });
 
+    // TODO, this can easily be a part of get-project-by-id
     checkForGeodash = () => fetch(`/geo-dash/get-by-projid?projectId=${this.props.projectId}`)
         .then(response => response.ok ? response.json() : Promise.reject(response))
         .then(data => {
@@ -181,14 +177,17 @@ class Collection extends React.Component {
             }
         });
 
+    // TODO, this can easily be a part of get-project-by-id
     getImageryList = () => {
-        const {id} = this.state.currentProject;
-        fetch(`/get-project-imagery?projectId=${id}`)
+        fetch(`/get-project-imagery?projectId=${this.props.projectId}`)
             .then(response => response.ok ? response.json() : Promise.reject(response))
-            .then(data => this.setState({imageryList: data}))
-            .catch(response => {
-                console.log(response);
-                alert("Error retrieving the imagery list. See console for details.");
+            .then(data => {
+                if (data.length > 0) {
+                    this.setState({imageryList: data});
+                    return Promise.resolve("resolved");
+                } else {
+                    return Promise.reject("No project imagery found");
+                }
             });
     };
 
