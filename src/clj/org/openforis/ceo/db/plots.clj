@@ -22,7 +22,7 @@
 (defn- prepare-samples-array [plot-id project-id]
   (mapv (fn [{:keys [sample_id sample_geom sampleId geom value]}]
           (merge {:id         sample_id
-                  :sampleGeom sample_geom
+                  :sampleGeom (tc/jsonb->clj sample_geom)
                   :sampleId   sampleId ;TODO I don't think we distinguish between sample_id and sampleId so this could go away
                   :geom       (tc/jsonb->clj geom)}
                  (when (< 2 (count (str value)))
