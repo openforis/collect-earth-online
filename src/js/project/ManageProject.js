@@ -1,4 +1,5 @@
 import React from "react";
+import {convertSampleValuesToSurveyQuestions} from "../utils/surveyUtils";
 import {ProjectContext} from "./constants";
 
 import ReviewForm from "./ReviewForm";
@@ -6,8 +7,48 @@ import ReviewForm from "./ReviewForm";
 export default class ManageProject extends React.Component {
 
     componentDidMount() {
-        // get project info here
+        this.context.processModal("Loading Project Details", this.getProjectDetails);
     }
+
+    /// API Calls
+
+    getProjectDetails = () =>
+        Promise.all([this.getProjectById(this.context.projectId),
+                     this.getProjectImagery(this.context.projectId),
+                     this.getProjectPlots(this.context.projectId)])
+            .catch(response =>{
+                console.log(response);
+                alert("Error retrieving the project info. See console for details.");
+            })
+
+    getProjectById = (projectId) =>
+        fetch(`/get-project-by-id?projectId=${projectId}`)
+            .then(response => response.ok ? response.json() : Promise.reject(response))
+            .then(data => {
+                if (data === "") {
+                    alert("No project found with ID " + projectId + ".");
+                    window.location = "/home";
+                } else {
+                    const newSurveyQuestions = convertSampleValuesToSurveyQuestions(data.sampleValues);
+                    this.context.setProjectState({...data, surveyQuestions: newSurveyQuestions});
+                }
+            })
+            .catch(() => Promise.reject("Error retrieving the project."));
+
+    // TODO: just return with the project info
+    getProjectImagery = (projectId) =>
+        fetch("/get-project-imagery?projectId=" + projectId)
+            .then(response => response.ok ? response.json() : Promise.reject(response))
+            .then(data => {
+                this.context.setProjectState({projectImageryList: data.map(imagery => imagery.id)});
+            })
+            .catch(() => Promise.reject("Error retrieving the project imagery list."));
+
+    getProjectPlots = (projectId) =>
+        fetch(`/get-project-plots?projectId=${projectId}&max=300`)
+            .then(response => response.ok ? response.json() : Promise.reject(response))
+            .then(data => this.context.setProjectState({plots: data}))
+            .catch(() => Promise.reject("Error retrieving plot list. See console for details."));
 
     render() {
         return (
@@ -47,6 +88,7 @@ export default class ManageProject extends React.Component {
         );
     }
 }
+ManageProject.contextType = ProjectContext;
 
 export class ProjectStatsGroup extends React.Component {
     constructor(props) {

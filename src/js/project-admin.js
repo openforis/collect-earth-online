@@ -6,8 +6,6 @@ import {LoadingModal, NavigationBar} from "./components/PageComponents";
 import CreateProjectWizard from "./project/CreateProjectWizard";
 import ReviewChanges from "./project/ReviewChanges";
 import ManageProject from "./project/ManageProject";
-import {convertSampleValuesToSurveyQuestions} from "./utils/surveyUtils";
-
 
 class Project extends React.Component {
     constructor(props) {
@@ -61,14 +59,10 @@ class Project extends React.Component {
 
     /// Lifecycle Methods
 
-    // TODO: Consider pulling uri to see which mode to start in.
     // TODO: Consider include institutionId for review project to allow for parallel API calls
     componentDidMount() {
         if (this.props.projectId > 0) {
             this.setState({designMode: "manage"});
-            this.getProjectById(this.props.projectId);
-            this.getProjectImagery(this.props.projectId);
-            this.getProjectPlots(this.props.projectId);
         } else if (this.props.institutionId > 0) {
             this.setState({designMode: "wizard"});
             this.getInstitutionImagery(this.props.institutionId);
@@ -88,6 +82,10 @@ class Project extends React.Component {
                     : sampleDistribution;
             if (newSampleDistribution !== sampleDistribution) this.setState({sampleDistribution: newSampleDistribution});
         }
+
+        if (prevState.projectDetails.institution !== this.state.projectDetails.institution) {
+            this.getInstitutionImagery(this.state.projectDetails.institution);
+        }
     }
 
     /// Updating State
@@ -101,56 +99,19 @@ class Project extends React.Component {
 
     /// API Calls
 
-    getProjectById = (projectId) => fetch(`/get-project-by-id?projectId=${projectId}`)
-        .then(response => response.ok ? response.json() : Promise.reject(response))
-        .then(data => {
-            if (data === "") {
-                alert("No project found with ID " + projectId + ".");
-                window.location = "/home";
-            } else {
-                this.getInstitutionImagery(data.institution);
-                const newSurveyQuestions = convertSampleValuesToSurveyQuestions(data.sampleValues);
-                this.setProjectState({...data, surveyQuestions: newSurveyQuestions});
-            }
-        })
-        .catch(response => {
-            console.log(response);
-            alert("Error retrieving the project info. See console for details.");
-        });
-
-    // TODO: just return with the project info
-    getProjectImagery = (projectId) => fetch("/get-project-imagery?projectId=" + projectId)
-        .then(response => response.ok ? response.json() : Promise.reject(response))
-        .then(data => {
-            this.setProjectState({projectImageryList: data.map(imagery => imagery.id)});
-        })
-        .catch(response => {
-            this.setProjectState({projectImageryList: []});
-            console.log("Error retrieving the project imagery list: ", response);
-        });
-
-    getInstitutionImagery = (institutionId) => fetch(`/get-institution-imagery?institutionId=${institutionId}`)
-        .then(response => response.ok ? response.json() : Promise.reject(response))
-        .then(data => {
-            const sorted = [...data.filter(a => a.title.toLocaleLowerCase().includes("mapbox")),
-                            ...data.filter(a => !a.title.toLocaleLowerCase().includes("mapbox"))];
-            this.setState({institutionImagery: sorted});
-            this.setProjectState({imageryId: sorted[0].id});
-        })
-        .catch(response => {
-            console.log(response);
-            alert("Error retrieving the imagery list. See console for details.");
-        });
-
-    getProjectPlots = () => {
-        fetch(`/get-project-plots?projectId=${this.props.projectId}&max=300`)
+    getInstitutionImagery = (institutionId) =>
+        fetch(`/get-institution-imagery?institutionId=${institutionId}`)
             .then(response => response.ok ? response.json() : Promise.reject(response))
-            .then(data => this.setProjectState({plots: data}))
+            .then(data => {
+                const sorted = [...data.filter(a => a.title.toLocaleLowerCase().includes("mapbox")),
+                                ...data.filter(a => !a.title.toLocaleLowerCase().includes("mapbox"))];
+                this.setState({institutionImagery: sorted});
+                this.setProjectState({imageryId: sorted[0].id});
+            })
             .catch(response => {
                 console.log(response);
-                alert("Error retrieving plot list. See console for details.");
+                alert("Error retrieving the imagery list. See console for details.");
             });
-    };
 
     /// Functions
 
