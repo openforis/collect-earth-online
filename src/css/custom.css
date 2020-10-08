@@ -140,10 +140,6 @@ h4 {font-size: 0.5rem;}
     -ms-transition: background-color 100ms linear;
     transition: background-color 100ms linear;
 }
-.bg-lightgreen:hover{
-    background-color:#279B93!important;
-    color:white;
-}
 .bg-lightgray{
     background-color:#ECEEEF!important;
     -webkit-transition: background-color 100ms linear;

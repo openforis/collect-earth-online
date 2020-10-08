@@ -1,0 +1,22 @@
+[
+    {
+        "body": "Click 'Go to first plot' to start collecting.",
+        "img": "/img/goto.png"
+    },
+    {
+        "body": "You can also zoom and click around the plot overview to start collecting.",
+        "img": "/img/plots.png"
+    },
+    {
+        "body": "The red survey questions need to be answered.",
+        "img": "/img/questions.png"
+    },
+    {
+        "body": "Select one sample by clicking it. Select multiple samples by either shift-clicking each one or holding control and clicking and dragging a box around all of them.",
+        "img": "/img/samples.png"
+    },
+    {
+        "body": "Green survey questions are correctly answered. Click save when done answering all of the questions.",
+        "img": "/img/answers.png"
+    }
+]

@@ -1,6 +1,8 @@
 import "../../css/custom.css";
 
 import React from "react";
+import {SvgIcon} from "../utils/svgIcons";
+import {getLanguage, capitalizeFirst} from "../utils/generalUtils";
 
 function LogOutButton({userName, uri}) {
     const fullUri = uri + window.location.search;
@@ -34,53 +36,183 @@ function LogOutButton({userName, uri}) {
             </>;
 }
 
-export function NavigationBar ({userName, userId, children}) {
-    const uri = window.location.pathname;
-    const loggedOut = !userName || userName === "" || userName === "guest";
+class HelpSlideDialog extends React.Component {
+    constructor(props) {
+        super(props);
+        this.state = {
+            currentSlideIdx: 0,
+        };
+    }
 
-    return (
-        <>
-            <nav className="navbar navbar-expand-lg navbar-light fixed-top py-0" style={{backgroundColor: "white"}} id="main-nav">
-                <a className="navbar-brand pt-1 pb-1" href="/home">
-                    <img className="img-fluid" id="ceo-site-logo" src="/img/ceo-logo.png" />
-                </a>
-                <button
-                    className="navbar-toggler"
-                    type="button"
-                    data-toggle="collapse"
-                    data-target="#navbarSupportedContent"
-                    aria-controls="navbarSupportedContent"
-                    aria-expanded="false"
-                    aria-label="Toggle navigation"
-                >
-                    <span className="navbar-toggler-icon"></span>
-                </button>
-                <div className="collapse navbar-collapse" id="navbarSupportedContent">
-                    <ul className="navbar-nav mr-auto">
-                        {["Home", "About", "Support"].map(page =>
-                            <li className={"nav-item" + ("/" + page.toLowerCase() === uri && " active")} key={page}>
-                                <a className="nav-link" href={"/" + page.toLowerCase()}>{page}</a>
-                            </li>
-                        )}
-                        {!loggedOut &&
+    render() {
+        const {currentSlideIdx} = this.state;
+        const {body, img} = this.props.helpSlides[currentSlideIdx];
+        const isLastSlide = currentSlideIdx === this.props.helpSlides.length - 1;
+        return (
+            <div
+                style={{
+                    position: "fixed",
+                    zIndex: "100",
+                    left: "0",
+                    top: "0",
+                    width: "100%",
+                    height: "100%",
+                    backgroundColor: "rgba(0,0,0,0.4)",
+                }}
+                onClick={this.props.closeHelpMenu}
+            >
+                <div className="col-8 col-sm-12">
+                    <div
+                        className="overflow-hidden container-fluid d-flex flex-column"
+                        style={{
+                            backgroundColor: "white",
+                            border: "1.5px solid",
+                            borderRadius: "5px",
+                            maxHeight: "calc(100vh - 150px)",
+                            margin: "90px auto",
+                            width: "fit-content",
+                        }}
+                        onClick={e => e.stopPropagation()}
+                    >
+                        <div className="row justify-content-between bg-lightgreen p-2">
+                            <h2 className="ml-2">{capitalizeFirst(this.props.page)} Help</h2>
+                            <div onClick={this.props.closeHelpMenu}>
+                                <SvgIcon icon="close" size="2rem"/>
+                            </div>
+                        </div>
+                        <div className="d-flex" style={{minHeight: "0", minWidth: "0"}}>
+                            <div className="d-flex flex-column justify-content-between">
+                                <p className="p-3" style={{width: "22vw"}}>{body}</p>
+                                <div className="d-flex justify-content-end">
+                                    <button
+                                        type="button"
+                                        className="btn bg-lightgreen btn-sm m-2"
+                                        onClick={() => this.setState({currentSlideIdx: currentSlideIdx - 1})}
+                                        disabled={currentSlideIdx === 0}
+                                    >
+                                        Previous
+                                    </button>
+                                    <button
+                                        type="button"
+                                        className="btn bg-lightgreen btn-sm m-2"
+                                        onClick={() => {
+                                            if (isLastSlide) {
+                                                this.props.closeHelpMenu();
+                                            } else {
+                                                this.setState({currentSlideIdx: currentSlideIdx + 1});
+                                            }
+                                        }}
+                                    >
+                                        {isLastSlide ? "Finish" : "Next"}
+                                    </button>
+                                </div>
+                            </div>
+                            <div style={{height: "100%", width: "33vw"}}>
+                                <img
+                                    style={{maxHeight: "100%", maxWidth: "100%"}}
+                                    src={"locale/" + this.props.page + img}
+                                />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        );
+    }
+}
+
+export class NavigationBar extends React.Component {
+    constructor(props) {
+        super(props);
+        this.state = {
+            helpSlides: [],
+            showHelpMenu: false,
+            page: "",
+        };
+    }
+
+    componentDidMount() {
+        const page = window.location.pathname.slice(1);
+        fetch("/locale/help.json")
+            .then(response => response.ok ? response.json() : Promise.reject(response))
+            .then(data => {
+                const availableLanguages = data[page];
+                if (availableLanguages) this.getHelpSlides(availableLanguages, page);
+            })
+            .catch(error => console.log(error));
+    }
+
+    getHelpSlides = (availableLanguages, page) => {
+        fetch(`/locale/${page}/${getLanguage(availableLanguages)}.json`)
+            .then(res => res.json())
+            .then(data => this.setState({helpSlides: data, page: page}));
+    };
+
+    closeHelpMenu = () => this.setState({showHelpMenu: false});
+
+    render() {
+        const {userName, userId, children} = this.props;
+        const uri = window.location.pathname;
+        const loggedOut = !userName || userName === "" || userName === "guest";
+
+        return (
+            <>
+                {this.state.showHelpMenu
+                &&
+                    <HelpSlideDialog
+                        helpSlides={this.state.helpSlides}
+                        closeHelpMenu={this.closeHelpMenu}
+                        page={this.state.page}
+                    />
+                }
+                <nav className="navbar navbar-expand-lg navbar-light fixed-top py-0" style={{backgroundColor: "white"}} id="main-nav">
+                    <a className="navbar-brand pt-1 pb-1" href="/home">
+                        <img className="img-fluid" id="ceo-site-logo" src="/img/ceo-logo.png" />
+                    </a>
+                    <button
+                        className="navbar-toggler"
+                        type="button"
+                        data-toggle="collapse"
+                        data-target="#navbarSupportedContent"
+                        aria-controls="navbarSupportedContent"
+                        aria-expanded="false"
+                        aria-label="Toggle navigation"
+                    >
+                        <span className="navbar-toggler-icon"></span>
+                    </button>
+                    <div className="collapse navbar-collapse" id="navbarSupportedContent">
+                        <ul className="navbar-nav mr-auto">
+                            {["Home", "About", "Support"].map(page =>
+                                <li className={"nav-item" + ("/" + page.toLowerCase() === uri && " active")} key={page}>
+                                    <a className="nav-link" href={"/" + page.toLowerCase()}>{page}</a>
+                                </li>
+                            )}
+                            {!loggedOut &&
                             <li className={"nav-item" + ("/account" === uri && " active")}>
                                 <a className="nav-link" href={"/account?accountId=" + userId}>Account</a>
                             </li>
-                        }
-                        {userId === 1 &&
+                            }
+                            {userId === 1 &&
                             <li className={"nav-item" + ("/mailing-list" === uri && " active")}>
                                 <a className="nav-link" href={"/mailing-list"}>Mailing List</a>
                             </li>
-                        }
-                    </ul>
-                    <ul id="login-info" className="navbar-nav mr-0">
-                        <LogOutButton userName={userName} uri={uri} />
-                    </ul>
-                </div>
-            </nav>
-            {children}
-        </>
-    );
+                            }
+                        </ul>
+                        <ul id="login-info" className="navbar-nav mr-0">
+                            <LogOutButton userName={userName} uri={uri} />
+                        </ul>
+                        <div
+                            className="ml-3"
+                            onClick={() => this.setState({showHelpMenu: true})}
+                        >
+                            {this.state.helpSlides.length > 0 && <SvgIcon icon="help" size="2rem" color="purple"/>}
+                        </div>
+                    </div>
+                </nav>
+                {children}
+            </>
+        );
+    }
 }
 
 export class GeoDashNavigationBar extends React.Component {
