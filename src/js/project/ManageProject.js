@@ -6,7 +6,7 @@ import ReviewForm from "./ReviewForm";
 export default class ManageProject extends React.Component {
 
     componentDidMount() {
-
+        // get project info here
     }
 
     render() {
@@ -33,8 +33,12 @@ export default class ManageProject extends React.Component {
                             <ReviewForm/>
                         </div>
                     </div>
-                    <div className="col-4">
-                        <div className="d-flex flex-column h-100">
+                    <div
+                        className="col-4 px-0 mr-2 overflow-auto"
+                        style={{border: "1px solid black", borderRadius: "6px"}}
+                    >
+                        <h2 className="bg-lightgreen w-100 py-1">Project Management</h2>
+                        <div className="p-3">
                             <ProjectManagement/>
                         </div>
                     </div>
