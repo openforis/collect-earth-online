@@ -20,11 +20,11 @@
                          (call-sql "select_limited_project_plots" project-id max-plots)))))
 
 (defn- prepare-samples-array [plot-id project-id]
-  (mapv (fn [{:keys [sample_id point sampleid geom value]}]
-          (merge {:id       sample_id
-                  :point    point
-                  :sampleId sampleid ;TODO I don't think we distinguish between sample_id and sampleId so this could go away
-                  :geom     (tc/jsonb->clj geom)}
+  (mapv (fn [{:keys [sample_id sample_geom sampleid geom value]}]
+          (merge {:id         sample_id
+                  :sampleGeom sample_geom
+                  :sampleId   sampleid ;TODO I don't think we distinguish between sample_id and sampleId so this could go away
+                  :geom       geom}
                  (when (< 2 (count (str value)))
                    {:value (tc/jsonb->clj value)})))
         (call-sql "select_plot_samples" plot-id project-id)))
@@ -37,7 +37,7 @@
      :flagged       (< 0 (or flagged -1))
      :analyses      assigned
      :plotId        plotid
-     :geom          (tc/jsonb->clj geom)
+     :geom          geom
      :extraPlotInfo (dissoc (tc/jsonb->clj extra_plot_info) :gid :lat :lon :plotid)
      :samples       (prepare-samples-array plot_id project-id)}))
 

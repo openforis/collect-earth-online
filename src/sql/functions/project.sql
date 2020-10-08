@@ -511,10 +511,10 @@ CREATE OR REPLACE FUNCTION samples_from_plots_with_files(_project_id integer)
         INNER JOIN add_file_plots(_project_id) asp
             ON asp.plotId = st.plotId
     ), samplerows AS (
-        INSERT INTO samples (plot_rid, point, ext_id)
-        SELECT plot_uid, center as point, ext_id
+        INSERT INTO samples (plot_rid, sample_geom, ext_id)
+        SELECT plot_uid, center as sample_geom, ext_id
         FROM sample_tbl
-        RETURNING sample_uid, ext_id, point
+        RETURNING sample_uid, ext_id, sample_geom
     )
 
     SELECT COUNT(*)::integer
@@ -590,10 +590,10 @@ CREATE OR REPLACE FUNCTION copy_project_plots_samples(_old_project_uid integer, 
     ), combined AS (
         SELECT * from new_ordered inner join project_plots USING (rowid)
     ), inserting_samples AS (
-        INSERT INTO samples (plot_rid, point, ext_id)
-        SELECT plid, point, ext_id
+        INSERT INTO samples (plot_rid, sample_geom, ext_id)
+        SELECT plid, sample_geom, ext_id
         FROM (
-            SELECT plid, point, s.ext_id
+            SELECT plid, sample_geom, s.ext_id
             FROM combined c
             INNER JOIN samples s
                 ON c.plid_old = s.plot_rid
@@ -1365,13 +1365,13 @@ $$ LANGUAGE SQL;
 --
 
 -- Create project plot sample with no external file data
-CREATE OR REPLACE FUNCTION create_project_plot_sample(_plot_id integer, _sample_point jsonb)
+CREATE OR REPLACE FUNCTION create_project_plot_sample(_plot_id integer, _sample_geom jsonb)
  RETURNS integer AS $$
 
     INSERT INTO samples
-        (plot_rid, point)
+        (plot_rid, sample_geom)
     VALUES
-        (_plot_id, ST_SetSRID(ST_GeomFromGeoJSON(_sample_point), 4326))
+        (_plot_id, ST_SetSRID(ST_GeomFromGeoJSON(_sample_geom), 4326))
     RETURNING sample_uid
 
 $$ LANGUAGE SQL;
@@ -1380,7 +1380,7 @@ $$ LANGUAGE SQL;
 CREATE OR REPLACE FUNCTION select_plot_samples(_plot_id integer, _project_id integer)
  RETURNS TABLE (
     sample_id             integer,
-    point                 text,
+    sample_geom           text,
     ext_id                integer,
     plotId                integer,
     sampleId              integer,
@@ -1399,7 +1399,7 @@ CREATE OR REPLACE FUNCTION select_plot_samples(_plot_id integer, _project_id int
     )
 
     SELECT sample_uid,
-        ST_AsGeoJSON(point) as point,
+        ST_AsGeoJSON(sample_geom) as sample_geom,
         fd.ext_id,
         fd.sampleId,
         fd.sampleId,
@@ -1643,8 +1643,8 @@ CREATE OR REPLACE FUNCTION dump_project_sample_data(_project_id integer)
 
     SELECT p.plot_id,
        sample_uid,
-       ST_X(point) AS lon,
-       ST_Y(point) AS lat,
+       ST_X(sample_geom) AS lon, -- TODO: This will no longer be valid once we start adding geoms
+       ST_Y(sample_geom) AS lat,
        p.username,
        p.confidence,
        p.flagged,
