@@ -225,7 +225,7 @@ export class SurveyCollection extends React.Component {
             <ul style={{textAlign: "left"}}>
                 How To:
                 <li>To modify an existing feature, hold ctrl and click to drag</li>
-                <li>To delete a feature, right click on it</li>
+                <li>To delete a feature, hold ctrl and right click on it</li>
                 <li>To save changes, switch back to question mode and answer remaining questions</li>
             </ul>
         </div>

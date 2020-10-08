@@ -1124,7 +1124,7 @@ mercator.makeDraw = function (layer, source, drawTool) {
         source: source,
         type: drawTool,
         condition: (e) => {
-            if (e.originalEvent.buttons === 2) removeFeature(e);
+            if (e.originalEvent.buttons === 2 && e.originalEvent.ctrlKey) removeFeature(e);
             return e.originalEvent.buttons === 1;
         },
     });
@@ -1143,7 +1143,7 @@ mercator.makeSnap = function (source) {
 mercator.makeModify = function (source) {
     const modify = new Modify({
         source: source,
-        condition: (e) => e.originalEvent.ctrlKey,
+        condition: (e) => e.originalEvent.buttons === 1 && e.originalEvent.ctrlKey,
     });
     modify.set("title", "modify");
     return modify;
