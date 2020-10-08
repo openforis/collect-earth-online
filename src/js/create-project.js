@@ -6,10 +6,12 @@ import {NavigationBar} from "./components/PageComponents";
 import {ProjectInfo, ProjectAOI, ProjectOptions, PlotReview, SampleReview} from "./components/ProjectComponents";
 import {mercator, ceoMapStyles} from "./utils/mercator.js";
 import {SurveyDesign} from "./components/SurveyDesign";
-import {plotLimit, perPlotLimit, sampleLimit} from "./utils/projectUtils";
 import {convertSampleValuesToSurveyQuestions} from "./utils/surveyUtils";
-import {encodeFileAsBase64} from "./utils/fileUtils";
-import {formatNumberWithCommas, isNumber} from "./utils/textUtils";
+import {formatNumberWithCommas, isNumber, encodeFileAsBase64} from "./utils/generalUtils";
+
+const plotLimit = 5000;
+const perPlotLimit = 200;
+const sampleLimit = 50000;
 
 const blankProject = {
     archived: false,
