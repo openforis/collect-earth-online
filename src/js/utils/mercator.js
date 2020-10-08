@@ -1125,6 +1125,7 @@ mercator.makeDraw = function (layer, source, drawTool) {
         type: drawTool,
         condition: (e) => {
             if (e.originalEvent.buttons === 2 && e.originalEvent.ctrlKey) removeFeature(e);
+            if (e.originalEvent.buttons === 2) draw.finishDrawing();
             return e.originalEvent.buttons === 1;
         },
     });

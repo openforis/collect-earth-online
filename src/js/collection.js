@@ -1376,7 +1376,6 @@ class PlotInformation extends React.Component {
             </>
         );
     }
-
 }
 
 class ImageryOptions extends React.Component {
