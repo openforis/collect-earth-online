@@ -227,40 +227,38 @@ export function SampleReview() {
     return (
         <ProjectContext.Consumer>
             {({sampleDistribution, samplesPerPlot, sampleResolution, allowDrawnSamples}) =>
-                <SectionBlock title="Sample Design">
-                    <div id="sample-design">
-                        {sampleDistribution === "none"
-                ? (
-                    <h3>No samples are predefined.</h3>
-                ) : (
-                    <table id="plot-review-table" className="table table-sm">
-                        <tbody>
-                            <tr>
-                                <td className="w-80">Generated Sample Spatial Distribution</td>
-                                <td className="w-20 text-center">
-                                    <span className="badge badge-pill bg-lightgreen">{sampleDistribution} distribution</span>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td className="w-80">Samples Per Plot</td>
-                                <td className="w-20 text-center">
-                                    <span className="badge badge-pill bg-lightgreen">{samplesPerPlot} /plot</span>
-                                </td>
-                            </tr>
-                            {sampleDistribution === "gridded" &&
+                <div id="sample-review">
+                    {sampleDistribution === "none"
+                    ? (
+                        <h3>No samples are predefined.</h3>
+                    ) : (
+                        <table id="plot-review-table" className="table table-sm">
+                            <tbody>
+                                <tr>
+                                    <td className="w-80">Generated Sample Spatial Distribution</td>
+                                    <td className="w-20 text-center">
+                                        <span className="badge badge-pill bg-lightgreen">{sampleDistribution} distribution</span>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td className="w-80">Samples Per Plot</td>
+                                    <td className="w-20 text-center">
+                                        <span className="badge badge-pill bg-lightgreen">{samplesPerPlot} /plot</span>
+                                    </td>
+                                </tr>
+                                {sampleDistribution === "gridded" &&
                                 <tr>
                                     <td className="w-80">Sample Spacing</td>
                                     <td className="w-20 text-center">
                                         <span className="badge badge-pill bg-lightgreen">{sampleResolution} m</span>
                                     </td>
                                 </tr>
-                            }
-                        </tbody>
-                    </table>
-                )}
-                        {allowDrawnSamples && <h3>Users can draw additional samples at collection time.</h3>}
-                    </div>
-                </SectionBlock>
+                                }
+                            </tbody>
+                        </table>
+                    )}
+                    {allowDrawnSamples && <h3>Users can draw additional samples at collection time.</h3>}
+                </div>
             }
         </ProjectContext.Consumer>
     );

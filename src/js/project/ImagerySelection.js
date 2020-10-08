@@ -6,7 +6,6 @@ export function ImagerySelection() {
     return (
         <ProjectContext.Consumer>
             {({imageryId, institutionImagery, projectImageryList, setProjectState}) => {
-
                 const renderImageryRow = (imageryIds) => imageryIds.map((imagery, uid) =>
                     <div className="col-md-5 offset-md-1 form-check" key={uid}>
                         <input
@@ -76,7 +75,23 @@ export function ImagerySelection() {
 }
 
 export function ImageryReview() {
+    const findImageryName = (i) => "image " + i; // FIXME fill in stub
     return (
-        <ProjectContext.Consumer>{context => <div></div>}</ProjectContext.Consumer>
+        <ProjectContext.Consumer>
+            {context =>
+                <div>
+                    <div className="d-flex flex-column">
+                        <label><b>Default Imagery:</b> {findImageryName(context.imageryId)}</label>
+                        <label><b>Additional Imagery:</b></label>
+                        <ul>
+                            {context.projectImageryList
+                                .filter(i => i !== context.imageryId)
+                                .map(i =>
+                                    <li key={i}>{findImageryName(i)}</li>)}
+                        </ul>
+                    </div>
+                </div>
+            }
+        </ProjectContext.Consumer>
     );
 }

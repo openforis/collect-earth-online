@@ -13,7 +13,7 @@ export default class ManageProject extends React.Component {
         return (
             <div
                 id="review-project"
-                className="d-flex p-3 full-height align-items-center flex-column"
+                className="d-flex flex-column full-height align-items-center p-3"
             >
                 <div
                     style={{
@@ -29,7 +29,7 @@ export default class ManageProject extends React.Component {
                         style={{border: "1px solid black", borderRadius: "6px"}}
                     >
                         <h2 className="bg-lightgreen w-100 py-1">Project Details</h2>
-                        <div className="p-3">
+                        <div className="px-3 pb-3">
                             <ReviewForm/>
                         </div>
                     </div>

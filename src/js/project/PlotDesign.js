@@ -322,33 +322,32 @@ export function PlotReview() {
     return (
         <ProjectContext.Consumer>
             {({plotDistribution, numPlots, plotSpacing, plotShape, plotSize}) =>
-                <SectionBlock title="Plot Review">
-                    <div id="plot-design">
-                        <div className="row">
-                            <div id="plot-design-col1" className="col">
-                                <table id="plot-review-table" className="table table-sm">
-                                    <tbody>
-                                        <tr>
-                                            <td className="w-80">Generated Plot Spatial Distribution</td>
-                                            <td className="w-20 text-center">
-                                                <span className="badge badge-pill bg-lightgreen">{plotDistribution} distribution</span>
-                                            </td>
-                                        </tr>
-                                        <tr>
-                                            <td className="w-80">Number of plots</td>
-                                            <td className="w-20 text-center">
-                                                <span className="badge badge-pill bg-lightgreen">{numPlots} plots</span>
-                                            </td>
-                                        </tr>
-                                        {plotDistribution === "gridded" &&
+                <div id="plot-review">
+                    <div className="row">
+                        <div id="plot-review-col1" className="col">
+                            <table id="plot-review-table" className="table table-sm">
+                                <tbody>
+                                    <tr>
+                                        <td className="w-80">Generated Plot Spatial Distribution</td>
+                                        <td className="w-20 text-center">
+                                            <span className="badge badge-pill bg-lightgreen">{plotDistribution} distribution</span>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td className="w-80">Number of plots</td>
+                                        <td className="w-20 text-center">
+                                            <span className="badge badge-pill bg-lightgreen">{numPlots} plots</span>
+                                        </td>
+                                    </tr>
+                                    {plotDistribution === "gridded" &&
                                         <tr>
                                             <td className="w-80">Plot spacing</td>
                                             <td className="w-20 text-center">
                                                 <span className="badge badge-pill bg-lightgreen">{plotSpacing} m</span>
                                             </td>
                                         </tr>
-                                        }
-                                        {plotDistribution !== "shp" &&
+                                    }
+                                    {plotDistribution !== "shp" &&
                                         <>
                                             <tr>
                                                 <td className="w-80">Plot shape</td>
@@ -363,13 +362,12 @@ export function PlotReview() {
                                                 </td>
                                             </tr>
                                         </>
-                                        }
-                                    </tbody>
-                                </table>
-                            </div>
+                                    }
+                                </tbody>
+                            </table>
                         </div>
                     </div>
-                </SectionBlock>
+                </div>
             }
         </ProjectContext.Consumer>
     );

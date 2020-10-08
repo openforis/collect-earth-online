@@ -1,5 +1,6 @@
 import React from "react";
 
+import {capitalizeFirst} from "../utils/generalUtils";
 import {ProjectContext} from "./constants";
 
 export function Overview(props) {
@@ -32,8 +33,8 @@ export function Overview(props) {
                             onChange={e => setProjectState({description: e.target.value})}
                         />
                     </div>
-                    <h3>Privacy Level</h3>
-                    <div id="project-visibility" className="mb-3 small">
+                    <h3>Availability</h3>
+                    <div id="project-visibility" className="mb-3">
                         <div className="form-check form-check-inline">
                             <input
                                 id="privacy-public"
@@ -261,6 +262,29 @@ ProjectTemplateSelection.contextType = ProjectContext;
 
 export function OverviewReview() {
     return (
-        <ProjectContext.Consumer>{context => <div></div>}</ProjectContext.Consumer>
+        <ProjectContext.Consumer>
+            {context =>
+                <div className="d-flex flex-column">
+                    <label><b>Name:</b> {context.name}</label>
+                    <label><b>Description:</b> {context.description}</label>
+                    <label><b>Visibility:</b> {capitalizeFirst(context.privacyLevel)}</label>
+                    <label className="font-weight-bold">Project Options:</label>
+                    <ul>
+                        <li>
+                            <b>{context.projectOptions.showGEEScript ? "Show " : "Don't Show "}</b>
+                            GEE Script link on Collection Page
+                        </li>
+                        <li>
+                            <b>{context.projectOptions.showPlotInformation ? "Show " : "Don't Show "}</b>
+                            Extra Plot Columns on Collection Page
+                        </li>
+                        <li>
+                            <b>{context.projectOptions.autoLaunchGeoDash ? "Auto-launch " : "Don't Auto-launch "}</b>
+                            Geo-Dash Window
+                        </li>
+                    </ul>
+                </div>
+            }
+        </ProjectContext.Consumer>
     );
 }
