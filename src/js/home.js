@@ -3,6 +3,7 @@ import ReactDOM from "react-dom";
 import {NavigationBar} from "./components/PageComponents";
 import {mercator, ceoMapStyles} from "./utils/mercator.js";
 import {sortAlphabetically, UnicodeIcon} from "./utils/generalUtils";
+import {SvgIcon} from "./utils/svgIcons";
 
 class Home extends React.Component {
     constructor(props) {
@@ -189,10 +190,9 @@ class MapPanel extends React.Component {
                     className="bg-lightgray"
                     onClick={this.props.toggleSidebar}
                 >
-                    {this.props.showSidePanel ?
-                        <UnicodeIcon icon="leftCaret"/>
-                        :
-                        <UnicodeIcon icon="rightCaret"/>
+                    {this.props.showSidePanel
+                        ? <SvgIcon icon="leftDouble" size="1.25rem"/>
+                        : <SvgIcon icon="rightDouble" size="1.25rem"/>
                     }
                 </div>
                 <div id="home-map-pane" className="full-height"></div>
