@@ -57,7 +57,6 @@ export function SvgIcon({icon, color, size}) {
                 height: size,
                 maxHeight: size,
                 maxWidth: size,
-
                 width: size,
             }}
         >
