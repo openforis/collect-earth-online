@@ -2,7 +2,7 @@ import React from "react";
 
 import {SectionBlock} from "../components/FormComponents";
 import {formatNumberWithCommas, encodeFileAsBase64} from "../utils/generalUtils";
-import {ProjectContext} from "./ProjectContext";
+import {ProjectContext} from "./constants";
 import {plotLimit} from "./constants";
 import {mercator} from "../utils/mercator.js";
 

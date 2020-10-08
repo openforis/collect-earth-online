@@ -1,9 +1,9 @@
 import React from "react";
-import {ProjectContext} from "./ProjectContext";
-import {ReviewForm} from "./ReviewForm";
+import {ProjectContext} from "./constants";
+import ReviewForm from "./ReviewForm";
 import {mercator} from "../utils/mercator.js";
 
-export class ReviewChanges extends React.Component {
+export default class ReviewChanges extends React.Component {
     constructor(props) {
         super(props);
     }
@@ -95,7 +95,7 @@ export class ReviewChanges extends React.Component {
                             console.log(response);
                             alert("Error updating project. See console for details.");
                         } else {
-                            this.context.setDesignMode("project");
+                            this.context.setDesignMode("manage");
                             alert("Project successfully updated!");
                         }
                     }));
@@ -117,7 +117,7 @@ export class ReviewChanges extends React.Component {
                         type="button"
                         className="btn btn-outline-danger btn-sm col-6"
                         value="Discard Changes"
-                        onClick={() => this.context.setDesignMode("project")}
+                        onClick={() => this.context.setDesignMode("manage")}
                     />
                 </>
             ) : (

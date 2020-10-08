@@ -1,5 +1,5 @@
 import React from "react";
-import {ProjectContext} from "./ProjectContext";
+import {ProjectContext} from "./constants";
 import {ImagerySelection} from "./ImagerySelection";
 import {Overview} from "./Overview";
 import {PlotDesign} from "./PlotDesign";
@@ -9,11 +9,11 @@ import {SvgIcon} from "../utils/svgIcons";
 import {mercator} from "../utils/mercator.js";
 import {last, removeFromSet} from "../utils/generalUtils";
 import {plotLimit, perPlotLimit, sampleLimit} from "./constants";
-import {AOIMap} from "./AOIMap";
+import AOIMap from "./AOIMap";
 import {convertSampleValuesToSurveyQuestions} from "../utils/surveyUtils";
 import {SampleDesign} from "./SampleDesign";
 
-export class CreateProjectWizard extends React.Component {
+export default class CreateProjectWizard extends React.Component {
     constructor(props) {
         super(props);
 
@@ -103,7 +103,7 @@ export class CreateProjectWizard extends React.Component {
 
     componentDidMount() {
         this.getProjectList();
-        this.checkAllSteps();
+        if (this.context.changesMade) this.checkAllSteps();
     }
 
     /// API Calls
@@ -348,7 +348,7 @@ export class CreateProjectWizard extends React.Component {
         if (failedStep) {
             this.setState({step: failedStep[0]});
         } else {
-            this.context.setDesignMode("changes");
+            this.context.setDesignMode("review");
         }
     }
 

@@ -1,6 +1,6 @@
 import React from "react";
 
-import {ProjectContext} from "./ProjectContext";
+import {ProjectContext} from "./constants";
 
 export function Overview(props) {
     return (

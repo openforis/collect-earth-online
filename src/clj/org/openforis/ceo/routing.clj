@@ -129,7 +129,7 @@
    [:get  "/get-proj-plot"]                  {:handler     plots/get-project-plot
                                               :auth-type   :collect
                                               :auth-action :block}
-   [:post "/add-user-samples"]               {:handler      plots/add-user-samples
+   [:post "/add-user-samples"]               {:handler     plots/add-user-samples
                                               :auth-type   :collect
                                               :auth-action :block}
    [:post "/flag-plot"]                      {:handler     plots/flag-plot

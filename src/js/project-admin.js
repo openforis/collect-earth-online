@@ -1,11 +1,11 @@
 import React from "react";
 import ReactDOM from "react-dom";
 
-import {ProjectContext} from "./project/ProjectContext";
+import {ProjectContext} from "./project/constants";
 import {LoadingModal, NavigationBar} from "./components/PageComponents";
-import {CreateProjectWizard} from "./project/CreateProjectWizard";
-import {ReviewChanges} from "./project/ReviewChanges";
-import {ReviewProject} from "./project/ReviewProject";
+import CreateProjectWizard from "./project/CreateProjectWizard";
+import ReviewChanges from "./project/ReviewChanges";
+import ManageProject from "./project/ManageProject";
 import {convertSampleValuesToSurveyQuestions} from "./utils/surveyUtils";
 
 
@@ -47,15 +47,15 @@ class Project extends React.Component {
 
         this.modes = {
             wizard: CreateProjectWizard,
-            changes: ReviewChanges,
-            project: ReviewProject,
-            none: () => null,
+            review: ReviewChanges,
+            manage: ManageProject,
+            loading: () => null,
         };
 
         this.state = {
             projectDetails: this.blankProject,
             institutionImagery: [],
-            designMode: "none",
+            designMode: "loading",
         };
     }
 
@@ -65,7 +65,7 @@ class Project extends React.Component {
     // TODO: Consider include institutionId for review project to allow for parallel API calls
     componentDidMount() {
         if (this.props.projectId > 0) {
-            this.setState({designMode: "project"});
+            this.setState({designMode: "manage"});
             this.getProjectById(this.props.projectId);
             this.getProjectImagery(this.props.projectId);
             this.getProjectPlots(this.props.projectId);
@@ -165,11 +165,12 @@ class Project extends React.Component {
         return (
             <ProjectContext.Provider
                 value={{
-                    ...this.state.projectDetails,
-                    designMode:this.state.designMode,
-                    institutionImagery: this.state.institutionImagery,
                     institutionId: this.props.institutionId,
                     projectId: this.props.projectId,
+                    ...this.state.projectDetails,
+                    designMode:this.state.designMode,
+                    changesMade: this.state.projectDetails !== this.blankProject,
+                    institutionImagery: this.state.institutionImagery,
                     setProjectState: this.setProjectState,
                     setDesignMode: this.setDesignMode,
                     resetProject: this.resetProject,

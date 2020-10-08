@@ -1,9 +1,9 @@
 import React from "react";
-import {ProjectContext} from "./ProjectContext";
+import {ProjectContext} from "./constants";
 
-import {ReviewForm} from "./ReviewForm";
+import ReviewForm from "./ReviewForm";
 
-export class ReviewProject extends React.Component {
+export default class ManageProject extends React.Component {
 
     componentDidMount() {
 

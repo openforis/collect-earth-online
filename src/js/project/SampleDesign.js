@@ -2,7 +2,7 @@ import React from "react";
 
 import {SectionBlock} from "../components/FormComponents";
 import {formatNumberWithCommas, encodeFileAsBase64} from "../utils/generalUtils";
-import {ProjectContext} from "./ProjectContext";
+import {ProjectContext} from "./constants";
 import {perPlotLimit, sampleLimit} from "./constants";
 
 export class SampleDesign extends React.Component {

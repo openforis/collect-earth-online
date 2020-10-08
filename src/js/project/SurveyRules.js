@@ -1,5 +1,5 @@
 import React from "react";
-import {ProjectContext} from "./ProjectContext";
+import {ProjectContext} from "./constants";
 
 export class SurveyRuleDesign extends React.Component {
     constructor(props) {

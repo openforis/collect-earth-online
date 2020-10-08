@@ -3,7 +3,7 @@ import React from "react";
 import {SectionBlock} from "../components/FormComponents";
 import SurveyCardList from "./SurveyCardList";
 import {removeEnumerator} from "../utils/surveyUtils";
-import {ProjectContext} from "./ProjectContext";
+import {ProjectContext} from "./constants";
 
 const componentTypes = [
     {componentType: "button", dataType: "text"},
