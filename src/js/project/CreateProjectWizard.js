@@ -17,19 +17,21 @@ export default class CreateProjectWizard extends React.Component {
     constructor(props) {
         super(props);
 
+        this.overviewStep = {
+            title: "Project Overview",
+            description: "General information about the project",
+            StepComponent: () =>
+                <Overview
+                    clearTemplateSelection={this.clearTemplateSelection}
+                    setProjectTemplate={this.setProjectTemplate}
+                    templateProjectList={this.state.templateProjectList}
+                />,
+            helpDescription: "Introduction",
+            validate: this.validateOverview,
+        };
+
         this.steps = {
-            overview: {
-                title: "Project Overview",
-                description: "General information about the project",
-                StepComponent: () =>
-                    <Overview
-                        clearTemplateSelection={this.clearTemplateSelection}
-                        setProjectTemplate={this.setProjectTemplate}
-                        templateProjectList={this.state.templateProjectList}
-                    />,
-                helpDescription: "Introduction",
-                validate: this.validateOverview,
-            },
+            overview: this.overviewStep,
             imagery: {
                 title: "Imagery Selection",
                 description: "Imagery available to use during collection",
@@ -308,8 +310,12 @@ export default class CreateProjectWizard extends React.Component {
 
     /// Changing Step
 
+    getSteps = () => this.context.projectId > 0
+        ? {overview: this.steps.overview}
+        : this.steps;
+
     checkAllSteps = () =>
-        Object.entries(this.steps).forEach(([key, val]) =>
+        Object.entries(this.getSteps()).forEach(([key, val]) =>
             this.setState({
                 complete: val.validate.call(this).length > 0
                     ? removeFromSet(this.state.complete, key)
@@ -320,7 +326,7 @@ export default class CreateProjectWizard extends React.Component {
 
     tryChangeStep = (newStep, alertUser = true) => {
         const dev = false;
-        const errorList = this.steps[this.state.step].validate.call(this);
+        const errorList = this.getSteps()[this.state.step].validate.call(this);
         this.setState({
             complete: errorList.length > 0
                 ? removeFromSet(this.state.complete, this.state.step)
@@ -334,17 +340,17 @@ export default class CreateProjectWizard extends React.Component {
     };
 
     nextStep = () => {
-        const stepKeys = Object.keys(this.steps);
+        const stepKeys = Object.keys(this.getSteps());
         this.tryChangeStep(stepKeys[Math.min(stepKeys.length - 1, stepKeys.indexOf(this.state.step) + 1)]);
     }
 
     prevStep = () => {
-        const stepKeys = Object.keys(this.steps);
+        const stepKeys = Object.keys(this.getSteps());
         this.tryChangeStep(stepKeys[Math.max(0, stepKeys.indexOf(this.state.step) - 1)], false);
     }
 
     finish = () => {
-        const failedStep = Object.entries(this.steps).find(([key, val]) => val.validate.call(this).length > 0);
+        const failedStep = Object.entries(this.getSteps()).find(([key, val]) => val.validate.call(this).length > 0);
         if (failedStep) {
             this.setState({step: failedStep[0]});
         } else {
@@ -412,7 +418,7 @@ export default class CreateProjectWizard extends React.Component {
     /// Render Functions
 
     renderStep = (stepName) => {
-        const isLast = last(Object.keys(this.steps)) === stepName;
+        const isLast = last(Object.keys(this.getSteps())) === stepName;
         const isSelected = stepName === this.state.step;
         const stepComplete = this.state.complete.has(stepName);
         const stepColor = isSelected ? "blue" : stepComplete ? "green" : "gray";
@@ -421,7 +427,7 @@ export default class CreateProjectWizard extends React.Component {
                 id={stepName + "-button"}
                 style={{width: "10rem", display: "flex", flexDirection: "column", alignItems: "center"}}
                 key={stepName}
-                title={this.steps[stepName].description}
+                title={this.getSteps()[stepName].description}
                 onClick={() => this.tryChangeStep(stepName, false)}
             >
                 {isLast
@@ -450,7 +456,7 @@ export default class CreateProjectWizard extends React.Component {
                     {stepComplete && <SvgIcon icon="check" size="1.25rem" color="white"/>}
                 </div>
                 <label style={{color: stepColor, fontWeight: "bold"}}>
-                    {this.steps[stepName].title}
+                    {this.getSteps()[stepName].title}
                 </label>
             </div>
         );
@@ -458,13 +464,13 @@ export default class CreateProjectWizard extends React.Component {
 
     renderStepBar = () => (
         <div style={{display: "flex", margin: ".75rem"}}>
-            {Object.keys(this.steps).map(s => this.renderStep(s))}
+            {Object.keys(this.getSteps()).map(s => this.renderStep(s))}
         </div>
     );
 
     render() {
-        const {description, StepComponent, helpDescription, StepHelpComponent} = this.steps[this.state.step];
-        const isLast = last(Object.keys(this.steps)) === this.state.step;
+        const {description, StepComponent, helpDescription, StepHelpComponent} = this.getSteps()[this.state.step];
+        const isLast = last(Object.keys(this.getSteps())) === this.state.step;
         return (
             <div
                 id="wizard"
@@ -501,7 +507,7 @@ export default class CreateProjectWizard extends React.Component {
                             <NavigationButtons
                                 nextStep={isLast ? this.finish : this.nextStep}
                                 prevStep={this.prevStep}
-                                canFinish={Object.keys(this.steps).length === this.state.complete.size || isLast}
+                                canFinish={Object.keys(this.getSteps()).length === this.state.complete.size || isLast}
                                 finish={this.finish}
                             />
                         </div>

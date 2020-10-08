@@ -13,9 +13,10 @@ export function Overview(props) {
                 setProjectState,
                 projectOptions,
                 projectOptions: {showGEEScript, showPlotInformation, autoLaunchGeoDash},
+                projectId,
             }) =>
                 <div id="project-info">
-                    <ProjectTemplateSelection {...props}/>
+                    {projectId < 0 && <ProjectTemplateSelection {...props}/>}
                     <div className="form-group">
                         <h3 htmlFor="project-name">Name</h3>
                         <input
