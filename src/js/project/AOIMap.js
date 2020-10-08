@@ -2,8 +2,6 @@ import React from "react";
 
 import {mercator} from "../utils/mercator.js";
 
-// Need context projectDetails: {}, imageryList: []
-// Need props plotList: [], selectedImagery, boundary?
 export class AOIMap extends React.Component {
     constructor(props) {
         super(props);
@@ -28,8 +26,16 @@ export class AOIMap extends React.Component {
                 this.updateBoundary();
             }
 
-            if (mapChange || this.props.context.imageryId !== prevProps.context.imageryId) {
+            if (mapChange || prevProps.context.imageryId !== this.props.context.imageryId) {
                 this.updateBaseMapImagery();
+            }
+
+            if (mapChange || prevProps.context.plots !== this.props.context.plots) {
+                if (this.props.context.plots.length > 0) {
+                    this.showPlots();
+                } else {
+                    this.hidePlots();
+                }
             }
         }
 
@@ -111,49 +117,54 @@ export class AOIMap extends React.Component {
         mercator.disableDragBoxDraw(this.state.mapConfig);
     }
 
-    showBounds = () => {
-        const {latMin, latMax, lonMin, lonMax} = this.state.coordinates;
-        const geoJsonBoundary = {
-            type: "Polygon",
-            coordinates: [[
-                [lonMin, latMin],
-                [lonMin, latMax],
-                [lonMax, latMax],
-                [lonMax, latMin],
-                [lonMin, latMin],
-            ]],
-        };
-        mercator.removeLayerById(this.state.mapConfig, "currentAOI");
-        mercator.setLayerVisibilityByLayerId(this.state.mapConfig, "dragBoxLayer", false);
-        // Display a bounding box with the project's AOI on the map and zoom to it
-        if (this.hasValidBounds()) {
-            mercator.addVectorLayer(this.state.mapConfig,
-                                    "currentAOI",
-                                    mercator.geometryToVectorSource(mercator.parseGeoJson(geoJsonBoundary, true)),
-                                    mercator.ceoMapStyles("geom", "yellow"));
-            mercator.zoomMapToLayer(this.state.mapConfig, "currentAOI");
-        }
-    }
+    // showBounds = () => {
+    //     const {latMin, latMax, lonMin, lonMax} = this.state.coordinates;
+    //     const geoJsonBoundary = {
+    //         type: "Polygon",
+    //         coordinates: [[
+    //             [lonMin, latMin],
+    //             [lonMin, latMax],
+    //             [lonMax, latMax],
+    //             [lonMax, latMin],
+    //             [lonMin, latMin],
+    //         ]],
+    //     };
+    //     mercator.removeLayerById(this.state.mapConfig, "currentAOI");
+    //     mercator.setLayerVisibilityByLayerId(this.state.mapConfig, "dragBoxLayer", false);
+    //     // Display a bounding box with the project's AOI on the map and zoom to it
+    //     if (this.hasValidBounds()) {
+    //         mercator.addVectorLayer(this.state.mapConfig,
+    //                                 "currentAOI",
+    //                                 mercator.geometryToVectorSource(mercator.parseGeoJson(geoJsonBoundary, true)),
+    //                                 mercator.ceoMapStyles("geom", "yellow"));
+    //         mercator.zoomMapToLayer(this.state.mapConfig, "currentAOI");
+    //     }
+    // }
 
-    showTemplateBounds = () => {
-        mercator.disableDragBoxDraw(this.state.mapConfig);
-        const boundaryExtent = mercator.parseGeoJson(this.props.context.boundary, false).getExtent();
-        this.setState({
-            coordinates: {
-                lonMin: boundaryExtent[0],
-                latMin: boundaryExtent[1],
-                lonMax: boundaryExtent[2],
-                latMax: boundaryExtent[3],
-            },
-        }, this.showBounds);
-    };
+    // showTemplateBounds = () => {
+    //     mercator.disableDragBoxDraw(this.state.mapConfig);
+    //     const boundaryExtent = mercator.parseGeoJson(this.props.context.boundary, false).getExtent();
+    //     this.setState({
+    //         coordinates: {
+    //             lonMin: boundaryExtent[0],
+    //             latMin: boundaryExtent[1],
+    //             lonMax: boundaryExtent[2],
+    //             latMax: boundaryExtent[3],
+    //         },
+    //     }, this.showBounds);
+    // };
 
-    showTemplatePlots = () => {
+    showPlots = () => {
+        mercator.removeLayerById(this.state.mapConfig, "projectPlots");
         mercator.addVectorLayer(this.state.mapConfig,
                                 "projectPlots",
-                                mercator.plotsToVectorSource(this.state.plotList),
-                                mercator.ceoMapStyles(this.state.projectDetails.plotShape, "yellow"));
+                                mercator.plotsToVectorSource(this.props.context.plots),
+                                mercator.ceoMapStyles(this.props.context.plotShape, "yellow"));
     };
+
+    hidePlots = () => {
+        mercator.removeLayerById(this.state.mapConfig, "projectPlots");
+    }
 
     render() {
         return <div id="project-map" style={{height: "25rem", width: "100%"}}>

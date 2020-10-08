@@ -92,8 +92,9 @@ export class CreateProjectWizard extends React.Component {
 
         this.state = {
             step: "overview",
-            complete: new Set(), // TODO remove pages if changes cause them to not be complete
+            complete: new Set(),
             templateProject: {},
+            templatePlots: [],
             templateProjectList: [{id: -1, name: "Loading..."}],
         };
     }
@@ -146,17 +147,20 @@ export class CreateProjectWizard extends React.Component {
             });
     };
 
-    getProjectPlots = () => {
-        fetch(`/get-project-plots?projectId=${this.props.projectId}&max=300`)
+    getProjectPlots = (projectId) => {
+        fetch(`/get-project-plots?projectId=${projectId}&max=300`)
             .then(response => response.ok ? response.json() : Promise.reject(response))
-            .then(data => this.setState({plotList: data}))
+            .then(data => {
+                this.setState({templatePlots: data});
+                this.context.setProjectState({plots: data});
+            })
             .catch(response => {
                 console.log(response);
                 alert("Error retrieving plot list. See console for details.");
             });
     };
 
-    // TODO: just return with the project info
+    // TODO: just return with the project info because we only need the integer ID
     // TODO: Test with project from different institution
     getProjectImagery = (projectId) => {
         fetch("/get-project-imagery?projectId=" + projectId)
@@ -171,8 +175,6 @@ export class CreateProjectWizard extends React.Component {
                 }
             });
     };
-
-    getProjectPlots = () => null
 
     /// Validations
 
@@ -384,6 +386,26 @@ export class CreateProjectWizard extends React.Component {
             });
         } else {
             this.setState({useTemplatePlots: false});
+        }
+    };
+
+    toggleTemplatePlots = () => {
+        if (this.context.useTemplatePlots) {
+            this.context.setProjectState({useTemplatePlots: false, plots: []});
+        } else {
+            this.context.setProjectState({
+                useTemplatePlots: true,
+                plots: this.state.templatePlots,
+                boundary: this.state.templateProject.boundary,
+                numPlots: this.state.templateProject.numPlots,
+                plotDistribution: this.state.templateProject.plotDistribution,
+                plotShape: this.state.templateProject.plotShape,
+                plotSize: this.state.templateProject.plotSize,
+                plotSpacing: this.state.templateProject.plotSpacing,
+                sampleDistribution: this.state.templateProject.sampleDistribution,
+                sampleResolution: this.state.templateProject.sampleResolution,
+                samplesPerPlot: this.state.templateProject.samplesPerPlot,
+            });
         }
     };
 

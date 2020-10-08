@@ -42,7 +42,7 @@ class Project extends React.Component {
             useTemplateWidgets: false,
             useTemplatePlots: false,
             projectImageryList: [],
-            plotsForPreview: [], // Will need to add the AOI map to sample selection for this to be useful
+            plots: [],
         };
 
         this.modes = {
@@ -68,6 +68,7 @@ class Project extends React.Component {
             this.setState({designMode: "project"});
             this.getProjectById(this.props.projectId);
             this.getProjectImagery(this.props.projectId);
+            this.getProjectPlots(this.props.projectId);
         } else if (this.props.institutionId > 0) {
             this.setState({designMode: "wizard"});
             this.getInstitutionImagery(this.props.institutionId);
@@ -140,6 +141,16 @@ class Project extends React.Component {
             console.log(response);
             alert("Error retrieving the imagery list. See console for details.");
         });
+
+    getProjectPlots = () => {
+        fetch(`/get-project-plots?projectId=${this.props.projectId}&max=300`)
+            .then(response => response.ok ? response.json() : Promise.reject(response))
+            .then(data => this.setProjectState({plots: data}))
+            .catch(response => {
+                console.log(response);
+                alert("Error retrieving plot list. See console for details.");
+            });
+    };
 
     /// Functions
 

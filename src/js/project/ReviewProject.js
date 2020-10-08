@@ -3,38 +3,45 @@ import {ProjectContext} from "./ProjectContext";
 
 import {ReviewForm} from "./ReviewForm";
 
-export function ReviewProject() {
-    return (
-        <div
-            id="review-project"
-            className="d-flex p-3 full-height align-items-center flex-column"
-        >
+export class ReviewProject extends React.Component {
+
+    componentDidMount() {
+
+    }
+
+    render() {
+        return (
             <div
-                style={{
-                    display: "flex",
-                    height: "100%",
-                    justifyContent: "center",
-                    width: "100%",
-                    overflow: "auto",
-                }}
+                id="review-project"
+                className="d-flex p-3 full-height align-items-center flex-column"
             >
                 <div
-                    className="col-7 px-0 mr-2 overflow-auto"
-                    style={{border: "1px solid black", borderRadius: "6px"}}
+                    style={{
+                        display: "flex",
+                        height: "100%",
+                        justifyContent: "center",
+                        width: "100%",
+                        overflow: "auto",
+                    }}
                 >
-                    <h2 className="bg-lightgreen w-100 py-1">Project Details</h2>
-                    <div className="p-3">
-                        <ReviewForm/>
+                    <div
+                        className="col-7 px-0 mr-2 overflow-auto"
+                        style={{border: "1px solid black", borderRadius: "6px"}}
+                    >
+                        <h2 className="bg-lightgreen w-100 py-1">Project Details</h2>
+                        <div className="p-3">
+                            <ReviewForm/>
+                        </div>
                     </div>
-                </div>
-                <div className="col-4">
-                    <div className="d-flex flex-column h-100">
-                        <ProjectManagement/>
+                    <div className="col-4">
+                        <div className="d-flex flex-column h-100">
+                            <ProjectManagement/>
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
-    );
+        );
+    }
 }
 
 export class ProjectStatsGroup extends React.Component {
@@ -183,7 +190,6 @@ class ProjectStats extends React.Component {
         : <p>Loading...</p>;
     }
 }
-
 
 class ProjectManagement extends React.Component {
     constructor(props) {
