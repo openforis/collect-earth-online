@@ -322,7 +322,6 @@ class ProjectManagement extends React.Component {
         const {button, update, description, canEdit} = this.projectStates[this.context.availability] || {};
         return (
             <div id="project-management" className="d-flex flex-column">
-                <h2 className="px-0">Project Management</h2>
                 <p>This project is <b>{this.context.availability}</b>. {description}</p>
                 <div className="d-flex flex-column align-items-end">
                     <h3 className="my-2">Modify Project Details</h3>
