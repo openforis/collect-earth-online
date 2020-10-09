@@ -1,11 +1,12 @@
 import React from "react";
 import ReactDOM from "react-dom";
 
-import {ProjectContext} from "./project/constants";
 import {LoadingModal, NavigationBar} from "./components/PageComponents";
 import CreateProjectWizard from "./project/CreateProjectWizard";
 import ReviewChanges from "./project/ReviewChanges";
 import ManageProject from "./project/ManageProject";
+
+import {ProjectContext} from "./project/constants";
 
 class Project extends React.Component {
     constructor(props) {

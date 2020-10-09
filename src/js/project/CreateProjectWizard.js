@@ -1,17 +1,18 @@
 import React from "react";
-import {ProjectContext} from "./constants";
+
 import {ImagerySelection} from "./ImagerySelection";
 import {Overview} from "./Overview";
 import {PlotDesign} from "./PlotDesign";
 import {SurveyQuestionDesign} from "./SurveyQuestions";
 import {SurveyRuleDesign} from "./SurveyRules";
+import AOIMap from "./AOIMap";
+import {SampleDesign} from "./SampleDesign";
+
 import {SvgIcon} from "../utils/svgIcons";
 import {mercator} from "../utils/mercator.js";
 import {last, removeFromSet} from "../utils/generalUtils";
-import {plotLimit, perPlotLimit, sampleLimit} from "./constants";
-import AOIMap from "./AOIMap";
 import {convertSampleValuesToSurveyQuestions} from "../utils/surveyUtils";
-import {SampleDesign} from "./SampleDesign";
+import {ProjectContext, plotLimit, perPlotLimit, sampleLimit} from "./constants";
 
 export default class CreateProjectWizard extends React.Component {
     constructor(props) {
@@ -104,13 +105,13 @@ export default class CreateProjectWizard extends React.Component {
     /// Lifecycle Methods
 
     componentDidMount() {
-        this.getProjectList();
+        this.getTemplateProjects();
         if (this.context.changesMade) this.checkAllSteps();
     }
 
     /// API Calls
 
-    getProjectList = () => {
+    getTemplateProjects = () => {
         fetch("/get-template-projects")
             .then(response => response.ok ? response.json() : Promise.reject(response))
             .then(data => this.setState({templateProjectList: data}))
@@ -120,63 +121,62 @@ export default class CreateProjectWizard extends React.Component {
             });
     };
 
-    getTemplateProject = (projectId) => {
-        Promise.all([this.getTemplateById(projectId), this.getProjectPlots(projectId), this.getProjectImagery(projectId)])
+    getTemplateProject = (projectId) =>
+        Promise.all([this.getTemplateById(projectId),
+                     this.getProjectPlots(projectId),
+                     this.getProjectImagery(projectId)])
+            .then(() => this.context.setProjectState({templateProjectId: projectId}))
             .catch(response => {
                 console.log(response);
-                alert("Error getting template info. See console for details.");
+                this.setState({templatePlots: [], templateProject: {}});
+                this.context.setProjectState({templateProjectId: -1});
+                alert("Error getting complete template info. See console for details.");
             });
-    }
 
-    getTemplateById = (projectId) => {
+
+    getTemplateById = (projectId) =>
         fetch(`/get-template-by-id?projectId=${projectId}`)
             .then(response => response.ok ? response.json() : Promise.reject(response))
             .then(data => {
-                if (data === "") {
-                    this.setState({templateProject: {}});
-                    Promise.reject("Get project info failed.");
-                } else {
-                    const newSurveyQuestions = convertSampleValuesToSurveyQuestions(data.sampleValues);
-                    this.setState({templateProject: {...data, surveyQuestions: newSurveyQuestions}});
-                    this.context.setProjectState({
-                        ...data,
-                        surveyQuestions: newSurveyQuestions,
-                        templateProjectId: projectId,
-                        useTemplatePlots: true,
-                        useTemplateWidgets: true,
-                    }, this.checkAllSteps);
-                }
+                const newSurveyQuestions = convertSampleValuesToSurveyQuestions(data.sampleValues);
+                this.setState({templateProject: {...data, surveyQuestions: newSurveyQuestions}});
+                this.context.setProjectState({
+                    ...data,
+                    surveyQuestions: newSurveyQuestions,
+                    templateProjectId: projectId,
+                    useTemplatePlots: true,
+                    useTemplateWidgets: true,
+                }, this.checkAllSteps);
+            })
+            .catch(error => {
+                console.log(error);
+                Promise.reject("Get project info failed.");
             });
-    };
 
-    getProjectPlots = (projectId) => {
+    getProjectPlots = (projectId) =>
         fetch(`/get-project-plots?projectId=${projectId}&max=300`)
             .then(response => response.ok ? response.json() : Promise.reject(response))
             .then(data => {
                 this.setState({templatePlots: data});
                 this.context.setProjectState({plots: data});
             })
-            .catch(response => {
-                console.log(response);
-                alert("Error retrieving plot list. See console for details.");
+            .catch(error => {
+                console.log(error);
+                Promise.reject("Error retrieving plot list. See console for details.");
             });
-    };
 
     // TODO: just return with the project info because we only need the integer ID
     // TODO: Test with project from different institution
-    getProjectImagery = (projectId) => {
+    getProjectImagery = (projectId) =>
         fetch("/get-project-imagery?projectId=" + projectId)
             .then(response => response.ok ? response.json() : Promise.reject(response))
             .then(data => {
-                if (data === "") {
-                    this.setState({projectImageryList: []});
-                    Promise.reject("Get project imagery failed.");
-                } else {
-                    this.setState({projectImageryList: data.map(imagery => imagery.id)});
-
-                }
+                this.context.setProjectState({projectImageryList: data.map(imagery => imagery.id)});
+            })
+            .catch(error => {
+                console.log(error);
+                Promise.reject("Error retrieving imagery list. See console for details.");
             });
-    };
 
     /// Validations
 
@@ -366,33 +366,9 @@ export default class CreateProjectWizard extends React.Component {
         this.setState({templateProject: {}, complete: new Set()});
     }
 
-    // TODO: I dont think we need a wraper function here
     setProjectTemplate = (newTemplateId) => {
-        this.getTemplateProject(newTemplateId);
-    };
-
-    toggleTemplatePlots = () => {
-        if (!this.state.useTemplatePlots) {
-            const templateProject = this.state.projectList.find(p => p.id === this.state.projectDetails.id);
-            this.setState({
-                useTemplatePlots: true,
-                // When user re-selects use template plots, revert project plot design values back to template but keep other data.
-                projectDetails: {
-                    ...this.state.projectDetails,
-                    boundary: templateProject.boundary,
-                    numPlots: templateProject.numPlots,
-                    plotDistribution: templateProject.plotDistribution,
-                    plotShape: templateProject.plotShape,
-                    plotSize: templateProject.plotSize,
-                    plotSpacing: templateProject.plotSpacing,
-                    sampleDistribution: templateProject.sampleDistribution,
-                    sampleResolution: templateProject.sampleResolution,
-                    samplesPerPlot: templateProject.samplesPerPlot,
-                },
-            });
-        } else {
-            this.setState({useTemplatePlots: false});
-        }
+        this.context.processModal("Loading Template Information",
+                                  () => this.getTemplateProject(newTemplateId));
     };
 
     toggleTemplatePlots = () => {
