@@ -783,7 +783,7 @@ mercator.zoomMapToLayer = function (mapConfig, layerId, padding) {
 
 // [Pure] Returns a style object that displays a circle with the
 // specified radius, fillColor, borderColor, and borderWidth. text
-// and textFillColor are used to overlay text on the circle.
+// is used to overlay text on the circle.
 mercator.getClusterStyle = function (radius, fillColor, borderColor, borderWidth, text) {
     return new Style({
         image: new CircleStyle({
@@ -803,11 +803,11 @@ mercator.getClusterStyle = function (radius, fillColor, borderColor, borderWidth
 
 // [Pure] Returns a style object that displays a circle with the
 // specified radius, fillColor, borderColor, and borderWidth.
-mercator.getCircleStyle = function (radius, fillColor, borderColor, borderWidth) {
+mercator.getCircleStyle = function (radius, borderColor, borderWidth, fillColor = null) {
     return new Style({
         image: new CircleStyle({
             radius: radius,
-            fill: fillColor ? new Fill({color: fillColor}) : null,
+            fill: new Fill({color: fillColor || "rgba(255, 255, 255, 0)"}),
             stroke: new Stroke({
                 color: borderColor,
                 width: borderWidth,
@@ -820,13 +820,13 @@ mercator.getCircleStyle = function (radius, fillColor, borderColor, borderWidth)
 // specified number of points, radius, rotation, fillColor,
 // borderColor, and borderWidth. A triangle has 3 points. A square has
 // 4 points with rotation pi/4. A star has 5 points.
-mercator.getRegularShapeStyle = function (radius, points, rotation, fillColor, borderColor, borderWidth) {
+mercator.getRegularShapeStyle = function (radius, points, rotation, borderColor, borderWidth, fillColor = null) {
     return new Style({
         image: new RegularShape({
             radius: radius,
             points: points,
             rotation: rotation || 0,
-            fill: fillColor ? new Fill({color: fillColor}) : null,
+            fill: new Fill({color: fillColor || "rgba(255, 255, 255, 0)"}),
             stroke: new Stroke({
                 color: borderColor,
                 width: borderWidth,
@@ -837,9 +837,9 @@ mercator.getRegularShapeStyle = function (radius, points, rotation, fillColor, b
 
 // [Pure] Returns a style object that displays any shape to which it
 // is applied wth the specified fillColor, borderColor, and borderWidth.
-mercator.getPolygonStyle = function (fillColor, borderColor, borderWidth) {
+mercator.getPolygonStyle = function (borderColor, borderWidth, fillColor = null) {
     return new Style({
-        fill: fillColor ? new Fill({color: fillColor}) : new Fill({color: "rgba(255, 255, 255, 0)"}),
+        fill: new Fill({color: fillColor || "rgba(255, 255, 255, 0)"}),
         stroke: new Stroke({
             color: borderColor,
             width: borderWidth,
@@ -857,12 +857,12 @@ const ceoMapPresets = {
 };
 
 const ceoMapStyleFunctions = {
-    polygon: color => mercator.getPolygonStyle(null, color, 3),
-    selectedpolygon: color => mercator.getPolygonStyle(null, color, 6),
-    point: color => mercator.getCircleStyle(6, null, color, 2),
-    selectedpoint: color => mercator.getCircleStyle(6, color, color, 2),
-    circle: color => mercator.getCircleStyle(5, null, color, 2),
-    square: color => mercator.getRegularShapeStyle(6, 4, Math.PI / 4, null, (color), 2),
+    polygon: color => mercator.getPolygonStyle(color, 3),
+    answeredpolygon: color => mercator.getPolygonStyle(color, 6),
+    point: color => mercator.getCircleStyle(6, color, 2),
+    answeredpoint: color => mercator.getCircleStyle(6, color, 2, color),
+    circle: color => mercator.getCircleStyle(5, color, 2),
+    square: color => mercator.getRegularShapeStyle(6, 4, Math.PI / 4, color, 2),
     cluster: numPlots => mercator.getClusterStyle(10, "#3399cc", "#ffffff", 1, numPlots),
 };
 
@@ -1094,7 +1094,7 @@ mercator.samplesToVectorSource = function (samples) {
         function (sample) {
             return new Feature({
                 sampleId: sample.id,
-                geometry: mercator.parseGeoJson(sample.geom || sample.sample_geom, true),
+                geometry: mercator.parseGeoJson(sample.geom || sample.sampleGeom, true),
             });
         }
     );
@@ -1125,7 +1125,7 @@ mercator.getAllFeatures = function (mapConfig, layerId) {
 // border and filled with the passed in color. If color is null, the
 // circle will be filled with gray.
 mercator.highlightSampleGeometry = function (sample, color) {
-    sample.setStyle(mercator.ceoMapStyles("selected" + sample.getGeometry().getType(), color));
+    sample.setStyle(mercator.ceoMapStyles("answered" + sample.getGeometry().getType(), color));
     return sample;
 };
 
