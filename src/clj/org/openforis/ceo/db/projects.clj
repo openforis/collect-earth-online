@@ -411,7 +411,7 @@
                                sample-resolution]
   ;; TODO Right now you have to have a sample shape or csv file if you have a plot shape file.
   ;;      Update create random / gridded to work on boundary so any plot type can have random, gridded, center.
-  (doseq [[x y] (condp = sample-distribution
+  (doseq [[x y] (case sample-distribution
                   "center"
                   [plot-center]
 
@@ -456,7 +456,7 @@
               ext-sample-count (:sample_count counts)]
           (check-plot-limits ext-plot-count
                              50000.0
-                             (condp = sample-distribution
+                             (case sample-distribution
                                "gridded" (count-gridded-sample-set plot-size sample-resolution)
                                "random"  samples-per-plot
                                "center"  1.0
@@ -490,7 +490,7 @@
                            (count-gridded-points left bottom right top plot-spacing)
                            num-plots)
                          5000.0
-                         (condp = sample-distribution
+                         (case sample-distribution
                            "gridded" (count-gridded-sample-set plot-size sample-resolution)
                            "random"  samples-per-plot
                            "center"  1.0
