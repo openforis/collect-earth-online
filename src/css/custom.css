@@ -132,35 +132,14 @@ h4 {font-size: 0.5rem;}
     color:white;
     margin:0;
 }
-
 .bg-lightgreen{
     background-color:#31BAB0!important;
     color:white;
-    -webkit-transition: background-color 100ms linear;
-    -ms-transition: background-color 100ms linear;
-    transition: background-color 100ms linear;
 }
 .bg-lightgray{
     background-color:#ECEEEF!important;
-    -webkit-transition: background-color 100ms linear;
-    -ms-transition: background-color 100ms linear;
-    transition: background-color 100ms linear;
 }
-.bg-lightgray:hover{
-    background-color:#dadcdf!important;
 
-}
-.bg-yellow{
-    background-color:#FCCF07!important;
-    color:#279B93;
-    -webkit-transition: background-color 100ms linear;
-    -ms-transition: background-color 100ms linear;
-    transition: background-color 100ms linear;
-}
-.bg-yellow a:hover{
-    background-color:#ecbc0d!important;
-    color:#279B93;
-}
 /* Buttons */
 /*****************/
 
@@ -168,10 +147,29 @@ h4 {font-size: 0.5rem;}
     border-width: 1.5px;
     font-weight: bold;
 }
-
+.btn-lightgray{
+    background-color:#ECEEEF!important;
+    -webkit-transition: background-color 100ms linear;
+    -ms-transition: background-color 100ms linear;
+    transition: background-color 100ms linear;
+}
+.btn-yellow{
+    background-color:#FCCF07!important;
+    color:#279B93;
+    -webkit-transition: background-color 100ms linear;
+    -ms-transition: background-color 100ms linear;
+    transition: background-color 100ms linear;
+}
+.btn-yellow a:hover{
+    background-color:#ecbc0d!important;
+    color:#279B93;
+}
+.btn-lightgray:hover{
+    background-color:#dadcdf!important;
+}
 .btn-outline-lightgreen{
     color: #31BAB0;
-    background-color: transparent;
+    background-color: white;
     background-image: none;
     border-color: #31BAB0;
 }
@@ -182,7 +180,7 @@ h4 {font-size: 0.5rem;}
 }
 .btn-outline-lightgray{
     color: black;
-    background-color: transparent;
+    background-color: white;
     background-image: none;
     border-color: #ECEEEF;
 }
@@ -192,7 +190,7 @@ h4 {font-size: 0.5rem;}
 }
 .btn-outline-darkgray{
     color: #5e5f60;
-    background-color: transparent;
+    background-color: white;
     background-image: none;
     border-color: #5e5f60;
 }
@@ -203,7 +201,7 @@ h4 {font-size: 0.5rem;}
 }
 .btn-outline-yellow{
     color: #f1c00f;
-    background-color: transparent;
+    background-color: white;
     background-image: none;
     border-color: #FCCF07;
 }
@@ -211,6 +209,17 @@ h4 {font-size: 0.5rem;}
     color: black;
     background-color: #FCCF07;
     border-color: #FCCF07;
+}
+.btn-outline-red{
+    color: #c42121;
+    background-color: white;
+    background-image: none;
+    border-color: #c42121;
+}
+.btn-outline-red:hover{
+    color: white;
+    background-color: #c42121;
+    border-color: #c42121;
 }
 .btn-file {
     position: relative;

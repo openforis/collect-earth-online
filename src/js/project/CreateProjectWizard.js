@@ -2,7 +2,7 @@ import React from "react";
 
 import {ImagerySelection} from "./ImagerySelection";
 import {Overview} from "./Overview";
-import {PlotDesign, PlotReview} from "./PlotDesign";
+import {AOIReview, PlotDesign, PlotReview} from "./PlotDesign";
 import {SurveyQuestionDesign} from "./SurveyQuestions";
 import {SurveyRuleDesign} from "./SurveyRules";
 import AOIMap from "./AOIMap";
@@ -49,8 +49,12 @@ export default class CreateProjectWizard extends React.Component {
                 title: "Plot Design",
                 description: "Area of interest and plot generation for collection",
                 StepComponent: () => this.context.useTemplatePlots
-                    ? <PlotReview/>
-                    : (
+                    ? (
+                        <div>
+                            <PlotReview/>
+                            <AOIReview/>
+                        </div>
+                    ) : (
                         <PlotDesign
                             getTotalPlots={this.getTotalPlots}
                             boundary={this.context.boundary}
@@ -477,7 +481,7 @@ export default class CreateProjectWizard extends React.Component {
                     }}
                 >
                     <div
-                        className="col-7 px-0 mr-2 overflow-auto"
+                        className="col-7 px-0 mr-2 overflow-auto bg-lightgray"
                         style={{border: "1px solid black", borderRadius: "6px"}}
                     >
                         <h2 className="bg-lightgreen w-100 py-1">{description}</h2>
@@ -485,7 +489,7 @@ export default class CreateProjectWizard extends React.Component {
                             <StepComponent/>
                         </div>
                     </div>
-                    <div className="col-4">
+                    <div className="col-4 bg-lightgray">
                         <div className="d-flex flex-column h-100">
                             <div
                                 className="h-100 overflow-auto"

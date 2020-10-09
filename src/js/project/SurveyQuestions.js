@@ -164,7 +164,7 @@ class NewQuestionDesigner extends React.Component {
     removeButton = (ruleId) => (
         <button
             type="button"
-            className="btn btn-outline-danger py-0 px-2 mr-1"
+            className="btn btn-outline-red py-0 px-2 mr-1"
             onClick={e => this.deleteSurveyRule(e)}
         >
             <span

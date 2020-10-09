@@ -180,7 +180,7 @@ class MapPanel extends React.Component {
             >
                 <div
                     id="toggle-map-button"
-                    className="bg-lightgray"
+                    className="btn-lightgray"
                     onClick={this.props.toggleSidebar}
                 >
                     {this.props.showSidePanel
@@ -471,7 +471,7 @@ function InstitutionFilter(props) {
 
 function CreateInstitutionButton() {
     return (
-        <div className="bg-yellow text-center p-2">
+        <div className="btn-yellow text-center p-2">
             <a
                 className="create-institution"
                 style={{display:"block"}}

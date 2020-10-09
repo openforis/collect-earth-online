@@ -66,7 +66,7 @@ export default class ManageProject extends React.Component {
                     }}
                 >
                     <div
-                        className="col-7 px-0 mr-2 overflow-auto"
+                        className="col-7 px-0 mr-2 overflow-auto bg-lightgray"
                         style={{border: "1px solid black", borderRadius: "6px"}}
                     >
                         <h2 className="bg-lightgreen w-100 py-1">Project Details</h2>
@@ -75,7 +75,7 @@ export default class ManageProject extends React.Component {
                         </div>
                     </div>
                     <div
-                        className="col-4 px-0 mr-2 overflow-auto"
+                        className="col-4 px-0 mr-2 overflow-auto bg-lightgray"
                         style={{border: "1px solid black", borderRadius: "6px"}}
                     >
                         <h2 className="bg-lightgreen w-100 py-1">Project Management</h2>
@@ -327,19 +327,19 @@ class ProjectManagement extends React.Component {
                     <h3 className="my-2">Modify Project Details</h3>
                     <input
                         type="button"
-                        className="btn btn-outline-danger btn-sm col-6"
+                        className="btn btn-outline-red btn-sm col-6"
                         value={(button || "Close") + " Project"}
                         onClick={() => update.call(this)}
                     />
                     <input
-                        className="btn btn-outline-danger btn-sm col-6"
+                        className="btn btn-outline-red btn-sm col-6"
                         type="button"
                         value="Edit Project"
                         disabled={!canEdit}
                         onClick={() => this.context.setDesignMode("wizard")}
                     />
                     <input
-                        className="btn btn-outline-danger btn-sm col-6"
+                        className="btn btn-outline-red btn-sm col-6"
                         type="button"
                         value="Delete Project"
                         onClick={this.deleteProject}

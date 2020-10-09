@@ -109,13 +109,13 @@ export default class ReviewChanges extends React.Component {
                 <>
                     <input
                         type="button"
-                        className="btn btn-outline-danger btn-sm col-6"
+                        className="btn btn-outline-red btn-sm col-6"
                         value="Update Project"
                         onClick={this.updateProject}
                     />
                     <input
                         type="button"
-                        className="btn btn-outline-danger btn-sm col-6"
+                        className="btn btn-outline-red btn-sm col-6"
                         value="Discard Changes"
                         onClick={() => this.context.setDesignMode("manage")}
                     />
@@ -123,7 +123,7 @@ export default class ReviewChanges extends React.Component {
             ) : (
                 <input
                     type="button"
-                    className="btn btn-outline-danger btn-sm col-6"
+                    className="btn btn-outline-red btn-sm col-6"
                     value="Create Project"
                     onClick={this.createProject}
                 />
@@ -141,7 +141,7 @@ export default class ReviewChanges extends React.Component {
         return (
             <div
                 id="changes"
-                className="d-flex pb-5 full-height align-items-center flex-column"
+                className="d-flex flex-column full-height align-items-center p-3"
             >
                 <div
                     style={{
@@ -153,16 +153,20 @@ export default class ReviewChanges extends React.Component {
                     }}
                 >
                     <div
-                        className="col-7 px-0 mr-2 overflow-auto"
+                        className="col-7 px-0 mr-2 overflow-auto bg-lightgray"
                         style={{border: "1px solid black", borderRadius: "6px"}}
                     >
                         <h2 className="bg-lightgreen w-100 py-1">Project Details</h2>
-                        <div className="p-3">
+                        <div className="px-3 pb-3">
                             <ReviewForm/>
                         </div>
                     </div>
-                    <div className="col-4">
-                        <div className="d-flex flex-column h-100">
+                    <div
+                        className="col-4 px-0 mr-2 overflow-auto bg-lightgray"
+                        style={{border: "1px solid black", borderRadius: "6px"}}
+                    >
+                        <h2 className="bg-lightgreen w-100 py-1">Project Management</h2>
+                        <div className="p-3">
                             {this.renderButtons()}
                         </div>
                     </div>

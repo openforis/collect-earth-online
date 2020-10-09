@@ -150,7 +150,7 @@ function SurveyQuestionTree({
                         {inDesignMode &&
                             <button
                                 type="button"
-                                className="btn btn-outline-danger py-0 px-2 mr-1"
+                                className="btn btn-outline-red py-0 px-2 mr-1"
                                 onClick={() => removeQuestion(surveyQuestion.id)}
                             >
                                 <span className="font-weight-bold">X</span>
@@ -242,7 +242,7 @@ function ExistingAnswer({answer, color, removeAnswer}) {
                 {removeAnswer &&
                     <button
                         type="button"
-                        className="btn btn-outline-danger py-0 px-2 mr-1"
+                        className="btn btn-outline-red py-0 px-2 mr-1"
                         onClick={removeAnswer}
                     >
                         <span className="font-weight-bold">X</span>

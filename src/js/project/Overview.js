@@ -206,6 +206,7 @@ class ProjectTemplateSelection extends React.Component {
                                 className="btn bg-lightgreen mr-1"
                                 style={{height: "calc(1.5em + .5rem + 2px)", padding: "0 .5rem"}}
                                 value="Load"
+                                disabled={this.state.selectedTemplateProjectId < 0}
                                 onClick={() => setProjectTemplate(this.state.selectedTemplateProjectId)}
                             />
                             <input

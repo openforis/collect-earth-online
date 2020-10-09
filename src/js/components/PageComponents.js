@@ -28,7 +28,7 @@ function LogOutButton({userName, uri}) {
                 </li>
                 <button
                     type="button"
-                    className="btn btn-outline-danger btn-sm"
+                    className="btn btn-outline-red btn-sm"
                     onClick={logout}
                 >
                     Logout

@@ -1099,13 +1099,13 @@ function SideBar(props) {
             />
             <div className="my-2 d-flex justify-content-between">
                 <input
-                    className="btn btn-outline-danger btn-sm col mr-1"
+                    className="btn btn-outline-red btn-sm col mr-1"
                     type="button"
                     value={props.currentPlot.flagged ? "Unflag Plot" : "Flag Plot"}
                     onClick={props.toggleFlagged}
                 />
                 <input
-                    className="btn btn-outline-danger btn-sm col"
+                    className="btn btn-outline-red btn-sm col"
                     type="button"
                     value={props.currentPlot.analyses > 0 ? "Clear Changes" : "Clear All"}
                     onClick={props.clearAnswers}
@@ -1134,7 +1134,7 @@ function SideBar(props) {
                     {props.plotId && saveButtonGroup()}
                     <button
                         id="collection-quit-button"
-                        className="btn btn-outline-danger btn-block btn-sm mb-4"
+                        className="btn btn-outline-red btn-block btn-sm mb-4"
                         type="button"
                         name="collection-quit"
                         onClick={props.toggleQuitModal}

@@ -29,21 +29,21 @@ export default function ReviewForm() {
                         {renderSectionHeader("Collection Design")}
                         <AOIMap context={context} canDrag={false}/>
                         <div className="row" style={{borderBottom: "1px solid lightgray"}}>
-                            <div className="col-6" style={{borderRight: "1px solid lightgray"}}>
+                            <div className="col-6 pt-3" style={{borderRight: "1px solid lightgray"}}>
                                 <h2>Imagery Selection</h2>
                                 <ImageryReview/>
                             </div>
-                            <div className="col-6">
+                            <div className="col-6 pt-3">
                                 <h2>AOI Boundary</h2>
                                 <AOIReview/>
                             </div>
                         </div>
                         <div className="row">
-                            <div className="col-6" style={{borderRight: "1px solid lightgray"}}>
+                            <div className="col-6 pt-3" style={{borderRight: "1px solid lightgray"}}>
                                 <h2>Plot Design</h2>
                                 <PlotReview/>
                             </div>
-                            <div className="col-6">
+                            <div className="col-6 pt-3">
                                 <h2>Sample Design</h2>
                                 <SampleReview/>
                             </div>

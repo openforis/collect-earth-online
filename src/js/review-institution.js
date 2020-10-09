@@ -248,7 +248,7 @@ class InstitutionDescription extends React.Component {
         <div className="col-6">
             <button
                 type="button"
-                className="btn btn-sm btn-outline-danger btn-block mt-0"
+                className="btn btn-sm btn-outline-red btn-block mt-0"
                 onClick={this.toggleEditMode}
             >
                 <UnicodeIcon icon="noAction"/> Cancel Changes
@@ -311,7 +311,7 @@ class InstitutionDescription extends React.Component {
                             <button
                                 id="delete-institution"
                                 type="button"
-                                className="btn btn-sm btn-outline-danger btn-block mt-0"
+                                className="btn btn-sm btn-outline-red btn-block mt-0"
                                 onClick={this.deleteInstitution}
                             >
                                 <UnicodeIcon icon="trash"/> Delete
@@ -835,7 +835,7 @@ class NewImagery extends React.Component {
                     </button>
                     <button
                         type="button"
-                        className="btn btn-sm btn-block btn-outline-danger btn-group py-2 font-weight-bold"
+                        className="btn btn-sm btn-block btn-outline-red btn-group py-2 font-weight-bold"
                         onClick={this.props.hideEditMode}
                     >
                         <UnicodeIcon icon="noAction"/>Discard
@@ -877,7 +877,7 @@ function Imagery({isAdmin, title, selectEditImagery, deleteImagery, isInstitutio
                 </div>
                 <div className="pr-3">
                     <button
-                        className="btn btn-outline-danger btn-sm btn-block px-3"
+                        className="btn btn-outline-red btn-sm btn-block px-3"
                         id="delete-imagery"
                         type="button"
                         onClick={deleteImagery}
@@ -998,7 +998,7 @@ class Project extends React.Component {
                 </div>
                 <div className="mr-3">
                     <a
-                        className="delete-project btn btn-sm btn-outline-danger btn-block px-3"
+                        className="delete-project btn btn-sm btn-outline-red btn-block px-3"
                         onClick={() => this.props.deleteProject(project.id)}
                     >
                         <UnicodeIcon icon="trash"/>
