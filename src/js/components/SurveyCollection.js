@@ -197,6 +197,7 @@ export class SurveyCollection extends React.Component {
         <div style={{display: "flex", flexDirection: "column"}}>
             <div
                 style={{alignItems: "center", cursor: "pointer", display: "flex"}}
+                title="Click anywhere to add a new point."
                 onClick={() => this.setDrawTool("Point")}
             >
                 <span style={this.buttonStyle(this.state.drawTool === "Point")}>
@@ -206,6 +207,7 @@ export class SurveyCollection extends React.Component {
             </div>
             <div
                 style={{alignItems: "center", cursor: "pointer", display: "flex"}}
+                title="Click anywhere to start drawing. A new point along the line string can be added with a single click. Right click or double click to finish drawing."
                 onClick={() => this.setDrawTool("LineString")}
             >
                 <span style={this.buttonStyle(this.state.drawTool === "LineString")}>
@@ -215,6 +217,7 @@ export class SurveyCollection extends React.Component {
             </div>
             <div
                 style={{alignItems: "center", cursor: "pointer", display: "flex"}}
+                title="Click anywhere to start drawing. A new vertex can be added with a singe click. Right click, double click, or complete the polygon to finish drawing."
                 onClick={() => this.setDrawTool("Polygon")}
             >
                 <span style={this.buttonStyle(this.state.drawTool === "Polygon")}>
