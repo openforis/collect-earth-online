@@ -227,7 +227,7 @@ class ProjectTemplateSelection extends React.Component {
                                         className="form-check-input"
                                         type="checkbox"
                                         id="use-template-plots"
-                                        onChange={() => setProjectState({useTemplatePlots: !useTemplatePlots})}
+                                        onChange={this.props.toggleTemplatePlots}
                                         checked={useTemplatePlots}
                                     />
                                     <label

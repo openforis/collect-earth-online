@@ -231,7 +231,7 @@ export function SampleReview() {
                     ?
                         <h3>No samples are predefined.</h3>
                     : (
-                        <div className="row">
+                        <div className="d-flex">
                             <div id="sample-review-col1">
                                 <table id="sample-review-table" className="table table-sm">
                                     <tbody>

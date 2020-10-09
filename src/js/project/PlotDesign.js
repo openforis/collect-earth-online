@@ -316,13 +316,26 @@ export class PlotDesign extends React.Component {
 }
 PlotDesign.contextType = ProjectContext;
 
+export function PlotDesignReview() {
+    return (
+        <div className="d-flex">
+            <div className="col-6">
+                <PlotReview/>
+            </div>
+            <div className="col-6">
+                <AOIReview/>
+            </div>
+        </div>
+    );
+}
+
 export function PlotReview() {
     return (
         <ProjectContext.Consumer>
             {({plotDistribution, numPlots, plotSpacing, plotShape, plotSize}) =>
                 <div id="plot-review">
                     <h3 className="mb-3">Plots will be copied from template project</h3>
-                    <div className="row">
+                    <div className="d-flex">
                         <div id="plot-review-col1">
                             <table id="plot-review-table" className="table table-sm">
                                 <tbody>

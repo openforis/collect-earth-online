@@ -2,7 +2,7 @@ import React from "react";
 
 import {ImagerySelection} from "./ImagerySelection";
 import {Overview} from "./Overview";
-import {AOIReview, PlotDesign, PlotReview} from "./PlotDesign";
+import {PlotDesign, PlotDesignReview} from "./PlotDesign";
 import {SurveyQuestionDesign} from "./SurveyQuestions";
 import {SurveyRuleDesign} from "./SurveyRules";
 import AOIMap from "./AOIMap";
@@ -25,6 +25,7 @@ export default class CreateProjectWizard extends React.Component {
                 <Overview
                     clearTemplateSelection={this.clearTemplateSelection}
                     setProjectTemplate={this.setProjectTemplate}
+                    toggleTemplatePlots={this.toggleTemplatePlots}
                     templateProjectList={this.state.templateProjectList}
                 />,
             helpDescription: "Introduction",
@@ -49,12 +50,8 @@ export default class CreateProjectWizard extends React.Component {
                 title: "Plot Design",
                 description: "Area of interest and plot generation for collection",
                 StepComponent: () => this.context.useTemplatePlots
-                    ? (
-                        <div>
-                            <PlotReview/>
-                            <AOIReview/>
-                        </div>
-                    ) : (
+                    ? <PlotDesignReview/>
+                    : (
                         <PlotDesign
                             getTotalPlots={this.getTotalPlots}
                             boundary={this.context.boundary}
@@ -489,10 +486,10 @@ export default class CreateProjectWizard extends React.Component {
                             <StepComponent/>
                         </div>
                     </div>
-                    <div className="col-4 bg-lightgray">
+                    <div className="col-4">
                         <div className="d-flex flex-column h-100">
                             <div
-                                className="h-100 overflow-auto"
+                                className="h-100 overflow-auto bg-lightgray"
                                 style={{border: "1px solid black", borderRadius: "6px"}}
                             >
                                 <h2 className="bg-lightgreen w-100 py-1">{helpDescription}</h2>
