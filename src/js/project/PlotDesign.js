@@ -340,9 +340,9 @@ export function PlotReview() {
                             <table id="plot-review-table" className="table table-sm">
                                 <tbody>
                                     <tr>
-                                        <td className="w-80 pr-3">Spatial Distribution</td>
+                                        <td className="w-80 pr-5">Spatial Distribution</td>
                                         <td className="w-20 text-center">
-                                            <span className="badge badge-pill bg-lightgreen">{plotDistribution} distribution</span>
+                                            <span className="badge badge-pill bg-lightgreen">{plotDistribution}</span>
                                         </td>
                                     </tr>
                                     <tr>

@@ -236,9 +236,9 @@ export function SampleReview() {
                                 <table id="sample-review-table" className="table table-sm">
                                     <tbody>
                                         <tr>
-                                            <td className="w-80 mb-3">Spatial Distribution</td>
+                                            <td className="w-80 pr-5">Spatial Distribution</td>
                                             <td className="w-20 text-center">
-                                                <span className="badge badge-pill bg-lightgreen">{sampleDistribution} distribution</span>
+                                                <span className="badge badge-pill bg-lightgreen">{sampleDistribution}</span>
                                             </td>
                                         </tr>
                                         <tr>
