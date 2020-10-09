@@ -141,7 +141,7 @@ export class SampleDesign extends React.Component {
             },
             none: {
                 display: "None",
-                description: "Do not predefine any samples. Requires users to draw their own plots during collection.",
+                description: "Do not predefine any samples. Requires users to draw their own samples during collection.",
                 inputs: [() => <h3>Users will draw samples at collection time.</h3>],
 
             },
@@ -261,6 +261,18 @@ export function SampleReview() {
                         </div>
                     )}
                     {allowDrawnSamples && <h3>Users can draw additional samples at collection time.</h3>}
+                </div>
+            }
+        </ProjectContext.Consumer>
+    );
+}
+
+export function SamplePreview() {
+    return (
+        <ProjectContext.Consumer>
+            {context =>
+                <div>
+                    <h3>This will look like a {context.plotShape} plot with {context.sampleDistribution} samples.</h3>
                 </div>
             }
         </ProjectContext.Consumer>

@@ -1,7 +1,7 @@
 import React from "react";
 
 import {ImagerySelection} from "./ImagerySelection";
-import {Overview} from "./Overview";
+import {Overview, OverviewHelp} from "./Overview";
 import {PlotDesign, PlotDesignReview} from "./PlotDesign";
 import {SurveyQuestionDesign, SurveyQuestionHelp} from "./SurveyQuestions";
 import {SurveyRuleDesign} from "./SurveyRules";
@@ -18,22 +18,21 @@ export default class CreateProjectWizard extends React.Component {
     constructor(props) {
         super(props);
 
-        this.overviewStep = {
-            title: "Project Overview",
-            description: "General information about the project",
-            StepComponent: () =>
-                <Overview
-                    clearTemplateSelection={this.clearTemplateSelection}
-                    setProjectTemplate={this.setProjectTemplate}
-                    toggleTemplatePlots={this.toggleTemplatePlots}
-                    templateProjectList={this.state.templateProjectList}
-                />,
-            helpDescription: "Introduction",
-            validate: this.validateOverview,
-        };
-
         this.steps = {
-            overview: this.overviewStep,
+            overview: {
+                title: "Project Overview",
+                description: "General information about the project",
+                StepComponent: () =>
+                    <Overview
+                        clearTemplateSelection={this.clearTemplateSelection}
+                        setProjectTemplate={this.setProjectTemplate}
+                        toggleTemplatePlots={this.toggleTemplatePlots}
+                        templateProjectList={this.state.templateProjectList}
+                    />,
+                helpDescription: "Introduction",
+                StepHelpComponent: OverviewHelp,
+                validate: this.validateOverview,
+            },
             imagery: {
                 title: "Imagery Selection",
                 description: "Imagery available to use during collection",

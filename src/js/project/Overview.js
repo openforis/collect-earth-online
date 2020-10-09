@@ -34,7 +34,7 @@ export function Overview(props) {
                             onChange={e => setProjectState({description: e.target.value})}
                         />
                     </div>
-                    <h3>Availability</h3>
+                    <h3>Visibility</h3>
                     <div id="project-visibility" className="mb-3">
                         <div className="form-check form-check-inline">
                             <input
@@ -289,4 +289,10 @@ export function OverviewReview() {
             }
         </ProjectContext.Consumer>
     );
+}
+
+export function OverviewIntro() {
+    return <div>
+        <h3>Welcome to the new wizard!</h3>
+    </div>;
 }
