@@ -55,6 +55,7 @@ class Project extends React.Component {
             projectDetails: this.blankProject,
             institutionImagery: [],
             designMode: "loading",
+            modalMessage: null,
         };
     }
 
@@ -84,7 +85,12 @@ class Project extends React.Component {
             if (newSampleDistribution !== sampleDistribution) this.setState({sampleDistribution: newSampleDistribution});
         }
 
+        if (prevState.institutionImagery !== this.state.institutionImagery) {
+            console.log("imagery change");
+        }
+
         if (prevState.projectDetails.institution !== this.state.projectDetails.institution) {
+            console.log("update");
             this.getInstitutionImagery(this.state.projectDetails.institution);
         }
     }
@@ -106,6 +112,7 @@ class Project extends React.Component {
             .then(data => {
                 const sorted = [...data.filter(a => a.title.toLocaleLowerCase().includes("mapbox")),
                                 ...data.filter(a => !a.title.toLocaleLowerCase().includes("mapbox"))];
+                console.log(sorted);
                 this.setState({institutionImagery: sorted});
                 this.setProjectState({imageryId: sorted[0].id});
             })

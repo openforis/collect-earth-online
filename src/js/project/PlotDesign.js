@@ -1,9 +1,7 @@
 import React from "react";
 
-import {SectionBlock} from "../components/FormComponents";
 import {formatNumberWithCommas, encodeFileAsBase64} from "../utils/generalUtils";
-import {ProjectContext} from "./constants";
-import {plotLimit} from "./constants";
+import {ProjectContext, plotLimit} from "./constants";
 import {mercator} from "../utils/mercator.js";
 
 export class PlotDesign extends React.Component {
@@ -323,12 +321,13 @@ export function PlotReview() {
         <ProjectContext.Consumer>
             {({plotDistribution, numPlots, plotSpacing, plotShape, plotSize}) =>
                 <div id="plot-review">
+                    <h3 className="mb-3">Plots will be copied from template project</h3>
                     <div className="row">
-                        <div id="plot-review-col1" className="col">
+                        <div id="plot-review-col1">
                             <table id="plot-review-table" className="table table-sm">
                                 <tbody>
                                     <tr>
-                                        <td className="w-80">Generated Plot Spatial Distribution</td>
+                                        <td className="w-80 pr-3">Spatial Distribution</td>
                                         <td className="w-20 text-center">
                                             <span className="badge badge-pill bg-lightgreen">{plotDistribution} distribution</span>
                                         </td>
@@ -369,6 +368,41 @@ export function PlotReview() {
                     </div>
                 </div>
             }
+        </ProjectContext.Consumer>
+    );
+}
+
+export function AOIReview() {
+    return (
+        <ProjectContext.Consumer>
+            {({boundary}) => {
+                const boundaryExtent = mercator.parseGeoJson(boundary, false).getExtent();
+                return (
+                    <div id="aoi-review">
+                        <h3>Boundary Coordinates</h3>
+                        <div className="form-group mx-4">
+                            <div className="row">
+                                <div className="col-md-6 offset-md-3">
+                                    <label><b>North: </b>{boundaryExtent[3]}</label>
+                                </div>
+                            </div>
+                            <div className="row">
+                                <div className="col-md-6">
+                                    <label><b>West: </b>{boundaryExtent[0]}</label>
+                                </div>
+                                <div className="col-md-6">
+                                    <label><b>East: </b>{boundaryExtent[2]}</label>
+                                </div>
+                            </div>
+                            <div className="row">
+                                <div className="col-md-6 offset-md-3">
+                                    <label><b>South: </b>{boundaryExtent[1]}</label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                );
+            }}
         </ProjectContext.Consumer>
     );
 }

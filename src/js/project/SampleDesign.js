@@ -1,9 +1,7 @@
 import React from "react";
 
-import {SectionBlock} from "../components/FormComponents";
 import {formatNumberWithCommas, encodeFileAsBase64} from "../utils/generalUtils";
-import {ProjectContext} from "./constants";
-import {perPlotLimit, sampleLimit} from "./constants";
+import {ProjectContext, perPlotLimit, sampleLimit} from "./constants";
 
 export class SampleDesign extends React.Component {
     constructor(props) {
@@ -228,34 +226,39 @@ export function SampleReview() {
         <ProjectContext.Consumer>
             {({sampleDistribution, samplesPerPlot, sampleResolution, allowDrawnSamples}) =>
                 <div id="sample-review">
+                    <h3 className="mb-3">Samples will be copied from template project</h3>
                     {sampleDistribution === "none"
-                    ? (
+                    ?
                         <h3>No samples are predefined.</h3>
-                    ) : (
-                        <table id="plot-review-table" className="table table-sm">
-                            <tbody>
-                                <tr>
-                                    <td className="w-80">Generated Sample Spatial Distribution</td>
-                                    <td className="w-20 text-center">
-                                        <span className="badge badge-pill bg-lightgreen">{sampleDistribution} distribution</span>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td className="w-80">Samples Per Plot</td>
-                                    <td className="w-20 text-center">
-                                        <span className="badge badge-pill bg-lightgreen">{samplesPerPlot} /plot</span>
-                                    </td>
-                                </tr>
-                                {sampleDistribution === "gridded" &&
-                                <tr>
-                                    <td className="w-80">Sample Spacing</td>
-                                    <td className="w-20 text-center">
-                                        <span className="badge badge-pill bg-lightgreen">{sampleResolution} m</span>
-                                    </td>
-                                </tr>
-                                }
-                            </tbody>
-                        </table>
+                    : (
+                        <div className="row">
+                            <div id="sample-review-col1">
+                                <table id="sample-review-table" className="table table-sm">
+                                    <tbody>
+                                        <tr>
+                                            <td className="w-80 mb-3">Spatial Distribution</td>
+                                            <td className="w-20 text-center">
+                                                <span className="badge badge-pill bg-lightgreen">{sampleDistribution} distribution</span>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td className="w-80">Samples Per Plot</td>
+                                            <td className="w-20 text-center">
+                                                <span className="badge badge-pill bg-lightgreen">{samplesPerPlot} /plot</span>
+                                            </td>
+                                        </tr>
+                                        {sampleDistribution === "gridded" &&
+                                        <tr>
+                                            <td className="w-80">Sample Spacing</td>
+                                            <td className="w-20 text-center">
+                                                <span className="badge badge-pill bg-lightgreen">{sampleResolution} m</span>
+                                            </td>
+                                        </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
                     )}
                     {allowDrawnSamples && <h3>Users can draw additional samples at collection time.</h3>}
                 </div>

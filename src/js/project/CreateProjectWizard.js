@@ -2,11 +2,11 @@ import React from "react";
 
 import {ImagerySelection} from "./ImagerySelection";
 import {Overview} from "./Overview";
-import {PlotDesign} from "./PlotDesign";
+import {PlotDesign, PlotReview} from "./PlotDesign";
 import {SurveyQuestionDesign} from "./SurveyQuestions";
 import {SurveyRuleDesign} from "./SurveyRules";
 import AOIMap from "./AOIMap";
-import {SampleDesign} from "./SampleDesign";
+import {SampleDesign, SampleReview} from "./SampleDesign";
 
 import {SvgIcon} from "../utils/svgIcons";
 import {mercator} from "../utils/mercator.js";
@@ -48,27 +48,33 @@ export default class CreateProjectWizard extends React.Component {
             plots: {
                 title: "Plot Design",
                 description: "Area of interest and plot generation for collection",
-                StepComponent: () =>
-                    <PlotDesign
-                        getTotalPlots={this.getTotalPlots}
-                        boundary={this.context.boundary}
-                    />,
+                StepComponent: () => this.context.useTemplatePlots
+                    ? <PlotReview/>
+                    : (
+                        <PlotDesign
+                            getTotalPlots={this.getTotalPlots}
+                            boundary={this.context.boundary}
+                        />
+                    ),
                 helpDescription: "Collection Map Preview",
                 StepHelpComponent: () =>
                     <AOIMap
                         context={this.context}
-                        canDrag
+                        canDrag={!this.context.useTemplatePlots}
                     />,
                 validate: this.validatePlotData,
             },
             samples: {
                 title: "Sample Design",
                 description: "Sample generation for collection",
-                StepComponent: () =>
-                    <SampleDesign
-                        getTotalPlots={this.getTotalPlots}
-                        getSamplesPerPlot={this.getSamplesPerPlot}
-                    />,
+                StepComponent: () => this.context.useTemplatePlots
+                    ? <SampleReview/>
+                    : (
+                        <SampleDesign
+                            getTotalPlots={this.getTotalPlots}
+                            getSamplesPerPlot={this.getSamplesPerPlot}
+                        />
+                    ),
                 helpDescription: "Collection Map Preview",
                 StepHelpComponent: () =>
                     <AOIMap
@@ -171,7 +177,10 @@ export default class CreateProjectWizard extends React.Component {
         fetch("/get-project-imagery?projectId=" + projectId)
             .then(response => response.ok ? response.json() : Promise.reject(response))
             .then(data => {
-                this.context.setProjectState({projectImageryList: data.map(imagery => imagery.id)});
+                const institutionImageryIds = this.context.institutionImagery.map(i => i.id);
+                this.context.setProjectState({
+                    projectImageryList: data.map(i => i.id).filter(id => institutionImageryIds.includes(id)),
+                });
             })
             .catch(error => {
                 console.log(error);
@@ -231,8 +240,10 @@ export default class CreateProjectWizard extends React.Component {
             && [...projectImageryList, imageryId]
                 .every(id => institutionImagery.some(il => il.id === id && il.visibility === "private"));
         const errorList = [
-            requiresPublic && `Projects with privacy level of ${privacyLevel} require at least one public imagery.`,
-            !imageryId > 0 && "Select a valid Basemap.",
+            requiresPublic
+                && `Projects with privacy level of ${privacyLevel} require at least one public imagery.`,
+            !imageryId > 0
+                && "Select a valid Basemap.",
         ];
         return errorList.filter(e => e);
     };
@@ -302,8 +313,10 @@ export default class CreateProjectWizard extends React.Component {
     validateSurveyQuestions = () => {
         const {surveyQuestions} = this.context;
         const errorList = [
-            (surveyQuestions.length === 0) && "A survey must include at least one question.",
-            (surveyQuestions.some(sq => sq.answers.length === 0)) && "All survey questions must contain at least one answer.",
+            (surveyQuestions.length === 0)
+                && "A survey must include at least one question.",
+            (surveyQuestions.some(sq => sq.answers.length === 0))
+                && "All survey questions must contain at least one answer.",
         ];
         return errorList.filter(e => e);
     };
@@ -350,7 +363,8 @@ export default class CreateProjectWizard extends React.Component {
     }
 
     finish = () => {
-        const failedStep = Object.entries(this.getSteps()).find(([key, val]) => val.validate.call(this).length > 0);
+        const failedStep = Object.entries(this.getSteps())
+            .find(([key, val]) => val.validate.call(this).length > 0);
         if (failedStep) {
             this.setState({step: failedStep[0]});
         } else {

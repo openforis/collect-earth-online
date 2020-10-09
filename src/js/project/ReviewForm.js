@@ -3,13 +3,11 @@ import React from "react";
 import AOIMap from "./AOIMap";
 import {ImageryReview} from "./ImagerySelection";
 import {OverviewReview} from "./Overview";
-import {PlotReview} from "./PlotDesign";
+import {AOIReview, PlotReview} from "./PlotDesign";
 import {ProjectContext} from "./constants";
 import {SampleReview} from "./SampleDesign";
 import SurveyCardList from "./SurveyCardList";
 import {SurveyRulesList} from "./SurveyRules";
-import {SectionBlock} from "../components/FormComponents";
-
 
 export default function ReviewForm() {
     const renderSectionHeader = (title) => (
@@ -20,6 +18,7 @@ export default function ReviewForm() {
             {title}
         </h2>
     );
+
     return (
         <ProjectContext.Consumer>
             {context =>
@@ -29,19 +28,32 @@ export default function ReviewForm() {
                     <div id="collection-review">
                         {renderSectionHeader("Collection Design")}
                         <AOIMap context={context} canDrag={false}/>
-                        <h2>Imagery Selection</h2>
-                        <ImageryReview/>
-                        <h2>Plot Design</h2>
-                        <PlotReview/>
-                        <h2>Sample Design</h2>
-                        <SampleReview/>
+                        <div className="row" style={{borderBottom: "1px solid lightgray"}}>
+                            <div className="col-6" style={{borderRight: "1px solid lightgray"}}>
+                                <h2>Imagery Selection</h2>
+                                <ImageryReview/>
+                            </div>
+                            <div className="col-6">
+                                <h2>AOI Boundary</h2>
+                                <AOIReview/>
+                            </div>
+                        </div>
+                        <div className="row">
+                            <div className="col-6" style={{borderRight: "1px solid lightgray"}}>
+                                <h2>Plot Design</h2>
+                                <PlotReview/>
+                            </div>
+                            <div className="col-6">
+                                <h2>Sample Design</h2>
+                                <SampleReview/>
+                            </div>
+                        </div>
                     </div>
                     {renderSectionHeader("Survey Questions")}
                     <div id="survey-review">
                         <SurveyCardList {...context} inDesignMode={false}/>
                         <SurveyRulesList {...context} inDesignMode={false}/>
                     </div>
-
                 </div>
             }
         </ProjectContext.Consumer>

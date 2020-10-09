@@ -63,7 +63,8 @@ export default class AOIMap extends React.Component {
                 this.state.mapConfig,
                 "currentAOI",
                 mercator.geometryToVectorSource(mercator.parseGeoJson(this.props.context.boundary, true)),
-                mercator.ceoMapStyles("geom", "yellow"));
+                mercator.ceoMapStyles("geom", "yellow")
+            );
             mercator.zoomMapToLayer(this.state.mapConfig, "currentAOI");
         }
     };
@@ -84,10 +85,12 @@ export default class AOIMap extends React.Component {
 
     showPlots = () => {
         mercator.removeLayerById(this.state.mapConfig, "projectPlots");
-        mercator.addVectorLayer(this.state.mapConfig,
-                                "projectPlots",
-                                mercator.plotsToVectorSource(this.props.context.plots),
-                                mercator.ceoMapStyles(this.props.context.plotShape, "yellow"));
+        mercator.addVectorLayer(
+            this.state.mapConfig,
+            "projectPlots",
+            mercator.plotsToVectorSource(this.props.context.plots),
+            mercator.ceoMapStyles(this.props.context.plotShape, "yellow")
+        );
     };
 
     hidePlots = () => {
