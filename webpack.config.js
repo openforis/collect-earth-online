@@ -84,7 +84,7 @@ module.exports = env => ({
                 });
                 compiler.hooks.emit.tap("EmitPlugin", () => {
                     // Remove old files to prevent conflicts.
-                    // Production will have the old files remove immediately before
+                    // Production will have the old files removed immediately before
                     // the new ones are created for less interruption.
                     if (!env.dev) {
                         fs.unlinkSync("./target/entry-points.json");
@@ -93,7 +93,7 @@ module.exports = env => ({
                     }
                 });
                 compiler.hooks.done.tap("DonePlugin", stats => {
-                    // Map entrypoint name to chunk files
+                    // Map entrypoint name -> chunk files
                     const entryPoints = Array.from(stats.compilation.entrypoints.entries());
                     const newMap = entryPoints.reduce((acc, [name, ep]) =>
                         ({...acc, [name]: ep.chunks.map(c => "/js/" + c.files[0])}),
