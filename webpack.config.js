@@ -77,7 +77,7 @@ module.exports = env => ({
                     // Dev will have the old files removed at the beginning
                     // so a browser refresh does not show stale data.
                     if (env.dev) {
-                        fs.unlinkSync("./target/entry-points.json");
+                        fs.unlink("./target/entry-points.json", () => null);
                         fs.readdirSync("./" + outdir)
                             .forEach(f => fs.unlinkSync(path.join("./" + outdir, f)));
                     }
@@ -87,7 +87,7 @@ module.exports = env => ({
                     // Production will have the old files removed immediately before
                     // the new ones are created for less interruption.
                     if (!env.dev) {
-                        fs.unlinkSync("./target/entry-points.json");
+                        fs.unlink("./target/entry-points.json", () => null);
                         fs.readdirSync("./" + outdir)
                             .forEach(f => fs.unlinkSync(path.join("./" + outdir, f)));
                     }
