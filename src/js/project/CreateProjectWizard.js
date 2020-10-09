@@ -3,7 +3,7 @@ import React from "react";
 import {ImagerySelection} from "./ImagerySelection";
 import {Overview} from "./Overview";
 import {PlotDesign, PlotDesignReview} from "./PlotDesign";
-import {SurveyQuestionDesign} from "./SurveyQuestions";
+import {SurveyQuestionDesign, SurveyQuestionHelp} from "./SurveyQuestions";
 import {SurveyRuleDesign} from "./SurveyRules";
 import AOIMap from "./AOIMap";
 import {SampleDesign, SampleReview} from "./SampleDesign";
@@ -89,6 +89,7 @@ export default class CreateProjectWizard extends React.Component {
                 description: "Questions to be answered during collection",
                 StepComponent: SurveyQuestionDesign,
                 helpDescription: "Question Preview",
+                StepHelpComponent: SurveyQuestionHelp,
                 validate: this.validateSurveyQuestions,
             },
             rules: {
@@ -96,6 +97,7 @@ export default class CreateProjectWizard extends React.Component {
                 description: "Rules to ensure correct answers",
                 StepComponent: SurveyRuleDesign,
                 helpDescription: "Question Preview",
+                StepHelpComponent: SurveyQuestionHelp,
                 validate: () => [],
             },
         };

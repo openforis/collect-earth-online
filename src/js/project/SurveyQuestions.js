@@ -1,9 +1,9 @@
 import React from "react";
 
-import {SectionBlock} from "../components/FormComponents";
 import SurveyCardList from "./SurveyCardList";
 import {removeEnumerator} from "../utils/surveyUtils";
 import {ProjectContext} from "./constants";
+import {SurveyCollection} from "../components/SurveyCollection";
 
 const componentTypes = [
     {componentType: "button", dataType: "text"},
@@ -342,3 +342,86 @@ class NewAnswerDesigner extends React.Component {
         </div>;
     }
 }
+
+export class SurveyQuestionHelp extends React.Component {
+    constructor(props) {
+        super(props);
+        this.state = {
+            answerMode: "question",
+            selectedQuestion: {id: 0, question: "", answers: [], visible: [1]},
+            userSamples: {1: {}},
+            unansweredColor: "black",
+            answered: {},
+        };
+    }
+
+    getChildQuestions = (currentQuestionId) => {
+        const {surveyQuestions} = this.context;
+        const {question, id} = surveyQuestions.find(sq => sq.id === currentQuestionId);
+        const childQuestions = surveyQuestions.filter(sq => sq.parentQuestion === id);
+
+        if (childQuestions.length === 0) {
+            return [question];
+        } else {
+            return childQuestions
+                .reduce((prev, acc) => (
+                    [...prev, ...this.getChildQuestions(acc.id)]
+                ), [question]);
+        }
+    };
+
+    setCurrentValue = (questionToSet, answerId, answerText) => {
+        const sampleIds = [1];
+        // Move rules check into SurveyCollection so it can be accessed here
+        // const ruleError = rulesViolated(questionToSet, answerId, answerText);
+
+        const newSamples = sampleIds.reduce((acc, sampleId) => {
+            const newQuestion = {
+                questionId: questionToSet.id,
+                answer: answerText,
+                answerId: answerId,
+            };
+
+            const childQuestionArray = this.getChildQuestions(questionToSet.id);
+            const clearedSubQuestions = Object.entries(this.state.userSamples[sampleId])
+                .filter(entry => !childQuestionArray.includes(entry[0]))
+                .reduce((acc, cur) => ({...acc, [cur[0]]: cur[1]}), {});
+
+            return {
+                ...acc,
+                [sampleId]: {
+                    ...clearedSubQuestions,
+                    [questionToSet.question]: newQuestion,
+                },
+            };
+
+        }, {});
+
+        this.setState({
+            userSamples: {...this.state.userSamples, ...newSamples},
+            selectedQuestion: questionToSet,
+            answered: {...this.state.answered, [questionToSet.id]: [{answerId: answerId, sampleId: 1}]},
+        });
+    };
+
+    render() {
+        return (
+            <SurveyCollection
+                surveyQuestions={this.context.surveyQuestions
+                    .map(q => ({...q, visible: [1], answered: this.state.answered[q.id] || []}))}
+                surveyRules={this.context.surveyRules}
+                allowDrawnSamples={this.context.allowDrawnSamples}
+                answerMode={this.state.answerMode}
+                selectedQuestion={this.state.selectedQuestion}
+                unansweredColor={this.state.unansweredColor}
+                setAnswerMode={(mode) => this.setState({answerMode: mode})}
+                setSelectedQuestion={(newSelectedQuestion) => this.setState({selectedQuestion: newSelectedQuestion})}
+                setUnansweredColor={(color) => this.setState({unansweredColor: color})}
+                setCurrentValue={this.setCurrentValue}
+                isFlagged={false}
+                selectedSampleId={1}
+            />
+        );
+    }
+}
+SurveyQuestionHelp.contextType = ProjectContext;
