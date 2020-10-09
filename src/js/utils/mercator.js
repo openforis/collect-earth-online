@@ -781,7 +781,7 @@ mercator.zoomMapToLayer = function (mapConfig, layerId, maxZoom) {
 
 // [Pure] Returns a style object that displays a circle with the
 // specified radius, fillColor, borderColor, and borderWidth. text
-// and textFillColor are used to overlay text on the circle.
+// is used to overlay text on the circle.
 mercator.getClusterStyle = function (radius, fillColor, borderColor, borderWidth, text) {
     return new Style({
         image: new CircleStyle({
@@ -858,7 +858,7 @@ const ceoMapStyleFunctions = {
     polygon: color => mercator.getPolygonStyle(color, 3),
     answeredpolygon: color => mercator.getPolygonStyle(color, 6),
     point: color => mercator.getCircleStyle(6, color, 2),
-    answeredpoint: color => mercator.getCircleStyle(6, color, color, 2),
+    answeredpoint: color => mercator.getCircleStyle(6, color, 2, color),
     circle: color => mercator.getCircleStyle(5, color, 2),
     square: color => mercator.getRegularShapeStyle(6, 4, Math.PI / 4, color, 2),
     cluster: numPlots => mercator.getClusterStyle(10, "#3399cc", "#ffffff", 1, numPlots),

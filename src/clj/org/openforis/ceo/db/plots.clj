@@ -24,7 +24,7 @@
           (merge {:id         sample_id
                   :sampleGeom sample_geom
                   :sampleId   sampleId ;TODO I don't think we distinguish between sample_id and sampleId so this could go away
-                  :geom       (tc/jsonb->clj geom)}
+                  :geom       geom}
                  (when (< 2 (count (str value)))
                    {:value (tc/jsonb->clj value)})))
         (call-sql "select_plot_samples" plot-id project-id)))
