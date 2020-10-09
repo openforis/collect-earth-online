@@ -169,21 +169,21 @@ export class SampleDesign extends React.Component {
                     {sampleOptions[sampleDistribution].description}
                 </p>
                 {sampleDistribution !== "none" &&
-                <div className="form-check form-check-inline mb-3">
-                    <input
-                        className="form-check-input"
-                        type="checkbox"
-                        id="allow-drawn-samples"
-                        onChange={() => setProjectState({allowDrawnSamples: !allowDrawnSamples})}
-                        checked={allowDrawnSamples || sampleDistribution === "none"}
-                    />
-                    <label
-                        className="form-check-label"
-                        htmlFor="allow-drawn-samples"
-                    >
-                        Allow users to draw their own samples
-                    </label>
-                </div>
+                    <div className="form-check form-check-inline mb-3">
+                        <input
+                            className="form-check-input"
+                            type="checkbox"
+                            id="allow-drawn-samples"
+                            onChange={() => setProjectState({allowDrawnSamples: !allowDrawnSamples})}
+                            checked={allowDrawnSamples || sampleDistribution === "none"}
+                        />
+                        <label
+                            className="form-check-label"
+                            htmlFor="allow-drawn-samples"
+                        >
+                            Allow users to draw their own samples
+                        </label>
+                    </div>
                 }
                 <div style={{display: "flex"}}>
                     {sampleOptions[sampleDistribution].inputs.map((i, idx)=>
