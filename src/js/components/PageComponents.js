@@ -44,7 +44,7 @@ class HelpSlideDialog extends React.Component {
         };
     }
 
-    render () {
+    render() {
         const {currentSlideIdx} = this.state;
         const {body, img} = this.props.helpSlides[currentSlideIdx];
         const isLastSlide = currentSlideIdx === this.props.helpSlides.length - 1;
@@ -114,7 +114,6 @@ class HelpSlideDialog extends React.Component {
                                 />
                             </div>
                         </div>
-
                     </div>
                 </div>
             </div>
@@ -132,7 +131,7 @@ export class NavigationBar extends React.Component {
         };
     }
 
-    componentDidMount () {
+    componentDidMount() {
         const page = window.location.pathname.slice(1);
         fetch("/locale/help.json")
             .then(response => response.ok ? response.json() : Promise.reject(response))
@@ -147,11 +146,11 @@ export class NavigationBar extends React.Component {
         fetch(`/locale/${page}/${getLanguage(availableLanguages)}.json`)
             .then(res => res.json())
             .then(data => this.setState({helpSlides: data, page: page}));
-    }
+    };
 
-    closeHelpMenu = () => this.setState({showHelpMenu: false})
+    closeHelpMenu = () => this.setState({showHelpMenu: false});
 
-    render () {
+    render() {
         const {userName, userId, children} = this.props;
         const uri = window.location.pathname;
         const loggedOut = !userName || userName === "" || userName === "guest";
