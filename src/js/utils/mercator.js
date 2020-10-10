@@ -1026,7 +1026,6 @@ mercator.removeInteractionByTitle = function (mapConfig, interactionTitle) {
 mercator.makeClickSelect = function (interactionTitle, layer) {
     const select = new Select({layers: [layer]});
     select.set("title", interactionTitle);
-    select.on("select");
     return select;
 };
 

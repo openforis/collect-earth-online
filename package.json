@@ -78,7 +78,6 @@
         "css-loader": "^4.3.0",
         "eslint": "^7.9.0",
         "eslint-plugin-react": "^7.21.0",
-        "file-loader": "^2.0.0",
         "style-loader": "^1.2.1",
         "tern": "^0.23.0",
         "webpack": "^4.44.2",
