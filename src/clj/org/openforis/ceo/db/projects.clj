@@ -56,6 +56,7 @@
    :sampleDistribution   (:sample_distribution project)
    :samplesPerPlot       (:samples_per_plot project)
    :sampleResolution     (:sample_resolution project)
+   :allowDrawnSamples    (:allow_drawn_samples project)
    :classification_times "" ; TODO this has never been used
    :editable             (:editable project)
    :validBoundary        (:valid_boundary project)
@@ -411,15 +412,17 @@
                                sample-resolution]
   ;; TODO Right now you have to have a sample shape or csv file if you have a plot shape file.
   ;;      Update create random / gridded to work on boundary so any plot type can have random, gridded, center.
-  (doseq [[x y] (cond
-                  (= "center" sample-distribution)
+  (doseq [[x y] (case sample-distribution
+                  "center"
                   [plot-center]
 
-                  (= "random" sample-distribution)
+                  "random"
                   (create-random-sample-set plot-center plot-shape plot-size samples-per-plot)
 
-                  :else
-                  (create-gridded-sample-set plot-center plot-shape plot-size sample-resolution))]
+                  "gridded"
+                  (create-gridded-sample-set plot-center plot-shape plot-size sample-resolution)
+
+                  [])]
     (call-sql "create_project_plot_sample"
               {:log? false}
               plot-id
@@ -454,10 +457,11 @@
               ext-sample-count (:sample_count counts)]
           (check-plot-limits ext-plot-count
                              50000.0
-                             (condp = sample-distribution
+                             (case sample-distribution
                                "gridded" (count-gridded-sample-set plot-size sample-resolution)
                                "random"  samples-per-plot
                                "center"  1.0
+                               "none"    1.0
                                (/ ext-sample-count ext-plot-count))
                              200.0
                              350000.0))
@@ -487,10 +491,11 @@
                            (count-gridded-points left bottom right top plot-spacing)
                            num-plots)
                          5000.0
-                         (condp = sample-distribution
+                         (case sample-distribution
                            "gridded" (count-gridded-sample-set plot-size sample-resolution)
+                           "random"  samples-per-plot
                            "center"  1.0
-                           samples-per-plot)
+                           "none"    1.0)
                          200.0
                          50000.0)
       ;; TODO use bulk insert, or use postGIS to generate points.
@@ -535,6 +540,7 @@
         sample-distribution  (:sampleDistribution params)
         samples-per-plot     (tc/str->int (:samplesPerPlot params))
         sample-resolution    (tc/str->float (:sampleResolution params))
+        allow-drawn-samples  (tc/str->bool (:allowDrawnSamples params))
         sample-values        (tc/clj->jsonb (:sampleValues params))
         survey-rules         (tc/clj->jsonb (:surveyRules params))
         project-options      (tc/clj->jsonb (:projectOptions params default-options))
@@ -562,6 +568,7 @@
                                                       sample-distribution
                                                       samples-per-plot
                                                       sample-resolution
+                                                      allow-drawn-samples
                                                       sample-values
                                                       survey-rules
                                                       (tc/clj->jsonb nil) ; TODO classification times is unused. Drop this column.

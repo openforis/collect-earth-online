@@ -30,6 +30,7 @@ const blankProject = {
     sampleDistribution: "random",
     sampleResolution: "",
     samplesPerPlot: "",
+    allowDrawnSamples: false,
     surveyQuestions: [],
     surveyRules: [],
     projectOptions: {
@@ -167,9 +168,9 @@ class Project extends React.Component {
                       projectTemplate: this.state.projectDetails.id,
                       sampleDistribution: this.state.projectDetails.sampleDistribution,
                       samplesPerPlot: this.state.projectDetails.samplesPerPlot,
-                      sampleResolution: this.state.projectDetails.sampleDistribution === "center"
-                            ? 2 * this.state.projectDetails.plotSize
-                            : this.state.projectDetails.sampleResolution,
+                      sampleResolution: this.state.projectDetails.sampleResolution,
+                      allowDrawnSamples: this.state.projectDetails.sampleDistribution === "none"
+                            || this.state.projectDetails.allowDrawnSamples,
                       sampleValues: this.state.projectDetails.surveyQuestions,
                       surveyRules: this.state.projectDetails.surveyRules,
                       plotFileName: this.state.projectDetails.plotFileName,
@@ -805,7 +806,7 @@ function PlotDesign ({
             <div id="plot-design">
                 <div className="row">
                     <div id="plot-design-col1" className="col">
-                        <h3 className="mb-3">Spatial Distribution</h3>
+                        <h3 className="mb-3">Generated Plot Spatial Distribution</h3>
                         <div className="form-check form-check-inline">
                             <input
                                 className="form-check-input"
@@ -1009,7 +1010,6 @@ function PlotDesign ({
     );
 }
 
-
 function SampleDesign ({
     setProjectDetail,
     plotSampleLimitVals,
@@ -1019,12 +1019,13 @@ function SampleDesign ({
         samplesPerPlot,
         sampleResolution,
         sampleFileName,
+        allowDrawnSamples,
     },
 }) {
     return (
         <SectionBlock title="Sample Design">
             <div id="sample-design">
-                <h3>Spatial Distribution</h3>
+                <h3>Generated Sample Spatial Distribution</h3>
                 <div className="form-check form-check-inline">
                     <input
                         className="form-check-input"
@@ -1145,22 +1146,37 @@ function SampleDesign ({
                         />
                     </label>
                 </div>
+                <div className="form-check form-check-inline">
+                    <input
+                        className="form-check-input"
+                        type="radio"
+                        id="sample-distribution-none"
+                        name="sample-distribution"
+                        defaultValue="none"
+                        onChange={() => setProjectDetail("sampleDistribution", "none")}
+                        checked={sampleDistribution === "none"}
+                    />
+                    <label
+                        className="form-check-label"
+                        htmlFor="sample-distribution-none"
+                    >
+                        None
+                    </label>
+                </div>
                 {["csv", "shp"].includes(sampleDistribution) &&
                     <div className="SampleDesign__file-display ml-3 d-inline">
                         File: {!sampleFileName ? <span className="font-italic">None</span> : sampleFileName}
                     </div>
                 }
                 <p id="sample-design-text" className="font-italic ml-2 small">-
-                    {sampleDistribution === "random" &&
-                        "Sample points will be randomly distributed within the plot boundary."}
-                    {sampleDistribution === "gridded" &&
-                        "Sample points will be arranged on a grid within the plot boundary using the sample resolution selected below."}
-                    {sampleDistribution === "center" &&
-                        "A Sample point will be placed on the center of the plot."}
-                    {sampleDistribution === "csv" &&
-                        "Specify your own sample points by uploading a CSV with these fields: LON,LAT,PLOTID,SAMPLEID."}
-                    {sampleDistribution === "shp" &&
-                        "Specify your own sample shapes by uploading a zipped Shapefile (containing SHP, SHX, DBF, and PRJ files) of polygon features. Each feature must have PLOTID and SAMPLEID fields."}
+                    {{
+                        "random": "Sample points will be randomly distributed within the plot boundary.",
+                        "gridded": "Sample points will be arranged on a grid within the plot boundary using the sample resolution selected below.",
+                        "center": "A Sample point will be placed on the center of the plot.",
+                        "csv": "Specify your own sample points by uploading a CSV with these fields: LON,LAT,PLOTID,SAMPLEID.",
+                        "shp": "Specify your own sample shapes by uploading a zipped Shapefile (containing SHP, SHX, DBF, and PRJ files) of polygon features. Each feature must have PLOTID and SAMPLEID fields.",
+                        "none": "Do not predefine any samples. Requires users to draw their own plots during collection.",
+                    }[sampleDistribution]}
                 </p>
                 <div className="form-group mb-3">
                     <label htmlFor="samples-per-plot">Samples per plot</label>
@@ -1192,6 +1208,26 @@ function SampleDesign ({
                         onChange={e => setProjectDetail("sampleResolution", e.target.value)}
                     />
                 </div>
+                {sampleDistribution === "none"
+                ? (
+                    <h3 className="my-3">Users will draw samples at collection time.</h3>
+                ) : (
+                    <div className="form-check form-check-inline my-3">
+                        <input
+                            className="form-check-input"
+                            type="checkbox"
+                            id="allow-drawn-samples"
+                            onChange={() => setProjectDetail("allowDrawnSamples", !allowDrawnSamples)}
+                            checked={allowDrawnSamples || sampleDistribution === "none"}
+                        />
+                        <label
+                            className="form-check-label"
+                            htmlFor="allow-drawn-samples"
+                        >
+                            Allow users to draw their own samples
+                        </label>
+                    </div>
+                )}
                 <p
                     id="plots info-text"
                     className="font-italic ml-2 small"
@@ -1206,10 +1242,9 @@ function SampleDesign ({
                         ? `This project will contain around ${formatNumberWithCommas(plotSampleLimitVals.plots)} plots.`
                         : ""
                     }
-                    {
-                        plotSampleLimitVals.plots && plotSampleLimitVals.plotLimitError
-                            ? `\n * The maximum allowed number for the selected plot distribution is ${formatNumberWithCommas(plotLimit)}.`
-                            : ""
+                    {plotSampleLimitVals.plots && plotSampleLimitVals.plotLimitError
+                        ? `\n * The maximum allowed number for the selected plot distribution is ${formatNumberWithCommas(plotLimit)}.`
+                        : ""
                     }
                 </p>
                 <p
@@ -1222,22 +1257,19 @@ function SampleDesign ({
                         whiteSpace: "pre-line",
                     }}
                 >
-                    {
-                        plotSampleLimitVals.perPlot
-                            ? `Each plot will contain around ${formatNumberWithCommas(plotSampleLimitVals.perPlot)} samples.`
-                            : ""
+                    {plotSampleLimitVals.perPlot
+                        ? `Each plot will contain around ${formatNumberWithCommas(plotSampleLimitVals.perPlot)} samples.`
+                        : ""
                     }
-                    {
-                        plotSampleLimitVals.plots && plotSampleLimitVals.perPlot
-                            ? `\nThere will be around ${formatNumberWithCommas(plotSampleLimitVals.plots * plotSampleLimitVals.perPlot)} ` +
-                              "total samples in the project."
-                            : ""
+                    {plotSampleLimitVals.plots && plotSampleLimitVals.perPlot
+                        ? `\nThere will be around ${formatNumberWithCommas(plotSampleLimitVals.plots * plotSampleLimitVals.perPlot)} `
+                            + "total samples in the project."
+                        : ""
                     }
-                    {
-                        plotSampleLimitVals.plots && plotSampleLimitVals.perPlot && plotSampleLimitVals.sampleLimitError
-                            ? `\n * The maximum allowed for the selected sample distribution is ${formatNumberWithCommas(perPlotLimit)}`
-                            + ` samples per plot.\n * The maximum allowed samples per project is ${formatNumberWithCommas(sampleLimit)}.`
-                            : ""
+                    {plotSampleLimitVals.plots && plotSampleLimitVals.perPlot && plotSampleLimitVals.sampleLimitError
+                        ? `\n * The maximum allowed for the selected sample distribution is ${formatNumberWithCommas(perPlotLimit)}`
+                           + ` samples per plot.\n * The maximum allowed samples per project is ${formatNumberWithCommas(sampleLimit)}.`
+                        : ""
                     }
                 </p>
             </div>
