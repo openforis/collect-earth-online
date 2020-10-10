@@ -1,7 +1,7 @@
 import React from "react";
 
 import {ImagerySelection} from "./ImagerySelection";
-import {Overview, OverviewHelp} from "./Overview";
+import {Overview, OverviewIntro} from "./Overview";
 import {PlotDesign, PlotDesignReview} from "./PlotDesign";
 import {SurveyQuestionDesign, SurveyQuestionHelp} from "./SurveyQuestions";
 import {SurveyRuleDesign} from "./SurveyRules";
@@ -30,7 +30,7 @@ export default class CreateProjectWizard extends React.Component {
                         templateProjectList={this.state.templateProjectList}
                     />,
                 helpDescription: "Introduction",
-                StepHelpComponent: OverviewHelp,
+                StepHelpComponent: OverviewIntro,
                 validate: this.validateOverview,
             },
             imagery: {
