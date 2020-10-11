@@ -210,7 +210,7 @@ function ProjectAOI() {
             <div className="col">
                 <h2 className="header px-0">Project AOI</h2>
                 <div id="project-aoi">
-                    <div id="project-map"></div>
+                    <div id="project-map" style={{height: "50vh", width: "100%"}}></div>
                 </div>
             </div>
         </div>
