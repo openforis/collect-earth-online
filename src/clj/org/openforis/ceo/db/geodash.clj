@@ -54,9 +54,9 @@
 (defn gateway-request [{:keys [params json-params server-name]}]
   (let [path (:path params)
         url  (if (str/starts-with? server-name "local")
-               "https://ceodev.servirglobal.net"
-               "https://localhost")]
-    (client/post (str url ":8888/" path)
+               "https://ceodev.servirglobal.net:8888/"
+               "http://localhost:8881/")]
+    (client/post (str url path)
                  {:body (tc/clj->json json-params)
                   :content-type :json
                   :accept :json})))
