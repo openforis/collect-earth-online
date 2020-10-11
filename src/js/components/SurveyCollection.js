@@ -97,10 +97,12 @@ export class SurveyCollection extends React.Component {
     showDrawTools = () => {
         const {mapConfig} = this.props;
         if (!mercator.getLayerById(mapConfig, "drawLayer")) {
-            mercator.addVectorLayer(mapConfig,
-                                    "drawLayer",
-                                    null,
-                                    mercator.ceoMapStyles("draw", "orange"));
+            mercator.addVectorLayer(
+                mapConfig,
+                "drawLayer",
+                null,
+                mercator.ceoMapStyles("draw", "orange")
+            );
         }
         mercator.enableDrawing(mapConfig, "drawLayer", this.state.drawTool);
     };
@@ -181,11 +183,11 @@ export class SurveyCollection extends React.Component {
                         title={removeEnumerator(this.getNodeById(node).question)}
                         onClick={() => this.setSurveyQuestionTree(i)}
                         style={{
-                            boxShadow: `${(i === this.state.currentNodeIndex)
-                                ? "0px 0px 2px 2px black inset,"
-                                : ""}
-                                    ${this.getTopColor(this.getNodeById(node))}
-                                    `,
+                            boxShadow:
+                                `${(i === this.state.currentNodeIndex)
+                                    ? "0px 0px 2px 2px black inset,"
+                                    : ""}
+                                ${this.getTopColor(this.getNodeById(node))}`,
                         }}
                     >
                         {i + 1}
@@ -218,7 +220,8 @@ export class SurveyCollection extends React.Component {
                     getRulesById={this.getRulesById}
                 />
             }
-        </div>);
+        </div>
+    );
 
     renderDrawTools = () => (
         <div style={{display: "flex", flexDirection: "column"}}>
