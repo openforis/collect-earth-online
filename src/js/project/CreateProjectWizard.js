@@ -6,7 +6,7 @@ import {PlotDesign, PlotDesignReview} from "./PlotDesign";
 import {SurveyQuestionDesign, SurveyQuestionHelp} from "./SurveyQuestions";
 import {SurveyRuleDesign} from "./SurveyRules";
 import AOIMap from "./AOIMap";
-import {SampleDesign, SampleReview} from "./SampleDesign";
+import {SampleDesign, SampleReview, SamplePreview} from "./SampleDesign";
 
 import {SvgIcon} from "../utils/svgIcons";
 import {mercator} from "../utils/mercator.js";
@@ -76,11 +76,7 @@ export default class CreateProjectWizard extends React.Component {
                         />
                     ),
                 helpDescription: "Collection Map Preview",
-                StepHelpComponent: () =>
-                    <AOIMap
-                        context={this.context}
-                        canDrag
-                    />,
+                StepHelpComponent: SamplePreview,
                 validate: this.validateSampleData,
             },
             questions: {

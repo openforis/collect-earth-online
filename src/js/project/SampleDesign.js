@@ -268,11 +268,31 @@ export function SampleReview() {
 }
 
 export function SamplePreview() {
+    const renderMessage = ({plotDistribution, sampleDistribution, plotShape}) => {
+        if (plotDistribution === "shp") {
+            return <h3>The system cannot currently generate a preview of shape files.</h3>;
+        } else if (sampleDistribution === "csv") {
+            return <h3>The system cannot currently generate a preview of sample csv files.</h3>;
+        } else if (sampleDistribution === "shp") {
+            return <h3>The system cannot currently generate a preview of sample shp files.</h3>;
+        } else {
+            return (
+                <div>
+                    <h3>The following is a mock up of a {plotShape} plot with {sampleDistribution} samples.</h3>
+                    <img
+                        className="w-100 h-100"
+                        src={"/img/examples/" + plotShape + "-" + sampleDistribution + ".webp"}
+                    />
+                </div>
+            );
+        }
+    };
+
     return (
         <ProjectContext.Consumer>
             {context =>
-                <div>
-                    <h3>This will look like a {context.plotShape} plot with {context.sampleDistribution} samples.</h3>
+                <div className="p-3">
+                    {renderMessage(context)}
                 </div>
             }
         </ProjectContext.Consumer>
