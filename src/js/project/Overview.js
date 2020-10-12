@@ -153,6 +153,10 @@ class ProjectTemplateSelection extends React.Component {
         };
     }
 
+    componentDidMount() {
+        this.setState({selectedTemplateProjectId: this.context.templateProjectId || -1});
+    }
+
     render() {
         const {
             templateProjectId,
@@ -206,7 +210,7 @@ class ProjectTemplateSelection extends React.Component {
                                 className="btn bg-lightgreen mr-1"
                                 style={{height: "calc(1.5em + .5rem + 2px)", padding: "0 .5rem"}}
                                 value="Load"
-                                disabled={this.state.selectedTemplateProjectId < 0}
+                                disabled={this.state.selectedTemplateProjectId === templateProjectId}
                                 onClick={() => setProjectTemplate(this.state.selectedTemplateProjectId)}
                             />
                             <input
@@ -214,7 +218,10 @@ class ProjectTemplateSelection extends React.Component {
                                 className="btn bg-lightgreen"
                                 style={{height: "calc(1.5em + .5rem + 2px)", padding: "0 .5rem"}}
                                 value="Clear"
-                                onClick={clearTemplateSelection}
+                                onClick={() => {
+                                    this.setState({selectedTemplateProjectId: -1});
+                                    clearTemplateSelection();
+                                }}
                             />
                         </span>
                     </div>

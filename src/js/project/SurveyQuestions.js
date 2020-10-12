@@ -351,8 +351,16 @@ export class SurveyQuestionHelp extends React.Component {
             selectedQuestion: {id: 0, question: "", answers: [], visible: [1]},
             userSamples: {1: {}},
             unansweredColor: "black",
-            answered: {},
+            visibleAnswered: {},
         };
+    }
+
+    componentDidUpdate(prevProps, prevState) {
+        // Update user samples calculations for display
+        if (this.context.surveyQuestions.length > 0
+            && this.state.userSamples !== prevState.userSamples) {
+            this.updateQuestionStatus();
+        }
     }
 
     getChildQuestions = (currentQuestionId) => {
@@ -368,6 +376,54 @@ export class SurveyQuestionHelp extends React.Component {
                     [...prev, ...this.getChildQuestions(acc.id)]
                 ), [question]);
         }
+    };
+
+    calcVisibleSamples = (currentQuestionId) => {
+        const {surveyQuestions} = this.context;
+        const {userSamples} = this.state;
+        const {parentQuestion, parentAnswer} = surveyQuestions.find(sq => sq.id === currentQuestionId);
+        const parentQuestionText = parentQuestion === -1
+              ? ""
+              : surveyQuestions.find(sq => sq.id === parentQuestion).question;
+
+        if (parentQuestion === -1) {
+            return [{id: 1}];
+        } else {
+            const correctAnswerText = surveyQuestions
+                .find(sq => sq.id === parentQuestion).answers
+                .find(ans => parentAnswer === -1 || ans.id === parentAnswer).answer;
+
+            return this.calcVisibleSamples(parentQuestion)
+                .filter(sample => {
+                    const sampleAnswer = userSamples[sample.id][parentQuestionText]
+                          && userSamples[sample.id][parentQuestionText].answer;
+                    return (parentAnswer === -1 && sampleAnswer) || correctAnswerText === sampleAnswer;
+                });
+        }
+    };
+
+    updateQuestionStatus = () => {
+        const visibleAnswered = this.context.surveyQuestions.reduce((acc, sq) => {
+            const visibleSamples = this.calcVisibleSamples(sq.id);
+            return ({
+                ...acc,
+                [sq.id]: {
+                    visible: visibleSamples,
+                    answered: visibleSamples
+                        .filter(vs => this.state.userSamples[vs.id][sq.question])
+                        .map(vs => ({
+                            sampleId: vs.id,
+                            answerId: this.state.userSamples[vs.id][sq.question].answerId,
+                            answerText: this.state.userSamples[vs.id][sq.question].answer,
+                        })),
+                },
+            });
+        }, {});
+
+        this.setState({
+            visibleAnswered: visibleAnswered,
+            selectedQuestion: {...this.state.selectedQuestion, ...visibleAnswered[this.state.selectedQuestion.id]},
+        });
     };
 
     setCurrentValue = (questionToSet, answerId, answerText) => {
@@ -400,27 +456,29 @@ export class SurveyQuestionHelp extends React.Component {
         this.setState({
             userSamples: {...this.state.userSamples, ...newSamples},
             selectedQuestion: questionToSet,
-            answered: {...this.state.answered, [questionToSet.id]: [{answerId: answerId, sampleId: 1}]},
+            // answered: {...this.state.answered, [questionToSet.id]: [{answerId: answerId, sampleId: 1}]},
         });
     };
 
     render() {
         return (
-            <SurveyCollection
-                surveyQuestions={this.context.surveyQuestions
-                    .map(q => ({...q, visible: [1], answered: this.state.answered[q.id] || []}))}
-                surveyRules={this.context.surveyRules}
-                allowDrawnSamples={this.context.allowDrawnSamples}
-                answerMode={this.state.answerMode}
-                selectedQuestion={this.state.selectedQuestion}
-                unansweredColor={this.state.unansweredColor}
-                setAnswerMode={(mode) => this.setState({answerMode: mode})}
-                setSelectedQuestion={(newSelectedQuestion) => this.setState({selectedQuestion: newSelectedQuestion})}
-                setUnansweredColor={(color) => this.setState({unansweredColor: color})}
-                setCurrentValue={this.setCurrentValue}
-                isFlagged={false}
-                selectedSampleId={1}
-            />
+            <div className="p-3">
+                <SurveyCollection
+                    surveyQuestions={this.context.surveyQuestions
+                        .map(q => ({...q, answered: [], visible: [], ...this.state.visibleAnswered[q.id]}))}
+                    surveyRules={this.context.surveyRules}
+                    allowDrawnSamples={this.context.allowDrawnSamples}
+                    answerMode={this.state.answerMode}
+                    selectedQuestion={this.state.selectedQuestion}
+                    unansweredColor={this.state.unansweredColor}
+                    setAnswerMode={(mode) => this.setState({answerMode: mode})}
+                    setSelectedQuestion={(newSelectedQuestion) => this.setState({selectedQuestion: newSelectedQuestion})}
+                    setUnansweredColor={(color) => this.setState({unansweredColor: color})}
+                    setCurrentValue={this.setCurrentValue}
+                    isFlagged={false}
+                    selectedSampleId={1}
+                />
+            </div>
         );
     }
 }

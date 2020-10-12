@@ -258,6 +258,7 @@ export default class CreateProjectWizard extends React.Component {
             plotSpacing,
             plotSize,
             plotFileName,
+            useTemplatePlots,
         } = this.context;
         const totalPlots = this.getTotalPlots();
         const errorList = [
@@ -269,9 +270,9 @@ export default class CreateProjectWizard extends React.Component {
                 && "A plot spacing is required for gridded plot distribution.",
             (plotDistribution !== "shp" && (!plotSize || plotSize === 0))
                 && "A plot size is required.",
-            (plotDistribution === "csv" && !(plotFileName && plotFileName.includes(".csv")))
+            (plotDistribution === "csv" && !useTemplatePlots && !(plotFileName && plotFileName.includes(".csv")))
                 && "A plot CSV (.csv) file is required.",
-            (plotDistribution === "shp" && !(plotFileName && plotFileName.includes(".zip")))
+            (plotDistribution === "shp" && !useTemplatePlots && !(plotFileName && plotFileName.includes(".zip")))
                 && "A plot SHP (.zip) file is required.",
             (totalPlots > plotLimit)
                 && "The plot or sample size limit exceeded. Check the Sample Design section for detailed info.",
@@ -286,6 +287,7 @@ export default class CreateProjectWizard extends React.Component {
             sampleResolution,
             plotShape,
             sampleFileName,
+            useTemplatePlots,
         } = this.context;
         const totalPlots = this.getTotalPlots();
         const samplesPerPlot = this.getSamplesPerPlot();
@@ -294,9 +296,9 @@ export default class CreateProjectWizard extends React.Component {
                 && "A number of samples per plot is required for random sample distribution.",
             (sampleDistribution === "gridded" && (!sampleResolution || sampleResolution === 0))
                 && "A sample spacing is required for gridded sample distribution.",
-            (sampleDistribution === "csv" && !(sampleFileName && sampleFileName.includes(".csv")))
+            (sampleDistribution === "csv" && !useTemplatePlots && !(sampleFileName && sampleFileName.includes(".csv")))
                 && "A sample CSV (.csv) file is required.",
-            (sampleDistribution === "shp" && !(sampleFileName && sampleFileName.includes(".zip")))
+            (sampleDistribution === "shp" && !useTemplatePlots && !(sampleFileName && sampleFileName.includes(".zip")))
                 && "A sample SHP (.zip) file is required.",
             (sampleDistribution === "gridded"
                 && plotShape === "circle"
@@ -366,7 +368,15 @@ export default class CreateProjectWizard extends React.Component {
 
     finish = () => {
         const failedStep = Object.entries(this.getSteps())
-            .find(([key, val]) => val.validate.call(this).length > 0);
+            .find(([key, val]) => {
+                const messages = val.validate.call(this);
+                if (messages.length > 0) {
+                    alert(messages.join("\n"));
+                    return true;
+                } else {
+                    return false;
+                }
+            });
         if (failedStep) {
             this.setState({step: failedStep[0]});
         } else {
@@ -378,8 +388,16 @@ export default class CreateProjectWizard extends React.Component {
 
     clearTemplateSelection = () => {
         this.context.resetProject();
-        this.context.setProjectState({imageryId: this.context.institutionImagery[0].id});
-        this.setState({templateProject: {}, complete: new Set()});
+        this.context.setProjectState({
+            imageryId: this.context.institutionImagery[0].id,
+            useTemplatePlots: false,
+            useTemplateWidgets: false,
+            templateProjectId: -1,
+        });
+        this.setState({
+            templateProject: {},
+            complete: new Set(),
+        });
     }
 
     setProjectTemplate = (newTemplateId) => {

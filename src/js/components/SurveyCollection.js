@@ -18,24 +18,31 @@ export class SurveyCollection extends React.Component {
     }
 
     componentDidMount() {
-        const topLevelNodeIds = this.props.surveyQuestions
-            .filter(sq => sq.parentQuestion === -1)
-            .sort((a, b) => a.id - b.id)
-            .map(sq => sq.id);
-        this.setState({
-            topLevelNodeIds: topLevelNodeIds,
-        });
+        this.calculateTopLevelNodes();
     }
 
     componentDidUpdate(prevProps, prevState) {
         if (this.state.currentNodeIndex !== prevState.currentNodeIndex) {
             this.props.setSelectedQuestion(this.getNodeById(this.state.topLevelNodeIds[this.state.currentNodeIndex]));
+        }
 
-        } else if (this.props.selectedQuestion.id !== prevProps.selectedQuestion.id
+        if (this.props.selectedQuestion.id !== prevProps.selectedQuestion.id
             && this.props.selectedQuestion.parentQuestion === -1) {
-
             this.setState({currentNodeIndex: this.state.topLevelNodeIds.indexOf(this.props.selectedQuestion.id)});
         }
+
+        if (prevProps.surveyQuestions !== this.props.surveyQuestions) {
+            this.calculateTopLevelNodes();
+        }
+    }
+
+    calculateTopLevelNodes = () => {
+        this.setState({
+            topLevelNodeIds: this.props.surveyQuestions
+                .filter(sq => sq.parentQuestion === -1)
+                .sort((a, b) => a.id - b.id)
+                .map(sq => sq.id),
+        });
     }
 
     prevSurveyQuestionTree = () => {
@@ -115,7 +122,7 @@ export class SurveyCollection extends React.Component {
     );
 
     unansweredColor = () => (
-        <div className="PlotNavigation__change-color row justify-content-center mb-2">
+        <div className="PlotNavigation__change-color d-flex justify-content-center mb-2">
             Unanswered Color
             <div className="form-check form-check-inline">
                 <input

@@ -37,7 +37,7 @@ export default class ReviewChanges extends React.Component {
                               plotSize: this.context.plotSize,
                               plotSpacing: this.context.plotSpacing,
                               privacyLevel: this.context.privacyLevel,
-                              projectTemplate: this.context.id,
+                              projectTemplate: this.context.templateProjectId,
                               sampleDistribution: this.context.sampleDistribution,
                               samplesPerPlot: this.context.samplesPerPlot,
                               sampleResolution: this.context.sampleResolution,
