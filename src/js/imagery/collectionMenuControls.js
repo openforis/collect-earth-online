@@ -527,7 +527,7 @@ export class GEEImageMenus extends React.Component {
                     <br />
                     <button
                         type="button"
-                        className="btn bg-lightgreen btn-sm btn-block"
+                        className="btn btn-lightgreen btn-sm btn-block"
                         id="update-gee-image-button"
                         onClick={this.updateGEEImagery}
                     >
@@ -634,7 +634,7 @@ export class GEEImageCollectionMenus extends React.Component {
                     <br />
                     <button
                         type="button"
-                        className="btn bg-lightgreen btn-sm btn-block"
+                        className="btn btn-lightgreen btn-sm btn-block"
                         id="update-gee-image-button"
                         onClick={this.updateGEEImageCollection}
                     >

@@ -961,7 +961,7 @@ class Collection extends React.Component {
                             document.documentElement.scrollTop = 0;
                         }
                     })}
-                    className="d-xl-none btn bg-lightgreen"
+                    className="d-xl-none btn btn-lightgreen"
                     style={{
                         position: "fixed",
                         zIndex: 99999,
@@ -1633,7 +1633,7 @@ function QuitMenu({projectId, toggleQuitModal}) {
                         </button>
                         <button
                             type="button"
-                            className="btn bg-lightgreen btn-sm"
+                            className="btn btn-lightgreen btn-sm"
                             id="quit-button"
                             onClick={() =>
                                 fetch(`/release-plot-locks?projectId=${projectId}`,

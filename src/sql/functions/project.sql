@@ -758,11 +758,59 @@ CREATE VIEW project_boundary AS
 FROM projects;
 
 -- Returns a row in projects by id
-CREATE OR REPLACE FUNCTION select_project(_project_id integer)
- RETURNS setOf project_return AS $$
+CREATE OR REPLACE FUNCTION select_project_by_id(_project_id integer)
+ RETURNS table (
+    project_id             integer,
+    institution_id         integer,
+    imagery_id             integer,
+    availability           text,
+    name                   text,
+    description            text,
+    privacy_level          text,
+    boundary               text,
+    plot_distribution      text,
+    num_plots              integer,
+    plot_spacing           float,
+    plot_shape             text,
+    plot_size              float,
+    sample_distribution    text,
+    samples_per_plot       integer,
+    sample_resolution      float,
+    allow_drawn_samples    boolean,
+    survey_questions       jsonb,
+    survey_rules           jsonb,
+    options                jsonb,
+    created_date           date,
+    published_date         date,
+    closed_date            date,
+    token_key              text
+ ) AS $$
 
-    SELECT *, FALSE as editable
-    FROM project_boundary
+    SELECT project_uid,
+        institution_rid,
+        imagery_rid,
+        availability,
+        name,
+        description,
+        privacy_level,
+        ST_AsGeoJSON(boundary),
+        plot_distribution,
+        num_plots,
+        plot_spacing,
+        plot_shape,
+        plot_size,
+        sample_distribution,
+        samples_per_plot,
+        sample_resolution,
+        allow_drawn_samples,
+        survey_questions,
+        survey_rules,
+        options,
+        created_date,
+        published_date,
+        closed_date,
+        token_key
+    FROM projects
     WHERE project_uid = _project_id
 
 $$ LANGUAGE SQL;
@@ -839,48 +887,6 @@ CREATE OR REPLACE FUNCTION select_institution_projects_with_roles(_user_id integ
     FROM select_all_user_projects(_user_id)
     WHERE institution_id = _institution_id
     ORDER BY project_id
-
-$$ LANGUAGE SQL;
-
--- Returns a row in projects by id
-CREATE OR REPLACE FUNCTION select_template_project(_project_id integer)
- RETURNS table (
-    imagery_id             integer,
-    name                   text,
-    description            text,
-    boundary               text,
-    plot_distribution      text,
-    num_plots              integer,
-    plot_spacing           float,
-    plot_shape             text,
-    plot_size              float,
-    sample_distribution    text,
-    samples_per_plot       integer,
-    sample_resolution      float,
-    allow_drawn_samples    boolean,
-    survey_questions       jsonb,
-    survey_rules           jsonb,
-    options                jsonb
- ) AS $$
-
-    SELECT imagery_rid,
-        name,
-        description,
-        ST_AsGeoJSON(boundary),
-        plot_distribution,
-        num_plots,
-        plot_spacing,
-        plot_shape,
-        plot_size,
-        sample_distribution,
-        samples_per_plot,
-        sample_resolution,
-        allow_drawn_samples,
-        survey_questions,
-        survey_rules,
-        options
-    FROM projects
-    WHERE project_uid = _project_id
 
 $$ LANGUAGE SQL;
 

@@ -23,7 +23,7 @@
         project-id (tc/str->int (:projectId params))
         token-key  (:tokenKey params)]
     (or (and token-key
-             (= token-key (:token_key (first (call-sql "select_project" {:log? false} project-id)))))
+             (= token-key (:token_key (first (call-sql "select_project_by_id" {:log? false} project-id)))))
         (sql-primitive (call-sql sql-query user-id project-id)))))
 
 (defn can-collect? [{:keys [params]}]
@@ -38,35 +38,24 @@
                       :showPlotInformation false
                       :autoLaunchGeoDash   true})
 
-(defn- single-project-object [project]
-  {:id                 (:project_id project)
-   :institution        (:institution_id project) ; TODO legacy variable name, update to institutionId
-   :imageryId          (:imagery_id project)
-   :availability       (:availability project)
-   :name               (:name project)
-   :description        (:description project)
-   :privacyLevel       (:privacy_level project)
-   :boundary           (:boundary project)
-   :plotDistribution   (:plot_distribution project)
-   :numPlots           (:num_plots project)
-   :plotSpacing        (:plot_spacing project)
-   :plotShape          (:plot_shape project)
-   :plotSize           (:plot_size project)
-   :sampleDistribution (:sample_distribution project)
-   :samplesPerPlot     (:samples_per_plot project)
-   :sampleResolution   (:sample_resolution project)
-   :allowDrawnSamples  (:allow_drawn_samples project)
-   :editable           (:editable project)
-   :validBoundary      (:valid_boundary project)
-   :sampleValues       (tc/jsonb->clj (:survey_questions project)) ; TODO why don't these names match
-   :surveyRules        (tc/jsonb->clj (:survey_rules project))
-   :projectOptions     (merge default-options (tc/jsonb->clj (:options project)))})
+(defn- single-project-list-object [project]
+  {:id            (:project_id project)
+   :institution   (:institution_id project) ; TODO legacy variable name, update to institutionId
+   :imageryId     (:imagery_id project)
+   :availability  (:availability project)
+   :name          (:name project)
+   :description   (:description project)
+   :privacyLevel  (:privacy_level project)
+   :boundary      (:boundary project)
+   :editable      (:editable project)
+   :validBoundary (:valid_boundary project)}) ; TODO set the visibility or availability for projects with invalid bounds so they dont show in the list in the first place
 
 (defn- get-project-list [sql-results]
-  (mapv single-project-object
+  (mapv single-project-list-object
         sql-results))
 
-;; TODO these long project lists do not need all of those values returned
+;; TODO These long project lists do not need all of those values returned.
+;; TODO Match the SQL function and returned values for each query separately
 (defn get-all-projects [{:keys [params]}]
   (let [user-id        (:userId params -1)
         institution-id (tc/str->int (:institutionId params))]
@@ -85,11 +74,6 @@
                                                  user-id
                                                  institution-id))))))
 
-(defn get-project-by-id [{:keys [params]}]
-  (let [project-id (tc/str->int (:projectId params))]
-    (data-response (single-project-object (first (call-sql "select_project" project-id))))))
-
-;; TODO, this might not need to be a separate route when the project list queries get simplified.
 (defn get-template-projects [{:keys [params]}]
   (let [user-id (tc/str->int (:userId params))]
     (data-response (mapv (fn [{:keys [project_id name]}]
@@ -97,9 +81,38 @@
                             :name name})
                          (call-sql "select_template_projects" user-id)))))
 
+(defn get-project-by-id [{:keys [params]}]
+  (let [project-id (tc/str->int (:projectId params))
+        project    (first (call-sql "select_project_by_id" project-id))]
+    (data-response {:id                 (:project_id project)
+                    :institution        (:institution_id project) ; TODO legacy variable name, update to institutionId
+                    :imageryId          (:imagery_id project)
+                    :availability       (:availability project)
+                    :name               (:name project)
+                    :description        (:description project)
+                    :privacyLevel       (:privacy_level project)
+                    :boundary           (:boundary project)
+                    :plotDistribution   (:plot_distribution project)
+                    :numPlots           (:num_plots project)
+                    :plotSpacing        (:plot_spacing project)
+                    :plotShape          (:plot_shape project)
+                    :plotSize           (:plot_size project)
+                    :sampleDistribution (:sample_distribution project)
+                    :samplesPerPlot     (:samples_per_plot project)
+                    :sampleResolution   (:sample_resolution project)
+                    :allowDrawnSamples  (:allow_drawn_samples project)
+                    :editable           (:editable project)
+                    :validBoundary      (:valid_boundary project)
+                    :sampleValues       (tc/jsonb->clj (:survey_questions project)) ; TODO why don't these names match
+                    :surveyRules        (tc/jsonb->clj (:survey_rules project))
+                    :projectOptions     (merge default-options (tc/jsonb->clj (:options project)))
+                    :createdDate        (str (:created_date project))
+                    :publishedDate      (str (:published_date project))
+                    :closedDate         (str (:closed_date project))})))
+
 (defn get-template-by-id [{:keys [params]}]
   (let [project-id (tc/str->int (:projectId params))
-        project (first (call-sql "select_template_project" project-id))]
+        project (first (call-sql "select_project_by_id" project-id))]
     (data-response {:imageryId          (:imagery_id project)
                     :name               (:name project)
                     :description        (:description project)
@@ -764,7 +777,7 @@
 ; TODO why did we move collection_time and analysis duration to the sample level when they are plot details?
 (defn dump-project-aggregate-data [{:keys [params]}]
   (let [project-id (tc/str->int (:projectId params))]
-    (if-let [project-info (first (call-sql "select_project" project-id))]
+    (if-let [project-info (first (call-sql "select_project_by_id" project-id))]
       (let [sample-value-group (tc/jsonb->clj (:survey_questions project-info)) ; TODO rename var
             text-headers       (concat plot-base-headers
                                        (get-ext-plot-headers project-id))
@@ -834,7 +847,7 @@
 ;;      They are a part of every project for a year now, I think we should just leave them in.
 (defn dump-project-raw-data [{:keys [params]}]
   (let [project-id (tc/str->int (:projectId params))]
-    (if-let [project-info (first (call-sql "select_project" project-id))]
+    (if-let [project-info (first (call-sql "select_project_by_id" project-id))]
       (let [sample-value-group (tc/jsonb->clj (:survey_questions project-info)) ; TODO rename var
             sample-value-trans (get-sample-value-translations sample-value-group)
             question-key       (first (get-sample-keys sample-value-group))

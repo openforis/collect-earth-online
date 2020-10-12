@@ -60,7 +60,7 @@ class UnsubscribeMailingList extends React.Component {
                                     onChange={e => this.setState({email: e.target.value})}
                                 />
                             </div>
-                            <button className="btn bg-lightgreen float-right mb-2" type="submit">Unsubscribe</button>
+                            <button className="btn btn-lightgreen float-right mb-2" type="submit">Unsubscribe</button>
                         </form>
                     </div>
                 </div>

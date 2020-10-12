@@ -515,6 +515,13 @@ export default class CreateProjectWizard extends React.Component {
                                 prevStep={this.prevStep}
                                 canFinish={Object.keys(this.getSteps()).length === this.state.complete.size || isLast}
                                 finish={this.finish}
+                                cancel={() => {
+                                    if (this.context.projectId > 0) {
+                                        this.context.setDesignMode("manage");
+                                    } else {
+                                        window.location = `/review-institution?institutionId=${this.context.institutionId}`;
+                                    }
+                                }}
                             />
                         </div>
                     </div>
@@ -525,29 +532,35 @@ export default class CreateProjectWizard extends React.Component {
 }
 CreateProjectWizard.contextType = ProjectContext;
 
-function NavigationButtons({prevStep, nextStep, finish, canFinish}) {
+function NavigationButtons({prevStep, nextStep, finish, canFinish, cancel}) {
     return (
         <div>
             <div id="project-management">
                 <div className="d-flex flex-row justify-content-around mt-2">
                     <input
                         type="button"
-                        className="btn bg-lightgreen"
+                        className="btn btn-lightgreen"
                         value="Back"
                         onClick={prevStep}
                     />
                     <input
                         type="button"
-                        className="btn bg-lightgreen"
+                        className="btn btn-lightgreen"
                         value="Next"
                         onClick={nextStep}
                     />
                     <input
                         type="button"
-                        className="btn bg-lightgreen"
+                        className="btn btn-lightgreen"
                         value="Review"
                         disabled={!canFinish}
                         onClick={finish}
+                    />
+                    <input
+                        type="button"
+                        className="btn btn-red"
+                        value="Cancel"
+                        onClick={cancel}
                     />
                 </div>
             </div>

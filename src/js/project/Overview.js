@@ -207,7 +207,7 @@ class ProjectTemplateSelection extends React.Component {
                         <span className="form-group">
                             <input
                                 type="button"
-                                className="btn bg-lightgreen mr-1"
+                                className="btn btn-lightgreen mr-1"
                                 style={{height: "calc(1.5em + .5rem + 2px)", padding: "0 .5rem"}}
                                 value="Load"
                                 disabled={this.state.selectedTemplateProjectId === templateProjectId}
@@ -215,7 +215,7 @@ class ProjectTemplateSelection extends React.Component {
                             />
                             <input
                                 type="button"
-                                className="btn bg-lightgreen"
+                                className="btn btn-lightgreen"
                                 style={{height: "calc(1.5em + .5rem + 2px)", padding: "0 .5rem"}}
                                 value="Clear"
                                 onClick={() => {

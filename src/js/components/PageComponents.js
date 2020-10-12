@@ -15,7 +15,7 @@ function LogOutButton({userName, uri}) {
         ?
             <button
                 type="button"
-                className="btn bg-lightgreen btn-sm"
+                className="btn btn-lightgreen btn-sm"
                 onClick={() => window.location = "/login?returnurl=" + encodeURIComponent(fullUri)}
             >
                 Login/Register
@@ -86,7 +86,7 @@ class HelpSlideDialog extends React.Component {
                                 <div className="d-flex justify-content-end">
                                     <button
                                         type="button"
-                                        className="btn bg-lightgreen btn-sm m-2"
+                                        className="btn btn-lightgreen btn-sm m-2"
                                         onClick={() => this.setState({currentSlideIdx: currentSlideIdx - 1})}
                                         disabled={currentSlideIdx === 0}
                                     >
@@ -94,7 +94,7 @@ class HelpSlideDialog extends React.Component {
                                     </button>
                                     <button
                                         type="button"
-                                        className="btn bg-lightgreen btn-sm m-2"
+                                        className="btn btn-lightgreen btn-sm m-2"
                                         onClick={() => {
                                             if (isLastSlide) {
                                                 this.props.closeHelpMenu();

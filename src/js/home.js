@@ -498,7 +498,7 @@ class Institution extends React.Component {
         return (
             <li>
                 <div
-                    className="btn bg-lightgreen btn-block p-2 rounded-0"
+                    className="btn btn-lightgreen btn-block p-2 rounded-0"
                     style={{marginBottom: "2px"}}
                     onClick={this.toggleShowProjectList}
                 >

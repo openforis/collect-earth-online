@@ -95,7 +95,7 @@ class Register extends React.Component {
                                     Subscribe To Mailinglist
                                 </label>
                             </div>
-                            <button className="btn bg-lightgreen float-right mb-2" type="submit">
+                            <button className="btn btn-lightgreen float-right mb-2" type="submit">
                                 Register
                             </button>
                         </form>

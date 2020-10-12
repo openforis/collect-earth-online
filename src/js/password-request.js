@@ -56,7 +56,7 @@ class PasswordRequest extends React.Component {
                                     onChange={e => this.setState({email: e.target.value})}
                                 />
                             </div>
-                            <button className="btn bg-lightgreen float-right mb-2" type="submit">
+                            <button className="btn btn-lightgreen float-right mb-2" type="submit">
                                 Request Password Reset Key
                             </button>
                         </form>

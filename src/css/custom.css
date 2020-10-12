@@ -167,6 +167,28 @@ h4 {font-size: 0.5rem;}
     background-color:#ecbc0d!important;
     color:#279B93;
 }
+.btn-lightgreen{
+    background-color:#31BAB0!important;
+    color:white;
+    -webkit-transition: background-color 50ms linear;
+    -ms-transition: background-color 50ms linear;
+    transition: background-color 50ms linear;
+}
+.btn-lightgreen:hover{
+    background-color: #279B93!important;
+    color:white;
+}
+.btn-red{
+    background-color:#c42121!important;
+    color:white;
+    -webkit-transition: background-color 50ms linear;
+    -ms-transition: background-color 50ms linear;
+    transition: background-color 50ms linear;
+}
+.btn-red:hover{
+    background-color:#8f1717!important;
+    color:white;
+}
 .btn-outline-lightgreen{
     color: #31BAB0;
     background-color: white;
@@ -254,10 +276,6 @@ h4 {font-size: 0.5rem;}
     background: white;
     cursor: inherit;
     display: block;
-}
-.btn.bg-lightgreen:hover{
-    background-color: #279B93!important;
-    color:white;
 }
 /* Links */
 /*************/
