@@ -571,7 +571,7 @@ class Collection extends React.Component {
                               collectionStart: this.state.collectionStart,
                               userSamples: this.state.userSamples,
                               userImages: this.state.userImages,
-                              plotSamples: this.state.currentPlot.samples,
+                              plotSamples: this.state.currentProject.allowDrawnSamples && this.state.currentPlot.samples,
                           }),
                       })
                     .then(response => {
