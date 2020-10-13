@@ -14,7 +14,6 @@ class Project extends React.Component {
 
         this.blankProject = {
             institution: -1,
-            availability: "nonexistent",
             name: "",
             description: "",
             projectOptions: {
@@ -22,7 +21,6 @@ class Project extends React.Component {
                 showPlotInformation: false,
                 autoLaunchGeoDash: true,
             },
-            privacyLevel: "institution",
             plotDistribution: "random",
             imageryId: -1,
             boundary: null,
@@ -51,7 +49,7 @@ class Project extends React.Component {
         };
 
         this.state = {
-            projectDetails: this.blankProject,
+            projectDetails: {...this.blankProject, privacyLevel: "institution"},
             institutionImagery: [],
             designMode: "loading",
             modalMessage: null,
