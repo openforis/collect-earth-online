@@ -50,10 +50,18 @@ class Collection extends React.Component {
 
     componentDidMount() {
         window.name = "_ceocollection";
+
         fetch(`/release-plot-locks?projectId=${this.props.projectId}`,
               {method: "POST"}
         );
+
         this.getProjectData();
+
+        if (this.state.currentProject.availability === "unpublished") {
+            alert("This project is unpublished. Only admins can collect. Any plot collections will be erased when the project is published.");
+        } else if (this.state.currentProject.availability === "closed") {
+            alert("This project has been closed. Admins can make corrections to any plot.");
+        }
     }
 
     componentDidUpdate(prevProps, prevState) {
@@ -532,59 +540,53 @@ class Collection extends React.Component {
     });
 
     postValuesToDB = () => {
-        if (this.state.currentProject.availability === "unpublished") {
-            alert("Please publish the project before starting the survey.");
-        } else if (this.state.currentProject.availability === "closed") {
-            alert("This project has been closed and is no longer accepting survey input.");
+        if (this.state.currentPlot.flagged) {
+            fetch("/flag-plot",
+                  {
+                      method: "POST",
+                      headers: {
+                          "Accept": "application/json",
+                          "Content-Type": "application/json",
+                      },
+                      body: JSON.stringify({
+                          projectId: this.props.projectId,
+                          plotId: this.state.currentPlot.id,
+                      }),
+                  })
+                .then(response => {
+                    if (response.ok) {
+                        this.nextPlot();
+                    } else {
+                        console.log(response);
+                        alert("Error flagging plot as bad. See console for details.");
+                    }
+                });
         } else {
-            if (this.state.currentPlot.flagged) {
-                fetch("/flag-plot",
-                      {
-                          method: "POST",
-                          headers: {
-                              "Accept": "application/json",
-                              "Content-Type": "application/json",
-                          },
-                          body: JSON.stringify({
-                              projectId: this.props.projectId,
-                              plotId: this.state.currentPlot.id,
-                          }),
-                      })
-                    .then(response => {
-                        if (response.ok) {
-                            this.nextPlot();
-                        } else {
-                            console.log(response);
-                            alert("Error flagging plot as bad. See console for details.");
-                        }
-                    });
-            } else {
-                fetch("/add-user-samples",
-                      {
-                          method: "post",
-                          headers: {
-                              "Accept": "application/json",
-                              "Content-Type": "application/json",
-                          },
-                          body: JSON.stringify({
-                              projectId: this.props.projectId,
-                              plotId: this.state.currentPlot.id,
-                              confidence: -1,
-                              collectionStart: this.state.collectionStart,
-                              userSamples: this.state.userSamples,
-                              userImages: this.state.userImages,
-                              plotSamples: this.state.currentProject.allowDrawnSamples && this.state.currentPlot.samples,
-                          }),
-                      })
-                    .then(response => {
-                        if (response.ok) {
-                            this.nextPlot();
-                        } else {
-                            console.log(response);
-                            alert("Error saving your assignments to the database. See console for details.");
-                        }
-                    });
-            }
+            fetch("/add-user-samples",
+                  {
+                      method: "post",
+                      headers: {
+                          "Accept": "application/json",
+                          "Content-Type": "application/json",
+                      },
+                      body: JSON.stringify({
+                          projectId: this.props.projectId,
+                          plotId: this.state.currentPlot.id,
+                          confidence: -1,
+                          collectionStart: this.state.collectionStart,
+                          userSamples: this.state.userSamples,
+                          userImages: this.state.userImages,
+                          plotSamples: this.state.currentProject.allowDrawnSamples && this.state.currentPlot.samples,
+                      }),
+                  })
+                .then(response => {
+                    if (response.ok) {
+                        this.nextPlot();
+                    } else {
+                        console.log(response);
+                        alert("Error saving your assignments to the database. See console for details.");
+                    }
+                });
         }
     };
 
