@@ -90,7 +90,7 @@ export function Overview(props) {
                         </div>
                         <p id="privacy-level-text" className="font-italic ml-2 small">
                             {(privacyLevel === "public" || privacyLevel === "users") &&
-                                    "**Public imagery will be visible to all users, and institution imagery will only be available"
+                                "**Public imagery will be visible to all users, and institution imagery will only be available"
                                     + "to the users in this institution."
                             }
                         </p>
@@ -158,17 +158,8 @@ class ProjectTemplateSelection extends React.Component {
     }
 
     render() {
-        const {
-            templateProjectId,
-            useTemplateWidgets,
-            useTemplatePlots,
-            setProjectState,
-        } = this.context;
-        const {
-            setProjectTemplate,
-            clearTemplateSelection,
-            templateProjectList,
-        } = this.props;
+        const {templateProjectId, useTemplateWidgets, useTemplatePlots, setProjectState} = this.context;
+        const {setProjectTemplate, clearTemplateSelection, templateProjectList} = this.props;
         return (
             <div id="project-template-selector">
                 <div>
@@ -299,7 +290,7 @@ export function OverviewReview() {
 }
 
 export function OverviewIntro() {
-    return <div>
+    return <div className="p-3">
         <h3>Welcome to the new wizard!</h3>
     </div>;
 }

@@ -13,7 +13,6 @@ class Project extends React.Component {
         super(props);
 
         this.blankProject = {
-            id: -1,
             institution: -1,
             availability: "nonexistent",
             name: "",
@@ -95,7 +94,7 @@ class Project extends React.Component {
     setProjectState = (newValue, callBack = () => null) =>
         this.setState({projectDetails: {...this.state.projectDetails, ...newValue}}, callBack);
 
-    resetProject = () => this.setState({projectDetails: this.blankProject});
+    resetProject = (defaults) => this.setState({projectDetails: this.blankProject, ...defaults});
 
     setDesignMode = (newMode) => this.setState({designMode: newMode})
 

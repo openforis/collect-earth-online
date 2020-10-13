@@ -48,19 +48,21 @@ export function ImagerySelection() {
                             <div className="form-group">
                                 <h3 htmlFor="additional-public-imagery">Public Imagery</h3>
                                 <div className="row mt-3" id="additional-public-imagery">
-                                    {renderImageryRow(institutionImagery.filter(imagery => imagery.visibility === "public"),
-                                                      imageryId,
-                                                      projectImageryList,
-                                                      setProjectState
+                                    {renderImageryRow(
+                                        institutionImagery.filter(imagery => imagery.visibility === "public"),
+                                        imageryId,
+                                        projectImageryList,
+                                        setProjectState
                                     )}
                                 </div>
                                 <br />
-                                <h3 htmlFor="additional-private-imagery">Institution Private Imagery*</h3>
+                                <h3 htmlFor="additional-private-imagery">Private Institution Imagery*</h3>
                                 <div className="row mt-3" id="additional-private-imagery">
-                                    {renderImageryRow(institutionImagery.filter(imagery => imagery.visibility === "private"),
-                                                      imageryId,
-                                                      projectImageryList,
-                                                      setProjectState
+                                    {renderImageryRow(
+                                        institutionImagery.filter(imagery => imagery.visibility === "private"),
+                                        imageryId,
+                                        projectImageryList,
+                                        setProjectState
                                     )}
                                 </div>
                             </div>
@@ -98,8 +100,7 @@ export function ImageryReview() {
                         <ul>
                             {projectImageryList
                                 .filter(id => id !== imageryId)
-                                .map(id =>
-                                    <li key={id}>{findImageryName(id, institutionImagery)}</li>)
+                                .map(id => <li key={id}>{findImageryName(id, institutionImagery)}</li>)
                             }
                         </ul>
                     </div>

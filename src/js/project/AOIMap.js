@@ -14,23 +14,30 @@ export default class AOIMap extends React.Component {
         if (this.props.context.institutionImagery.length > 0) this.initProjectMap();
     }
 
-    componentDidUpdate(prevProps, prevState) {
+    componentDidUpdate(prevProps) {
         if (this.props.context.institutionImagery.length > 0
             && this.props.context.institutionImagery !== prevProps.context.institutionImagery) {
             this.initProjectMap();
         }
 
-        const mapChange = prevState.mapConfig !== this.state.mapConfig;
         if (this.state.mapConfig) {
-            if (mapChange || prevProps.context.boundary !== this.props.context.boundary) {
+            if (prevProps.context.boundary !== this.props.context.boundary) {
                 this.updateBoundary();
             }
 
-            if (mapChange || prevProps.context.imageryId !== this.props.context.imageryId) {
+            if (prevProps.context.imageryId !== this.props.context.imageryId) {
                 this.updateBaseMapImagery();
             }
 
-            if (mapChange || prevProps.context.plots !== this.props.context.plots) {
+            if (prevProps.canDrag !== this.props.canDrag) {
+                if (this.props.canDrag) {
+                    this.showDragBoxDraw();
+                } else {
+                    this.hideDragBoxDraw();
+                }
+            }
+
+            if (prevProps.context.plots !== this.props.context.plots) {
                 if (this.props.context.plots.length > 0) {
                     this.showPlots();
                 } else {
@@ -43,10 +50,10 @@ export default class AOIMap extends React.Component {
     initProjectMap = () => {
         const newMapConfig = mercator.createMap("project-map", [0.0, 0.0], 1, this.props.context.institutionImagery);
         this.setState({mapConfig: newMapConfig}, () => {
-            // TODO: These updates may need to move back to didUpdate for RO modes
             this.updateBaseMapImagery();
             if (this.props.context.boundary) this.updateBoundary();
             if (this.props.canDrag) this.showDragBoxDraw();
+            if (this.props.context.plots.length > 0) this.showPlots();
         });
     };
 
@@ -69,8 +76,7 @@ export default class AOIMap extends React.Component {
         }
     };
 
-    showDragBoxDraw = (clearBox) => {
-        if (clearBox) mercator.removeLayerById(this.state.mapConfig, "currentAOI");
+    showDragBoxDraw = () => {
         const displayDragBoxBounds = (dragBox) => {
             mercator.removeLayerById(this.state.mapConfig, "currentAOI");
             const boundary = mercator.geometryToGeoJSON(dragBox.getGeometry().clone(), "EPSG:4326", "EPSG:3857");

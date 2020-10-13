@@ -1,9 +1,9 @@
 import React from "react";
-import {StatsCell, StatsRow} from "../components/FormComponents";
-import {convertSampleValuesToSurveyQuestions} from "../utils/surveyUtils";
-import {ProjectContext} from "./constants";
 
 import ReviewForm from "./ReviewForm";
+
+import {convertSampleValuesToSurveyQuestions} from "../utils/surveyUtils";
+import {ProjectContext} from "./constants";
 
 export default class ManageProject extends React.Component {
 
@@ -125,9 +125,7 @@ class ProjectManagement extends React.Component {
 
     publishProject = () => {
         if (confirm("Do you want to publish this project?")) {
-            fetch(`/publish-project?projectId=${this.context.id}`,
-                  {method: "POST"}
-            )
+            fetch(`/publish-project?projectId=${this.context.id}`, {method: "POST"})
                 .then(response => {
                     if (response.ok) {
                         this.context.setProjectState({availability: "published"});
@@ -141,9 +139,7 @@ class ProjectManagement extends React.Component {
 
     closeProject = () => {
         if (confirm("Do you want to close this project?")) {
-            fetch(`/close-project?projectId=${this.context.id}`,
-                  {method: "POST"}
-            )
+            fetch(`/close-project?projectId=${this.context.id}`, {method: "POST"})
                 .then(response => {
                     if (response.ok) {
                         this.context.setProjectState({availability: "closed"});
@@ -157,13 +153,11 @@ class ProjectManagement extends React.Component {
 
     deleteProject = () => {
         if (confirm("Do you want to delete this project? This operation cannot be undone.")) {
-            fetch(`/archive-project?projectId=${this.context.id}`,
-                  {method: "POST"}
-            )
+            fetch(`/archive-project?projectId=${this.context.id}`, {method: "POST"})
                 .then(response => {
                     if (response.ok) {
                         alert("Project " + this.context.id + " has been deleted.");
-                        window.location = `/review-institution?institutionId=${this.extent.institution}`;
+                        window.location = `/review-institution?institutionId=${this.context.institution}`;
                     } else {
                         console.log(response);
                         alert("Error deleting project. See console for details.");
@@ -182,9 +176,10 @@ class ProjectManagement extends React.Component {
                             <div className="d-flex flex-column">
                                 <div className="">
                                     Date Created
-                                    <span className="badge badge-pill bg-lightgreen ml-3">{this.context.createdDate || "Unknown"}</span>
+                                    <span className="badge badge-pill bg-lightgreen ml-3">
+                                        {this.context.createdDate || "Unknown"}
+                                    </span>
                                 </div>
-
                                 <div className="">
                                     Date Published
                                     <span className="badge badge-pill bg-lightgreen ml-3">
@@ -193,7 +188,6 @@ class ProjectManagement extends React.Component {
                                         : "Unknown" )}
                                     </span>
                                 </div>
-
                                 <div className="">
                                     Date Closed
                                     <span className="badge badge-pill bg-lightgreen ml-3">
@@ -209,8 +203,8 @@ class ProjectManagement extends React.Component {
                     <div className="col-5 d-flex flex-column align-items-center">
                         <h3 className="my-2">Modify Project Details</h3>
                         <input
-                            type="button"
                             className="btn btn-outline-red btn-sm w-100"
+                            type="button"
                             value={(button || "Close") + " Project"}
                             onClick={() => update.call(this)}
                         />
@@ -233,9 +227,9 @@ class ProjectManagement extends React.Component {
                             type="button"
                             value="Configure Geo-Dash"
                             onClick={() => window.open(
-                                "/widget-layout-editor?editable=true&"
-                            + `institutionId=${this.context.institution}`
-                            + `&projectId=${this.context.id}`,
+                                "/widget-layout-editor?editable=true&" // TODO, drop unused 'editable'
+                                    + `institutionId=${this.context.institution}`
+                                    + `&projectId=${this.context.id}`,
                                 "_geo-dash"
                             )}
                         />

@@ -25,84 +25,36 @@ export class SampleDesign extends React.Component {
         </div>
     )
 
-    renderPlotShape = () => {
-        const {plotShape, setProjectState} = this.context;
-        return (
-            <div className="form-group" style={{display: "flex", flexDirection: "column"}}>
-                <label>Plot Shape</label>
-                <div>
-                    <div className="form-check form-check-inline">
-                        <input
-                            className="form-check-input"
-                            type="radio"
-                            id="plot-shape-circle"
-                            checked={plotShape === "circle"}
-                            onChange={() => setProjectState({plotShape: "circle"})}
-                        />
-                        <label
-                            className="form-check-label"
-                            htmlFor="plot-shape-circle"
-                        >
-                            Circle
-                        </label>
-                    </div>
-                    <div className="form-check form-check-inline">
-                        <input
-                            className="form-check-input"
-                            type="radio"
-                            id="plot-shape-square"
-                            checked={plotShape === "square"}
-                            onChange={() => setProjectState({plotShape: "square"})}
-                        />
-                        <label
-                            className="form-check-label"
-                            htmlFor="plot-shape-square"
-                        >
-                            Square
-                        </label>
-                    </div>
-                </div>
-            </div>
-        );
-    }
-
     renderFileInput = (fileType) => (
         <div style={{display: "flex"}}>
             <label
+                id="custom-upload"
                 className="btn btn-sm btn-block btn-outline-lightgreen btn-file py-0 text-nowrap"
                 style={{display: "flex", alignItems: "center", width: "fit-content"}}
-                id="custom-upload"
-                htmlFor="plot-distribution-file"
+                htmlFor="sample-distribution-file"
             >
-                Upload File
+                Upload sample file
                 <input
                     type="file"
                     accept={fileType === "csv" ? "text/csv" : "application/zip"}
-                    id="plot-distribution-file"
+                    id="sample-distribution-file"
                     defaultValue=""
-                    name="plot-distribution-file"
+                    name="sample-distribution-file"
                     onChange={e => {
-                        this.context.setProjectState({plotFileName: e.target.files[0].name});
-                        encodeFileAsBase64(e.target.files[0], base64 => this.context.setProjectState({plotFileBase64: base64}));
+                        encodeFileAsBase64(e.target.files[0], base64 =>
+                            this.context.setProjectState({
+                                sampleFileName: e.target.files[0].name,
+                                sampleFileBase64: base64,
+                            }));
                     }}
                     style={{display: "none"}}
                 />
             </label>
             <label className="ml-3 text-nowrap">
-                File: {!this.context.plotFileName ? <span className="font-italic">None</span> : this.context.plotFileName}
+                File: {!this.context.sampleFileName ? <span className="font-italic">None</span> : this.context.sampleFileName}
             </label>
         </div>
     );
-
-    renderCSV = () => (
-        <div style={{display: "flex", flexDirection: "column"}}>
-            {this.renderFileInput("csv")}
-            <div style={{display: "flex"}}>
-                {this.renderPlotShape()}
-                {this.renderLabeledInput("Diameter (m)", "plotSize")}
-            </div>
-        </div>
-    )
 
     render() {
         const {plotDistribution, sampleDistribution, allowDrawnSamples, setProjectState} = this.context;
@@ -193,7 +145,7 @@ export class SampleDesign extends React.Component {
                     )}
                 </div>
                 <p
-                    className="font-italic ml-2 small"
+                    className="font-italic ml-2"
                     style={{
                         color: samplesPerPlot > perPlotLimit ? "#8B0000" : "#006400",
                         fontSize: "1rem",
@@ -268,7 +220,7 @@ export function SampleReview() {
 }
 
 export function SamplePreview() {
-    const renderMessage = ({plotDistribution, sampleDistribution, plotShape}) => {
+    const renderPreview = ({plotDistribution, sampleDistribution, plotShape}) => {
         if (plotDistribution === "shp") {
             return <h3>The system cannot currently generate a preview of shape files.</h3>;
         } else if (sampleDistribution === "csv") {
@@ -292,7 +244,7 @@ export function SamplePreview() {
         <ProjectContext.Consumer>
             {context =>
                 <div className="p-3">
-                    {renderMessage(context)}
+                    {renderPreview(context)}
                 </div>
             }
         </ProjectContext.Consumer>

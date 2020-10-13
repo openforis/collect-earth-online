@@ -12,7 +12,7 @@ function LogOutButton({userName, uri}) {
         .then(() => window.location = "/home");
 
     return loggedOut
-        ?
+        ? (
             <button
                 type="button"
                 className="btn btn-lightgreen btn-sm"
@@ -21,7 +21,7 @@ function LogOutButton({userName, uri}) {
                 Login/Register
             </button>
 
-        :
+        ) : (
             <>
                 <li id="username" className="nav-item my-auto">
                     <span className="nav-link disabled">{userName}</span>
@@ -33,7 +33,8 @@ function LogOutButton({userName, uri}) {
                 >
                     Logout
                 </button>
-            </>;
+            </>
+        );
 }
 
 class HelpSlideDialog extends React.Component {
@@ -161,8 +162,7 @@ export class NavigationBar extends React.Component {
 
         return (
             <>
-                {this.state.showHelpMenu
-                &&
+                {this.state.showHelpMenu &&
                     <HelpSlideDialog
                         helpSlides={this.state.helpSlides}
                         closeHelpMenu={this.closeHelpMenu}
@@ -196,14 +196,14 @@ export class NavigationBar extends React.Component {
                                 </li>
                             )}
                             {!loggedOut &&
-                            <li className={"nav-item" + ("/account" === uri && " active")}>
-                                <a className="nav-link" href={"/account?accountId=" + userId}>Account</a>
-                            </li>
+                                <li className={"nav-item" + ("/account" === uri && " active")}>
+                                    <a className="nav-link" href={"/account?accountId=" + userId}>Account</a>
+                                </li>
                             }
                             {userId === 1 &&
-                            <li className={"nav-item" + ("/mailing-list" === uri && " active")}>
-                                <a className="nav-link" href={"/mailing-list"}>Mailing List</a>
-                            </li>
+                                <li className={"nav-item" + ("/mailing-list" === uri && " active")}>
+                                    <a className="nav-link" href={"/mailing-list"}>Mailing List</a>
+                                </li>
                             }
                         </ul>
                         <ul id="login-info" className="navbar-nav mr-0">
@@ -271,35 +271,36 @@ export class GeoDashNavigationBar extends React.Component {
                             </ul>
                             <ul className="navbar-nav mr-0">
                                 {uri === "/widget-layout-editor" &&
-                                <>
-                                    <li className="nav-item my-auto ml-1" id="copyWidgetLayout">
-                                        <button
-                                            className="btn btn-outline-lightgreen btn-sm"
-                                            type="button"
-                                            onClick={() => this.setState({copyDialog: true})}
-                                            alt="This will remove any existing widgets currently configured."
-                                            title="This will remove any existing widgets currently configured."
-                                        >
-                                            Copy Layout
-                                        </button>
-                                    </li>
-                                    <li className="nav-item my-auto ml-1">
-                                        <button
-                                            className="btn btn-outline-lightgreen btn-sm"
-                                            type="button"
-                                            onClick={() => this.setState({addDialog : true})}
-                                        >
-                                            Add Widget
-                                        </button>
-                                    </li>
-                                </>
+                                    <>
+                                        <li className="nav-item my-auto ml-1" id="copyWidgetLayout">
+                                            <button
+                                                className="btn btn-outline-lightgreen btn-sm"
+                                                type="button"
+                                                onClick={() => this.setState({copyDialog: true})}
+                                                alt="This will remove any existing widgets currently configured."
+                                                title="This will remove any existing widgets currently configured."
+                                            >
+                                                Copy Layout
+                                            </button>
+                                        </li>
+                                        <li className="nav-item my-auto ml-1">
+                                            <button
+                                                className="btn btn-outline-lightgreen btn-sm"
+                                                type="button"
+                                                onClick={() => this.setState({addDialog : true})}
+                                            >
+                                                Add Widget
+                                            </button>
+                                        </li>
+                                    </>
                                 }
                                 <li className="nav-item my-auto ml-1">
                                     <button
                                         className="btn btn-outline-lightgreen btn-sm"
                                         type="button"
                                         onClick={() => window.open("geo-dash/geo-dash-help", "_blank")}
-                                    >Geo-Dash Help
+                                    >
+                                        Geo-Dash Help
                                     </button>
                                 </li>
                                 <LogOutButton userName={userName} uri={uri} />

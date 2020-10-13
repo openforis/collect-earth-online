@@ -356,7 +356,6 @@ export class SurveyQuestionHelp extends React.Component {
     }
 
     componentDidUpdate(prevProps, prevState) {
-        // Update user samples calculations for display
         if (this.context.surveyQuestions.length > 0
             && this.state.userSamples !== prevState.userSamples) {
             this.updateQuestionStatus();
@@ -456,7 +455,6 @@ export class SurveyQuestionHelp extends React.Component {
         this.setState({
             userSamples: {...this.state.userSamples, ...newSamples},
             selectedQuestion: questionToSet,
-            // answered: {...this.state.answered, [questionToSet.id]: [{answerId: answerId, sampleId: 1}]},
         });
     };
 

@@ -70,7 +70,6 @@ export default class ReviewChanges extends React.Component {
     };
 
     updateProject = () => {
-        // TODO warning message needs to include check for plot changes.
         if (confirm("Do you REALLY want to update this project?")) {
             this.context.processModal("Updating Project", () =>
                 fetch("/update-project",

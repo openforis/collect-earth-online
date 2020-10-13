@@ -82,9 +82,9 @@ export class PlotDesign extends React.Component {
                 <div>
                     <div className="form-check form-check-inline">
                         <input
+                            id="plot-shape-circle"
                             className="form-check-input"
                             type="radio"
-                            id="plot-shape-circle"
                             checked={plotShape === "circle"}
                             onChange={() => setProjectState({plotShape: "circle"})}
                         />
@@ -97,9 +97,9 @@ export class PlotDesign extends React.Component {
                     </div>
                     <div className="form-check form-check-inline">
                         <input
+                            id="plot-shape-square"
                             className="form-check-input"
                             type="radio"
-                            id="plot-shape-square"
                             checked={plotShape === "square"}
                             onChange={() => setProjectState({plotShape: "square"})}
                         />
@@ -117,7 +117,6 @@ export class PlotDesign extends React.Component {
 
     renderAOICoords = () => {
         const {latMax, lonMin, lonMax, latMin} = this.state;
-        const inEditMode = this.context.designMode === "wizard";
         return (
             <div>
                 <label>Boundary Coordinates</label>
@@ -132,7 +131,6 @@ export class PlotDesign extends React.Component {
                                 min="-90.0"
                                 max="90.0"
                                 step="any"
-                                disabled={!inEditMode}
                                 onChange={(e) => this.updateBoundaryFromCoords({latMax: parseFloat(e.target.value)})}
                             />
                         </div>
@@ -147,7 +145,6 @@ export class PlotDesign extends React.Component {
                                 min="-180.0"
                                 max="180.0"
                                 step="any"
-                                disabled={!inEditMode}
                                 onChange={(e) => this.updateBoundaryFromCoords({lonMin: parseFloat(e.target.value)})}
                             />
                         </div>
@@ -160,7 +157,6 @@ export class PlotDesign extends React.Component {
                                 min="-180.0"
                                 max="180.0"
                                 step="any"
-                                disabled={!inEditMode}
                                 onChange={(e) => this.updateBoundaryFromCoords({lonMax: parseFloat(e.target.value)})}
                             />
                         </div>
@@ -175,7 +171,6 @@ export class PlotDesign extends React.Component {
                                 min="-90.0"
                                 max="90.0"
                                 step="any"
-                                disabled={!inEditMode}
                                 onChange={(e) => this.updateBoundaryFromCoords({latMin: parseFloat(e.target.value)})}
                             />
                         </div>
@@ -188,12 +183,12 @@ export class PlotDesign extends React.Component {
     renderFileInput = (fileType) => (
         <div style={{display: "flex"}}>
             <label
+                id="custom-upload"
                 className="btn btn-sm btn-block btn-outline-lightgreen btn-file py-0 text-nowrap"
                 style={{display: "flex", alignItems: "center", width: "fit-content"}}
-                id="custom-upload"
                 htmlFor="plot-distribution-file"
             >
-                Upload File
+                Upload plot file
                 <input
                     type="file"
                     accept={fileType === "csv" ? "text/csv" : "application/zip"}
@@ -201,8 +196,11 @@ export class PlotDesign extends React.Component {
                     defaultValue=""
                     name="plot-distribution-file"
                     onChange={e => {
-                        this.context.setProjectState({plotFileName: e.target.files[0].name});
-                        encodeFileAsBase64(e.target.files[0], base64 => this.context.setProjectState({plotFileBase64: base64}));
+                        encodeFileAsBase64(e.target.files[0], base64 =>
+                            this.context.setProjectState({
+                                plotFileName: e.target.files[0].name,
+                                plotFileBase64: base64,
+                            }));
                     }}
                     style={{display: "none"}}
                 />
@@ -291,7 +289,6 @@ export class PlotDesign extends React.Component {
                         </div>
                     </div>
                 </div>
-                {/* TODO have default message.  Warn for no boundary. */}
                 <p
                     className="font-italic ml-2 small"
                     style={{

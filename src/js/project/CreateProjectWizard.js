@@ -115,7 +115,7 @@ export default class CreateProjectWizard extends React.Component {
 
     /// API Calls
 
-    getTemplateProjects = () => {
+    getTemplateProjects = () =>
         fetch("/get-template-projects")
             .then(response => response.ok ? response.json() : Promise.reject(response))
             .then(data => this.setState({templateProjectList: data}))
@@ -123,7 +123,6 @@ export default class CreateProjectWizard extends React.Component {
                 console.log(response);
                 this.setState({templateProjectList: [{id: -1, name: "Failed to load"}]});
             });
-    };
 
     getTemplateProject = (projectId) =>
         Promise.all([this.getTemplateById(projectId),
@@ -170,7 +169,6 @@ export default class CreateProjectWizard extends React.Component {
             });
 
     // TODO: just return with the project info because we only need the integer ID
-    // TODO: Test with project from different institution
     getProjectImagery = (projectId) =>
         fetch("/get-project-imagery?projectId=" + projectId)
             .then(response => response.ok ? response.json() : Promise.reject(response))
@@ -207,7 +205,6 @@ export default class CreateProjectWizard extends React.Component {
         }
     };
 
-    // TODO, this does not account for less samples in a circle plot
     getSamplesPerPlot = () => {
         if (this.context.sampleDistribution === "random"
             && this.context.samplesPerPlot) {
@@ -327,25 +324,21 @@ export default class CreateProjectWizard extends React.Component {
         ? {overview: this.steps.overview}
         : this.steps;
 
-    checkAllSteps = () =>
-        Object.entries(this.getSteps()).forEach(([key, val]) =>
-            this.setState({
-                complete: val.validate.call(this).length > 0
-                    ? removeFromSet(this.state.complete, key)
-                    : this.state.complete.add(key),
-            })
-        )
-
+    checkAllSteps = () => {
+        const validSteps = Object.entries(this.getSteps())
+            .filter(([key, val]) => val.validate.call(this).length === 0)
+            .map(([key, val]) => key);
+        this.setState({complete: new Set(validSteps)});
+    }
 
     tryChangeStep = (newStep, alertUser = true) => {
-        const dev = false;
         const errorList = this.getSteps()[this.state.step].validate.call(this);
         this.setState({
             complete: errorList.length > 0
                 ? removeFromSet(this.state.complete, this.state.step)
                 : this.state.complete.add(this.state.step),
         });
-        if (alertUser && !dev && errorList.length > 0) {
+        if (alertUser && errorList.length > 0) {
             alert(errorList.join("\n"));
         } else {
             this.setState({step: newStep});
@@ -365,9 +358,9 @@ export default class CreateProjectWizard extends React.Component {
     finish = () => {
         const failedStep = Object.entries(this.getSteps())
             .find(([key, val]) => {
-                const messages = val.validate.call(this);
-                if (messages.length > 0) {
-                    alert(messages.join("\n"));
+                const errorList = val.validate.call(this);
+                if (errorList.length > 0) {
+                    alert(errorList.join("\n"));
                     return true;
                 } else {
                     return false;
@@ -383,13 +376,7 @@ export default class CreateProjectWizard extends React.Component {
     /// Template handling
 
     clearTemplateSelection = () => {
-        this.context.resetProject();
-        this.context.setProjectState({
-            imageryId: this.context.institutionImagery[0].id,
-            useTemplatePlots: false,
-            useTemplateWidgets: false,
-            templateProjectId: -1,
-        });
+        this.context.resetProject({imageryId: this.context.institutionImagery[0].id});
         this.setState({
             templateProject: {},
             complete: new Set(),
@@ -468,12 +455,6 @@ export default class CreateProjectWizard extends React.Component {
         );
     }
 
-    renderStepBar = () => (
-        <div style={{display: "flex", margin: ".75rem"}}>
-            {Object.keys(this.getSteps()).map(s => this.renderStep(s))}
-        </div>
-    );
-
     render() {
         const {description, StepComponent, helpDescription, StepHelpComponent} = this.getSteps()[this.state.step];
         const isLast = last(Object.keys(this.getSteps())) === this.state.step;
@@ -482,7 +463,9 @@ export default class CreateProjectWizard extends React.Component {
                 id="wizard"
                 className="d-flex pb-5 full-height align-items-center flex-column"
             >
-                {this.renderStepBar()}
+                <div style={{display: "flex", margin: ".75rem"}}>
+                    {Object.keys(this.getSteps()).map(s => this.renderStep(s))}
+                </div>
                 <div
                     style={{
                         display: "flex",
@@ -535,30 +518,30 @@ CreateProjectWizard.contextType = ProjectContext;
 function NavigationButtons({prevStep, nextStep, finish, canFinish, cancel}) {
     return (
         <div>
-            <div id="project-management">
+            <div id="navigation-buttons">
                 <div className="d-flex flex-row justify-content-around mt-2">
                     <input
-                        type="button"
                         className="btn btn-lightgreen"
+                        type="button"
                         value="Back"
                         onClick={prevStep}
                     />
                     <input
-                        type="button"
                         className="btn btn-lightgreen"
+                        type="button"
                         value="Next"
                         onClick={nextStep}
                     />
                     <input
-                        type="button"
                         className="btn btn-lightgreen"
+                        type="button"
                         value="Review"
                         disabled={!canFinish}
                         onClick={finish}
                     />
                     <input
-                        type="button"
                         className="btn btn-red"
+                        type="button"
                         value="Cancel"
                         onClick={cancel}
                     />
