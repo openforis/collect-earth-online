@@ -1599,11 +1599,18 @@ CREATE OR REPLACE FUNCTION update_user_samples(
 
 $$ LANGUAGE SQL;
 
-CREATE OR REPLACE FUNCTION delete_saved_samples(_plot_id integer)
+CREATE OR REPLACE FUNCTION delete_saved_samples_by_plot(_plot_id integer)
  RETURNS void AS $$
 
     DELETE FROM user_plots WHERE plot_rid = _plot_id;
     DELETE FROM samples WHERE plot_rid = _plot_id;
+
+$$ LANGUAGE SQL;
+
+CREATE OR REPLACE FUNCTION delete_user_plots_by_project(_project_id integer)
+ RETURNS void AS $$
+
+    DELETE FROM user_plots WHERE plot_rid IN (SELECT plot_uid FROM plots WHERE project_rid = _project_id)
 
 $$ LANGUAGE SQL;
 

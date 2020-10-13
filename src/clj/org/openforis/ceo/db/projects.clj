@@ -138,7 +138,9 @@
                     :userStats       (tc/jsonb->clj (:user_stats stats))})))
 
 (defn publish-project [{:keys [params]}]
-  (let [project-id (tc/val->int (:projectId params))]
+  (let [project-id   (tc/val->int (:projectId params))
+        clear-saved? (tc/val->bool (:clearSaved params))]
+    (when clear-saved? (call-sql "delete_user_plots_by_project" project-id))
     (call-sql "publish_project" project-id)
     (data-response "")))
 
