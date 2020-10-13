@@ -124,8 +124,13 @@ class ProjectManagement extends React.Component {
     /// API Calls
 
     publishProject = () => {
-        if (confirm("Do you want to publish this project?")) {
-            fetch(`/publish-project?projectId=${this.context.id}`, {method: "POST"})
+        const unpublished = this.context.availability === "unpublished";
+        const message = unpublished
+            ? "Do you want to publish this project?  This action will clear plots collected by admins to allow collecting by users."
+            : "Do you want to re-open this project?  Members will be allowed to collect plots again.";
+        if (confirm(message)) {
+            fetch(`/publish-project?projectId=${this.context.id}&clearSaved=${unpublished}`,
+                  {method: "POST"})
                 .then(response => {
                     if (response.ok) {
                         this.context.setProjectState({availability: "published"});
