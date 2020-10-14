@@ -415,7 +415,7 @@ class Collection extends React.Component {
     };
 
     showPlotSamples = () => {
-        const {mapConfig, selectedQuestion: {visible}} = this.state;
+        const {mapConfig, unansweredColor, selectedQuestion: {visible}} = this.state;
         mercator.disableSelection(mapConfig);
         mercator.removeLayerById(mapConfig, "currentSamples");
         mercator.removeLayerById(mapConfig, "drawLayer");
@@ -425,7 +425,7 @@ class Collection extends React.Component {
             mercator.samplesToVectorSource(visible),
             feature => mercator.ceoMapStyles(
                 feature.getGeometry().getType(),
-                this.state.unansweredColor
+                unansweredColor
             )
         );
         mercator.enableSelection(mapConfig,
@@ -434,22 +434,22 @@ class Collection extends React.Component {
     };
 
     featuresToDrawLayer = (drawTool) => {
-        const {mapConfig} = this.state;
+        const {mapConfig, currentPlot} = this.state;
         mercator.removeLayerById(mapConfig, "currentSamples");
         mercator.removeLayerById(mapConfig, "drawLayer");
         mercator.addVectorLayer(
             mapConfig,
             "drawLayer",
-            mercator.samplesToVectorSource(this.state.currentPlot.samples),
+            mercator.samplesToVectorSource(currentPlot.samples),
             mercator.ceoMapStyles("draw", "orange")
         );
         mercator.enableDrawing(mapConfig, "drawLayer", drawTool);
     };
 
     featuresToSampleLayer = () => {
-        const {mapConfig} = this.state;
+        const {mapConfig, userSamples, userImages, currentPlot} = this.state;
         mercator.disableDrawing(mapConfig);
-        const allFeatures = mercator.getAllFeatures(this.state.mapConfig, "drawLayer") || [];
+        const allFeatures = mercator.getAllFeatures(mapConfig, "drawLayer") || [];
         const getMin = (samples) => Math.min(0, ...samples.map(s => s.id));
         const newSamples = allFeatures.reduce((acc, cur) => {
             const sampleId = cur.get("sampleId");
@@ -470,9 +470,8 @@ class Collection extends React.Component {
         }
         , []);
 
-        const {userSamples, userImages} = this.state;
         this.setState({
-            currentPlot: {...this.state.currentPlot, samples: newSamples},
+            currentPlot: {...currentPlot, samples: newSamples},
             userSamples: newSamples.reduce((obj, s) => {
                 obj[s.id] = userSamples[s.id] || {};
                 return obj;
@@ -482,7 +481,7 @@ class Collection extends React.Component {
                 return obj;
             }, {}),
         });
-    }
+    };
 
     showGeoDash = () => {
         const {currentPlot, mapConfig, currentProject} = this.state;

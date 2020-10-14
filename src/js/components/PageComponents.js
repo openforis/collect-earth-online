@@ -131,7 +131,7 @@ export class NavigationBar extends React.Component {
         };
     }
 
-    componentDidMount () {
+    componentDidMount() {
         fetch("/locale/help.json")
             .then(response => response.ok ? response.json() : Promise.reject(response))
             .then(data => {
