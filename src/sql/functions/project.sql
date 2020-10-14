@@ -1420,6 +1420,7 @@ CREATE OR REPLACE FUNCTION select_plot_samples(_plot_id integer, _project_id int
 
 $$ LANGUAGE SQL;
 
+-- FIXME _project_id should not be needed
 -- FIXME this does not account for someone submitting to a plot already saved
 -- FIXME this can probably be eliminate with a rewrite to update_user_samples
 -- Returns user plots table id if available
@@ -1436,6 +1437,7 @@ CREATE OR REPLACE FUNCTION check_user_plots(_project_id integer, _plot_id intege
 
 $$ LANGUAGE SQL;
 
+-- FIXME _project_id is not used
 -- Add user sample value selections
 CREATE OR REPLACE FUNCTION add_user_samples(
     _project_id          integer,
@@ -1476,7 +1478,7 @@ CREATE OR REPLACE FUNCTION add_user_samples(
 
 $$ LANGUAGE SQL;
 
--- FIXME, project_id, plot_id, user_id is probably enough information since that is all that is provided to check_user_plots
+-- FIXME _project_id is not used
 -- Update user sample value selections
 CREATE OR REPLACE FUNCTION update_user_samples(
     _user_plots_uid      integer,
@@ -1523,6 +1525,14 @@ CREATE OR REPLACE FUNCTION update_user_samples(
             value = excluded.value
 
     RETURNING sample_values.sample_rid
+
+$$ LANGUAGE SQL;
+
+CREATE OR REPLACE FUNCTION delete_saved_samples(_plot_id integer)
+ RETURNS void AS $$
+
+    DELETE FROM user_plots WHERE plot_rid = _plot_id;
+    DELETE FROM samples WHERE plot_rid = _plot_id;
 
 $$ LANGUAGE SQL;
 
