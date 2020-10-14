@@ -1,6 +1,6 @@
 [
     {
-        "body": "Click Go to first plot to start collecting.",
+        "body": "Click 'Go to first plot' to start collecting.",
         "img": "/img/goto.png"
     },
     {
@@ -12,7 +12,7 @@
         "img": "/img/questions.png"
     },
     {
-        "body": "Click on each sample or use the control button to select with the mouse.",
+        "body": "Select one sample by clicking it. Select multiple samples by either shift-clicking each one or holding control and clicking and dragging a box around all of them.",
         "img": "/img/samples.png"
     },
     {
