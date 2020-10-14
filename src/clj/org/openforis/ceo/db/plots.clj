@@ -2,9 +2,9 @@
   (:import java.sql.Timestamp)
   (:require [clojure.set :as set]
             [org.openforis.ceo.utils.type-conversion :as tc]
-            [org.openforis.ceo.database        :refer [call-sql sql-primitive]]
-            [org.openforis.ceo.db.institutions :refer [is-inst-admin-query?]]
-            [org.openforis.ceo.views           :refer [data-response]]))
+            [org.openforis.ceo.database    :refer [call-sql sql-primitive]]
+            [org.openforis.ceo.db.projects :refer [is-proj-admin?]]
+            [org.openforis.ceo.views       :refer [data-response]]))
 
 (defn- time-plus-five-min []
   (Timestamp. (+ (System/currentTimeMillis) (* 5 60 1000))))
@@ -65,24 +65,22 @@
   (data-response ""))
 
 (defn- get-collection-plot [params method]
-  (let [get-user-plots? (tc/str->bool (:getUserPlots params))
+  (let [navigation-mode (:navigationMode params "unanalyzed")
         project-id      (tc/str->int (:projectId params))
-        institution-id  (tc/str->int (:institutionId params))
         plot-id         (tc/str->int (:plotId params))
         user-id         (:userId params -1)
         user-name       (:userName params)
-        inst-admin?     (is-inst-admin-query? user-id institution-id)
-        sql2            #(call-sql % project-id plot-id)
-        sql3            #(call-sql % project-id plot-id user-name)]
-    (data-response (if-let [plot-info (first (cond
-                                               (and inst-admin? get-user-plots?)
-                                               (sql2 (str "select_" method "user_plot_by_admin"))
-
-                                               get-user-plots?
-                                               (sql3 (str "select_" method "user_plot"))
-
-                                               :else
-                                               (sql2 (str "select_" method "unassigned_plot"))))]
+        review-all?     (and (is-proj-admin? {:params params})
+                             (= "all" navigation-mode))]
+    (data-response (if-let [plot-info (first (if (= "unanalyzed" navigation-mode)
+                                               (call-sql (str "select_" method "unassigned_plot")
+                                                         project-id
+                                                         plot-id)
+                                               (call-sql (str "select_" method "user_plot")
+                                                         project-id
+                                                         plot-id
+                                                         user-name
+                                                         review-all?)))]
                      (do
                        (unlock-plots user-id)
                        (call-sql "lock_plot"
