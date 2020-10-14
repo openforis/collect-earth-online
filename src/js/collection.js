@@ -32,7 +32,6 @@ class Collection extends React.Component {
             nextPlotButtonDisabled: false,
             plotList: [],
             prevPlotButtonDisabled: false,
-            reviewPlots: false,
             unansweredColor: "black",
             selectedQuestion: {id: 0, question: "", answers: []},
             selectedSampleId: -1,
@@ -45,6 +44,7 @@ class Collection extends React.Component {
             showQuitModal: false,
             answerMode: "question",
             modalMessage: null,
+            navigationMode: "unanalyzed",
         };
     }
 
@@ -269,17 +269,17 @@ class Collection extends React.Component {
         this.processModal(`Getting plot ${plotId}`, () =>
             fetch("/get-plot-by-id?"
               + getQueryString({
-                  getUserPlots: this.state.reviewPlots,
                   plotId: plotId,
                   projectId: this.props.projectId,
+                  navigationMode: this.state.navigationMode,
               }))
                 .then(response => response.ok ? response.json() : Promise.reject(response))
                 .then(data => {
                     if (data === "done") {
-                        alert(this.state.reviewPlots
+                        alert(this.state.navigationMode !== "unanalyzed"
                           ? "This plot was analyzed by someone else. You are logged in as " + this.props.userName + "."
                           : "This plot has already been analyzed.");
-                    } else if (data === "not found") {
+                    } else if (data === "not-found") {
                         alert("Plot " + plotId + " not found.");
                     } else {
                         this.setState({
@@ -302,16 +302,15 @@ class Collection extends React.Component {
         this.processModal(plotId > 0 ? "Getting next plot" : "Getting first plot", () =>
             fetch("/get-next-plot?"
               + getQueryString({
-                  getUserPlots: this.state.reviewPlots,
                   plotId: plotId,
                   projectId: this.props.projectId,
-                  institutionId: this.state.currentProject.institution,
+                  navigationMode: this.state.navigationMode,
               }))
                 .then(response => response.ok ? response.json() : Promise.reject(response))
                 .then(data => {
                     if (data === "done") {
                         if (plotId === -1) {
-                            alert(this.state.reviewPlots
+                            alert(this.state.navigationMode !== "unanalyzed"
                               ? "You have not reviewed any plots. You are logged in as " + this.props.userName + "."
                               : "All plots have been analyzed for this project.");
                         } else {
@@ -338,16 +337,15 @@ class Collection extends React.Component {
         this.processModal("Getting previous plot", () =>
             fetch("/get-prev-plot?"
               + getQueryString({
-                  getUserPlots: this.state.reviewPlots,
                   plotId: plotId,
                   projectId: this.props.projectId,
-                  institutionId: this.state.currentProject.institution,
+                  navigationMode: this.state.navigationMode,
               }))
                 .then(response => response.ok ? response.json() : Promise.reject(response))
                 .then(data => {
                     if (data === "done") {
                         this.setState({prevPlotButtonDisabled: true});
-                        alert(this.state.reviewPlots
+                        alert(this.state.navigationMode !== "unanalyzed"
                           ? "No previous plots were analyzed by you. You are logged in as " + this.props.userName + "."
                           : "All previous plots have been analyzed.");
                     } else {
@@ -549,8 +547,8 @@ class Collection extends React.Component {
         }
     };
 
-    setReviewPlots = () => this.setState({
-        reviewPlots: !this.state.reviewPlots,
+    setNavigationMode = (newMode) => this.setState({
+        navigationMode: newMode,
         prevPlotButtonDisabled: false,
         nextPlotButtonDisabled: false,
     });
@@ -1022,14 +1020,15 @@ class Collection extends React.Component {
                         showNavButtons={this.state.currentPlot.id}
                         nextPlotButtonDisabled={this.state.nextPlotButtonDisabled}
                         prevPlotButtonDisabled={this.state.prevPlotButtonDisabled}
-                        reviewPlots={this.state.reviewPlots}
+                        navigationMode={this.state.navigationMode}
                         navToFirstPlot={this.navToFirstPlot}
                         navToPlot={this.navToPlot}
                         navToNextPlot={this.navToNextPlot}
                         navToPrevPlot={this.navToPrevPlot}
-                        setReviewPlots={this.setReviewPlots}
+                        setNavigationMode={this.setNavigationMode}
                         loadingPlots={this.state.plotList.length === 0}
                         currentPlot={this.state.currentPlot}
+                        isProjectAdmin={this.state.currentProject.isProjectAdmin}
                     />
                     <ExternalTools
                         zoomMapToPlot={this.zoomToPlot}
@@ -1188,7 +1187,7 @@ class PlotNavigation extends React.Component {
     updateNewPlotId = (value) => this.setState({newPlotInput: value});
 
     gotoButton = () => (
-        <div className="PlotNavigation__first row mb-2" id="go-to-first-plot">
+        <div id="go-to-first-plot" className="row mb-2">
             <div className="col">
                 <input
                     id="go-to-first-plot-button"
@@ -1203,7 +1202,7 @@ class PlotNavigation extends React.Component {
     );
 
     navButtons = () => (
-        <div className="PlotNavigation__nav-buttons row justify-content-center" id="plot-nav">
+        <div id="plot-nav" className="row justify-content-center mb-2">
             <button
                 className="btn btn-outline-lightgreen btn-sm"
                 type="button"
@@ -1223,8 +1222,8 @@ class PlotNavigation extends React.Component {
                 <UnicodeIcon icon="rightCaret"/>
             </button>
             <input
-                type="text"
                 id="plotId"
+                type="number"
                 autoComplete="off"
                 className="col-4 px-0 ml-2 mr-1"
                 value={this.state.newPlotInput}
@@ -1244,24 +1243,25 @@ class PlotNavigation extends React.Component {
         const {props} = this;
         return (
             <div className="text-center mt-2">
+                <div className="d-flex align-items-center my-2">
+                    <h3 className="w-100">Navigate Through:</h3>
+                    <select
+                        className="form-control form-control-sm mr-2"
+                        style={{flex: "1 1 1px"}}
+                        onChange={(e) => props.setNavigationMode(e.target.value)}
+                        value={props.navigationMode}
+                    >
+                        <option value="unanalyzed">Unanalyzed plots</option>
+                        <option value="analyzed">My analyzed plots</option>
+                        {this.props.isProjectAdmin && <option value="all">All analysed plots</option>}
+                    </select>
+                </div>
                 {props.loadingPlots
                     ? <h3>Loading plot data...</h3>
                     : this.props.showNavButtons
                         ? this.navButtons()
                         : this.gotoButton()
                 }
-                <div className="PlotNavigation__review-option row justify-content-center mb-1">
-                    <div className="form-check">
-                        <input
-                            className="form-check-input"
-                            checked={props.reviewPlots}
-                            id="reviewCheck"
-                            onChange={props.setReviewPlots}
-                            type="checkbox"
-                        />
-                        <label htmlFor="reviewCheck" className="form-check-label">Review your analyzed plots</label>
-                    </div>
-                </div>
             </div>
         );
     }

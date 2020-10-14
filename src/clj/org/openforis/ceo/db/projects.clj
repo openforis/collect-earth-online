@@ -78,9 +78,10 @@
                          (call-sql "select_template_projects" user-id)))))
 
 (defn get-project-by-id [{:keys [params]}]
-  (let [project-id (tc/val->int (:projectId params))
+  (let [user-id    (:userId params -1)
+        project-id (tc/val->int (:projectId params))
         project    (first (call-sql "select_project_by_id" project-id))]
-    (data-response {:id                 (:project_id project)
+    (data-response {:id                 (:project_id project) ; TODO dont return known values
                     :institution        (:institution_id project) ; TODO legacy variable name, update to institutionId
                     :imageryId          (:imagery_id project)
                     :availability       (:availability project)
@@ -102,7 +103,8 @@
                     :projectOptions     (merge default-options (tc/jsonb->clj (:options project)))
                     :createdDate        (str (:created_date project))
                     :publishedDate      (str (:published_date project))
-                    :closedDate         (str (:closed_date project))})))
+                    :closedDate         (str (:closed_date project))
+                    :isProjectAdmin     (is-proj-admin? user-id project-id nil)})))
 
 (defn get-template-by-id [{:keys [params]}]
   (let [project-id (tc/val->int (:projectId params))
