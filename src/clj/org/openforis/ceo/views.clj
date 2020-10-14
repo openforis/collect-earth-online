@@ -1,7 +1,6 @@
 (ns org.openforis.ceo.views
   (:require [clojure.data.json :as json]
             [clojure.string :as str]
-            [clojure.java.io :as io]
             [cognitect.transit :as transit]
             [hiccup.page :refer [html5 include-js include-css]])
   (:import java.io.ByteArrayOutputStream))
@@ -37,16 +36,9 @@
      (str "window.onload = function () { " page ".pageInit(" js-params "); };")]))
 
 (defn find-webpack-files [page]
-  (->> (io/file "target/public/js")
-       (file-seq)
-       (map #(str "/js/" (.getName %)))
-       (filter #(and (or (str/includes? % page)
-                         (str/includes? % "common"))
-                     (str/ends-with? % "bundle.js")))
-       (sort-by #(cond
-                   (str/includes? % "common") -1
-                   (str/includes? % "~")      0
-                   :else                      1))))
+  (as-> (slurp "target/entry-points.json") wp
+    (json/read-str wp)
+    (get wp page)))
 
 (defn render-page [uri]
   (fn [request]
