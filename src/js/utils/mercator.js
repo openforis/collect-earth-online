@@ -1120,7 +1120,7 @@ mercator.disableSelection = function (mapConfig) {
 
 // [Pure] Returns a new Draw interaction with a type of drawTool
 // for the source. A function to remove features on right click is
-// added for layer
+// added for layer.
 mercator.makeDraw = function (layer, source, drawTool) {
     const removeFeature = function (e) {
         layer.getFeatures(e.pixel)

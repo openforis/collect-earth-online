@@ -109,7 +109,7 @@ export class SurveyCollection extends React.Component {
 
     hideDrawTools = () => {
         mercator.disableDrawing(this.props.mapConfig);
-    }
+    };
 
     setAnswerMode = (newMode) => {
         if (this.state.answerMode !== newMode) {
@@ -120,12 +120,12 @@ export class SurveyCollection extends React.Component {
             }
             this.setState({answerMode: newMode});
         }
-    }
+    };
 
     setDrawTool = (newTool) => {
         this.setState({drawTool: newTool});
         mercator.changeDrawTool(this.props.mapConfig, "drawLayer", newTool);
-    }
+    };
 
     buttonStyle = (selected) => Object.assign(
         {padding: "4px", margin: ".25rem"},
