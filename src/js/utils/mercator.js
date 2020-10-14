@@ -913,7 +913,7 @@ const ceoMapStyleFunctions = {
     point: color => mercator.getCircleStyle(6, color, 2),
     answeredpoint: color => mercator.getCircleStyle(6, color, 2, color),
     circle: color => mercator.getCircleStyle(5, color, 2),
-    square: color => mercator.getRegularShapeStyle(6, 4, Math.PI / 4, null, (color), 2),
+    square: color => mercator.getRegularShapeStyle(6, 4, Math.PI / 4, (color), 2),
     cluster: numPlots => mercator.getClusterStyle(10, "#3399cc", "#ffffff", 1, numPlots),
     draw: color => mercator.getDrawStyle(color, 3, color, 8),
 };

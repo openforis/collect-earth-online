@@ -419,13 +419,15 @@ class Collection extends React.Component {
         mercator.disableSelection(mapConfig);
         mercator.removeLayerById(mapConfig, "currentSamples");
         mercator.removeLayerById(mapConfig, "drawLayer");
-        mercator.addVectorLayer(mapConfig,
-                                "currentSamples",
-                                mercator.samplesToVectorSource(visible),
-                                feature => mercator.ceoMapStyles(
-                                    feature.getGeometry().getType(),
-                                    this.state.unansweredColor
-                                ));
+        mercator.addVectorLayer(
+            mapConfig,
+            "currentSamples",
+            mercator.samplesToVectorSource(visible),
+            feature => mercator.ceoMapStyles(
+                feature.getGeometry().getType(),
+                this.state.unansweredColor
+            )
+        );
         mercator.enableSelection(mapConfig,
                                  "currentSamples",
                                  (sampleId) => this.setState({selectedSampleId: sampleId}));
@@ -435,10 +437,12 @@ class Collection extends React.Component {
         const {mapConfig} = this.state;
         mercator.removeLayerById(mapConfig, "currentSamples");
         mercator.removeLayerById(mapConfig, "drawLayer");
-        mercator.addVectorLayer(mapConfig,
-                                "drawLayer",
-                                mercator.samplesToVectorSource(this.state.currentPlot.samples),
-                                mercator.ceoMapStyles("draw", "orange"));
+        mercator.addVectorLayer(
+            mapConfig,
+            "drawLayer",
+            mercator.samplesToVectorSource(this.state.currentPlot.samples),
+            mercator.ceoMapStyles("draw", "orange")
+        );
         mercator.enableDrawing(mapConfig, "drawLayer", drawTool);
     };
 
