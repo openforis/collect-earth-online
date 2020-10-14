@@ -9,9 +9,9 @@ import {SurveyDesign} from "./components/SurveyDesign";
 import {convertSampleValuesToSurveyQuestions} from "./utils/surveyUtils";
 import {formatNumberWithCommas, isNumber, encodeFileAsBase64} from "./utils/generalUtils";
 
-export const plotLimit = 5000;
-export const perPlotLimit = 200;
-export const sampleLimit = 50000;
+const plotLimit = 5000;
+const perPlotLimit = 200;
+const sampleLimit = 50000;
 
 const blankProject = {
     archived: false,
@@ -1224,7 +1224,7 @@ function SampleDesign ({
                             className="form-check-label"
                             htmlFor="allow-drawn-samples"
                         >
-                            Allow users to drawn their own plots
+                            Allow users to draw their own samples
                         </label>
                     </div>
                 )}

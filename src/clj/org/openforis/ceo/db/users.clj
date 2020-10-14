@@ -108,7 +108,7 @@
         (call-sql "set_mailing_list" user-id on-mailing-list?)
         (data-response "" {:session {:userName updated-email}})))))
 
-(defn get-password-reset-key [{:keys [params]}]
+(defn password-request [{:keys [params]}]
   (let [reset-key (str (UUID/randomUUID))
         email     (sql-primitive (call-sql "set_password_reset_key" (:email params) reset-key))
         email-msg (format (str "Hi %s,\n\n"
@@ -121,7 +121,7 @@
         (data-response ""))
       (data-response "There is no user with that email address."))))
 
-(defn- get-reset-password-errors [email reset-key password password-confirmation user]
+(defn- get-password-reset-errors [email reset-key password password-confirmation user]
   (cond (nil? user)
         "There is no user with that email address."
 
@@ -136,13 +136,13 @@
 
         :else nil))
 
-(defn reset-password [{:keys [params]}]
+(defn password-reset [{:keys [params]}]
   (let [email                 (:email params)
         reset-key             (:passwordResetKey params)
         password              (:password params)
         password-confirmation (:passwordConfirmation params)
         user                  (first (call-sql "get_user" email))]
-    (if-let [error-msg (get-reset-password-errors email reset-key password password-confirmation user)]
+    (if-let [error-msg (get-password-reset-errors email reset-key password password-confirmation user)]
       (data-response error-msg)
       (do
         (call-sql "update_password" email password)
