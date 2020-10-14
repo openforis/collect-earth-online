@@ -352,6 +352,7 @@ export class SurveyQuestionHelp extends React.Component {
             userSamples: {1: {}},
             unansweredColor: "black",
             visibleAnswered: {},
+            drawTool: "Point",
         };
     }
 
@@ -469,6 +470,8 @@ export class SurveyQuestionHelp extends React.Component {
                     answerMode={this.state.answerMode}
                     selectedQuestion={this.state.selectedQuestion}
                     unansweredColor={this.state.unansweredColor}
+                    drawTool={this.state.drawTool}
+                    setDrawTool={(newTool) => this.setState({drawTool: newTool})}
                     setAnswerMode={(mode) => this.setState({answerMode: mode})}
                     setSelectedQuestion={(newSelectedQuestion) => this.setState({selectedQuestion: newSelectedQuestion})}
                     setUnansweredColor={(color) => this.setState({unansweredColor: color})}

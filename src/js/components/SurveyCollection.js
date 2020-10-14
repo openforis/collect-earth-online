@@ -13,7 +13,6 @@ export class SurveyCollection extends React.Component {
             currentNodeIndex: 0,
             topLevelNodeIds: [],
             showSurveyQuestions: true,
-            drawTool: "Point",
         };
     }
 
@@ -69,8 +68,9 @@ export class SurveyCollection extends React.Component {
         const childQuestions = surveyQuestions.filter(sq => sq.parentQuestion === currentQuestionId);
 
         return visible.length === answered.length
+                    && answered.length > 0
                     && (childQuestions.length === 0
-                    || childQuestions.every(cq => this.checkAllSubAnswers(cq.id)));
+                        || childQuestions.every(cq => this.checkAllSubAnswers(cq.id)));
     };
 
     getTopColor = (node) => this.checkAllSubAnswers(node.id) || this.props.isFlagged
@@ -112,7 +112,7 @@ export class SurveyCollection extends React.Component {
     };
 
     setDrawTool = (newTool) => {
-        this.setState({drawTool: newTool});
+        this.props.setDrawTool(newTool);
         if (this.props.mapConfig) mercator.changeDrawTool(this.props.mapConfig, "drawLayer", newTool);
     };
 
@@ -219,7 +219,7 @@ export class SurveyCollection extends React.Component {
                 title="Click anywhere to add a new point."
                 onClick={() => this.setDrawTool("Point")}
             >
-                <span style={this.buttonStyle(this.state.drawTool === "Point")}>
+                <span style={this.buttonStyle(this.props.drawTool === "Point")}>
                     <SvgIcon icon="point" size="2rem"/>
                 </span>
                 Point tool
@@ -229,7 +229,7 @@ export class SurveyCollection extends React.Component {
                 title="Click anywhere to start drawing. A new point along the line string can be added with a single click. Right click or double click to finish drawing."
                 onClick={() => this.setDrawTool("LineString")}
             >
-                <span style={this.buttonStyle(this.state.drawTool === "LineString")}>
+                <span style={this.buttonStyle(this.props.drawTool === "LineString")}>
                     <SvgIcon icon="lineString" size="2rem"/>
                 </span>
                 LineString tool
@@ -239,7 +239,7 @@ export class SurveyCollection extends React.Component {
                 title="Click anywhere to start drawing. A new vertex can be added with a singe click. Right click, double click, or complete the polygon to finish drawing."
                 onClick={() => this.setDrawTool("Polygon")}
             >
-                <span style={this.buttonStyle(this.state.drawTool === "Polygon")}>
+                <span style={this.buttonStyle(this.props.drawTool === "Polygon")}>
                     <SvgIcon icon="polygon" size="2rem"/>
                 </span>
                 Polygon tool
@@ -266,14 +266,14 @@ export class SurveyCollection extends React.Component {
                         <span
                             style={this.buttonStyle(this.props.answerMode === "question")}
                             title="Answer questions"
-                            onClick={() => this.props.setAnswerMode("question", this.state.drawTool)}
+                            onClick={() => this.props.setAnswerMode("question")}
                         >
                             <SvgIcon icon="question" size="2rem"/>
                         </span>
                         <span
                             style={this.buttonStyle(this.props.answerMode === "draw")}
                             title="Draw sample points"
-                            onClick={() => this.props.setAnswerMode("draw", this.state.drawTool)}
+                            onClick={() => this.props.setAnswerMode("draw")}
                         >
                             <SvgIcon icon="draw" size="2rem"/>
                         </span>

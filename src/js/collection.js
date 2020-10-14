@@ -44,6 +44,7 @@ class Collection extends React.Component {
             loading: false,
             showQuitModal: false,
             answerMode: "question",
+            drawTool: "Point",
             navigationMode: "unanalyzed",
         };
     }
@@ -368,19 +369,34 @@ class Collection extends React.Component {
             });
     };
 
-    resetPlotValues = (newPlot) => this.setState(this.newPlotValues(newPlot));
+    clearAll = () => {
+        if (this.state.answerMode === "draw"
+            && confirm("Do you want to clear all samples from the draw area?")) {
+            const {mapConfig} = this.state;
+            mercator.disableDrawing(mapConfig);
+            mercator.removeLayerById(mapConfig, "currentSamples");
+            mercator.removeLayerById(mapConfig, "drawLayer");
+            mercator.addVectorLayer(mapConfig,
+                                    "drawLayer",
+                                    null,
+                                    mercator.ceoMapStyles("draw", "orange"));
+            mercator.enableDrawing(mapConfig, "drawLayer", this.state.drawTool);
+        } else if (confirm("Do you want to clear all answers?")) {
+            this.setState(this.newPlotValues(this.state.currentPlot, false));
+        }
+    };
 
-    newPlotValues = (newPlot) => ({
+    newPlotValues = (newPlot, copyValues = true) => ({
         newPlotInput: newPlot.plotId ? newPlot.plotId : newPlot.id,
         userSamples: newPlot.samples
             ? newPlot.samples.reduce((obj, s) => {
-                obj[s.id] = s.value || {};
+                obj[s.id] = copyValues ? (s.value || {}) : {};
                 return obj;
             }, {})
             : {},
         userImages: newPlot.samples
             ? newPlot.samples.reduce((obj, s) => {
-                obj[s.id] = s.userImage || {};
+                obj[s.id] = copyValues ? (s.userImage || {}) : {};
                 return obj;
             }, {})
             : {},
@@ -435,8 +451,8 @@ class Collection extends React.Component {
                                  (sampleId) => this.setState({selectedSampleId: sampleId}));
     };
 
-    featuresToDrawLayer = (drawTool) => {
-        const {mapConfig, currentPlot} = this.state;
+    featuresToDrawLayer = () => {
+        const {mapConfig, currentPlot, drawTool} = this.state;
         mercator.disableDrawing(mapConfig);
         mercator.removeLayerById(mapConfig, "currentSamples");
         mercator.removeLayerById(mapConfig, "drawLayer");
@@ -471,8 +487,7 @@ class Collection extends React.Component {
                             sampleGeom: mercator.geometryToGeoJSON(cur.getGeometry(), "EPSG:4326", "EPSG:3857"),
                         }];
             }
-        }
-        , []);
+        }, []);
 
         this.setState({
             currentPlot: {...currentPlot, samples: newSamples},
@@ -485,6 +500,17 @@ class Collection extends React.Component {
                 return obj;
             }, {}),
         });
+    };
+
+    setAnswerMode = (newMode) => {
+        if (this.state.answerMode !== newMode) {
+            if (newMode === "draw") {
+                this.featuresToDrawLayer();
+            } else {
+                this.featuresToSampleLayer();
+            }
+            this.setState({answerMode: newMode});
+        }
     };
 
     showGeoDash = () => {
@@ -940,6 +966,8 @@ class Collection extends React.Component {
         nextPlotButtonDisabled: false,
     });
 
+    setDrawTool = (newTool) => this.setState({drawTool: newTool});
+
     render() {
         const plotId = this.state.currentPlot.plotId ? this.state.currentPlot.plotId : this.state.currentPlot.id;
         return (
@@ -977,13 +1005,14 @@ class Collection extends React.Component {
                     plotId={plotId}
                     postValuesToDB={this.postValuesToDB}
                     projectName={this.state.currentProject.name}
-                    clearAnswers={() => this.resetPlotValues(this.state.currentPlot)}
+                    clearAll={this.clearAll}
                     surveyQuestions={this.state.currentProject.surveyQuestions}
                     userName={this.props.userName}
                     currentPlot={this.state.currentPlot}
                     toggleFlagged={this.toggleFlagged}
                     toggleQuitModal={this.toggleQuitModal}
                     answerMode={this.state.answerMode}
+                    isAdmin={this.state.currentProject.isAdmin}
                 >
                     <PlotNavigation
                         plotId={plotId}
@@ -1025,31 +1054,33 @@ class Collection extends React.Component {
                         loadingImages={this.state.imageryList.length === 0}
                     />
                     {this.state.currentPlot.id
-                        ?
-                            <>
-                                <SurveyCollection
-                                    selectedQuestion={this.state.selectedQuestion}
-                                    surveyQuestions={this.state.currentProject.surveyQuestions}
-                                    surveyRules={this.state.currentProject.surveyRules}
-                                    isFlagged={this.state.currentPlot && this.state.currentPlot.flagged}
-                                    setCurrentValue={this.setCurrentValue}
-                                    setSelectedQuestion={this.setSelectedQuestion}
-                                    selectedSampleId={Object.keys(this.state.userSamples).length === 1
+                    ?
+                        <>
+                            <SurveyCollection
+                                selectedQuestion={this.state.selectedQuestion}
+                                surveyQuestions={this.state.currentProject.surveyQuestions}
+                                surveyRules={this.state.currentProject.surveyRules}
+                                isFlagged={this.state.currentPlot && this.state.currentPlot.flagged}
+                                setCurrentValue={this.setCurrentValue}
+                                setSelectedQuestion={this.setSelectedQuestion}
+                                selectedSampleId={Object.keys(this.state.userSamples).length === 1
                                         ? parseInt(Object.keys(this.state.userSamples)[0])
                                         : this.state.selectedSampleId}
-                                    mapConfig={this.state.mapConfig}
-                                    allowDrawnSamples={this.state.currentProject.allowDrawnSamples}
-                                    unansweredColor={this.state.unansweredColor}
-                                    setUnansweredColor={this.setUnansweredColor}
-                                    answerMode={this.state.answerMode}
-                                    setAnswerMode={this.setAnswerMode}
-                                />
-                            </>
-                        :
-                            <fieldset className="mb-3 justify-content-center text-center">
-                                <h3>Survey Questions</h3>
-                                <p>Please go to a plot to see survey questions</p>
-                            </fieldset>
+                                mapConfig={this.state.mapConfig}
+                                allowDrawnSamples={this.state.currentProject.allowDrawnSamples}
+                                unansweredColor={this.state.unansweredColor}
+                                setUnansweredColor={this.setUnansweredColor}
+                                answerMode={this.state.answerMode}
+                                setAnswerMode={this.setAnswerMode}
+                                drawTool={this.state.drawTool}
+                                setDrawTool={this.setDrawTool}
+                            />
+                        </>
+                    :
+                        <fieldset className="mb-3 justify-content-center text-center">
+                            <h3>Survey Questions</h3>
+                            <p>Please go to a plot to see survey questions</p>
+                        </fieldset>
                     }
                 </SideBar>
                 {this.state.showQuitModal &&
@@ -1079,23 +1110,26 @@ function ImageAnalysisPane({loader, imageryAttribution}) {
 }
 
 function SideBar(props) {
-    const saveValuesButtonEnabled =
-        props.currentPlot.samples
+    const adminCanSave = props.isAdmin && props.surveyQuestions.every(sq => (sq.answered || []).length === 0);
+    const saveValuesButtonEnabled = adminCanSave
+        || props.currentPlot.samples
         && props.currentPlot.samples.length > 0
         && props.answerMode === "question"
         && (props.currentPlot.flagged
             || props.surveyQuestions.every(sq => sq.visible && sq.answered && sq.visible.length === sq.answered.length));
 
-    const saveButtonGroup = () => (
+    const renderQuitButton = () => (
+        <input
+            id="collection-quit-button"
+            className="btn btn-outline-lightgreen btn-sm col"
+            type="button"
+            value="Quit"
+            onClick={props.toggleQuitModal}
+        />
+    );
+
+    const renderSaveButtonGroup = () => (
         <>
-            <input
-                className="btn btn-outline-lightgreen btn-sm btn-block"
-                type="button"
-                value="Save"
-                onClick={props.postValuesToDB}
-                style={{opacity: saveValuesButtonEnabled ? "1.0" : ".25"}}
-                disabled={!saveValuesButtonEnabled}
-            />
             <div className="my-2 d-flex justify-content-between">
                 <input
                     className="btn btn-outline-red btn-sm col mr-1"
@@ -1106,10 +1140,19 @@ function SideBar(props) {
                 <input
                     className="btn btn-outline-red btn-sm col"
                     type="button"
-                    value={props.currentPlot.analyses > 0 ? "Clear Changes" : "Clear All"}
-                    onClick={props.clearAnswers}
-                    disabled={props.answerMode !== "question"}
+                    value="Clear All"
+                    onClick={props.clearAll}
                 />
+            </div>
+            <div className="my-2 d-flex justify-content-between">
+                <input
+                    className={"btn btn-outline-lightgreen btn-sm col mr-1"
+                                + (!saveValuesButtonEnabled ? " disabled-group" : "")}
+                    type="button"
+                    value="Save"
+                    onClick={props.postValuesToDB}
+                />
+                {renderQuitButton()}
             </div>
         </>
     );
@@ -1130,16 +1173,10 @@ function SideBar(props) {
 
             <div className="row">
                 <div className="col-sm-12 btn-block">
-                    {props.plotId && saveButtonGroup()}
-                    <button
-                        id="collection-quit-button"
-                        className="btn btn-outline-red btn-block btn-sm mb-4"
-                        type="button"
-                        name="collection-quit"
-                        onClick={props.toggleQuitModal}
-                    >
-                        Quit
-                    </button>
+                    {props.plotId
+                        ? renderSaveButtonGroup()
+                        : renderQuitButton()
+                    }
                 </div>
             </div>
         </div>

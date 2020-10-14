@@ -125,17 +125,22 @@
                                        (assoc acc (str id) (str new-id))))
                                    {}
                                    plot-samples))]
-    (apply call-sql
-           (concat (if user-plot-id
-                     ["update_user_samples" user-plot-id]
-                     ["add_user_samples"])
-                   [project-id
-                    plot-id
-                    user-id
-                    (when (pos? confidence) confidence)
-                    (Timestamp. collection-start)
-                    (tc/clj->jsonb (set/rename-keys user-samples id-translation))
-                    (tc/clj->jsonb (set/rename-keys user-images id-translation))]))
+    (cond
+      (some (fn [[k v]] (seq v)) user-samples)
+      (apply call-sql
+             (concat (if user-plot-id
+                       ["update_user_samples" user-plot-id]
+                       ["add_user_samples"])
+                     [project-id
+                      plot-id
+                      user-id
+                      (when (pos? confidence) confidence)
+                      (Timestamp. collection-start)
+                      (tc/clj->jsonb (set/rename-keys user-samples id-translation))
+                      (tc/clj->jsonb (set/rename-keys user-images id-translation))]))
+
+      user-plot-id
+      (call-sql "delete_user_plot_by_plot" plot-id))
     (unlock-plots user-id)
     (data-response "")))
 

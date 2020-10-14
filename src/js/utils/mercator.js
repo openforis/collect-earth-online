@@ -727,9 +727,8 @@ mercator.getLayerConfigById = function (mapConfig, layerConfigId) {
 
 // FIXME: This function exposes several leaky abstractions. I need to rethink the createLayer->createSource workflow.
 //
-// [Side Effects] Finds the map layer with id === layerId and
-// applies transformer to its initial sourceConfig to create a new
-// source for the layer.
+// [Side Effects] This function is for imagery layers. Finds the map layer with id === layerId and
+// applies transformer to its initial sourceConfig to create a new source for the layer.
 mercator.updateLayerSource = function (mapConfig, imageryId, projectBoundary, transformer, caller) {
     const layer = mercator.getLayerById(mapConfig, imageryId);
     const layerConfig = mercator.getLayerConfigById(mapConfig, imageryId);
