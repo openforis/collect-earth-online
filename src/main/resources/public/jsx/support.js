@@ -7,7 +7,7 @@ function Support() {
         <section id="support" className="container">
             <div className="row justify-content-center">
                 <div className="col-xl-7 col-lg-10">
-                    <h1>Collect New Features</h1>
+                    <h1>New Features</h1>
                     <div className="btn-group-vertical btn-block mb-4">
                         <a className="btn btn-outline-lightgreen btn-block" href="/downloads/CEO_Planet_new_imagery_user_doc.pdf" role="button">
                             &#x1F4BE; Public Planet Imagery
