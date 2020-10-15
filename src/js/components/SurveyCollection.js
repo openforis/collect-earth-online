@@ -93,10 +93,21 @@ export class SurveyCollection extends React.Component {
                             : "Rule: " + r.ruleType + " | 'Question1: " + r.questionText1 + ", Answer1: " + r.answerText1 + "' is not compatible with 'Question2: " + r.questionText2 + ", Answer2: " + r.answerText2 + "'.")
             .join("\n");
 
+    setAnswerMode = (newMode) => {
+        if (this.state.answerMode !== newMode) {
+            if (newMode === "draw") {
+                this.props.featuresToDrawLayer(this.state.drawTool);
+            } else {
+                this.props.featuresToSampleLayer();
+            }
+            this.setState({answerMode: newMode});
+        }
+    };
+
     setDrawTool = (newTool) => {
         this.setState({drawTool: newTool});
         mercator.changeDrawTool(this.props.mapConfig, "drawLayer", newTool);
-    }
+    };
 
     buttonStyle = (selected) => Object.assign(
         {padding: "4px", margin: ".25rem"},
@@ -154,11 +165,11 @@ export class SurveyCollection extends React.Component {
                         title={removeEnumerator(this.getNodeById(node).question)}
                         onClick={() => this.setSurveyQuestionTree(i)}
                         style={{
-                            boxShadow: `${(i === this.state.currentNodeIndex)
-                                ? "0px 0px 2px 2px black inset,"
-                                : ""}
-                                    ${this.getTopColor(this.getNodeById(node))}
-                                    `,
+                            boxShadow:
+                                `${(i === this.state.currentNodeIndex)
+                                    ? "0px 0px 2px 2px black inset,"
+                                    : ""}
+                                ${this.getTopColor(this.getNodeById(node))}`,
                         }}
                     >
                         {i + 1}
@@ -191,12 +202,14 @@ export class SurveyCollection extends React.Component {
                     getRulesById={this.getRulesById}
                 />
             }
-        </div>);
+        </div>
+    );
 
     renderDrawTools = () => (
         <div style={{display: "flex", flexDirection: "column"}}>
             <div
                 style={{alignItems: "center", cursor: "pointer", display: "flex"}}
+                title="Click anywhere to add a new point."
                 onClick={() => this.setDrawTool("Point")}
             >
                 <span style={this.buttonStyle(this.state.drawTool === "Point")}>
@@ -206,6 +219,7 @@ export class SurveyCollection extends React.Component {
             </div>
             <div
                 style={{alignItems: "center", cursor: "pointer", display: "flex"}}
+                title="Click anywhere to start drawing. A new point along the line string can be added with a single click. Right click or double click to finish drawing."
                 onClick={() => this.setDrawTool("LineString")}
             >
                 <span style={this.buttonStyle(this.state.drawTool === "LineString")}>
@@ -215,6 +229,7 @@ export class SurveyCollection extends React.Component {
             </div>
             <div
                 style={{alignItems: "center", cursor: "pointer", display: "flex"}}
+                title="Click anywhere to start drawing. A new vertex can be added with a singe click. Right click, double click, or complete the polygon to finish drawing."
                 onClick={() => this.setDrawTool("Polygon")}
             >
                 <span style={this.buttonStyle(this.state.drawTool === "Polygon")}>
@@ -225,7 +240,7 @@ export class SurveyCollection extends React.Component {
             <ul style={{textAlign: "left"}}>
                 How To:
                 <li>To modify an existing feature, hold ctrl and click to drag</li>
-                <li>To delete a feature, right click on it</li>
+                <li>To delete a feature, hold ctrl and right click on it</li>
                 <li>To save changes, switch back to question mode and answer remaining questions</li>
             </ul>
         </div>

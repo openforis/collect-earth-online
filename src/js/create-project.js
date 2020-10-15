@@ -9,9 +9,9 @@ import {SurveyDesign} from "./components/SurveyDesign";
 import {convertSampleValuesToSurveyQuestions} from "./utils/surveyUtils";
 import {formatNumberWithCommas, isNumber, encodeFileAsBase64} from "./utils/generalUtils";
 
-export const plotLimit = 5000;
-export const perPlotLimit = 200;
-export const sampleLimit = 50000;
+const plotLimit = 5000;
+const perPlotLimit = 200;
+const sampleLimit = 50000;
 
 const blankProject = {
     archived: false,
@@ -525,7 +525,7 @@ class Project extends React.Component {
         mercator.addVectorLayer(this.state.mapConfig,
                                 "projectPlots",
                                 mercator.plotsToVectorSource(this.state.plotList),
-                                mercator.ceoMapStyles(this.state.projectDetails.plotShape, "yellow"));
+                                mercator.ceoMapStyles("overview", "yellow"));
     };
 
     setProjectImageryList = (newProjectImageryList) =>

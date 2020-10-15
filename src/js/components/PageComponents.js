@@ -44,7 +44,7 @@ class HelpSlideDialog extends React.Component {
         };
     }
 
-    render () {
+    render() {
         const {currentSlideIdx} = this.state;
         const {body, img} = this.props.helpSlides[currentSlideIdx];
         const isLastSlide = currentSlideIdx === this.props.helpSlides.length - 1;
@@ -114,7 +114,6 @@ class HelpSlideDialog extends React.Component {
                                 />
                             </div>
                         </div>
-
                     </div>
                 </div>
             </div>
@@ -153,9 +152,9 @@ export class NavigationBar extends React.Component {
             .catch(error => console.log(page, getLanguage(availableLanguages), error));
     }
 
-    closeHelpMenu = () => this.setState({showHelpMenu: false})
+    closeHelpMenu = () => this.setState({showHelpMenu: false});
 
-    render () {
+    render() {
         const {userName, userId, children} = this.props;
         const uri = window.location.pathname;
         const loggedOut = !userName || userName === "" || userName === "guest";
