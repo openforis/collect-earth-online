@@ -480,7 +480,7 @@ class Collection extends React.Component {
                 return obj;
             }, {}),
         });
-    }
+    };
 
     setAnswerMode = (newMode, drawTool) => {
         if (this.state.answerMode !== newMode) {
@@ -491,7 +491,7 @@ class Collection extends React.Component {
             }
             this.setState({answerMode: newMode});
         }
-    }
+    };
 
     showGeoDash = () => {
         const {currentPlot, mapConfig, currentProject} = this.state;
@@ -1094,7 +1094,7 @@ function SideBar(props) {
         props.currentPlot.samples
         && props.currentPlot.samples.length > 0
         && props.answerMode === "question"
-        && (props.currentPlot.isFlagged
+        && (props.currentPlot.flagged
             || props.surveyQuestions.every(sq => sq.visible && sq.answered && sq.visible.length === sq.answered.length));
 
     const saveButtonGroup = () => (
@@ -1111,7 +1111,7 @@ function SideBar(props) {
                 <input
                     className="btn btn-outline-danger btn-sm col mr-1"
                     type="button"
-                    value={props.currentPlot.isFlagged ? "Unflag Plot" : "Flag Plot"}
+                    value={props.currentPlot.flagged ? "Unflag Plot" : "Flag Plot"}
                     onClick={props.toggleFlagged}
                 />
                 <input
