@@ -364,7 +364,7 @@
                                   shp-name   (find-file-by-ext (str folder-name type) "shp")]
                               (sh-wrapper-pipe (str folder-name type)
                                                {:PASSWORD "ceo"}
-                                               (format-simple "shp2pgsql -s -t 2D 4326 %1 ext_tables.%2"
+                                               (format-simple "shp2pgsql -s 4326 -t 2D %1 ext_tables.%2"
                                                               shp-name table-name)
                                                (format-simple "psql -h localhost -U ceo -d ceo"))
                               table-name))

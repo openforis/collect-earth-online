@@ -25,7 +25,7 @@ import {DragBox, Select, Draw, Modify, Snap} from "ol/interaction";
 import {GeoJSON, KML} from "ol/format";
 import {Tile as TileLayer, Vector as VectorLayer, Group as LayerGroup} from "ol/layer";
 import {BingMaps, Cluster, TileWMS, Vector as VectorSource, XYZ} from "ol/source";
-import {Circle as CircleStyle, Fill, Stroke, Style, Text as StyleText, RegularShape} from "ol/style";
+import {Circle as CircleStyle, Fill, Stroke, Style, Text as StyleText} from "ol/style";
 import {fromLonLat, transform, transformExtent} from "ol/proj";
 import {fromExtent, fromCircle} from "ol/geom/Polygon";
 import {formatDateISO} from "./generalUtils";
@@ -818,8 +818,8 @@ mercator.getClusterStyle = function (radius, fillColor, borderColor, borderWidth
     });
 };
 
-// [Pure] Returns a style object that displays a solid point the
-// specified radius, fillColor
+// [Pure] Returns a style object that displays a solid point with
+// the specified radius and fillColor.
 mercator.getCircleStyle = function (radius, fillColor) {
     return new Style({
         image: new CircleStyle({
