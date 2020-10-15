@@ -417,36 +417,40 @@ class Collection extends React.Component {
     };
 
     showPlotSamples = () => {
-        const {mapConfig, selectedQuestion: {visible}} = this.state;
+        const {mapConfig, unansweredColor, selectedQuestion: {visible}} = this.state;
         mercator.disableSelection(mapConfig);
         mercator.disableDrawing(mapConfig);
         mercator.removeLayerById(mapConfig, "currentSamples");
         mercator.removeLayerById(mapConfig, "drawLayer");
-        mercator.addVectorLayer(mapConfig,
-                                "currentSamples",
-                                mercator.samplesToVectorSource(visible),
-                                mercator.ceoMapStyles("geom", this.state.unansweredColor));
+        mercator.addVectorLayer(
+            mapConfig,
+            "currentSamples",
+            mercator.samplesToVectorSource(visible),
+            mercator.ceoMapStyles("geom", unansweredColor)
+        );
         mercator.enableSelection(mapConfig,
                                  "currentSamples",
                                  (sampleId) => this.setState({selectedSampleId: sampleId}));
     };
 
     featuresToDrawLayer = (drawTool) => {
-        const {mapConfig} = this.state;
+        const {mapConfig, currentPlot} = this.state;
         mercator.disableDrawing(mapConfig);
         mercator.removeLayerById(mapConfig, "currentSamples");
         mercator.removeLayerById(mapConfig, "drawLayer");
-        mercator.addVectorLayer(mapConfig,
-                                "drawLayer",
-                                mercator.samplesToVectorSource(this.state.currentPlot.samples),
-                                mercator.ceoMapStyles("draw", "orange"));
+        mercator.addVectorLayer(
+            mapConfig,
+            "drawLayer",
+            mercator.samplesToVectorSource(currentPlot.samples),
+            mercator.ceoMapStyles("draw", "orange")
+        );
         mercator.enableDrawing(mapConfig, "drawLayer", drawTool);
     };
 
     featuresToSampleLayer = () => {
-        const {mapConfig} = this.state;
+        const {mapConfig, userSamples, userImages, currentPlot} = this.state;
         mercator.disableDrawing(mapConfig);
-        const allFeatures = mercator.getAllFeatures(this.state.mapConfig, "drawLayer") || [];
+        const allFeatures = mercator.getAllFeatures(mapConfig, "drawLayer") || [];
         const existingIds = allFeatures.map(f => f.get("sampleId")).filter(id => id);
         const getMax = (samples) => Math.max(0, ...existingIds, ...samples.map(s => s.id));
         const newSamples = allFeatures.reduce((acc, cur) => {
@@ -468,9 +472,8 @@ class Collection extends React.Component {
         }
         , []);
 
-        const {userSamples, userImages} = this.state;
         this.setState({
-            currentPlot: {...this.state.currentPlot, samples: newSamples},
+            currentPlot: {...currentPlot, samples: newSamples},
             userSamples: newSamples.reduce((obj, s) => {
                 obj[s.id] = userSamples[s.id] || {};
                 return obj;
@@ -480,17 +483,6 @@ class Collection extends React.Component {
                 return obj;
             }, {}),
         });
-    };
-
-    setAnswerMode = (newMode, drawTool) => {
-        if (this.state.answerMode !== newMode) {
-            if (newMode === "draw") {
-                this.featuresToDrawLayer(drawTool);
-            } else {
-                this.featuresToSampleLayer();
-            }
-            this.setState({answerMode: newMode});
-        }
     };
 
     showGeoDash = () => {
@@ -584,7 +576,7 @@ class Collection extends React.Component {
                               collectionStart: this.state.collectionStart,
                               userSamples: this.state.userSamples,
                               userImages: this.state.userImages,
-                              plotSamples: this.state.currentPlot.samples,
+                              plotSamples: this.state.currentProject.allowDrawnSamples && this.state.currentPlot.samples,
                           }),
                       })
                     .then(response => {
@@ -921,7 +913,7 @@ class Collection extends React.Component {
 
     updateQuestionStatus = () => {
         const newSurveyQuestions = this.state.currentProject.surveyQuestions.map(sq => {
-            const visibleSamples = this.calcVisibleSamples(sq.id);
+            const visibleSamples = this.calcVisibleSamples(sq.id) || [];
             return ({
                 ...sq,
                 visible: visibleSamples,

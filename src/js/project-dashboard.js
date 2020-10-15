@@ -45,7 +45,7 @@ class ProjectDashboard extends React.Component {
             this.showProjectMap();
         }
         if (this.state.isMapShown && this.state.plotList.length > 0) {
-            mercator.addPlotOverviewLayers(this.state.mapConfig, this.state.plotList, this.state.projectDetails.plotShape);
+            mercator.addPlotOverviewLayers(this.state.mapConfig, this.state.plotList);
         }
     }
 

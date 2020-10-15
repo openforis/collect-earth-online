@@ -77,8 +77,8 @@
    [:post "/send-to-mailing-list"]           {:handler     users/submit-email-for-mailing-list
                                               :auth-type   :super
                                               :auth-action :block}
-   [:post "/password-request"]               {:handler     users/reset-password}
-   [:post "/password-reset"]                 {:handler     users/get-password-reset-key}
+   [:post "/password-request"]               {:handler     users/password-request}
+   [:post "/password-reset"]                 {:handler     users/password-reset}
    [:post "/register"]                       {:handler     users/register}
    [:post "/unsubscribe-mailing-list"]       {:handler     users/unsubscribe-from-mailing-list}
    ;; Projects API

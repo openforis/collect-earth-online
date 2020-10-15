@@ -1,7 +1,6 @@
 (ns org.openforis.ceo.db.plots
   (:import java.sql.Timestamp)
   (:require [clojure.set :as set]
-            [org.openforis.ceo.logging :refer [log-str]]
             [org.openforis.ceo.utils.type-conversion :as tc]
             [org.openforis.ceo.database        :refer [call-sql sql-primitive]]
             [org.openforis.ceo.db.institutions :refer [is-inst-admin-query?]]
@@ -22,24 +21,24 @@
                          (call-sql "select_limited_project_plots" project-id max-plots)))))
 
 (defn- prepare-samples-array [plot-id project-id]
-  (mapv (fn [{:keys [sample_id sample_geom sampleId geom value]}]
+  (mapv (fn [{:keys [sample_id sample_geom sampleid geom value]}]
           (merge {:id         sample_id
                   :sampleGeom sample_geom
-                  :sampleId   sampleId ;TODO I don't think we distinguish between sample_id and sampleId so this could go away
-                  :geom       (tc/jsonb->clj geom)}
+                  :sampleId   sampleid ;TODO I don't think we distinguish between sample_id and sampleId so this could go away
+                  :geom       geom}
                  (when (< 2 (count (str value)))
                    {:value (tc/jsonb->clj value)})))
         (call-sql "select_plot_samples" plot-id project-id)))
 
 (defn- prepare-plot-object [plot-info project-id]
-  (let [{:keys [plot_id center flagged assigned plotId geom extra_plot_info]} plot-info]
+  (let [{:keys [plot_id center flagged assigned plotid geom extra_plot_info]} plot-info]
     {:id            plot_id
      :projectId     project-id ;TODO why do we need to return a value that is already known
      :center        center
      :flagged       (< 0 (or flagged -1))
      :analyses      assigned
-     :plotId        plotId
-     :geom          (tc/jsonb->clj geom)
+     :plotId        plotid
+     :geom          geom
      :extraPlotInfo (dissoc (tc/jsonb->clj extra_plot_info) :gid :lat :lon :plotid)
      :samples       (prepare-samples-array plot_id project-id)}))
 
