@@ -875,7 +875,7 @@ const ceoMapStyleFunctions = {
 
 mercator.ceoMapStyles = function (type, option) {
     const styleFunction = ceoMapStyleFunctions[type.toLowerCase()];
-    if (!styleFunction) console.log("type");
+    if (!styleFunction) console.log(type);
     return styleFunction
         ? styleFunction.call(null, ceoMapPresets[option] || option)
         : new Style();
