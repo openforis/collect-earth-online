@@ -8,7 +8,7 @@
 ***
 *** Description: This library provides a set of functions for
 *** interacting with embedded web maps in an API agnostic manner. This
-*** file contains the OpenLayers 5 implementation.
+*** file contains the OpenLayers 6 implementation.
 ***
 ******************************************************************************
 ***
@@ -800,7 +800,7 @@ mercator.zoomMapToLayer = function (mapConfig, layerId, padding) {
 
 // [Pure] Returns a style object that displays a circle with the
 // specified radius, fillColor, borderColor, and borderWidth. text
-// and textFillColor are used to overlay text on the circle.
+// is used to overlay text on the circle.
 mercator.getClusterStyle = function (radius, fillColor, borderColor, borderWidth, text) {
     return new Style({
         image: new CircleStyle({
@@ -824,7 +824,7 @@ mercator.getCircleStyle = function (radius, fillColor) {
     return new Style({
         image: new CircleStyle({
             radius: radius,
-            fill: fillColor ? new Fill({color: fillColor}) : null,
+            fill: new Fill({color: fillColor || "rgba(255, 255, 255, 0)"}),
             stroke: new Stroke({
                 color: "black",
                 width: 1,
@@ -1027,7 +1027,6 @@ mercator.removeInteractionByTitle = function (mapConfig, interactionTitle) {
 mercator.makeClickSelect = function (interactionTitle, layer) {
     const select = new Select({layers: [layer]});
     select.set("title", interactionTitle);
-    select.on("select");
     return select;
 };
 
@@ -1089,7 +1088,7 @@ mercator.disableSelection = function (mapConfig) {
 
 // [Pure] Returns a new Draw interaction with a type of drawTool
 // for the source. A function to remove features on right click is
-// added for layer
+// added for layer.
 mercator.makeDraw = function (layer, source, drawTool) {
     const removeFeature = function (e) {
         layer.getFeatures(e.pixel)

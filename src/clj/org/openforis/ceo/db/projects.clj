@@ -34,8 +34,9 @@
 
 ;;; Data Functions
 
-;; TODO add settings that are new since we forked
-(def default-options {:showGEEScript false})
+(def default-options {:showGEEScript       false
+                      :showPlotInformation false
+                      :autoLaunchGeoDash   true})
 
 (defn- single-project-object [project]
   {:id                   (:project_id project)
@@ -61,7 +62,7 @@
    :validBoundary        (:valid_boundary project)
    :sampleValues         (tc/jsonb->clj (:survey_questions project)) ; TODO why don't these names match
    :surveyRules          (tc/jsonb->clj (:survey_rules project))
-   :projectOptions       (or (tc/jsonb->clj (:options project)) default-options)})
+   :projectOptions       (merge default-options (tc/jsonb->clj (:options project)))})
 
 (defn- get-project-list [sql-results]
   (mapv single-project-object
@@ -333,12 +334,12 @@
        (map #(str % (cond
                       (#{"LON" "LAT"} %)         " float"
                       (#{"PLOTID" "SAMPLEID"} %) " integer"
-                      :else                      " text"))
-            (str/join ","))))
+                      :else                      " text")))
+       (str/join ",")))
 
 (defn- get-csv-headers [ext-file must-include]
   (let [data (slurp ext-file)]
-    (if-let [header-row (re-find #".+\n?" data)]
+    (if-let [header-row (re-find #".+(?=\n)" data)]
       (let [headers (as-> header-row hr
                       (str/split hr #",")
                       (mapv #(-> %
@@ -411,7 +412,7 @@
                                sample-resolution]
   ;; TODO Right now you have to have a sample shape or csv file if you have a plot shape file.
   ;;      Update create random / gridded to work on boundary so any plot type can have random, gridded, center.
-  (doseq [[x y] (condp = sample-distribution
+  (doseq [[x y] (case sample-distribution
                   "center"
                   [plot-center]
 
@@ -456,7 +457,7 @@
               ext-sample-count (:sample_count counts)]
           (check-plot-limits ext-plot-count
                              50000.0
-                             (condp = sample-distribution
+                             (case sample-distribution
                                "gridded" (count-gridded-sample-set plot-size sample-resolution)
                                "random"  samples-per-plot
                                "center"  1.0
@@ -490,7 +491,7 @@
                            (count-gridded-points left bottom right top plot-spacing)
                            num-plots)
                          5000.0
-                         (condp = sample-distribution
+                         (case sample-distribution
                            "gridded" (count-gridded-sample-set plot-size sample-resolution)
                            "random"  samples-per-plot
                            "center"  1.0
