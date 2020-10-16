@@ -101,15 +101,17 @@ export default class AOIMap extends React.Component {
 
     hidePlots = () => {
         mercator.removeLayerById(this.state.mapConfig, "projectPlots");
-    }
+    };
 
     render() {
-        return <div id="project-map" style={{height: "25rem", width: "100%"}}>
-            {this.props.canDrag &&
+        return (
+            <div id="project-map" style={{height: "25rem", width: "100%"}}>
+                {this.props.canDrag &&
                 <div className="col small text-center mb-2">
                     Hold CTRL and click-and-drag a bounding box on the map
                 </div>
-            }
-        </div>;
+                }
+            </div>
+        );
     }
 }
