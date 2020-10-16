@@ -127,7 +127,7 @@ class Project extends React.Component {
                     institutionId: this.props.institutionId,
                     projectId: this.props.projectId,
                     ...this.state.projectDetails,
-                    designMode:this.state.designMode,
+                    designMode: this.state.designMode,
                     institutionImagery: this.state.institutionImagery,
                     setProjectState: this.setProjectState,
                     setDesignMode: this.setDesignMode,

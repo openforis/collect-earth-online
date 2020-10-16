@@ -8,10 +8,12 @@ export default class ReviewChanges extends React.Component {
         super(props);
     }
 
+    /// API Functions
+
     createProject = () => {
         // TODO pass boundary instead of lon / lat.  Boundary will be arbitrary.
         const boundaryExtent = mercator.parseGeoJson(this.context.boundary, false).getExtent();
-        if (confirm("Do you REALLY want to create this project?")) {
+        if (confirm("Do you really want to create this project?")) {
             this.context.processModal("Creating Project", () =>
                 fetch("/create-project",
                       {
@@ -70,7 +72,7 @@ export default class ReviewChanges extends React.Component {
     };
 
     updateProject = () => {
-        if (confirm("Do you REALLY want to update this project?")) {
+        if (confirm("Do you really want to update this project?")) {
             this.context.processModal("Updating Project", () =>
                 fetch("/update-project",
                       {

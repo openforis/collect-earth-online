@@ -177,7 +177,7 @@ class Collection extends React.Component {
             }
         });
 
-    getImageryList = () => {
+    getImageryList = () =>
         fetch(`/get-project-imagery?projectId=${this.props.projectId}`)
             .then(response => response.ok ? response.json() : Promise.reject(response))
             .then(data => {
@@ -188,7 +188,6 @@ class Collection extends React.Component {
                     return Promise.reject("No project imagery found");
                 }
             });
-    };
 
     initializeProjectMap = () => {
         const mapConfig = mercator.createMap("image-analysis-pane",

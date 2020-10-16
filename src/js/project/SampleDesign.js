@@ -220,6 +220,7 @@ export function SampleReview() {
 }
 
 export function SamplePreview() {
+    // TODO: Update messaging so its more clear when shp is defined at the plot level, especially with CSV samples
     const renderPreview = ({plotDistribution, sampleDistribution, plotShape}) => {
         if (plotDistribution === "shp") {
             return <h3>The system cannot currently generate a preview of shape files.</h3>;
