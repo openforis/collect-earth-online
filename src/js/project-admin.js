@@ -71,18 +71,18 @@ class Project extends React.Component {
     }
 
     componentDidUpdate(prevProps, prevState) {
-        if (this.state.plotDistribution !== prevState.plotDistribution) {
-            const {plotDistribution, sampleDistribution} = this.state;
-            const newSampleDistribution = ["random", "gridded"].includes(plotDistribution)
-                && ["csv", "shp"].includes(sampleDistribution) ? "random"
-                : plotDistribution === "shp"
-                        && ["random", "gridded"].includes(sampleDistribution) ? "shp"
-                    : sampleDistribution;
-            if (newSampleDistribution !== sampleDistribution) this.setState({sampleDistribution: newSampleDistribution});
+        const {plotDistribution, sampleDistribution, institution} = this.state.projectDetails;
+        if (plotDistribution !== prevState.projectDetails.plotDistribution) {
+            const newSampleDistribution = ["random", "gridded"].includes(plotDistribution) && ["csv", "shp"].includes(sampleDistribution)
+                ? "random"
+                : plotDistribution === "shp" && ["random", "gridded"].includes(sampleDistribution)
+                ? "shp"
+                : sampleDistribution;
+            if (newSampleDistribution !== sampleDistribution) this.setProjectState({sampleDistribution: newSampleDistribution});
         }
 
-        if (prevState.projectDetails.institution !== this.state.projectDetails.institution) {
-            this.getInstitutionImagery(this.state.projectDetails.institution);
+        if (prevState.projectDetails.institution !== institution) {
+            this.getInstitutionImagery(institution);
         }
     }
 
