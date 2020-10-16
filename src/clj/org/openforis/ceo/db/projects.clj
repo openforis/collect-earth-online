@@ -38,20 +38,19 @@
                       :showPlotInformation false
                       :autoLaunchGeoDash   true})
 
-(defn- single-project-list-object [project]
-  {:id            (:project_id project)
-   :institution   (:institution_id project) ; TODO legacy variable name, update to institutionId
-   :imageryId     (:imagery_id project)
-   :availability  (:availability project)
-   :name          (:name project)
-   :description   (:description project)
-   :privacyLevel  (:privacy_level project)
-   :boundary      (:boundary project)
-   :editable      (:editable project)
-   :validBoundary (:valid_boundary project)}) ; TODO set the visibility or availability for projects with invalid bounds so they dont show in the list in the first place
-
 (defn- get-project-list [sql-results]
-  (mapv single-project-list-object
+  (mapv (fn [project]
+          {:id            (:project_id project)
+           :institution   (:institution_id project) ; TODO legacy variable name, update to institutionId
+           :imageryId     (:imagery_id project)
+           :availability  (:availability project)
+           :name          (:name project)
+           :description   (:description project)
+           :privacyLevel  (:privacy_level project)
+           :numPlots      (:num_plots project)
+           :boundary      (:boundary project)
+           :editable      (:editable project)
+           :validBoundary (:valid_boundary project)}) ; TODO set the visibility or availability for projects with invalid bounds so they dont show in the list in the first place
         sql-results))
 
 ;; TODO These long project lists do not need all of those values returned.
@@ -75,7 +74,7 @@
                                                  institution-id))))))
 
 (defn get-template-projects [{:keys [params]}]
-  (let [user-id (tc/str->int (:userId params))]
+  (let [user-id (:userId params -1)]
     (data-response (mapv (fn [{:keys [project_id name]}]
                            {:id   project_id
                             :name name})
@@ -101,8 +100,6 @@
                     :samplesPerPlot     (:samples_per_plot project)
                     :sampleResolution   (:sample_resolution project)
                     :allowDrawnSamples  (:allow_drawn_samples project)
-                    :editable           (:editable project)
-                    :validBoundary      (:valid_boundary project)
                     :sampleValues       (tc/jsonb->clj (:survey_questions project)) ; TODO why don't these names match
                     :surveyRules        (tc/jsonb->clj (:survey_rules project))
                     :projectOptions     (merge default-options (tc/jsonb->clj (:options project)))

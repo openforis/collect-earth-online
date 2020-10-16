@@ -759,7 +759,7 @@ FROM projects;
 
 -- Returns a row in projects by id
 CREATE OR REPLACE FUNCTION select_project_by_id(_project_id integer)
- RETURNS table (
+ RETURNS TABLE (
     project_id             integer,
     institution_id         integer,
     imagery_id             integer,
@@ -891,7 +891,7 @@ CREATE OR REPLACE FUNCTION select_institution_projects_with_roles(_user_id integ
 $$ LANGUAGE SQL;
 
 CREATE OR REPLACE FUNCTION select_template_projects(_user_id integer)
- RETURNS table (
+ RETURNS TABLE (
      project_id    integer,
      name          text
  ) AS $$
