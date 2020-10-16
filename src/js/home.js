@@ -581,7 +581,7 @@ class ProjectPopup extends React.Component {
     componentDidMount() {
         // There is some kind of bug in attaching this onClick handler directly to its button in render().
         document.getElementById("zoomToCluster").onclick = () => {
-            mercator.zoomMapToExtent(this.props.mapConfig, this.props.clusterExtent);
+            mercator.zoomMapToExtent(this.props.mapConfig, this.props.clusterExtent, 128);
             mercator.getOverlayByTitle(this.props.mapConfig, "projectPopup").setPosition(undefined);
         };
     }
