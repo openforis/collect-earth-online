@@ -120,6 +120,12 @@ class Project extends React.Component {
                           .finally(() => this.setState({modalMessage: null})));
     }
 
+    // Currently this return value is only used on mount of the wizard,
+    // If neither of these two changes were made its pretty safe to assume that the wizard is
+    // mounting for a new project.
+    changesMade = () => this.state.projectDetails.name !== ""
+            && this.state.projectDetails.description !== "";
+
     render() {
         const CurrentComponent = this.modes[this.state.designMode];
         return (
@@ -129,7 +135,7 @@ class Project extends React.Component {
                     projectId: this.props.projectId,
                     ...this.state.projectDetails,
                     designMode:this.state.designMode,
-                    changesMade: this.state.projectDetails !== this.blankProject,
+                    changesMade: this.changesMade(),
                     institutionImagery: this.state.institutionImagery,
                     setProjectState: this.setProjectState,
                     setDesignMode: this.setDesignMode,
