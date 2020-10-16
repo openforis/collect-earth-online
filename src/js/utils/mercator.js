@@ -792,6 +792,12 @@ mercator.zoomMapToLayer = function (mapConfig, layerId, padding) {
     return mapConfig;
 };
 
+// [Side Effects] Resizes the map
+mercator.resize = function (mapConfig) {
+    mapConfig.map.updateSize();
+    return mapConfig;
+};
+
 /*****************************************************************************
 ***
 *** Functions to create map styles

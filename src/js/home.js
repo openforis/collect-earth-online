@@ -68,7 +68,10 @@ class Home extends React.Component {
             }
         });
 
-    toggleSidebar = () => this.setState({showSidePanel: !this.state.showSidePanel});
+    toggleSidebar = (mapConfig) => this.setState(
+        {showSidePanel: !this.state.showSidePanel},
+        () => mercator.resize(mapConfig)
+    );
 
     render() {
         return (
@@ -181,14 +184,16 @@ class MapPanel extends React.Component {
                 <div
                     id="toggle-map-button"
                     className="bg-lightgray"
-                    onClick={this.props.toggleSidebar}
+                    onClick={() => {
+                        this.props.toggleSidebar(this.state.mapConfig);
+                    }}
                 >
                     {this.props.showSidePanel
                         ? <SvgIcon icon="leftDouble" size="1.25rem"/>
                         : <SvgIcon icon="rightDouble" size="1.25rem"/>
                     }
                 </div>
-                <div id="home-map-pane" className="full-height"></div>
+                <div id="home-map-pane" className="full-height" style={{maxWidth: "inherit"}}></div>
                 <ProjectPopup
                     mapConfig={this.state.mapConfig}
                     clusterExtent={this.state.clusterExtent}
