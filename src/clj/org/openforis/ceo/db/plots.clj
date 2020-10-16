@@ -117,7 +117,8 @@
         user-plot-id     (when (not plot-samples)
                            (sql-primitive (call-sql "check_user_plots" project-id plot-id user-id)))
         id-translation   (when plot-samples
-                           (call-sql "delete_saved_samples_by_plot" plot-id)
+                           (call-sql "delete_user_plot_by_plot" plot-id)
+                           (call-sql "delete_samples_by_plot" plot-id)
                            (reduce (fn [acc {:keys [id sampleGeom]}]
                                      (let [new-id (sql-primitive (call-sql "create_project_plot_sample"
                                                                            {:log? false}

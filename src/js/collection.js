@@ -56,12 +56,6 @@ class Collection extends React.Component {
         );
 
         this.getProjectData();
-
-        if (this.state.currentProject.availability === "unpublished") {
-            alert("This project is unpublished. Only admins can collect. Any plot collections will be erased when the project is published.");
-        } else if (this.state.currentProject.availability === "closed") {
-            alert("This project has been closed. Admins can make corrections to any plot.");
-        }
     }
 
     componentDidUpdate(prevProps, prevState) {
@@ -153,6 +147,11 @@ class Collection extends React.Component {
             if (project.id > 0 && project.availability !== "archived") {
                 const surveyQuestions = convertSampleValuesToSurveyQuestions(project.sampleValues);
                 this.setState({currentProject: {...project, surveyQuestions: surveyQuestions}});
+                if (project.availability === "unpublished") {
+                    alert("This project is unpublished. Only admins can collect. Any plot collections will be erased when the project is published.");
+                } else if (project.availability === "closed") {
+                    alert("This project has been closed. Admins can make corrections to any plot.");
+                }
                 return Promise.resolve("resolved");
             } else {
                 return Promise.reject(project.availability === "archived"

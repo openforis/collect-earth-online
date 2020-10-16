@@ -143,23 +143,6 @@
                     :closedDate      (str (:closed_date stats))
                     :userStats       (tc/jsonb->clj (:user_stats stats))})))
 
-(defn publish-project [{:keys [params]}]
-  (let [project-id   (tc/str->int (:projectId params))
-        clear-saved? (tc/str->bool (:clearSaved params))]
-    (when clear-saved? (call-sql "delete_user_plots_by_project" project-id))
-    (call-sql "publish_project" project-id)
-    (data-response "")))
-
-(defn close-project [{:keys [params]}]
-  (let [project-id (tc/str->int (:projectId params))]
-    (call-sql "close_project" project-id)
-    (data-response "")))
-
-(defn archive-project [{:keys [params]}]
-  (let [project-id (tc/str->int (:projectId params))]
-    (call-sql "archive_project" project-id)
-    (data-response "")))
-
 ;;; Create/Update Common
 
 (defn- get-first-public-imagery []
@@ -663,6 +646,55 @@
         (data-response (if-let [causes (:causes (ex-data e))]
                          (str/join "\n" causes)
                          "Unknown server error."))))))
+
+;;; Update Status
+
+(defn reset-collected-samples [project-id]
+  (let [project (first (call-sql "select_project_by_id" project-id))
+        sample-distribution (:sample_distribution project)
+        allow-drawn-samples (:allow_drawn_samples project)]
+    (cond
+      (not allow-drawn-samples)
+      (call-sql "delete_user_plots_by_project" project-id)
+
+      (#{"shp" "csv"} sample-distribution)
+      (do
+        ;; TODO this can be done more efficiently.  Update when we update how external data is stored.
+        (call-sql "delete_all_samples_by_project" project-id)
+        (call-sql "delete_user_plots_by_project" project-id)
+        (call-sql "samples_from_plots_with_files" project-id))
+
+      :else
+      (let [plot-shape        (:plot_shape project)
+            plot-size         (tc/str->float (:plot_size project))
+            samples-per-plot  (tc/str->int (:samples_per_plot project))
+            sample-resolution (tc/str->float (:sample_resolution project))]
+        (doseq [{:keys [plot_id lon lat]} (call-sql "get_deleted_user_plots_by_project" project-id)]
+          (println "------" plot_id lon lat)
+          (create-project-samples plot_id
+                                  sample-distribution
+                                  [lon lat]
+                                  plot-shape
+                                  plot-size
+                                  samples-per-plot
+                                  sample-resolution))))))
+
+(defn publish-project [{:keys [params]}]
+  (let [project-id   (tc/str->int (:projectId params))
+        clear-saved? (tc/str->bool (:clearSaved params))]
+    (when clear-saved? (reset-collected-samples project-id))
+    (call-sql "publish_project" project-id)
+    (data-response "")))
+
+(defn close-project [{:keys [params]}]
+  (let [project-id (tc/str->int (:projectId params))]
+    (call-sql "close_project" project-id)
+    (data-response "")))
+
+(defn archive-project [{:keys [params]}]
+  (let [project-id (tc/str->int (:projectId params))]
+    (call-sql "archive_project" project-id)
+    (data-response "")))
 
 ;;; Dump Data common
 
