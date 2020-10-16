@@ -139,43 +139,46 @@ class Collection extends React.Component {
             });
     };
 
-    getProjectById = () => fetch(`/get-project-by-id?projectId=${this.props.projectId}`)
-        .then(response => response.ok ? response.json() : Promise.reject(response))
-        .then(project => {
-            if (project.id > 0 && project.availability !== "archived") {
-                const surveyQuestions = convertSampleValuesToSurveyQuestions(project.sampleValues);
-                this.setState({currentProject: {...project, surveyQuestions: surveyQuestions}});
-                return Promise.resolve("resolved");
-            } else {
-                return Promise.reject(project.availability === "archived"
+    getProjectById = () =>
+        fetch(`/get-project-by-id?projectId=${this.props.projectId}`)
+            .then(response => response.ok ? response.json() : Promise.reject(response))
+            .then(project => {
+                if (project.id > 0 && project.availability !== "archived") {
+                    const surveyQuestions = convertSampleValuesToSurveyQuestions(project.sampleValues);
+                    this.setState({currentProject: {...project, surveyQuestions: surveyQuestions}});
+                    return Promise.resolve("resolved");
+                } else {
+                    return Promise.reject(project.availability === "archived"
                                       ? "This project is archived"
                                       : "No project found with ID " + this.props.projectId + ".");
-            }
-        });
+                }
+            });
 
     // TODO, this can easily be a part of get-project-by-id
-    checkForGeodash = () => fetch(`/geo-dash/get-by-projid?projectId=${this.props.projectId}`)
-        .then(response => response.ok ? response.json() : Promise.reject(response))
-        .then(data => {
-            const widgets = Array.isArray(data.widgets)
+    checkForGeodash = () =>
+        fetch(`/geo-dash/get-by-projid?projectId=${this.props.projectId}`)
+            .then(response => response.ok ? response.json() : Promise.reject(response))
+            .then(data => {
+                const widgets = Array.isArray(data.widgets)
                 ? data.widgets
                 : Array.isArray(eval(data.widgets))
                     ? eval(data.widgets)
                     : [];
-            this.setState({hasGeoDash: widgets.length > 0});
-            return Promise.resolve("resolved");
-        });
-
-    getProjectPlots = () => fetch(`/get-project-plots?projectId=${this.props.projectId}&max=1000`)
-        .then(response => response.ok ? response.json() : Promise.reject(response))
-        .then(data => {
-            if (data.length > 0) {
-                this.setState({plotList: data});
+                this.setState({hasGeoDash: widgets.length > 0});
                 return Promise.resolve("resolved");
-            } else {
-                return Promise.reject("No plot information found");
-            }
-        });
+            });
+
+    getProjectPlots = () =>
+        fetch(`/get-project-plots?projectId=${this.props.projectId}&max=1000`)
+            .then(response => response.ok ? response.json() : Promise.reject(response))
+            .then(data => {
+                if (data.length > 0) {
+                    this.setState({plotList: data});
+                    return Promise.resolve("resolved");
+                } else {
+                    return Promise.reject("No plot information found");
+                }
+            });
 
     getImageryList = () =>
         fetch(`/get-project-imagery?projectId=${this.props.projectId}`)

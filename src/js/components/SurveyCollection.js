@@ -43,7 +43,7 @@ export class SurveyCollection extends React.Component {
                 .sort((a, b) => a.id - b.id)
                 .map(sq => sq.id),
         });
-    }
+    };
 
     prevSurveyQuestionTree = () => {
         if (this.state.currentNodeIndex > 0) {
