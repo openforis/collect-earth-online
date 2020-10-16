@@ -44,9 +44,6 @@ module.exports = {
             "error",
             "always",
         ],
-        "no-var": [
-            "error",
-        ],
         // From Matt
         "arrow-body-style": ["error", "as-needed"],
         "brace-style": 2,
@@ -65,6 +62,7 @@ module.exports = {
         "no-prototype-builtins": 0,
         "no-useless-return": 1,
         "no-unused-vars": 1,
+        "no-var": 2,
         "object-curly-newline": [1, {"multiline": true, "consistent": true}],
         "object-curly-spacing": [1, "never"],
         "object-property-newline": ["error", {"allowAllPropertiesOnSameLine": true}],

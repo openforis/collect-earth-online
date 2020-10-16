@@ -114,7 +114,7 @@ export class SurveyCollection extends React.Component {
     setDrawTool = (newTool) => {
         this.setState({drawTool: newTool});
         if (this.props.mapConfig) mercator.changeDrawTool(this.props.mapConfig, "drawLayer", newTool);
-    }
+    };
 
     buttonStyle = (selected) => Object.assign(
         {padding: "4px", margin: ".25rem"},

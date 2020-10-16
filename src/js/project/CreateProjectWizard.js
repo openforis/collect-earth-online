@@ -110,7 +110,7 @@ export default class CreateProjectWizard extends React.Component {
 
     componentDidMount() {
         this.getTemplateProjects();
-        if (this.context.changesMade) this.checkAllSteps();
+        if (this.context.name !== "" || this.context.description !== "") this.checkAllSteps();
     }
 
     /// API Calls

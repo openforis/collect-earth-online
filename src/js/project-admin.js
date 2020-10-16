@@ -58,7 +58,6 @@ class Project extends React.Component {
 
     /// Lifecycle Methods
 
-    // TODO: Consider include institutionId for review project to allow for parallel API calls
     componentDidMount() {
         if (this.props.projectId > 0) {
             this.setState({designMode: "manage"});
@@ -94,7 +93,7 @@ class Project extends React.Component {
 
     resetProject = (defaults) => this.setState({projectDetails: this.blankProject, ...defaults});
 
-    setDesignMode = (newMode) => this.setState({designMode: newMode})
+    setDesignMode = (newMode) => this.setState({designMode: newMode});
 
     /// API Calls
 
@@ -118,13 +117,7 @@ class Project extends React.Component {
         this.setState({modalMessage: message},
                       () => callBack.call(this)
                           .finally(() => this.setState({modalMessage: null})));
-    }
-
-    // Currently this return value is only used on mount of the wizard,
-    // If neither of these two changes were made its pretty safe to assume that the wizard is
-    // mounting for a new project.
-    changesMade = () => this.state.projectDetails.name !== ""
-            && this.state.projectDetails.description !== "";
+    };
 
     render() {
         const CurrentComponent = this.modes[this.state.designMode];
@@ -135,7 +128,6 @@ class Project extends React.Component {
                     projectId: this.props.projectId,
                     ...this.state.projectDetails,
                     designMode:this.state.designMode,
-                    changesMade: this.changesMade(),
                     institutionImagery: this.state.institutionImagery,
                     setProjectState: this.setProjectState,
                     setDesignMode: this.setDesignMode,
