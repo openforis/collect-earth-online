@@ -401,41 +401,58 @@ $$ LANGUAGE SQL;
 --
 
 -- Check if user is admin of institution
-CREATE OR REPLACE FUNCTION is_institution_user_admin(_user_id integer, _institution_id integer)
+CREATE OR REPLACE FUNCTION is_institution_admin(_user_id integer, _institution_id integer)
  RETURNS boolean AS $$
 
-    SELECT EXISTS(
-        SELECT title
-        FROM institution_users as iu
-        INNER JOIN roles as r
-            ON iu.role_rid = role_uid
-        INNER JOIN institutions as i
-            ON institution_rid = institution_uid
-        WHERE iu.user_rid = _user_id
-            AND institution_rid = _institution_id
-            AND title = 'admin'
-            AND archived = FALSE
-    )
+    SELECT count(1) > 0
+    FROM institution_users as iu
+    INNER JOIN roles as r
+        ON iu.role_rid = role_uid
+    INNER JOIN institutions as i
+        ON institution_rid = institution_uid
+    WHERE iu.user_rid = _user_id
+        AND institution_rid = _institution_id
+        AND title = 'admin'
+        AND archived = FALSE
 
 $$ LANGUAGE SQL;
 
 -- Check if user has collection rights (read rights) for the project
-CREATE OR REPLACE FUNCTION can_user_collect(_user_id integer, _project_id integer)
+CREATE OR REPLACE FUNCTION can_user_collect_project(_user_id integer, _project_id integer)
  RETURNS boolean AS $$
 
-    SELECT EXISTS(SELECT * FROM select_all_user_projects(_user_id) WHERE project_id = _project_id)
+    SELECT count(1) > 0
+    FROM projects as p
+    LEFT JOIN institution_users iu
+        ON p.institution_rid = iu.institution_rid
+        AND user_rid = _user_id
+    LEFT JOIN roles r
+        ON iu.role_rid = role_uid
+    WHERE project_uid = _project_id
+        AND ((r.title = 'admin' AND p.availability <> 'archived')
+            OR (r.title = 'member'
+                AND p.privacy_level IN ('public', 'institution', 'users')
+                AND p.availability = 'published')
+            OR (_user_id > 0
+                AND p.privacy_level IN ('public', 'users')
+                AND p.availability = 'published')
+            OR (p.privacy_level IN ('public')
+                AND p.availability = 'published'))
 
 $$ LANGUAGE SQL;
 
 -- Check if user has modify rights for the project
-CREATE OR REPLACE FUNCTION can_user_edit(_user_id integer, _project_id integer)
+CREATE OR REPLACE FUNCTION can_user_edit_project(_user_id integer, _project_id integer)
  RETURNS boolean AS $$
 
-    SELECT EXISTS(
-        SELECT *
-        FROM select_all_user_projects(_user_id)
-        WHERE project_id = _project_id
-            AND editable = true
-    )
+    SELECT count(1) > 0
+    FROM projects as p
+    LEFT JOIN institution_users iu
+        ON p.institution_rid = iu.institution_rid
+        AND user_rid = _user_id
+    LEFT JOIN roles r
+        ON iu.role_rid = role_uid
+    WHERE project_uid = _project_id
+        AND (r.title = 'admin' AND p.availability <> 'archived')
 
 $$ LANGUAGE SQL;

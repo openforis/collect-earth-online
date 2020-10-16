@@ -8,7 +8,7 @@
             [org.openforis.ceo.utils.part-utils :refer [write-file-part-base64]]))
 
 (defn is-inst-admin-query? [user-id institution-id]
-  (sql-primitive (call-sql "is_institution_user_admin" user-id institution-id)))
+  (sql-primitive (call-sql "is_institution_admin" user-id institution-id)))
 
 (defn is-inst-admin? [{:keys [params]}]
   (let [user-id        (:userId params -1)
