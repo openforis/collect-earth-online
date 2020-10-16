@@ -588,12 +588,12 @@ class ProjectPopup extends React.Component {
 
     render() {
         return (
-            <div id="projectPopUp" className="d-flex flex-column" style={{height: "100%"}}>
+            <div id="projectPopUp" className="d-flex flex-column" style={{maxHeight: "40vh"}}>
                 <div className="cTitle">
                     <h1>{this.props.features.length > 1 ? "Cluster info" : "Project info"}</h1>
                 </div>
                 <div className="cContent" style={{padding: "10px", overflow: "auto"}}>
-                    <table className="table table-sm">
+                    <table className="table table-sm" style={{tableLayout: "fixed"}}>
                         <tbody>
                             {
                                 this.props.features.map((feature, uid) =>

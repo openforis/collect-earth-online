@@ -1275,7 +1275,8 @@ mercator.addOverlay = function (mapConfig, overlayTitle, element) {
     const overlay = new Overlay({
         id: overlayTitle,
         element: element,
-    });//?element:document.createElement("div")});
+        autoPan: true,
+    });
     mapConfig.map.addOverlay(overlay);
     return mapConfig;
 };
