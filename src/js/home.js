@@ -263,7 +263,7 @@ class SideBar extends React.Component {
                             filterInstitution={this.state.filterInstitution}
                             sortByNumber={this.state.sortByNumber}
                             showEmptyInstitutions={this.state.showEmptyInstitutions}
-                            userInstitutionList
+                            userInstitutions
                         />
                         <div className="bg-darkgreen">
                             <h2 className="tree_label" id="panelTitle">Other Institutions</h2>
@@ -281,7 +281,7 @@ class SideBar extends React.Component {
                         filterInstitution={this.state.filterInstitution}
                         sortByNumber={this.state.sortByNumber}
                         showEmptyInstitutions={this.state.showEmptyInstitutions}
-                        userInstitutionList={false}
+                        userInstitutions={false}
                     />
                 : (
                     this.props.userInstitutions.length > 0
@@ -301,7 +301,7 @@ function InstitutionList({
     useFirstLetter,
     showEmptyInstitutions,
     sortByNumber,
-    userInstitutionList,
+    userInstitutions,
 }) {
     const filterTextLower = filterText.toLocaleLowerCase();
 
@@ -331,7 +331,7 @@ function InstitutionList({
                                 - projects.filter(proj => a.id === proj.institution).length
                             : sortAlphabetically(a.name, b.name));
 
-    const userInstStyle = userInstitutionList ? {maxHeight: "fit-content"} : {};
+    const userInstStyle = userInstitutions ? {maxHeight: "fit-content"} : {};
 
     return (
         filteredInstitutions.length > 0
@@ -360,7 +360,7 @@ function InstitutionList({
         :
             <h3 className="p-3">
                 {filterInstitution
-                    ? userInstitutionList
+                    ? userInstitutions
                         ? "No affiliations Found..."
                         : "No Institutions Found..."
                     : "No Projects Found..."}

@@ -72,6 +72,7 @@ class Project extends React.Component {
 
     componentDidUpdate(prevProps, prevState) {
         const {plotDistribution, sampleDistribution, institution} = this.state.projectDetails;
+
         if (plotDistribution !== prevState.projectDetails.plotDistribution) {
             const newSampleDistribution = ["random", "gridded"].includes(plotDistribution) && ["csv", "shp"].includes(sampleDistribution)
                 ? "random"
@@ -81,7 +82,7 @@ class Project extends React.Component {
             if (newSampleDistribution !== sampleDistribution) this.setProjectState({sampleDistribution: newSampleDistribution});
         }
 
-        if (prevState.projectDetails.institution !== institution) {
+        if (institution !== prevState.projectDetails.institution) {
             this.getInstitutionImagery(institution);
         }
     }

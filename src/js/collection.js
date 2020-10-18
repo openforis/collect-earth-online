@@ -148,9 +148,11 @@ class Collection extends React.Component {
                     this.setState({currentProject: {...project, surveyQuestions: surveyQuestions}});
                     return Promise.resolve("resolved");
                 } else {
-                    return Promise.reject(project.availability === "archived"
-                                      ? "This project is archived"
-                                      : "No project found with ID " + this.props.projectId + ".");
+                    return Promise.reject(
+                        project.availability === "archived"
+                            ? "This project is archived"
+                            : "No project found with ID " + this.props.projectId + "."
+                    );
                 }
             });
 
@@ -160,10 +162,10 @@ class Collection extends React.Component {
             .then(response => response.ok ? response.json() : Promise.reject(response))
             .then(data => {
                 const widgets = Array.isArray(data.widgets)
-                ? data.widgets
-                : Array.isArray(eval(data.widgets))
-                    ? eval(data.widgets)
-                    : [];
+                    ? data.widgets
+                    : Array.isArray(eval(data.widgets))
+                        ? eval(data.widgets)
+                        : [];
                 this.setState({hasGeoDash: widgets.length > 0});
                 return Promise.resolve("resolved");
             });
