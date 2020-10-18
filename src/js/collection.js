@@ -1110,13 +1110,29 @@ function ImageAnalysisPane({loader, imageryAttribution}) {
 }
 
 function SideBar(props) {
-    const adminCanSave = props.isAdmin && props.surveyQuestions.every(sq => (sq.answered || []).length === 0);
-    const saveValuesButtonEnabled = adminCanSave
-        || props.currentPlot.samples
-        && props.currentPlot.samples.length > 0
-        && props.answerMode === "question"
-        && (props.currentPlot.flagged
-            || props.surveyQuestions.every(sq => sq.visible && sq.answered && sq.visible.length === sq.answered.length));
+    const checkCanSave = () => {
+        const safeLength = (arr) => (arr || []).length;
+        const noneAnswered = props.surveyQuestions.every(sq => safeLength(sq.answered) === 0);
+        const hasSamples = safeLength(props.currentPlot.samples) > 0;
+        const allAnswered = props.currentPlot.flagged
+            || props.surveyQuestions.every(sq => safeLength(sq.visible) === safeLength(sq.answered));
+
+        if (props.answerMode !== "question") {
+            alert("You must be in question mode to save the collection.");
+            return false;
+        } else if (props.isAdmin && !(noneAnswered || allAnswered)) {
+            alert("Admins can only save the plot if all questions are answered, or the answers are cleared.");
+            return false;
+        } else if (!hasSamples) {
+            alert("The collection must have samples to be saved. Enter draw mode to add more samples.");
+            return false;
+        } else if (!allAnswered) {
+            alert("All questions must be answered to save the collection.");
+            return false;
+        } else {
+            return true;
+        }
+    };
 
     const renderQuitButton = () => (
         <input
@@ -1146,11 +1162,12 @@ function SideBar(props) {
             </div>
             <div className="my-2 d-flex justify-content-between">
                 <input
-                    className={"btn btn-outline-lightgreen btn-sm col mr-1"
-                                + (!saveValuesButtonEnabled ? " disabled-group" : "")}
+                    className={"btn btn-outline-lightgreen btn-sm col mr-1"}
                     type="button"
                     value="Save"
-                    onClick={props.postValuesToDB}
+                    onClick={() => {
+                        if (checkCanSave()) props.postValuesToDB();
+                    }}
                 />
                 {renderQuitButton()}
             </div>
