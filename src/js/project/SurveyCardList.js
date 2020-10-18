@@ -1,4 +1,5 @@
 import React, {Fragment} from "react";
+
 import {removeEnumerator} from "../utils/surveyUtils";
 import {UnicodeIcon} from "../utils/generalUtils";
 

@@ -4,10 +4,11 @@ import AOIMap from "./AOIMap";
 import {ImageryReview} from "./ImagerySelection";
 import {OverviewReview} from "./Overview";
 import {AOIReview, PlotReview} from "./PlotDesign";
-import {ProjectContext} from "./constants";
 import {SampleReview} from "./SampleDesign";
 import SurveyCardList from "./SurveyCardList";
 import {SurveyRulesList} from "./SurveyRules";
+
+import {ProjectContext} from "./constants";
 
 export default function ReviewForm() {
     const renderSectionHeader = (title) => (

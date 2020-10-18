@@ -1,4 +1,5 @@
 import React from "react";
+
 import {ProjectContext} from "./constants";
 
 export class SurveyRuleDesign extends React.Component {

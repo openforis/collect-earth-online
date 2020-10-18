@@ -1,6 +1,8 @@
 import React from "react";
-import {ProjectContext} from "./constants";
+
 import ReviewForm from "./ReviewForm";
+
+import {ProjectContext} from "./constants";
 import {mercator} from "../utils/mercator.js";
 
 export default class ReviewChanges extends React.Component {

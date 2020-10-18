@@ -1,9 +1,10 @@
 import React from "react";
 
 import SurveyCardList from "./SurveyCardList";
+import {SurveyCollection} from "../components/SurveyCollection";
+
 import {removeEnumerator} from "../utils/surveyUtils";
 import {ProjectContext} from "./constants";
-import {SurveyCollection} from "../components/SurveyCollection";
 
 const componentTypes = [
     {componentType: "button", dataType: "text"},
