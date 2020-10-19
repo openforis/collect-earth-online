@@ -76,17 +76,17 @@
     font-family: 'CaviarDreams';
     src: url('/fonts/CaviarDreams.eot');
     src: local('☺'),
-    url('/fonts/CaviarDreams.woff') format('woff'),
-    url('/fonts/CaviarDreams.ttf') format('truetype'),
-    url('/fonts/CaviarDreams.svg') format('svg');
+        url('/fonts/CaviarDreams.woff') format('woff'),
+        url('/fonts/CaviarDreams.ttf') format('truetype'),
+        url('/fonts/CaviarDreams.svg') format('svg');
 }
 @font-face {
     font-family: 'CaviarDreams_Bold';
     src: url('/fonts/CaviarDreams_Bold.eot');
     src: local('☺'),
-    url('/fonts/CaviarDreams_Bold.woff') format('woff'),
-    url('/fonts/CaviarDreams_Bold.ttf') format('truetype'),
-    url('/fonts/CaviarDreams_Bold.svg') format('svg');
+        url('/fonts/CaviarDreams_Bold.woff') format('woff'),
+        url('/fonts/CaviarDreams_Bold.ttf') format('truetype'),
+        url('/fonts/CaviarDreams_Bold.svg') format('svg');
 }
 
 /**************/
@@ -350,14 +350,12 @@ a:hover {
         border-top: solid 4px #31bab0;
         margin-top: -10px;
         padding-top: 6px;
-        }
-
+    }
     #main-nav .nav-item:hover {
         border-top: solid 4px #fccf07;
         margin-top: -10px;
         padding-top: 6px;
-        }
-
+    }
     #main-nav .nav-item#username, #main-nav .nav-item#login-button {
         border: none;
         padding-top: 0;
@@ -367,25 +365,25 @@ a:hover {
     .navbar .collapse.show {
         padding-bottom: 1rem;
     }
-        #main-nav .nav-item.active, #main-nav .nav-item.active:hover {
-            border-left: solid 4px #31bab0;
-            margin-left: -9px;
-            padding-left: 5px;
-        }
-        #main-nav .nav-item:hover {
-            border-left: solid 4px #fccf07;
-            margin-left: -9px;
-            padding-left: 5px;
-        }
-        #main-nav .nav-item#username, #main-nav .nav-item#login-button {
-            border: none;
-            padding-left: 0;
-            margin-left: 0;
+    #main-nav .nav-item.active, #main-nav .nav-item.active:hover {
+        border-left: solid 4px #31bab0;
+        margin-left: -9px;
+        padding-left: 5px;
+    }
+    #main-nav .nav-item:hover {
+        border-left: solid 4px #fccf07;
+        margin-left: -9px;
+        padding-left: 5px;
+    }
+    #main-nav .nav-item#username, #main-nav .nav-item#login-button {
+        border: none;
+        padding-left: 0;
+        margin-left: 0;
     }
 }
 
 /*************/
-/* HOME PAGE */
+/* Home Page */
 /*************/
 #home-map-pane {
     width: 100%;
@@ -476,7 +474,7 @@ a.ol-popup-closer.close {
 }
 .ol-overlay-container td {border-top: none;}
 .ol-overlay-container tr {border-top: 1px solid #dee2e6;}
-.ol-overlay-container tr:first-child {border-top: none;margin-top: .3rem;}
+.ol-overlay-container tr:first-child {border-top: none; margin-top: .3rem;}
 
 /***********************/
 /* Login/Register Page */
@@ -566,21 +564,9 @@ ul.samplevalue {
     background-color: rgba(75,75,150,1.0);
     z-index: 100;
 }
-#download-kml {
-    position: absolute;
-    left: 40%;
-    bottom: 5px;
-    height: 2rem;
-    padding: 0.25rem;
-    text-align: center;
-    background-color: #31bab0;
-    z-index: 100;
-    width: 20%;
-    border-radius: 10px;
-}
 
 /********************/
-/* INSTITUTION PAGE */
+/* Institution Page */
 /********************/
 #institution .header {margin: 1rem 0;}
 #institution .badge-light {
@@ -590,7 +576,7 @@ ul.samplevalue {
 
 /* FIXME, move any remaining css to geo-dash.css as necessary */
 /*******************************/
-/* GEO DASH WIDGET EDITOR PAGE */
+/* Geo Dash Widget Editor Page */
 /*******************************/
 .container-fluid.widgetEditor {
     width: 100%;
@@ -622,7 +608,6 @@ ul.samplevalue {
 @-o-keyframes      sweep { to { -o-transform: rotate(360deg); } }
 @-moz-keyframes    sweep { to { -moz-transform: rotate(360deg); } }
 @-webkit-keyframes sweep { to { -webkit-transform: rotate(360deg); } }
-
 
 /********************/
 /* Expandable Image */
