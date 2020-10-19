@@ -19,7 +19,7 @@ export class SampleDesign extends React.Component {
                 id={property}
                 min="0"
                 step="1"
-                value={this.context[property] || ""}
+                value={this.context.projectDetails[property] || ""}
                 onChange={e => this.context.setProjectState({[property]: e.target.value})}
             />
         </div>
@@ -51,13 +51,15 @@ export class SampleDesign extends React.Component {
                 />
             </label>
             <label className="ml-3 text-nowrap">
-                File: {!this.context.sampleFileName ? <span className="font-italic">None</span> : this.context.sampleFileName}
+                File: {!this.context.projectDetails.sampleFileName
+                    ? <span className="font-italic">None</span>
+                    : this.context.projectDetails.sampleFileName}
             </label>
         </div>
     );
 
     render() {
-        const {plotDistribution, sampleDistribution, allowDrawnSamples, setProjectState} = this.context;
+        const {projectDetails: {plotDistribution, sampleDistribution, allowDrawnSamples}, setProjectState} = this.context;
         const totalPlots = this.props.getTotalPlots();
         const samplesPerPlot = this.props.getSamplesPerPlot();
 
@@ -245,7 +247,7 @@ export function SamplePreview() {
         <ProjectContext.Consumer>
             {context =>
                 <div className="p-3">
-                    {renderPreview(context)}
+                    {renderPreview(context.projectDetails)}
                 </div>
             }
         </ProjectContext.Consumer>

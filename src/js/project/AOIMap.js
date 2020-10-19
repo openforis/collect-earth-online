@@ -21,11 +21,11 @@ export default class AOIMap extends React.Component {
         }
 
         if (this.state.mapConfig) {
-            if (prevProps.context.boundary !== this.props.context.boundary) {
+            if (prevProps.context.projectDetails.boundary !== this.props.context.projectDetails.boundary) {
                 this.updateBoundary();
             }
 
-            if (prevProps.context.imageryId !== this.props.context.imageryId) {
+            if (prevProps.context.projectDetails.imageryId !== this.props.context.projectDetails.imageryId) {
                 this.updateBaseMapImagery();
             }
 
@@ -37,8 +37,8 @@ export default class AOIMap extends React.Component {
                 }
             }
 
-            if (prevProps.context.plots !== this.props.context.plots) {
-                if (this.props.context.plots.length > 0) {
+            if (prevProps.context.projectDetails.plots !== this.props.context.projectDetails.plots) {
+                if (this.props.context.projectDetails.plots.length > 0) {
                     this.showPlots();
                 } else {
                     this.hidePlots();
@@ -51,25 +51,28 @@ export default class AOIMap extends React.Component {
         const newMapConfig = mercator.createMap("project-map", [0.0, 0.0], 1, this.props.context.institutionImagery);
         this.setState({mapConfig: newMapConfig}, () => {
             this.updateBaseMapImagery();
-            if (this.props.context.boundary) this.updateBoundary();
+            if (this.props.context.projectDetails.boundary) this.updateBoundary();
             if (this.props.canDrag) this.showDragBoxDraw();
-            if (this.props.context.plots.length > 0) this.showPlots();
+            if (this.props.context.projectDetails.plots.length > 0) this.showPlots();
         });
     };
 
     updateBaseMapImagery = () => {
-        mercator.setVisibleLayer(this.state.mapConfig,
-                                 this.props.context.imageryId || this.props.context.institutionImagery[0].id);
+        mercator.setVisibleLayer(
+            this.state.mapConfig,
+            this.props.context.projectDetails.imageryId
+                || this.props.context.institutionImagery[0].id
+        );
     };
 
     updateBoundary = () => {
         // Display a bounding box with the project's AOI on the map and zoom to it
         mercator.removeLayerById(this.state.mapConfig, "currentAOI");
-        if (this.props.context.boundary) {
+        if (this.props.context.projectDetails.boundary) {
             mercator.addVectorLayer(
                 this.state.mapConfig,
                 "currentAOI",
-                mercator.geometryToVectorSource(mercator.parseGeoJson(this.props.context.boundary, true)),
+                mercator.geometryToVectorSource(mercator.parseGeoJson(this.props.context.projectDetails.boundary, true)),
                 mercator.ceoMapStyles("geom", "yellow")
             );
             mercator.zoomMapToLayer(this.state.mapConfig, "currentAOI");
@@ -94,8 +97,8 @@ export default class AOIMap extends React.Component {
         mercator.addVectorLayer(
             this.state.mapConfig,
             "projectPlots",
-            mercator.plotsToVectorSource(this.props.context.plots),
-            mercator.ceoMapStyles(this.props.context.plotShape, "yellow")
+            mercator.plotsToVectorSource(this.props.context.projectDetails.plots),
+            mercator.ceoMapStyles(this.props.context.projectDetails.plotShape, "yellow")
         );
     };
 

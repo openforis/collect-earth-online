@@ -126,7 +126,7 @@ class Project extends React.Component {
                 value={{
                     institutionId: this.props.institutionId,
                     projectId: this.props.projectId,
-                    ...this.state.projectDetails,
+                    projectDetails: this.state.projectDetails,
                     designMode: this.state.designMode,
                     institutionImagery: this.state.institutionImagery,
                     setProjectState: this.setProjectState,

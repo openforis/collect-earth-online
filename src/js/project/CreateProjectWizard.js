@@ -48,26 +48,26 @@ export default class CreateProjectWizard extends React.Component {
             plots: {
                 title: "Plot Design",
                 description: "Area of interest and plot generation for collection",
-                StepComponent: () => this.context.useTemplatePlots
+                StepComponent: () => this.context.projectDetails.useTemplatePlots
                     ? <PlotDesignReview/>
                     : (
                         <PlotDesign
                             getTotalPlots={this.getTotalPlots}
-                            boundary={this.context.boundary}
+                            boundary={this.context.projectDetails.boundary}
                         />
                     ),
                 helpDescription: "Collection Map Preview",
                 StepHelpComponent: () =>
                     <AOIMap
                         context={this.context}
-                        canDrag={!this.context.useTemplatePlots}
+                        canDrag={!this.context.projectDetails.useTemplatePlots}
                     />,
                 validate: this.validatePlotData,
             },
             samples: {
                 title: "Sample Design",
                 description: "Sample generation for collection",
-                StepComponent: () => this.context.useTemplatePlots
+                StepComponent: () => this.context.projectDetails.useTemplatePlots
                     ? <SampleReview/>
                     : (
                         <SampleDesign
@@ -110,7 +110,7 @@ export default class CreateProjectWizard extends React.Component {
 
     componentDidMount() {
         this.getTemplateProjects();
-        if (this.context.name !== "" || this.context.description !== "") this.checkAllSteps();
+        if (this.context.projectDetails.name !== "" || this.context.projectDetails.description !== "") this.checkAllSteps();
     }
 
     /// API Calls
@@ -186,19 +186,20 @@ export default class CreateProjectWizard extends React.Component {
     /// Validations
 
     getTotalPlots = () => {
-        if (this.context.plotDistribution === "random"
-            && this.context.numPlots) {
-            return Number(this.context.numPlots);
-        } else if (this.context.plotDistribution === "gridded"
-                    && this.context.plotSize
-                    && this.context.plotSpacing) {
-            const boundaryExtent = mercator.parseGeoJson(this.context.boundary, true).getExtent();
-            const buffer = Number(this.context.plotSize);
+        const {plotDistribution, numPlots, plotSize, plotSpacing, boundary} = this.context.projectDetails;
+        if (plotDistribution === "random"
+            && numPlots) {
+            return Number(numPlots);
+        } else if (plotDistribution === "gridded"
+                    && plotSize
+                    && plotSpacing) {
+            const boundaryExtent = mercator.parseGeoJson(boundary, true).getExtent();
+            const buffer = Number(plotSize);
             const xRange = boundaryExtent[2] - boundaryExtent[0] - buffer;
             const yRange = boundaryExtent[3] - boundaryExtent[1] - buffer;
 
-            const xSteps = Math.floor(xRange / this.context.plotSpacing) + 1;
-            const ySteps = Math.floor(yRange / this.context.plotSpacing) + 1;
+            const xSteps = Math.floor(xRange / plotSpacing) + 1;
+            const ySteps = Math.floor(yRange / plotSpacing) + 1;
             return xSteps * ySteps;
         } else {
             return 0;
@@ -206,15 +207,16 @@ export default class CreateProjectWizard extends React.Component {
     };
 
     getSamplesPerPlot = () => {
-        if (this.context.sampleDistribution === "random"
-            && this.context.samplesPerPlot) {
-            return Number(this.context.samplesPerPlot);
-        } else if (this.context.sampleDistribution === "gridded"
-            && this.context.plotSize
-            && this.context.sampleResolution) {
-            const steps = Math.floor(Number(this.context.plotSize) / Number(this.context.sampleResolution)) + 1;
+        const {sampleDistribution, samplesPerPlot, plotSize, sampleResolution} = this.context.projectDetails;
+        if (sampleDistribution === "random"
+            && samplesPerPlot) {
+            return Number(samplesPerPlot);
+        } else if (sampleDistribution === "gridded"
+            && plotSize
+            && sampleResolution) {
+            const steps = Math.floor(Number(plotSize) / Number(sampleResolution)) + 1;
             return steps * steps;
-        } else if (this.context.sampleDistribution === "center") {
+        } else if (sampleDistribution === "center") {
             return 1;
         } else {
             return 0;
@@ -222,7 +224,7 @@ export default class CreateProjectWizard extends React.Component {
     };
 
     validateOverview = () => {
-        const {name, description} = this.context;
+        const {name, description} = this.context.projectDetails;
         const errorList = [
             (name === "" || description === "") && "A project must contain a name and description.",
         ];
@@ -230,7 +232,7 @@ export default class CreateProjectWizard extends React.Component {
     };
 
     validateImagery = () => {
-        const {privacyLevel, imageryId, institutionImagery, projectImageryList} = this.context;
+        const {privacyLevel, imageryId, institutionImagery, projectImageryList} = this.context.projectDetails;
         const requiresPublic = ["public", "users"].includes(privacyLevel)
             && [...projectImageryList, imageryId]
                 .every(id => institutionImagery.some(il => il.id === id && il.visibility === "private"));
@@ -252,7 +254,7 @@ export default class CreateProjectWizard extends React.Component {
             plotSize,
             plotFileName,
             useTemplatePlots,
-        } = this.context;
+        } = this.context.projectDetails;
         const totalPlots = this.getTotalPlots();
         const errorList = [
             (["random", "gridded"].includes(plotDistribution) && !boundary)
@@ -281,7 +283,7 @@ export default class CreateProjectWizard extends React.Component {
             plotShape,
             sampleFileName,
             useTemplatePlots,
-        } = this.context;
+        } = this.context.projectDetails;
         const totalPlots = this.getTotalPlots();
         const samplesPerPlot = this.getSamplesPerPlot();
         const errorList = [
@@ -308,7 +310,7 @@ export default class CreateProjectWizard extends React.Component {
     };
 
     validateSurveyQuestions = () => {
-        const {surveyQuestions} = this.context;
+        const {surveyQuestions} = this.context.projectDetails;
         const errorList = [
             (surveyQuestions.length === 0)
                 && "A survey must include at least one question.",
@@ -389,7 +391,7 @@ export default class CreateProjectWizard extends React.Component {
     };
 
     toggleTemplatePlots = () => {
-        if (this.context.useTemplatePlots) {
+        if (this.context.projectDetails.useTemplatePlots) {
             this.context.setProjectState({useTemplatePlots: false, plots: []});
         } else {
             this.context.setProjectState({

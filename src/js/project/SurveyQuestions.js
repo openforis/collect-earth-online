@@ -24,7 +24,7 @@ export class SurveyQuestionDesign extends React.Component {
     }
 
     getChildQuestionIds = (questionId) => {
-        const childQuestions = this.context.surveyQuestions.filter(sq => sq.parentQuestion === questionId);
+        const childQuestions = this.context.projectDetails.surveyQuestions.filter(sq => sq.parentQuestion === questionId);
         if (childQuestions.length === 0) {
             return [questionId];
         } else {
@@ -37,14 +37,15 @@ export class SurveyQuestionDesign extends React.Component {
     removeQuestion = (questionId) => {
         const questionsToRemove = this.getChildQuestionIds(questionId);
 
-        const newSurveyQuestions = this.context.surveyQuestions
+        const newSurveyQuestions = this.context.projectDetails.surveyQuestions
             .filter(sq => !questionsToRemove.includes(sq.id));
 
         this.context.setProjectState({surveyQuestions: newSurveyQuestions});
     };
 
     removeAnswer = (questionId, answerId) => {
-        const matchingQuestion = this.context.surveyQuestions
+        const {surveyQuestions} = this.context.projectDetails;
+        const matchingQuestion = surveyQuestions
             .find(sq => sq.parentQuestion === questionId && sq.parentAnswer === answerId);
 
         if (matchingQuestion) {
@@ -52,12 +53,12 @@ export class SurveyQuestionDesign extends React.Component {
                 matchingQuestion.question
                 + ") is referencing it.");
         } else {
-            const surveyQuestion = this.context.surveyQuestions.find(sq => sq.id === questionId);
+            const surveyQuestion = surveyQuestions.find(sq => sq.id === questionId);
             const updatedAnswers = surveyQuestion.answers.filter(ans => ans.id !== answerId);
 
             const updatedQuestion = {...surveyQuestion, answers: updatedAnswers};
 
-            const newSurveyQuestions = this.context.surveyQuestions
+            const newSurveyQuestions = surveyQuestions
                 .map(sq => sq.id === updatedQuestion.id ? updatedQuestion : sq);
 
             this.context.setProjectState({surveyQuestions: newSurveyQuestions});
@@ -71,31 +72,32 @@ export class SurveyQuestionDesign extends React.Component {
     }
 
     render() {
+        const {projectDetails, setProjectState} = this.context;
         return (
             <div id="survey-design">
                 <SurveyCardList
                     inDesignMode
-                    setProjectState={this.context.setProjectState}
-                    setSurveyRules={this.context.setSurveyRules}
-                    surveyQuestions={this.context.surveyQuestions}
-                    surveyRules={this.context.surveyRules}
+                    setProjectState={setProjectState}
+                    setSurveyRules={(newRules) => setProjectState({surveyRules: newRules})}
+                    surveyQuestions={projectDetails.surveyQuestions}
+                    surveyRules={projectDetails.surveyRules}
                     removeAnswer={this.removeAnswer}
                     removeQuestion={this.removeQuestion}
                     newAnswerComponent={(surveyQuestion) => surveyQuestion.answers.length
                                 < this.maxAnswers(surveyQuestion.componentType, surveyQuestion.dataType)
                                 &&
                                 <NewAnswerDesigner
-                                    setProjectState={this.context.setProjectState}
-                                    surveyQuestions={this.context.surveyQuestions}
+                                    setProjectState={projectDetails.setProjectState}
+                                    surveyQuestions={projectDetails.surveyQuestions}
                                     surveyQuestion={surveyQuestion}
                                 />
                     }
                 />
                 <NewQuestionDesigner
-                    setProjectState={this.context.setProjectState}
-                    surveyQuestions={this.context.surveyQuestions}
-                    surveyRules = {this.context.surveyRules}
-                    setSurveyRules = {this.context.setSurveyRules}
+                    setProjectState={projectDetails.setProjectState}
+                    surveyQuestions={projectDetails.surveyQuestions}
+                    surveyRules = {projectDetails.surveyRules}
+                    setSurveyRules = {(newRules) => setProjectState({surveyRules: newRules})}
                 />
             </div>
         );
@@ -357,14 +359,14 @@ export class SurveyQuestionHelp extends React.Component {
     }
 
     componentDidUpdate(prevProps, prevState) {
-        if (this.context.surveyQuestions.length > 0
+        if (this.context.projectDetails.surveyQuestions.length > 0
             && this.state.userSamples !== prevState.userSamples) {
             this.updateQuestionStatus();
         }
     }
 
     getChildQuestions = (currentQuestionId) => {
-        const {surveyQuestions} = this.context;
+        const {surveyQuestions} = this.context.projectDetails;
         const {question, id} = surveyQuestions.find(sq => sq.id === currentQuestionId);
         const childQuestions = surveyQuestions.filter(sq => sq.parentQuestion === id);
 
@@ -379,7 +381,7 @@ export class SurveyQuestionHelp extends React.Component {
     };
 
     calcVisibleSamples = (currentQuestionId) => {
-        const {surveyQuestions} = this.context;
+        const {surveyQuestions} = this.context.projectDetails;
         const {userSamples} = this.state;
         const {parentQuestion, parentAnswer} = surveyQuestions.find(sq => sq.id === currentQuestionId);
         const parentQuestionText = parentQuestion === -1
@@ -403,7 +405,7 @@ export class SurveyQuestionHelp extends React.Component {
     };
 
     updateQuestionStatus = () => {
-        const visibleAnswered = this.context.surveyQuestions.reduce((acc, sq) => {
+        const visibleAnswered = this.context.projectDetails.surveyQuestions.reduce((acc, sq) => {
             const visibleSamples = this.calcVisibleSamples(sq.id);
             return ({
                 ...acc,
@@ -463,10 +465,10 @@ export class SurveyQuestionHelp extends React.Component {
         return (
             <div className="p-3">
                 <SurveyCollection
-                    surveyQuestions={this.context.surveyQuestions
+                    surveyQuestions={this.context.projectDetails.surveyQuestions
                         .map(q => ({...q, answered: [], visible: [], ...this.state.visibleAnswered[q.id]}))}
-                    surveyRules={this.context.surveyRules}
-                    allowDrawnSamples={this.context.allowDrawnSamples}
+                    surveyRules={this.context.projectDetails.surveyRules}
+                    allowDrawnSamples={this.context.projectDetails.allowDrawnSamples}
                     answerMode={this.state.answerMode}
                     selectedQuestion={this.state.selectedQuestion}
                     unansweredColor={this.state.unansweredColor}

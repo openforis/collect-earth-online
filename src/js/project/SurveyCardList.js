@@ -3,7 +3,8 @@ import {removeEnumerator} from "../utils/surveyUtils";
 import {UnicodeIcon} from "../utils/generalUtils";
 
 export default function SurveyCardList(props) {
-    const topLevelNodes = props.surveyQuestions
+    const {projectDetails} = props;
+    const topLevelNodes = projectDetails.surveyQuestions
         .filter(sq => sq.parentQuestion === -1)
         .sort((a, b) => a.id - b.id);
 
@@ -16,8 +17,8 @@ export default function SurveyCardList(props) {
             inSimpleMode={props.inSimpleMode}
             setSurveyQuestions={props.setSurveyQuestions}
             surveyQuestion={sq}
-            surveyQuestions={props.surveyQuestions}
-            surveyRules={props.surveyRules}
+            surveyQuestions={projectDetails.surveyQuestions}
+            surveyRules={projectDetails.surveyRules}
             removeAnswer={props.removeAnswer}
             removeQuestion={props.removeQuestion}
             newAnswerComponent={props.newAnswerComponent}

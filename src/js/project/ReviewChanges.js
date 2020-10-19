@@ -1,6 +1,8 @@
 import React from "react";
-import {ProjectContext} from "./constants";
+
 import ReviewForm from "./ReviewForm";
+
+import {ProjectContext} from "./constants";
 import {mercator} from "../utils/mercator.js";
 
 export default class ReviewChanges extends React.Component {
@@ -11,9 +13,8 @@ export default class ReviewChanges extends React.Component {
     /// API Functions
 
     createProject = () => {
-        // TODO pass boundary instead of lon / lat.  Boundary will be arbitrary.
-        const boundaryExtent = mercator.parseGeoJson(this.context.boundary, false).getExtent();
         if (confirm("Do you really want to create this project?")) {
+            const {projectDetails} = this.context;
             this.context.processModal("Creating Project", () =>
                 fetch("/create-project",
                       {
@@ -24,34 +25,10 @@ export default class ReviewChanges extends React.Component {
                           },
                           body: JSON.stringify({
                               institutionId: this.context.institutionId,
-                              imageryId: this.context.imageryId,
-                              projectImageryList: this.context.projectImageryList,
-                              lonMin: boundaryExtent[0],
-                              latMin: boundaryExtent[1],
-                              lonMax: boundaryExtent[2],
-                              latMax: boundaryExtent[3],
-                              description: this.context.description,
-                              name: this.context.name,
-                              projectOptions: this.context.projectOptions,
-                              numPlots: this.context.numPlots,
-                              plotDistribution: this.context.plotDistribution,
-                              plotShape: this.context.plotShape,
-                              plotSize: this.context.plotSize,
-                              plotSpacing: this.context.plotSpacing,
-                              privacyLevel: this.context.privacyLevel,
-                              projectTemplate: this.context.templateProjectId,
-                              sampleDistribution: this.context.sampleDistribution,
-                              samplesPerPlot: this.context.samplesPerPlot,
-                              sampleResolution: this.context.sampleResolution,
-                              allowDrawnSamples: this.context.allowDrawnSamples,
-                              sampleValues: this.context.surveyQuestions,
-                              surveyRules: this.context.surveyRules,
-                              plotFileName: this.context.plotFileName,
-                              plotFileBase64: this.context.plotFileBase64,
-                              sampleFileName: this.context.sampleFileName,
-                              sampleFileBase64: this.context.sampleFileBase64,
-                              useTemplatePlots: this.context.useTemplatePlots,
-                              useTemplateWidgets: this.context.useTemplateWidgets,
+                              projectTemplate: projectDetails.templateProjectId,
+                              useTemplatePlots: projectDetails.useTemplatePlots,
+                              useTemplateWidgets: projectDetails.useTemplateWidgets,
+                              ...this.buildProjectObject(),
                           }),
                       }
                 )
@@ -72,7 +49,12 @@ export default class ReviewChanges extends React.Component {
     };
 
     updateProject = () => {
-        if (confirm("Do you really want to update this project?")) {
+        const extraMessage = this.collectionUpdated(this.context.projectDetails, this.context.originalProject)
+                ? "  Plots and samples will be recreated, losing all collection data."
+            : this.surveyQuestionUpdated(this.context.projectDetails, this.context.originalProject)
+                ? "  Updating survey questions or rules will reset all collected."
+            : "";
+        if (confirm("Do you really want to update this project?" + extraMessage)) {
             this.context.processModal("Updating Project", () =>
                 fetch("/update-project",
                       {
@@ -83,12 +65,10 @@ export default class ReviewChanges extends React.Component {
                           },
                           body: JSON.stringify({
                               projectId: this.context.projectId,
-                              imageryId: this.context.imageryId,
-                              description: this.context.description,
-                              name: this.context.name,
-                              privacyLevel: this.context.privacyLevel,
-                              projectOptions: this.context.projectOptions,
-                              projectImageryList: this.context.projectImageryList,
+                              projectTemplate: -1,
+                              useTemplatePlots: false,
+                              useTemplateWidgets: false,
+                              ...this.buildProjectObject(),
                           }),
                       })
                     .then(response => {
@@ -102,6 +82,61 @@ export default class ReviewChanges extends React.Component {
                     }));
         }
     };
+
+    /// Helper Functions
+
+    buildProjectObject = () => {
+        const {projectDetails} = this.context;
+        // TODO pass boundary instead of lon / lat.  Boundary will be arbitrary.
+        const boundaryExtent = mercator.parseGeoJson(projectDetails.boundary, false).getExtent();
+        return {
+            imageryId: projectDetails.imageryId,
+            projectImageryList: projectDetails.projectImageryList,
+            lonMin: boundaryExtent[0],
+            latMin: boundaryExtent[1],
+            lonMax: boundaryExtent[2],
+            latMax: boundaryExtent[3],
+            description: projectDetails.description,
+            name: projectDetails.name,
+            privacyLevel: projectDetails.privacyLevel,
+            projectOptions: projectDetails.projectOptions,
+            numPlots: projectDetails.numPlots,
+            plotDistribution: projectDetails.plotDistribution,
+            plotShape: projectDetails.plotShape,
+            plotSize: projectDetails.plotSize,
+            plotSpacing: projectDetails.plotSpacing,
+            sampleDistribution: projectDetails.sampleDistribution,
+            samplesPerPlot: projectDetails.samplesPerPlot,
+            sampleResolution: projectDetails.sampleResolution,
+            allowDrawnSamples: projectDetails.allowDrawnSamples,
+            sampleValues: projectDetails.surveyQuestions,
+            surveyRules: projectDetails.surveyRules,
+            plotFileName: projectDetails.plotFileName,
+            plotFileBase64: projectDetails.plotFileBase64,
+            sampleFileName: projectDetails.sampleFileName,
+            sampleFileBase64: projectDetails.sampleFileBase64,
+        };
+    }
+
+    surveyQuestionUpdated = (projectDetails, originalProject) =>
+        projectDetails.surveyQuestions !== originalProject.surveyQuestions
+            || projectDetails.surveyRules !== originalProject.surveyRules;
+
+    collectionUpdated = (projectDetails, originalProject) =>
+        projectDetails.boundary !== originalProject.boundary
+            || projectDetails.numPlots !== originalProject.numPlots
+            || projectDetails.plotDistribution !== originalProject.plotDistribution
+            || projectDetails.plotShape !== originalProject.plotShape
+            || projectDetails.plotSize !== originalProject.plotSize
+            || projectDetails.plotSpacing !== originalProject.plotSpacing
+            || projectDetails.sampleDistribution !== originalProject.sampleDistribution
+            || projectDetails.samplesPerPlot !== originalProject.samplesPerPlot
+            || projectDetails.sampleResolution !== originalProject.sampleResolution
+            || projectDetails.plotFileBase64
+            || projectDetails.sampleFileBase64
+            || (originalProject.allowDrawnSamples && !projectDetails.allowDrawnSamples)
+
+    /// Render Functions
 
     renderButtons = () => (
         <div className="d-flex flex-column">

@@ -154,11 +154,11 @@ class ProjectTemplateSelection extends React.Component {
     }
 
     componentDidMount() {
-        this.setState({selectedTemplateProjectId: this.context.templateProjectId || -1});
+        this.setState({selectedTemplateProjectId: this.context.projectDetails.templateProjectId || -1});
     }
 
     render() {
-        const {templateProjectId, useTemplateWidgets, useTemplatePlots, setProjectState} = this.context;
+        const {projectDetails: {templateProjectId, useTemplateWidgets, useTemplatePlots}, setProjectState} = this.context;
         const {setProjectTemplate, clearTemplateSelection, templateProjectList} = this.props;
         return (
             <div id="project-template-selector">
@@ -263,23 +263,23 @@ ProjectTemplateSelection.contextType = ProjectContext;
 export function OverviewReview() {
     return (
         <ProjectContext.Consumer>
-            {context =>
+            {({projectDetails: {name, description, privacyLevel, projectOptions}}) =>
                 <div className="d-flex flex-column">
-                    <label><b>Name:</b> {context.name}</label>
-                    <label><b>Description:</b> {context.description}</label>
-                    <label><b>Visibility:</b> {capitalizeFirst(context.privacyLevel)}</label>
+                    <label><b>Name:</b> {name}</label>
+                    <label><b>Description:</b> {description}</label>
+                    <label><b>Visibility:</b> {capitalizeFirst(privacyLevel)}</label>
                     <label className="font-weight-bold">Project Options:</label>
                     <ul>
                         <li>
-                            <b>{context.projectOptions.showGEEScript ? "Show " : "Don't Show "}</b>
+                            <b>{projectOptions.showGEEScript ? "Show " : "Don't Show "}</b>
                             GEE Script link on Collection Page
                         </li>
                         <li>
-                            <b>{context.projectOptions.showPlotInformation ? "Show " : "Don't Show "}</b>
+                            <b>{projectOptions.showPlotInformation ? "Show " : "Don't Show "}</b>
                             Extra Plot Columns on Collection Page
                         </li>
                         <li>
-                            <b>{context.projectOptions.autoLaunchGeoDash ? "Auto-launch " : "Don't Auto-launch "}</b>
+                            <b>{projectOptions.autoLaunchGeoDash ? "Auto-launch " : "Don't Auto-launch "}</b>
                             Geo-Dash Window
                         </li>
                     </ul>

@@ -53,12 +53,13 @@ export class SurveyRuleDesign extends React.Component {
 
     updateOptions = (target, type) => {
         const selection = Array.from(target.options).filter(option => option.selected);
+        const {surveyQuestions} = this.context.projectDetails;
         if (this.state.selectedRuleType === "incompatible-answers") {
             selection.map(option => {
                 const questionId = parseInt(option.value);
                 if (target.id === "question1") {
-                    const dropdownQuestions = this.context.surveyQuestions.filter(question => question.id !== questionId);
-                    const currentQuestion = this.context.surveyQuestions.find(ques => ques.id === questionId);
+                    const dropdownQuestions = surveyQuestions.filter(question => question.id !== questionId);
+                    const currentQuestion = surveyQuestions.find(ques => ques.id === questionId);
                     const answers = currentQuestion.answers;
                     this.setState({
                         question1: questionId,
@@ -68,7 +69,7 @@ export class SurveyRuleDesign extends React.Component {
                         answers2: [],
                     });
                 } else if (target.id === "question2") {
-                    const currentQuestion = this.context.surveyQuestions.find(ques => ques.id === questionId);
+                    const currentQuestion = surveyQuestions.find(ques => ques.id === questionId);
                     const answers = currentQuestion ? currentQuestion.answers : [];
                     this.setState({
                         question2: questionId,
@@ -76,18 +77,18 @@ export class SurveyRuleDesign extends React.Component {
                         answers2: answers,
                     });
                 } else if (target.id === "answer1") {
-                    const currentQuestion = this.context.surveyQuestions.find(ques => ques.id === this.state.question1);
+                    const currentQuestion = surveyQuestions.find(ques => ques.id === this.state.question1);
                     const answer = currentQuestion.answers.find(ans => ans.id === questionId);
                     this.setState({answer1: questionId, answerText1: answer.answer});
                 } else if (target.id === "answer2") {
-                    const currentQuestion = this.context.surveyQuestions.find(ques => ques.id === this.state.question2);
+                    const currentQuestion = surveyQuestions.find(ques => ques.id === this.state.question2);
                     const answer = currentQuestion.answers.find(ans => ans.id === questionId);
                     this.setState({answer2: questionId, answerText2: answer.answer});
                 }
             });
         } else if (this.state.selectedRuleType === "matching-sums" && selection.length > 1) {
             const questions = selection.map(option => {
-                const question = this.context.surveyQuestions.find(surveyQuestion => surveyQuestion.id === parseInt(option.value));
+                const question = surveyQuestions.find(surveyQuestion => surveyQuestion.id === parseInt(option.value));
                 return question.question;
             });
             if (type === "questionSet1") {
@@ -103,7 +104,7 @@ export class SurveyRuleDesign extends React.Component {
             }
         } else if ((this.state.selectedRuleType === "sum-of-answers" && selection.length > 1) || (this.state.selectedRuleType !== "sum-of-answers" && selection.length > 0)) {
             const questions = selection.map(option => {
-                const question = this.context.surveyQuestions.find(surveyQuestion => surveyQuestion.id === parseInt(option.value));
+                const question = surveyQuestions.find(surveyQuestion => surveyQuestion.id === parseInt(option.value));
                 return question.question;
             });
             this.setState({questionIds: selection.map(option => parseInt(option.value)), questions: questions});
@@ -114,7 +115,8 @@ export class SurveyRuleDesign extends React.Component {
     getMaxId = (array) => array.reduce((maxId, obj) => Math.max(maxId, obj.id), 0);
 
     addSurveyRule = (ruleType) => {
-        const rules = this.context.surveyRules.map(rule =>
+        const {surveyRules} = this.context.projectDetails;
+        const rules = surveyRules.map(rule =>
             (rule.ruleType === "numeric-range"
                 && rule.questionId === this.state.questionIds[0])
                 ? {...rule, min: this.state.min, max: this.state.max}
@@ -130,14 +132,14 @@ export class SurveyRuleDesign extends React.Component {
                 ? {...rule}
             : rule);
 
-        const numExists = this.context.surveyRules.some(rule => rule.ruleType === "numeric-range" && rule.questionId === this.state.questionIds[0]);
-        const textExists = this.context.surveyRules.some(rule => rule.ruleType === "text-match" && rule.questionId === this.state.questionIds[0]);
-        const sumExists = this.context.surveyRules.some(rule => rule.ruleType === "sum-of-answers"
+        const numExists = surveyRules.some(rule => rule.ruleType === "numeric-range" && rule.questionId === this.state.questionIds[0]);
+        const textExists = surveyRules.some(rule => rule.ruleType === "text-match" && rule.questionId === this.state.questionIds[0]);
+        const sumExists = surveyRules.some(rule => rule.ruleType === "sum-of-answers"
                 && this.state.questionIds.every(qId => rule.questions.includes(qId)));
-        const matchingSumsExists = this.context.surveyRules.some(rule => rule.ruleType === "matching-sums"
+        const matchingSumsExists = surveyRules.some(rule => rule.ruleType === "matching-sums"
                 && this.state.questionSetIds1.every(qId => rule.questionSetIds1.includes(qId))
                 && this.state.questionSetIds2.every(qId => rule.questionSetIds2.includes(qId)));
-        const incompatibleExists = this.context.surveyRules.some(rule => rule.ruleType === "incompatible-answers"
+        const incompatibleExists = surveyRules.some(rule => rule.ruleType === "incompatible-answers"
                 && rule.question1 === this.state.question1
                 && rule.question2 === this.state.question2
                 && rule.answer1 === this.state.answer1
@@ -189,9 +191,10 @@ export class SurveyRuleDesign extends React.Component {
     };
 
     render() {
+        const {surveyRules, surveyQuestions, surveyQuestion} = this.context.projectDetails;
         return (
             <SurveyRulesList
-                surveyRules={this.context.surveyRules}
+                surveyRules={surveyRules}
                 setProjectState={this.context.setProjectState}
                 inDesignMode
             >
@@ -224,33 +227,33 @@ export class SurveyRuleDesign extends React.Component {
                 {
                     this.state.selectedRuleType === "text-match" ? (
                         <TextMatch
-                            surveyQuestions={this.context.surveyQuestions}
-                            surveyQuestion={this.context.surveyQuestion}
+                            surveyQuestions={surveyQuestions}
+                            surveyQuestion={surveyQuestion}
                             updateRegex={this.updateRegex}
                             updateOptions={this.updateOptions}
                         />
                     ) : this.state.selectedRuleType === "numeric-range" ? (
                         <NumericRange
-                            surveyQuestions={this.context.surveyQuestions}
-                            surveyRules={this.context.surveyRules}
+                            surveyQuestions={surveyQuestions}
+                            surveyRules={surveyRules}
                             updateMin={this.updateMin}
                             updateMax={this.updateMax}
-                            surveyQuestion={this.context.surveyQuestion}
+                            surveyQuestion={surveyQuestion}
                             updateOptions={this.updateOptions}
                         />
                     ) : this.state.selectedRuleType === "sum-of-answers" ? (
                         <SumOfAnswers
-                            surveyQuestions={this.context.surveyQuestions}
-                            surveyRules={this.context.surveyRules}
-                            surveyQuestion={this.context.surveyQuestion}
+                            surveyQuestions={surveyQuestions}
+                            surveyRules={surveyRules}
+                            surveyQuestion={surveyQuestion}
                             updateMaxSum={this.updateMaxSum}
                             updateOptions={this.updateOptions}
                         />
                     ) : this.state.selectedRuleType === "matching-sums" ? (
                         <MatchingSums
-                            surveyQuestions={this.context.surveyQuestions}
-                            surveyRules={this.context.surveyRules}
-                            surveyQuestion={this.context.surveyQuestion}
+                            surveyQuestions={surveyQuestions}
+                            surveyRules={surveyRules}
+                            surveyQuestion={surveyQuestion}
                             updateOptions={this.updateOptions}
                         />
                     ) : this.state.selectedRuleType === "incompatible-answers" ? (
@@ -258,9 +261,9 @@ export class SurveyRuleDesign extends React.Component {
                             answers1={this.state.answers1}
                             answers2={this.state.answers2}
                             dropdownQuestions={this.state.dropdownQuestions}
-                            surveyQuestions={this.context.surveyQuestions}
-                            surveyRules={this.context.surveyRules}
-                            surveyQuestion={this.context.surveyQuestion}
+                            surveyQuestions={surveyQuestions}
+                            surveyRules={surveyRules}
+                            surveyQuestion={surveyQuestion}
                             updateOptions={this.updateOptions}
                         />
                     ) : <tr><td></td><td></td></tr>
@@ -579,9 +582,10 @@ function IncompatibleAnswers(props) {
 }
 
 export function SurveyRulesList(props) {
+    const {projectDetails: {surveyRules}, inDesignMode} = props;
 
     const deleteSurveyRule = (event) => {
-        const newSurveyRules = props.surveyRules.filter(rule => rule.id !== parseInt(event.target.id));
+        const newSurveyRules = surveyRules.filter(rule => rule.id !== parseInt(event.target.id));
         props.setProjectState({surveyRules: newSurveyRules});
     };
 
@@ -606,12 +610,12 @@ export function SurveyRulesList(props) {
             <span className="font-weight-bold">Rules:</span>
             <table id="srd">
                 <tbody>
-                    {props.surveyRules && props.surveyRules.length > 0
+                    {surveyRules && surveyRules.length > 0
                     ?
-                        props.surveyRules.map((rule, uid) => {
+                        surveyRules.map((rule, uid) => {
                             if (rule.ruleType === "text-match") {
                                 return <tr id={"rule" + rule.id} key={uid}>
-                                    {props.inDesginMode &&
+                                    {inDesignMode &&
                                         <td>
                                             {removeButton(rule.id)}
                                         </td>
@@ -623,7 +627,7 @@ export function SurveyRulesList(props) {
                                 </tr>;
                             } else if (rule.ruleType === "numeric-range") {
                                 return <tr id={"rule" + rule.id} key={uid}>
-                                    {props.inDesginMode &&
+                                    {inDesignMode &&
                                         <td>
                                             {removeButton(rule.id)}
                                         </td>
@@ -636,7 +640,7 @@ export function SurveyRulesList(props) {
                                 </tr>;
                             } else if (rule.ruleType === "sum-of-answers") {
                                 return <tr id={"rule" + rule.id} key={uid}>
-                                    {props.inDesginMode &&
+                                    {inDesignMode &&
                                         <td>
                                             {removeButton(rule.id)}
                                         </td>
@@ -648,7 +652,7 @@ export function SurveyRulesList(props) {
                                 </tr>;
                             } else if (rule.ruleType === "matching-sums") {
                                 return <tr id={"rule" + rule.id} key={uid}>
-                                    {props.inDesginMode &&
+                                    {inDesignMode &&
                                         <td>
                                             {removeButton(rule.id)}
                                         </td>
@@ -660,7 +664,7 @@ export function SurveyRulesList(props) {
                                 </tr>;
                             } else if (rule.ruleType === "incompatible-answers") {
                                 return <tr id={"rule" + rule.id} key={uid}>
-                                    {props.inDesginMode &&
+                                    {inDesignMode &&
                                         <td>
                                             {removeButton(rule.id)}
                                         </td>

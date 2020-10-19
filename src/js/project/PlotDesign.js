@@ -68,14 +68,14 @@ export class PlotDesign extends React.Component {
                 id={property}
                 min="0"
                 step="1"
-                value={this.context[property] || ""}
+                value={this.context.projectDetails[property] || ""}
                 onChange={e => this.context.setProjectState({[property]: e.target.value})}
             />
         </div>
     )
 
     renderPlotShape = () => {
-        const {plotShape, setProjectState} = this.context;
+        const {plotShape, setProjectState} = this.context.projectDetails;
         return (
             <div className="form-group" style={{display: "flex", flexDirection: "column"}}>
                 <label>Plot Shape</label>
@@ -206,7 +206,9 @@ export class PlotDesign extends React.Component {
                 />
             </label>
             <label className="ml-3 text-nowrap">
-                File: {!this.context.plotFileName ? <span className="font-italic">None</span> : this.context.plotFileName}
+                File: {!this.context.projectDetails.plotFileName
+                    ? <span className="font-italic">None</span>
+                    : this.context.projectDetails.plotFileName}
             </label>
         </div>
     );
@@ -222,7 +224,7 @@ export class PlotDesign extends React.Component {
     )
 
     render() {
-        const {plotDistribution} = this.context;
+        const {plotDistribution} = this.context.projectDetails;
         const totalPlots = this.props.getTotalPlots();
 
         const plotOptions = {
@@ -329,7 +331,7 @@ export function PlotDesignReview() {
 export function PlotReview() {
     return (
         <ProjectContext.Consumer>
-            {({plotDistribution, numPlots, plotSpacing, plotShape, plotSize}) =>
+            {({projectDetails: {plotDistribution, numPlots, plotSpacing, plotShape, plotSize}}) =>
                 <div id="plot-review">
                     <h3 className="mb-3">Plots will be copied from template project</h3>
                     <div className="d-flex">
