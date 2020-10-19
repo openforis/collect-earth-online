@@ -161,8 +161,8 @@ h4 {font-size: 0.5rem;}
     color: #279b93;
 }
 .btn-lightgreen {
-    background-color : #31bab0;
-    color : white;
+    background-color: #31bab0;
+    color: white;
     -webkit-transition: background-color 50ms linear;
     -ms-transition: background-color 50ms linear;
     transition: background-color 50ms linear;
