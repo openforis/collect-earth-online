@@ -104,7 +104,7 @@ class ProjectManagement extends React.Component {
             unpublished: {
                 button: "Publish",
                 update: this.publishProject,
-                description: "Admins can review, edit (currently limited), and test collecting the project.  Publish the project in order for users to begin collection.",
+                description: "Admins can review, edit, and test collecting the project.  Publish the project in order for users to begin collection.",
                 canEdit: true,
             },
             published: {

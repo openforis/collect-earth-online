@@ -52,7 +52,7 @@ export default class ReviewChanges extends React.Component {
         const extraMessage = this.collectionUpdated(this.context.projectDetails, this.context.originalProject)
                 ? "  Plots and samples will be recreated, losing all collection data."
             : this.surveyQuestionUpdated(this.context.projectDetails, this.context.originalProject)
-                ? "  Updating survey questions or rules will reset all collected."
+                ? "  Updating survey questions or rules will reset all collected data."
             : "";
         if (confirm("Do you really want to update this project?" + extraMessage)) {
             this.context.processModal("Updating Project", () =>
