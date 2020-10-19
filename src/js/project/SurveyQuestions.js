@@ -77,7 +77,6 @@ export class SurveyQuestionDesign extends React.Component {
                 <SurveyCardList
                     inDesignMode
                     setProjectState={this.context.setProjectState}
-                    setSurveyRules={this.context.setSurveyRules}
                     surveyQuestions={this.context.surveyQuestions}
                     surveyRules={this.context.surveyRules}
                     removeAnswer={this.removeAnswer}
@@ -96,7 +95,6 @@ export class SurveyQuestionDesign extends React.Component {
                     setProjectState={this.context.setProjectState}
                     surveyQuestions={this.context.surveyQuestions}
                     surveyRules = {this.context.surveyRules}
-                    setSurveyRules = {this.context.setSurveyRules}
                 />
             </div>
         );
@@ -157,7 +155,7 @@ class NewQuestionDesigner extends React.Component {
 
     deleteSurveyRule = (event) => {
         const surveyRules = this.props.surveyRules.filter(rule => rule.id !== parseInt(event.target.id));
-        this.props.setSurveyRules(surveyRules);
+        this.props.setProjectState({surveyRules: surveyRules});
     };
 
     //   Render Functions //

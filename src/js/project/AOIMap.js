@@ -91,16 +91,23 @@ export default class AOIMap extends React.Component {
 
     showPlots = () => {
         mercator.removeLayerById(this.state.mapConfig, "projectPlots");
-        mercator.addVectorLayer(
-            this.state.mapConfig,
-            "projectPlots",
-            mercator.plotsToVectorSource(this.props.context.plots),
-            mercator.ceoMapStyles(this.props.context.plotShape, "yellow")
-        );
+        if (this.props.context.projectId > 0) {
+            mercator.addPlotOverviewLayers(this.state.mapConfig, this.props.context.plots);
+        } else {
+            mercator.addVectorLayer(
+                this.state.mapConfig,
+                "projectPlots",
+                mercator.plotsToVectorSource(this.props.context.plots),
+                mercator.ceoMapStyles("overview", "yellow")
+            );
+        }
     };
 
     hidePlots = () => {
         mercator.removeLayerById(this.state.mapConfig, "projectPlots");
+        mercator.removeLayerById(this.state.mapConfig, "flaggedPlots");
+        mercator.removeLayerById(this.state.mapConfig, "analyzedPlots");
+        mercator.removeLayerById(this.state.mapConfig, "unanalyzedPlots");
     };
 
     render() {

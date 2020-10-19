@@ -14,7 +14,6 @@ export default function SurveyCardList(props) {
             topLevelNodeIds={topLevelNodes.map(tln => tln.id)}
             cardNumber={index + 1}
             inDesignMode={props.inDesignMode}
-            inSimpleMode={props.inSimpleMode}
             setSurveyQuestions={props.setSurveyQuestions}
             surveyQuestion={sq}
             surveyQuestions={props.surveyQuestions}
@@ -106,7 +105,6 @@ class SurveyCard extends React.Component {
                             <SurveyQuestionTree
                                 indentLevel={0}
                                 inDesignMode={this.props.inDesignMode}
-                                inSimpleMode={this.props.inSimpleMode}
                                 newAnswerComponent={this.props.newAnswerComponent}
                                 removeAnswer={this.props.removeAnswer}
                                 removeQuestion={this.props.removeQuestion}
@@ -126,7 +124,6 @@ class SurveyCard extends React.Component {
 function SurveyQuestionTree({
     indentLevel,
     inDesignMode,
-    inSimpleMode,
     newAnswerComponent,
     removeAnswer,
     removeQuestion,
@@ -163,13 +160,13 @@ function SurveyQuestionTree({
                     </div>
                     <div className="SurveyQuestionTree__question-information pb-1">
                         <ul className="mb-1">
-                            {(surveyQuestion.componentType && !inSimpleMode) &&
+                            {surveyQuestion.componentType &&
                             <li>
                                 <span className="font-weight-bold">Component Type:  </span>
                                 {surveyQuestion.componentType + " - " + surveyQuestion.dataType}
                             </li>
                             }
-                            {(surveyRules && surveyRules.length > 0 && !inSimpleMode) &&
+                            {surveyRules && surveyRules.length > 0 &&
                                 <li>
                                     <span className="font-weight-bold">Rules:  </span>
                                     <ul>
@@ -221,7 +218,6 @@ function SurveyQuestionTree({
                 <SurveyQuestionTree
                     key={uid}
                     indentLevel={indentLevel + 1}
-                    inSimpleMode={inSimpleMode}
                     inDesignMode={inDesignMode}
                     newAnswerComponent={newAnswerComponent}
                     removeAnswer={removeAnswer}
