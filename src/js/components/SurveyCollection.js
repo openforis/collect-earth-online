@@ -62,9 +62,12 @@ export class SurveyCollection extends React.Component {
 
     setSurveyQuestionTree = (index) => this.setState({currentNodeIndex: index});
 
+    getNodeById = (id) => this.props.surveyQuestions.find(sq => sq.id === id)
+        || {id: -1, visible: [], answers: [], answered: [], question: "", componentType: ""};
+
     checkAllSubAnswers = (currentQuestionId) => {
         const {surveyQuestions} = this.props;
-        const {visible, answered} = surveyQuestions.find(sq => sq.id === currentQuestionId);
+        const {visible, answered} = this.getNodeById(currentQuestionId);
         const childQuestions = surveyQuestions.filter(sq => sq.parentQuestion === currentQuestionId);
 
         return visible.length === answered.length
@@ -78,8 +81,6 @@ export class SurveyCollection extends React.Component {
                                 : node.answered.length > 0
                                     ? "0px 0px 6px 4px yellow inset"
                                     : "0px 0px 6px 4px red inset";
-
-    getNodeById = (id) => this.props.surveyQuestions.find(sq => sq.id === id);
 
     getRulesById = (id) =>
         (this.props.surveyRules || [])

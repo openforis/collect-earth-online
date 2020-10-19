@@ -460,6 +460,16 @@ export class SurveyQuestionHelp extends React.Component {
         });
     };
 
+    // This is need for when a top level question is deleted.
+    getSelectedQuestion = () => {
+        if (this.state.selectedQuestion.id === 0
+            || this.context.projectDetails.surveyQuestions.find(sq => sq.id === this.state.selectedQuestion.id)) {
+            return this.state.selectedQuestion;
+        } else {
+            return this.context.projectDetails.surveyQuestions[0];
+        }
+    }
+
     render() {
         return (
             <div className="p-3">
@@ -469,7 +479,7 @@ export class SurveyQuestionHelp extends React.Component {
                     surveyRules={this.context.projectDetails.surveyRules}
                     allowDrawnSamples={this.context.projectDetails.allowDrawnSamples}
                     answerMode={this.state.answerMode}
-                    selectedQuestion={this.state.selectedQuestion}
+                    selectedQuestion={this.getSelectedQuestion()}
                     unansweredColor={this.state.unansweredColor}
                     drawTool={this.state.drawTool}
                     setDrawTool={(newTool) => this.setState({drawTool: newTool})}
