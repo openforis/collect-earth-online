@@ -83,7 +83,7 @@ export default class AOIMap extends React.Component {
         const displayDragBoxBounds = (dragBox) => {
             mercator.removeLayerById(this.state.mapConfig, "currentAOI");
             const boundary = mercator.geometryToGeoJSON(dragBox.getGeometry().clone(), "EPSG:4326", "EPSG:3857");
-            this.props.context.setProjectState({boundary: boundary});
+            this.props.context.setProjectDetails({boundary: boundary});
         };
         mercator.enableDragBoxDraw(this.state.mapConfig, displayDragBoxBounds);
     };

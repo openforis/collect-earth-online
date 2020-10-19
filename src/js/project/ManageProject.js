@@ -31,7 +31,7 @@ export default class ManageProject extends React.Component {
                     window.location = "/home";
                 } else {
                     const newSurveyQuestions = convertSampleValuesToSurveyQuestions(data.sampleValues);
-                    this.context.setProjectState({...data, surveyQuestions: newSurveyQuestions});
+                    this.context.setProjectDetails({...data, surveyQuestions: newSurveyQuestions});
                 }
             })
             .catch(() => Promise.reject("Error retrieving the project."));
@@ -41,14 +41,14 @@ export default class ManageProject extends React.Component {
         fetch("/get-project-imagery?projectId=" + projectId)
             .then(response => response.ok ? response.json() : Promise.reject(response))
             .then(data => {
-                this.context.setProjectState({projectImageryList: data.map(imagery => imagery.id)});
+                this.context.setProjectDetails({projectImageryList: data.map(imagery => imagery.id)});
             })
             .catch(() => Promise.reject("Error retrieving the project imagery list."));
 
     getProjectPlots = (projectId) =>
         fetch(`/get-project-plots?projectId=${projectId}&max=300`)
             .then(response => response.ok ? response.json() : Promise.reject(response))
-            .then(data => this.context.setProjectState({plots: data}))
+            .then(data => this.context.setProjectDetails({plots: data}))
             .catch(() => Promise.reject("Error retrieving plot list. See console for details."));
 
     render() {
@@ -133,7 +133,7 @@ class ProjectManagement extends React.Component {
                   {method: "POST"})
                 .then(response => {
                     if (response.ok) {
-                        this.context.setProjectState({availability: "published"});
+                        this.context.setProjectDetails({availability: "published"});
                     } else {
                         console.log(response);
                         alert("Error publishing project. See console for details.");
@@ -147,7 +147,7 @@ class ProjectManagement extends React.Component {
             fetch(`/close-project?projectId=${this.context.projectDetails.id}`, {method: "POST"})
                 .then(response => {
                     if (response.ok) {
-                        this.context.setProjectState({availability: "closed"});
+                        this.context.setProjectDetails({availability: "closed"});
                     } else {
                         console.log(response);
                         alert("Error closing project. See console for details.");

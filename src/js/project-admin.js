@@ -88,7 +88,7 @@ class Project extends React.Component {
 
     /// Updating State
 
-    setProjectState = (newValue, callBack = () => null) =>
+    setProjectDetails = (newValue, callBack = () => null) =>
         this.setState({projectDetails: {...this.state.projectDetails, ...newValue}}, callBack);
 
     resetProject = (defaults) => this.setState({projectDetails: this.blankProject, ...defaults});
@@ -104,7 +104,7 @@ class Project extends React.Component {
                 const sorted = [...data.filter(a => a.title.toLocaleLowerCase().includes("mapbox")),
                                 ...data.filter(a => !a.title.toLocaleLowerCase().includes("mapbox"))];
                 this.setState({institutionImagery: sorted});
-                this.setProjectState({imageryId: sorted[0].id});
+                this.setProjectDetails({imageryId: sorted[0].id});
             })
             .catch(response => {
                 console.log(response);
@@ -129,7 +129,7 @@ class Project extends React.Component {
                     projectDetails: this.state.projectDetails,
                     designMode: this.state.designMode,
                     institutionImagery: this.state.institutionImagery,
-                    setProjectState: this.setProjectState,
+                    setProjectDetails: this.setProjectDetails,
                     setDesignMode: this.setDesignMode,
                     resetProject: this.resetProject,
                     processModal: this.processModal,

@@ -10,7 +10,7 @@ export function Overview(props) {
                 name,
                 description,
                 privacyLevel,
-                setProjectState,
+                setProjectDetails,
                 projectOptions,
                 projectOptions: {showGEEScript, showPlotInformation, autoLaunchGeoDash},
                 projectId,
@@ -23,7 +23,7 @@ export function Overview(props) {
                             className="form-control form-control-sm"
                             type="text"
                             value={name}
-                            onChange={e => setProjectState({name: e.target.value})}
+                            onChange={e => setProjectDetails({name: e.target.value})}
                         />
                     </div>
                     <div className="form-group">
@@ -31,7 +31,7 @@ export function Overview(props) {
                         <textarea
                             className="form-control form-control-sm"
                             value={description}
-                            onChange={e => setProjectState({description: e.target.value})}
+                            onChange={e => setProjectDetails({description: e.target.value})}
                         />
                     </div>
                     <h3>Visibility</h3>
@@ -42,7 +42,7 @@ export function Overview(props) {
                                 className="form-check-input"
                                 type="radio"
                                 checked={privacyLevel === "public"}
-                                onChange={() => setProjectState({privacyLevel: "public"})}
+                                onChange={() => setProjectDetails({privacyLevel: "public"})}
                             />
                             <label
                                 className="form-check-label"
@@ -58,7 +58,7 @@ export function Overview(props) {
                                 className="form-check-input"
                                 type="radio"
                                 checked={privacyLevel === "users"}
-                                onChange={() => setProjectState({privacyLevel: "users"})}
+                                onChange={() => setProjectDetails({privacyLevel: "users"})}
                             />
                             <label className="form-check-label" htmlFor="privacy-users">
                                 Users: <i>Logged In Users</i>
@@ -69,7 +69,7 @@ export function Overview(props) {
                                 id="privacy-institution"
                                 className="form-check-input"
                                 type="radio"
-                                onChange={() => setProjectState({privacyLevel: "institution"})}
+                                onChange={() => setProjectDetails({privacyLevel: "institution"})}
                                 checked={privacyLevel === "institution"}
                             />
                             <label className="form-check-label" htmlFor="privacy-institution">
@@ -81,7 +81,7 @@ export function Overview(props) {
                                 id="privacy-private"
                                 className="form-check-input"
                                 type="radio"
-                                onChange={() => setProjectState({privacyLevel: "private"})}
+                                onChange={() => setProjectDetails({privacyLevel: "private"})}
                                 checked={privacyLevel === "private"}
                             />
                             <label className="form-check-label" htmlFor="privacy-private">
@@ -102,7 +102,7 @@ export function Overview(props) {
                             type="checkbox"
                             className="form-check-input"
                             checked={showGEEScript}
-                            onChange={() => setProjectState({
+                            onChange={() => setProjectDetails({
                                 projectOptions: {...projectOptions, showGEEScript: !showGEEScript},
                             })}
                         />
@@ -116,7 +116,7 @@ export function Overview(props) {
                             className="form-check-input"
                             type="checkbox"
                             checked={showPlotInformation}
-                            onChange={() => setProjectState({
+                            onChange={() => setProjectDetails({
                                 projectOptions: {...projectOptions, showPlotInformation: !showPlotInformation},
                             })}
                         />
@@ -130,7 +130,7 @@ export function Overview(props) {
                             className="form-check-input"
                             type="checkbox"
                             checked={autoLaunchGeoDash}
-                            onChange={() => setProjectState({
+                            onChange={() => setProjectDetails({
                                 projectOptions: {...projectOptions, autoLaunchGeoDash: !autoLaunchGeoDash},
                             })}
                         />
@@ -158,7 +158,7 @@ class ProjectTemplateSelection extends React.Component {
     }
 
     render() {
-        const {projectDetails: {templateProjectId, useTemplateWidgets, useTemplatePlots}, setProjectState} = this.context;
+        const {projectDetails: {templateProjectId, useTemplateWidgets, useTemplatePlots}, setProjectDetails} = this.context;
         const {setProjectTemplate, clearTemplateSelection, templateProjectList} = this.props;
         return (
             <div id="project-template-selector">
@@ -240,7 +240,7 @@ class ProjectTemplateSelection extends React.Component {
                                         className="form-check-input"
                                         type="checkbox"
                                         id="use-template-widgets"
-                                        onChange={() => setProjectState({useTemplateWidgets: !useTemplateWidgets})}
+                                        onChange={() => setProjectDetails({useTemplateWidgets: !useTemplateWidgets})}
                                         checked={useTemplateWidgets}
                                     />
                                     <label

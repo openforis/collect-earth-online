@@ -4,13 +4,13 @@ import {ProjectContext} from "./constants";
 
 export function ImagerySelection() {
 
-    const renderImageryRow = (filteredImageryList, imageryId, projectImageryList, setProjectState) =>
+    const renderImageryRow = (filteredImageryList, imageryId, projectImageryList, setProjectDetails) =>
         filteredImageryList.map((imagery, idx) =>
             <div className="col-md-5 offset-md-1 form-check" key={idx}>
                 <input
                     className="form-check-input"
                     id={imagery.id}
-                    onChange={e => setProjectState({
+                    onChange={e => setProjectDetails({
                         projectImageryList: e.target.checked
                                     ? [...projectImageryList, imagery.id]
                                     : projectImageryList.filter(img => img !== imagery.id),
@@ -25,7 +25,7 @@ export function ImagerySelection() {
 
     return (
         <ProjectContext.Consumer>
-            {({imageryId, institutionImagery, projectImageryList, setProjectState}) => (
+            {({imageryId, institutionImagery, projectImageryList, setProjectDetails}) => (
                 <>
                     {institutionImagery
                     ?
@@ -36,7 +36,7 @@ export function ImagerySelection() {
                                     className="form-control form-control-sm"
                                     size="1"
                                     value={imageryId || -1}
-                                    onChange={e => setProjectState({imageryId: parseInt(e.target.value)})}
+                                    onChange={e => setProjectDetails({imageryId: parseInt(e.target.value)})}
                                 >
                                     {institutionImagery.filter(layerConfig => layerConfig.sourceConfig.type !== "PlanetDaily")
                                         .map((imagery, uid) =>
@@ -52,7 +52,7 @@ export function ImagerySelection() {
                                         institutionImagery.filter(imagery => imagery.visibility === "public"),
                                         imageryId,
                                         projectImageryList,
-                                        setProjectState
+                                        setProjectDetails
                                     )}
                                 </div>
                                 <br />
@@ -62,7 +62,7 @@ export function ImagerySelection() {
                                         institutionImagery.filter(imagery => imagery.visibility === "private"),
                                         imageryId,
                                         projectImageryList,
-                                        setProjectState
+                                        setProjectDetails
                                     )}
                                 </div>
                             </div>

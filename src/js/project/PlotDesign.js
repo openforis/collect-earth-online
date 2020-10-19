@@ -54,7 +54,7 @@ export class PlotDesign extends React.Component {
 
     updateBoundaryFromCoords = (newCoord) => {
         this.setState(newCoord,
-                      () => this.context.setProjectState({boundary: this.generateGeoJSON()}));
+                      () => this.context.setProjectDetails({boundary: this.generateGeoJSON()}));
     }
 
     /// Render Functions
@@ -69,13 +69,13 @@ export class PlotDesign extends React.Component {
                 min="0"
                 step="1"
                 value={this.context.projectDetails[property] || ""}
-                onChange={e => this.context.setProjectState({[property]: e.target.value})}
+                onChange={e => this.context.setProjectDetails({[property]: e.target.value})}
             />
         </div>
     )
 
     renderPlotShape = () => {
-        const {plotShape, setProjectState} = this.context.projectDetails;
+        const {plotShape, setProjectDetails} = this.context.projectDetails;
         return (
             <div className="form-group" style={{display: "flex", flexDirection: "column"}}>
                 <label>Plot Shape</label>
@@ -86,7 +86,7 @@ export class PlotDesign extends React.Component {
                             className="form-check-input"
                             type="radio"
                             checked={plotShape === "circle"}
-                            onChange={() => setProjectState({plotShape: "circle"})}
+                            onChange={() => setProjectDetails({plotShape: "circle"})}
                         />
                         <label
                             className="form-check-label"
@@ -101,7 +101,7 @@ export class PlotDesign extends React.Component {
                             className="form-check-input"
                             type="radio"
                             checked={plotShape === "square"}
-                            onChange={() => setProjectState({plotShape: "square"})}
+                            onChange={() => setProjectDetails({plotShape: "square"})}
                         />
                         <label
                             className="form-check-label"
@@ -197,7 +197,7 @@ export class PlotDesign extends React.Component {
                     name="plot-distribution-file"
                     onChange={e => {
                         encodeFileAsBase64(e.target.files[0], base64 =>
-                            this.context.setProjectState({
+                            this.context.setProjectDetails({
                                 plotFileName: e.target.files[0].name,
                                 plotFileBase64: base64,
                             }));
@@ -268,7 +268,7 @@ export class PlotDesign extends React.Component {
                                     <select
                                         className="form-control form-control-sm ml-3"
                                         style={{width: "initial"}}
-                                        onChange={(e) => this.context.setProjectState({plotDistribution: e.target.value})}
+                                        onChange={(e) => this.context.setProjectDetails({plotDistribution: e.target.value})}
                                         value={plotDistribution}
                                     >
                                         {Object.entries(plotOptions).map(([key, options]) =>

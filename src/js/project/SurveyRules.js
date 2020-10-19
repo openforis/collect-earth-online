@@ -187,7 +187,7 @@ export class SurveyRuleDesign extends React.Component {
                 answerText1: this.state.answerText1,
                 answerText2: this.state.answerText2,
             } : null;
-        this.context.setProjectState({surveyRules: newRule ? [...rules, newRule] : rules});
+        this.context.setProjectDetails({surveyRules: newRule ? [...rules, newRule] : rules});
     };
 
     render() {
@@ -195,7 +195,7 @@ export class SurveyRuleDesign extends React.Component {
         return (
             <SurveyRulesList
                 surveyRules={surveyRules}
-                setProjectState={this.context.setProjectState}
+                setProjectDetails={this.context.setProjectDetails}
                 inDesignMode
             >
                 <tr>
@@ -586,7 +586,7 @@ export function SurveyRulesList(props) {
 
     const deleteSurveyRule = (event) => {
         const newSurveyRules = surveyRules.filter(rule => rule.id !== parseInt(event.target.id));
-        props.setProjectState({surveyRules: newSurveyRules});
+        props.setProjectDetails({surveyRules: newSurveyRules});
     };
 
     // TODO update the remove buttons with SVG
