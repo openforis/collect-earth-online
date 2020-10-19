@@ -32,6 +32,7 @@ export default class ManageProject extends React.Component {
                 } else {
                     const newSurveyQuestions = convertSampleValuesToSurveyQuestions(data.sampleValues);
                     this.context.setProjectDetails({...data, surveyQuestions: newSurveyQuestions});
+                    this.context.setContextState({originalProject: {...data, surveyQuestions: newSurveyQuestions}});
                 }
             })
             .catch(() => Promise.reject("Error retrieving the project."));
@@ -221,7 +222,7 @@ class ProjectManagement extends React.Component {
                             type="button"
                             value="Edit Project"
                             disabled={!canEdit}
-                            onClick={() => this.context.setDesignMode("wizard")}
+                            onClick={() => this.context.setContextState({designMode: "wizard"})}
                         />
                         <input
                             className="btn btn-outline-red btn-sm w-100"

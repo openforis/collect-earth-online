@@ -323,7 +323,7 @@ export default class CreateProjectWizard extends React.Component {
     /// Changing Step
 
     getSteps = () => this.context.projectId > 0
-        ? {overview: this.steps.overview}
+        ? this.steps
         : this.steps;
 
     checkAllSteps = () => {
@@ -371,7 +371,7 @@ export default class CreateProjectWizard extends React.Component {
         if (failedStep) {
             this.setState({step: failedStep[0]});
         } else {
-            this.context.setDesignMode("review");
+            this.context.setContextState({designMode: "review"});
         }
     }
 
@@ -502,7 +502,7 @@ export default class CreateProjectWizard extends React.Component {
                                 finish={this.finish}
                                 cancel={() => {
                                     if (this.context.projectId > 0) {
-                                        this.context.setDesignMode("manage");
+                                        this.context.setContextState({designMode: "manage"});
                                     } else {
                                         window.location = `/review-institution?institutionId=${this.context.institutionId}`;
                                     }

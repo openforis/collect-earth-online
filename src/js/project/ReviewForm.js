@@ -52,7 +52,7 @@ export default function ReviewForm() {
                     {renderSectionHeader("Survey Questions")}
                     <div id="survey-review">
                         <SurveyCardList {...context} inDesignMode={false}/>
-                        <SurveyRulesList {...context} inDesignMode={false}/>
+                        <SurveyRulesList surveyRules={context.projectDetails.surveyRules} inDesignMode={false}/>
                     </div>
                 </div>
             }

@@ -582,7 +582,7 @@ function IncompatibleAnswers(props) {
 }
 
 export function SurveyRulesList(props) {
-    const {projectDetails: {surveyRules}, inDesignMode} = props;
+    const {surveyRules, inDesignMode} = props;
 
     const deleteSurveyRule = (event) => {
         const newSurveyRules = surveyRules.filter(rule => rule.id !== parseInt(event.target.id));

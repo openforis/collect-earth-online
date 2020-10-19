@@ -25,7 +25,7 @@ export function ImagerySelection() {
 
     return (
         <ProjectContext.Consumer>
-            {({imageryId, institutionImagery, projectImageryList, setProjectDetails}) => (
+            {({projectDetails: {imageryId, projectImageryList}, institutionImagery, setProjectDetails}) => (
                 <>
                     {institutionImagery
                     ?
@@ -92,7 +92,7 @@ export function ImageryReview() {
 
     return (
         <ProjectContext.Consumer>
-            {({imageryId, projectImageryList, institutionImagery}) =>
+            {({projectDetails: {imageryId, projectImageryList}, institutionImagery}) =>
                 <div>
                     <div className="d-flex flex-column">
                         <label><b>Default Imagery:</b> {findImageryName(imageryId, institutionImagery)}</label>

@@ -50,6 +50,7 @@ class Project extends React.Component {
 
         this.state = {
             projectDetails: {...this.blankProject, privacyLevel: "institution"},
+            originalProject: {},
             institutionImagery: [],
             designMode: "loading",
             modalMessage: null,
@@ -93,7 +94,7 @@ class Project extends React.Component {
 
     resetProject = (defaults) => this.setState({projectDetails: this.blankProject, ...defaults});
 
-    setDesignMode = (newMode) => this.setState({designMode: newMode});
+    setContextState = (newState) => this.setState(newState);
 
     /// API Calls
 
@@ -127,10 +128,11 @@ class Project extends React.Component {
                     institutionId: this.props.institutionId,
                     projectId: this.props.projectId,
                     projectDetails: this.state.projectDetails,
+                    originalProject: this.state.originalProject,
                     designMode: this.state.designMode,
                     institutionImagery: this.state.institutionImagery,
                     setProjectDetails: this.setProjectDetails,
-                    setDesignMode: this.setDesignMode,
+                    setContextState: this.setContextState,
                     resetProject: this.resetProject,
                     processModal: this.processModal,
                 }}

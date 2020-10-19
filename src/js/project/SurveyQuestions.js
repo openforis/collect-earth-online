@@ -79,22 +79,21 @@ export class SurveyQuestionDesign extends React.Component {
                     inDesignMode
                     setProjectDetails={setProjectDetails}
                     setSurveyRules={(newRules) => setProjectDetails({surveyRules: newRules})}
-                    surveyQuestions={projectDetails.surveyQuestions}
-                    surveyRules={projectDetails.surveyRules}
+                    projectDetails={projectDetails}
                     removeAnswer={this.removeAnswer}
                     removeQuestion={this.removeQuestion}
                     newAnswerComponent={(surveyQuestion) => surveyQuestion.answers.length
                                 < this.maxAnswers(surveyQuestion.componentType, surveyQuestion.dataType)
                                 &&
                                 <NewAnswerDesigner
-                                    setProjectDetails={projectDetails.setProjectDetails}
+                                    setProjectDetails={setProjectDetails}
                                     surveyQuestions={projectDetails.surveyQuestions}
                                     surveyQuestion={surveyQuestion}
                                 />
                     }
                 />
                 <NewQuestionDesigner
-                    setProjectDetails={projectDetails.setProjectDetails}
+                    setProjectDetails={setProjectDetails}
                     surveyQuestions={projectDetails.surveyQuestions}
                     surveyRules = {projectDetails.surveyRules}
                     setSurveyRules = {(newRules) => setProjectDetails({surveyRules: newRules})}

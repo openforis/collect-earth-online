@@ -7,13 +7,15 @@ export function Overview(props) {
     return (
         <ProjectContext.Consumer>
             {({
-                name,
-                description,
-                privacyLevel,
-                setProjectDetails,
-                projectOptions,
-                projectOptions: {showGEEScript, showPlotInformation, autoLaunchGeoDash},
-                projectId,
+                projectDetails: {
+                    name,
+                    description,
+                    privacyLevel,
+                    setProjectDetails,
+                    projectOptions,
+                    projectOptions: {showGEEScript, showPlotInformation, autoLaunchGeoDash},
+                    projectId,
+                },
             }) =>
                 <div id="project-info">
                     {projectId < 0 && <ProjectTemplateSelection {...props}/>}

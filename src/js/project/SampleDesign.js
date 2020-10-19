@@ -178,7 +178,7 @@ SampleDesign.contextType = ProjectContext;
 export function SampleReview() {
     return (
         <ProjectContext.Consumer>
-            {({sampleDistribution, samplesPerPlot, sampleResolution, allowDrawnSamples}) =>
+            {({projectDetails: {sampleDistribution, samplesPerPlot, sampleResolution, allowDrawnSamples}}) =>
                 <div id="sample-review">
                     <h3 className="mb-3">Samples will be copied from template project</h3>
                     {sampleDistribution === "none"
