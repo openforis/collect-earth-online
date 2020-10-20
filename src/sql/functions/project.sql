@@ -187,12 +187,12 @@ CREATE OR REPLACE FUNCTION create_project(
     _boundary                jsonb,
     _plot_distribution       text,
     _num_plots               integer,
-    _plot_spacing            float,
+    _plot_spacing            real,
     _plot_shape              text,
-    _plot_size               float,
+    _plot_size               real,
     _sample_distribution     text,
     _samples_per_plot        integer,
-    _sample_resolution       float,
+    _sample_resolution       real,
     _allow_drawn_samples     boolean,
     _survey_questions        jsonb,
     _survey_rules            jsonb,
@@ -418,7 +418,7 @@ CREATE OR REPLACE FUNCTION delete_duplicates(_table_name text, _on_cols text)
 $$ LANGUAGE PLPGSQL;
 
 -- Calculates boundary from for csv data
-CREATE OR REPLACE FUNCTION csv_boundary(_project_id integer, _m_buffer float)
+CREATE OR REPLACE FUNCTION csv_boundary(_project_id integer, _m_buffer real)
  RETURNS void AS $$
 
     UPDATE projects SET boundary = b
@@ -450,7 +450,7 @@ CREATE OR REPLACE FUNCTION shp_boundary(_project_id integer)
 $$ LANGUAGE SQL;
 
 -- Runs a few functions after data has been uploaded
-CREATE OR REPLACE FUNCTION cleanup_project_tables(_project_id integer, _m_buffer float)
+CREATE OR REPLACE FUNCTION cleanup_project_tables(_project_id integer, _m_buffer real)
  RETURNS void AS $$
 
     DECLARE
@@ -478,8 +478,8 @@ CREATE OR REPLACE FUNCTION add_file_plots(_project_id integer)
  RETURNS TABLE (
     plot_uid    integer,
     plotid      integer,
-    lon         float,
-    lat         float
+    lon         double precision,
+    lat         double precision
  ) AS $$
 
     WITH plot_tbl AS (
@@ -770,12 +770,12 @@ CREATE OR REPLACE FUNCTION select_project_by_id(_project_id integer)
     boundary               text,
     plot_distribution      text,
     num_plots              integer,
-    plot_spacing           float,
+    plot_spacing           real,
     plot_shape             text,
-    plot_size              float,
+    plot_size              real,
     sample_distribution    text,
     samples_per_plot       integer,
-    sample_resolution      float,
+    sample_resolution      real,
     allow_drawn_samples    boolean,
     survey_questions       jsonb,
     survey_rules           jsonb,
@@ -1615,10 +1615,10 @@ $$ LANGUAGE SQL;
 CREATE OR REPLACE FUNCTION dump_project_plot_data(_project_id integer)
  RETURNS TABLE (
         plot_id                     integer,
-        lon                         float,
-        lat                         float,
+        lon                         double precision,
+        lat                         double precision,
         plot_shape                  text,
-        plot_size                   float,
+        plot_size                   real,
         email                       text,
         confidence                  integer,
         flagged                     integer,
@@ -1701,8 +1701,8 @@ CREATE OR REPLACE FUNCTION dump_project_sample_data(_project_id integer)
  RETURNS TABLE (
         plot_id               integer,
         sample_id             integer,
-        lon                   float,
-        lat                   float,
+        lon                   double precision,
+        lat                   double precision,
         email                 text,
         confidence            integer,
         flagged               integer,

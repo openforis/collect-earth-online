@@ -22,6 +22,7 @@
        (Long/parseLong string)
        (catch Exception _ default)))))
 
+;; Warning Postgres type float is equivalent to java Double, and Postgres real is equivalent to java Float
 (defn str->float
   ([string]
    (str->float string (float -1.0)))
@@ -32,6 +33,7 @@
        (Float/parseFloat string)
        (catch Exception _ default)))))
 
+;; Warning Postgres type float is equivalent to java Double, and Postgres real is equivalent to java Float
 (defn str->double
   ([string]
    (str->double string (double -1.0)))
