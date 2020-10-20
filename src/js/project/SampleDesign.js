@@ -23,7 +23,7 @@ export class SampleDesign extends React.Component {
                 onChange={e => this.context.setProjectState({[property]: e.target.value})}
             />
         </div>
-    )
+    );
 
     renderFileInput = (fileType) => (
         <div style={{display: "flex"}}>
@@ -39,7 +39,6 @@ export class SampleDesign extends React.Component {
                     accept={fileType === "csv" ? "text/csv" : "application/zip"}
                     id="sample-distribution-file"
                     defaultValue=""
-                    name="sample-distribution-file"
                     onChange={e => {
                         const file = e.target.files[0];
                         encodeFileAsBase64(file, base64 =>
@@ -77,7 +76,7 @@ export class SampleDesign extends React.Component {
             },
             center: {
                 display: "Center",
-                description: "A single sample point will be placed on the center of the plot.",
+                description: "A single sample point will be placed in the center of the plot.",
                 inputs: [],
             },
             csv: {
@@ -108,7 +107,7 @@ export class SampleDesign extends React.Component {
                     <select
                         className="form-control form-control-sm ml-3"
                         style={{width: "initial"}}
-                        onChange={(e) => this.context.setProjectState({sampleDistribution: e.target.value})}
+                        onChange={(e) => setProjectState({sampleDistribution: e.target.value})}
                         value={sampleDistribution}
                     >
                         {Object.entries(sampleOptions).map(([key, options]) =>
@@ -139,7 +138,7 @@ export class SampleDesign extends React.Component {
                     </div>
                 }
                 <div style={{display: "flex"}}>
-                    {sampleOptions[sampleDistribution].inputs.map((i, idx)=>
+                    {sampleOptions[sampleDistribution].inputs.map((i, idx) =>
                         <div key={idx} className="mr-3">
                             {i.call(this)}
                         </div>
@@ -164,7 +163,7 @@ export class SampleDesign extends React.Component {
                     }
                     {totalPlots && samplesPerPlot && samplesPerPlot > perPlotLimit
                         ? `* The maximum allowed for the selected sample distribution is ${formatNumberWithCommas(perPlotLimit)}`
-                            + ` samples per plot.\n * The maximum allowed samples per project is ${formatNumberWithCommas(sampleLimit)}.`
+                            + ` samples per plot. * The maximum allowed samples per project is ${formatNumberWithCommas(sampleLimit)}.`
                         : ""
                     }
                 </p>
@@ -197,7 +196,7 @@ export function SampleReview() {
                                         <tr>
                                             <td className="w-80">Samples Per Plot</td>
                                             <td className="w-20 text-center">
-                                                <span className="badge badge-pill bg-lightgreen">{samplesPerPlot} /plot</span>
+                                                <span className="badge badge-pill bg-lightgreen">{samplesPerPlot} / plot</span>
                                             </td>
                                         </tr>
                                         {sampleDistribution === "gridded" &&
@@ -221,32 +220,26 @@ export function SampleReview() {
 }
 
 export function SamplePreview() {
-    // TODO: Update messaging so its more clear when shp is defined at the plot level, especially with CSV samples
-    const renderPreview = ({plotDistribution, sampleDistribution, plotShape}) => {
-        if (plotDistribution === "shp") {
-            return <h3>The system cannot currently generate a preview of shape files.</h3>;
-        } else if (sampleDistribution === "csv") {
-            return <h3>The system cannot currently generate a preview of sample csv files.</h3>;
-        } else if (sampleDistribution === "shp") {
-            return <h3>The system cannot currently generate a preview of sample shp files.</h3>;
-        } else {
-            return (
-                <div>
-                    <h3>The following is a mock up of a {plotShape} plot with {sampleDistribution} samples.</h3>
-                    <img
-                        className="w-100 h-100"
-                        src={"/img/examples/" + plotShape + "-" + sampleDistribution + ".webp"}
-                    />
-                </div>
-            );
-        }
-    };
-
+    // TODO: Update messaging so it's more clear when shp is defined at the plot level, especially with CSV samples
     return (
         <ProjectContext.Consumer>
-            {context =>
+            {({plotDistribution, sampleDistribution, plotShape}) =>
                 <div className="p-3">
-                    {renderPreview(context)}
+                    {(plotDistribution === "shp")
+                     ? <h3>The system cannot currently generate a preview of plot shp files.</h3>
+                     : (sampleDistribution === "csv")
+                     ? <h3>The system cannot currently generate a preview of sample csv files.</h3>
+                     : (sampleDistribution === "shp")
+                     ? <h3>The system cannot currently generate a preview of sample shp files.</h3>
+                     : (
+                         <div>
+                             <h3>The following is a mock up of a {plotShape} plot with {sampleDistribution} samples.</h3>
+                             <img
+                                 className="w-100 h-100"
+                                 src={"/img/examples/" + plotShape + "-" + sampleDistribution + ".webp"}
+                             />
+                         </div>
+                     )}
                 </div>
             }
         </ProjectContext.Consumer>

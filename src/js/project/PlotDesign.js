@@ -193,7 +193,6 @@ export class PlotDesign extends React.Component {
                     accept={fileType === "csv" ? "text/csv" : "application/zip"}
                     id="plot-distribution-file"
                     defaultValue=""
-                    name="plot-distribution-file"
                     onChange={e => {
                         const file = e.target.files[0];
                         encodeFileAsBase64(file, base64 =>
