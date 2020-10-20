@@ -109,7 +109,7 @@ export default class ReviewChanges extends React.Component {
             samplesPerPlot: projectDetails.samplesPerPlot,
             sampleResolution: projectDetails.sampleResolution,
             allowDrawnSamples: projectDetails.allowDrawnSamples,
-            sampleValues: projectDetails.surveyQuestions,
+            surveyQuestions: projectDetails.surveyQuestions,
             surveyRules: projectDetails.surveyRules,
             plotFileName: projectDetails.plotFileName,
             plotFileBase64: projectDetails.plotFileBase64,
@@ -120,7 +120,8 @@ export default class ReviewChanges extends React.Component {
 
     surveyQuestionUpdated = (projectDetails, originalProject) =>
         projectDetails.surveyQuestions !== originalProject.surveyQuestions
-            || projectDetails.surveyRules !== originalProject.surveyRules;
+            || projectDetails.surveyRules !== originalProject.surveyRules
+            || (originalProject.allowDrawnSamples && !projectDetails.allowDrawnSamples);
 
     collectionUpdated = (projectDetails, originalProject) =>
         projectDetails.boundary !== originalProject.boundary
@@ -133,8 +134,7 @@ export default class ReviewChanges extends React.Component {
             || projectDetails.samplesPerPlot !== originalProject.samplesPerPlot
             || projectDetails.sampleResolution !== originalProject.sampleResolution
             || projectDetails.plotFileBase64
-            || projectDetails.sampleFileBase64
-            || (originalProject.allowDrawnSamples && !projectDetails.allowDrawnSamples)
+            || projectDetails.sampleFileBase64;
 
     /// Render Functions
 
