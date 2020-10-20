@@ -699,7 +699,7 @@
         plot-file-base64    (:plotFileBase64 params)
         sample-file-name    (:sampleFileName params)
         sample-file-base64  (:sampleFileBase64 params)
-        original-project    (first (call-sql "select_project_by_id") project-id)]
+        original-project    (first (call-sql "select_project_by_id" project-id))]
     (if original-project
       (do
         (call-sql "update_project"
@@ -724,6 +724,20 @@
         (when-let [imagery-list (:projectImageryList params)]
           (call-sql "delete_project_imagery" project-id)
           (insert-project-imagery project-id imagery-list))
+        (println (= (str boundary) (str (:boundary original-project))))
+        (println (type boundary) (type (tc/jsonb->clj (:boundary original-project))))
+        (println (type sample-resolution) (type (:sample_resolution original-project)))
+        (println (not= boundary (:boundary original-project))
+                 (not= num-plots (:num_plots original-project))
+                 (not= plot-distribution (:plot_distribution original-project))
+                 (not= plot-shape (:plot_shape original-project))
+                 (not= plot-size (:plot_size original-project))
+                 (not= plot-spacing (:plot_spacing original-project))
+                 (not= sample-distribution (:sample_distribution original-project))
+                 (not= samples-per-plot (:samples_per_plot original-project))
+                 (not= sample-resolution (:sample_resolution original-project))
+                 plot-file-base64
+                 sample-file-base64)
         (cond
           (or (not= boundary (:boundary original-project))
               (not= num-plots (:num_plots original-project))

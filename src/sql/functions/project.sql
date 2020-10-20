@@ -223,7 +223,7 @@ CREATE OR REPLACE FUNCTION create_project(
         options
     ) VALUES (
         _institution_id,
-        "unpublished",
+        'unpublished',
         _name,
         _description,
         _privacy_level,
@@ -336,7 +336,7 @@ CREATE OR REPLACE FUNCTION update_project(
         description = _description,
         privacy_level = _privacy_level,
         imagery_rid = _imagery_id,
-        boundary = _boundary,
+        boundary = ST_SetSRID(ST_GeomFromGeoJSON(_boundary), 4326),
         plot_distribution = _plot_distribution,
         num_plots = _num_plots,
         plot_spacing = _plot_spacing,
@@ -348,7 +348,7 @@ CREATE OR REPLACE FUNCTION update_project(
         allow_drawn_samples = _allow_drawn_samples,
         survey_questions = _survey_questions,
         survey_rules = _survey_rules,
-        options = _options,
+        options = _options
     WHERE project_uid = _project_id
 
 $$ LANGUAGE SQL;
@@ -845,7 +845,7 @@ CREATE OR REPLACE FUNCTION select_project_by_id(_project_id integer)
         token_key
     FROM projects
     WHERE project_uid = _project_id
-        AND availability <> "archived"
+        AND availability <> 'archived'
 
 $$ LANGUAGE SQL;
 
@@ -1624,7 +1624,7 @@ $$ LANGUAGE SQL;
 CREATE OR REPLACE FUNCTION delete_plots_by_project(_project_id integer)
  RETURNS void AS $$
 
-    DELETE FROM plots WHERE plot_rid IN (SELECT plot_uid FROM plots WHERE project_rid = _project_id)
+    DELETE FROM plots WHERE plot_uid IN (SELECT plot_uid FROM plots WHERE project_rid = _project_id)
 
 $$ LANGUAGE SQL;
 

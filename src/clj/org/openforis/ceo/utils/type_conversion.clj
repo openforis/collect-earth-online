@@ -26,11 +26,9 @@
   ([string]
    (str->float string (float -1.0)))
   ([string default]
-   (if (number? string)
-     string
-     (try
-       (Float/parseFloat string)
-       (catch Exception _ default)))))
+   (try
+     (Float/parseFloat (str string))
+     (catch Exception _ default))))
 
 (defn str->double
   ([string]

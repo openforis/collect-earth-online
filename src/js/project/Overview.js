@@ -11,11 +11,11 @@ export function Overview(props) {
                     name,
                     description,
                     privacyLevel,
-                    setProjectDetails,
                     projectOptions,
                     projectOptions: {showGEEScript, showPlotInformation, autoLaunchGeoDash},
                     projectId,
                 },
+                setProjectDetails,
             }) =>
                 <div id="project-info">
                     {projectId < 0 && <ProjectTemplateSelection {...props}/>}

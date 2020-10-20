@@ -255,19 +255,20 @@ export default class CreateProjectWizard extends React.Component {
             plotFileName,
             useTemplatePlots,
         } = this.context.projectDetails;
+        const {projectId} = this.context;
         const totalPlots = this.getTotalPlots();
         const errorList = [
             (["random", "gridded"].includes(plotDistribution) && !boundary)
                 && "Please select a valid boundary",
-            (plotDistribution === "random" && (!numPlots || numPlots === 0))
+            (plotDistribution === "random" && !(numPlots || 0) === 0)
                 && "A number of plots is required for random plot distribution.",
-            (plotDistribution === "gridded" && (!plotSpacing || plotSpacing === 0))
+            (plotDistribution === "gridded" && !(plotSpacing || 0) === 0)
                 && "A plot spacing is required for gridded plot distribution.",
             (plotDistribution !== "shp" && (!plotSize || plotSize === 0))
                 && "A plot size is required.",
-            (plotDistribution === "csv" && !useTemplatePlots && !(plotFileName && plotFileName.includes(".csv")))
+            (plotDistribution === "csv" && projectId === -1 && !useTemplatePlots && !(plotFileName || "").includes(".csv"))
                 && "A plot CSV (.csv) file is required.",
-            (plotDistribution === "shp" && !useTemplatePlots && !(plotFileName && plotFileName.includes(".zip")))
+            (plotDistribution === "shp" && projectId === -1 && !useTemplatePlots && !(plotFileName || "").includes(".zip"))
                 && "A plot SHP (.zip) file is required.",
             (totalPlots > plotLimit)
                 && "The plot or sample size limit exceeded. Check the Sample Design section for detailed info.",
@@ -282,19 +283,25 @@ export default class CreateProjectWizard extends React.Component {
             sampleResolution,
             plotShape,
             sampleFileName,
+            plotFileName,
             useTemplatePlots,
         } = this.context.projectDetails;
+        const {projectId} = this.context;
         const totalPlots = this.getTotalPlots();
         const samplesPerPlot = this.getSamplesPerPlot();
         const errorList = [
-            (sampleDistribution === "random" && (!samplesPerPlot || samplesPerPlot === 0))
+            (sampleDistribution === "random" && !(samplesPerPlot || 0) === 0)
                 && "A number of samples per plot is required for random sample distribution.",
-            (sampleDistribution === "gridded" && (!sampleResolution || sampleResolution === 0))
+            (sampleDistribution === "gridded" && !(sampleResolution || 0) === 0)
                 && "A sample spacing is required for gridded sample distribution.",
-            (sampleDistribution === "csv" && !useTemplatePlots && !(sampleFileName && sampleFileName.includes(".csv")))
+            (sampleDistribution === "csv" && projectId === -1 && !useTemplatePlots && !(sampleFileName || "").includes(".csv"))
                 && "A sample CSV (.csv) file is required.",
-            (sampleDistribution === "shp" && !useTemplatePlots && !(sampleFileName && sampleFileName.includes(".zip")))
+            (sampleDistribution === "shp" && projectId === -1 && !useTemplatePlots && !(sampleFileName || "").includes(".zip"))
                 && "A sample SHP (.zip) file is required.",
+            (sampleDistribution === "csv" && plotFileName && !(sampleFileName || "").includes(".csv"))
+                && "A sample CSV (.csv) file is required to save changes if a plot file has been updated.",
+            (sampleDistribution === "shp" && plotFileName && !(sampleFileName || "").includes(".zip"))
+                && "A sample SHP (.zip) file is required to save changes if a plot file has been updated.",
             (sampleDistribution === "gridded"
                 && plotShape === "circle"
                 && sampleResolution >= plotSize / Math.sqrt(2))
