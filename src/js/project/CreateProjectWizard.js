@@ -136,7 +136,6 @@ export default class CreateProjectWizard extends React.Component {
                 alert("Error getting complete template info. See console for details.");
             });
 
-
     getTemplateById = (projectId) =>
         fetch(`/get-template-by-id?projectId=${projectId}`)
             .then(response => response.ok ? response.json() : Promise.reject(response))
@@ -188,15 +187,14 @@ export default class CreateProjectWizard extends React.Component {
     getTotalPlots = () => {
         if (this.context.plotDistribution === "random"
             && this.context.numPlots) {
-            return Number(this.context.numPlots);
+            return this.context.numPlots;
         } else if (this.context.plotDistribution === "gridded"
                     && this.context.plotSize
                     && this.context.plotSpacing) {
             const boundaryExtent = mercator.parseGeoJson(this.context.boundary, true).getExtent();
-            const buffer = Number(this.context.plotSize);
+            const buffer = this.context.plotSize;
             const xRange = boundaryExtent[2] - boundaryExtent[0] - buffer;
             const yRange = boundaryExtent[3] - boundaryExtent[1] - buffer;
-
             const xSteps = Math.floor(xRange / this.context.plotSpacing) + 1;
             const ySteps = Math.floor(yRange / this.context.plotSpacing) + 1;
             return xSteps * ySteps;
@@ -208,11 +206,11 @@ export default class CreateProjectWizard extends React.Component {
     getSamplesPerPlot = () => {
         if (this.context.sampleDistribution === "random"
             && this.context.samplesPerPlot) {
-            return Number(this.context.samplesPerPlot);
+            return this.context.samplesPerPlot;
         } else if (this.context.sampleDistribution === "gridded"
             && this.context.plotSize
             && this.context.sampleResolution) {
-            const steps = Math.floor(Number(this.context.plotSize) / Number(this.context.sampleResolution)) + 1;
+            const steps = Math.floor(this.context.plotSize / this.context.sampleResolution) + 1;
             return steps * steps;
         } else if (this.context.sampleDistribution === "center") {
             return 1;
@@ -237,7 +235,7 @@ export default class CreateProjectWizard extends React.Component {
         const errorList = [
             requiresPublic
                 && `Projects with privacy level of ${privacyLevel} require at least one public imagery.`,
-            !imageryId > 0
+            imageryId <= 0
                 && "Select a valid Basemap.",
         ];
         return errorList.filter(e => e);
@@ -256,7 +254,7 @@ export default class CreateProjectWizard extends React.Component {
         const totalPlots = this.getTotalPlots();
         const errorList = [
             (["random", "gridded"].includes(plotDistribution) && !boundary)
-                && "Please select a valid boundary",
+                && "Please select a valid boundary.",
             (plotDistribution === "random" && (!numPlots || numPlots === 0))
                 && "A number of plots is required for random plot distribution.",
             (plotDistribution === "gridded" && (!plotSpacing || plotSpacing === 0))
@@ -268,7 +266,7 @@ export default class CreateProjectWizard extends React.Component {
             (plotDistribution === "shp" && !useTemplatePlots && !(plotFileName && plotFileName.includes(".zip")))
                 && "A plot SHP (.zip) file is required.",
             (totalPlots > plotLimit)
-                && "The plot or sample size limit exceeded. Check the Sample Design section for detailed info.",
+                && "The plot or sample size limit has been exceeded. Check the Plot Design section for detailed info.",
         ];
         return errorList.filter(e => e);
     };
@@ -299,10 +297,10 @@ export default class CreateProjectWizard extends React.Component {
                 && "The sample spacing must be less than plot diameter divided by the square root of 2.",
             (sampleDistribution === "gridded"
                 && plotShape === "square"
-                && parseInt(sampleResolution) >= plotSize)
+                && sampleResolution >= plotSize)
                 && "The sample spacing must be less than the plot width.",
             (samplesPerPlot > perPlotLimit || (totalPlots * samplesPerPlot) > sampleLimit)
-                && "The sample size limit exceeded. Check the Sample Design section for detailed info.",
+                && "The sample size limit has been exceeded. Check the Sample Design section for detailed info.",
         ];
         return errorList.filter(e => e);
     };
@@ -329,7 +327,7 @@ export default class CreateProjectWizard extends React.Component {
             .filter(([key, val]) => val.validate.call(this).length === 0)
             .map(([key, val]) => key);
         this.setState({complete: new Set(validSteps)});
-    }
+    };
 
     tryChangeStep = (newStep, alertUser = true) => {
         const errorList = this.getSteps()[this.state.step].validate.call(this);
@@ -348,12 +346,12 @@ export default class CreateProjectWizard extends React.Component {
     nextStep = () => {
         const stepKeys = Object.keys(this.getSteps());
         this.tryChangeStep(stepKeys[Math.min(stepKeys.length - 1, stepKeys.indexOf(this.state.step) + 1)]);
-    }
+    };
 
     prevStep = () => {
         const stepKeys = Object.keys(this.getSteps());
         this.tryChangeStep(stepKeys[Math.max(0, stepKeys.indexOf(this.state.step) - 1)], false);
-    }
+    };
 
     finish = () => {
         const failedStep = Object.entries(this.getSteps())
@@ -371,7 +369,7 @@ export default class CreateProjectWizard extends React.Component {
         } else {
             this.context.setDesignMode("review");
         }
-    }
+    };
 
     /// Template handling
 
@@ -379,9 +377,10 @@ export default class CreateProjectWizard extends React.Component {
         this.context.resetProject({imageryId: this.context.institutionImagery[0].id});
         this.setState({
             templateProject: {},
+            templatePlots: [],
             complete: new Set(),
         });
-    }
+    };
 
     setProjectTemplate = (newTemplateId) => {
         this.context.processModal("Loading Template Information",
@@ -411,7 +410,8 @@ export default class CreateProjectWizard extends React.Component {
     /// Render Functions
 
     renderStep = (stepName) => {
-        const isLast = last(Object.keys(this.getSteps())) === stepName;
+        const steps = this.getSteps();
+        const isLast = last(Object.keys(steps)) === stepName;
         const isSelected = stepName === this.state.step;
         const stepComplete = this.state.complete.has(stepName);
         const stepColor = isSelected ? "blue" : stepComplete ? "green" : "gray";
@@ -420,7 +420,7 @@ export default class CreateProjectWizard extends React.Component {
                 id={stepName + "-button"}
                 style={{width: "10rem", display: "flex", flexDirection: "column", alignItems: "center"}}
                 key={stepName}
-                title={this.getSteps()[stepName].description}
+                title={steps[stepName].description}
                 onClick={() => this.tryChangeStep(stepName, false)}
             >
                 {isLast
@@ -449,22 +449,23 @@ export default class CreateProjectWizard extends React.Component {
                     {stepComplete && <SvgIcon icon="check" size="1.25rem" color="white"/>}
                 </div>
                 <label style={{color: stepColor, fontWeight: "bold"}}>
-                    {this.getSteps()[stepName].title}
+                    {steps[stepName].title}
                 </label>
             </div>
         );
-    }
+    };
 
     render() {
-        const {description, StepComponent, helpDescription, StepHelpComponent} = this.getSteps()[this.state.step];
-        const isLast = last(Object.keys(this.getSteps())) === this.state.step;
+        const steps = this.getSteps();
+        const {description, StepComponent, helpDescription, StepHelpComponent} = steps[this.state.step];
+        const isLast = last(Object.keys(steps)) === this.state.step;
         return (
             <div
                 id="wizard"
                 className="d-flex pb-5 full-height align-items-center flex-column"
             >
                 <div style={{display: "flex", margin: ".75rem"}}>
-                    {Object.keys(this.getSteps()).map(s => this.renderStep(s))}
+                    {Object.keys(steps).map(s => this.renderStep(s))}
                 </div>
                 <div
                     style={{
@@ -491,12 +492,12 @@ export default class CreateProjectWizard extends React.Component {
                                 style={{border: "1px solid black", borderRadius: "6px"}}
                             >
                                 <h2 className="bg-lightgreen w-100 py-1">{helpDescription}</h2>
-                                {StepHelpComponent && <StepHelpComponent/>}
+                                <StepHelpComponent/>
                             </div>
                             <NavigationButtons
                                 nextStep={isLast ? this.finish : this.nextStep}
                                 prevStep={this.prevStep}
-                                canFinish={Object.keys(this.getSteps()).length === this.state.complete.size || isLast}
+                                canFinish={Object.keys(steps).length === this.state.complete.size || isLast}
                                 finish={this.finish}
                                 cancel={() => {
                                     if (this.context.projectId > 0) {
