@@ -12,7 +12,6 @@ export class PlotDesign extends React.Component {
             latMin: "",
             lonMax: "",
             latMax: "",
-            boundaryMode: "draw",
         };
     }
 
@@ -21,12 +20,12 @@ export class PlotDesign extends React.Component {
     }
 
     componentDidUpdate(prevProps) {
-        if (this.state.boundaryMode === "draw" && this.props.boundary && prevProps.boundary !== this.props.boundary) {
+        if (this.props.boundary && prevProps.boundary !== this.props.boundary) {
             this.setCoordsFromBoundary();
         }
     }
 
-    setCoordsFromBoundary() {
+    setCoordsFromBoundary = () => {
         const boundaryExtent = mercator.parseGeoJson(this.props.boundary, false).getExtent();
         this.setState({
             lonMin: boundaryExtent[0],
@@ -34,7 +33,7 @@ export class PlotDesign extends React.Component {
             lonMax: boundaryExtent[2],
             latMax: boundaryExtent[3],
         });
-    }
+    };
 
     generateGeoJSON = () => {
         const {latMin, latMax, lonMin, lonMax} = this.state;
@@ -52,10 +51,10 @@ export class PlotDesign extends React.Component {
             : null;
     };
 
-    updateBoundaryFromCoords = (newCoord) => {
-        this.setState(newCoord,
-                      () => this.context.setProjectState({boundary: this.generateGeoJSON()}));
-    }
+    updateBoundaryFromCoords = (newCoord) => this.setState(
+        newCoord,
+        () => this.context.setProjectState({boundary: this.generateGeoJSON()})
+    );
 
     /// Render Functions
 
@@ -72,7 +71,7 @@ export class PlotDesign extends React.Component {
                 onChange={e => this.context.setProjectState({[property]: e.target.value})}
             />
         </div>
-    )
+    );
 
     renderPlotShape = () => {
         const {plotShape, setProjectState} = this.context;
@@ -113,7 +112,7 @@ export class PlotDesign extends React.Component {
                 </div>
             </div>
         );
-    }
+    };
 
     renderAOICoords = () => {
         const {latMax, lonMin, lonMax, latMin} = this.state;
@@ -166,7 +165,7 @@ export class PlotDesign extends React.Component {
                             <input
                                 className="form-control form-control-sm"
                                 type="number"
-                                defaultValue={latMin}
+                                value={latMin}
                                 placeholder="South"
                                 min="-90.0"
                                 max="90.0"
@@ -178,7 +177,7 @@ export class PlotDesign extends React.Component {
                 </div>
             </div>
         );
-    }
+    };
 
     renderFileInput = (fileType) => (
         <div style={{display: "flex"}}>
@@ -196,9 +195,10 @@ export class PlotDesign extends React.Component {
                     defaultValue=""
                     name="plot-distribution-file"
                     onChange={e => {
-                        encodeFileAsBase64(e.target.files[0], base64 =>
+                        const file = e.target.files[0];
+                        encodeFileAsBase64(file, base64 =>
                             this.context.setProjectState({
-                                plotFileName: e.target.files[0].name,
+                                plotFileName: file.name,
                                 plotFileBase64: base64,
                             }));
                     }}
@@ -206,7 +206,7 @@ export class PlotDesign extends React.Component {
                 />
             </label>
             <label className="ml-3 text-nowrap">
-                File: {!this.context.plotFileName ? <span className="font-italic">None</span> : this.context.plotFileName}
+                File: <span className="font-italic">{this.context.plotFileName || "None"}</span>
             </label>
         </div>
     );
@@ -219,7 +219,7 @@ export class PlotDesign extends React.Component {
                 {this.renderLabeledInput("Diameter (m)", "plotSize")}
             </div>
         </div>
-    )
+    );
 
     render() {
         const {plotDistribution} = this.context;
@@ -246,11 +246,13 @@ export class PlotDesign extends React.Component {
                 display: "CSV File",
                 description: "Specify your own plot centers by uploading a CSV with these fields: LON,LAT,PLOTID.",
                 inputs: [this.renderCSV],
+                showAOI: false,
             },
             shp: {
                 display: "SHP File",
                 description: "Specify your own plot boundaries by uploading a zipped Shapefile (containing SHP, SHX, DBF, and PRJ files) of polygon features. Each feature must have a unique PLOTID field.",
                 inputs: [() => this.renderFileInput("shp")],
+                showAOI: false,
             },
         };
 
@@ -278,7 +280,7 @@ export class PlotDesign extends React.Component {
                                     {plotOptions[plotDistribution].description}
                                 </p>
                                 <div style={{display: "flex"}}>
-                                    {plotOptions[plotDistribution].inputs.map((i, idx)=>
+                                    {plotOptions[plotDistribution].inputs.map((i, idx) =>
                                         <div key={idx} className="mr-3">
                                             {i.call(this)}
                                         </div>
@@ -303,7 +305,7 @@ export class PlotDesign extends React.Component {
                         : ""
                     }
                     {totalPlots && totalPlots > plotLimit
-                        ? `\n * The maximum allowed number for the selected plot distribution is ${formatNumberWithCommas(plotLimit)}.`
+                        ? `* The maximum allowed number for the selected plot distribution is ${formatNumberWithCommas(plotLimit)}.`
                         : ""
                     }
                 </p>
@@ -337,7 +339,7 @@ export function PlotReview() {
                             <table id="plot-review-table" className="table table-sm">
                                 <tbody>
                                     <tr>
-                                        <td className="w-80 pr-5">Spatial Distribution</td>
+                                        <td className="w-80 pr-5">Spatial distribution</td>
                                         <td className="w-20 text-center">
                                             <span className="badge badge-pill bg-lightgreen">{plotDistribution}</span>
                                         </td>

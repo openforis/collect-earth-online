@@ -41,9 +41,10 @@ export class SampleDesign extends React.Component {
                     defaultValue=""
                     name="sample-distribution-file"
                     onChange={e => {
-                        encodeFileAsBase64(e.target.files[0], base64 =>
+                        const file = e.target.files[0];
+                        encodeFileAsBase64(file, base64 =>
                             this.context.setProjectState({
-                                sampleFileName: e.target.files[0].name,
+                                sampleFileName: file.name,
                                 sampleFileBase64: base64,
                             }));
                     }}
@@ -51,7 +52,7 @@ export class SampleDesign extends React.Component {
                 />
             </label>
             <label className="ml-3 text-nowrap">
-                File: {!this.context.sampleFileName ? <span className="font-italic">None</span> : this.context.sampleFileName}
+                File: <span className="font-italic">{this.context.sampleFileName || "None"}</span>
             </label>
         </div>
     );
@@ -157,12 +158,12 @@ export class SampleDesign extends React.Component {
                         : ""
                     }
                     {totalPlots && samplesPerPlot
-                        ? `\nThere will be around ${formatNumberWithCommas(totalPlots * samplesPerPlot)} `
+                        ? `There will be around ${formatNumberWithCommas(totalPlots * samplesPerPlot)} `
                             + "total samples in the project."
                         : ""
                     }
                     {totalPlots && samplesPerPlot && samplesPerPlot > perPlotLimit
-                        ? `\n * The maximum allowed for the selected sample distribution is ${formatNumberWithCommas(perPlotLimit)}`
+                        ? `* The maximum allowed for the selected sample distribution is ${formatNumberWithCommas(perPlotLimit)}`
                             + ` samples per plot.\n * The maximum allowed samples per project is ${formatNumberWithCommas(sampleLimit)}.`
                         : ""
                     }
