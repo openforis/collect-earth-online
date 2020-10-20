@@ -561,10 +561,10 @@
         name                 (:name params)
         description          (:description params)
         privacy-level        (:privacyLevel params)
-        lon-min              (tc/str->float (:lonMin params))
-        lat-min              (tc/str->float (:latMin params))
-        lon-max              (tc/str->float (:lonMax params))
-        lat-max              (tc/str->float (:latMax params))
+        lon-min              (tc/str->double (:lonMin params))
+        lat-min              (tc/str->double (:latMin params))
+        lon-max              (tc/str->double (:lonMax params))
+        lat-max              (tc/str->double (:latMax params))
         boundary             (make-geo-json-polygon lon-min
                                                     lat-min
                                                     lon-max
