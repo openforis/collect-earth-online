@@ -7,15 +7,10 @@
             [org.openforis.ceo.views            :refer [data-response]]
             [org.openforis.ceo.utils.part-utils :refer [write-file-part-base64]]))
 
-(defn is-inst-admin-query? [user-id institution-id]
-  (sql-primitive (call-sql "is_institution_admin" user-id institution-id)))
-
-(defn is-inst-admin? [{:keys [params]}]
-  (let [user-id        (:userId params -1)
-        institution-id (tc/val->int (:institutionId params))]
-    (and (pos? user-id)
-         (pos? institution-id)
-         (is-inst-admin-query? user-id institution-id))))
+(defn is-inst-admin? [user-id institution-id]
+  (and (pos? user-id)
+       (pos? institution-id)
+       (sql-primitive (call-sql "is_institution_admin" user-id institution-id))))
 
 ;; TODO the front end uses get-institution-members, don't return members here.
 (defn- prepare-institution [{:keys [institution_id name logo description url archived members admins pending]}]

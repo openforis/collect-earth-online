@@ -18,19 +18,16 @@
 
 ;;; Auth Functions
 
-(defn- check-auth-common [params sql-query]
-  (let [user-id    (:userId params -1)
-        project-id (tc/val->int (:projectId params))
-        token-key  (:tokenKey params)]
-    (or (and token-key
-             (= token-key (:token_key (first (call-sql "select_project_by_id" {:log? false} project-id)))))
-        (sql-primitive (call-sql sql-query user-id project-id)))))
+(defn- check-auth-common [user-id project-id token-key sql-query]
+  (or (and token-key
+           (= token-key (:token_key (first (call-sql "select_project_by_id" {:log? false} project-id)))))
+      (sql-primitive (call-sql sql-query user-id project-id))))
 
-(defn can-collect? [{:keys [params]}]
-  (check-auth-common params "can_user_collect_project"))
+(defn can-collect? [user-id project-id token-key]
+  (check-auth-common user-id project-id token-key "can_user_collect_project"))
 
-(defn is-proj-admin? [{:keys [params]}]
-  (check-auth-common params "can_user_edit_project"))
+(defn is-proj-admin? [user-id project-id token-key]
+  (check-auth-common user-id project-id token-key "can_user_edit_project"))
 
 ;;; Data Functions
 

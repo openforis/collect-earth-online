@@ -1,6 +1,6 @@
 (ns org.openforis.ceo.db.imagery
   (:require [org.openforis.ceo.database :refer [call-sql sql-primitive]]
-            [org.openforis.ceo.db.institutions :refer [is-inst-admin-query?]]
+            [org.openforis.ceo.db.institutions :refer [is-inst-admin?]]
             [org.openforis.ceo.utils.type-conversion :as tc]
             [org.openforis.ceo.views :refer [data-response]]))
 
@@ -25,7 +25,7 @@
   (let [institution-id (tc/val->int (:institutionId params))
         user-id        (:userId params -1)]
     (data-response (prepare-imagery (call-sql "select_imagery_by_institution" institution-id user-id)
-                                    (is-inst-admin-query? user-id institution-id)))))
+                                    (is-inst-admin? user-id institution-id)))))
 
 (defn get-project-imagery [{:keys [params]}]
   (let [project-id (tc/val->int (:projectId params))
