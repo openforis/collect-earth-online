@@ -116,7 +116,7 @@ class Project extends React.Component {
 
     processModal = (message, callBack) => {
         this.setState({modalMessage: message},
-                      () => callBack.call(this)
+                      () => callBack()
                           .finally(() => this.setState({modalMessage: null})));
     };
 

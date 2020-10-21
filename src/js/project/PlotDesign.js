@@ -281,7 +281,7 @@ export class PlotDesign extends React.Component {
                                 <div style={{display: "flex"}}>
                                     {plotOptions[plotDistribution].inputs.map((i, idx) =>
                                         <div key={idx} className="mr-3">
-                                            {i.call(this)}
+                                            {i()}
                                         </div>
                                     )}
                                 </div>

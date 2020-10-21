@@ -205,7 +205,7 @@ class ProjectManagement extends React.Component {
                             className="btn btn-outline-red btn-sm w-100"
                             type="button"
                             value={(button || "Close") + " Project"}
-                            onClick={() => update.call(this)}
+                            onClick={() => update()}
                         />
                         <input
                             className="btn btn-outline-red btn-sm w-100"

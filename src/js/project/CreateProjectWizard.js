@@ -324,13 +324,13 @@ export default class CreateProjectWizard extends React.Component {
 
     checkAllSteps = () => {
         const validSteps = Object.entries(this.getSteps())
-            .filter(([key, val]) => val.validate.call(this).length === 0)
+            .filter(([key, val]) => val.validate().length === 0)
             .map(([key, val]) => key);
         this.setState({complete: new Set(validSteps)});
     };
 
     tryChangeStep = (newStep, alertUser = true) => {
-        const errorList = this.getSteps()[this.state.step].validate.call(this);
+        const errorList = this.getSteps()[this.state.step].validate();
         this.setState({
             complete: errorList.length > 0
                 ? removeFromSet(this.state.complete, this.state.step)
@@ -356,7 +356,7 @@ export default class CreateProjectWizard extends React.Component {
     finish = () => {
         const failedStep = Object.entries(this.getSteps())
             .find(([key, val]) => {
-                const errorList = val.validate.call(this);
+                const errorList = val.validate();
                 if (errorList.length > 0) {
                     alert(errorList.join("\n"));
                     return true;

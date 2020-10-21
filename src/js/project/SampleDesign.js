@@ -140,7 +140,7 @@ export class SampleDesign extends React.Component {
                 <div style={{display: "flex"}}>
                     {sampleOptions[sampleDistribution].inputs.map((i, idx) =>
                         <div key={idx} className="mr-3">
-                            {i.call(this)}
+                            {i()}
                         </div>
                     )}
                 </div>
