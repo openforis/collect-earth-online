@@ -12,7 +12,7 @@
 
 (defn is-inst-admin? [{:keys [params]}]
   (let [user-id        (:userId params -1)
-        institution-id (tc/str->int (:institutionId params))]
+        institution-id (tc/val->int (:institutionId params))]
     (and (pos? user-id)
          (pos? institution-id)
          (is-inst-admin-query? user-id institution-id))))
@@ -49,7 +49,7 @@
      :pending      []}))
 
 (defn get-institution-details [{:keys [params]}]
-  (let [institution-id (tc/str->int (:institutionId params))]
+  (let [institution-id (tc/val->int (:institutionId params))]
     (data-response (get-institution-by-id institution-id))))
 
 (defn create-institution [{:keys [params]}]
@@ -73,7 +73,7 @@
       (data-response ""))))
 
 (defn update-institution [{:keys [params]}]
-  (let [institution-id (tc/str->int (:institutionId params))
+  (let [institution-id (tc/val->int (:institutionId params))
         name           (:name params)
         url            (:url params)
         logo           (:logo params)
@@ -92,6 +92,6 @@
       (data-response "")))) ; FIXME: Return "Institution not found." and update front-end code accordingly.
 
 (defn archive-institution [{:keys [params]}]
-  (let [institution-id (tc/str->int (:institutionId params))]
+  (let [institution-id (tc/val->int (:institutionId params))]
     (call-sql "archive_institution" institution-id)
     (data-response "")))

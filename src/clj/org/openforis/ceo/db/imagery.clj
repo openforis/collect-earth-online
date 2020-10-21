@@ -22,13 +22,13 @@
         imagery))
 
 (defn get-institution-imagery [{:keys [params]}]
-  (let [institution-id (tc/str->int (:institutionId params))
+  (let [institution-id (tc/val->int (:institutionId params))
         user-id        (:userId params -1)]
     (data-response (prepare-imagery (call-sql "select_imagery_by_institution" institution-id user-id)
                                     (is-inst-admin-query? user-id institution-id)))))
 
 (defn get-project-imagery [{:keys [params]}]
-  (let [project-id (tc/str->int (:projectId params))
+  (let [project-id (tc/val->int (:projectId params))
         user-id    (:userId params -1)
         token-key  (:tokenKey params)]
     (data-response (prepare-imagery (call-sql "select_imagery_by_project" project-id user-id token-key)
@@ -47,11 +47,11 @@
     {}))
 
 (defn add-institution-imagery [{:keys [params]}]
-  (let [institution-id       (tc/str->int (:institutionId params))
+  (let [institution-id       (tc/val->int (:institutionId params))
         imagery-title        (:imageryTitle params)
         imagery-attribution  (:imageryAttribution params)
         source-config        (tc/clj->jsonb (:sourceConfig params))
-        add-to-all-projects? (tc/str->bool (:addToAllProjects params) true)]
+        add-to-all-projects? (tc/val->bool (:addToAllProjects params) true)]
     (if (sql-primitive (call-sql "imagery_name_taken" institution-id imagery-title -1))
       (data-response "The title you have chosen is already taken.")
       (let [new-imagery-id (sql-primitive (call-sql "add_institution_imagery"
@@ -66,11 +66,11 @@
         (data-response "")))))
 
 (defn update-institution-imagery [{:keys [params]}]
-  (let [imagery-id           (tc/str->int (:imageryId params))
+  (let [imagery-id           (tc/val->int (:imageryId params))
         imagery-title        (:imageryTitle params)
         imagery-attribution  (:imageryAttribution params)
         source-config        (tc/clj->jsonb (:sourceConfig params))
-        add-to-all-projects? (tc/str->bool (:addToAllProjects params) true)
+        add-to-all-projects? (tc/val->bool (:addToAllProjects params) true)
         institution-id       (:institution_id (get-imagery-by-id imagery-id))]
     (if (sql-primitive (call-sql "imagery_name_taken" institution-id imagery-title imagery-id))
       (data-response "The title you have chosen is already taken.")
@@ -85,5 +85,5 @@
         (data-response "")))))
 
 (defn archive-institution-imagery [{:keys [params]}]
-  (call-sql "archive_imagery" (tc/str->int (:imageryId params)))
+  (call-sql "archive_imagery" (tc/val->int (:imageryId params)))
   (data-response ""))

@@ -1,65 +1,69 @@
 (ns org.openforis.ceo.utils.type-conversion
   (:import org.postgresql.util.PGobject)
-  (:require [clojure.data.json :as json]))
+  (:require [clojure.data.json :refer [read-str write-str]]))
 
-(defn str->int
-  ([string]
-   (str->int string (int -1)))
-  ([string default]
-   (if (int? string)
-     string
-     (try
-       (Integer/parseInt string)
-       (catch Exception _ default)))))
+(defn val->int
+  ([val]
+   (val->int val (int -1)))
+  ([val default]
+   (cond
+     (instance? Integer val) val
+     (number? val)           (int val)
+     :else                   (try
+                               (Integer/parseInt val)
+                               (catch Exception _ default)))))
 
-(defn str->long
-  ([string]
-   (str->long string (long -1)))
-  ([string default]
-   (if (number? string)
-     string
-     (try
-       (Long/parseLong string)
-       (catch Exception _ default)))))
-
-;; Warning Postgres type float is equivalent to java Double, and Postgres real is equivalent to java Float
-(defn str->float
-  ([string]
-   (str->float string (float -1.0)))
-  ([string default]
-   (if (number? string)
-     string
-     (try
-       (Float/parseFloat string)
-       (catch Exception _ default)))))
+(defn val->long
+  ([val]
+   (val->long val (long -1)))
+  ([val default]
+   (cond
+     (instance? Long val) val
+     (number? val)       (long val)
+     :else               (try
+                           (Long/parseLong val)
+                           (catch Exception _ default)))))
 
 ;; Warning Postgres type float is equivalent to java Double, and Postgres real is equivalent to java Float
-(defn str->double
-  ([string]
-   (str->double string (double -1.0)))
-  ([string default]
-   (if (number? string)
-     string
-     (try
-       (Double/parseDouble string)
-       (catch Exception _ default)))))
+(defn val->float
+  ([val]
+   (val->float val (float -1.0)))
+  ([val default]
+   (cond
+     (instance? Float val) val
+     (number? val)        (float val)
+     :else                (try
+                            (Float/parseFloat val)
+                            (catch Exception _ default)))))
 
-(defn str->bool
-  ([string]
-   (str->bool string false))
-  ([string default]
-   (if (boolean? string)
-     string
+;; Warning Postgres type float is equivalent to java Double, and Postgres real is equivalent to java Float
+(defn val->double
+  ([val]
+   (val->double val (double -1.0)))
+  ([val default]
+   (cond
+     (instance? Double val) val
+     (number? val)          (double val)
+     :else                  (try
+                              (Double/parseDouble val)
+                              (catch Exception _ default)))))
+
+(defn val->bool
+  ([val]
+   (val->bool val false))
+  ([val default]
+   (if (instance? Boolean val)
+     val
      (try
-       (Boolean/parseBoolean string)
+       (Boolean/parseBoolean val)
        (catch Exception _ default)))))
 
 (defn json->clj
-  ([string]
-   (json->clj string nil))
-  ([string default]
+  ([json]
+   (json->clj json nil))
+  ([json default]
    (try
-     (json/read-str string :key-fn keyword)
+     (read-str json :key-fn keyword)
      (catch Exception _ default))))
 
 (def jsonb->json str)
@@ -67,17 +71,17 @@
 (defn jsonb->clj [jsonb]
   (-> jsonb jsonb->json json->clj))
 
-(def clj->json json/write-str)
+(def clj->json write-str)
 
-(defn clj->jsonb [data]
+(defn clj->jsonb [clj]
   (doto (PGobject.)
     (.setType "jsonb")
-    (.setValue (clj->json data))))
+    (.setValue (clj->json clj))))
 
 (defn json->jsonb [json]
   (-> json json->clj clj->jsonb))
 
-(defn str->pg-uuid [string]
+(defn str->pg-uuid [str]
   (doto (PGobject.)
     (.setType "uuid")
-    (.setValue string)))
+    (.setValue str)))

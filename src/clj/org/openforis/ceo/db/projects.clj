@@ -20,7 +20,7 @@
 
 (defn- check-auth-common [params sql-query]
   (let [user-id    (:userId params -1)
-        project-id (tc/str->int (:projectId params))
+        project-id (tc/val->int (:projectId params))
         token-key  (:tokenKey params)]
     (or (and token-key
              (= token-key (:token_key (first (call-sql "select_project_by_id" {:log? false} project-id)))))
@@ -57,7 +57,7 @@
 ;; TODO Match the SQL function and returned values for each query separately
 (defn get-all-projects [{:keys [params]}]
   (let [user-id        (:userId params -1)
-        institution-id (tc/str->int (:institutionId params))]
+        institution-id (tc/val->int (:institutionId params))]
     (data-response (get-project-list (cond
                                        (= -1 user-id institution-id)
                                        (call-sql "select_all_projects")
@@ -81,7 +81,7 @@
                          (call-sql "select_template_projects" user-id)))))
 
 (defn get-project-by-id [{:keys [params]}]
-  (let [project-id (tc/str->int (:projectId params))
+  (let [project-id (tc/val->int (:projectId params))
         project    (first (call-sql "select_project_by_id" project-id))]
     (data-response {:id                 (:project_id project)
                     :institution        (:institution_id project) ; TODO legacy variable name, update to institutionId
@@ -108,7 +108,7 @@
                     :closedDate         (str (:closed_date project))})))
 
 (defn get-template-by-id [{:keys [params]}]
-  (let [project-id (tc/str->int (:projectId params))
+  (let [project-id (tc/val->int (:projectId params))
         project (first (call-sql "select_project_by_id" project-id))]
     (data-response {:imageryId          (:imagery_id project)
                     :name               (:name project)
@@ -128,7 +128,7 @@
                     :projectOptions     (merge default-options (tc/jsonb->clj (:options project)))})))
 
 (defn get-project-stats [{:keys [params]}]
-  (let [project-id (tc/str->int (:projectId params))
+  (let [project-id (tc/val->int (:projectId params))
         stats      (first (call-sql "select_project_statistics" project-id))]
     (data-response {:flaggedPlots    (:flagged_plots stats)
                     :analyzedPlots   (:assigned_plots stats) ;TODO why don't these variable match? unanalyzed is not a word, but unassigned is.
@@ -141,17 +141,17 @@
                     :userStats       (tc/jsonb->clj (:user_stats stats))})))
 
 (defn publish-project [{:keys [params]}]
-  (let [project-id (tc/str->int (:projectId params))]
+  (let [project-id (tc/val->int (:projectId params))]
     (call-sql "publish_project" project-id)
     (data-response "")))
 
 (defn close-project [{:keys [params]}]
-  (let [project-id (tc/str->int (:projectId params))]
+  (let [project-id (tc/val->int (:projectId params))]
     (call-sql "close_project" project-id)
     (data-response "")))
 
 (defn archive-project [{:keys [params]}]
-  (let [project-id (tc/str->int (:projectId params))]
+  (let [project-id (tc/val->int (:projectId params))]
     (call-sql "archive_project" project-id)
     (data-response "")))
 
@@ -168,7 +168,7 @@
 ;;; Update Project
 
 (defn update-project [{:keys [params]}]
-  (let [project-id      (tc/str->int (:projectId params))
+  (let [project-id      (tc/val->int (:projectId params))
         name            (:name params)
         description     (:description params)
         privacy-level   (:privacyLevel params)
@@ -553,35 +553,35 @@
                      "This can come from improper coordinates or projection when uploading shape or csv data."))))
 
 (defn create-project [{:keys [params]}]
-  (let [institution-id       (tc/str->int (:institutionId params))
+  (let [institution-id       (tc/val->int (:institutionId params))
         imagery-id           (or (:imageryId params nil) (get-first-public-imagery))
         name                 (:name params)
         description          (:description params)
         privacy-level        (:privacyLevel params)
-        lon-min              (tc/str->double (:lonMin params))
-        lat-min              (tc/str->double (:latMin params))
-        lon-max              (tc/str->double (:lonMax params))
-        lat-max              (tc/str->double (:latMax params))
+        lon-min              (tc/val->double (:lonMin params))
+        lat-min              (tc/val->double (:latMin params))
+        lon-max              (tc/val->double (:lonMax params))
+        lat-max              (tc/val->double (:latMax params))
         boundary             (make-geo-json-polygon lon-min
                                                     lat-min
                                                     lon-max
                                                     lat-max)
         plot-distribution    (:plotDistribution params)
-        num-plots            (tc/str->int (:numPlots params))
-        plot-spacing         (tc/str->float (:plotSpacing params))
+        num-plots            (tc/val->int (:numPlots params))
+        plot-spacing         (tc/val->float (:plotSpacing params))
         plot-shape           (:plotShape params)
-        plot-size            (tc/str->float (:plotSize params))
+        plot-size            (tc/val->float (:plotSize params))
         sample-distribution  (:sampleDistribution params)
-        samples-per-plot     (tc/str->int (:samplesPerPlot params))
-        sample-resolution    (tc/str->float (:sampleResolution params))
+        samples-per-plot     (tc/val->int (:samplesPerPlot params))
+        sample-resolution    (tc/val->float (:sampleResolution params))
         allow-drawn-samples  (or (= sample-distribution "none")
-                                 (tc/str->bool (:allowDrawnSamples params)))
+                                 (tc/val->bool (:allowDrawnSamples params)))
         sample-values        (tc/clj->jsonb (:sampleValues params))
         survey-rules         (tc/clj->jsonb (:surveyRules params))
         project-options      (tc/clj->jsonb (:projectOptions params default-options))
-        project-template     (tc/str->int (:projectTemplate params))
-        use-template-plots   (tc/str->bool (:useTemplatePlots params))
-        use-template-widgets (tc/str->bool (:useTemplateWidgets params))
+        project-template     (tc/val->int (:projectTemplate params))
+        use-template-plots   (tc/val->bool (:useTemplatePlots params))
+        use-template-widgets (tc/val->bool (:useTemplateWidgets params))
         plot-file-name       (:plotFileName params)
         plot-file-base64     (:plotFileBase64 params)
         sample-file-name     (:sampleFileName params)
@@ -773,7 +773,7 @@
 
 ; TODO why did we move collection_time and analysis duration to the sample level when they are plot details?
 (defn dump-project-aggregate-data [{:keys [params]}]
-  (let [project-id (tc/str->int (:projectId params))]
+  (let [project-id (tc/val->int (:projectId params))]
     (if-let [project-info (first (call-sql "select_project_by_id" project-id))]
       (let [sample-value-group (tc/jsonb->clj (:survey_questions project-info)) ; TODO rename var
             text-headers       (concat plot-base-headers
@@ -843,7 +843,7 @@
 ;; TODO collection_time analysis_duration imagery_title imagery_attributes are not really "optional" anymore
 ;;      They are a part of every project for a year now, I think we should just leave them in.
 (defn dump-project-raw-data [{:keys [params]}]
-  (let [project-id (tc/str->int (:projectId params))]
+  (let [project-id (tc/val->int (:projectId params))]
     (if-let [project-info (first (call-sql "select_project_by_id" project-id))]
       (let [sample-value-group (tc/jsonb->clj (:survey_questions project-info)) ; TODO rename var
             sample-value-trans (get-sample-value-translations sample-value-group)

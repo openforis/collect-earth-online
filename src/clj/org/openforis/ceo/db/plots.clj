@@ -11,8 +11,8 @@
 
 ;; TODO if we use a more efficient SQL call, we can return more plots.
 (defn get-project-plots [{:keys [params]}]
-  (let [project-id (tc/str->int (:projectId params))
-        max-plots  (tc/str->int (:max params) 1000)]
+  (let [project-id (tc/val->int (:projectId params))
+        max-plots  (tc/val->int (:max params) 1000)]
     (data-response (mapv (fn [{:keys [plot_id center flagged assigned]}]
                            {:id       plot_id
                             :center   center
@@ -43,8 +43,8 @@
      :samples       (prepare-samples-array plot_id project-id)}))
 
 (defn get-project-plot [{:keys [params]}]
-  (let [project-id (tc/str->int (:projectId params))
-        plot-id    (tc/str->int (:plotId params))]
+  (let [project-id (tc/val->int (:projectId params))
+        plot-id    (tc/val->int (:plotId params))]
     (data-response (if-let [plot-info (first (call-sql "select_plot_by_id"
                                                        project-id
                                                        plot-id))]
@@ -55,7 +55,7 @@
   (call-sql "unlock_plots" {:log? false} user-id))
 
 (defn reset-plot-lock [{:keys [params]}]
-  (let [plot-id (tc/str->int (:plotId params))
+  (let [plot-id (tc/val->int (:plotId params))
         user-id (:userId params -1)]
     (call-sql "lock_plot_reset" {:log? false} plot-id user-id (time-plus-five-min))
     (data-response "")))
@@ -65,10 +65,10 @@
   (data-response ""))
 
 (defn- get-collection-plot [params method]
-  (let [get-user-plots? (tc/str->bool (:getUserPlots params))
-        project-id      (tc/str->int (:projectId params))
-        institution-id  (tc/str->int (:institutionId params))
-        plot-id         (tc/str->int (:plotId params))
+  (let [get-user-plots? (tc/val->bool (:getUserPlots params))
+        project-id      (tc/val->int (:projectId params))
+        institution-id  (tc/val->int (:institutionId params))
+        plot-id         (tc/val->int (:plotId params))
         user-id         (:userId params -1)
         user-name       (:userName params)
         inst-admin?     (is-inst-admin-query? user-id institution-id)
@@ -93,8 +93,8 @@
                      "done"))))
 
 (defn get-plot-by-id [{:keys [params]}]
-  (let  [project-id (tc/str->int (:projectId params))
-         plot-id    (tc/str->int (:plotId params))]
+  (let  [project-id (tc/val->int (:projectId params))
+         plot-id    (tc/val->int (:plotId params))]
     (if (first (call-sql "select_plot_by_id" project-id plot-id))
       (get-collection-plot params "by_id_")
       (data-response "not-found"))))
@@ -106,11 +106,11 @@
   (get-collection-plot params "prev_"))
 
 (defn add-user-samples [{:keys [params]}]
-  (let [project-id       (tc/str->int (:projectId params))
-        plot-id          (tc/str->int (:plotId params))
+  (let [project-id       (tc/val->int (:projectId params))
+        plot-id          (tc/val->int (:plotId params))
         user-id          (:userId params -1)
-        confidence       (tc/str->int (:confidence params))
-        collection-start (tc/str->long (:collectionStart params))
+        confidence       (tc/val->int (:confidence params))
+        collection-start (tc/val->long (:collectionStart params))
         user-samples     (:userSamples params)
         user-images      (:userImages params)
         plot-samples     (:plotSamples params)
@@ -141,7 +141,7 @@
     (data-response "")))
 
 (defn flag-plot [{:keys [params]}]
-  (let [plot-id (tc/str->int (:plotId params))
+  (let [plot-id (tc/val->int (:plotId params))
         user-id (:userId params -1)]
     (call-sql "flag_plot" plot-id user-id nil)
     (unlock-plots user-id)

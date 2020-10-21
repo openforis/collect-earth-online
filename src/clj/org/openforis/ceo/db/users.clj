@@ -43,7 +43,7 @@
   (let [email                 (:email params)
         password              (:password params)
         password-confirmation (:passwordConfirmation params)
-        on-mailing-list?      (tc/str->bool (:onMailingList params))]
+        on-mailing-list?      (tc/val->bool (:onMailingList params))]
     (if-let [error-msg (get-register-errors email password password-confirmation)]
       (data-response error-msg)
       (let [user-id   (sql-primitive (call-sql "add_user" email password on-mailing-list?))
@@ -95,7 +95,7 @@
         new-email             (:email params)
         password              (:password params)
         password-confirmation (:passwordConfirmation params)
-        on-mailing-list?      (tc/str->bool (:onMailingList params))]
+        on-mailing-list?      (tc/val->bool (:onMailingList params))]
     (if-let [error-msg (get-update-account-errors user-id current-email current-password
                                                   new-email password password-confirmation)]
       (data-response error-msg)
@@ -158,7 +158,7 @@
 
 ;; FIXME: Update get_all_users_by_institution to remove unused values.
 (defn get-institution-users [{:keys [params]}]
-  (let [institution-id (tc/str->int (:institutionId params))
+  (let [institution-id (tc/val->int (:institutionId params))
         all-users      (mapv (fn [{:keys [user_id email institution_role]}]
                                {:id              user_id
                                 :email           email
@@ -173,7 +173,7 @@
       (data-response ""))))
 
 (defn get-user-stats [{:keys [params]}]
-  (let [account-id (tc/str->int (:accountId params))]
+  (let [account-id (tc/val->int (:accountId params))]
     (if-let [stats (first (call-sql "get_user_stats" account-id))]
       (data-response {:totalProjects (:total_projects stats)
                       :totalPlots    (:total_plots stats)
@@ -185,8 +185,8 @@
 ;; TODO accountId is verified on the front end. Instead, pass email and check here.
 ;;      The issue with the current front end check is that it requires the entire user list be sent.
 (defn update-institution-role [{:keys [params]}]
-  (let [account-id       (tc/str->int (:accountId params))
-        institution-id   (tc/str->int (:institutionId params))
+  (let [account-id       (tc/val->int (:accountId params))
+        institution-id   (tc/val->int (:institutionId params))
         institution-role (:role params)] ; TODO rename param to institutionRole
     (if (= institution-role "not-member")
       (call-sql "remove_institution_user_role" institution-id account-id)
@@ -209,7 +209,7 @@
 
 (defn request-institution-membership [{:keys [params]}]
   (let [user-id        (:userId params -1)
-        institution-id (tc/str->int (:institutionId params))]
+        institution-id (tc/val->int (:institutionId params))]
     (call-sql "add_institution_user" institution-id user-id 3)
     (data-response "")))
 
