@@ -6,6 +6,9 @@ import {convertSampleValuesToSurveyQuestions} from "../utils/surveyUtils";
 import {ProjectContext} from "./constants";
 
 export default class ManageProject extends React.Component {
+    constructor(props) {
+        super(props);
+    }
 
     componentDidMount() {
         this.context.processModal("Loading Project Details", this.getProjectDetails);
@@ -17,10 +20,10 @@ export default class ManageProject extends React.Component {
         Promise.all([this.getProjectById(this.context.projectId),
                      this.getProjectImagery(this.context.projectId),
                      this.getProjectPlots(this.context.projectId)])
-            .catch(response =>{
+            .catch(response => {
                 console.log(response);
                 alert("Error retrieving the project info. See console for details.");
-            })
+            });
 
     getProjectById = (projectId) =>
         fetch(`/get-project-by-id?projectId=${projectId}`)
@@ -38,7 +41,7 @@ export default class ManageProject extends React.Component {
 
     // TODO: just return with the project info
     getProjectImagery = (projectId) =>
-        fetch("/get-project-imagery?projectId=" + projectId)
+        fetch(`/get-project-imagery?projectId=${projectId}`)
             .then(response => response.ok ? response.json() : Promise.reject(response))
             .then(data => {
                 this.context.setProjectState({projectImageryList: data.map(imagery => imagery.id)});
@@ -49,7 +52,7 @@ export default class ManageProject extends React.Component {
         fetch(`/get-project-plots?projectId=${projectId}&max=300`)
             .then(response => response.ok ? response.json() : Promise.reject(response))
             .then(data => this.context.setProjectState({plots: data}))
-            .catch(() => Promise.reject("Error retrieving plot list. See console for details."));
+            .catch(() => Promise.reject("Error retrieving the plot list."));
 
     render() {
         return (
@@ -94,11 +97,7 @@ ManageProject.contextType = ProjectContext;
 class ProjectManagement extends React.Component {
     constructor(props) {
         super(props);
-        this.stateTransitions = {
-            unpublished: "Publish",
-            published: "Close",
-            closed: "Publish",
-        };
+
         this.projectStates = {
             unpublished: {
                 button: "Publish",
@@ -174,21 +173,21 @@ class ProjectManagement extends React.Component {
                     <div className="col-7">
                         <div className="ProjectStats__dates-table mb-4">
                             <div className="d-flex flex-column">
-                                <div className="">
+                                <div>
                                     Date Created
                                     <span className="badge badge-pill bg-lightgreen ml-3">
                                         {this.context.createdDate || "Unknown"}
                                     </span>
                                 </div>
-                                <div className="">
+                                <div>
                                     Date Published
                                     <span className="badge badge-pill bg-lightgreen ml-3">
                                         {this.context.publishedDate || (this.context.availability === "unpublished"
                                         ? "Unpublished"
-                                        : "Unknown" )}
+                                        : "Unknown")}
                                     </span>
                                 </div>
-                                <div className="">
+                                <div>
                                     Date Closed
                                     <span className="badge badge-pill bg-lightgreen ml-3">
                                         {this.context.closedDate || (["archived", "closed"].includes(this.context.availability)

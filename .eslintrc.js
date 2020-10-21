@@ -46,6 +46,7 @@ module.exports = {
         ],
         // From Matt
         "arrow-body-style": ["error", "as-needed"],
+        "arrow-spacing": 2,
         "brace-style": 2,
         "camelcase": 1,
         "comma-dangle": [1, "always-multiline"],

@@ -55,8 +55,7 @@ export default class ReviewChanges extends React.Component {
                               useTemplatePlots: this.context.useTemplatePlots,
                               useTemplateWidgets: this.context.useTemplateWidgets,
                           }),
-                      }
-                )
+                      })
                     .then(response => Promise.all([response.ok, response.json()]))
                     .then(data => {
                         if (data[0] && Number.isInteger(data[1].projectId)) {
@@ -101,7 +100,8 @@ export default class ReviewChanges extends React.Component {
                             this.context.setDesignMode("manage");
                             alert("Project successfully updated!");
                         }
-                    }));
+                    })
+            );
         }
     };
 
