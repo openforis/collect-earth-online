@@ -1,7 +1,7 @@
 import React from "react";
 import ReactDOM from "react-dom";
 import {mercator} from "./utils/mercator.js";
-import {NavigationBar} from "./components/PageComponents";
+import {LoadingModal, NavigationBar} from "./components/PageComponents";
 import {SurveyCollection} from "./components/SurveyCollection";
 import {
     PlanetMenus,
@@ -45,6 +45,7 @@ class Collection extends React.Component {
             loading: false,
             showQuitModal: false,
             answerMode: "question",
+            modalMessage: null,
         };
     }
 
@@ -131,13 +132,20 @@ class Collection extends React.Component {
 
     setImageryAttributes = (newImageryAttributes) => this.setState({imageryAttributes: newImageryAttributes});
 
-    getProjectData = () => {
-        Promise.all([this.getProjectById(), this.getProjectPlots(), this.checkForGeodash(), this.getImageryList()])
-            .catch(response => {
-                console.log(response);
-                alert("Error retrieving the project info. See console for details.");
-            });
-    };
+    processModal = (message, callBack) => new Promise(() =>
+        Promise.resolve(this.setState({modalMessage: message},
+                                      () => callBack().finally(() => this.setState({modalMessage: null}))
+        ))
+    );
+
+    getProjectData = () =>
+        this.processModal("Loading project details", () =>
+            Promise.all([this.getProjectById(), this.getProjectPlots(), this.checkForGeodash(), this.getImageryList()])
+                .catch(response => {
+                    console.log(response);
+                    alert("Error retrieving the project info. See console for details.");
+                })
+        );
 
     getProjectById = () =>
         fetch(`/get-project-by-id?projectId=${this.props.projectId}`)
@@ -249,103 +257,106 @@ class Collection extends React.Component {
         }
     };
 
-    getPlotData = (plotId) => {
-        fetch("/get-plot-by-id?"
+    getPlotData = (plotId) =>
+        this.processModal(`Getting plot ${plotId}`, () =>
+            fetch("/get-plot-by-id?"
               + getQueryString({
                   getUserPlots: this.state.reviewPlots,
                   plotId: plotId,
                   projectId: this.props.projectId,
               }))
-            .then(response => response.ok ? response.json() : Promise.reject(response))
-            .then(data => {
-                if (data === "done") {
-                    alert(this.state.reviewPlots
+                .then(response => response.ok ? response.json() : Promise.reject(response))
+                .then(data => {
+                    if (data === "done") {
+                        alert(this.state.reviewPlots
                           ? "This plot was analyzed by someone else. You are logged in as " + this.props.userName + "."
                           : "This plot has already been analyzed.");
-                } else if (data === "not found") {
-                    alert("Plot " + plotId + " not found.");
-                } else {
-                    this.setState({
-                        currentPlot: data,
-                        ...this.newPlotValues(data),
-                        prevPlotButtonDisabled: false,
-                        nextPlotButtonDisabled: false,
-                        answerMode: "question",
-                    });
-                    this.warnOnNoSamples(data);
-                }
-            })
-            .catch(response => {
-                console.log(response);
-                alert("Error retrieving plot data. See console for details.");
-            });
-    };
+                    } else if (data === "not found") {
+                        alert("Plot " + plotId + " not found.");
+                    } else {
+                        this.setState({
+                            currentPlot: data,
+                            ...this.newPlotValues(data),
+                            prevPlotButtonDisabled: false,
+                            nextPlotButtonDisabled: false,
+                            answerMode: "question",
+                        });
+                        this.warnOnNoSamples(data);
+                    }
+                })
+                .catch(response => {
+                    console.log(response);
+                    alert("Error retrieving plot data. See console for details.");
+                })
+        );
 
-    getNextPlotData = (plotId) => {
-        fetch("/get-next-plot?"
+    getNextPlotData = (plotId) =>
+        this.processModal(plotId > 0 ? "Getting next plot" : "Getting first plot", () =>
+            fetch("/get-next-plot?"
               + getQueryString({
                   getUserPlots: this.state.reviewPlots,
                   plotId: plotId,
                   projectId: this.props.projectId,
                   institutionId: this.state.currentProject.institution,
               }))
-            .then(response => response.ok ? response.json() : Promise.reject(response))
-            .then(data => {
-                if (data === "done") {
-                    if (plotId === -1) {
-                        alert(this.state.reviewPlots
+                .then(response => response.ok ? response.json() : Promise.reject(response))
+                .then(data => {
+                    if (data === "done") {
+                        if (plotId === -1) {
+                            alert(this.state.reviewPlots
                               ? "You have not reviewed any plots. You are logged in as " + this.props.userName + "."
                               : "All plots have been analyzed for this project.");
+                        } else {
+                            this.setState({nextPlotButtonDisabled: true});
+                            alert("You have reached the end of the plot list.");
+                        }
                     } else {
-                        this.setState({nextPlotButtonDisabled: true});
-                        alert("You have reached the end of the plot list.");
+                        this.setState({
+                            currentPlot: data,
+                            ...this.newPlotValues(data),
+                            prevPlotButtonDisabled: plotId === -1,
+                            answerMode: "question",
+                        });
+                        this.warnOnNoSamples(data);
                     }
-                } else {
-                    this.setState({
-                        currentPlot: data,
-                        ...this.newPlotValues(data),
-                        prevPlotButtonDisabled: plotId === -1,
-                        answerMode: "question",
-                    });
-                    this.warnOnNoSamples(data);
-                }
-            })
-            .catch(response => {
-                console.log(response);
-                alert("Error retrieving plot data. See console for details.");
-            });
-    };
+                })
+                .catch(response => {
+                    console.log(response);
+                    alert("Error retrieving plot data. See console for details.");
+                })
+        );
 
-    getPrevPlotData = (plotId) => {
-        fetch("/get-prev-plot?"
+    getPrevPlotData = (plotId) =>
+        this.processModal("Getting previous plot", () =>
+            fetch("/get-prev-plot?"
               + getQueryString({
                   getUserPlots: this.state.reviewPlots,
                   plotId: plotId,
                   projectId: this.props.projectId,
                   institutionId: this.state.currentProject.institution,
               }))
-            .then(response => response.ok ? response.json() : Promise.reject(response))
-            .then(data => {
-                if (data === "done") {
-                    this.setState({prevPlotButtonDisabled: true});
-                    alert(this.state.reviewPlots
+                .then(response => response.ok ? response.json() : Promise.reject(response))
+                .then(data => {
+                    if (data === "done") {
+                        this.setState({prevPlotButtonDisabled: true});
+                        alert(this.state.reviewPlots
                           ? "No previous plots were analyzed by you. You are logged in as " + this.props.userName + "."
                           : "All previous plots have been analyzed.");
-                } else {
-                    this.setState({
-                        currentPlot: data,
-                        ...this.newPlotValues(data),
-                        nextPlotButtonDisabled: false,
-                        answerMode: "question",
-                    });
-                    this.warnOnNoSamples(data);
-                }
-            })
-            .catch(response => {
-                console.log(response);
-                alert("Error retrieving plot data. See console for details.");
-            });
-    };
+                    } else {
+                        this.setState({
+                            currentPlot: data,
+                            ...this.newPlotValues(data),
+                            nextPlotButtonDisabled: false,
+                            answerMode: "question",
+                        });
+                        this.warnOnNoSamples(data);
+                    }
+                })
+                .catch(response => {
+                    console.log(response);
+                    alert("Error retrieving plot data. See console for details.");
+                })
+        );
 
     resetPlotLock = () => {
         fetch("/reset-plot-lock",
@@ -512,17 +523,17 @@ class Collection extends React.Component {
         });
     };
 
-    goToFirstPlot = () => this.getNextPlotData(-1);
+    navToFirstPlot = () => this.getNextPlotData(-1);
 
-    prevPlot = () => this.getPrevPlotData(this.state.currentPlot.plotId
-                                          ? parseInt(this.state.currentPlot.plotId)
-                                          : this.state.currentPlot.id);
+    getPlotId = () => this.state.currentPlot.plotId
+        ? parseInt(this.state.currentPlot.plotId)
+        : this.state.currentPlot.id
 
-    nextPlot = () => this.getNextPlotData(this.state.currentPlot.plotId
-                                          ? parseInt(this.state.currentPlot.plotId)
-                                          : this.state.currentPlot.id);
+    navToNextPlot = () => this.getNextPlotData(this.getPlotId());
 
-    goToPlot = (newPlot) => {
+    navToPrevPlot = () => this.getPrevPlotData(this.getPlotId());
+
+    navToPlot = (newPlot) => {
         if (!isNaN(newPlot)) {
             this.getPlotData(newPlot);
         } else {
@@ -543,52 +554,56 @@ class Collection extends React.Component {
             alert("This project has been closed and is no longer accepting survey input.");
         } else {
             if (this.state.currentPlot.flagged) {
-                fetch("/flag-plot",
-                      {
-                          method: "POST",
-                          headers: {
-                              "Accept": "application/json",
-                              "Content-Type": "application/json",
-                          },
-                          body: JSON.stringify({
-                              projectId: this.props.projectId,
-                              plotId: this.state.currentPlot.id,
-                          }),
-                      })
-                    .then(response => {
-                        if (response.ok) {
-                            this.nextPlot();
-                        } else {
-                            console.log(response);
-                            alert("Error flagging plot as bad. See console for details.");
-                        }
-                    });
+                this.processModal("Saving flagged plot", () =>
+                    fetch("/flag-plot",
+                          {
+                              method: "POST",
+                              headers: {
+                                  "Accept": "application/json",
+                                  "Content-Type": "application/json",
+                              },
+                              body: JSON.stringify({
+                                  projectId: this.props.projectId,
+                                  plotId: this.state.currentPlot.id,
+                              }),
+                          })
+                        .then(response => {
+                            if (response.ok) {
+                                return this.navToNextPlot();
+                            } else {
+                                console.log(response);
+                                alert("Error flagging plot as bad. See console for details.");
+                            }
+                        })
+                );
             } else {
-                fetch("/add-user-samples",
-                      {
-                          method: "post",
-                          headers: {
-                              "Accept": "application/json",
-                              "Content-Type": "application/json",
-                          },
-                          body: JSON.stringify({
-                              projectId: this.props.projectId,
-                              plotId: this.state.currentPlot.id,
-                              confidence: -1,
-                              collectionStart: this.state.collectionStart,
-                              userSamples: this.state.userSamples,
-                              userImages: this.state.userImages,
-                              plotSamples: this.state.currentProject.allowDrawnSamples && this.state.currentPlot.samples,
-                          }),
-                      })
-                    .then(response => {
-                        if (response.ok) {
-                            this.nextPlot();
-                        } else {
-                            console.log(response);
-                            alert("Error saving your assignments to the database. See console for details.");
-                        }
-                    });
+                this.processModal("Saving plot answers", () =>
+                    fetch("/add-user-samples",
+                          {
+                              method: "post",
+                              headers: {
+                                  "Accept": "application/json",
+                                  "Content-Type": "application/json",
+                              },
+                              body: JSON.stringify({
+                                  projectId: this.props.projectId,
+                                  plotId: this.state.currentPlot.id,
+                                  confidence: -1,
+                                  collectionStart: this.state.collectionStart,
+                                  userSamples: this.state.userSamples,
+                                  userImages: this.state.userImages,
+                                  plotSamples: this.state.currentProject.allowDrawnSamples && this.state.currentPlot.samples,
+                              }),
+                          })
+                        .then(response => {
+                            if (response.ok) {
+                                return this.navToNextPlot();
+                            } else {
+                                console.log(response);
+                                alert("Error saving your assignments to the database. See console for details.");
+                            }
+                        })
+                );
             }
         }
     };
@@ -950,6 +965,7 @@ class Collection extends React.Component {
         const plotId = this.state.currentPlot.plotId ? this.state.currentPlot.plotId : this.state.currentPlot.id;
         return (
             <div className="row" style={{height: "-webkit-fill-available"}}>
+                {this.state.modalMessage && <LoadingModal message={this.state.modalMessage}/>}
                 <ImageAnalysisPane
                     imageryAttribution={this.state.imageryAttribution}
                     projectId={this.props.projectId}
@@ -997,10 +1013,10 @@ class Collection extends React.Component {
                         nextPlotButtonDisabled={this.state.nextPlotButtonDisabled}
                         prevPlotButtonDisabled={this.state.prevPlotButtonDisabled}
                         reviewPlots={this.state.reviewPlots}
-                        goToFirstPlot={this.goToFirstPlot}
-                        goToPlot={this.goToPlot}
-                        nextPlot={this.nextPlot}
-                        prevPlot={this.prevPlot}
+                        navToFirstPlot={this.navToFirstPlot}
+                        navToPlot={this.navToPlot}
+                        navToNextPlot={this.navToNextPlot}
+                        navToPrevPlot={this.navToPrevPlot}
                         setReviewPlots={this.setReviewPlots}
                         loadingPlots={this.state.plotList.length === 0}
                         currentPlot={this.state.currentPlot}
@@ -1174,7 +1190,7 @@ class PlotNavigation extends React.Component {
                     type="button"
                     name="new-plot"
                     value="Go to first plot"
-                    onClick={this.props.goToFirstPlot}
+                    onClick={this.props.navToFirstPlot}
                 />
             </div>
         </div>
@@ -1185,7 +1201,7 @@ class PlotNavigation extends React.Component {
             <button
                 className="btn btn-outline-lightgreen btn-sm"
                 type="button"
-                onClick={this.props.prevPlot}
+                onClick={this.props.navToPrevPlot}
                 style={{opacity: this.props.prevPlotButtonDisabled ? "0.25" : "1.0"}}
                 disabled={this.props.prevPlotButtonDisabled}
             >
@@ -1194,7 +1210,7 @@ class PlotNavigation extends React.Component {
             <button
                 className="btn btn-outline-lightgreen btn-sm mx-1"
                 type="button"
-                onClick={this.props.nextPlot}
+                onClick={this.props.navToNextPlot}
                 style={{opacity: this.props.nextPlotButtonDisabled ? "0.25" : "1.0"}}
                 disabled={this.props.nextPlotButtonDisabled}
             >
@@ -1211,7 +1227,7 @@ class PlotNavigation extends React.Component {
             <button
                 className="btn btn-outline-lightgreen btn-sm"
                 type="button"
-                onClick={() => this.props.goToPlot(this.state.newPlotInput)}
+                onClick={() => this.props.navToPlot(this.state.newPlotInput)}
             >
                 Go to plot
             </button>
