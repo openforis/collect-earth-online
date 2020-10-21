@@ -25,7 +25,7 @@
             [org.openforis.ceo.views            :refer [not-found-page data-response]]
             [org.openforis.ceo.db.projects      :refer [can-collect? is-proj-admin?]]
             [org.openforis.ceo.db.institutions  :refer [is-inst-admin?]]
-            [org.openforis.ceo.type_conversions :as tc]))
+            [org.openforis.ceo.utils.type-conversion :as tc]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Routing Handler
