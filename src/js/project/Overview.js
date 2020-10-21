@@ -174,7 +174,7 @@ class ProjectTemplateSelection extends React.Component {
                             onChange={e => this.setState({projectFilter: e.target.value})}
                         />
                     </div>
-                    <div className="form-group mx-3" style={{flex: "1 1 auto"}}>
+                    <div className="form-group mx-3" style={{flex: "1 1 1px"}}>
                         <h3 htmlFor="project-template">Select Template</h3>
                         <select
                             className="form-control-sm form-control"

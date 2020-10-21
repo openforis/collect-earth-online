@@ -299,13 +299,9 @@ export class PlotDesign extends React.Component {
                         whiteSpace: "pre-line",
                     }}
                 >
-                    {totalPlots
-                        ? `This project will contain around ${formatNumberWithCommas(totalPlots)} plots.`
-                        : ""
-                    }
-                    {totalPlots && totalPlots > plotLimit
-                        ? `* The maximum allowed number for the selected plot distribution is ${formatNumberWithCommas(plotLimit)}.`
-                        : ""
+                    {totalPlots > 0 && `This project will contain around ${formatNumberWithCommas(totalPlots)} plots.`}
+                    {totalPlots > 0 && totalPlots > plotLimit &&
+                        `* The maximum allowed number for the selected plot distribution is ${formatNumberWithCommas(plotLimit)}.`
                     }
                 </p>
             </div>
@@ -330,9 +326,9 @@ export function PlotDesignReview() {
 export function PlotReview() {
     return (
         <ProjectContext.Consumer>
-            {({plotDistribution, numPlots, plotSpacing, plotShape, plotSize}) =>
+            {({plotDistribution, numPlots, plotSpacing, plotShape, plotSize, useTemplatePlots}) =>
                 <div id="plot-review">
-                    <h3 className="mb-3">Plots will be copied from template project</h3>
+                    {useTemplatePlots && <h3 className="mb-3">Plots will be copied from template project</h3>}
                     <div className="d-flex">
                         <div id="plot-review-col1">
                             <table id="plot-review-table" className="table table-sm">

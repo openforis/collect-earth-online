@@ -152,19 +152,16 @@ export class SampleDesign extends React.Component {
                         whiteSpace: "pre-line",
                     }}
                 >
-                    {samplesPerPlot
-                        ? `Each plot will contain around ${formatNumberWithCommas(samplesPerPlot)} samples.`
-                        : ""
-                    }
-                    {totalPlots && samplesPerPlot
-                        ? `There will be around ${formatNumberWithCommas(totalPlots * samplesPerPlot)} `
+                    {samplesPerPlot > 0 && `Each plot will contain around ${formatNumberWithCommas(samplesPerPlot)} samples.`}
+                    {totalPlots > 0 &&
+                        samplesPerPlot > 0 ? `There will be around ${formatNumberWithCommas(totalPlots * samplesPerPlot)} `
                             + "total samples in the project."
+                        : sampleDistribution === "none" ? "No samples will be added to the plot."
                         : ""
                     }
-                    {totalPlots && samplesPerPlot && samplesPerPlot > perPlotLimit
-                        ? `* The maximum allowed for the selected sample distribution is ${formatNumberWithCommas(perPlotLimit)}`
+                    {totalPlots > 0 && samplesPerPlot > 0 && samplesPerPlot > perPlotLimit &&
+                        `* The maximum allowed for the selected sample distribution is ${formatNumberWithCommas(perPlotLimit)}`
                             + ` samples per plot. * The maximum allowed samples per project is ${formatNumberWithCommas(sampleLimit)}.`
-                        : ""
                     }
                 </p>
             </div>
@@ -176,9 +173,9 @@ SampleDesign.contextType = ProjectContext;
 export function SampleReview() {
     return (
         <ProjectContext.Consumer>
-            {({sampleDistribution, samplesPerPlot, sampleResolution, allowDrawnSamples}) =>
+            {({sampleDistribution, samplesPerPlot, sampleResolution, allowDrawnSamples, useTemplatePlots}) =>
                 <div id="sample-review">
-                    <h3 className="mb-3">Samples will be copied from template project</h3>
+                    {useTemplatePlots && <h3 className="mb-3">Samples will be copied from template project</h3>}
                     {sampleDistribution === "none"
                     ?
                         <h3>No samples are predefined.</h3>
