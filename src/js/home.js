@@ -184,9 +184,7 @@ class MapPanel extends React.Component {
                 <div
                     id="toggle-map-button"
                     className="bg-lightgray"
-                    onClick={() => {
-                        this.props.toggleSidebar(this.state.mapConfig);
-                    }}
+                    onClick={() => this.props.toggleSidebar(this.state.mapConfig)}
                 >
                     {this.props.showSidePanel
                         ? <SvgIcon icon="leftDouble" size="1.25rem"/>
