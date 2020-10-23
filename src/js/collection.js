@@ -946,6 +946,17 @@ class Collection extends React.Component {
 
     setUnansweredColor = (newColor) => this.setState({unansweredColor: newColor});
 
+    setAnswerMode = (newMode) => {
+        if (this.state.answerMode !== newMode) {
+            if (newMode === "draw") {
+                this.props.featuresToDrawLayer(this.state.drawTool);
+            } else {
+                this.props.featuresToSampleLayer();
+            }
+            this.setState({answerMode: newMode});
+        }
+    };
+
     render() {
         const plotId = this.state.currentPlot.plotId ? this.state.currentPlot.plotId : this.state.currentPlot.id;
         return (
