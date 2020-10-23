@@ -68,7 +68,10 @@ class Home extends React.Component {
             }
         });
 
-    toggleSidebar = () => this.setState({showSidePanel: !this.state.showSidePanel});
+    toggleSidebar = (mapConfig) => this.setState(
+        {showSidePanel: !this.state.showSidePanel},
+        () => mercator.resize(mapConfig)
+    );
 
     render() {
         return (
@@ -180,15 +183,15 @@ class MapPanel extends React.Component {
             >
                 <div
                     id="toggle-map-button"
-                    className="btn-lightgray"
-                    onClick={this.props.toggleSidebar}
+                    className="bg-lightgray"
+                    onClick={() => this.props.toggleSidebar(this.state.mapConfig)}
                 >
                     {this.props.showSidePanel
                         ? <SvgIcon icon="leftDouble" size="1.25rem"/>
                         : <SvgIcon icon="rightDouble" size="1.25rem"/>
                     }
                 </div>
-                <div id="home-map-pane" className="full-height"></div>
+                <div id="home-map-pane" className="full-height" style={{maxWidth: "inherit"}}></div>
                 <ProjectPopup
                     mapConfig={this.state.mapConfig}
                     clusterExtent={this.state.clusterExtent}
@@ -580,19 +583,19 @@ class ProjectPopup extends React.Component {
     componentDidMount() {
         // There is some kind of bug in attaching this onClick handler directly to its button in render().
         document.getElementById("zoomToCluster").onclick = () => {
-            mercator.zoomMapToExtent(this.props.mapConfig, this.props.clusterExtent);
+            mercator.zoomMapToExtent(this.props.mapConfig, this.props.clusterExtent, 128);
             mercator.getOverlayByTitle(this.props.mapConfig, "projectPopup").setPosition(undefined);
         };
     }
 
     render() {
         return (
-            <div id="projectPopUp" className="d-flex flex-column" style={{height: "100%"}}>
+            <div id="projectPopUp" className="d-flex flex-column" style={{maxHeight: "40vh"}}>
                 <div className="cTitle">
                     <h1>{this.props.features.length > 1 ? "Cluster info" : "Project info"}</h1>
                 </div>
                 <div className="cContent" style={{padding: "10px", overflow: "auto"}}>
-                    <table className="table table-sm">
+                    <table className="table table-sm" style={{tableLayout: "fixed"}}>
                         <tbody>
                             {this.props.features.map((feature, uid) =>
                                 <React.Fragment key={uid}>
