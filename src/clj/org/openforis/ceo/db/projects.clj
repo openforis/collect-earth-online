@@ -445,7 +445,7 @@
                                samples-per-plot
                                sample-resolution]
   ;; TODO Right now you have to have a sample shape or csv file if you have a plot shape file.
-  ;;      Update create random / gridded to work on boundary so any plot type can have random, gridded, center.
+  ;;      Update create random / gridded to work on boundary so any plot type can have random and gridded.
   (doseq [[x y] (case sample-distribution
                   "center"
                   [plot-center]
