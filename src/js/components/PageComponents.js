@@ -426,14 +426,19 @@ export function LoadingModal({message}) {
         >
             <div
                 style={{
-                    width: "fit-content",
-                    margin: "20% auto",
+                    alignItems: "center",
+                    backgroundColor: "white",
                     border: "1.5px solid",
                     borderRadius: "5px",
-                    backgroundColor: "white",
+                    display: "flex",
+                    margin: "20% auto",
+                    width: "fit-content",
                 }}
             >
-                <label className="m-4">{message}</label>
+                <div className="p-3">
+                    <div id="spinner" style={{height: "2.5rem", position: "static", width: "2.5rem"}}/>
+                </div>
+                <label className="m-0 mr-3">{message}</label>
             </div>
         </div>
     );

@@ -124,44 +124,50 @@ class ProjectManagement extends React.Component {
 
     publishProject = () => {
         if (confirm("Do you want to publish this project?")) {
-            fetch(`/publish-project?projectId=${this.context.id}`, {method: "POST"})
-                .then(response => {
-                    if (response.ok) {
-                        this.context.setProjectState({availability: "published"});
-                    } else {
-                        console.log(response);
-                        alert("Error publishing project. See console for details.");
-                    }
-                });
+            this.context.processModal("Publishing project", () =>
+                fetch(`/publish-project?projectId=${this.context.id}`, {method: "POST"})
+                    .then(response => {
+                        if (response.ok) {
+                            this.context.setProjectState({availability: "published"});
+                        } else {
+                            console.log(response);
+                            alert("Error publishing project. See console for details.");
+                        }
+                    })
+            );
         }
     };
 
     closeProject = () => {
         if (confirm("Do you want to close this project?")) {
-            fetch(`/close-project?projectId=${this.context.id}`, {method: "POST"})
-                .then(response => {
-                    if (response.ok) {
-                        this.context.setProjectState({availability: "closed"});
-                    } else {
-                        console.log(response);
-                        alert("Error closing project. See console for details.");
-                    }
-                });
+            this.context.processModal("Closing project", () =>
+                fetch(`/close-project?projectId=${this.context.id}`, {method: "POST"})
+                    .then(response => {
+                        if (response.ok) {
+                            this.context.setProjectState({availability: "closed"});
+                        } else {
+                            console.log(response);
+                            alert("Error closing project. See console for details.");
+                        }
+                    })
+            );
         }
     };
 
     deleteProject = () => {
         if (confirm("Do you want to delete this project? This operation cannot be undone.")) {
-            fetch(`/archive-project?projectId=${this.context.id}`, {method: "POST"})
-                .then(response => {
-                    if (response.ok) {
-                        alert("Project " + this.context.id + " has been deleted.");
-                        window.location = `/review-institution?institutionId=${this.context.institution}`;
-                    } else {
-                        console.log(response);
-                        alert("Error deleting project. See console for details.");
-                    }
-                });
+            this.context.processModal("Deleting project", () =>
+                fetch(`/archive-project?projectId=${this.context.id}`, {method: "POST"})
+                    .then(response => {
+                        if (response.ok) {
+                            alert("Project " + this.context.id + " has been deleted.");
+                            window.location = `/review-institution?institutionId=${this.context.institution}`;
+                        } else {
+                            console.log(response);
+                            alert("Error deleting project. See console for details.");
+                        }
+                    })
+            );
         }
     };
 
