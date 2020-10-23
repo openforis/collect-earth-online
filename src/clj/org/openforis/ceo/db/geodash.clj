@@ -10,7 +10,7 @@
 
 ;; TODO, this function name is not clear
 (defn geodash-id [{:keys [params]}]
-  (let [project-id (tc/str->int (:projectId params))
+  (let [project-id (tc/val->int (:projectId params))
         dashboard  (call-sql "get_project_widgets_by_project_id" project-id)]
     ;; TODO, we should not need to pass back projectId
     (data-response {:projectId   project-id
@@ -20,7 +20,7 @@
                     :widgets     (mapv #(tc/jsonb->clj (:widget %)) dashboard)})))
 
 (defn create-dashboard-widget-by-id [{:keys [params]}]
-  (let [project-id         (tc/str->int (:projectId params))
+  (let [project-id         (tc/val->int (:projectId params))
         dashboard-id       (tc/str->pg-uuid (:dashID params))
         widget-json-string (tc/json->jsonb (:widgetJSON params))]
     (call-sql "add_project_widget"
@@ -34,7 +34,7 @@
 ;;      the entire layout at once. If we keep the same workflow, limit the live edit
 ;;      calls by only updating the one widget that moves.
 (defn update-dashboard-widget-by-id [{:keys [params]}]
-  (let [widget-id          (tc/str->int (:widgetId params))
+  (let [widget-id          (tc/val->int (:widgetId params))
         dashboard-id       (tc/str->pg-uuid (:dashID params))
         widget-json-string (tc/json->jsonb (:widgetJSON params))]
     (call-sql "update_project_widget_by_widget_id"
@@ -44,7 +44,7 @@
     (data-response "")))
 
 (defn delete-dashboard-widget-by-id [{:keys [params]}]
-  (let [widget-id    (tc/str->int (:widgetId params))
+  (let [widget-id    (tc/val->int (:widgetId params))
         dashboard-id (tc/str->pg-uuid (:dashID params))]
     (call-sql "delete_project_widget_by_widget_id"
               widget-id

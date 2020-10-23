@@ -41,7 +41,7 @@
            (str/join "&" new-query-params)))))
 
 (defn- build-url [{:keys [query-params]}]
-  (let [source-config (get-imagery-source-config (tc/str->int (get query-params "imageryId")))
+  (let [source-config (get-imagery-source-config (tc/val->int (get query-params "imageryId")))
         source-type   (:type source-config "")]
     (cond
       (= "Planet" source-type)
@@ -57,7 +57,7 @@
   (client/get (build-url req) {:as :stream}))
 
 (defn get-securewatch-dates [{:keys [query-params]}]
-  (let [source-config (get-imagery-source-config (tc/str->int (get query-params "imageryId")))
+  (let [source-config (get-imagery-source-config (tc/val->int (get query-params "imageryId")))
         base-url      (:geoserverUrl source-config)
         url           (str base-url
                            (when-not (str/ends-with? base-url "?") "?")
