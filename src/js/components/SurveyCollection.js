@@ -100,17 +100,6 @@ export class SurveyCollection extends React.Component {
                             : "Rule: " + r.ruleType + " | 'Question1: " + r.questionText1 + ", Answer1: " + r.answerText1 + "' is not compatible with 'Question2: " + r.questionText2 + ", Answer2: " + r.answerText2 + "'.")
             .join("\n");
 
-    setAnswerMode = (newMode) => {
-        if (this.state.answerMode !== newMode) {
-            if (newMode === "draw") {
-                this.props.featuresToDrawLayer(this.state.drawTool);
-            } else {
-                this.props.featuresToSampleLayer();
-            }
-            this.setState({answerMode: newMode});
-        }
-    };
-
     setDrawTool = (newTool) => {
         this.setState({drawTool: newTool});
         if (this.props.mapConfig) mercator.changeDrawTool(this.props.mapConfig, "drawLayer", newTool);
