@@ -1247,7 +1247,7 @@ class PlotNavigation extends React.Component {
                     <h3 className="w-100">Navigate Through:</h3>
                     <select
                         className="form-control form-control-sm mr-2"
-                        style={{flex: "1 1 1px"}}
+                        style={{flex: "1 1 auto"}}
                         onChange={(e) => props.setNavigationMode(e.target.value)}
                         value={props.navigationMode}
                     >
