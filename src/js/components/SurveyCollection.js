@@ -69,11 +69,12 @@ export class SurveyCollection extends React.Component {
         const childQuestions = surveyQuestions.filter(sq => sq.parentQuestion === currentQuestionId);
 
         return visible.length === answered.length
+                    && answered.length > 0
                     && (childQuestions.length === 0
                     || childQuestions.every(cq => this.checkAllSubAnswers(cq.id)));
     };
 
-    getTopColor = (node) => this.checkAllSubAnswers(node.id) || this.props.isFlagged
+    getTopColor = (node) => this.checkAllSubAnswers(node.id) || this.props.flagged
                                 ? "0px 0px 6px 4px #3bb9d6 inset"
                                 : node.answered.length > 0
                                     ? "0px 0px 6px 4px yellow inset"
@@ -103,6 +104,22 @@ export class SurveyCollection extends React.Component {
     setDrawTool = (newTool) => {
         this.setState({drawTool: newTool});
         if (this.props.mapConfig) mercator.changeDrawTool(this.props.mapConfig, "drawLayer", newTool);
+    };
+
+    clearAll = (drawTool) => {
+        if (this.props.answerMode === "draw" && confirm("Do you want to clear all samples from the draw area?")) {
+            const {mapConfig} = this.props;
+            mercator.disableDrawing(mapConfig);
+            mercator.removeLayerById(mapConfig, "currentSamples");
+            mercator.removeLayerById(mapConfig, "drawLayer");
+            mercator.addVectorLayer(mapConfig,
+                                    "drawLayer",
+                                    null,
+                                    mercator.ceoMapStyles("draw", "orange"));
+            mercator.enableDrawing(mapConfig, "drawLayer", drawTool);
+        } else if (confirm("Do you want to clear all answers?")) {
+            this.props.resetPlotValues();
+        }
     };
 
     buttonStyle = (selected) => Object.assign(
@@ -182,7 +199,7 @@ export class SurveyCollection extends React.Component {
                     {">"}
                 </button>
             </div>
-            {this.props.isFlagged
+            {this.props.flagged
             ?
                 <div style={{color: "red"}}>FLAGGED</div>
             : this.state.topLevelNodeIds.length > 0 &&
@@ -242,6 +259,23 @@ export class SurveyCollection extends React.Component {
         </div>
     );
 
+    renderFlagClearButtons =() => (
+        <div className="mb-2 d-flex justify-content-between">
+            <input
+                className="btn btn-outline-red btn-sm col mr-1"
+                type="button"
+                value={this.props.flagged ? "Unflag Plot" : "Flag Plot"}
+                onClick={this.props.toggleFlagged}
+            />
+            <input
+                className="btn btn-outline-red btn-sm col"
+                type="button"
+                value="Clear All"
+                onClick={this.clearAll}
+            />
+        </div>
+    );
+
     render() {
         return (
             <fieldset className="justify-content-center text-center">
@@ -270,9 +304,13 @@ export class SurveyCollection extends React.Component {
                 }
                 {this.state.showSurveyQuestions
                 ? this.props.surveyQuestions.length > 0
-                    ? this.props.answerMode === "question"
-                        ? this.renderQuestions()
-                        : this.renderDrawTools()
+                    ?
+                        <>
+                            {this.props.answerMode === "question"
+                                ? this.renderQuestions()
+                                : this.renderDrawTools()}
+                            {this.renderFlagClearButtons()}
+                        </>
                     :
                         <h3>This project is missing survey questions!</h3>
                 : null

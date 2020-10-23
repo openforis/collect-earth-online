@@ -1,6 +1,6 @@
 import React from "react";
 import ReactDOM from "react-dom";
-import {mercator} from "./utils/mercator.js";
+
 import {LoadingModal, NavigationBar} from "./components/PageComponents";
 import {SurveyCollection} from "./components/SurveyCollection";
 import {
@@ -11,9 +11,11 @@ import {
     GEEImageMenus,
     GEEImageCollectionMenus,
 } from "./imagery/collectionMenuControls";
-import {convertSampleValuesToSurveyQuestions} from "./utils/surveyUtils";
-import {UnicodeIcon, getQueryString} from "./utils/generalUtils";
 import {CollapsibleTitle} from "./components/FormComponents";
+
+import {convertSampleValuesToSurveyQuestions} from "./utils/surveyUtils";
+import {UnicodeIcon, getQueryString, safeLength} from "./utils/generalUtils";
+import {mercator} from "./utils/mercator.js";
 
 class Collection extends React.Component {
     constructor(props) {
@@ -385,19 +387,19 @@ class Collection extends React.Component {
             });
     };
 
-    resetPlotValues = (newPlot) => this.setState(this.newPlotValues(newPlot));
+    resetPlotValues = () => this.setState(this.newPlotValues(this.state.currentPlot, false));
 
-    newPlotValues = (newPlot) => ({
+    newPlotValues = (newPlot, copyValues = true) => ({
         newPlotInput: newPlot.plotId ? newPlot.plotId : newPlot.id,
         userSamples: newPlot.samples
             ? newPlot.samples.reduce((obj, s) => {
-                obj[s.id] = s.value || {};
+                obj[s.id] = copyValues ? (s.value || {}) : {};
                 return obj;
             }, {})
             : {},
         userImages: newPlot.samples
             ? newPlot.samples.reduce((obj, s) => {
-                obj[s.id] = s.userImage || {};
+                obj[s.id] = copyValues ? (s.userImage || {}) : {};
                 return obj;
             }, {})
             : {},
@@ -488,8 +490,7 @@ class Collection extends React.Component {
                             sampleGeom: mercator.geometryToGeoJSON(cur.getGeometry(), "EPSG:4326", "EPSG:3857"),
                         }];
             }
-        }
-        , []);
+        }, []);
 
         this.setState({
             currentPlot: {...currentPlot, samples: newSamples},
@@ -1007,13 +1008,11 @@ class Collection extends React.Component {
                     plotId={plotId}
                     postValuesToDB={this.postValuesToDB}
                     projectName={this.state.currentProject.name}
-                    clearAnswers={() => this.resetPlotValues(this.state.currentPlot)}
                     surveyQuestions={this.state.currentProject.surveyQuestions}
                     userName={this.props.userName}
                     currentPlot={this.state.currentPlot}
-                    toggleFlagged={this.toggleFlagged}
-                    toggleQuitModal={this.toggleQuitModal}
                     answerMode={this.state.answerMode}
+                    isProjectAdmin={this.state.currentProject.isProjectAdmin}
                 >
                     <PlotNavigation
                         plotId={plotId}
@@ -1061,7 +1060,7 @@ class Collection extends React.Component {
                                     selectedQuestion={this.state.selectedQuestion}
                                     surveyQuestions={this.state.currentProject.surveyQuestions}
                                     surveyRules={this.state.currentProject.surveyRules}
-                                    isFlagged={this.state.currentPlot && this.state.currentPlot.flagged}
+                                    flagged={this.state.currentPlot && this.state.currentPlot.flagged}
                                     setCurrentValue={this.setCurrentValue}
                                     setSelectedQuestion={this.setSelectedQuestion}
                                     selectedSampleId={Object.keys(this.state.userSamples).length === 1
@@ -1073,6 +1072,9 @@ class Collection extends React.Component {
                                     setUnansweredColor={this.setUnansweredColor}
                                     answerMode={this.state.answerMode}
                                     setAnswerMode={this.setAnswerMode}
+                                    resetPlotValues={this.resetPlotValues}
+                                    toggleFlagged={this.toggleFlagged}
+                                    toggleQuitModal={this.toggleQuitModal}
                                 />
                             </>
                         :
@@ -1105,39 +1107,56 @@ function ImageAnalysisPane({imageryAttribution}) {
 }
 
 function SideBar(props) {
-    const saveValuesButtonEnabled =
-        props.currentPlot.samples
-        && props.currentPlot.samples.length > 0
-        && props.answerMode === "question"
-        && (props.currentPlot.flagged
-            || props.surveyQuestions.every(sq => sq.visible && sq.answered && sq.visible.length === sq.answered.length));
+    const checkCanSave = () => {
+        const noneAnswered = props.surveyQuestions.every(sq => safeLength(sq.answered) === 0);
+        const hasSamples = safeLength(props.currentPlot.samples) > 0;
+        const allAnswered = props.currentPlot.flagged
+            || props.surveyQuestions.every(sq => safeLength(sq.visible) === safeLength(sq.answered));
+        if (props.answerMode !== "question") {
+            alert("You must be in question mode to save the collection.");
+            return false;
+        } else if (props.isProjectAdmin) {
+            if (!(noneAnswered || allAnswered)) {
+                alert("Admins can only save the plot if all questions are answered, or the answers are cleared.");
+                return false;
+            } else {
+                return true;
+            }
+        } else {
+            if (!hasSamples) {
+                alert("The collection must have samples to be saved. Enter draw mode to add more samples.");
+                return false;
+            } else if (!allAnswered) {
+                alert("All questions must be answered to save the collection.");
+                return false;
+            } else {
+                return true;
+            }
+        }
+    };
 
-    const saveButtonGroup = () => (
-        <>
+    const renderQuitButton = () => (
+        <input
+            id="collection-quit-button"
+            className="btn btn-outline-lightgreen btn-sm col"
+            type="button"
+            value="Quit"
+            onClick={props.toggleQuitModal}
+        />
+    );
+
+    const renderSaveButtonGroup = () => (
+        <div className="mb-5 d-flex justify-content-between">
             <input
-                className="btn btn-outline-lightgreen btn-sm btn-block"
+                className={"btn btn-outline-lightgreen btn-sm col mr-1"}
                 type="button"
                 value="Save"
-                onClick={props.postValuesToDB}
-                style={{opacity: saveValuesButtonEnabled ? "1.0" : ".25"}}
-                disabled={!saveValuesButtonEnabled}
+                onClick={() => {
+                    if (checkCanSave()) props.postValuesToDB();
+                }}
             />
-            <div className="my-2 d-flex justify-content-between">
-                <input
-                    className="btn btn-outline-red btn-sm col mr-1"
-                    type="button"
-                    value={props.currentPlot.flagged ? "Unflag Plot" : "Flag Plot"}
-                    onClick={props.toggleFlagged}
-                />
-                <input
-                    className="btn btn-outline-red btn-sm col"
-                    type="button"
-                    value={props.currentPlot.analyses > 0 ? "Clear Changes" : "Clear All"}
-                    onClick={props.clearAnswers}
-                    disabled={props.answerMode !== "question"}
-                />
-            </div>
-        </>
+            {renderQuitButton()}
+        </div>
     );
 
     return (
@@ -1156,16 +1175,10 @@ function SideBar(props) {
 
             <div className="row">
                 <div className="col-sm-12 btn-block">
-                    {props.plotId && saveButtonGroup()}
-                    <button
-                        id="collection-quit-button"
-                        className="btn btn-outline-red btn-block btn-sm mb-4"
-                        type="button"
-                        name="collection-quit"
-                        onClick={props.toggleQuitModal}
-                    >
-                        Quit
-                    </button>
+                    {props.plotId
+                        ? renderSaveButtonGroup()
+                        : renderQuitButton()
+                    }
                 </div>
             </div>
         </div>
