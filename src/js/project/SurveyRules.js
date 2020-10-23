@@ -550,9 +550,8 @@ function IncompatibleAnswers(props) {
 }
 
 export class SurveyRulesList extends React.Component {
-
     deleteSurveyRule = (ruleId) => {
-        const newSurveyRules = this.props.surveyRules.filter(rule => rule.id !== parseInt(ruleId));
+        const newSurveyRules = this.props.surveyRules.filter(rule => rule.id !== ruleId);
         this.props.setProjectState({surveyRules: newSurveyRules});
     };
 
