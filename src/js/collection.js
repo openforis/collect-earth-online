@@ -42,7 +42,6 @@ class Collection extends React.Component {
             KMLFeatures: null,
             hasGeoDash: false,
             showSidebar: false,
-            loading: false,
             showQuitModal: false,
             answerMode: "question",
             modalMessage: null,
@@ -968,9 +967,6 @@ class Collection extends React.Component {
                 {this.state.modalMessage && <LoadingModal message={this.state.modalMessage}/>}
                 <ImageAnalysisPane
                     imageryAttribution={this.state.imageryAttribution}
-                    projectId={this.props.projectId}
-                    plotId={plotId}
-                    loader={this.state.loading}
                 />
                 <div
                     onClick={() => this.setState({showSidebar: !this.state.showSidebar}, () => {
@@ -1079,19 +1075,15 @@ class Collection extends React.Component {
                         toggleQuitModal={this.toggleQuitModal}
                     />
                 }
-                {this.state.plotList.length === 0 &&
-                    <div id="spinner" style={{top: "45%", left: "38%"}}/>
-                }
             </div>
         );
     }
 }
 
-function ImageAnalysisPane({loader, imageryAttribution}) {
+function ImageAnalysisPane({imageryAttribution}) {
     return (
         // Mercator hooks into image-analysis-pane
         <div id="image-analysis-pane" className="col-xl-9 col-lg-9 col-md-12 pl-0 pr-0 full-height">
-            {loader ? <div id="spinner" style={{top: "45%", zIndex: "5000", visibility: "visible"}}></div> : null }
             <div id="imagery-info" className="row" style={{justifyContent: "center"}}>
                 <p style={{fontSize: ".9rem", marginBottom: "0"}}>{imageryAttribution}</p>
             </div>

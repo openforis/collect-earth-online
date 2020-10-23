@@ -597,7 +597,6 @@ ul.samplevalue {
     height: 4rem;
     border-radius: 2rem;
     border-bottom: 0.5rem solid #3fabc6;
-    visibility: hidden;
     animation: sweep 1s infinite linear;
     -o-animation: sweep 1s infinite linear;
     -moz-animation: sweep 1s infinite linear;
