@@ -56,12 +56,6 @@ class Collection extends React.Component {
         );
 
         this.getProjectData();
-
-        if (this.state.currentProject.availability === "unpublished") {
-            alert("This project is unpublished. Only admins can collect. Any plot collections will be erased when the project is published.");
-        } else if (this.state.currentProject.availability === "closed") {
-            alert("This project has been closed. Admins can make corrections to any plot.");
-        }
     }
 
     componentDidUpdate(prevProps, prevState) {
@@ -148,6 +142,13 @@ class Collection extends React.Component {
     getProjectData = () =>
         this.processModal("Loading project details", () =>
             Promise.all([this.getProjectById(), this.getProjectPlots(), this.checkForGeodash(), this.getImageryList()])
+                .then(() => {
+                    if (this.state.currentProject.availability === "unpublished") {
+                        alert("This project is unpublished. Only admins can collect. Any plot collections will be erased when the project is published.");
+                    } else if (this.state.currentProject.availability === "closed") {
+                        alert("This project has been closed. Admins can make corrections to any plot.");
+                    }
+                })
                 .catch(response => {
                     console.log(response);
                     alert("Error retrieving the project info. See console for details.");
@@ -571,7 +572,7 @@ class Collection extends React.Component {
                       })
                     .then(response => {
                         if (response.ok) {
-                            this.nextPlot();
+                            return this.navToNextPlot();
                         } else {
                             console.log(response);
                             alert("Error flagging plot as bad. See console for details.");
@@ -599,7 +600,7 @@ class Collection extends React.Component {
                       })
                     .then(response => {
                         if (response.ok) {
-                            this.nextPlot();
+                            return this.navToNextPlot();
                         } else {
                             console.log(response);
                             alert("Error saving your assignments to the database. See console for details.");
@@ -961,6 +962,17 @@ class Collection extends React.Component {
     };
 
     setUnansweredColor = (newColor) => this.setState({unansweredColor: newColor});
+
+    setAnswerMode = (newMode, drawTool) => {
+        if (this.state.answerMode !== newMode) {
+            if (newMode === "draw") {
+                this.featuresToDrawLayer(drawTool);
+            } else {
+                this.featuresToSampleLayer();
+            }
+            this.setState({answerMode: newMode});
+        }
+    };
 
     render() {
         const plotId = this.state.currentPlot.plotId ? this.state.currentPlot.plotId : this.state.currentPlot.id;
