@@ -27,10 +27,10 @@
         (sql-primitive (call-sql sql-query user-id project-id)))))
 
 (defn can-collect? [{:keys [params]}]
-  (check-auth-common params "can_user_collect"))
+  (check-auth-common params "can_user_collect_project"))
 
 (defn is-proj-admin? [{:keys [params]}]
-  (check-auth-common params "can_user_edit"))
+  (check-auth-common params "can_user_edit_project"))
 
 ;;; Data Functions
 
