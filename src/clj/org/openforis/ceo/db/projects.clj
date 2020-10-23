@@ -459,7 +459,7 @@
                              sample-resolution
                              plots-file
                              samples-file
-                             allow-drawn-samples]
+                             allow-drawn-samples?]
   (if (#{"csv" "shp"} plot-distribution)
     (do (try-catch-throw  #(call-sql "update_project_tables"
                                      project-id
@@ -495,14 +495,14 @@
                                                       sample-resolution))
                            "Error adding plot file with generated samples."))
         ;; The SQL function only checks against plots with external tables.
-        (when (not allow-drawn-samples)
-         (let [bad-plots (map :plot_id (call-sql "plots_missing_samples" project-id))]
-           (when (seq bad-plots)
-             (init-throw (str "The uploaded plot and sample files do not have correctly overlapping data. "
-                              (count bad-plots)
-                              " plots have no samples. The first 10 are: ["
-                              (str/join "," (take 10 bad-plots))
-                              "]"))))))
+        (when (not allow-drawn-samples?)
+          (let [bad-plots (map :plot_id (call-sql "plots_missing_samples" project-id))]
+            (when (seq bad-plots)
+              (init-throw (str "The uploaded plot and sample files do not have correctly overlapping data. "
+                               (count bad-plots)
+                               " plots have no samples. The first 10 are: ["
+                               (str/join "," (take 10 bad-plots))
+                               "]"))))))
     (let [[[left bottom] [top right]] (pu/EPSG:4326->3857 [lon-min lat-min] [lon-max lat-max])
           [left bottom right top] (pad-bounds left bottom top right (/ 2.0 plot-size))]
       (check-plot-limits (if (= "gridded" plot-distribution)
@@ -558,7 +558,7 @@
         sample-distribution  (:sampleDistribution params)
         samples-per-plot     (tc/val->int (:samplesPerPlot params))
         sample-resolution    (tc/val->float (:sampleResolution params))
-        allow-drawn-samples  (or (= sample-distribution "none")
+        allow-drawn-samples? (or (= sample-distribution "none")
                                  (tc/val->bool (:allowDrawnSamples params)))
         sample-values        (tc/clj->jsonb (:sampleValues params))
         survey-rules         (tc/clj->jsonb (:surveyRules params))
@@ -587,7 +587,7 @@
                                                       sample-distribution
                                                       samples-per-plot
                                                       sample-resolution
-                                                      allow-drawn-samples
+                                                      allow-drawn-samples?
                                                       sample-values
                                                       survey-rules
                                                       (tc/clj->jsonb nil) ; TODO classification times is unused. Drop this column.
@@ -635,7 +635,7 @@
                                 sample-resolution
                                 plots-file
                                 samples-file
-                                allow-drawn-samples)))
+                                allow-drawn-samples?)))
       (data-response {:projectId project-id
                       :tokenKey  token-key})
       (catch Exception e
@@ -648,10 +648,10 @@
 
 (defn reset-collected-samples [project-id]
   (let [project (first (call-sql "select_project_by_id" project-id))
-        sample-distribution (:sample_distribution project)
-        allow-drawn-samples (:allow_drawn_samples project)]
+        sample-distribution  (:sample_distribution project)
+        allow-drawn-samples? (:allow_drawn_samples project)]
     (cond
-      (not allow-drawn-samples)
+      (not allow-drawn-samples?)
       (call-sql "delete_user_plots_by_project" project-id)
 
       (#{"shp" "csv"} sample-distribution)
