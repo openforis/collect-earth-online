@@ -11,7 +11,7 @@
      (number? val)           (int val)
      :else                   (try
                                (Integer/parseInt val)
-                               (catch Exception _ default)))))
+                               (catch Exception _ (int default))))))
 
 (defn val->long
   ([val]
@@ -22,7 +22,7 @@
      (number? val)       (long val)
      :else               (try
                            (Long/parseLong val)
-                           (catch Exception _ default)))))
+                           (catch Exception _ (long default))))))
 
 ;; Warning Postgres type float is equivalent to java Double, and Postgres real is equivalent to java Float
 (defn val->float
@@ -34,7 +34,7 @@
      (number? val)        (float val)
      :else                (try
                             (Float/parseFloat val)
-                            (catch Exception _ default)))))
+                            (catch Exception _ (float default))))))
 
 ;; Warning Postgres type float is equivalent to java Double, and Postgres real is equivalent to java Float
 (defn val->double
@@ -46,7 +46,7 @@
      (number? val)          (double val)
      :else                  (try
                               (Double/parseDouble val)
-                              (catch Exception _ default)))))
+                              (catch Exception _ (double default))))))
 
 (defn val->bool
   ([val]
@@ -56,7 +56,7 @@
      val
      (try
        (Boolean/parseBoolean val)
-       (catch Exception _ default)))))
+       (catch Exception _ (boolean default))))))
 
 (defn json->clj
   ([json]
