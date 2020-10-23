@@ -13,8 +13,8 @@ const renderImageryRow = (filteredImageryList, defaultImageryId, projectImageryL
                         id={imagery.id}
                         onChange={e => setProjectState({
                             projectImageryList: e.target.checked
-                                    ? [...projectImageryList, imagery.id]
-                                    : projectImageryList.filter(img => img !== imagery.id),
+                                ? [...projectImageryList, imagery.id]
+                                : projectImageryList.filter(img => img !== imagery.id),
                         })}
                         type="checkbox"
                         disabled={imagery.id === defaultImageryId}

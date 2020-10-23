@@ -185,8 +185,8 @@ class ProjectTemplateSelection extends React.Component {
                             onChange={e => this.setState({selectedTemplateProjectId: parseInt(e.target.value)})}
                         >
                             {templateProjectList
-                                    && templateProjectList[0].id > 0
-                                    && <option key={-1} value={-1}>- Select Project -</option>
+                                && templateProjectList[0].id > 0
+                                && <option key={-1} value={-1}>- Select Project -</option>
                             }
                             {templateProjectList && templateProjectList
                                 .filter(proj => (proj.id + proj.name.toLocaleLowerCase())

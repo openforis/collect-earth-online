@@ -275,8 +275,8 @@ export class PlotDesign extends React.Component {
                                         )}
                                     </select>
                                 </div>
-                                <p id="plot-design-text" className="font-italic ml-2 small">-
-                                    {plotOptions[plotDistribution].description}
+                                <p id="plot-design-text" className="font-italic ml-2 small">
+                                    - {plotOptions[plotDistribution].description}
                                 </p>
                                 <div style={{display: "flex"}}>
                                     {plotOptions[plotDistribution].inputs.map((i, idx) =>

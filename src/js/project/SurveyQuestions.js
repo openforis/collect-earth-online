@@ -9,18 +9,6 @@ import {ProjectContext} from "./constants";
 export class SurveyQuestionDesign extends React.Component {
     constructor(props) {
         super(props);
-        this.componentTypes = [
-            {componentType: "button", dataType: "text"},
-            {componentType: "button", dataType: "number"},
-            {componentType: "input", dataType: "number"},
-            {componentType: "input", dataType: "text"},
-            {componentType: "radiobutton", dataType: "boolean"},
-            {componentType: "radiobutton", dataType: "text"},
-            {componentType: "radiobutton", dataType: "number"},
-            {componentType: "dropdown", dataType: "boolean"},
-            {componentType: "dropdown", dataType: "text"},
-            {componentType: "dropdown", dataType: "number"},
-        ];
     }
 
     getChildQuestionIds = (questionId) => {
@@ -93,6 +81,19 @@ SurveyQuestionDesign.contextType = ProjectContext;
 class NewQuestionDesigner extends React.Component {
     constructor(props) {
         super(props);
+        this.componentTypes = [
+            {componentType: "button", dataType: "text"},
+            {componentType: "button", dataType: "number"},
+            {componentType: "input", dataType: "number"},
+            {componentType: "input", dataType: "text"},
+            {componentType: "radiobutton", dataType: "boolean"},
+            {componentType: "radiobutton", dataType: "text"},
+            {componentType: "radiobutton", dataType: "number"},
+            {componentType: "dropdown", dataType: "boolean"},
+            {componentType: "dropdown", dataType: "text"},
+            {componentType: "dropdown", dataType: "number"},
+        ];
+
         this.state = {
             selectedAnswer: -1,
             selectedParent: -1,
@@ -120,7 +121,7 @@ class NewQuestionDesigner extends React.Component {
             const repeatedQuestions = surveyQuestions.filter(sq => removeEnumerator(sq.question) === this.state.newQuestionText).length;
 
             if (repeatedQuestions === 0
-                || confirm("Warning: this is a duplicate name.  It will be added as "
+                || confirm("Warning: This is a duplicate name.  It will be added as "
                            + this.state.newQuestionText + ` (${repeatedQuestions})` + " in design mode.")) {
                 const newQuestion = {
                     id: surveyQuestions.reduce((p, c) => Math.max(p, c.id), 0) + 1,

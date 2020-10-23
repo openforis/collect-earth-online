@@ -117,8 +117,8 @@ export class SampleDesign extends React.Component {
                         )}
                     </select>
                 </div>
-                <p id="sample-design-text" className="font-italic ml-2 small">-
-                    {sampleOptions[sampleDistribution].description}
+                <p id="sample-design-text" className="font-italic ml-2 small">
+                    - {sampleOptions[sampleDistribution].description}
                 </p>
                 {sampleDistribution !== "none" &&
                     <div className="form-check form-check-inline mb-3">
@@ -153,10 +153,10 @@ export class SampleDesign extends React.Component {
                     }}
                 >
                     {samplesPerPlot > 0 && `Each plot will contain around ${formatNumberWithCommas(samplesPerPlot)} samples.`}
-                    {totalPlots > 0 &&
-                        samplesPerPlot > 0 ? `There will be around ${formatNumberWithCommas(totalPlots * samplesPerPlot)} `
-                            + "total samples in the project."
-                        : sampleDistribution === "none" ? "No samples will be added to the plot."
+                    {totalPlots > 0 && samplesPerPlot > 0
+                        ? `There will be around ${formatNumberWithCommas(totalPlots * samplesPerPlot)} total samples in the project.`
+                        : sampleDistribution === "none"
+                        ? "No samples will be added to the plot."
                         : ""
                     }
                     {totalPlots > 0 && samplesPerPlot > 0 && samplesPerPlot > perPlotLimit &&

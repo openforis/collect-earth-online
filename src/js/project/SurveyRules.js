@@ -551,8 +551,8 @@ function IncompatibleAnswers(props) {
 
 export class SurveyRulesList extends React.Component {
 
-    deleteSurveyRule = (event) => {
-        const newSurveyRules = this.props.surveyRules.filter(rule => rule.id !== parseInt(event.target.id));
+    deleteSurveyRule = (ruleId) => {
+        const newSurveyRules = this.props.surveyRules.filter(rule => rule.id !== parseInt(ruleId));
         this.props.setProjectState({surveyRules: newSurveyRules});
     };
 
@@ -560,15 +560,10 @@ export class SurveyRulesList extends React.Component {
     removeButton = (ruleId) => (
         <button
             type="button"
-            className="btn btn-outline-red py-0 px-2 mr-1"
-            onClick={e => this.deleteSurveyRule(e)}
+            className="btn btn-outline-red py-0 px-2 mr-1 font-weight-bold"
+            onClick={() => this.deleteSurveyRule(ruleId)}
         >
-            <span
-                id={ruleId}
-                className="font-weight-bold"
-            >
-                X
-            </span>
+            X
         </button>
     );
 
@@ -580,75 +575,75 @@ export class SurveyRulesList extends React.Component {
                 <table id="srd">
                     <tbody>
                         {(surveyRules || []).length > 0
-                    ?
-                        surveyRules.map((rule, uid) => {
-                            if (rule.ruleType === "text-match") {
-                                return <tr id={"rule" + rule.id} key={uid}>
-                                    {inDesignMode &&
+                        ?
+                            surveyRules.map((rule, uid) => {
+                                if (rule.ruleType === "text-match") {
+                                    return <tr id={"rule" + rule.id} key={uid}>
+                                        {inDesignMode &&
                                         <td>
                                             {this.removeButton(rule.id)}
                                         </td>
-                                    }
-                                    <td>{"Rule " + rule.id}</td>
-                                    <td>Type: Text Regex Match</td>
-                                    <td>Regex: {rule.regex}</td>
-                                    <td colSpan="2">Questions: {rule.questionsText.toString()}</td>
-                                </tr>;
-                            } else if (rule.ruleType === "numeric-range") {
-                                return <tr id={"rule" + rule.id} key={uid}>
-                                    {inDesignMode &&
+                                        }
+                                        <td>{"Rule " + rule.id}</td>
+                                        <td>Type: Text Regex Match</td>
+                                        <td>Regex: {rule.regex}</td>
+                                        <td colSpan="2">Questions: {rule.questionsText.toString()}</td>
+                                    </tr>;
+                                } else if (rule.ruleType === "numeric-range") {
+                                    return <tr id={"rule" + rule.id} key={uid}>
+                                        {inDesignMode &&
                                         <td>
                                             {this.removeButton(rule.id)}
                                         </td>
-                                    }
-                                    <td>{"Rule " + rule.id}</td>
-                                    <td>Type: Numeric Range</td>
-                                    <td>Min: {rule.min}</td>
-                                    <td>Max: {rule.max}</td>
-                                    <td>Questions: {rule.questionsText.toString()}</td>
-                                </tr>;
-                            } else if (rule.ruleType === "sum-of-answers") {
-                                return <tr id={"rule" + rule.id} key={uid}>
-                                    {inDesignMode &&
+                                        }
+                                        <td>{"Rule " + rule.id}</td>
+                                        <td>Type: Numeric Range</td>
+                                        <td>Min: {rule.min}</td>
+                                        <td>Max: {rule.max}</td>
+                                        <td>Questions: {rule.questionsText.toString()}</td>
+                                    </tr>;
+                                } else if (rule.ruleType === "sum-of-answers") {
+                                    return <tr id={"rule" + rule.id} key={uid}>
+                                        {inDesignMode &&
                                         <td>
                                             {this.removeButton(rule.id)}
                                         </td>
-                                    }
-                                    <td>{"Rule " + rule.id}</td>
-                                    <td>Type: Sum of Answers</td>
-                                    <td>Valid Sum: {rule.validSum}</td>
-                                    <td colSpan="2">Questions: {rule.questionsText.toString()}</td>
-                                </tr>;
-                            } else if (rule.ruleType === "matching-sums") {
-                                return <tr id={"rule" + rule.id} key={uid}>
-                                    {inDesignMode &&
+                                        }
+                                        <td>{"Rule " + rule.id}</td>
+                                        <td>Type: Sum of Answers</td>
+                                        <td>Valid Sum: {rule.validSum}</td>
+                                        <td colSpan="2">Questions: {rule.questionsText.toString()}</td>
+                                    </tr>;
+                                } else if (rule.ruleType === "matching-sums") {
+                                    return <tr id={"rule" + rule.id} key={uid}>
+                                        {inDesignMode &&
                                         <td>
                                             {this.removeButton(rule.id)}
                                         </td>
-                                    }
-                                    <td>{"Rule " + rule.id}</td>
-                                    <td>Type: Matching Sums</td>
-                                    <td>Questions Set 1: {rule.questionSetText1.toString()}</td>
-                                    <td colSpan="2">Questions Set 2: {rule.questionSetText2.toString()}</td>
-                                </tr>;
-                            } else if (rule.ruleType === "incompatible-answers") {
-                                return <tr id={"rule" + rule.id} key={uid}>
-                                    {inDesignMode &&
+                                        }
+                                        <td>{"Rule " + rule.id}</td>
+                                        <td>Type: Matching Sums</td>
+                                        <td>Questions Set 1: {rule.questionSetText1.toString()}</td>
+                                        <td colSpan="2">Questions Set 2: {rule.questionSetText2.toString()}</td>
+                                    </tr>;
+                                } else if (rule.ruleType === "incompatible-answers") {
+                                    return <tr id={"rule" + rule.id} key={uid}>
+                                        {inDesignMode &&
                                         <td>
                                             {this.removeButton(rule.id)}
                                         </td>
-                                    }
-                                    <td>{"Rule " + rule.id}</td>
-                                    <td>Type: Incompatible Answers</td>
-                                    <td>Question 1: {rule.questionText1}, Answer 1: {rule.answerText1}</td>
-                                    <td colSpan="2">Question 2: {rule.questionText2}, Answer 2: {rule.answerText2}</td>
-                                </tr>;
-                            }
-                        })
-                    :
-                        <tr>
-                            <td colSpan="5"><span>No rules set for this survey</span></td>
-                        </tr>
+                                        }
+                                        <td>{"Rule " + rule.id}</td>
+                                        <td>Type: Incompatible Answers</td>
+                                        <td>Question 1: {rule.questionText1}, Answer 1: {rule.answerText1}</td>
+                                        <td colSpan="2">Question 2: {rule.questionText2}, Answer 2: {rule.answerText2}</td>
+                                    </tr>;
+                                }
+                            })
+                        :
+                            <tr>
+                                <td colSpan="5"><span>No rules set for this survey</span></td>
+                            </tr>
                         }
                         {children}
                     </tbody>
