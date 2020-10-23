@@ -3,7 +3,7 @@
   (:require [clojure.set :as set]
             [org.openforis.ceo.utils.type-conversion :as tc]
             [org.openforis.ceo.database        :refer [call-sql sql-primitive]]
-            [org.openforis.ceo.db.institutions :refer [is-inst-admin-query?]]
+            [org.openforis.ceo.db.institutions :refer [is-inst-admin?]]
             [org.openforis.ceo.views           :refer [data-response]]))
 
 (defn- time-plus-five-min []
@@ -71,7 +71,7 @@
         plot-id         (tc/val->int (:plotId params))
         user-id         (:userId params -1)
         user-name       (:userName params)
-        inst-admin?     (is-inst-admin-query? user-id institution-id)
+        inst-admin?     (is-inst-admin? user-id institution-id)
         sql2            #(call-sql % project-id plot-id)
         sql3            #(call-sql % project-id plot-id user-name)]
     (data-response (if-let [plot-info (first (cond

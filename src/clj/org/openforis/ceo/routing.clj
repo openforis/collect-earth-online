@@ -24,7 +24,7 @@
                                               :auth-type   :user
                                               :auth-action :redirect}
    [:get  "/create-project"]                 {:handler     (render-page "/project-admin")
-                                              :auth-type   :inst-admin
+                                              :auth-type   :admin
                                               :auth-action :redirect}
    [:get  "/geo-dash"]                       {:handler     (render-page "/geo-dash")
                                               :auth-type   :collect
@@ -32,22 +32,22 @@
    [:get  "/geo-dash/geo-dash-help"]         {:handler     (render-page "/geo-dash/geo-dash-help")}
    [:get  "/home"]                           {:handler     (render-page "/home")}
    [:get  "/institution-dashboard"]          {:handler     (render-page "/institution-dashboard")
-                                              :auth-type   :inst-admin
+                                              :auth-type   :admin
                                               :auth-action :redirect}
    [:get  "/login"]                          {:handler     (render-page "/login")}
    [:get  "/password-request"]               {:handler     (render-page "/password-request")}
    [:get  "/password-reset"]                 {:handler     (render-page "/password-reset")}
    [:get  "/project-dashboard"]              {:handler     (render-page "/project-dashboard")
-                                              :auth-type   :proj-admin
+                                              :auth-type   :admin
                                               :auth-action :redirect}
    [:get  "/register"]                       {:handler     (render-page "/register")}
    [:get  "/review-institution"]             {:handler     (render-page "/review-institution")}
    [:get  "/review-project"]                 {:handler     (render-page "/project-admin")
-                                              :auth-type   :proj-admin
+                                              :auth-type   :admin
                                               :auth-action :redirect}
    [:get  "/support"]                        {:handler     (render-page "/support")}
    [:get  "/widget-layout-editor"]           {:handler     (render-page "/widget-layout-editor")
-                                              :auth-type   :proj-admin
+                                              :auth-type   :admin
                                               :auth-action :redirect}
    [:get  "/mailing-list"]                   {:handler     (render-page "/mailing-list")
                                               :auth-type   :super
@@ -70,7 +70,7 @@
    [:post "/login"]                          {:handler     users/login}
    [:post "/logout"]                         {:handler     users/logout}
    [:post "/update-user-institution-role"]   {:handler     users/update-institution-role
-                                              :auth-type   :inst-admin
+                                              :auth-type   :admin
                                               :auth-action :block}
    [:post "/request-institution-membership"] {:handler     users/request-institution-membership
                                               :auth-type   :user
@@ -84,10 +84,10 @@
    [:post "/unsubscribe-mailing-list"]       {:handler     users/unsubscribe-from-mailing-list}
    ;; Projects API
    [:get  "/dump-project-aggregate-data"]    {:handler     projects/dump-project-aggregate-data
-                                              :auth-type   :proj-admin
+                                              :auth-type   :admin
                                               :auth-action :block}
    [:get  "/dump-project-raw-data"]          {:handler     projects/dump-project-raw-data
-                                              :auth-type   :proj-admin
+                                              :auth-type   :admin
                                               :auth-action :block}
    [:get  "/get-all-projects"]               {:handler     projects/get-all-projects}
    [:get  "/get-project-by-id"]              {:handler     projects/get-project-by-id
@@ -99,19 +99,19 @@
                                               :auth-type   :collect
                                               :auth-action :block}
    [:post "/archive-project"]                {:handler     projects/archive-project
-                                              :auth-type   :proj-admin
+                                              :auth-type   :admin
                                               :auth-action :block}
    [:post "/close-project"]                  {:handler     projects/close-project
-                                              :auth-type   :proj-admin
+                                              :auth-type   :admin
                                               :auth-action :block}
    [:post "/create-project"]                 {:handler     projects/create-project
-                                              :auth-type   :inst-admin
+                                              :auth-type   :admin
                                               :auth-action :block}
    [:post "/publish-project"]                {:handler     projects/publish-project
-                                              :auth-type   :proj-admin
+                                              :auth-type   :admin
                                               :auth-action :block}
    [:post "/update-project"]                 {:handler     projects/update-project
-                                              :auth-type   :proj-admin
+                                              :auth-type   :admin
                                               :auth-action :block}
    ;; Plots API
    [:get  "/get-next-plot"]                  {:handler     plots/get-next-plot
@@ -145,13 +145,13 @@
    [:get  "/get-all-institutions"]           {:handler     institutions/get-all-institutions}
    [:get  "/get-institution-details"]        {:handler     institutions/get-institution-details}
    [:post "/archive-institution"]            {:handler     institutions/archive-institution
-                                              :auth-type   :inst-admin
+                                              :auth-type   :admin
                                               :auth-action :block}
    [:post "/create-institution"]             {:handler     institutions/create-institution
                                               :auth-type   :user
                                               :auth-action :block}
    [:post "/update-institution"]             {:handler     institutions/update-institution
-                                              :auth-type   :inst-admin
+                                              :auth-type   :admin
                                               :auth-action :block}
    ;; Imagery API
    [:get  "/get-institution-imagery"]        {:handler     imagery/get-institution-imagery}
@@ -160,13 +160,13 @@
                                               :auth-action :block}
    [:get  "/get-public-imagery"]             {:handler     imagery/get-public-imagery}
    [:post "/add-institution-imagery"]        {:handler     imagery/add-institution-imagery
-                                              :auth-type   :inst-admin
+                                              :auth-type   :admin
                                               :auth-action :block}
    [:post "/update-institution-imagery"]     {:handler     imagery/update-institution-imagery
-                                              :auth-type   :inst-admin
+                                              :auth-type   :admin
                                               :auth-action :block}
    [:post "/archive-institution-imagery"]    {:handler     imagery/archive-institution-imagery
-                                              :auth-type   :inst-admin
+                                              :auth-type   :admin
                                               :auth-action :block}
    ;; GeoDash API
    [:get  "/geo-dash/get-by-projid"]         {:handler     geodash/geodash-id}

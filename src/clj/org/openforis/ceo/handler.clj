@@ -24,7 +24,8 @@
             [org.openforis.ceo.routing          :refer [routes]]
             [org.openforis.ceo.views            :refer [not-found-page data-response]]
             [org.openforis.ceo.db.projects      :refer [can-collect? is-proj-admin?]]
-            [org.openforis.ceo.db.institutions  :refer [is-inst-admin?]]))
+            [org.openforis.ceo.db.institutions  :refer [is-inst-admin?]]
+            [org.openforis.ceo.utils.type-conversion :as tc]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Routing Handler
@@ -45,28 +46,32 @@
                        "&flash_message=You must login to see "
                        full-url))))))
 
-(defn- no-cross-traffic? [{:keys [headers]}]
-  (when-let [referer (get headers "referer")]
-    (when-let [host (get headers "host")]
-      (str/includes? referer host))))
+(defn- no-cross-traffic? [{:strs [referer host]}]
+  (and referer host (str/includes? referer host)))
 
-(defn authenticated-routing-handler [{:keys [uri request-method params] :as request}]
+(defn authenticated-routing-handler [{:keys [uri request-method params headers] :as request}]
   (let [{:keys [auth-type auth-action handler] :as route} (get routes [request-method uri])
-        user-id      (:userId params -1)
-        next-handler (if route
-                       (if (condp = auth-type
-                             :user       (pos? user-id)
-                             :super      (= 1  user-id)
-                             :collect    (can-collect? request)
-                             :proj-admin (is-proj-admin? request)
-                             :inst-admin (is-inst-admin? request)
-                             :no-cross   (no-cross-traffic? request)
-                             true)
-                         handler
-                         (if (= :redirect auth-action)
-                           (redirect-auth user-id)
-                           forbidden-response))
-                       not-found-page)]
+        user-id        (:userId params -1)
+        institution-id (tc/val->int (:institutionId params))
+        project-id     (tc/val->int (:projectId params))
+        next-handler   (if route
+                         (if (condp = auth-type
+                               :user     (pos? user-id)
+                               :super    (= 1  user-id)
+                               :collect  (can-collect? user-id project-id (:tokenKey params))
+                               :admin    (cond
+                                           (pos? project-id)
+                                           (is-proj-admin? user-id project-id (:tokenKey params))
+
+                                           (pos? institution-id)
+                                           (is-inst-admin? user-id institution-id))
+                               :no-cross (no-cross-traffic? headers)
+                               true)
+                           handler
+                           (if (= :redirect auth-action)
+                             (redirect-auth user-id)
+                             forbidden-response))
+                         not-found-page)]
     (next-handler request)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
