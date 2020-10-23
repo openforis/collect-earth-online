@@ -21,7 +21,7 @@
 (defn- check-auth-common [user-id project-id token-key sql-query]
   (or (and token-key
            (= token-key (:token_key (first (call-sql "select_project_by_id" {:log? false} project-id)))))
-      (sql-primitive (call-sql sql-query user-id project-id))))
+      (sql-primitive (call-sql {:log? false} sql-query user-id project-id))))
 
 (defn can-collect? [user-id project-id token-key]
   (check-auth-common user-id project-id token-key "can_user_collect_project"))

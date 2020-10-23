@@ -10,7 +10,7 @@
 (defn is-inst-admin? [user-id institution-id]
   (and (pos? user-id)
        (pos? institution-id)
-       (sql-primitive (call-sql "is_institution_admin" user-id institution-id))))
+       (sql-primitive (call-sql {:log? false} "is_institution_admin" user-id institution-id))))
 
 ;; TODO the front end uses get-institution-members, don't return members here.
 (defn- prepare-institution [{:keys [institution_id name logo description url archived members admins pending]}]
