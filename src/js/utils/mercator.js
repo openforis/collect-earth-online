@@ -805,6 +805,12 @@ mercator.zoomMapToLayer = function (mapConfig, layerId, padding) {
     return mapConfig;
 };
 
+// [Side Effects] Resizes the map
+mercator.resize = function (mapConfig) {
+    mapConfig.map.updateSize();
+    return mapConfig;
+};
+
 /*****************************************************************************
 ***
 *** Functions to create map styles
@@ -1289,7 +1295,8 @@ mercator.addOverlay = function (mapConfig, overlayTitle, element) {
     const overlay = new Overlay({
         id: overlayTitle,
         element: element,
-    });//?element:document.createElement("div")});
+        autoPan: true,
+    });
     mapConfig.map.addOverlay(overlay);
     return mapConfig;
 };

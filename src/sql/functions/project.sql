@@ -1606,8 +1606,8 @@ $$ LANGUAGE SQL;
 CREATE OR REPLACE FUNCTION get_deleted_user_plots_by_project(_project_id integer)
  RETURNS TABLE (
     plot_id    integer,
-    lon        float,
-    lat        float
+    lon        double precision,
+    lat        double precision
  ) AS $$
 
     WITH deleted_user_plots AS (

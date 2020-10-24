@@ -267,19 +267,18 @@ class Collection extends React.Component {
 
     getPlotData = (plotId) =>
         this.processModal(`Getting plot ${plotId}`, () =>
-            fetch("/get-plot-by-id?"
-              + getQueryString({
-                  plotId: plotId,
-                  projectId: this.props.projectId,
-                  navigationMode: this.state.navigationMode,
-              }))
+            fetch("/get-plot-by-id?" + getQueryString({
+                plotId: plotId,
+                projectId: this.props.projectId,
+                navigationMode: this.state.navigationMode,
+            }))
                 .then(response => response.ok ? response.json() : Promise.reject(response))
                 .then(data => {
                     if (data === "done") {
-                        alert(this.state.navigationMode !== "unanalyzed"
-                          ? "This plot was analyzed by someone else. You are logged in as " + this.props.userName + "."
-                          : "This plot has already been analyzed.");
-                    } else if (data === "not-found") {
+                        alert(this.state.reviewPlots
+                              ? "This plot was analyzed by someone else. You are logged in as " + this.props.userName + "."
+                              : "This plot has already been analyzed.");
+                    } else if (data === "not found") {
                         alert("Plot " + plotId + " not found.");
                     } else {
                         this.setState({
@@ -300,19 +299,18 @@ class Collection extends React.Component {
 
     getNextPlotData = (plotId) =>
         this.processModal(plotId > 0 ? "Getting next plot" : "Getting first plot", () =>
-            fetch("/get-next-plot?"
-              + getQueryString({
-                  plotId: plotId,
-                  projectId: this.props.projectId,
-                  navigationMode: this.state.navigationMode,
-              }))
+            fetch("/get-next-plot?" + getQueryString({
+                plotId: plotId,
+                projectId: this.props.projectId,
+                navigationMode: this.state.navigationMode,
+            }))
                 .then(response => response.ok ? response.json() : Promise.reject(response))
                 .then(data => {
                     if (data === "done") {
                         if (plotId === -1) {
                             alert(this.state.navigationMode !== "unanalyzed"
-                              ? "You have not reviewed any plots. You are logged in as " + this.props.userName + "."
-                              : "All plots have been analyzed for this project.");
+                                  ? "You have not reviewed any plots. You are logged in as " + this.props.userName + "."
+                                  : "All plots have been analyzed for this project.");
                         } else {
                             this.setState({nextPlotButtonDisabled: true});
                             alert("You have reached the end of the plot list.");
@@ -335,19 +333,18 @@ class Collection extends React.Component {
 
     getPrevPlotData = (plotId) =>
         this.processModal("Getting previous plot", () =>
-            fetch("/get-prev-plot?"
-              + getQueryString({
-                  plotId: plotId,
-                  projectId: this.props.projectId,
-                  navigationMode: this.state.navigationMode,
-              }))
+            fetch("/get-prev-plot?" + getQueryString({
+                plotId: plotId,
+                projectId: this.props.projectId,
+                navigationMode: this.state.navigationMode,
+            }))
                 .then(response => response.ok ? response.json() : Promise.reject(response))
                 .then(data => {
                     if (data === "done") {
                         this.setState({prevPlotButtonDisabled: true});
                         alert(this.state.navigationMode !== "unanalyzed"
-                          ? "No previous plots were analyzed by you. You are logged in as " + this.props.userName + "."
-                          : "All previous plots have been analyzed.");
+                              ? "No previous plots were analyzed by you. You are logged in as " + this.props.userName + "."
+                              : "All previous plots have been analyzed.");
                     } else {
                         this.setState({
                             currentPlot: data,
@@ -533,7 +530,7 @@ class Collection extends React.Component {
 
     getPlotId = () => this.state.currentPlot.plotId
         ? parseInt(this.state.currentPlot.plotId)
-        : this.state.currentPlot.id
+        : this.state.currentPlot.id;
 
     navToNextPlot = () => this.getNextPlotData(this.getPlotId());
 
