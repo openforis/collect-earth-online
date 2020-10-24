@@ -125,7 +125,7 @@
                                        (assoc acc (str id) (str new-id))))
                                    {}
                                    plot-samples))]
-    (if (some (fn [[_ v]] (seq v)) user-samples)
+    (if (some seq (vals user-samples))
       (apply call-sql
              (concat (if user-plot-id
                        ["update_user_samples" user-plot-id]

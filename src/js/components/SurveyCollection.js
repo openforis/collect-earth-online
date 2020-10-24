@@ -259,7 +259,7 @@ export class SurveyCollection extends React.Component {
         </div>
     );
 
-    renderFlagClearButtons =() => (
+    renderFlagClearButtons = () => (
         <div className="mb-2 d-flex justify-content-between">
             <input
                 className="btn btn-outline-red btn-sm col mr-1"

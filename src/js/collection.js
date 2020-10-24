@@ -1013,6 +1013,7 @@ class Collection extends React.Component {
                     currentPlot={this.state.currentPlot}
                     answerMode={this.state.answerMode}
                     isProjectAdmin={this.state.currentProject.isProjectAdmin}
+                    toggleQuitModal={this.toggleQuitModal}
                 >
                     <PlotNavigation
                         plotId={plotId}
@@ -1074,7 +1075,6 @@ class Collection extends React.Component {
                                     setAnswerMode={this.setAnswerMode}
                                     resetPlotValues={this.resetPlotValues}
                                     toggleFlagged={this.toggleFlagged}
-                                    toggleQuitModal={this.toggleQuitModal}
                                 />
                             </>
                         :
@@ -1106,18 +1106,18 @@ function ImageAnalysisPane({imageryAttribution}) {
     );
 }
 
-function SideBar(props) {
-    const checkCanSave = () => {
-        const noneAnswered = props.surveyQuestions.every(sq => safeLength(sq.answered) === 0);
-        const hasSamples = safeLength(props.currentPlot.samples) > 0;
-        const allAnswered = props.currentPlot.flagged
-            || props.surveyQuestions.every(sq => safeLength(sq.visible) === safeLength(sq.answered));
-        if (props.answerMode !== "question") {
+class SideBar extends React.Component {
+    checkCanSave = () => {
+        const noneAnswered = this.props.surveyQuestions.every(sq => safeLength(sq.answered) === 0);
+        const hasSamples = safeLength(this.props.currentPlot.samples) > 0;
+        const allAnswered = this.props.currentPlot.flagged
+            || this.props.surveyQuestions.every(sq => safeLength(sq.visible) === safeLength(sq.answered));
+        if (this.props.answerMode !== "question") {
             alert("You must be in question mode to save the collection.");
             return false;
-        } else if (props.isProjectAdmin) {
+        } else if (this.props.isProjectAdmin) {
             if (!(noneAnswered || allAnswered)) {
-                alert("Admins can only save the plot if all questions are answered, or the answers are cleared.");
+                alert("Admins can only save the plot if all questions are answered or the answers are cleared.");
                 return false;
             } else {
                 return true;
@@ -1135,54 +1135,54 @@ function SideBar(props) {
         }
     };
 
-    const renderQuitButton = () => (
+    renderQuitButton = () => (
         <input
             id="collection-quit-button"
             className="btn btn-outline-lightgreen btn-sm col"
             type="button"
             value="Quit"
-            onClick={props.toggleQuitModal}
+            onClick={this.props.toggleQuitModal}
         />
     );
 
-    const renderSaveButtonGroup = () => (
+    renderSaveButtonGroup = () => (
         <div className="mb-5 d-flex justify-content-between">
             <input
-                className={"btn btn-outline-lightgreen btn-sm col mr-1"}
+                className="btn btn-outline-lightgreen btn-sm col mr-1"
                 type="button"
                 value="Save"
-                onClick={() => {
-                    if (checkCanSave()) props.postValuesToDB();
-                }}
+                onClick={() => this.checkCanSave() && this.props.postValuesToDB()}
             />
-            {renderQuitButton()}
+            {this.renderQuitButton()}
         </div>
     );
 
-    return (
-        <div
-            id="sidebar"
-            className="col-xl-3 border-left full-height"
-            style={{overflowY: "scroll", overflowX: "hidden"}}
-        >
-            <ProjectTitle
-                projectId={props.projectId}
-                plotId={props.plotId}
-                userName={props.userName}
-                projectName={props.projectName || ""}
-            />
-            {props.children}
+    render() {
+        return (
+            <div
+                id="sidebar"
+                className="col-xl-3 border-left full-height"
+                style={{overflowY: "scroll", overflowX: "hidden"}}
+            >
+                <ProjectTitle
+                    projectId={this.props.projectId}
+                    plotId={this.props.plotId}
+                    userName={this.props.userName}
+                    projectName={this.props.projectName || ""}
+                />
+                {this.props.children}
 
-            <div className="row">
-                <div className="col-sm-12 btn-block">
-                    {props.plotId
-                        ? renderSaveButtonGroup()
-                        : renderQuitButton()
-                    }
+                <div className="row">
+                    <div className="col-sm-12 btn-block">
+                        {this.props.plotId
+                            ? this.renderSaveButtonGroup()
+                            : this.renderQuitButton()
+                        }
+                    </div>
                 </div>
             </div>
-        </div>
-    );
+        );
+    }
 }
 
 class PlotNavigation extends React.Component {
