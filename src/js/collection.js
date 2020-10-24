@@ -1240,7 +1240,7 @@ class PlotNavigation extends React.Component {
     );
 
     render() {
-        const {props} = this;
+        const {setNavigationMode, navigationMode, loadingPlots} = this.props;
         return (
             <div className="text-center mt-2">
                 <div className="d-flex align-items-center my-2">
@@ -1248,17 +1248,17 @@ class PlotNavigation extends React.Component {
                     <select
                         className="form-control form-control-sm mr-2"
                         style={{flex: "1 1 auto"}}
-                        onChange={(e) => props.setNavigationMode(e.target.value)}
-                        value={props.navigationMode}
+                        onChange={(e) => setNavigationMode(e.target.value)}
+                        value={navigationMode}
                     >
                         <option value="unanalyzed">Unanalyzed plots</option>
                         <option value="analyzed">My analyzed plots</option>
-                        {this.props.isProjectAdmin && <option value="all">All analysed plots</option>}
+                        {this.isProjectAdmin && <option value="all">All analyzed plots</option>}
                     </select>
                 </div>
-                {props.loadingPlots
+                {loadingPlots
                     ? <h3>Loading plot data...</h3>
-                    : this.props.showNavButtons
+                    : this.showNavButtons
                         ? this.navButtons()
                         : this.gotoButton()
                 }
