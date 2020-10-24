@@ -113,3 +113,7 @@ export function removeFromSet(set, value) {
     set.delete(value);
     return set;
 }
+
+export function safeLength(arr) {
+    return (arr || []).length;
+}
