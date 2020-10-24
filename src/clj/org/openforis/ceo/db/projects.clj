@@ -137,21 +137,6 @@
                     :closedDate      (str (:closed_date stats))
                     :userStats       (tc/jsonb->clj (:user_stats stats))})))
 
-(defn publish-project [{:keys [params]}]
-  (let [project-id (tc/val->int (:projectId params))]
-    (call-sql "publish_project" project-id)
-    (data-response "")))
-
-(defn close-project [{:keys [params]}]
-  (let [project-id (tc/val->int (:projectId params))]
-    (call-sql "close_project" project-id)
-    (data-response "")))
-
-(defn archive-project [{:keys [params]}]
-  (let [project-id (tc/val->int (:projectId params))]
-    (call-sql "archive_project" project-id)
-    (data-response "")))
-
 ;;; Create/Update Common
 
 (defn- get-first-public-imagery []
@@ -473,7 +458,8 @@
                              samples-per-plot
                              sample-resolution
                              plots-file
-                             samples-file]
+                             samples-file
+                             allow-drawn-samples?]
   (if (#{"csv" "shp"} plot-distribution)
     (do (try-catch-throw  #(call-sql "update_project_tables"
                                      project-id
@@ -509,13 +495,14 @@
                                                       sample-resolution))
                            "Error adding plot file with generated samples."))
         ;; The SQL function only checks against plots with external tables.
-        (let [bad-plots (map :plot_id (call-sql "plots_missing_samples" project-id))]
-          (when (seq bad-plots)
-            (init-throw (str "The uploaded plot and sample files do not have correctly overlapping data. "
-                             (count bad-plots)
-                             " plots have no samples. The first 10 are: ["
-                             (str/join "," (take 10 bad-plots))
-                             "]")))))
+        (when (not allow-drawn-samples?)
+          (let [bad-plots (map :plot_id (call-sql "plots_missing_samples" project-id))]
+            (when (seq bad-plots)
+              (init-throw (str "The uploaded plot and sample files do not have correctly overlapping data. "
+                               (count bad-plots)
+                               " plots have no samples. The first 10 are: ["
+                               (str/join "," (take 10 bad-plots))
+                               "]"))))))
     (let [[[left bottom] [top right]] (pu/EPSG:4326->3857 [lon-min lat-min] [lon-max lat-max])
           [left bottom right top] (pad-bounds left bottom top right (/ 2.0 plot-size))]
       (check-plot-limits (if (= "gridded" plot-distribution)
@@ -571,7 +558,7 @@
         sample-distribution  (:sampleDistribution params)
         samples-per-plot     (tc/val->int (:samplesPerPlot params))
         sample-resolution    (tc/val->float (:sampleResolution params))
-        allow-drawn-samples  (or (= sample-distribution "none")
+        allow-drawn-samples? (or (= sample-distribution "none")
                                  (tc/val->bool (:allowDrawnSamples params)))
         sample-values        (tc/clj->jsonb (:sampleValues params))
         survey-rules         (tc/clj->jsonb (:surveyRules params))
@@ -600,7 +587,7 @@
                                                       sample-distribution
                                                       samples-per-plot
                                                       sample-resolution
-                                                      allow-drawn-samples
+                                                      allow-drawn-samples?
                                                       sample-values
                                                       survey-rules
                                                       (tc/clj->jsonb nil) ; TODO classification times is unused. Drop this column.
@@ -647,7 +634,8 @@
                                 samples-per-plot
                                 sample-resolution
                                 plots-file
-                                samples-file)))
+                                samples-file
+                                allow-drawn-samples?)))
       (data-response {:projectId project-id
                       :tokenKey  token-key})
       (catch Exception e
@@ -655,6 +643,54 @@
         (data-response (if-let [causes (:causes (ex-data e))]
                          (str/join "\n" causes)
                          "Unknown server error."))))))
+
+;;; Update Status
+
+(defn reset-collected-samples [project-id]
+  (let [project (first (call-sql "select_project_by_id" project-id))
+        sample-distribution  (:sample_distribution project)
+        allow-drawn-samples? (:allow_drawn_samples project)]
+    (cond
+      (not allow-drawn-samples?)
+      (call-sql "delete_user_plots_by_project" project-id)
+
+      (#{"shp" "csv"} sample-distribution)
+      (do
+        ;; TODO this can be done more efficiently.  Update when we update how external data is stored.
+        (call-sql "delete_all_samples_by_project" project-id)
+        (call-sql "delete_user_plots_by_project"  project-id)
+        (call-sql "samples_from_plots_with_files" project-id))
+
+      :else
+      (let [plot-shape        (:plot_shape project)
+            plot-size         (tc/val->float (:plot_size project))
+            samples-per-plot  (tc/val->int (:samples_per_plot project))
+            sample-resolution (tc/val->float (:sample_resolution project))]
+        (doseq [{:keys [plot_id lon lat]} (call-sql "get_deleted_user_plots_by_project" project-id)]
+          (create-project-samples plot_id
+                                  sample-distribution
+                                  [lon lat]
+                                  plot-shape
+                                  plot-size
+                                  samples-per-plot
+                                  sample-resolution))))))
+
+(defn publish-project [{:keys [params]}]
+  (let [project-id   (tc/val->int (:projectId params))
+        clear-saved? (tc/val->bool (:clearSaved params))]
+    (when clear-saved? (reset-collected-samples project-id))
+    (call-sql "publish_project" project-id)
+    (data-response "")))
+
+(defn close-project [{:keys [params]}]
+  (let [project-id (tc/val->int (:projectId params))]
+    (call-sql "close_project" project-id)
+    (data-response "")))
+
+(defn archive-project [{:keys [params]}]
+  (let [project-id (tc/val->int (:projectId params))]
+    (call-sql "archive_project" project-id)
+    (data-response "")))
 
 ;;; Dump Data common
 

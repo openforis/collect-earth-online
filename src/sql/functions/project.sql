@@ -1599,11 +1599,64 @@ CREATE OR REPLACE FUNCTION update_user_samples(
 
 $$ LANGUAGE SQL;
 
-CREATE OR REPLACE FUNCTION delete_saved_samples(_plot_id integer)
+--
+--  RESETTING COLLECTION
+--
+
+-- For clearing user plots for a single plot
+CREATE OR REPLACE FUNCTION delete_user_plot_by_plot(_plot_id integer)
  RETURNS void AS $$
 
-    DELETE FROM user_plots WHERE plot_rid = _plot_id;
-    DELETE FROM samples WHERE plot_rid = _plot_id;
+    DELETE FROM user_plots WHERE plot_rid = _plot_id
+
+$$ LANGUAGE SQL;
+
+-- For clearing samples for a single plot
+CREATE OR REPLACE FUNCTION delete_samples_by_plot(_plot_id integer)
+ RETURNS void AS $$
+
+    DELETE FROM samples WHERE plot_rid = _plot_id
+
+$$ LANGUAGE SQL;
+
+-- For clearing all user plots in a project
+CREATE OR REPLACE FUNCTION delete_user_plots_by_project(_project_id integer)
+ RETURNS void AS $$
+
+    DELETE FROM user_plots WHERE plot_rid IN (SELECT plot_uid FROM plots WHERE project_rid = _project_id)
+
+$$ LANGUAGE SQL;
+
+-- For clearing all samples in a project
+CREATE OR REPLACE FUNCTION delete_all_samples_by_project(_project_id integer)
+ RETURNS void AS $$
+
+    DELETE FROM samples WHERE plot_rid IN (SELECT plot_uid FROM plots WHERE project_rid = _project_id)
+
+$$ LANGUAGE SQL;
+
+-- For clearing user plots and collected samples for a project
+CREATE OR REPLACE FUNCTION get_deleted_user_plots_by_project(_project_id integer)
+ RETURNS TABLE (
+    plot_id    integer,
+    lon        double precision,
+    lat        double precision
+ ) AS $$
+
+    WITH deleted_user_plots AS (
+        DELETE FROM user_plots WHERE plot_rid IN (SELECT plot_uid FROM plots WHERE project_rid = _project_id)
+        RETURNING plot_rid
+    ), deleted_samples AS (
+        DELETE FROM samples WHERE plot_rid IN (SELECT plot_rid FROM deleted_user_plots)
+        RETURNING plot_rid
+    )
+
+    SELECT distinct(plot_uid),
+        ST_X(center) AS lon,
+        ST_Y(center) AS lat
+    FROM plots
+    INNER JOIN deleted_samples
+        ON plot_uid = plot_rid
 
 $$ LANGUAGE SQL;
 
@@ -1673,7 +1726,7 @@ CREATE OR REPLACE FUNCTION dump_project_plot_data(_project_id integer)
     )
 
     SELECT plot_id,
-        ST_X(ST_SetSRID(ST_GeomFromGeoJSON(center), 4326)) AS lon,
+        ST_X(ST_SetSRID(ST_GeomFromGeoJSON(center), 4326)) AS lon, -- TODO, why is this already in geojson when its stored as a geometry
         ST_Y(ST_SetSRID(ST_GeomFromGeoJSON(center), 4326)) AS lat,
         plot_shape,
         plot_size,
