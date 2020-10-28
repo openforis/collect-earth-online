@@ -680,10 +680,10 @@
                                                                  sample-file-base64
                                                                  write-dir
                                                                  (str "project-" project-id "-samples"))))]
-           (try-catch-throw  #(call-sql "update_project_sample_table"
-                                        project-id
-                                        (check-load-ext sample-distribution project-id samples-file "samples" ["PLOTID" "SAMPLEID"]))
-                             "SQL Error: cannot update project table.")
+           (try-catch-throw #(call-sql "update_project_sample_table"
+                                       project-id
+                                       (check-load-ext sample-distribution project-id samples-file "samples" ["PLOTID" "SAMPLEID"]))
+                            "SQL Error: cannot update project table.")
            (try-catch-throw #(call-sql "samples_from_plots_with_files" project-id)
                             "Error importing samples file."))
          (doseq [{:keys [plot_id lon lat]} (call-sql "get_plot_centers_by_project" project-id)]
