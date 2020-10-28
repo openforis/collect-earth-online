@@ -60,7 +60,8 @@ export default class CreateProjectWizard extends React.Component {
                 StepHelpComponent: () =>
                     <AOIMap
                         context={this.context}
-                        canDrag={!this.context.useTemplatePlots}
+                        canDrag={!this.context.useTemplatePlots
+                                 && !["csv", "shp"].includes(this.context.plotDistribution)}
                     />,
                 validate: this.validatePlotData,
             },
@@ -111,6 +112,10 @@ export default class CreateProjectWizard extends React.Component {
     componentDidMount() {
         this.getTemplateProjects();
         if (this.context.name !== "" || this.context.description !== "") this.checkAllSteps();
+        this.context.setProjectDetails({
+            plotFileBase64: null,
+            sampleFileBase64: null,
+        });
     }
 
     /// API Calls
@@ -243,6 +248,7 @@ export default class CreateProjectWizard extends React.Component {
 
     validatePlotData = () => {
         const {
+            projectId,
             boundary,
             plotDistribution,
             numPlots,
@@ -250,46 +256,54 @@ export default class CreateProjectWizard extends React.Component {
             plotSize,
             plotFileName,
             useTemplatePlots,
+            originalProject,
         } = this.context;
         const totalPlots = this.getTotalPlots();
+        const plotFileNeeded = !useTemplatePlots
+            && (projectId === -1 || plotDistribution !== originalProject.plotDistribution);
         const errorList = [
             (["random", "gridded"].includes(plotDistribution) && !boundary)
-                && "Please select a valid boundary.",
-            (plotDistribution === "random" && (!numPlots || numPlots === 0))
+                && "Please select a valid boundary",
+            (plotDistribution === "random" && !(numPlots || 0) === 0)
                 && "A number of plots is required for random plot distribution.",
-            (plotDistribution === "gridded" && (!plotSpacing || plotSpacing === 0))
+            (plotDistribution === "gridded" && !(plotSpacing || 0) === 0)
                 && "A plot spacing is required for gridded plot distribution.",
             (plotDistribution !== "shp" && (!plotSize || plotSize === 0))
                 && "A plot size is required.",
-            (plotDistribution === "csv" && !useTemplatePlots && !(plotFileName && plotFileName.includes(".csv")))
+            (plotDistribution === "csv" && plotFileNeeded && !(plotFileName || "").includes(".csv"))
                 && "A plot CSV (.csv) file is required.",
-            (plotDistribution === "shp" && !useTemplatePlots && !(plotFileName && plotFileName.includes(".zip")))
+            (plotDistribution === "shp" && plotFileNeeded && !(plotFileName || "").includes(".zip"))
                 && "A plot SHP (.zip) file is required.",
             (totalPlots > plotLimit)
-                && "The plot or sample size limit has been exceeded. Check the Plot Design section for detailed info.",
+                && "The plot or sample size limit exceeded. Check the Sample Design section for detailed info.",
         ];
         return errorList.filter(e => e);
     };
 
     validateSampleData = () => {
         const {
+            projectId,
             plotSize,
             sampleDistribution,
             sampleResolution,
             plotShape,
+            plotFileName,
             sampleFileName,
             useTemplatePlots,
+            originalProject,
         } = this.context;
         const totalPlots = this.getTotalPlots();
         const samplesPerPlot = this.getSamplesPerPlot();
+        const sampleFileNeeded = !useTemplatePlots
+            && (projectId === -1 || sampleDistribution !== originalProject.sampleDistribution || plotFileName);
         const errorList = [
-            (sampleDistribution === "random" && (!samplesPerPlot || samplesPerPlot === 0))
+            (sampleDistribution === "random" && !(samplesPerPlot || 0) === 0)
                 && "A number of samples per plot is required for random sample distribution.",
-            (sampleDistribution === "gridded" && (!sampleResolution || sampleResolution === 0))
+            (sampleDistribution === "gridded" && !(sampleResolution || 0) === 0)
                 && "A sample spacing is required for gridded sample distribution.",
-            (sampleDistribution === "csv" && !useTemplatePlots && !(sampleFileName && sampleFileName.includes(".csv")))
+            (sampleDistribution === "csv" && sampleFileNeeded && !(sampleFileName || "").includes(".csv"))
                 && "A sample CSV (.csv) file is required.",
-            (sampleDistribution === "shp" && !useTemplatePlots && !(sampleFileName && sampleFileName.includes(".zip")))
+            (sampleDistribution === "shp" && sampleFileNeeded && !(sampleFileName || "").includes(".zip"))
                 && "A sample SHP (.zip) file is required.",
             (sampleDistribution === "gridded"
                 && plotShape === "circle"
@@ -318,13 +332,12 @@ export default class CreateProjectWizard extends React.Component {
 
     /// Changing Step
 
-    getSteps = () => this.context.projectId > 0
-        ? {
+    getSteps = () => (this.context.projectId === -1 || this.context.originalProject.availability === "unpublished")
+        ? this.steps
+        : {
             overview: this.steps.overview,
-            questions: this.steps.questions,
-            rules: this.steps.rules,
-        }
-        : this.steps;
+            imagery: this.steps.imagery,
+        };
 
     checkAllSteps = () => {
         const validSteps = Object.entries(this.getSteps())
