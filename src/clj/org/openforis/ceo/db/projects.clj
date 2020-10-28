@@ -357,23 +357,26 @@
 
 (defn- get-csv-headers [ext-file must-include]
   (let [data (slurp ext-file)]
-    (if-let [header-row (re-find #".+(?=\n)" data)]
-      (let [headers (as-> header-row hr
-                      (str/split hr #",")
-                      (mapv #(-> %
-                                 (str/upper-case)
-                                 (str/replace #"-| |," "_")
-                                 (str/replace #"X|LONGITUDE|LONG|CENTER_X" "LON")
-                                 (str/replace #"Y|LATITUDE|CENTER_Y" "LAT"))
-                            hr))]
-        (if (every? (set headers) must-include)
-          (do
-            (spit ext-file (str/replace-first data header-row (str/join "," headers)))
-            (type-columns headers))
-          (init-throw (str "Error while checking headers. Fields must include LON,LAT,"
-                           (str/join "," must-include)
-                           ".\n"))))
-      (init-throw "CSV File is empty.\n"))))
+    (if-let [header-row (re-find #".+(?=[\r\n|\n|\r])" data)]
+      (do
+        (when (not (str/includes? header-row ","))
+          (init-throw "The CSV file must use commas for the delimiter."))
+        (let [headers (as-> header-row hr
+                        (str/split hr #",")
+                        (mapv #(-> %
+                                   (str/upper-case)
+                                   (str/replace #"-| |," "_")
+                                   (str/replace #"X|LONGITUDE|LONG|CENTER_X" "LON")
+                                   (str/replace #"Y|LATITUDE|CENTER_Y" "LAT"))
+                              hr))]
+          (if (every? (set headers) must-include)
+            (do
+              (spit ext-file (str/replace-first data header-row (str/join "," headers)))
+              (type-columns headers))
+            (init-throw (str "Error while checking headers. Fields must include LON,LAT,"
+                             (str/join "," must-include)
+                             ".")))))
+      (init-throw "CSV File is empty."))))
 
 (defn- load-external-data [distribution project-id ext-file type must-include]
   (let [folder-name (str tmp-dir "/ceo-tmp-" project-id "/")]
@@ -398,7 +401,7 @@
                                                      table-name ext-file))
                           (call-sql "add_index_col" table-name) ; Add index for reference
                           table-name))
-                     "Error importing file into SQL.\n")))
+                     "Error importing file into SQL.")))
 
 (defn- check-load-ext [distribution project-id ext-file type must-include]
   (when (#{"csv" "shp"} distribution)
@@ -411,15 +414,15 @@
                          (try-catch-throw #(if (= "plots" type)
                                              (call-sql "select_partial_table_by_name" table)
                                              (call-sql "select_partial_sample_table_by_name" table))
-                                          (str (str/capitalize type) " " distribution " file failed to load.\n"))
+                                          (str (str/capitalize type) " " distribution " file failed to load."))
                          table))
                      (if (= "csv" distribution)
-                       (str "Malformed " type " CSV. Fields must include LON,LAT," (str/join "," must-include) " columns.\n")
+                       (str "Malformed " type " CSV. Fields must include LON,LAT," (str/join "," must-include) " columns.")
                        (str "Malformed "
                             type
                             " Shapefile. All features must be of type polygon and include "
                             (str/join "," must-include)
-                            " field(s).\n")))))
+                            " field(s).")))))
 
 (defn- create-project-samples [plot-id
                                sample-distribution
@@ -643,7 +646,7 @@
       (catch Exception e
         (try (call-sql "delete_project" project-id))
         (data-response (if-let [causes (:causes (ex-data e))]
-                         (str/join "\n" causes)
+                         (str "-" (str/join "\n-" causes))
                          "Unknown server error."))))))
 
 ;;; Update Status
