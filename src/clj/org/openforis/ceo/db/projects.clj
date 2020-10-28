@@ -668,8 +668,9 @@
         name             (:name params)
         description      (:description params)
         privacy-level    (:privacyLevel params)
-        survey-questions (:surveyQuestions params)
-        survey-rules     (:surveyRules params)
+        survey-questions (tc/clj->jsonb (:surveyQuestions params))
+        survey-rules     (tc/clj->jsonb (:surveyRules params))
+        update-survey    (tc/val->bool (:updateSurvey params))
         project-options  (tc/clj->jsonb (:projectOptions params default-options))
         original-project (first (call-sql "select_project_by_id" project-id))]
     (if original-project
@@ -680,15 +681,14 @@
                   description
                   privacy-level
                   imagery-id
-                  (tc/clj->jsonb survey-questions)
-                  (tc/clj->jsonb survey-rules)
+                  survey-questions
+                  survey-rules
                   project-options)
         (when-let [imagery-list (:projectImageryList params)]
           (call-sql "delete_project_imagery" project-id)
           (insert-project-imagery project-id imagery-list))
-        ;; FIXME: Old formatted survey questions wont match what is returned from the front end.
-        (when (or (not= survey-questions (tc/jsonb->clj (:survey_questions original-project)))
-                  (not= survey-rules (tc/jsonb->clj (:survey_rules original-project))))
+        ;; FIXME: Old stored questions can have a different format than when passed from the UI.
+        (when update-survey
           (reset-collected-samples project-id))
         (data-response ""))
       (data-response (str "Project " project-id "  not found.")))))

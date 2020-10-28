@@ -1,4 +1,5 @@
 import React from "react";
+import _ from "lodash";
 
 import ReviewForm from "./ReviewForm";
 
@@ -73,9 +74,8 @@ export default class ReviewChanges extends React.Component {
     };
 
     updateProject = () => {
-
-    updateProject = () => {
-        const extraMessage = this.surveyQuestionUpdated(this.context, this.context.originalProject)
+        const surveyQuestionUpdated = this.surveyQuestionUpdated(this.context, this.context.originalProject);
+        const extraMessage = surveyQuestionUpdated
             ? "  Updating survey questions or rules will reset all collected data."
             : "";
         if (confirm("Do you really want to update this project?" + extraMessage)) {
@@ -97,6 +97,7 @@ export default class ReviewChanges extends React.Component {
                               projectImageryList: this.context.projectImageryList,
                               surveyQuestions: this.context.surveyQuestions,
                               surveyRules: this.context.surveyRules,
+                              surveyQuestionUpdated: surveyQuestionUpdated, // FIXME this is a shim for when stored questions are in an old format.
                           }),
                       })
                     .then(response => {
