@@ -319,7 +319,11 @@ export default class CreateProjectWizard extends React.Component {
     /// Changing Step
 
     getSteps = () => this.context.projectId > 0
-        ? {overview: this.steps.overview}
+        ? {
+            overview: this.steps.overview,
+            questions: this.steps.questions,
+            rules: this.steps.rules,
+        }
         : this.steps;
 
     checkAllSteps = () => {

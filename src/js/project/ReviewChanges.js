@@ -73,7 +73,12 @@ export default class ReviewChanges extends React.Component {
     };
 
     updateProject = () => {
-        if (confirm("Do you really want to update this project?")) {
+
+    updateProject = () => {
+        const extraMessage = this.surveyQuestionUpdated(this.context, this.context.originalProject)
+            ? "  Updating survey questions or rules will reset all collected data."
+            : "";
+        if (confirm("Do you really want to update this project?" + extraMessage)) {
             this.context.processModal("Updating Project", () =>
                 fetch("/update-project",
                       {
@@ -90,6 +95,8 @@ export default class ReviewChanges extends React.Component {
                               privacyLevel: this.context.privacyLevel,
                               projectOptions: this.context.projectOptions,
                               projectImageryList: this.context.projectImageryList,
+                              surveyQuestions: this.context.surveyQuestions,
+                              surveyRules: this.context.surveyRules,
                           }),
                       })
                     .then(response => {
@@ -104,6 +111,15 @@ export default class ReviewChanges extends React.Component {
             );
         }
     };
+
+    /// Helper Functions
+
+    surveyQuestionUpdated = (projectDetails, originalProject) =>
+        projectDetails.surveyQuestions !== originalProject.surveyQuestions
+            || projectDetails.surveyRules !== originalProject.surveyRules
+            || (originalProject.allowDrawnSamples && !projectDetails.allowDrawnSamples);
+
+    /// Render Functions
 
     renderButtons = () => (
         <div className="d-flex flex-column">

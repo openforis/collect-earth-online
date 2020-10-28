@@ -149,21 +149,6 @@
   (doseq [imagery imagery-list]
     (call-sql "insert_project_imagery" project-id imagery)))
 
-;;; Update Project
-
-(defn update-project [{:keys [params]}]
-  (let [project-id      (tc/val->int (:projectId params))
-        name            (:name params)
-        description     (:description params)
-        privacy-level   (:privacyLevel params)
-        imagery-id      (or (:imageryId params) (get-first-public-imagery))
-        project-options (tc/clj->jsonb (:projectOptions params default-options))]
-    (call-sql "update_project" project-id name description privacy-level imagery-id project-options)
-    (when-let [imagery-list (:projectImageryList params)]
-      (call-sql "delete_project_imagery" project-id)
-      (insert-project-imagery project-id imagery-list))
-    (data-response "")))
-
 ;;; Create Project
 
 (defn- init-throw [message]
@@ -562,7 +547,7 @@
         sample-resolution    (tc/val->float (:sampleResolution params))
         allow-drawn-samples? (or (= sample-distribution "none")
                                  (tc/val->bool (:allowDrawnSamples params)))
-        sample-values        (tc/clj->jsonb (:sampleValues params))
+        survey-questions     (tc/clj->jsonb (:surveyQuestions params))
         survey-rules         (tc/clj->jsonb (:surveyRules params))
         project-options      (tc/clj->jsonb (:projectOptions params default-options))
         project-template     (tc/val->int (:projectTemplate params))
@@ -575,11 +560,10 @@
         token-key            (str (UUID/randomUUID))
         project-id           (sql-primitive (call-sql "create_project"
                                                       institution-id
-                                                      imagery-id
-                                                      "unpublished"
                                                       name
                                                       description
                                                       privacy-level
+                                                      imagery-id
                                                       boundary
                                                       plot-distribution
                                                       num-plots
@@ -590,9 +574,8 @@
                                                       samples-per-plot
                                                       sample-resolution
                                                       allow-drawn-samples?
-                                                      sample-values
+                                                      survey-questions
                                                       survey-rules
-                                                      (tc/clj->jsonb nil) ; TODO classification times is unused. Drop this column.
                                                       token-key
                                                       project-options))]
     (try
@@ -676,6 +659,68 @@
                                   plot-size
                                   samples-per-plot
                                   sample-resolution))))))
+
+;;; Update Project
+
+(defn update-project [{:keys [params]}]
+  (let [project-id       (tc/val->int (:projectId params))
+        imagery-id       (or (:imageryId params nil) (get-first-public-imagery))
+        name             (:name params)
+        description      (:description params)
+        privacy-level    (:privacyLevel params)
+        survey-questions (tc/clj->jsonb (:surveyQuestions params))
+        survey-rules     (tc/clj->jsonb (:surveyRules params))
+        project-options  (tc/clj->jsonb (:projectOptions params default-options))
+        original-project (first (call-sql "select_project_by_id" project-id))]
+    (if original-project
+      (do
+        (call-sql "update_project"
+                  project-id
+                  name
+                  description
+                  privacy-level
+                  imagery-id
+                  survey-questions
+                  survey-rules
+                  project-options)
+        (when-let [imagery-list (:projectImageryList params)]
+          (call-sql "delete_project_imagery" project-id)
+          (insert-project-imagery project-id imagery-list))
+        (when (or (not= survey-questions (:survey_questions original-project))
+                  (not= survey-rules (:survey_rules original-project)))
+          (reset-collected-samples project-id))
+        (data-response ""))
+      (data-response (str "Project " project-id "  not found.")))))
+
+(defn update-project [{:keys [params]}]
+  (let [project-id           (tc/val->int (:projectId params))
+        imagery-id           (or (:imageryId params nil) (get-first-public-imagery))
+        name                 (:name params)
+        description          (:description params)
+        privacy-level        (:privacyLevel params)
+        survey-questions     (tc/clj->jsonb (:surveyQuestions params))
+        survey-rules         (tc/clj->jsonb (:surveyRules params))
+        project-options      (tc/clj->jsonb (:projectOptions params default-options))
+        original-project     (first (call-sql "select_project_by_id" project-id))]
+    (if original-project
+      (do
+        (call-sql "update_project"
+                  project-id
+                  name
+                  description
+                  privacy-level
+                  imagery-id
+                  survey-questions
+                  survey-rules
+                  project-options)
+        (when-let [imagery-list (:projectImageryList params)]
+          (call-sql "delete_project_imagery" project-id)
+          (insert-project-imagery project-id imagery-list))
+        (when (or (not= survey-questions (:survey_questions original-project))
+                  (not= survey-rules (:survey_rules original-project)))
+          (reset-collected-samples project-id))
+        (data-response ""))
+      (data-response (str "Project " project-id "  not found.")))))
 
 (defn publish-project [{:keys [params]}]
   (let [project-id   (tc/val->int (:projectId params))

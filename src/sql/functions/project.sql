@@ -178,36 +178,34 @@ $$ LANGUAGE SQL;
 
 -- Create a project
 CREATE OR REPLACE FUNCTION create_project(
-    _institution_id          integer,
-    _imagery_id              integer,
-    _availability            text,
-    _name                    text,
-    _description             text,
-    _privacy_level           text,
-    _boundary                jsonb,
-    _plot_distribution       text,
-    _num_plots               integer,
-    _plot_spacing            real,
-    _plot_shape              text,
-    _plot_size               real,
-    _sample_distribution     text,
-    _samples_per_plot        integer,
-    _sample_resolution       real,
-    _allow_drawn_samples     boolean,
-    _survey_questions        jsonb,
-    _survey_rules            jsonb,
-    _classification_times    jsonb,
-    _token_key               text,
-    _options                 jsonb
+    _institution_id         integer,
+    _name                   text,
+    _description            text,
+    _privacy_level          text,
+    _imagery_id             integer,
+    _boundary               jsonb,
+    _plot_distribution      text,
+    _num_plots              integer,
+    _plot_spacing           float,
+    _plot_shape             text,
+    _plot_size              float,
+    _sample_distribution    text,
+    _samples_per_plot       integer,
+    _sample_resolution      float,
+    _allow_drawn_samples    boolean,
+    _survey_questions       jsonb,
+    _survey_rules           jsonb,
+    _token_key              text,
+    _options                jsonb
  ) RETURNS integer AS $$
 
     INSERT INTO projects (
         institution_rid,
-        imagery_rid,
         availability,
         name,
         description,
         privacy_level,
+        imagery_rid,
         boundary,
         plot_distribution,
         num_plots,
@@ -221,16 +219,15 @@ CREATE OR REPLACE FUNCTION create_project(
         survey_questions,
         survey_rules,
         created_date,
-        classification_times,
         token_key,
         options
     ) VALUES (
         _institution_id,
-        _imagery_id,
-        _availability,
+        'unpublished',
         _name,
         _description,
         _privacy_level,
+        _imagery_id,
         ST_SetSRID(ST_GeomFromGeoJSON(_boundary), 4326),
         _plot_distribution,
         _num_plots,
@@ -244,7 +241,6 @@ CREATE OR REPLACE FUNCTION create_project(
         _survey_questions,
         _survey_rules,
         now(),
-        _classification_times,
         _token_key,
         _options
     )
@@ -315,12 +311,28 @@ $$ LANGUAGE PLPGSQL;
 
 -- Update select set of project fields
 CREATE OR REPLACE FUNCTION update_project(
-    _project_id       integer,
-    _name             text,
-    _description      text,
-    _privacy_level    text,
-    _imagery_id       integer,
-    _options          jsonb
+    _project_id             integer,
+    _name                   text,
+    _description            text,
+    _privacy_level          text,
+    _imagery_id             integer,
+    _survey_questions       jsonb,
+    _survey_rules           jsonb,
+    _options                jsonb
+ ) RETURNS void AS $$
+
+    UPDATE projects
+    SET name = _name,
+        description = _description,
+        privacy_level = _privacy_level,
+        imagery_rid = _imagery_id,
+        survey_questions = _survey_questions,
+        survey_rules = _survey_rules,
+        options = _options
+    WHERE project_uid = _project_id
+
+$$ LANGUAGE SQL;
+
  ) RETURNS void AS $$
 
     UPDATE projects
