@@ -115,9 +115,8 @@ export default class ReviewChanges extends React.Component {
     /// Helper Functions
 
     surveyQuestionUpdated = (projectDetails, originalProject) =>
-        projectDetails.surveyQuestions !== originalProject.surveyQuestions
-            || projectDetails.surveyRules !== originalProject.surveyRules
-            || (originalProject.allowDrawnSamples && !projectDetails.allowDrawnSamples);
+        !_.isEqual(projectDetails.surveyQuestions, originalProject.surveyQuestions)
+            || !_.isEqual(projectDetails.surveyRules, originalProject.surveyRules);
 
     /// Render Functions
 
