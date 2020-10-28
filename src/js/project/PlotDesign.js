@@ -51,9 +51,15 @@ export class PlotDesign extends React.Component {
             : null;
     };
 
+    setPlotDetails = (newDetail) => this.context.setProjectDetails(Object.assign(
+        newDetail,
+        {plots: []},
+        ["csv", "shp"].includes(this.context.plotDistribution) ? {boundary: null} : {}
+    ));
+
     updateBoundaryFromCoords = (newCoord) => this.setState(
         newCoord,
-        () => this.context.setProjectState({boundary: this.generateGeoJSON()})
+        () => this.setPlotDetails({boundary: this.generateGeoJSON()})
     );
 
     /// Render Functions
@@ -68,13 +74,13 @@ export class PlotDesign extends React.Component {
                 min="0"
                 step="1"
                 value={this.context[property] || ""}
-                onChange={e => this.context.setProjectState({[property]: e.target.value})}
+                onChange={e => this.setPlotDetails({[property]: e.target.value})}
             />
         </div>
     );
 
     renderPlotShape = () => {
-        const {plotShape, setProjectState} = this.context;
+        const {plotShape} = this.context;
         return (
             <div className="form-group" style={{display: "flex", flexDirection: "column"}}>
                 <label>Plot Shape</label>
@@ -85,7 +91,7 @@ export class PlotDesign extends React.Component {
                             className="form-check-input"
                             type="radio"
                             checked={plotShape === "circle"}
-                            onChange={() => setProjectState({plotShape: "circle"})}
+                            onChange={() => this.setPlotDetails({plotShape: "circle"})}
                         />
                         <label
                             className="form-check-label"
@@ -100,7 +106,7 @@ export class PlotDesign extends React.Component {
                             className="form-check-input"
                             type="radio"
                             checked={plotShape === "square"}
-                            onChange={() => setProjectState({plotShape: "square"})}
+                            onChange={() => this.setPlotDetails({plotShape: "square"})}
                         />
                         <label
                             className="form-check-label"
@@ -196,7 +202,7 @@ export class PlotDesign extends React.Component {
                     onChange={e => {
                         const file = e.target.files[0];
                         encodeFileAsBase64(file, base64 =>
-                            this.context.setProjectState({
+                            this.setPlotDetails({
                                 plotFileName: file.name,
                                 plotFileBase64: base64,
                             }));
@@ -267,7 +273,7 @@ export class PlotDesign extends React.Component {
                                     <select
                                         className="form-control form-control-sm ml-3"
                                         style={{width: "initial"}}
-                                        onChange={(e) => this.context.setProjectState({plotDistribution: e.target.value})}
+                                        onChange={(e) => this.setPlotDetails({plotDistribution: e.target.value})}
                                         value={plotDistribution}
                                     >
                                         {Object.entries(plotOptions).map(([key, options]) =>

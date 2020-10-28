@@ -50,6 +50,7 @@ class Project extends React.Component {
 
         this.state = {
             projectDetails: {...this.blankProject, privacyLevel: "institution"},
+            originalProject: {},
             institutionImagery: [],
             designMode: "loading",
             modalMessage: null,
@@ -79,7 +80,7 @@ class Project extends React.Component {
                 : plotDistribution === "shp" && ["random", "gridded"].includes(sampleDistribution)
                 ? "shp"
                 : sampleDistribution;
-            if (newSampleDistribution !== sampleDistribution) this.setProjectState({sampleDistribution: newSampleDistribution});
+            if (newSampleDistribution !== sampleDistribution) this.setProjectDetails({sampleDistribution: newSampleDistribution});
         }
 
         if (institution !== prevState.projectDetails.institution) {
@@ -89,12 +90,12 @@ class Project extends React.Component {
 
     /// Updating State
 
-    setProjectState = (newValue, callBack = () => null) =>
+    setProjectDetails = (newValue, callBack = () => null) =>
         this.setState({projectDetails: {...this.state.projectDetails, ...newValue}}, callBack);
 
     resetProject = (defaults) => this.setState({projectDetails: this.blankProject, ...defaults});
 
-    setDesignMode = (newMode) => this.setState({designMode: newMode});
+    setContextState = (newState) => this.setState(newState);
 
     /// API Calls
 
@@ -105,7 +106,7 @@ class Project extends React.Component {
                 const sorted = [...data.filter(a => a.title.toLocaleLowerCase().includes("mapbox")),
                                 ...data.filter(a => !a.title.toLocaleLowerCase().includes("mapbox"))];
                 this.setState({institutionImagery: sorted});
-                this.setProjectState({imageryId: sorted[0].id});
+                this.setProjectDetails({imageryId: sorted[0].id});
             })
             .catch(response => {
                 console.log(response);
@@ -127,11 +128,12 @@ class Project extends React.Component {
                 value={{
                     institutionId: this.props.institutionId,
                     projectId: this.props.projectId,
-                    ...this.state.projectDetails,
+                    ...this.state.projectDetails, // TODO: Do not spread projectDetails into context.
+                    originalProject: this.state.originalProject,
                     designMode: this.state.designMode,
                     institutionImagery: this.state.institutionImagery,
-                    setProjectState: this.setProjectState,
-                    setDesignMode: this.setDesignMode,
+                    setProjectDetails: this.setProjectDetails,
+                    setContextState: this.setContextState,
                     resetProject: this.resetProject,
                     processModal: this.processModal,
                 }}

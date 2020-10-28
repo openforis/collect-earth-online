@@ -22,7 +22,7 @@ export class SurveyQuestionDesign extends React.Component {
         const questionsToRemove = this.getChildQuestionIds(questionId);
         const newSurveyQuestions = this.context.surveyQuestions
             .filter(sq => !questionsToRemove.includes(sq.id));
-        this.context.setProjectState({surveyQuestions: newSurveyQuestions});
+        this.context.setProjectDetails({surveyQuestions: newSurveyQuestions});
     };
 
     removeAnswer = (questionId, answerId) => {
@@ -38,7 +38,7 @@ export class SurveyQuestionDesign extends React.Component {
             const updatedQuestion = {...surveyQuestion, answers: updatedAnswers};
             const newSurveyQuestions = this.context.surveyQuestions
                 .map(sq => sq.id === updatedQuestion.id ? updatedQuestion : sq);
-            this.context.setProjectState({surveyQuestions: newSurveyQuestions});
+            this.context.setProjectDetails({surveyQuestions: newSurveyQuestions});
         }
     };
 
@@ -52,7 +52,7 @@ export class SurveyQuestionDesign extends React.Component {
             <div id="survey-design">
                 <SurveyCardList
                     inDesignMode
-                    setProjectState={this.context.setProjectState}
+                    setProjectDetails={this.context.setProjectDetails}
                     surveyQuestions={this.context.surveyQuestions}
                     surveyRules={this.context.surveyRules}
                     removeAnswer={this.removeAnswer}
@@ -61,14 +61,14 @@ export class SurveyQuestionDesign extends React.Component {
                                 < this.maxAnswers(surveyQuestion.componentType, surveyQuestion.dataType)
                                 &&
                                 <NewAnswerDesigner
-                                    setProjectState={this.context.setProjectState}
+                                    setProjectDetails={this.context.setProjectDetails}
                                     surveyQuestions={this.context.surveyQuestions}
                                     surveyQuestion={surveyQuestion}
                                 />
                     }
                 />
                 <NewQuestionDesigner
-                    setProjectState={this.context.setProjectState}
+                    setProjectDetails={this.context.setProjectDetails}
                     surveyQuestions={this.context.surveyQuestions}
                     surveyRules={this.context.surveyRules}
                 />
@@ -116,7 +116,7 @@ class NewQuestionDesigner extends React.Component {
 
     addSurveyQuestion = () => {
         if (this.state.newQuestionText !== "") {
-            const {surveyQuestions, setProjectState} = this.props;
+            const {surveyQuestions, setProjectDetails} = this.props;
             const {dataType, componentType} = this.componentTypes[this.state.selectedType];
             const repeatedQuestions = surveyQuestions.filter(sq => removeEnumerator(sq.question) === this.state.newQuestionText).length;
 
@@ -134,7 +134,7 @@ class NewQuestionDesigner extends React.Component {
                     dataType: dataType,
                     componentType: componentType,
                 };
-                setProjectState({surveyQuestions: [...surveyQuestions, newQuestion]});
+                setProjectDetails({surveyQuestions: [...surveyQuestions, newQuestion]});
                 this.setState({selectedAnswer: -1, newQuestionText: ""});
             }
         } else {
@@ -259,7 +259,7 @@ class NewAnswerDesigner extends React.Component {
     }
 
     addSurveyAnswer = () => {
-        const {surveyQuestion, surveyQuestions, setProjectState} = this.props;
+        const {surveyQuestion, surveyQuestions, setProjectDetails} = this.props;
         if (this.state.newAnswerText.length > 0) {
             const newAnswer = {
                 id: surveyQuestion.answers.reduce((a, c) => Math.max(a, c.id), 0) + 1,
@@ -270,7 +270,7 @@ class NewAnswerDesigner extends React.Component {
             const updatedQuestion = {...surveyQuestion, answers: updatedAnswers};
             const newSurveyQuestions = surveyQuestions
                 .map(sq => sq.id === updatedQuestion.id ? updatedQuestion : sq);
-            setProjectState({surveyQuestions: newSurveyQuestions});
+            setProjectDetails({surveyQuestions: newSurveyQuestions});
             this.setState({selectedColor: "#1527f6", newAnswerText: ""});
         } else {
             alert("A survey answer must possess both an answer and a color.");

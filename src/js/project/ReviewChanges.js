@@ -97,7 +97,7 @@ export default class ReviewChanges extends React.Component {
                             console.log(response);
                             alert("Error updating project. See console for details.");
                         } else {
-                            this.context.setDesignMode("manage");
+                            this.context.setContextState({designMode: "manage"});
                             alert("Project successfully updated!");
                         }
                     })
@@ -120,7 +120,7 @@ export default class ReviewChanges extends React.Component {
                         type="button"
                         className="btn btn-outline-red btn-sm col-6"
                         value="Discard Changes"
-                        onClick={() => this.context.setDesignMode("manage")}
+                        onClick={() => this.context.setContextState({designMode: "manage"})}
                     />
                 </>
             ) : (
@@ -135,7 +135,7 @@ export default class ReviewChanges extends React.Component {
                 type="button"
                 className="btn btn-outline-lightgreen btn-sm col-6"
                 value="Continue Editing"
-                onClick={() => this.context.setDesignMode("wizard")}
+                onClick={() => this.context.setContextState({designMode: "wizard"})}
             />
         </div>
     );
