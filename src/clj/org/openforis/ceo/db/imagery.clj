@@ -71,7 +71,7 @@
         imagery-attribution  (:imageryAttribution params)
         source-config        (tc/clj->jsonb (:sourceConfig params))
         add-to-all-projects? (tc/val->bool (:addToAllProjects params) true)
-        institution-id       (:institution_id (get-imagery-by-id imagery-id))]
+        institution-id       (tc/val->int (:institutionId params))]
     (if (sql-primitive (call-sql "imagery_name_taken" institution-id imagery-title imagery-id))
       (data-response "The title you have chosen is already taken.")
       (do
@@ -83,6 +83,13 @@
         (when add-to-all-projects?
           (call-sql "add_imagery_to_all_institution_projects" imagery-id))
         (data-response "")))))
+
+(defn update-imagery-visibility [{:keys [params]}]
+  (let [imagery-id     (tc/val->int (:imageryId params))
+        visibility     (:visibility params)
+        institution-id (tc/val->int (:institutionId params))]
+    (call-sql "update_imagery_visibility" imagery-id visibility institution-id)
+    (data-response "")))
 
 (defn archive-institution-imagery [{:keys [params]}]
   (call-sql "archive_imagery" (tc/val->int (:imageryId params)))
