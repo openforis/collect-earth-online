@@ -225,6 +225,15 @@ mercator.createSource = function (sourceConfig, imageryId, attribution,
                  `&year=${sourceConfig.year}`,
             attributions: attribution,
         });
+    } else if (sourceConfig.type === "PlanetNICFI") {
+        return new XYZ({
+            url: "https://tiles2.planet.com/basemaps/v1/planet-tiles/planet_medres_normalized_analytic_"
+                + sourceConfig.time
+                + "_mosaic/gmap/{z}/{x}/{y}"
+                + `?api_key=${sourceConfig.accessToken}`
+                + `&proc=${sourceConfig.band}`,
+            attributions: attribution,
+        });
     } else if (sourceConfig.type === "PlanetDaily") {
         // make ajax call to get layerid then add xyz layer
         const theJson = {
@@ -730,11 +739,11 @@ mercator.getLayerConfigById = function (mapConfig, layerConfigId) {
 // [Side Effects] Finds the map layer with id === layerId and
 // applies transformer to its initial sourceConfig to create a new
 // source for the layer.
-mercator.updateLayerSource = function (mapConfig, imageryId, projectBoundary, transformer, caller) {
+mercator.updateLayerSource = function (mapConfig, imageryId, projectBoundary, transformer) {
     const layer = mercator.getLayerById(mapConfig, imageryId);
     const layerConfig = mercator.getLayerConfigById(mapConfig, imageryId);
     const projectAOI = projectBoundary ? JSON.parse(projectBoundary).coordinates[0] : null;
-    const newSourceConfig = transformer.call(caller, layerConfig.sourceConfig);
+    const newSourceConfig = transformer(layerConfig.sourceConfig);
     if (layer && layerConfig) {
         if (layer instanceof LayerGroup) {
             // This is a LayerGroup
