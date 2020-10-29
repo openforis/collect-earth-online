@@ -687,7 +687,8 @@
         (when-let [imagery-list (:projectImageryList params)]
           (call-sql "delete_project_imagery" project-id)
           (insert-project-imagery project-id imagery-list))
-        ;; FIXME: Old stored questions can have a different format than when passed from the UI.
+        ;; NOTE: Old stored questions can have a different format than when passed from the UI.
+        ;;       This is why we check the if the survey questions are different on the front (for now).
         (when update-survey
           (reset-collected-samples project-id))
         (data-response ""))
