@@ -736,7 +736,7 @@ class NewImagery extends React.Component {
             ? "Google Earth Engine | © Google LLC"
         : type.includes("MapBox")
             ? "© Mapbox"
-        : ""
+        : "";
 
     imageryTypeChangeHandler = (val) => {
         const defaultState = imageryOptions[val].params.reduce((acc, cur) => ({

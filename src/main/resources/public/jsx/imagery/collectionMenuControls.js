@@ -226,6 +226,7 @@ export class PlanetNICFIMenu extends React.Component {
                     <div className="d-flex align-items-center mb-2">
                         <label htmlFor="time-selection" className="mb-0 mr-3">Select Time</label>
                         <select
+                            id="time-selection"
                             onChange={e => this.setState({ selectedTime: e.target.value })}
                             value={this.state.selectedTime}
                         >
