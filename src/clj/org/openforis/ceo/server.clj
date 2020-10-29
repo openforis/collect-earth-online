@@ -1,6 +1,7 @@
 (ns org.openforis.ceo.server
   (:require [clojure.java.io :as io]
             [clojure.string :as str]
+            [clojure.tools.cli  :refer [parse-opts]]
             [ring.adapter.jetty :refer [run-jetty]]
             [org.openforis.ceo.handler :refer [development-app production-app]]
             [org.openforis.ceo.logging :refer [log-str]]))
@@ -32,29 +33,50 @@
       (try (delete-tmp)
            (catch Exception _)))))
 
-(defn start-server! [& [port mode]]
-  (let [mode     (or mode "prod")
-        has-key? (.exists (io/file "./.key/keystore.pkcs12"))
-        handler  (if (= mode "prod")
-                   #'production-app
-                   #'development-app)
-        config   (merge
-                  {:port  (cond
-                            (integer? port) port
-                            (string? port)  (Integer/parseInt port)
-                            (nil? port)     8080
-                            :else           8080)
-                   :join? false}
-                  (when (and has-key? (= mode "prod"))
-                    {:ssl?          true
-                     :ssl-port      8443
-                     :keystore      "./.key/keystore.pkcs12"
-                     :keystore-type "pkcs12"
-                     :key-password  "foobar"}))]
-    (if (and (not has-key?) (= mode "prod"))
-      (println "ERROR: there is no SSL key for enabling HTTPS! Create a SSL key for HTTPS or run with the \"dev\" option.")
-      (do (reset! server (run-jetty handler config))
-          (reset! clean-up-service (start-clean-up-service!))))))
+(def cli-options
+  [["-p" "--http-port PORT" "Port for http, default 8080"
+    :default 8080
+    :parse-fn #(Integer/parseInt %)
+    :validate [#(< 0 % 0x10000) "Must be a number between 0 and 65536"]]
+   ["-P" "--https-port PORT" "Port for https, default 8443"
+    :parse-fn #(Integer/parseInt %)
+    :validate [#(< 0 % 0x10000) "Must be a number between 0 and 65536"]]
+   ["-m" "--mode MODE" "Production (prod) or development (dev) mode, default prod"
+    :default "prod"
+    :validate [#(or (= % "prod") (= % "dev")) "Must be \"prod\" or \"dev\""]]])
+
+(defn start-server! [& args]
+  (let [{:keys [options _ summary errors]} (parse-opts args cli-options)]
+    (if (seq errors)
+      (do
+        (run! println errors)
+        (println (str "Usage:\n" summary)))
+      (let [mode       (:mode options)
+            has-key?   (.exists (io/file "./.key/keystore.pkcs12"))
+            handler    (if (= mode "prod")
+                         #'production-app
+                         #'development-app)
+            https?     (or (int? (:https-port options))
+                           (= mode "prod"))
+            https-port (:https-port options 8443)
+            config     (merge
+                        {:port  (:http-port options)
+                         :join? false}
+                        (when (and has-key? https?)
+                          {:ssl?          true
+                           :ssl-port      https-port
+                           :keystore      "./.key/keystore.pkcs12"
+                           :keystore-type "pkcs12"
+                           :key-password  "foobar"}))]
+        (if (and (not has-key?) https?)
+          (do (println "ERROR:")
+              (if (= mode "prod")
+                (do (println "  A SSL key is required to run in production mode.")
+                    (println "  Create a SSL key for HTTPS or run with the \"-m dev\" option."))
+                (do (println "  A SSL key is required if a HTTPS port is specified.")
+                    (println "  Create a SSL key for HTTPS or run without the --https-port (-P) option."))))
+          (do (reset! server (run-jetty handler config))
+              (reset! clean-up-service (start-clean-up-service!))))))))
 
 (defn stop-server! []
   (when @clean-up-service
