@@ -54,6 +54,24 @@ export const imageryOptions = [
         url: "https://developers.planet.com/docs/quickstart/getting-started/",
     },
     {
+        type: "PlanetNICFI",
+        label: "Planet NICFI",
+        params: [
+            { key: "accessToken", display: "Access Token" },
+            { key: "time", display: "Default Time" },
+            {
+                key: "band",
+                display: "Default Band",
+                type: "select",
+                options: [
+                    { label: "Visible", value: "rgb" },
+                    { label: "Infrared", value: "cir" },
+                ],
+            },
+        ],
+        url: "https://assets.planet.com/docs/NICFI_UserGuidesFAQ.pdf",
+    },
+    {
         type: "SecureWatch",
         params: [
             {

@@ -4,12 +4,13 @@ import { mercator, ceoMapStyles } from "../js/mercator.js";
 import { NavigationBar } from "./components/PageComponents";
 import { SurveyCollection } from "./components/SurveyCollection";
 import {
-    PlanetMenus,
-    PlanetDailyMenus,
-    SecureWatchMenus,
-    SentinelMenus,
-    GEEImageMenus,
-    GEEImageCollectionMenus,
+    PlanetMenu,
+    PlanetDailyMenu,
+    PlanetNICFIMenu,
+    SecureWatchMenu,
+    SentinelMenu,
+    GEEImageMenu,
+    GEEImageCollectionMenu,
 } from "./imagery/collectionMenuControls";
 import { convertSampleValuesToSurveyQuestions } from "./utils/surveyUtils";
 import { UnicodeIcon, getQueryString } from "./utils/textUtils";
@@ -1387,14 +1388,16 @@ class ImageryOptions extends React.Component {
                             sourceConfig: imagery.sourceConfig,
                             visible: props.currentImageryId === imagery.id && this.state.showImageryOptions,
                         };
-                        return imagery.sourceConfig.type === "Planet" ? <PlanetMenus {...individualProps}/>
-                            : imagery.sourceConfig.type === "PlanetDaily" ? <PlanetDailyMenus {...individualProps}/>
-                            : imagery.sourceConfig.type === "SecureWatch" ? <SecureWatchMenus {...individualProps}/>
-                            : imagery.sourceConfig.type === "Sentinel1" ? <SentinelMenus {...individualProps}/>
-                            : imagery.sourceConfig.type === "Sentinel2" ? <SentinelMenus {...individualProps}/>
-                            : imagery.sourceConfig.type === "GEEImage" ? <GEEImageMenus {...individualProps}/>
-                            : imagery.sourceConfig.type === "GEEImageCollection" ? <GEEImageCollectionMenus {...individualProps}/>
-                            : null;
+                        return imagery && {
+                            "Planet": <PlanetMenu {...individualProps}/>,
+                            "PlanetDaily": <PlanetDailyMenu {...individualProps}/>,
+                            "PlanetNICFI": <PlanetNICFIMenu {...individualProps}/>,
+                            "SecureWatch": <SecureWatchMenu {...individualProps}/>,
+                            "Sentinel1": <SentinelMenu {...individualProps}/>,
+                            "Sentinel2": <SentinelMenu {...individualProps}/>,
+                            "GEEImage": <GEEImageMenu {...individualProps}/>,
+                            "GEEImageCollection": <GEEImageCollectionMenu {...individualProps}/>,
+                        }[imagery.sourceConfig.type];
                     })}
                 </div>
             </div>

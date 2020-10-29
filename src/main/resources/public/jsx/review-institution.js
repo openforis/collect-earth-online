@@ -479,6 +479,8 @@ class NewImagery extends React.Component {
                 selectedType: selectedType,
                 newImageryParams: this.getImageryParams(type, imageryParams),
             });
+        } else {
+            this.imageryTypeChangeHandler(0);
         }
     }
 
@@ -723,42 +725,29 @@ class NewImagery extends React.Component {
     // Imagery Type Change Handler //
 
     // TODO, this can be generalized back into imageryOptions
-    imageryTypeChangeHandler = (e) => {
-        const val = e.target.value;
-        this.setState({ selectedType: val });
-        if (imageryOptions[val].type === "BingMaps") {
-            this.setState({
-                newImageryAttribution: "Bing Maps API: " + imageryOptions[val]["params"][0]["options"][0] + " | © Microsoft Corporation",
-                newImageryParams: { imageryId: imageryOptions[val]["params"].filter(param => param.key === "imageryId")[0].options[0].value },
-            });
-        } else if (imageryOptions[val].type === "Planet" || imageryOptions[val].type === "PlanetDaily") {
-            this.setState({
-                newImageryAttribution: "Planet Labs Global Mosaic | © Planet Labs, Inc",
-                newImageryParams: {},
-            });
-        } else if (imageryOptions[val].type === "SecureWatch") {
-            this.setState({
-                newImageryAttribution: "SecureWatch Imagery | © Maxar Technologies Inc.",
-                newImageryParams: {},
-            });
-        } else if (imageryOptions[val].type === "Sentinel1" || imageryOptions[val].type === "Sentinel2") {
-            this.setState({
-                newImageryAttribution: "Google Earth Engine | © Google LLC",
-                newImageryParams: { bandCombination: imageryOptions[val]["params"].filter(param => param.key === "bandCombination")[0].options[0].value },
-            });
-        } else if (imageryOptions[val].type.includes("MapBox")) {
-            this.setState({
-                newImageryAttribution: "© Mapbox",
-                newImageryParams: {},
-            });
-        } else if (imageryOptions[val].type.includes("GEE")) {
-            this.setState({
-                newImageryAttribution: "Google Earth Engine | © Google LLC",
-                newImageryParams: {},
-            });
-        } else {
-            this.setState({ newImageryAttribution: "", newImageryParams: {}});
-        }
+    getImageryAttribution = (type) =>
+        type === "BingMaps"
+            ? "Bing Maps API: Aerial | © Microsoft Corporation"
+        : type.includes("Planet")
+            ? "Planet Labs Global Mosaic | © Planet Labs, Inc"
+        : type === "SecureWatch"
+            ? "SecureWatch Imagery | © Maxar Technologies Inc."
+        : ["Sentinel1", "Sentinel2", "GEE"].includes(type)
+            ? "Google Earth Engine | © Google LLC"
+        : type.includes("MapBox")
+            ? "© Mapbox"
+        : ""
+
+    imageryTypeChangeHandler = (val) => {
+        const defaultState = imageryOptions[val].params.reduce((acc, cur) => ({
+            ...acc,
+            [cur.key]: cur.type === "select" ? cur.options[0].value : "",
+        }), {});
+        this.setState({
+            selectedType: val,
+            newImageryParams: defaultState,
+            newImageryAttribution: this.getImageryAttribution(imageryOptions[val].type),
+        });
     };
 
     render() {
@@ -770,7 +759,7 @@ class NewImagery extends React.Component {
                     <label>Select Type</label>
                     <select
                         className="form-control"
-                        onChange={this.imageryTypeChangeHandler}
+                        onChange={e => this.imageryTypeChangeHandler(e.target.value)}
                         value={this.state.selectedType}
                         disabled={!isNewImagery}
                     >
