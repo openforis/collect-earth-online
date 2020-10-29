@@ -513,7 +513,7 @@ class NewImagery extends React.Component {
         } else {
             return imageryParams;
         }
-    }
+    };
 
     //    Remote Calls    //
 
@@ -603,7 +603,7 @@ class NewImagery extends React.Component {
         } catch (e) {
             return false;
         }
-    }
+    };
 
     checkJSONParams = () => this.state.newImageryTitle.length > 0
         && this.state.newImageryAttribution.length > 0
@@ -748,7 +748,7 @@ class NewImagery extends React.Component {
             ? "Google Earth Engine | © Google LLC"
         : type.includes("MapBox")
             ? "© Mapbox"
-        : ""
+        : "";
 
     imageryTypeChangeHandler = (val) => {
         const defaultState = imageryOptions[val].params.reduce((acc, cur) => ({

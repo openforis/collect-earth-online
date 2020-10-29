@@ -1463,7 +1463,7 @@ class ImageryOptions extends React.Component {
                             sourceConfig: imagery.sourceConfig,
                             visible: props.currentImageryId === imagery.id && this.state.showImageryOptions,
                         };
-                        return imagery && {
+                        return imagery && imagery.sourceConfig && {
                             "Planet": <PlanetMenu {...individualProps}/>,
                             "PlanetDaily": <PlanetDailyMenu {...individualProps}/>,
                             "PlanetNICFI": <PlanetNICFIMenu {...individualProps}/>,
