@@ -361,21 +361,22 @@
       (do
         (when (not (str/includes? header-row ","))
           (init-throw "The CSV file must use commas for the delimiter."))
-        (let [headers (as-> header-row hr
-                        (str/split hr #",")
-                        (mapv #(-> %
-                                   (str/upper-case)
-                                   (str/replace #"-| |," "_")
-                                   (str/replace #"X|LONGITUDE|LONG|CENTER_X" "LON")
-                                   (str/replace #"Y|LATITUDE|CENTER_Y" "LAT"))
-                              hr))]
-          (if (every? (set headers) must-include)
+        (let [headers    (as-> header-row hr
+                           (str/split hr #",")
+                           (mapv #(-> %
+                                      (str/upper-case)
+                                      (str/replace #"-| |," "_")
+                                      (str/replace #"X|LONGITUDE|LONG|CENTER_X" "LON")
+                                      (str/replace #"Y|LATITUDE|CENTER_Y" "LAT"))
+                                 hr))
+              header-set (set headers)]
+          (if (set/subset must-include header-set)
             (do
               (spit ext-file (str/replace-first data header-row (str/join "," headers)))
               (type-columns headers))
-            (init-throw (str "Error while checking headers. Fields must include LON,LAT,"
-                             (str/join "," must-include)
-                             ".")))))
+            (init-throw (str "Header fields "
+                             (str/join "," (set/difference (set must-include) header-set))
+                             " are missing. ")))))
       (init-throw "CSV File is empty."))))
 
 (defn- load-external-data [distribution project-id ext-file type must-include]
