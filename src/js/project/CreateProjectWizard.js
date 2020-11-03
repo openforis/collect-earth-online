@@ -497,7 +497,6 @@ export default class CreateProjectWizard extends React.Component {
                             <NavigationButtons
                                 nextStep={isLast ? this.finish : this.nextStep}
                                 prevStep={this.prevStep}
-                                canFinish={Object.keys(steps).length === this.state.complete.size || isLast}
                                 finish={this.finish}
                                 cancel={() => {
                                     if (this.context.projectId > 0) {
@@ -516,7 +515,7 @@ export default class CreateProjectWizard extends React.Component {
 }
 CreateProjectWizard.contextType = ProjectContext;
 
-function NavigationButtons({prevStep, nextStep, finish, canFinish, cancel}) {
+function NavigationButtons({prevStep, nextStep, finish, cancel}) {
     return (
         <div>
             <div id="navigation-buttons">
@@ -537,7 +536,6 @@ function NavigationButtons({prevStep, nextStep, finish, canFinish, cancel}) {
                         className="btn btn-lightgreen"
                         type="button"
                         value="Review"
-                        disabled={!canFinish}
                         onClick={finish}
                     />
                     <input
