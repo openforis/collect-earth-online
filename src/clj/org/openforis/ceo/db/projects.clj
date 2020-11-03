@@ -351,15 +351,19 @@
                                      (str/replace #"X|LONGITUDE|LONG|CENTER_X" "LON")
                                      (str/replace #"Y|LATITUDE|CENTER_Y" "LAT"))
                                 hr))
-            header-diff (set/difference (set must-include) (set headers))]
+            header-set  (set headers)
+            header-diff (set/difference (set must-include) header-set)]
         (cond
           (not (str/includes? header-row ","))
-          (init-throw "The CSV file must use commas for the delimiter.")
+          (init-throw "The CSV file must use commas for the delimiter. This error may indicate that the csv file contains one column")
 
           (seq header-diff)
           (init-throw (str "Header fields " header-diff " are missing."))
 
-          :else
+          (every? (fn [header]
+                    (or (re-matches #"^[a-zA-Z_][a-zA-Z0-9_]*$" header)
+                        (init-throw (str "The CSV column \"" header "\" is invalid."))))
+                  header-set)
           (do
             (spit ext-file (str/replace-first data header-row (str/join "," headers)))
             (type-columns headers))))
