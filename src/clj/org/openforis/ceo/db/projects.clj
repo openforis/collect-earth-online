@@ -358,26 +358,29 @@
 (defn- get-csv-headers [ext-file must-include]
   (let [data (slurp ext-file)]
     (if-let [header-row (re-find #".+(?=[\r\n|\n|\r])" data)]
-      (do
-        (when (not (str/includes? header-row ","))
-          (init-throw "The CSV file must use commas for the delimiter."))
-        (let [headers    (as-> header-row hr
-                           (str/split hr #",")
-                           (mapv #(-> %
-                                      (str/upper-case)
-                                      (str/replace #"-| |," "_")
-                                      (str/replace #"X|LONGITUDE|LONG|CENTER_X" "LON")
-                                      (str/replace #"Y|LATITUDE|CENTER_Y" "LAT"))
-                                 hr))
-              header-set (set headers)]
-          (if (set/subset must-include header-set)
-            (do
-              (spit ext-file (str/replace-first data header-row (str/join "," headers)))
-              (type-columns headers))
-            (init-throw (str "Header fields "
-                             (str/join "," (set/difference (set must-include) header-set))
-                             " are missing. ")))))
-      (init-throw "CSV File is empty."))))
+      (let [headers    (as-> header-row hr
+                         (str/split hr #",")
+                         (mapv #(-> %
+                                    (str/upper-case)
+                                    (str/replace #"-| |," "_")
+                                    (str/replace #"X|LONGITUDE|LONG|CENTER_X" "LON")
+                                    (str/replace #"Y|LATITUDE|CENTER_Y" "LAT"))
+                               hr))
+            header-set (set headers)]
+        (cond
+          (not (set/subset must-include header-set))
+          (init-throw (str "Header fields "
+                           (str/join "," (set/difference (set must-include) header-set))
+                           " are missing. "))
+
+          (not (str/includes? header-row ","))
+          (init-throw "The CSV file must use commas for the delimiter.")
+
+          :else
+          (do
+            (spit ext-file (str/replace-first data header-row (str/join "," headers)))
+            (type-columns headers))))
+      (init-throw "CSV file contains no rows of data."))))
 
 (defn- load-external-data [distribution project-id ext-file type must-include]
   (let [folder-name (str tmp-dir "/ceo-tmp-" project-id "/")]
