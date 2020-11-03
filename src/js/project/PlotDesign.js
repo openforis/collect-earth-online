@@ -210,19 +210,20 @@ export class PlotDesign extends React.Component {
         </div>
     );
 
-    renderCSV = () => (
+    renderCSV = (plotUnits) => (
         <div style={{display: "flex", flexDirection: "column"}}>
             {this.renderFileInput("csv")}
             <div style={{display: "flex"}}>
                 {this.renderPlotShape()}
-                {this.renderLabeledInput("Diameter (m)", "plotSize")}
+                {this.renderLabeledInput(plotUnits, "plotSize")}
             </div>
         </div>
     );
 
     render() {
-        const {plotDistribution} = this.context;
+        const {plotDistribution, plotShape} = this.context;
         const totalPlots = this.props.getTotalPlots();
+        const plotUnits = plotShape === "circle" ? "Diameter (m)" : "Width (m)";
 
         const plotOptions = {
             random: {
@@ -230,7 +231,7 @@ export class PlotDesign extends React.Component {
                 description: "Plot centers will be randomly distributed within the project boundary.",
                 inputs: [() => this.renderLabeledInput("Number of plots", "numPlots"),
                          this.renderPlotShape,
-                         () => this.renderLabeledInput("Diameter (m)", "plotSize")],
+                         () => this.renderLabeledInput(plotUnits, "plotSize")],
                 showAOI: true,
             },
             gridded: {
@@ -238,13 +239,13 @@ export class PlotDesign extends React.Component {
                 description: "Plot centers will be arranged on a grid within the AOI using the plot spacing selected below.",
                 inputs: [() => this.renderLabeledInput("Plot spacing (m)", "plotSpacing"),
                          this.renderPlotShape,
-                         () => this.renderLabeledInput("Diameter (m)", "plotSize")],
+                         () => this.renderLabeledInput(plotUnits, "plotSize")],
                 showAOI: true,
             },
             csv: {
                 display: "CSV File",
                 description: "Specify your own plot centers by uploading a CSV with these fields: LON,LAT,PLOTID.",
-                inputs: [this.renderCSV],
+                inputs: [() => this.renderCSV(plotUnits)],
                 showAOI: false,
             },
             shp: {
