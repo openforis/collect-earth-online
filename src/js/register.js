@@ -26,7 +26,7 @@ class Register extends React.Component {
             .then(response => Promise.all([response.ok, response.json()]))
             .then(data => {
                 if (data[0] && data[1] === "") {
-                    alert("You have successfully created an accout.");
+                    alert("You have successfully created an account.");
                     window.location = "/home";
                 } else {
                     alert(data[1]);
