@@ -68,8 +68,11 @@
 
 (def jsonb->json str)
 
-(defn jsonb->clj [jsonb]
-  (-> jsonb jsonb->json json->clj))
+(defn jsonb->clj
+  ([jsonb]
+   (jsonb->clj jsonb nil))
+  ([jsonb default]
+   (-> jsonb jsonb->json (json->clj default))))
 
 (def clj->json write-str)
 

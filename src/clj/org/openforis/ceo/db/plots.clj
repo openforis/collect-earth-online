@@ -39,7 +39,7 @@
      :analyses      assigned
      :plotId        plotid
      :geom          geom
-     :extraPlotInfo (dissoc (tc/jsonb->clj extra_plot_info) :gid :lat :lon :plotid)
+     :extraPlotInfo (dissoc (tc/jsonb->clj extra_plot_info {}) :gid :lat :lon :plotid)
      :samples       (prepare-samples-array plot_id project-id)}))
 
 (defn get-project-plot [{:keys [params]}]

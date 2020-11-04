@@ -98,8 +98,8 @@
                     :samplesPerPlot     (:samples_per_plot project)
                     :sampleResolution   (:sample_resolution project)
                     :allowDrawnSamples  (:allow_drawn_samples project)
-                    :sampleValues       (tc/jsonb->clj (:survey_questions project)) ; TODO why don't these names match
-                    :surveyRules        (tc/jsonb->clj (:survey_rules project))
+                    :sampleValues       (tc/jsonb->clj (:survey_questions project) []) ; TODO update variable name
+                    :surveyRules        (tc/jsonb->clj (:survey_rules project) [])
                     :projectOptions     (merge default-options (tc/jsonb->clj (:options project)))
                     :createdDate        (str (:created_date project))
                     :publishedDate      (str (:published_date project))
@@ -122,8 +122,8 @@
                     :samplesPerPlot     (:samples_per_plot project)
                     :sampleResolution   (:sample_resolution project)
                     :allowDrawnSamples  (:allow_drawn_samples project)
-                    :sampleValues       (tc/jsonb->clj (:survey_questions project)) ; TODO why don't these names match
-                    :surveyRules        (tc/jsonb->clj (:survey_rules project))
+                    :sampleValues       (tc/jsonb->clj (:survey_questions project) []) ; TODO update variable name
+                    :surveyRules        (tc/jsonb->clj (:survey_rules project) [])
                     :projectOptions     (merge default-options (tc/jsonb->clj (:options project)))})))
 
 (defn get-project-stats [{:keys [params]}]
