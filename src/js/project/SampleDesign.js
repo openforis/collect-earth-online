@@ -154,9 +154,9 @@ export class SampleDesign extends React.Component {
                 >
                     {samplesPerPlot > 0 && `Each plot will contain around ${formatNumberWithCommas(samplesPerPlot)} samples.`}
                     {totalPlots > 0 && samplesPerPlot > 0
-                        ? `There will be around ${formatNumberWithCommas(totalPlots * samplesPerPlot)} total samples in the project.`
+                        ? `  There will be around ${formatNumberWithCommas(totalPlots * samplesPerPlot)} total samples in the project.`
                         : sampleDistribution === "none"
-                        ? "No samples will be added to the plot."
+                        ? "  No samples will be added to the plot."
                         : ""
                     }
                     {totalPlots > 0 && samplesPerPlot > 0 && samplesPerPlot > perPlotLimit &&
