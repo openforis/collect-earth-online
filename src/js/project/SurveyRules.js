@@ -186,14 +186,14 @@ export class SurveyRuleDesign extends React.Component {
                 answerText1: this.state.answerText1,
                 answerText2: this.state.answerText2,
             } : null;
-        this.context.setProjectState({surveyRules: newRule ? [...rules, newRule] : rules});
+        this.context.setProjectDetails({surveyRules: newRule ? [...rules, newRule] : rules});
     };
 
     render() {
         return (
             <SurveyRulesList
                 surveyRules={this.context.surveyRules}
-                setProjectState={this.context.setProjectState}
+                setProjectDetails={this.context.setProjectDetails}
                 inDesignMode
             >
                 <tr>
@@ -552,7 +552,7 @@ function IncompatibleAnswers(props) {
 export class SurveyRulesList extends React.Component {
     deleteSurveyRule = (ruleId) => {
         const newSurveyRules = this.props.surveyRules.filter(rule => rule.id !== ruleId);
-        this.props.setProjectState({surveyRules: newSurveyRules});
+        this.props.setProjectDetails({surveyRules: newSurveyRules});
     };
 
     // TODO update the remove buttons with SVG

@@ -20,7 +20,7 @@ export class SampleDesign extends React.Component {
                 min="0"
                 step="1"
                 value={this.context[property] || ""}
-                onChange={e => this.context.setProjectState({[property]: e.target.value})}
+                onChange={e => this.context.setProjectDetails({[property]: e.target.value})}
             />
         </div>
     );
@@ -42,7 +42,7 @@ export class SampleDesign extends React.Component {
                     onChange={e => {
                         const file = e.target.files[0];
                         encodeFileAsBase64(file, base64 =>
-                            this.context.setProjectState({
+                            this.context.setProjectDetails({
                                 sampleFileName: file.name,
                                 sampleFileBase64: base64,
                             }));
@@ -57,7 +57,7 @@ export class SampleDesign extends React.Component {
     );
 
     render() {
-        const {plotDistribution, sampleDistribution, allowDrawnSamples, setProjectState} = this.context;
+        const {plotDistribution, sampleDistribution, allowDrawnSamples, setProjectDetails} = this.context;
         const totalPlots = this.props.getTotalPlots();
         const samplesPerPlot = this.props.getSamplesPerPlot();
 
@@ -107,7 +107,7 @@ export class SampleDesign extends React.Component {
                     <select
                         className="form-control form-control-sm ml-3"
                         style={{width: "initial"}}
-                        onChange={(e) => setProjectState({sampleDistribution: e.target.value})}
+                        onChange={(e) => setProjectDetails({sampleDistribution: e.target.value})}
                         value={sampleDistribution}
                     >
                         {Object.entries(sampleOptions).map(([key, options]) =>
@@ -126,7 +126,7 @@ export class SampleDesign extends React.Component {
                             className="form-check-input"
                             type="checkbox"
                             id="allow-drawn-samples"
-                            onChange={() => setProjectState({allowDrawnSamples: !allowDrawnSamples})}
+                            onChange={() => setProjectDetails({allowDrawnSamples: !allowDrawnSamples})}
                             checked={allowDrawnSamples || sampleDistribution === "none"}
                         />
                         <label

@@ -128,11 +128,11 @@ export default class CreateProjectWizard extends React.Component {
         Promise.all([this.getTemplateById(projectId),
                      this.getProjectPlots(projectId),
                      this.getProjectImagery(projectId)])
-            .then(() => this.context.setProjectState({templateProjectId: projectId}))
+            .then(() => this.context.setProjectDetails({templateProjectId: projectId}))
             .catch(response => {
                 console.log(response);
                 this.setState({templatePlots: [], templateProject: {}});
-                this.context.setProjectState({templateProjectId: -1});
+                this.context.setProjectDetails({templateProjectId: -1});
                 alert("Error getting complete template info. See console for details.");
             });
 
@@ -142,7 +142,7 @@ export default class CreateProjectWizard extends React.Component {
             .then(data => {
                 const newSurveyQuestions = convertSampleValuesToSurveyQuestions(data.sampleValues);
                 this.setState({templateProject: {...data, surveyQuestions: newSurveyQuestions}});
-                this.context.setProjectState({
+                this.context.setProjectDetails({
                     ...data,
                     surveyQuestions: newSurveyQuestions,
                     templateProjectId: projectId,
@@ -160,7 +160,7 @@ export default class CreateProjectWizard extends React.Component {
             .then(response => response.ok ? response.json() : Promise.reject(response))
             .then(data => {
                 this.setState({templatePlots: data});
-                this.context.setProjectState({plots: data});
+                this.context.setProjectDetails({plots: data});
             })
             .catch(error => {
                 console.log(error);
@@ -173,7 +173,7 @@ export default class CreateProjectWizard extends React.Component {
             .then(response => response.ok ? response.json() : Promise.reject(response))
             .then(data => {
                 const institutionImageryIds = this.context.institutionImagery.map(i => i.id);
-                this.context.setProjectState({
+                this.context.setProjectDetails({
                     projectImageryList: data.map(i => i.id).filter(id => institutionImageryIds.includes(id)),
                 });
             })
@@ -367,7 +367,7 @@ export default class CreateProjectWizard extends React.Component {
         if (failedStep) {
             this.setState({step: failedStep[0]});
         } else {
-            this.context.setDesignMode("review");
+            this.context.setContextState({designMode: "review"});
         }
     };
 
@@ -389,9 +389,9 @@ export default class CreateProjectWizard extends React.Component {
 
     toggleTemplatePlots = () => {
         if (this.context.useTemplatePlots) {
-            this.context.setProjectState({useTemplatePlots: false, plots: []});
+            this.context.setProjectDetails({useTemplatePlots: false, plots: []});
         } else {
-            this.context.setProjectState({
+            this.context.setProjectDetails({
                 useTemplatePlots: true,
                 plots: this.state.templatePlots,
                 boundary: this.state.templateProject.boundary,
@@ -501,7 +501,7 @@ export default class CreateProjectWizard extends React.Component {
                                 finish={this.finish}
                                 cancel={() => {
                                     if (this.context.projectId > 0) {
-                                        this.context.setDesignMode("manage");
+                                        this.context.setContextState({designMode: "manage"});
                                     } else {
                                         window.location = `/review-institution?institutionId=${this.context.institutionId}`;
                                     }
