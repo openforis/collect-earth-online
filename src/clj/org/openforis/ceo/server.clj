@@ -36,17 +36,17 @@
 (def cli-options
   [["-p" "--http-port PORT" "Port for http, default 8080"
     :default 8080
-    :parse-fn #(Integer/parseInt %)
+    :parse-fn #(if (int? %) % (Integer/parseInt %))
     :validate [#(< 0 % 0x10000) "Must be a number between 0 and 65536"]]
-   ["-P" "--https-port PORT" "Port for https, default 8443"
-    :parse-fn #(Integer/parseInt %)
+   ["-P" "--https-port PORT" "Port for https (e.g. 8443)"
+    :parse-fn #(if (int? %) % (Integer/parseInt %))
     :validate [#(< 0 % 0x10000) "Must be a number between 0 and 65536"]]
    ["-m" "--mode MODE" "Production (prod) or development (dev) mode, default prod"
     :default "prod"
-    :validate [#(or (= % "prod") (= % "dev")) "Must be \"prod\" or \"dev\""]]])
+    :validate [#{"prod" "dev"} "Must be \"prod\" or \"dev\""]]])
 
 (defn start-server! [& args]
-  (let [{:keys [options _ summary errors]} (parse-opts args cli-options)]
+  (let [{:keys [options summary errors]} (parse-opts args cli-options)]
     (if (seq errors)
       (do
         (run! println errors)
@@ -56,25 +56,20 @@
             handler    (if (= mode "prod")
                          #'production-app
                          #'development-app)
-            https?     (or (int? (:https-port options))
-                           (= mode "prod"))
-            https-port (:https-port options 8443)
+            https-port (:https-port options)
             config     (merge
                         {:port  (:http-port options)
                          :join? false}
-                        (when (and has-key? https?)
+                        (when (and has-key? https-port)
                           {:ssl?          true
                            :ssl-port      https-port
                            :keystore      "./.key/keystore.pkcs12"
                            :keystore-type "pkcs12"
                            :key-password  "foobar"}))]
-        (if (and (not has-key?) https?)
-          (do (println "ERROR:")
-              (if (= mode "prod")
-                (do (println "  A SSL key is required to run in production mode.")
-                    (println "  Create a SSL key for HTTPS or run with the \"-m dev\" option."))
-                (do (println "  A SSL key is required if a HTTPS port is specified.")
-                    (println "  Create a SSL key for HTTPS or run without the --https-port (-P) option."))))
+        (if (and (not has-key?) https-port)
+          (println "ERROR:\n"
+                   "  An SSL key is required if an HTTPS port is specified.\n"
+                   "  Create an SSL key for HTTPS or run without the --https-port (-P) option.")
           (do (reset! server (run-jetty handler config))
               (reset! clean-up-service (start-clean-up-service!))))))))
 
