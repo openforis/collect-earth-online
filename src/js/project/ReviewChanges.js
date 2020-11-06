@@ -1,4 +1,5 @@
 import React from "react";
+import _ from "lodash";
 
 import ReviewForm from "./ReviewForm";
 
@@ -46,7 +47,7 @@ export default class ReviewChanges extends React.Component {
                               samplesPerPlot: this.context.samplesPerPlot,
                               sampleResolution: this.context.sampleResolution,
                               allowDrawnSamples: this.context.allowDrawnSamples,
-                              sampleValues: this.context.surveyQuestions,
+                              surveyQuestions: this.context.surveyQuestions,
                               surveyRules: this.context.surveyRules,
                               plotFileName: this.context.plotFileName,
                               plotFileBase64: this.context.plotFileBase64,
@@ -73,7 +74,11 @@ export default class ReviewChanges extends React.Component {
     };
 
     updateProject = () => {
-        if (confirm("Do you really want to update this project?")) {
+        const updateSurvey = this.surveyQuestionUpdated(this.context, this.context.originalProject);
+        const extraMessage = updateSurvey
+            ? "  Updating survey questions or rules will reset all collected data."
+            : "";
+        if (confirm("Do you really want to update this project?" + extraMessage)) {
             this.context.processModal("Updating Project", () =>
                 fetch("/update-project",
                       {
@@ -90,6 +95,9 @@ export default class ReviewChanges extends React.Component {
                               privacyLevel: this.context.privacyLevel,
                               projectOptions: this.context.projectOptions,
                               projectImageryList: this.context.projectImageryList,
+                              surveyQuestions: this.context.surveyQuestions,
+                              surveyRules: this.context.surveyRules,
+                              updateSurvey: updateSurvey, // FIXME this is a shim for when stored questions are in an old format.
                           }),
                       })
                     .then(response => {
@@ -104,6 +112,14 @@ export default class ReviewChanges extends React.Component {
             );
         }
     };
+
+    /// Helper Functions
+
+    surveyQuestionUpdated = (projectDetails, originalProject) =>
+        !_.isEqual(projectDetails.surveyQuestions, originalProject.surveyQuestions)
+            || !_.isEqual(projectDetails.surveyRules, originalProject.surveyRules);
+
+    /// Render Functions
 
     renderButtons = () => (
         <div className="d-flex flex-column">
