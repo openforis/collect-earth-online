@@ -94,17 +94,17 @@ To compile and run the web application, navigate to the toplevel
 project directory and run:
 
 #+begin_src sh
-npm run webpack-[dev|prod]
-clojure -A:run-server -m [dev|prod]
+npm run webpack-<dev|prod>
+clojure -A:run-server [-m <dev|prod>] [-p 8080] [-P 8443]
 #+end_src
 
-The website will then be available at http://localhost:8080 unless
-a port is specified.  A http port can be specified with -p and a https
-port can be specified with -P. In dev mode,
-server-side exceptions will be displayed in the browser and Clojure
-source files will be reloaded whenever you refresh the page. These
-features are disabled in prod mode. If the second argument to
-run-server is omitted, it will default to prod mode.
+The website will then be available at http://localhost:8080 unless a
+port is specified. An http port can be specified with -p and an https
+port can be specified with -P. In dev mode, server-side exceptions
+will be displayed in the browser and Clojure source files will be
+reloaded whenever you refresh the page. These features are disabled in
+prod mode. If the second argument to run-server is omitted, it will
+default to prod mode.
 
 ** Building GEE-Gateway
 
