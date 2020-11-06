@@ -333,18 +333,6 @@ CREATE OR REPLACE FUNCTION update_project(
 
 $$ LANGUAGE SQL;
 
- ) RETURNS void AS $$
-
-    UPDATE projects
-    SET name = _name,
-        description = _description,
-        privacy_level = _privacy_level,
-        imagery_rid = _imagery_id,
-        options = _options
-    WHERE project_uid = _project_id
-
-$$ LANGUAGE SQL;
-
 -- Update counts after plots are created
 CREATE OR REPLACE FUNCTION update_project_counts(_project_id integer)
  RETURNS void AS $$

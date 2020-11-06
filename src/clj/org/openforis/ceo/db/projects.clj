@@ -525,7 +525,7 @@
 
 (defn create-project [{:keys [params]}]
   (let [institution-id       (tc/val->int (:institutionId params))
-        imagery-id           (or (:imageryId params nil) (get-first-public-imagery))
+        imagery-id           (or (:imageryId params) (get-first-public-imagery))
         name                 (:name params)
         description          (:description params)
         privacy-level        (:privacyLevel params)
@@ -664,7 +664,7 @@
 
 (defn update-project [{:keys [params]}]
   (let [project-id       (tc/val->int (:projectId params))
-        imagery-id       (or (:imageryId params nil) (get-first-public-imagery))
+        imagery-id       (or (:imageryId params) (get-first-public-imagery))
         name             (:name params)
         description      (:description params)
         privacy-level    (:privacyLevel params)
@@ -688,11 +688,11 @@
           (call-sql "delete_project_imagery" project-id)
           (insert-project-imagery project-id imagery-list))
         ;; NOTE: Old stored questions can have a different format than when passed from the UI.
-        ;;       This is why we check the if the survey questions are different on the front (for now).
+        ;;       This is why we check whether the survey questions are different on the front (for now).
         (when update-survey
           (reset-collected-samples project-id))
         (data-response ""))
-      (data-response (str "Project " project-id "  not found.")))))
+      (data-response (str "Project " project-id " not found.")))))
 
 (defn publish-project [{:keys [params]}]
   (let [project-id   (tc/val->int (:projectId params))

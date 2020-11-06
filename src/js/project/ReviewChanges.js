@@ -47,7 +47,7 @@ export default class ReviewChanges extends React.Component {
                               samplesPerPlot: this.context.samplesPerPlot,
                               sampleResolution: this.context.sampleResolution,
                               allowDrawnSamples: this.context.allowDrawnSamples,
-                              sampleValues: this.context.surveyQuestions,
+                              surveyQuestions: this.context.surveyQuestions,
                               surveyRules: this.context.surveyRules,
                               plotFileName: this.context.plotFileName,
                               plotFileBase64: this.context.plotFileBase64,
@@ -74,8 +74,8 @@ export default class ReviewChanges extends React.Component {
     };
 
     updateProject = () => {
-        const surveyQuestionUpdated = this.surveyQuestionUpdated(this.context, this.context.originalProject);
-        const extraMessage = surveyQuestionUpdated
+        const updateSurvey = this.surveyQuestionUpdated(this.context, this.context.originalProject);
+        const extraMessage = updateSurvey
             ? "  Updating survey questions or rules will reset all collected data."
             : "";
         if (confirm("Do you really want to update this project?" + extraMessage)) {
@@ -97,7 +97,7 @@ export default class ReviewChanges extends React.Component {
                               projectImageryList: this.context.projectImageryList,
                               surveyQuestions: this.context.surveyQuestions,
                               surveyRules: this.context.surveyRules,
-                              surveyQuestionUpdated: surveyQuestionUpdated, // FIXME this is a shim for when stored questions are in an old format.
+                              updateSurvey: updateSurvey, // FIXME this is a shim for when stored questions are in an old format.
                           }),
                       })
                     .then(response => {
