@@ -63,9 +63,12 @@ export class SurveyCollection extends React.Component {
 
     setSurveyQuestionTree = (index) => this.setState({currentNodeIndex: index});
 
+    getNodeById = (id) => this.props.surveyQuestions.find(sq => sq.id === id)
+        || {question: "", answers: [], answered: [], visible: []};
+
     checkAllSubAnswers = (currentQuestionId) => {
         const {surveyQuestions} = this.props;
-        const {visible, answered} = surveyQuestions.find(sq => sq.id === currentQuestionId);
+        const {visible, answered} = this.getNodeById(currentQuestionId);
         const childQuestions = surveyQuestions.filter(sq => sq.parentQuestion === currentQuestionId);
 
         return visible.length === answered.length
@@ -79,8 +82,6 @@ export class SurveyCollection extends React.Component {
                                 : node.answered.length > 0
                                     ? "0px 0px 6px 4px yellow inset"
                                     : "0px 0px 6px 4px red inset";
-
-    getNodeById = (id) => this.props.surveyQuestions.find(sq => sq.id === id);
 
     getRulesById = (id) =>
         (this.props.surveyRules || [])
@@ -646,13 +647,11 @@ class AnswerDropDown extends React.Component {
 }
 
 function SurveyAnswers(props) {
-    if (props.surveyNode.componentType.toLowerCase() === "radiobutton") {
-        return (<AnswerRadioButton {...props} />);
-    } else if (props.surveyNode.componentType.toLowerCase() === "input") {
-        return (<AnswerInput {...props} />);
-    } else if (props.surveyNode.componentType.toLowerCase() === "dropdown") {
-        return (<AnswerDropDown {...props} />);
-    } else {
-        return (<AnswerButton {...props} />);
-    }
+    const type = (props.surveyNode.componentType || "button").toLowerCase();
+    return {
+        radiobutton: <AnswerRadioButton {...props} />,
+        input: <AnswerInput {...props} />,
+        dropdown: <AnswerDropDown {...props} />,
+        button: <AnswerButton {...props} />,
+    }[type];
 }
