@@ -263,10 +263,10 @@ export default class CreateProjectWizard extends React.Component {
             && (projectId === -1 || plotDistribution !== originalProject.plotDistribution);
         const errorList = [
             (["random", "gridded"].includes(plotDistribution) && !boundary)
-                && "Please select a valid boundary",
-            (plotDistribution === "random" && !(numPlots || 0) === 0)
+                && "Please select a valid boundary.",
+            (plotDistribution === "random" && !numPlots)
                 && "A number of plots is required for random plot distribution.",
-            (plotDistribution === "gridded" && !(plotSpacing || 0) === 0)
+            (plotDistribution === "gridded" && !plotSpacing)
                 && "A plot spacing is required for gridded plot distribution.",
             (plotDistribution !== "shp" && (!plotSize || plotSize === 0))
                 && "A plot size is required.",
@@ -275,7 +275,7 @@ export default class CreateProjectWizard extends React.Component {
             (plotDistribution === "shp" && plotFileNeeded && !(plotFileName || "").includes(".zip"))
                 && "A plot SHP (.zip) file is required.",
             (totalPlots > plotLimit)
-                && "The plot or sample size limit exceeded. Check the Sample Design section for detailed info.",
+                && "The plot size limit has been exceeded. Check the Plot Design section for detailed info.",
         ];
         return errorList.filter(e => e);
     };

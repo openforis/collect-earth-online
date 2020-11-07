@@ -53,12 +53,14 @@ export class PlotDesign extends React.Component {
 
     setPlotDetails = (newDetail) => {
         const resetBoundary = ["csv", "shp"].includes(newDetail.plotDistribution);
-        if (resetBoundary) this.setState({
-            lonMin: "",
-            latMin: "",
-            lonMax: "",
-            latMax: "",
-        });
+        if (resetBoundary) {
+            this.setState({
+                lonMin: "",
+                latMin: "",
+                lonMax: "",
+                latMax: "",
+            });
+        }
         this.context.setProjectDetails(Object.assign(
             newDetail,
             {plots: []},
@@ -220,7 +222,7 @@ export class PlotDesign extends React.Component {
                 />
             </label>
             <label className="ml-3 text-nowrap">
-                {`File: ${this.context.plotFileName || (this.context.projectId > 0 ? "Use existing data" : "None")}`}
+                File: {this.context.plotFileName || (this.context.projectId > 0 ? "Use existing data" : "None")}
             </label>
         </div>
     );

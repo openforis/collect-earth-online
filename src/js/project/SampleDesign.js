@@ -51,8 +51,8 @@ export class SampleDesign extends React.Component {
                 />
             </label>
             <label className="ml-3 text-nowrap">
-                {`File: ${this.context.sampleFileName
-                            || (this.context.projectId === -1 || this.context.plotFileName ? " None" : " Use existing data")}`}
+                File: {this.context.sampleFileName
+                        || ((this.context.projectId === -1 || this.context.plotFileName) ? " None" : " Use existing data")}
             </label>
         </div>
     );
