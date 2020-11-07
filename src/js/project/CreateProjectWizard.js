@@ -297,9 +297,9 @@ export default class CreateProjectWizard extends React.Component {
         const sampleFileNeeded = !useTemplatePlots
             && (projectId === -1 || sampleDistribution !== originalProject.sampleDistribution || plotFileName);
         const errorList = [
-            (sampleDistribution === "random" && !(samplesPerPlot || 0) === 0)
+            (sampleDistribution === "random" && !samplesPerPlot)
                 && "A number of samples per plot is required for random sample distribution.",
-            (sampleDistribution === "gridded" && !(sampleResolution || 0) === 0)
+            (sampleDistribution === "gridded" && !sampleResolution)
                 && "A sample spacing is required for gridded sample distribution.",
             (sampleDistribution === "csv" && sampleFileNeeded && !(sampleFileName || "").includes(".csv"))
                 && "A sample CSV (.csv) file is required.",
