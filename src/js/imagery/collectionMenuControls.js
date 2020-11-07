@@ -2,7 +2,7 @@ import React from "react";
 import {mercator} from "../utils/mercator";
 import {monthlyMapping} from "../utils/generalUtils";
 
-export class PlanetMenus extends React.Component {
+export class PlanetMenu extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
@@ -47,8 +47,7 @@ export class PlanetMenus extends React.Component {
                                        ...sourceConfig,
                                        month: (this.state.month.length === 1 ? "0" : "") + this.state.month,
                                        year: this.state.year,
-                                   }),
-                                   this);
+                                   }));
     };
 
     render() {
@@ -83,7 +82,7 @@ export class PlanetMenus extends React.Component {
     }
 }
 
-export class PlanetDailyMenus extends React.Component {
+export class PlanetDailyMenu extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
@@ -142,8 +141,7 @@ export class PlanetDailyMenus extends React.Component {
                                                ...sourceConfig,
                                                startDate: startDate,
                                                endDate: endDate,
-                                           }),
-                                           this);
+                                           }));
             }
         }
     };
@@ -178,7 +176,117 @@ export class PlanetDailyMenus extends React.Component {
     }
 }
 
-export class SecureWatchMenus extends React.Component {
+export class PlanetNICFIMenu extends React.Component {
+    constructor(props) {
+        super(props);
+        this.state = {
+            selectedTime: "",
+            selectedBand: "",
+        };
+    }
+
+    componentDidMount() {
+        this.setState({
+            selectedTime: this.props.sourceConfig.time,
+            selectedBand: this.props.sourceConfig.band,
+        }, () => this.updatePlanetLayer());
+    }
+
+    componentDidUpdate(prevProps) {
+        if (this.props.visible && prevProps.visible !== this.props.visible) {
+            this.updateImageryInformation();
+        }
+    }
+
+    updateImageryInformation = () => {
+        if (this.props.visible) {
+            this.props.setImageryAttribution(` | ${this.state.selectedTime} Mosaic`);
+            this.props.setImageryAttributes({
+                time: this.state.selectedTime,
+            });
+        }
+    };
+
+    updatePlanetLayer = () => {
+        this.updateImageryInformation();
+        mercator.updateLayerSource(this.props.mapConfig,
+                                   this.props.thisImageryId,
+                                   this.props.currentProjectBoundary,
+                                   sourceConfig => ({
+                                       ...sourceConfig,
+                                       time: this.state.selectedTime,
+                                       band: this.state.selectedBand,
+                                   }));
+    };
+
+    render() {
+        return (
+            <div className="PlanetsMenu my-2" style={{display: this.props.visible ? "block" : "none"}}>
+                <div className="d-flex flex-column">
+                    <div className="d-flex align-items-center mb-2">
+                        <label htmlFor="time-selection" className="mb-0 mr-3">Select Time</label>
+                        <select
+                            id="time-selection"
+                            onChange={e => this.setState({selectedTime: e.target.value})}
+                            value={this.state.selectedTime}
+                        >
+                            {["2018-12_2019-05",
+                              "2019-06_2019-11",
+                              "2019-12_2020-05",
+                              "2020-06_2020-08",
+                              "2020-09"]
+                                .map(time => <option key={time} value={time}>{time}</option>)
+                            }
+                        </select>
+                    </div>
+                    <div className="d-flex align-items-center mb-2">
+                        <div id="radio-group">
+                            <div className="form-check form-check-inline">
+                                <input
+                                    id="visible"
+                                    className="form-check-input"
+                                    type="radio"
+                                    checked={this.state.selectedBand === "rgb"}
+                                    onChange={() => this.setState({selectedBand: "rgb"})}
+                                />
+                                <label
+                                    className="form-check-label"
+                                    htmlFor="visible"
+                                >
+                                    Visible
+                                </label>
+                            </div>
+                            <div className="form-check form-check-inline">
+                                <input
+                                    id="infrared"
+                                    className="form-check-input"
+                                    type="radio"
+                                    checked={this.state.selectedBand === "cir"}
+                                    onChange={() => this.setState({selectedBand: "cir"})}
+                                />
+                                <label
+                                    className="form-check-label"
+                                    htmlFor="infrared"
+                                >
+                                    Infrared
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    <button
+                        className="btn btn-lightgreen btn-sm"
+                        type="button"
+                        onClick={this.updatePlanetLayer}
+                    >
+                        Update Imagery
+                    </button>
+                </div>
+            </div>
+        );
+    }
+}
+
+export class SecureWatchMenu extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
@@ -352,7 +460,7 @@ export class SecureWatchMenus extends React.Component {
     }
 }
 
-export class SentinelMenus extends React.Component {
+export class SentinelMenu extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
@@ -401,8 +509,7 @@ export class SentinelMenus extends React.Component {
                                        month: (this.state.month.length === 1 ? "0" : "") + this.state.month,
                                        year: this.state.year,
                                        bandCombination: this.state.bandCombination,
-                                   }),
-                                   this);
+                                   }));
     };
 
     render() {
@@ -468,7 +575,7 @@ export class SentinelMenus extends React.Component {
     }
 }
 
-export class GEEImageMenus extends React.Component {
+export class GEEImageMenu extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
@@ -506,8 +613,7 @@ export class GEEImageMenus extends React.Component {
             sourceConfig => ({
                 ...sourceConfig,
                 imageVisParams: this.state.visParams,
-            }),
-            this
+            })
         );
     };
 
@@ -539,7 +645,7 @@ export class GEEImageMenus extends React.Component {
     }
 }
 
-export class GEEImageCollectionMenus extends React.Component {
+export class GEEImageCollectionMenu extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
@@ -590,8 +696,7 @@ export class GEEImageCollectionMenus extends React.Component {
                     collectionVisParams: visParams,
                     startDate: startDate,
                     endDate: endDate,
-                }),
-                this
+                })
             );
         }
     };

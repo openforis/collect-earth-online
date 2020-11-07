@@ -4,12 +4,13 @@ import ReactDOM from "react-dom";
 import {LoadingModal, NavigationBar} from "./components/PageComponents";
 import {SurveyCollection} from "./components/SurveyCollection";
 import {
-    PlanetMenus,
-    PlanetDailyMenus,
-    SecureWatchMenus,
-    SentinelMenus,
-    GEEImageMenus,
-    GEEImageCollectionMenus,
+    PlanetMenu,
+    PlanetDailyMenu,
+    PlanetNICFIMenu,
+    SecureWatchMenu,
+    SentinelMenu,
+    GEEImageMenu,
+    GEEImageCollectionMenu,
 } from "./imagery/collectionMenuControls";
 import {CollapsibleTitle} from "./components/FormComponents";
 
@@ -1076,7 +1077,7 @@ class Collection extends React.Component {
                             </>
                         :
                             <fieldset className="mb-3 justify-content-center text-center">
-                                <h3>Survey Questions</h3>
+                                <CollapsibleTitle title="Survey Questions" showGroup/>
                                 <p>Please go to a plot to see survey questions</p>
                             </fieldset>
                     }
@@ -1353,7 +1354,7 @@ class ExternalTools extends React.Component {
         return this.props.currentPlot.id ? (
             <>
                 <CollapsibleTitle
-                    title={"External Tools"}
+                    title="External Tools"
                     showGroup={this.state.showExternalTools}
                     toggleShow={() => this.setState({showExternalTools: !this.state.showExternalTools})}
                 />
@@ -1462,14 +1463,16 @@ class ImageryOptions extends React.Component {
                             sourceConfig: imagery.sourceConfig,
                             visible: props.currentImageryId === imagery.id && this.state.showImageryOptions,
                         };
-                        return imagery.sourceConfig.type === "Planet" ? <PlanetMenus {...individualProps}/>
-                            : imagery.sourceConfig.type === "PlanetDaily" ? <PlanetDailyMenus {...individualProps}/>
-                            : imagery.sourceConfig.type === "SecureWatch" ? <SecureWatchMenus {...individualProps}/>
-                            : imagery.sourceConfig.type === "Sentinel1" ? <SentinelMenus {...individualProps}/>
-                            : imagery.sourceConfig.type === "Sentinel2" ? <SentinelMenus {...individualProps}/>
-                            : imagery.sourceConfig.type === "GEEImage" ? <GEEImageMenus {...individualProps}/>
-                            : imagery.sourceConfig.type === "GEEImageCollection" ? <GEEImageCollectionMenus {...individualProps}/>
-                            : null;
+                        return imagery && imagery.sourceConfig && {
+                            "Planet": <PlanetMenu {...individualProps}/>,
+                            "PlanetDaily": <PlanetDailyMenu {...individualProps}/>,
+                            "PlanetNICFI": <PlanetNICFIMenu {...individualProps}/>,
+                            "SecureWatch": <SecureWatchMenu {...individualProps}/>,
+                            "Sentinel1": <SentinelMenu {...individualProps}/>,
+                            "Sentinel2": <SentinelMenu {...individualProps}/>,
+                            "GEEImage": <GEEImageMenu {...individualProps}/>,
+                            "GEEImageCollection": <GEEImageCollectionMenu {...individualProps}/>,
+                        }[imagery.sourceConfig.type];
                     })}
                 </div>
             </div>

@@ -49,12 +49,12 @@ export default class ReviewChanges extends React.Component {
 
     updateProject = () => {
         // TODO: Match project details in context as in state (i.e. do not spread into context).
-        const surveyQuestionUpdated = this.surveyQuestionUpdated(this.context, this.context.originalProject);
+        const updateSurvey = this.surveyQuestionUpdated(this.context, this.context.originalProject);
         const extraMessage = this.plotsUpdated(this.context, this.context.originalProject)
                 ? "  Plots and samples will be recreated, losing all collection data."
             : this.samplesUpdated(this.context, this.context.originalProject)
                 ? "  Samples will be recreated, losing all collection data."
-            : surveyQuestionUpdated
+            : updateSurvey
                 ? "  Updating survey questions or rules will reset all collected data."
             : this.allowDrawnSamplesDisallowed(this.context, this.context.originalProject)
                 ? "  Disallowing users to draw samples will reset all collected data."
@@ -71,7 +71,7 @@ export default class ReviewChanges extends React.Component {
                           body: JSON.stringify({
                               projectId: this.context.projectId,
                               ...this.buildProjectObject(),
-                              surveyQuestionUpdated: surveyQuestionUpdated, // FIXME this is a shim for when stored questions are in an old format.
+                              updateSurvey: updateSurvey, // FIXME this is a shim for when stored questions are in an old format.
                           }),
                       })
                     .then(response => {

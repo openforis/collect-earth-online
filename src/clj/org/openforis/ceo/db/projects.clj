@@ -540,7 +540,7 @@
 
 (defn create-project [{:keys [params]}]
   (let [institution-id       (tc/val->int (:institutionId params))
-        imagery-id           (or (:imageryId params nil) (get-first-public-imagery))
+        imagery-id           (or (:imageryId params) (get-first-public-imagery))
         name                 (:name params)
         description          (:description params)
         privacy-level        (:privacyLevel params)
@@ -806,12 +806,13 @@
                               sample-file-name
                               sample-file-base64))
 
-          ;; FIXME: Old formatted survey questions won't match what is returned from the front end.
+          ;; NOTE: Old stored questions can have a different format than when passed from the UI.
+          ;;       This is why we check whether the survey questions are different on the front (for now).
           (or update-survey
               (and (:allow_drawn_samples original-project) (not allow-drawn-samples?)))
           (reset-collected-samples project-id))
         (data-response ""))
-      (data-response (str "Project " project-id "  not found.")))))
+      (data-response (str "Project " project-id " not found.")))))
 
 (defn publish-project [{:keys [params]}]
   (let [project-id   (tc/val->int (:projectId params))
