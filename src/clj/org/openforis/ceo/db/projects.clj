@@ -366,15 +366,13 @@
                                     (str/replace #"X|LONGITUDE|LONG|CENTER_X" "LON")
                                     (str/replace #"Y|LATITUDE|CENTER_Y" "LAT"))
                                hr))
-            header-set (set headers)]
+            header-diff (set/difference (set must-include) set headers)]
         (cond
-          (not (set/subset must-include header-set))
-          (init-throw (str "Header fields "
-                           (str/join "," (set/difference (set must-include) header-set))
-                           " are missing. "))
-
           (not (str/includes? header-row ","))
           (init-throw "The CSV file must use commas for the delimiter.")
+
+          (seq header-diff)
+          (init-throw (str "Header fields " header-diff " are missing."))
 
           :else
           (do
