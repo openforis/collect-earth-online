@@ -273,7 +273,7 @@ class NewAnswerDesigner extends React.Component {
             setProjectDetails({surveyQuestions: newSurveyQuestions});
             this.setState({selectedColor: "#1527f6", newAnswerText: ""});
         } else {
-            alert("A survey answer must possess both an answer and a color.");
+            alert("You cannot add a empty survey answer. Please enter a value for the answer.");
         }
     };
 
