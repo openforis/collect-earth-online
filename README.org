@@ -16,8 +16,17 @@ Crowd-sourced visual interpretation of on-demand satellite imagery
 ** Postgresql Database Setup
 
 *Postgresql* needs to be installed on the machine that will be hosting
-this website. Use [[https://pgtune.leopard.in.ua/#/][pgtune]] to update
-performance settings in postgresql.conf.
+this website. Use [[https://pgtune.leopard.in.ua/#/][pgtune]] to get a
+set of system performance settings.  The easiest way to add the new
+settings is to add "import performance.conf" to
+"/etc/postgresql/12/ceo/postgresql.conf" and copy the recommended settings
+into "/etc/postgresql/12/ceo/performance.conf". The imported conf file
+will override the settings in postgresql.conf.  Note that the posgtres
+server will need to be restarted:
+
+#+begin_src sh
+sudo systemctl restart postgresql
+#+end_src
 
 Once the Postgresql database server is running on your
 machine, you should navigate to the toplevel directory and run the
