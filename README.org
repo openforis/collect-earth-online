@@ -16,7 +16,10 @@ Crowd-sourced visual interpretation of on-demand satellite imagery
 ** Postgresql Database Setup
 
 *Postgresql* needs to be installed on the machine that will be hosting
-this website. Once the Postgresql database server is running on your
+this website. Use [[https://pgtune.leopard.in.ua/#/][pgtune]] to update
+performance settings in postgresql.conf.
+
+Once the Postgresql database server is running on your
 machine, you should navigate to the toplevel directory and run the
 database build command as follows:
 
