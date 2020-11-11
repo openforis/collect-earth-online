@@ -503,36 +503,37 @@ class AnswerInput extends React.Component {
 
     render() {
         const {surveyNode, surveyNode: {answers, dataType}, setCurrentValue} = this.props;
-        return (
-            <div className="d-inline-flex">
-                <div className="pr-2 pt-2">
-                    <div
-                        className="circle"
-                        style={{
-                            backgroundColor: answers[0].color,
-                            border: "1px solid",
-                        }}
+        return answers[0]
+            ?
+                <div className="d-inline-flex">
+                    <div className="pr-2 pt-2">
+                        <div
+                            className="circle"
+                            style={{
+                                backgroundColor: answers[0].color,
+                                border: "1px solid",
+                            }}
+                        />
+                    </div>
+                    <input
+                        type={dataType}
+                        className="form-control mr-2"
+                        placeholder={answers[0].answer}
+                        id={answers[0].answer + "_" + answers[0].id}
+                        name={answers[0].answer + "_" + answers[0].id}
+                        value={this.state.newInput}
+                        onChange={e => this.updateInputValue(e.target.value)}
+                    />
+                    <input
+                        id="save-input"
+                        className="text-center btn btn-outline-lightgreen btn-sm"
+                        type="button"
+                        name="save-input"
+                        value="Save"
+                        onClick={() => setCurrentValue(surveyNode, answers[0].id, this.state.newInput)}
                     />
                 </div>
-                <input
-                    type={dataType}
-                    className="form-control mr-2"
-                    placeholder={answers[0].answer}
-                    id={answers[0].answer + "_" + answers[0].id}
-                    name={answers[0].answer + "_" + answers[0].id}
-                    value={this.state.newInput}
-                    onChange={e => this.updateInputValue(e.target.value)}
-                />
-                <input
-                    id="save-input"
-                    className="text-center btn btn-outline-lightgreen btn-sm"
-                    type="button"
-                    name="save-input"
-                    value="Save"
-                    onClick={() => setCurrentValue(surveyNode, answers[0].id, this.state.newInput)}
-                />
-            </div>
-        );
+            : null;
     }
 }
 
