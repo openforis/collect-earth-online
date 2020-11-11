@@ -3,7 +3,7 @@
             [clojure.string :as str]
             [clojure.tools.cli  :refer [parse-opts]]
             [ring.adapter.jetty :refer [run-jetty]]
-            [org.openforis.ceo.handler :refer [development-app production-app]]
+            [org.openforis.ceo.handler :refer [create-handler-sack]]
             [org.openforis.ceo.logging :refer [log-str]]))
 
 (defonce server           (atom nil))
@@ -53,14 +53,13 @@
         (println (str "Usage:\n" summary)))
       (let [mode       (:mode options)
             has-key?   (.exists (io/file "./.key/keystore.pkcs12"))
-            handler    (if (= mode "prod")
-                         #'production-app
-                         #'development-app)
             https-port (:https-port options)
+            ssl?       (and has-key? https-port)
+            handler    (create-handler-sack ssl? (= mode "dev"))
             config     (merge
                         {:port  (:http-port options)
                          :join? false}
-                        (when (and has-key? https-port)
+                        (when ssl?
                           {:ssl?          true
                            :ssl-port      https-port
                            :keystore      "./.key/keystore.pkcs12"
