@@ -355,17 +355,17 @@
             header-diff (set/difference (set must-include) header-set)]
         (cond
           (not (str/includes? header-row ","))
-          (init-throw "The CSV file must use commas for the delimiter. This error may indicate that the csv file contains one column")
+          (init-throw "The CSV file must use commas for the delimiter. This error may indicate that the csv file contains only one column.")
 
           (seq header-diff)
-          (init-throw (str "Header fields " header-diff " are missing."))
+          (init-throw (str "The required header field(s) " (str/join ", " header-diff) " are missing."))
 
           (every? (fn [header]
                     (or (re-matches #"^[a-zA-Z_][a-zA-Z0-9_]*$" header)
                         (init-throw (str "The CSV column \"" header "\" is invalid."))))
                   header-set)
           (do
-            (spit ext-file (str/replace-first data header-row (str/join "," headers)))
+            (spit ext-file (str/replace-first data header-row (str/join ", " headers)))
             (type-columns headers))))
       (init-throw "CSV file contains no rows of data."))))
 
@@ -408,11 +408,11 @@
                                           (str (str/capitalize type) " " distribution " file failed to load."))
                          table))
                      (if (= "csv" distribution)
-                       (str "Malformed " type " CSV. Fields must include LON,LAT," (str/join "," must-include) " columns.")
+                       (str "Malformed " type " CSV.")
                        (str "Malformed "
                             type
                             " Shapefile. All features must be of type polygon and include "
-                            (str/join "," must-include)
+                            (str/join ", " must-include)
                             " field(s).")))))
 
 (defn- create-project-samples [plot-id
@@ -512,7 +512,7 @@
                 (init-throw (str "The uploaded plot and sample files do not have correctly overlapping data. "
                                  (count bad-plots)
                                  " plots have no samples. The first 10 are: ["
-                                 (str/join "," (take 10 bad-plots))
+                                 (str/join ", " (take 10 bad-plots))
                                  "]"))))))
       (let [[[left bottom] [top right]] (pu/EPSG:4326->3857 [lon-min lat-min] [lon-max lat-max])
             [left bottom right top] (pad-bounds left bottom top right (/ 2.0 plot-size))]
