@@ -10,7 +10,7 @@
         org.clojure/data.json     {:mvn/version "1.0.0"}
         org.clojure/tools.cli     {:mvn/version "1.0.194"}
         org.postgresql/postgresql {:mvn/version "42.2.18"}
-        ring/ring                 {:mvn/version "1.8.0"}
+        ring/ring                 {:mvn/version "1.8.2"}
         ring/ring-headers         {:mvn/version "0.3.0"}
         ring/ring-ssl             {:mvn/version "0.3.0"}
         ring/ring-json            {:mvn/version "0.5.0"}
