@@ -14,7 +14,7 @@ export default function SurveyCardList(props) {
             topLevelNodeIds={topLevelNodes.map(tln => tln.id)}
             cardNumber={index + 1}
             inDesignMode={props.inDesignMode}
-            setSurveyQuestions={props.setSurveyQuestions}
+            setProjectDetails={props.setProjectDetails}
             surveyQuestion={sq}
             surveyQuestions={props.surveyQuestions}
             surveyRules={props.surveyRules}
@@ -43,15 +43,14 @@ class SurveyCard extends React.Component {
         const swapId = this.props.topLevelNodeIds[
             this.props.topLevelNodeIds.indexOf(this.props.surveyQuestion.id) + upOrDown
         ];
-
-        this.props.setSurveyQuestions(
-            this.props.surveyQuestions
+        this.props.setProjectDetails({
+            surveyQuestions: this.props.surveyQuestions
                 .map(sq => ({
                     ...sq,
                     id: this.swapId(sq.id, myId, swapId),
                     parentQuestion: this.swapId(sq.parentQuestion, myId, swapId),
-                }))
-        );
+                })),
+        });
     };
 
     render() {
@@ -111,7 +110,6 @@ class SurveyCard extends React.Component {
                                 surveyQuestion={this.props.surveyQuestion}
                                 surveyQuestions={this.props.surveyQuestions}
                                 surveyRules={this.props.surveyRules}
-                                setSurveyQuestions={this.props.setSurveyQuestions}
                             />
                         </div>
                     }
@@ -130,7 +128,6 @@ function SurveyQuestionTree({
     surveyQuestion,
     surveyQuestions,
     surveyRules,
-    setSurveyQuestions,
 }) {
     const childNodes = surveyQuestions.filter(sq => sq.parentQuestion === surveyQuestion.id);
     const parentQuestion = surveyQuestions.find(sq => sq.id === surveyQuestion.parentQuestion);
@@ -222,7 +219,6 @@ function SurveyQuestionTree({
                     newAnswerComponent={newAnswerComponent}
                     removeAnswer={removeAnswer}
                     removeQuestion={removeQuestion}
-                    setSurveyQuestions={setSurveyQuestions}
                     surveyQuestion={surveyQuestion}
                     surveyQuestions={surveyQuestions}
                     surveyRules={surveyRules}
