@@ -1379,7 +1379,7 @@ class PlotInformation extends React.Component {
     }
 
     render() {
-        const hasExtraInfo = Object.values(this.props.extraPlotInfo)
+        const hasExtraInfo = Object.values(this.props.extraPlotInfo || {})
             .filter(value => value && !(value instanceof Object)).length > 0;
         return (
             <>
