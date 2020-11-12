@@ -358,15 +358,15 @@
 (defn- get-csv-headers [ext-file must-include]
   (let [data (slurp ext-file)]
     (if-let [header-row (re-find #".+(?=[\r\n|\n|\r])" data)]
-      (let [headers    (as-> header-row hr
-                         (str/split hr #",")
-                         (mapv #(-> %
-                                    (str/upper-case)
-                                    (str/replace #"-| |," "_")
-                                    (str/replace #"X|LONGITUDE|LONG|CENTER_X" "LON")
-                                    (str/replace #"Y|LATITUDE|CENTER_Y" "LAT"))
-                               hr))
-            header-diff (set/difference (set must-include) set headers)]
+      (let [headers     (as-> header-row hr
+                          (str/split hr #",")
+                          (mapv #(-> %
+                                     (str/upper-case)
+                                     (str/replace #"-| |," "_")
+                                     (str/replace #"X|LONGITUDE|LONG|CENTER_X" "LON")
+                                     (str/replace #"Y|LATITUDE|CENTER_Y" "LAT"))
+                                hr))
+            header-diff (set/difference (set must-include) (set headers))]
         (cond
           (not (str/includes? header-row ","))
           (init-throw "The CSV file must use commas for the delimiter.")
