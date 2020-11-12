@@ -410,7 +410,10 @@ class ImageryList extends React.Component {
         const toVisibility = currentVisibility === "private" ? "public" : "private";
         if (this.props.institutionId === 3
                 && this.props.isAdmin
-                && confirm(`Do you want to change the visibility from ${currentVisibility} to ${toVisibility}?`)) {
+                && confirm(`Do you want to change the visibility from ${currentVisibility} to ${toVisibility}?`
+                            + toVisibility === "private"
+                                ? "  This will remove the imagery from other institution's projects."
+                                : "")) {
             fetch("/update-imagery-visibility",
                   {
                       method: "POST",
