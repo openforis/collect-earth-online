@@ -316,6 +316,16 @@ CREATE OR REPLACE FUNCTION update_project(
     _description            text,
     _privacy_level          text,
     _imagery_id             integer,
+    _boundary               jsonb,
+    _plot_distribution      text,
+    _num_plots              integer,
+    _plot_spacing           float,
+    _plot_shape             text,
+    _plot_size              float,
+    _sample_distribution    text,
+    _samples_per_plot       integer,
+    _sample_resolution      float,
+    _allow_drawn_samples    boolean,
     _survey_questions       jsonb,
     _survey_rules           jsonb,
     _options                jsonb
@@ -326,12 +336,55 @@ CREATE OR REPLACE FUNCTION update_project(
         description = _description,
         privacy_level = _privacy_level,
         imagery_rid = _imagery_id,
+        boundary = ST_SetSRID(ST_GeomFromGeoJSON(_boundary), 4326),
+        plot_distribution = _plot_distribution,
+        num_plots = _num_plots,
+        plot_spacing = _plot_spacing,
+        plot_shape = _plot_shape,
+        plot_size = _plot_size,
+        sample_distribution = _sample_distribution,
+        samples_per_plot = _samples_per_plot,
+        sample_resolution = _sample_resolution,
+        allow_drawn_samples = _allow_drawn_samples,
         survey_questions = _survey_questions,
         survey_rules = _survey_rules,
         options = _options
     WHERE project_uid = _project_id
 
 $$ LANGUAGE SQL;
+
+CREATE OR REPLACE FUNCTION delete_project_tables(_project_id integer)
+ RETURNS void AS $$
+
+ BEGIN
+
+    UPDATE projects
+    SET samples_ext_table = null,
+        plots_ext_table = null
+    WHERE project_uid = _project_id;
+
+    EXECUTE
+    'DROP TABLE IF EXISTS ext_tables.project_' || _project_id || '_plots_csv;'
+    'DROP TABLE IF EXISTS ext_tables.project_' || _project_id || '_plots_shp;'
+    'DROP TABLE IF EXISTS ext_tables.project_' || _project_id || '_samples_csv;'
+    'DROP TABLE IF EXISTS ext_tables.project_' || _project_id || '_samples_shp;';
+ END
+
+$$ LANGUAGE PLPGSQL;
+
+CREATE OR REPLACE FUNCTION delete_project_sample_table(_project_id integer)
+ RETURNS void AS $$
+
+ BEGIN
+
+    UPDATE projects SET samples_ext_table = null WHERE project_uid = _project_id;
+
+    EXECUTE
+    'DROP TABLE IF EXISTS ext_tables.project_' || _project_id || '_samples_csv;'
+    'DROP TABLE IF EXISTS ext_tables.project_' || _project_id || '_samples_shp;';
+ END
+
+$$ LANGUAGE PLPGSQL;
 
 -- Update counts after plots are created
 CREATE OR REPLACE FUNCTION update_project_counts(_project_id integer)
@@ -537,6 +590,18 @@ CREATE OR REPLACE FUNCTION update_project_tables(
     UPDATE projects
     SET plots_ext_table = _plots_ext_table,
         samples_ext_table = _samples_ext_table
+    WHERE project_uid = _project_id;
+
+$$ LANGUAGE SQL;
+
+-- Update sample table for external data after project is created
+CREATE OR REPLACE FUNCTION update_project_sample_table(
+    _project_id           integer,
+    _samples_ext_table    text
+ ) RETURNS void AS $$
+
+    UPDATE projects
+    SET samples_ext_table = _samples_ext_table
     WHERE project_uid = _project_id;
 
 $$ LANGUAGE SQL;
@@ -812,6 +877,7 @@ CREATE OR REPLACE FUNCTION select_project_by_id(_project_id integer)
         token_key
     FROM projects
     WHERE project_uid = _project_id
+        AND availability <> 'archived'
 
 $$ LANGUAGE SQL;
 
@@ -1586,6 +1652,14 @@ CREATE OR REPLACE FUNCTION delete_samples_by_plot(_plot_id integer)
 
 $$ LANGUAGE SQL;
 
+-- For clearing all plots in a project
+CREATE OR REPLACE FUNCTION delete_plots_by_project(_project_id integer)
+ RETURNS void AS $$
+
+    DELETE FROM plots WHERE project_rid = _project_id
+
+$$ LANGUAGE SQL;
+
 -- For clearing all user plots in a project
 CREATE OR REPLACE FUNCTION delete_user_plots_by_project(_project_id integer)
  RETURNS void AS $$
@@ -1624,6 +1698,22 @@ CREATE OR REPLACE FUNCTION get_deleted_user_plots_by_project(_project_id integer
     FROM plots
     INNER JOIN deleted_samples
         ON plot_uid = plot_rid
+
+$$ LANGUAGE SQL;
+
+-- Get all plots and centers to recreate samples.
+CREATE OR REPLACE FUNCTION get_plot_centers_by_project(_project_id integer)
+ RETURNS TABLE (
+    plot_id    integer,
+    lon        double precision,
+    lat        double precision
+ ) AS $$
+
+    SELECT plot_uid,
+        ST_X(center) AS lon,
+        ST_Y(center) AS lat
+    FROM plots
+    WHERE project_rid = _project_id
 
 $$ LANGUAGE SQL;
 

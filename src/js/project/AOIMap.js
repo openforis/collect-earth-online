@@ -80,7 +80,7 @@ export default class AOIMap extends React.Component {
         const displayDragBoxBounds = (dragBox) => {
             mercator.removeLayerById(this.state.mapConfig, "currentAOI");
             const boundary = mercator.geometryToGeoJSON(dragBox.getGeometry().clone(), "EPSG:4326", "EPSG:3857");
-            this.props.context.setProjectDetails({boundary: boundary});
+            this.props.context.setProjectDetails({boundary: boundary, plots: []});
         };
         mercator.enableDragBoxDraw(this.state.mapConfig, displayDragBoxBounds);
     };
@@ -89,8 +89,15 @@ export default class AOIMap extends React.Component {
         mercator.disableDragBoxDraw(this.state.mapConfig);
     }
 
-    showPlots = () => {
+    hidePlots = () => {
         mercator.removeLayerById(this.state.mapConfig, "projectPlots");
+        mercator.removeLayerById(this.state.mapConfig, "flaggedPlots");
+        mercator.removeLayerById(this.state.mapConfig, "analyzedPlots");
+        mercator.removeLayerById(this.state.mapConfig, "unanalyzedPlots");
+    };
+
+    showPlots = () => {
+        this.hidePlots();
         if (this.props.context.projectId > 0) {
             mercator.addPlotOverviewLayers(this.state.mapConfig, this.props.context.plots);
         } else {
@@ -101,13 +108,6 @@ export default class AOIMap extends React.Component {
                 mercator.ceoMapStyles("overview", "yellow")
             );
         }
-    };
-
-    hidePlots = () => {
-        mercator.removeLayerById(this.state.mapConfig, "projectPlots");
-        mercator.removeLayerById(this.state.mapConfig, "flaggedPlots");
-        mercator.removeLayerById(this.state.mapConfig, "analyzedPlots");
-        mercator.removeLayerById(this.state.mapConfig, "unanalyzedPlots");
     };
 
     render() {

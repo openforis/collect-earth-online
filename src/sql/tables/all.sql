@@ -187,7 +187,7 @@ CREATE TABLE sample_values (
 -- many plots <-> many users, although by other means we restrict it to 1 user to 1 plot
 CREATE TABLE plot_locks (
     user_rid    integer NOT NULL REFERENCES users(user_uid),
-    plot_rid    integer NOT NULL REFERENCES plots(plot_uid),
+    plot_rid    integer NOT NULL REFERENCES plots(plot_uid) ON DELETE CASCADE,
     lock_end    timestamp,
     PRIMARY KEY(user_rid, plot_rid)
 );

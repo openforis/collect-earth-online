@@ -51,7 +51,8 @@ export class SampleDesign extends React.Component {
                 />
             </label>
             <label className="ml-3 text-nowrap">
-                File: <span className="font-italic">{this.context.sampleFileName || "None"}</span>
+                File: {this.context.sampleFileName
+                        || ((this.context.projectId === -1 || this.context.plotFileName) ? " None" : " Use existing data")}
             </label>
         </div>
     );
