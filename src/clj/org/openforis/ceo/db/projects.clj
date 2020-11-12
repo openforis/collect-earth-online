@@ -496,7 +496,7 @@
                                                         samples-per-plot
                                                         sample-resolution))
                              "Error adding plot file with generated samples."))
-        ;; The SQL function only checks against plots with external tables.
+          ;; The SQL function only checks against plots with external tables.
           (when (not allow-drawn-samples?)
             (let [bad-plots (map :plot_id (call-sql "plots_missing_samples" project-id))]
               (when (seq bad-plots)
@@ -518,7 +518,7 @@
                              "none"    1.0)
                            200.0
                            50000.0)
-      ;; TODO use bulk insert, or use postGIS to generate points.
+        ;; TODO use bulk insert, or use postGIS to generate points.
         (doseq [plot-center (if (= "gridded" plot-distribution)
                               (create-gridded-points-in-bounds left bottom right top plot-spacing)
                               (create-random-points-in-bounds left bottom right top num-plots))]
@@ -922,7 +922,7 @@
   [project-id]
   (->> (call-sql "get_plot_headers" project-id)
        (map :column_names)
-       (remove #(#{"GID", "GEOM", "PLOT_GEOM", "LAT", "LON"} (str/upper-case %)))
+       (remove #(#{"GID" "GEOM" "PLOT_GEOM" "LAT" "LON"} (str/upper-case %)))
        (mapv #(str "pl_" %))))
 
 (def plot-key-names {:lon        :center_lon
@@ -985,7 +985,7 @@
   [project-id]
   (->> (call-sql "get_sample_headers" project-id)
        (map :column_names)
-       (remove #(#{"GID", "GEOM", "LAT", "LON", "SAMPLE_GEOM"} (str/upper-case %)))
+       (remove #(#{"GID" "GEOM" "LAT" "LON" "SAMPLE_GEOM"} (str/upper-case %)))
        (map #(str "smpl_" %))))
 
 (defn- extract-answers [value sample-value-trans]
