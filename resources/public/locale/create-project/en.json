@@ -1,0 +1,46 @@
+[
+    {
+        "body": "Click \"Create New Project\" to get started.",
+        "img": "/img/create-project1.webp"
+    },
+    {
+        "body": "You can create a project based on an existing project template. You can only use your institution’s projects or publicly available projects as templates.",
+        "img": "/img/create-project2.webp"
+    },
+    {
+        "body": "Specify the project name, description, and privacy level of your project. The project name is displayed on the home page and at the top of the project page. The project description only appears on the home page. Privacy level will decide who can view your project.",
+        "img": "/img/create-project3.webp"
+    },
+    {
+        "body": "Specify the boundaries for your project.",
+        "img": "/img/create-project4.wepb"
+    },
+    {
+        "body": "Decide what aspects of your project will be shown on the Collection Page and whether or not it will auto-launch Geo-Dash when opened.",
+        "img": "/img/create-project5.jpg"
+    },
+    {
+        "body": "Specify the plot design for your project.",
+        "img": "/img/create-project6.jpg"
+    },
+    {
+        "body": "Specify the sample design for your project.",
+        "img": "/img/create-project7.jpg"
+    },
+    {
+        "body": "Create the survey questions that users will answer for each sample point. You can make a new question dependent on another question being answered a certain way by assigning the new question a parent question/answer pair.",
+        "img": "/img/create-project8.jpg"
+    },
+    {
+        "body": "If you click on Advanced you can add rules to your survey. Adding survey rules will restrict what answers users can input on the data collection page. Adding survey rules is not required.",
+        "img": "/img/create-project9.jpg"
+    },
+    {
+        "body": "Once you have filled out all of your project settings, click on \"Create Project\". This will lead you to a Project Review page.",
+        "img": "/img/create-project10.jpg"
+    },
+    {
+        "body": "At the bottom of the Project Review page, you will see the Project Management section, which will allow you to decide what to do next with your project after review.",
+        "img": "/img/create-project11.jpg"
+    }
+]

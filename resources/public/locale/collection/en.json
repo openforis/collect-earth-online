@@ -1,0 +1,42 @@
+[
+    {
+        "body": "This is the map area. Right now it shows the project overview with all plots in the project.",
+        "img": "/img/collection1.webp"
+    },
+    {
+        "body": "This is the analysis area. You must click on \"Go to first plot\" to start analyzing data.",
+        "img": "/img/collection2.webp"
+    },
+    {
+        "body": "The yellow square is the plot. The black circle(s) are the sample points. You will answer questions about these sample points to help your institution learn things about the broader landscape.",
+        "img": "/img/collection3.webp"
+    },
+    {
+        "body": "This is the plot navigation menu. The arrows allow you to move one plot forward or backward. You can enter a plot number and click \"Go to plot\" to go to a specific plot. You must check \"Review your analyzed plots\" in order to return to plots you have previously analyzed.",
+        "img": "/img/collection4.webp"
+    },
+    {
+        "body": "These are your External Tools. Re-Zoom will refocus the window on the current plot. Geodash will open a new window with additional information about the plot if the institution has set it up. \"Download Plot KML\" will download KML information. If you have Google Earth installed, you can see the plot there.",
+        "img": "/img/collection5.webp"
+    },
+    {
+        "body": "This is the Imagery Options menu. You can choose the background imagery using the dropdown menu. Changing the background imagery can help you answer survey questions. Some imagery options will also let you change the date of the imagery displayed.",
+        "img": "/img/collection6.webp"
+    },
+    {
+        "body": "This is the Survey Questions menu. Each project asks questions about each sample point to learn things about the broader landscape. You can change the color of the point data with the radio buttons next to Unanswered Color. You must answer all the survey questions to Save the plot data.",
+        "img": "/img/collection7.webp"
+    },
+    {
+        "body": "Finally, you can select \"Flag Plot\" if the imagery quality isn’t good enough to answer the survey questions. Click \"Clear All\" to remove your Survey Question answers. Click \"Quit\" to return to the Home page.",
+        "img": "/img/collection8.webp"
+    },
+    {
+        "body": "1. Plot boundary is yellow; sample points are black circles. 2. Navigate between plots or enter a plot number. 3. Return to your previously saved plots. 4. Download KML to view in Google Earth. 5. Change background imagery displayed. 6. Navigate between questions. 7. Click to select your answer to the current question. 8. Click to save your answers when all questions are answered. 9. Click to flag plot when imagery is insufficient.",
+        "img": "/img/collection9.webp"
+    },
+    {
+        "body": "You can click the ? at any time to be reminded of these features. Start collecting!",
+        "img": "/img/collection10.webp"
+    }
+]
