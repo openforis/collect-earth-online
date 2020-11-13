@@ -360,13 +360,12 @@
           (seq header-diff)
           (init-throw (str "The required header field(s) " (str/join ", " header-diff) " are missing."))
 
-          (every? (fn [header]
-                    (or (re-matches #"^[a-zA-Z_][a-zA-Z0-9_]*$" header)
-                        (init-throw (str "The CSV column \"" header "\" is invalid."))))
-                  header-set)
-          (do
-            (spit ext-file (str/replace-first data header-row (str/join ", " headers)))
-            (type-columns headers))))
+          :else
+          (if-let [invalid-headers (seq (remove #(re-matches #"^[a-zA-Z_][a-zA-Z0-9_]*$" %) headers))]
+            (init-throw (str "One or more CSV columns are invalid: " (str/join ", " invalid-headers)))
+            (do
+              (spit ext-file (str/replace-first data header-row (str/join ", " headers)))
+              (type-columns headers)))))
       (init-throw "CSV file contains no rows of data."))))
 
 (defn- load-external-data [distribution project-id ext-file type must-include]
