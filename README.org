@@ -16,20 +16,45 @@ Crowd-sourced visual interpretation of on-demand satellite imagery
 ** Postgresql Database Setup
 
 *Postgresql* needs to be installed on the machine that will be hosting
-this website. Once the Postgresql database server is running on your
-machine, you should navigate to the toplevel directory and run the
-database build command as follows:
+this website. This installation task is system specific and is beyond
+the scope of this README, so please follow the instructions for your
+operating system and Postgresql version. However, please ensure that
+the database server's superuser account is named "postgres" and that
+you know its database connection password before proceeding.
+
+Once the Postgresql database server is running on your machine, you
+should navigate to the toplevel directory (i.e., the directory
+containing this README) and run the database build command as follows:
 
 #+begin_src sh
 clojure -A:build-db build-all
 #+end_src
 
-This will begin by creating a new database and role called
-ceo and then add the pgcrypto extension to it. Next, the
-script will populate the database with the schemas, tables, and
-functions that are necessary for storing and processing ceo's
-data. Finally, it will load some default data into these tables that
-is necessary for the website to function properly.
+This will begin by creating a new database and role called ceo and
+then add the postgis and pgcrypto extensions to it. Next, the script
+will populate the database with the schemas, tables, and functions
+that are necessary for storing and processing ceo's data. Finally, it
+will load some default data into these tables that is necessary for
+the website to function properly.
+
+If you want to improve the performance of your Postgresql server, one
+way is to visit the [[https://pgtune.leopard.in.ua/][pgtune]] website and input your system settings.
+This will generate a set of configuration options that you can add to
+the postgresql.conf file in your system-specific Postgresql data
+directory.
+
+If you would like to keep these settings separate for your own
+reference, you can add them to a file called "performance.conf" that
+you should place in your Postgresql data directory. You can then
+import these settings into postgresql.conf by adding this line to the
+end of that file:
+
+#+begin_example
+include = 'performance.conf'
+#+end_example
+
+Note that the Postgresql server will need to be restarted for these
+changes to take effect.
 
 ** Email Server
 
