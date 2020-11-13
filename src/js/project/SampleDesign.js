@@ -122,20 +122,25 @@ export class SampleDesign extends React.Component {
                     - {sampleOptions[sampleDistribution].description}
                 </p>
                 {sampleDistribution !== "none" &&
-                    <div className="form-check form-check-inline mb-3">
-                        <input
-                            className="form-check-input"
-                            type="checkbox"
-                            id="allow-drawn-samples"
-                            onChange={() => setProjectDetails({allowDrawnSamples: !allowDrawnSamples})}
-                            checked={allowDrawnSamples || sampleDistribution === "none"}
-                        />
-                        <label
-                            className="form-check-label"
-                            htmlFor="allow-drawn-samples"
-                        >
-                            Allow users to draw their own samples
-                        </label>
+                    <div className="mb-3">
+                        <div className="form-check form-check-inline">
+                            <input
+                                className="form-check-input"
+                                type="checkbox"
+                                id="allow-drawn-samples"
+                                onChange={() => setProjectDetails({allowDrawnSamples: !allowDrawnSamples})}
+                                checked={allowDrawnSamples || sampleDistribution === "none"}
+                            />
+                            <label
+                                className="form-check-label"
+                                htmlFor="allow-drawn-samples"
+                            >
+                                Allow users to draw their own samples
+                            </label>
+                        </div>
+                        <p className="font-italic ml-2 small">
+                            - Enable this to allow users to draw and label points, lines, and polygons during data collection.
+                        </p>
                     </div>
                 }
                 <div style={{display: "flex"}}>

@@ -74,7 +74,6 @@ function Support() {
     );
 }
 
-
 export function pageInit(args) {
     ReactDOM.render(
         <NavigationBar userName={args.userName} userId={args.userId}>
