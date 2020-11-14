@@ -139,7 +139,7 @@ export class SampleDesign extends React.Component {
                             </label>
                         </div>
                         <p className="font-italic ml-2 small">
-                            - Enable this to allow users to draw and label points, lines, and polygons during data collection.
+                            - Enable this to allow users to draw and label points, linestrings, and polygons during data collection.
                         </p>
                     </div>
                 }
