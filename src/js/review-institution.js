@@ -103,6 +103,7 @@ class ReviewInstitution extends React.Component {
                         />
                         <ImageryList
                             isAdmin={this.state.isAdmin}
+                            userId={this.props.userId}
                             institutionId={this.props.institutionId}
                             setImageryCount={this.setImageryCount}
                             isVisible={this.state.selectedTab === 1}
@@ -406,6 +407,39 @@ class ImageryList extends React.Component {
         }
     };
 
+    toggleVisibility = (imageryId, currentVisibility) => {
+        const toVisibility = currentVisibility === "private" ? "public" : "private";
+        if (this.props.userId === 1
+                && confirm(`Do you want to change the visibility from ${currentVisibility} to ${toVisibility}?`
+                            + toVisibility === "private"
+                                ? "  This will remove the imagery from other institutions' projects."
+                                : "")) {
+            fetch("/update-imagery-visibility",
+                  {
+                      method: "POST",
+                      headers: {
+                          "Accept": "application/json",
+                          "Content-Type": "application/json",
+                      },
+                      body: JSON.stringify({
+                          institutionId: this.props.institutionId,
+                          visibility: toVisibility,
+                          imageryId: imageryId,
+                      }),
+                  }
+            )
+                .then(response => {
+                    if (response.ok) {
+                        this.getImageryList();
+                        alert("Imagery visibility has been successfully updated.");
+                    } else {
+                        console.log(response);
+                        alert("Error updating imagery visibility. See console for details.");
+                    }
+                });
+        }
+    };
+
     //    State Modifications    //
 
     hideEditMode = () => this.setState({imageryToEdit: null});
@@ -448,14 +482,15 @@ class ImageryList extends React.Component {
                         }
                         {this.state.imageryList.length === 0
                             ? <h3>Loading imagery...</h3>
-                            : this.state.imageryList.map((imageryItem, uid) =>
+                            : this.state.imageryList.map(({id, title, institution, visibility}) =>
                                 <Imagery
-                                    key={uid}
-                                    title={imageryItem.title}
-                                    isAdmin={this.props.isAdmin}
-                                    isInstitutionImage={this.props.institutionId === imageryItem.institution}
-                                    selectEditImagery={() => this.selectEditImagery(imageryItem.id)}
-                                    deleteImagery={() => this.deleteImagery(imageryItem.id)}
+                                    key={id}
+                                    title={title}
+                                    canEdit={this.props.isAdmin && this.props.institutionId === institution}
+                                    visibility={visibility}
+                                    toggleVisibility={() => this.toggleVisibility(id, visibility)}
+                                    selectEditImagery={() => this.selectEditImagery(id)}
+                                    deleteImagery={() => this.deleteImagery(id)}
                                 />
                             )
                         }
@@ -835,12 +870,15 @@ class NewImagery extends React.Component {
     }
 }
 
-function Imagery({isAdmin, title, selectEditImagery, deleteImagery, isInstitutionImage}) {
+function Imagery({title, canEdit, visibility, toggleVisibility, selectEditImagery, deleteImagery}) {
     return (
         <div className="row mb-1 d-flex">
             <div className="col-2 pr-0">
-                <div className="btn btn-sm btn-outline-lightgreen btn-block">
-                    {isInstitutionImage ? "Institution" : "Public"}
+                <div
+                    className="btn btn-sm btn-outline-lightgreen btn-block"
+                    onClick={toggleVisibility}
+                >
+                    {visibility === "private" ? "Institution" : "Public"}
                 </div>
             </div>
             <div className="col overflow-hidden">
@@ -852,7 +890,7 @@ function Imagery({isAdmin, title, selectEditImagery, deleteImagery, isInstitutio
                     {title}
                 </button>
             </div>
-            {(isAdmin && isInstitutionImage) &&
+            {canEdit &&
             <>
                 <div className="pr-3">
                     <button

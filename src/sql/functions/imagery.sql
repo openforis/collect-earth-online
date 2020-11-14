@@ -77,6 +77,28 @@ CREATE OR REPLACE FUNCTION update_institution_imagery(
 
 $$ LANGUAGE SQL;
 
+-- Updates institution imagery visibility (this is only for the super user)
+CREATE OR REPLACE FUNCTION update_imagery_visibility(
+    _imagery_id        integer,
+    _visibility        text,
+    _institution_id    integer
+ ) RETURNS void AS $$
+
+    UPDATE imagery
+    SET visibility = _visibility
+    WHERE imagery_uid = _imagery_id;
+
+    UPDATE projects
+    SET imagery_rid = (SELECT select_first_public_imagery())
+    WHERE imagery_rid = _imagery_id
+        AND institution_rid <> _institution_id;
+
+    DELETE FROM project_imagery
+    WHERE imagery_rid = _imagery_id
+        AND project_rid IN (SELECT project_uid FROM projects WHERE institution_rid <> _institution_id);
+
+$$ LANGUAGE SQL;
+
 -- Delete single imagery by id
 CREATE OR REPLACE FUNCTION archive_imagery(_imagery_id integer)
  RETURNS void AS $$

@@ -165,6 +165,9 @@
    [:post "/update-institution-imagery"]     {:handler     imagery/update-institution-imagery
                                               :auth-type   :admin
                                               :auth-action :block}
+   [:post "/update-imagery-visibility"]      {:handler     imagery/update-imagery-visibility
+                                              :auth-type   :admin
+                                              :auth-action :block}
    [:post "/archive-institution-imagery"]    {:handler     imagery/archive-institution-imagery
                                               :auth-type   :admin
                                               :auth-action :block}
