@@ -152,7 +152,7 @@
           (data-response cause {:status (or status 500)}))))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Handler Stacks
+;; Handler Stack
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defn optional-middleware [handler mw use?]
@@ -160,7 +160,7 @@
     (mw handler)
     handler))
 
-(defn create-handler-sack [ssl? reload?]
+(defn create-handler-stack [ssl? reload?]
   (-> authenticated-routing-handler
       (optional-middleware wrap-ssl-redirect ssl?)
       wrap-bad-uri
