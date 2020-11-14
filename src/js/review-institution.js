@@ -103,6 +103,7 @@ class ReviewInstitution extends React.Component {
                         />
                         <ImageryList
                             isAdmin={this.state.isAdmin}
+                            userId={this.props.userId}
                             institutionId={this.props.institutionId}
                             setImageryCount={this.setImageryCount}
                             isVisible={this.state.selectedTab === 1}
@@ -408,11 +409,10 @@ class ImageryList extends React.Component {
 
     toggleVisibility = (imageryId, currentVisibility) => {
         const toVisibility = currentVisibility === "private" ? "public" : "private";
-        if (this.props.institutionId === 3
-                && this.props.isAdmin
+        if (this.props.userId === 1
                 && confirm(`Do you want to change the visibility from ${currentVisibility} to ${toVisibility}?`
                             + toVisibility === "private"
-                                ? "  This will remove the imagery from other institution's projects."
+                                ? "  This will remove the imagery from other institutions' projects."
                                 : "")) {
             fetch("/update-imagery-visibility",
                   {
@@ -438,7 +438,7 @@ class ImageryList extends React.Component {
                     }
                 });
         }
-    }
+    };
 
     //    State Modifications    //
 

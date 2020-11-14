@@ -77,7 +77,7 @@ CREATE OR REPLACE FUNCTION update_institution_imagery(
 
 $$ LANGUAGE SQL;
 
--- Updates institution imagery
+-- Updates institution imagery visibility (this is only for the super user)
 CREATE OR REPLACE FUNCTION update_imagery_visibility(
     _imagery_id        integer,
     _visibility        text,
