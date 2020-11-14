@@ -12,6 +12,12 @@ function Support() {
                         <a className="btn btn-outline-lightgreen btn-block" href="/downloads/CEO_Planet_new_imagery_user_doc.pdf" role="button">
                             &#x1F4BE; Public Planet Imagery
                         </a>
+                        <a className="btn btn-outline-lightgreen btn-block" href="/downloads/CEO_Manual_DataCollector_20201105_DRAFT.pdf" role="button">
+                            &#x1F4BE; Data Collection Manual (English, Draft Update)
+                        </a>
+                        <a className="btn btn-outline-lightgreen btn-block" href="/downloads/CEO_Manual_InstitutionProject_20201105_DRAFT.pdf" role="button">
+                            &#x1F4BE; Institution & Project Creation Manual (For Admin, Draft Update)
+                        </a>
                     </div>
                     <h1>Collect Earth Online Manuals</h1>
                     <div className="btn-group-vertical btn-block mb-4">
