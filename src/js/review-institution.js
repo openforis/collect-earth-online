@@ -1250,7 +1250,11 @@ class NewUserButtons extends React.Component {
             alert(this.state.newUserEmail + " is already a member of this institution.");
             return false;
         } else if (!this.props.isActiveUser(this.state.newUserEmail)) {
-            alert(this.state.newUserEmail + " is not an existing user's email address.");
+            // TODO Call the back end each time add user is clicked and then remove "and refresh this page".
+            alert(
+                this.state.newUserEmail
+                + " was not found. Please verify that the user has a valid account in CEO and refresh this page."
+            );
             return false;
         } else {
             return true;

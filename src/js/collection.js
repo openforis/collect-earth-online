@@ -795,7 +795,7 @@ class Collection extends React.Component {
             alert("Invalid Selection. Try selecting the question before answering.");
             return false;
         } else if (sampleIds.length === 0) {
-            alert("You must make a selection after some samples have been answered.");
+            alert("Please select at least one sample before choosing an answer.");
             return false;
         } else if (ruleError) {
             alert(ruleError);
