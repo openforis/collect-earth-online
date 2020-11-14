@@ -151,8 +151,18 @@
           (log-str "Error: " cause)
           (data-response cause {:status (or status 500)}))))))
 
-(defn wrap-common [handler]
-  (-> handler
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Handler Stack
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defn optional-middleware [handler mw use?]
+  (if use?
+    (mw handler)
+    handler))
+
+(defn create-handler-stack [ssl? reload?]
+  (-> authenticated-routing-handler
+      (optional-middleware wrap-ssl-redirect ssl?)
       wrap-bad-uri
       wrap-request-logging
       wrap-persistent-session
@@ -172,16 +182,5 @@
       (wrap-content-type-options :nosniff)
       wrap-response-logging
       wrap-gzip
-      wrap-exceptions))
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Handler Stacks
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-(def production-app (-> authenticated-routing-handler
-                        wrap-ssl-redirect
-                        wrap-common))
-
-(defonce development-app (-> authenticated-routing-handler
-                             wrap-common
-                             wrap-reload))
+      wrap-exceptions
+      (optional-middleware wrap-reload reload?))) ; TODO, is wrap-reload harmful in prod mode?
