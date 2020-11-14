@@ -299,6 +299,9 @@ class NewAnswerDesigner extends React.Component {
                         className="value-name"
                         autoComplete="off"
                         value={this.state.newAnswerText}
+                        onKeyDown={e => {
+                            if (e.key === "e" && this.props.surveyQuestion.dataType === "number") e.preventDefault();
+                        }}
                         onChange={e => this.setState({newAnswerText: e.target.value})}
                     />
                 </div>
