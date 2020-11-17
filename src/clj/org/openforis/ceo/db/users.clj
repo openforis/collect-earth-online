@@ -148,15 +148,6 @@
         (call-sql "update_password" email password)
         (data-response "")))))
 
-;; FIXME: Remove this route and check if a user exists directly when adding
-(defn get-all-users [_]
-  (let [all-users (mapv (fn [{:keys [user_id email]}]
-                          {:id    user_id
-                           :email email})
-                        (call-sql "get_all_users"))]
-    (data-response all-users)))
-
-;; FIXME: Update get_all_users_by_institution to remove unused values.
 (defn get-institution-users [{:keys [params]}]
   (let [institution-id (tc/val->int (:institutionId params))
         all-users      (mapv (fn [{:keys [user_id email institution_role]}]
@@ -181,17 +172,26 @@
                       :perProject    (tc/jsonb->clj (:per_project stats))})
       (data-response {}))))
 
-;; FIXME: This fails silently. Add better error messages.
-;; TODO accountId is verified on the front end. Instead, pass email and check here.
-;;      The issue with the current front end check is that it requires the entire user list be sent.
 (defn update-institution-role [{:keys [params]}]
-  (let [account-id       (tc/val->int (:accountId params))
+  (let [new-user-email   (:newUserEmail params)
+        account-id       (if-let [id (:accountId params)]
+                           (tc/val->int id)
+                           (:user_id (first (call-sql "get_user" new-user-email))))
         institution-id   (tc/val->int (:institutionId params))
-        institution-role (:role params)] ; TODO rename param to institutionRole
-    (if (= institution-role "not-member")
-      (call-sql "remove_institution_user_role" institution-id account-id)
-      (let [email            (:email (first (call-sql "get_user_by_id" account-id)))
-            institution-name (:name (first (call-sql "select_institution_by_id" institution-id)))
+        institution-role (:institutionRole params)
+        email            (and (pos? account-id)
+                              (:email (first (call-sql "get_user_by_id" account-id))))]
+    (cond
+      (not email)
+      (data-response (str "User " new-user-email " not found."))
+
+      (= institution-role "not-member")
+      (do
+        (call-sql "remove_institution_user_role" institution-id account-id)
+        (data-response (str "User " email " has been removed.")))
+
+      :else
+      (let [institution-name (:name (first (call-sql "select_institution_by_id" institution-id)))
             timestamp        (-> (DateTimeFormatter/ofPattern "yyyy/MM/dd HH:mm:ss")
                                  (.format (LocalDateTime/now)))
             inst-user-id     (sql-primitive (call-sql "update_institution_user_role"
@@ -204,8 +204,14 @@
                                           "  The CEO Team")
                                      email institution-role institution-name timestamp)]
         (when-not inst-user-id (call-sql "add_institution_user" institution-id account-id institution-role))
-        (send-mail email nil nil "User Role Assignment" email-msg "text/plain")))
-    (data-response "")))
+        (try
+          (send-mail email nil nil "User Role Assignment" email-msg "text/plain")
+          (data-response (str email " has been assigned role " institution-role "."))
+          (catch Exception _
+            (data-response (str email
+                                " has been assigned role "
+                                institution-role
+                                ", but the email notification has failed."))))))))
 
 (defn request-institution-membership [{:keys [params]}]
   (let [user-id        (:userId params -1)

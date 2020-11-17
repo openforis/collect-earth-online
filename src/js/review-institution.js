@@ -1060,12 +1060,10 @@ class UserList extends React.Component {
         super(props);
         this.state = {
             institutionUserList: [],
-            activeUserList: [],
         };
     }
 
     componentDidMount() {
-        this.getActiveUserList();
         this.getInstitutionUserList();
     }
 
@@ -1091,18 +1089,7 @@ class UserList extends React.Component {
             });
     };
 
-    getActiveUserList = () => {
-        fetch("/get-all-users")
-            .then(response => response.ok ? response.json() : Promise.reject(response))
-            .then(data => this.setState({activeUserList: data}))
-            .catch(response => {
-                this.setState({activeUserList: []});
-                console.log(response);
-                alert("Error retrieving the complete user list. See console for details.");
-            });
-    };
-
-    updateUserInstitutionRole = (newUserId, email, role) => {
+    updateUserInstitutionRole = (accountId, newUserEmail, institutionRole) => {
         fetch("/update-user-institution-role",
               {
                   method: "POST",
@@ -1111,21 +1098,21 @@ class UserList extends React.Component {
                       "Content-Type": "application/json",
                   },
                   body: JSON.stringify({
-                      accountId: newUserId,
+                      accountId: accountId,
+                      newUserEmail: newUserEmail,
                       institutionId: this.props.institutionId,
-                      role: role,
+                      institutionRole: institutionRole,
                   }),
               })
-            .then(response => {
-                if (response.ok) {
-                    alert("User " + email + " has been given role '" + role + "'.");
-                    this.getInstitutionUserList();
-                } else {
-                    console.log(response);
-                    alert("Error updating institution details. See console for details.");
-                }
+            .then(response => response.ok ? response.json() : Promise.reject(response))
+            .then(message => {
+                alert(message);
+                this.getInstitutionUserList();
+            })
+            .catch(response => {
+                console.log(response);
+                alert("Error updating institution details. See console for details.");
             });
-
     };
 
     requestMembership = () => {
@@ -1156,10 +1143,6 @@ class UserList extends React.Component {
 
     isInstitutionMember = (userEmail) => this.state.institutionUserList.some(iu => iu.email === userEmail);
 
-    isActiveUser = (userEmail) => this.state.activeUserList.some(au => au.email === userEmail);
-
-    findUserByEmail = (userEmail) => this.state.activeUserList.find(au => au.email === userEmail);
-
     render() {
         return this.props.isVisible &&
             <Fragment>
@@ -1172,9 +1155,7 @@ class UserList extends React.Component {
                     currentIsInstitutionMember={this.currentIsInstitutionMember()}
                     requestMembership={this.requestMembership}
                     isAdmin={this.props.isAdmin}
-                    isActiveUser={this.isActiveUser}
                     isInstitutionMember={this.isInstitutionMember}
-                    findUserByEmail={this.findUserByEmail}
                     updateUserInstitutionRole={this.updateUserInstitutionRole}
                     userId={this.props.userId}
                 />
@@ -1221,7 +1202,7 @@ function User({user, isAdmin, updateUserInstitutionRole}) {
                         value={user.institutionRole}
                         className="custom-select custom-select-sm"
                         size="1"
-                        onChange={e => updateUserInstitutionRole(user.id, user.email, e.target.value)}
+                        onChange={e => updateUserInstitutionRole(user.id, null, e.target.value)}
                     >
                         {user.institutionRole === "pending" && <option value="pending">Pending</option>}
                         <option value="member">Member</option>
@@ -1249,25 +1230,12 @@ class NewUserButtons extends React.Component {
         } else if (this.props.isInstitutionMember(this.state.newUserEmail)) {
             alert(this.state.newUserEmail + " is already a member of this institution.");
             return false;
-        } else if (!this.props.isActiveUser(this.state.newUserEmail)) {
-            // TODO Call the back end each time add user is clicked and then remove "and refresh this page".
-            alert(
-                this.state.newUserEmail
-                + " was not found. Please verify that the user has a valid account in CEO and refresh this page."
-            );
-            return false;
         } else {
             return true;
         }
     };
 
-    addUser = () => {
-        this.props.updateUserInstitutionRole(
-            this.props.findUserByEmail(this.state.newUserEmail).id,
-            this.state.newUserEmail,
-            "member"
-        );
-    };
+    addUser = () => this.props.updateUserInstitutionRole(null, this.state.newUserEmail, "member");
 
     render() {
         return <Fragment>
