@@ -281,7 +281,7 @@ class Collection extends React.Component {
                         alert(this.state.reviewPlots
                               ? "This plot was analyzed by someone else. You are logged in as " + this.props.userName + "."
                               : "This plot has already been analyzed.");
-                    } else if (data === "not found") {
+                    } else if (data === "not-found") {
                         alert("Plot " + plotId + " not found.");
                     } else {
                         this.setState({
