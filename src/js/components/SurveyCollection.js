@@ -202,17 +202,17 @@ export class SurveyCollection extends React.Component {
                         </button>
                     </div>
                     {this.state.topLevelNodeIds.length > 0 &&
-                    <SurveyQuestionTree
-                        hierarchyLabel=""
-                        surveyNode={this.getNodeById(this.state.topLevelNodeIds[this.state.currentNodeIndex])}
-                        surveyQuestions={this.props.surveyQuestions}
-                        surveyRules={this.props.surveyRules}
-                        setCurrentValue={this.props.setCurrentValue}
-                        selectedQuestion={this.props.selectedQuestion}
-                        selectedSampleId={this.props.selectedSampleId}
-                        setSelectedQuestion={this.props.setSelectedQuestion}
-                        getRulesById={this.getRulesById}
-                    />
+                        <SurveyQuestionTree
+                            hierarchyLabel=""
+                            surveyNode={this.getNodeById(this.state.topLevelNodeIds[this.state.currentNodeIndex])}
+                            surveyQuestions={this.props.surveyQuestions}
+                            surveyRules={this.props.surveyRules}
+                            setCurrentValue={this.props.setCurrentValue}
+                            selectedQuestion={this.props.selectedQuestion}
+                            selectedSampleId={this.props.selectedSampleId}
+                            setSelectedQuestion={this.props.setSelectedQuestion}
+                            getRulesById={this.getRulesById}
+                        />
                     }
                 </>
             }
