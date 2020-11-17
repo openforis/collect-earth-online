@@ -1,7 +1,10 @@
 import React from "react";
 import ReactDOM from "react-dom";
 import {mercator} from "./utils/mercator.js";
+
+import {StatsCell, StatsRow} from "./components/FormComponents";
 import {NavigationBar} from "./components/PageComponents";
+
 import {convertSampleValuesToSurveyQuestions} from "./utils/surveyUtils";
 
 class ProjectDashboard extends React.Component {
@@ -13,10 +16,6 @@ class ProjectDashboard extends React.Component {
             imageryList: [],
             mapConfig: null,
             plotList: [],
-            dateCreated: null,
-            datePublished: null,
-            dateClosed: null,
-            dateArchived: null,
             isMapShown: false,
         };
     }
@@ -24,7 +23,7 @@ class ProjectDashboard extends React.Component {
     componentDidMount() {
         this.getProjectById(this.props.projectId);
         this.getProjectStats(this.props.projectId);
-        this.getPlotList(this.props.projectId, 100);//100 is the number of plots you want to see on the map
+        this.getPlotList(this.props.projectId, 500);
     }
 
     componentDidUpdate(prevProps, prevState) {
@@ -134,25 +133,20 @@ class ProjectDashboard extends React.Component {
 
     render() {
         return (
-            <div className="row justify-content-center">
-                <div
-                    id="project-design"
-                    className="col-xl-6 col-lg-8 border bg-lightgray mb-5"
-                    style={{display: "contents"}}
-                >
-                    <div className="bg-darkgreen mb-3 no-container-margin" style={{width: "100%", margin: "0 10px 0 10px"}}>
-                        <h1>Project Dashboard</h1>
+            <div className="d-flex flex-column full-height p-3">
+                <div className="bg-darkgreen">
+                    <h1>Project Dashboard</h1>
+                </div>
+                <div className="d-flex justify-content-around mt-3 flex-grow-1">
+                    <div className="bg-lightgray col-7">
+                        <ProjectAOI/>
                     </div>
-                    <div style={{display: "inline-flex", width: "100%", margin: "0 10px 0 10px"}}>
-                        <div className="bg-lightgray" style={{margin: "20px", width: "70%"}}>
-                            <ProjectAOI/>
-                        </div>
-                        <div className="bg-lightgray" style={{margin: "20px", width: "30%"}}>
-                            <ProjectStats
-                                project={this.state}
-                                project_stats_visibility={this.props.project_stats_visibility}
-                            />
-                        </div>
+                    <div className="bg-lightgray col-4">
+                        <ProjectStats
+                            stats={this.state.stats}
+                            availability={this.state.projectDetails.availability}
+                            isProjectAdmin={this.state.projectDetails.isProjectAdmin}
+                        />
                     </div>
                 </div>
             </div>
@@ -161,58 +155,100 @@ class ProjectDashboard extends React.Component {
 }
 
 function ProjectStats(props) {
-    return (
-        <div id="project-stats" className="header">
-            <div className="col">
+    const {
+        stats : {
+            analyzedPlots,
+            closedDate,
+            contributors,
+            createdDate,
+            flaggedPlots,
+            members,
+            publishedDate,
+            unanalyzedPlots,
+            userStats,
+        },
+        availability,
+        isProjectAdmin,
+    } = props;
+    const numPlots = flaggedPlots + analyzedPlots + unanalyzedPlots;
+    return numPlots
+        ?
+            <div className="d-flex flex-column">
                 <h2 className="header px-0">Project Stats</h2>
-                <table className="table table-sm">
-                    <tbody>
-                        <tr>
-                            <td>Members</td>
-                            <td>{props.project.stats.members}</td>
-                            <td>Contributors</td>
-                            <td>{props.project.stats.contributors}</td>
-                        </tr>
-                        <tr>
-                            <td>Total Plots</td>
-                            <td>{props.project.projectDetails.numPlots}</td>
-                            <td>Date Created</td>
-                            <td>{props.project.dateCreated}</td>
-                        </tr>
-                        <tr>
-                            <td>Flagged Plots</td>
-                            <td>{props.project.stats.flaggedPlots}</td>
-                            <td>Date Published</td>
-                            <td>{props.project.datePublished}</td>
-                        </tr>
-                        <tr>
-                            <td>Analyzed Plots</td>
-                            <td>{props.project.stats.analyzedPlots}</td>
-                            <td>Date Closed</td>
-                            <td>{props.project.dateClosed}</td>
-                        </tr>
-                        <tr>
-                            <td>Unanalyzed Plots</td>
-                            <td>{props.project.stats.unanalyzedPlots}</td>
-                            <td>Date Archived</td>
-                            <td>{props.project.dateArchived}</td>
-                        </tr>
-                    </tbody>
-                </table>
+                <div id="project-stats" className="p-1">
+                    <div className="mb-4">
+                        <h3>Project Dates:</h3>
+                        <div className="container row pl-4">
+                            <div className="pr-4">
+                                Date Created
+                                <span className="badge badge-pill bg-lightgreen ml-3">{createdDate || "Unknown"}</span>
+                            </div>
+                            <div className="pr-4">
+                                Date Published
+                                <span className="badge badge-pill bg-lightgreen ml-3">
+                                    {publishedDate || (availability === "unpublished" ? "Unpublished" : "Unknown" )}
+                                </span>
+                            </div>
+                            <div className="pr-4">
+                                Date Closed
+                                <span className="badge badge-pill bg-lightgreen ml-3">
+                                    {closedDate || (["archived", "closed"].includes(availability) ? "Unknown" : "Open")}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                    <div className="mb-2">
+                        <h3>Project Stats:</h3>
+                        <div className="row pl-2">
+                            <div className="col-6">
+                                <StatsCell title="Members">{members}</StatsCell>
+                                <StatsCell title="Contributors">{contributors}</StatsCell>
+                                <StatsCell title="Total Plots">{numPlots}</StatsCell>
+
+                            </div>
+                            <div className="col-6">
+                                <StatsCell title="Flagged Plots">{flaggedPlots}</StatsCell>
+                                <StatsCell title="Analyzed Plots">{analyzedPlots}</StatsCell>
+                                <StatsCell title="Unanalyzed Plots">{unanalyzedPlots}</StatsCell>
+                            </div>
+                        </div>
+                    </div>
+                    {userStats &&
+                    <div>
+                        <h3>Plots Completed:</h3>
+                        <StatsRow
+                            title="Total"
+                            plots={userStats.reduce((p, c) => p + c.plots, 0)}
+                            analysisTime={userStats.reduce((p, c) => p + c.timedPlots, 0) > 0
+                                ? (userStats.reduce((p, c) => p + c.seconds, 0)
+                                    / userStats.reduce((p, c) => p + c.timedPlots, 0)
+                                    / 1.0).toFixed(2)
+                                : 0
+                            }
+                        />
+                        {isProjectAdmin && userStats.map((user, uid) => (
+                            <StatsRow
+                                key={uid}
+                                title={user.user}
+                                plots={user.plots}
+                                analysisTime={user.timedPlots > 0
+                                    ? (user.seconds / user.timedPlots / 1.0).toFixed(2)
+                                    : 0
+                                }
+                            />
+                        ))}
+                    </div>
+                    }
+                </div>
             </div>
-        </div>
-    );
+        : <p>Loading...</p>;
 }
 
 function ProjectAOI() {
     return (
-        <div className="header">
-            <div className="col">
-                <h2 className="header px-0">Project AOI</h2>
-                <div id="project-aoi">
-                    <div id="project-map" style={{height: "50vh", width: "100%"}}></div>
-                </div>
-            </div>
+        <div className="d-flex flex-column h-100">
+            <h2 className="header px-0">Project AOI</h2>
+            <div id="project-map" style={{flex: 1}}/>
         </div>
     );
 }
@@ -222,8 +258,6 @@ export function pageInit(args) {
         <NavigationBar userName={args.userName} userId={args.userId}>
             <ProjectDashboard
                 projectId={args.projectId || "0"}
-                project_stats_visibility={args.projectId ? "visible" : "d-none"}
-                project_template_visibility={args.projectId ? "d-none" : "visible"}
             />
         </NavigationBar>,
         document.getElementById("app")
