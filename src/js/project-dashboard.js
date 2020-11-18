@@ -1,10 +1,10 @@
 import React from "react";
 import ReactDOM from "react-dom";
-import {mercator} from "./utils/mercator.js";
 
 import {StatsCell, StatsRow} from "./components/FormComponents";
 import {NavigationBar} from "./components/PageComponents";
 
+import {mercator} from "./utils/mercator.js";
 import {convertSampleValuesToSurveyQuestions} from "./utils/surveyUtils";
 
 class ProjectDashboard extends React.Component {
@@ -156,7 +156,7 @@ class ProjectDashboard extends React.Component {
 
 function ProjectStats(props) {
     const {
-        stats : {
+        stats: {
             analyzedPlots,
             closedDate,
             contributors,
@@ -181,12 +181,14 @@ function ProjectStats(props) {
                         <div className="container row pl-4">
                             <div className="pr-4">
                                 Date Created
-                                <span className="badge badge-pill bg-lightgreen ml-3">{createdDate || "Unknown"}</span>
+                                <span className="badge badge-pill bg-lightgreen ml-3">
+                                    {createdDate || "Unknown"}
+                                </span>
                             </div>
                             <div className="pr-4">
                                 Date Published
                                 <span className="badge badge-pill bg-lightgreen ml-3">
-                                    {publishedDate || (availability === "unpublished" ? "Unpublished" : "Unknown" )}
+                                    {publishedDate || (availability === "unpublished" ? "Unpublished" : "Unknown")}
                                 </span>
                             </div>
                             <div className="pr-4">
@@ -241,7 +243,8 @@ function ProjectStats(props) {
                     }
                 </div>
             </div>
-        : <p>Loading...</p>;
+        :
+            <p>Loading...</p>;
 }
 
 function ProjectAOI() {
