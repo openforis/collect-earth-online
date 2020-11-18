@@ -70,14 +70,10 @@ export class SurveyCollection extends React.Component {
         const {surveyQuestions} = this.props;
         const {visible, answered} = this.getNodeById(currentQuestionId);
         const childQuestions = surveyQuestions.filter(sq => sq.parentQuestion === currentQuestionId);
-
-        return visible.length === answered.length
-                    && answered.length > 0
-                    && (childQuestions.length === 0
-                    || childQuestions.every(cq => this.checkAllSubAnswers(cq.id)));
+        return visible.length === answered.length && childQuestions.every(cq => this.checkAllSubAnswers(cq.id));
     };
 
-    getTopColor = (node) => this.checkAllSubAnswers(node.id) || this.props.flagged
+    getTopColor = (node) => this.checkAllSubAnswers(node.id)
                                 ? "0px 0px 6px 4px #3bb9d6 inset"
                                 : node.answered.length > 0
                                     ? "0px 0px 6px 4px yellow inset"
@@ -159,62 +155,66 @@ export class SurveyCollection extends React.Component {
     renderQuestions = () => (
         <div className="SurveyQuestions__questions mx-1">
             {this.unansweredColor()}
-            <div className="SurveyQuestions__top-questions">
-                <button
-                    type="button"
-                    id="prev-survey-question"
-                    className="btn btn-outline-lightgreen m-2"
-                    onClick={this.prevSurveyQuestionTree}
-                    disabled={this.state.currentNodeIndex === 0}
-                    style={{opacity: this.state.currentNodeIndex === 0 ? "0.25" : "1.0"}}
-                >
-                    {"<"}
-                </button>
-                {this.state.topLevelNodeIds.map((node, i) =>
-                    <button
-                        type="button"
-                        id="top-select"
-                        key={i}
-                        className="btn btn-outline-lightgreen m-2"
-                        title={removeEnumerator(this.getNodeById(node).question)}
-                        onClick={() => this.setSurveyQuestionTree(i)}
-                        style={{
-                            boxShadow:
-                                `${(i === this.state.currentNodeIndex)
-                                    ? "0px 0px 2px 2px black inset,"
-                                    : ""}
-                                ${this.getTopColor(this.getNodeById(node))}`,
-                        }}
-                    >
-                        {i + 1}
-                    </button>
-                )}
-                <button
-                    type="button"
-                    id="next-survey-question"
-                    className="btn btn-outline-lightgreen"
-                    onClick={this.nextSurveyQuestionTree}
-                    disabled={this.state.currentNodeIndex === this.state.topLevelNodeIds.length - 1}
-                    style={{opacity: this.state.currentNodeIndex === this.state.topLevelNodeIds.length - 1 ? "0.25" : "1.0"}}
-                >
-                    {">"}
-                </button>
-            </div>
             {this.props.flagged
             ?
-                <div style={{color: "red"}}>FLAGGED</div>
-            : this.state.topLevelNodeIds.length > 0 &&
-                <SurveyQuestionTree
-                    hierarchyLabel=""
-                    surveyNode={this.getNodeById(this.state.topLevelNodeIds[this.state.currentNodeIndex])}
-                    surveyQuestions={this.props.surveyQuestions}
-                    surveyRules={this.props.surveyRules}
-                    setCurrentValue={this.props.setCurrentValue}
-                    selectedQuestion={this.props.selectedQuestion}
-                    selectedSampleId={this.props.selectedSampleId}
-                    setSelectedQuestion={this.props.setSelectedQuestion}
-                    getRulesById={this.getRulesById}
-                />
+                <div style={{color: "red", fontSize: "1.5rem", padding: "2rem"}}>This plot has been flagged.</div>
+            :
+                <>
+                    <div className="SurveyQuestions__top-questions">
+                        <button
+                            type="button"
+                            id="prev-survey-question"
+                            className="btn btn-outline-lightgreen m-2"
+                            onClick={this.prevSurveyQuestionTree}
+                            disabled={this.state.currentNodeIndex === 0}
+                            style={{opacity: this.state.currentNodeIndex === 0 ? "0.25" : "1.0"}}
+                        >
+                            {"<"}
+                        </button>
+                        {this.state.topLevelNodeIds.map((node, i) =>
+                            <button
+                                type="button"
+                                id="top-select"
+                                key={i}
+                                className="btn btn-outline-lightgreen m-2"
+                                title={removeEnumerator(this.getNodeById(node).question)}
+                                onClick={() => this.setSurveyQuestionTree(i)}
+                                style={{
+                                    boxShadow:
+                                    `${(i === this.state.currentNodeIndex)
+                                        ? "0px 0px 2px 2px black inset,"
+                                        : ""}
+                                    ${this.getTopColor(this.getNodeById(node))}`,
+                                }}
+                            >
+                                {i + 1}
+                            </button>
+                        )}
+                        <button
+                            type="button"
+                            id="next-survey-question"
+                            className="btn btn-outline-lightgreen"
+                            onClick={this.nextSurveyQuestionTree}
+                            disabled={this.state.currentNodeIndex === this.state.topLevelNodeIds.length - 1}
+                            style={{opacity: this.state.currentNodeIndex === this.state.topLevelNodeIds.length - 1 ? "0.25" : "1.0"}}
+                        >
+                            {">"}
+                        </button>
+                    </div>
+                    {this.state.topLevelNodeIds.length > 0 &&
+                        <SurveyQuestionTree
+                            hierarchyLabel=""
+                            surveyNode={this.getNodeById(this.state.topLevelNodeIds[this.state.currentNodeIndex])}
+                            surveyQuestions={this.props.surveyQuestions}
+                            surveyRules={this.props.surveyRules}
+                            setCurrentValue={this.props.setCurrentValue}
+                            selectedQuestion={this.props.selectedQuestion}
+                            selectedSampleId={this.props.selectedSampleId}
+                            setSelectedQuestion={this.props.setSelectedQuestion}
+                            getRulesById={this.getRulesById}
+                        />
+                    }
+                </>
             }
         </div>
     );
