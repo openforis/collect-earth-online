@@ -107,7 +107,7 @@ export function StatsCell({title, children}) {
 export function StatsRow({title, plots, analysisTime, titleHref}) {
     return (
         <div className="StatsRow row mx-1 py-1 border-bottom">
-            <div className="col-8">
+            <div className="col-7">
                 {titleHref
                     ? <a href={titleHref} target="_blank" rel="noreferrer noopener">{title}</a>
                     : title
@@ -116,7 +116,7 @@ export function StatsRow({title, plots, analysisTime, titleHref}) {
             <div className="col-2">
                 <span className="badge badge-pill bg-lightgreen">{plots} plots</span>
             </div>
-            <div className="col-2">
+            <div className="col-3">
                 {analysisTime ?
                     (
                         <span className="badge badge-pill bg-lightgreen">
