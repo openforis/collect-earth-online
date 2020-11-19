@@ -54,7 +54,6 @@
                                               :auth-action :redirect}
    [:get  "/unsubscribe-mailing-list"]       {:handler     (render-page "/unsubscribe-mailing-list")}
    ;; Users API
-   [:get  "/get-all-users"]                  {:handler     users/get-all-users}
    [:get  "/get-institution-users"]          {:handler     users/get-institution-users
                                               :auth-type   :user
                                               :auth-action :block}

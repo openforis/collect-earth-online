@@ -17,22 +17,6 @@ CREATE OR REPLACE FUNCTION add_user(_email text, _password text, _on_mailing_lis
 
 $$ LANGUAGE SQL;
 
--- Returns all of the user fields associated with the provided email
-CREATE OR REPLACE FUNCTION get_all_users()
- RETURNS TABLE(
-    user_id          integer,
-    email            text,
-    administrator    boolean,
-    reset_key        text
- ) AS $$
-
-    SELECT user_uid, email, administrator, reset_key
-    FROM users
-    WHERE email <> 'admin@openforis.org'
-        AND email <> 'guest'
-
-$$ LANGUAGE SQL;
-
 -- Get information for single user
 CREATE OR REPLACE FUNCTION get_user(_email text)
  RETURNS TABLE (
@@ -57,6 +41,7 @@ CREATE OR REPLACE FUNCTION get_user_by_id(_user_id integer)
     SELECT email, administrator, reset_key
     FROM users
     WHERE user_uid = _user_id
+        AND _user_id > 0
 
 $$ LANGUAGE SQL;
 
@@ -65,18 +50,18 @@ CREATE OR REPLACE FUNCTION get_all_users_by_institution_id(_institution_id integ
  RETURNS TABLE (
     user_id             integer,
     email               text,
-    administrator       boolean,
-    reset_key           text,
     institution_role    text
  ) AS $$
 
-    SELECT user_id, email, administrator, reset_key, title AS institution_role
-    FROM get_all_users() AS users
+    SELECT user_uid, email, title AS institution_role
+    FROM users u
     INNER JOIN institution_users iu
-        ON users.user_id = iu.user_rid
+        ON u.user_uid = iu.user_rid
     INNER JOIN roles
         ON roles.role_uid = iu.role_rid
     WHERE iu.institution_rid = _institution_id
+        AND administrator = FALSE
+        AND email <> 'guest'
 
 $$ LANGUAGE SQL;
 
