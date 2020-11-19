@@ -176,13 +176,12 @@
   (let [new-user-email   (:newUserEmail params)
         account-id       (if-let [id (:accountId params)]
                            (tc/val->int id)
-                           (:user_id (first (call-sql "get_user" new-user-email))))
+                           (-> (call-sql "get_user" new-user-email) (first) (:user_id -1)))
         institution-id   (tc/val->int (:institutionId params))
         institution-role (:institutionRole params)
-        email            (and (pos? account-id)
-                              (:email (first (call-sql "get_user_by_id" account-id))))]
+        email            (:email (first (call-sql "get_user_by_id" account-id)))]
     (cond
-      (not email)
+      (nil? email)
       (data-response (str "User " new-user-email " not found."))
 
       (= institution-role "not-member")
