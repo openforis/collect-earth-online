@@ -636,7 +636,9 @@
       (data-response {:projectId project-id
                       :tokenKey  token-key})
       (catch Exception e
-        (try (call-sql "delete_project" project-id))
+        (try
+          (call-sql "delete_project" project-id)
+          (catch Exception _))
         (data-response (if-let [causes (:causes (ex-data e))]
                          (str "-" (str/join "\n-" causes))
                          "Unknown server error."))))))

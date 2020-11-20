@@ -57,7 +57,9 @@
                                    "Kind Regards,\n"
                                    "  The CEO Team")
                               email email timestamp)]
-        (send-mail email nil nil "Welcome to CEO!" email-msg "text/plain")
+        (try
+          (send-mail email nil nil "Welcome to CEO!" email-msg "text/plain")
+          (catch Exception _))
         (data-response ""
                        {:session {:userId   user-id
                                   :userName email
@@ -122,7 +124,7 @@
         (catch Exception _
           (data-response (str "A user with the email "
                               email
-                              " was found, but there was a server error.  Please contact the system administrator."))))
+                              " was found, but there was a server error.  Please contact support@sig-gis.com."))))
       (data-response "There is no user with that email address."))))
 
 (defn- get-password-reset-errors [email reset-key password password-confirmation user]
@@ -259,6 +261,6 @@
         (call-sql "set_mailing_list" (:user_id user) false)
         (try
           (send-mail email nil nil "Successfully unsubscribed from CEO mailing list" email-msg "text/plain")
-          (catch Exception _)) ; I normally don't need an empty catch, but something is going on here where I do.
+          (catch Exception _))
         (data-response "You have been unsubscribed from the mailing list."))
       (data-response "There is no user with that email address."))))
