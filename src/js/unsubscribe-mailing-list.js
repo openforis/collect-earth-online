@@ -26,12 +26,8 @@ class UnsubscribeMailingList extends React.Component {
             })
                 .then(response => Promise.all([response.ok, response.json()]))
                 .then(data => {
-                    if (data[0] && data[1] === "") {
-                        alert("You have been unsubscribed from mailing list.");
-                        window.location = "/home";
-                    } else {
-                        alert(data[1]);
-                    }
+                    alert(data[1]);
+                    window.location = "/home";
                 })
                 .catch(err => console.log(err));
         }

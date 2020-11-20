@@ -116,9 +116,13 @@
                                "  %spassword-reset?email=%s&passwordResetKey=%s")
                           email (get-base-url) email reset-key)]
     (if email
-      (do
+      (try
         (send-mail email nil nil "Password reset on CEO" email-msg "text/plain")
-        (data-response ""))
+        (data-response "")
+        (catch Exception _
+          (data-response (str "A user with the email "
+                              email
+                              " was found, but there was a server error.  Please contact the system administrator."))))
       (data-response "There is no user with that email address."))))
 
 (defn- get-password-reset-errors [email reset-key password password-confirmation user]
@@ -253,6 +257,8 @@
                                    "  The CEO Team")
                               email)]
         (call-sql "set_mailing_list" (:user_id user) false)
-        (send-mail email nil nil "Successfully unsubscribed from CEO mailing list" email-msg "text/plain")
-        (data-response ""))
+        (try
+          (send-mail email nil nil "Successfully unsubscribed from CEO mailing list" email-msg "text/plain")
+          (catch Exception _)) ; I normally don't need an empty catch, but something is going on here where I do.
+        (data-response "You have been unsubscribed from the mailing list."))
       (data-response "There is no user with that email address."))))
