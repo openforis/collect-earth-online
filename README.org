@@ -104,7 +104,7 @@ clojure -A:package-cert mydomain.com [certbot-dir]
 #+end_src
 
 Certbot runs as a background task every 12 hours and will renew any
-ertificate that is set to expire in 30 days or less. Each time the
+certificate that is set to expire in 30 days or less. Each time the
 certificate is renewed, certbot-deploy-hook.sh will be run
 automatically to repackage the updated certificate into the correct
 format.
