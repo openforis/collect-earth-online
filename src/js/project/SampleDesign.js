@@ -20,7 +20,7 @@ export class SampleDesign extends React.Component {
                 min="0"
                 step="1"
                 value={this.context[property] || ""}
-                onChange={e => this.context.setProjectDetails({[property]: e.target.value})}
+                onChange={e => this.context.setProjectDetails({[property]: Number(e.target.value)})}
             />
         </div>
     );
