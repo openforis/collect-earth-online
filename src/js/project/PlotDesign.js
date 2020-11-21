@@ -85,7 +85,7 @@ export class PlotDesign extends React.Component {
                 min="0"
                 step="1"
                 value={this.context[property] || ""}
-                onChange={e => this.setPlotDetails({[property]: e.target.value})}
+                onChange={e => this.setPlotDetails({[property]: Number(e.target.value)})}
             />
         </div>
     );
