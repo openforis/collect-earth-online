@@ -5,7 +5,6 @@ import {StatsCell, StatsRow} from "./components/FormComponents";
 import {NavigationBar} from "./components/PageComponents";
 
 import {mercator} from "./utils/mercator.js";
-import {convertSampleValuesToSurveyQuestions} from "./utils/surveyUtils";
 
 class ProjectDashboard extends React.Component {
     constructor(props) {
@@ -63,8 +62,7 @@ class ProjectDashboard extends React.Component {
                     alert("No project found with ID " + projectId + ".");
                     window.location = "/home";
                 } else {
-                    const newSurveyQuestions = convertSampleValuesToSurveyQuestions(data.sampleValues);
-                    this.setState({projectDetails: {...data, surveyQuestions: newSurveyQuestions}});
+                    this.setState({projectDetails: data});
                 }
             });
     }

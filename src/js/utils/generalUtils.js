@@ -118,6 +118,10 @@ export function safeLength(arr) {
     return (arr || []).length;
 }
 
+export function removeEnumerator(questionText) {
+    return questionText.replace(/[\s][(][\d]*[[)]$/, "");
+}
+
 export function sameContents(array1, array2) {
     return array1.every(e => array2.includes(e)) && array2.every(e => array1.includes(e));
 }

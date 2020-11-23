@@ -2,7 +2,6 @@ import React from "react";
 
 import ReviewForm from "./ReviewForm";
 
-import {convertSampleValuesToSurveyQuestions} from "../utils/surveyUtils";
 import {ProjectContext} from "./constants";
 
 export default class ManageProject extends React.Component {
@@ -39,9 +38,8 @@ export default class ManageProject extends React.Component {
                     alert("No project found with ID " + projectId + ".");
                     window.location = "/home";
                 } else {
-                    const newSurveyQuestions = convertSampleValuesToSurveyQuestions(data.sampleValues);
-                    this.context.setProjectDetails({...data, surveyQuestions: newSurveyQuestions});
-                    this.context.setContextState({originalProject: {...data, surveyQuestions: newSurveyQuestions}});
+                    this.context.setProjectDetails(data);
+                    this.context.setContextState({originalProject: data});
                 }
             })
             .catch(() => Promise.reject("Error retrieving the project."));
