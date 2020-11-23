@@ -98,7 +98,7 @@
                     :samplesPerPlot     (:samples_per_plot project)
                     :sampleResolution   (:sample_resolution project)
                     :allowDrawnSamples  (:allow_drawn_samples project)
-                    :sampleValues       (tc/jsonb->clj (:survey_questions project) []) ; TODO update variable name
+                    :surveyQuestions    (tc/jsonb->clj (:survey_questions project) [])
                     :surveyRules        (tc/jsonb->clj (:survey_rules project) [])
                     :projectOptions     (merge default-options (tc/jsonb->clj (:options project)))
                     :createdDate        (str (:created_date project))
@@ -122,7 +122,7 @@
                     :samplesPerPlot     (:samples_per_plot project)
                     :sampleResolution   (:sample_resolution project)
                     :allowDrawnSamples  (:allow_drawn_samples project)
-                    :sampleValues       (tc/jsonb->clj (:survey_questions project) []) ; TODO update variable name
+                    :surveyQuestions    (tc/jsonb->clj (:survey_questions project) [])
                     :surveyRules        (tc/jsonb->clj (:survey_rules project) [])
                     :projectOptions     (merge default-options (tc/jsonb->clj (:options project)))})))
 
