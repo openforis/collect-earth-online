@@ -4,12 +4,17 @@ Crowd-sourced visual interpretation of on-demand satellite imagery
 
 ** Installation Requirements
 
+*** Required
+
 - [[https://jdk.java.net][Java Development Kit (version 14)]]
 - [[https://clojure.org/guides/getting_started][Clojure CLI tools]]
 - [[https://www.postgresql.org/download][Postgresql (version 12)]]
 - [[https://postgis.net/install/][PostGIS (version 3)]]
 - [[https://www.7-zip.org/][p7zip]]
 - [[https://www.npmjs.com/][npm]]
+
+*** Optional / For Production
+
 - [[https://certbot.eff.org/][certbot]]
 - [[https://www.openssl.org/source/][openssl]]
 
@@ -74,7 +79,7 @@ replacing the values with your own:
  :mailing-list-interval 600}
 #+end_src
 
-** Enabling https
+** Enabling HTTPS
 
 To automatically create an SSL certificate signed by [[https://letsencrypt.org][Let's Encrypt]],
 simply run the following command from your shell:
@@ -125,7 +130,7 @@ sudo apt -y install iptables-persistent
 
 ** Web Server
 
-To compile and run the web application, navigate to the toplevel
+To compile and run the web application, navigate to the top level
 project directory and run:
 
 #+begin_src sh
