@@ -397,7 +397,7 @@ class Collection extends React.Component {
         newPlotInput: newPlot.plotId ? newPlot.plotId : newPlot.id,
         userSamples: newPlot.samples
             ? newPlot.samples.reduce((obj, s) => {
-                obj[s.id] = copyValues ? (s.value || {}) : {};
+                obj[s.id] = copyValues ? (s.savedAnswers || {}) : {};
                 return obj;
             }, {})
             : {},
