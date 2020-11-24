@@ -183,4 +183,4 @@
       wrap-response-logging
       wrap-gzip
       wrap-exceptions
-      (optional-middleware wrap-reload reload?))) ; TODO, is wrap-reload harmful in prod mode?
+      (optional-middleware wrap-reload reload?)))
