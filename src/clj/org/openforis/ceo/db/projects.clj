@@ -902,7 +902,7 @@
                 (mapcat (fn [sample]
                           (map (fn [[question-label answer]]
                                  (str (name question-label) ":" (:answer answer)))
-                               (:value sample)))
+                               (:saved_answers sample)))
                         samples)))
 
 (defn- get-ext-plot-headers
@@ -1008,7 +1008,7 @@
                                      (map :question survey-questions))
             headers-out      (str/join "," (map #(-> % name csv-quotes) text-headers))
             data-rows        (map (fn [row]
-                                    (let [value           (tc/jsonb->clj (:value row))
+                                    (let [saved_answers   (tc/jsonb->clj (:saved_answers row))
                                           ext-plot-data   (tc/jsonb->clj (:ext_plot_data row))
                                           ext-sample-data (tc/jsonb->clj (:ext_sample_data row))
                                           format-time     #(when %
@@ -1016,14 +1016,14 @@
                                                                       %))]
                                       (str/join ","
                                                 (map->csv (merge (-> row
-                                                                     (dissoc :value :confidence)
+                                                                     (dissoc :saved_answers :confidence)
                                                                      (update :collection_time format-time)
                                                                      (update :flagged pos?)
                                                                      (update :analysis_duration #(when % (str % " secs")))
                                                                      (set/rename-keys sample-key-names))
                                                                  (prefix-keys "pl_" ext-plot-data)
                                                                  (prefix-keys "smpl_" ext-sample-data)
-                                                                 (extract-answers value))
+                                                                 (extract-answers saved_answers))
                                                           text-headers
                                                           ""))))
                                   (call-sql "dump_project_sample_data" project-id))]
