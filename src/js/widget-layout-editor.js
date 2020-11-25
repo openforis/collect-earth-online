@@ -760,7 +760,7 @@ class WidgetLayoutEditor extends React.PureComponent {
 
     getWidgetTemplateByProjectId = id => {
         this.fetchProject(id)
-            .then(() =>{
+            .then(() => {
                 this.state.widgets.forEach(widget => {
                     this.addTemplateWidget(widget);
                 });
@@ -1097,7 +1097,7 @@ class WidgetLayoutEditor extends React.PureComponent {
             institution review page
         </a>
         &nbsp;in the imagery tab.
-    </div>
+    </div>;
 
     getNextStepButton = () => this.state.selectedWidgetType === "DualImageCollection"
         ?

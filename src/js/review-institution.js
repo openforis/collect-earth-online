@@ -33,7 +33,7 @@ class ReviewInstitution extends React.Component {
                 console.log(response);
                 alert("Error retrieving the project info. See console for details.");
             });
-    }
+    };
 
     archiveProject = (projectId) => {
         if (confirm("Do you REALLY want to delete this project? This operation cannot be undone.")) {
