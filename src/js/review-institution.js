@@ -783,6 +783,8 @@ class NewImagery extends React.Component {
             ? "Google Earth Engine | © Google LLC"
         : type.includes("MapBox")
             ? "© Mapbox"
+        : type === "OSM"
+            ? "Open Street Maps"
         : "";
 
     imageryTypeChangeHandler = (val) => {
