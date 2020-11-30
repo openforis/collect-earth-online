@@ -104,13 +104,13 @@ class ProjectManagement extends React.Component {
                 button: "Publish",
                 update: this.publishProject,
                 description: "Admins can review, edit, and test collecting the project.  Publish the project in order for users to begin collection.",
-                canEdit: true,
+                canEdit: false,
             },
             published: {
                 button: "Close",
                 update: this.closeProject,
                 description: "Users can begin collecting.  Limited changes to the project details can be made.  Close the project to prevent anymore updates.",
-                canEdit: true,
+                canEdit: false,
             },
             closed: {
                 button: "Reopen",
