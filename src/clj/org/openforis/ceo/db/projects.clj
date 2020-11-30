@@ -31,9 +31,9 @@
 
 ;;; Data Functions
 
-(def default-options {:showGEEScript       false
-                      :showPlotInformation false
-                      :autoLaunchGeoDash   true})
+(def default-options {"showGEEScript"       false
+                      "showPlotInformation" false
+                      "autoLaunchGeoDash"   true})
 
 (defn- get-project-list [sql-results]
   (mapv (fn [project]
@@ -850,7 +850,7 @@
 
 (defn- prefix-keys [prefix in-map]
   (pu/mapm (fn [[key val]]
-             [(str prefix (name key)) val])
+             [(str prefix key) val])
            in-map))
 
 (defn map->csv [row-map key-set default]
@@ -864,11 +864,11 @@
   [sample-value-group]
   (let [first-group (first sample-value-group)]
     (cond
-      (:name first-group)
-      [:name :values :name]
+      (get first-group "name")
+      ["name" "values" "name"]
 
-      (:question first-group)
-      [:question :answers :answer]
+      (get first-group "question")
+      ["question" "answers" "answer"]
 
       :else
       [])))
@@ -882,7 +882,7 @@
         first-group-name (get first-group a)]
     (->> (get first-group b)
          (reduce (fn [acc cur]
-                   (assoc acc (:id cur) (str first-group-name ":" (name (get cur c)))))))))
+                   (assoc acc (get cur "id") (str first-group-name ":" (get cur c))))))))
 
 (defn- prepare-file-name [project-name data-type]
   (str/join "-"
@@ -901,9 +901,9 @@
   (let [[a b c] (get-sample-keys sample-value-group)]
     (->> sample-value-group
          (mapcat (fn [group]
-                   (let [question-label (name (get group a))]
+                   (let [question-label (get group a)]
                      (map (fn [answer]
-                            (str question-label ":" (name (get answer c))))
+                            (str question-label ":" (get answer c)))
                           (get group b))))))))
 
 (defn- count-answer [sample-size answers]
@@ -914,16 +914,16 @@
 (defn- get-value-distribution
   "Count the answers given, and return a map of {:'question:answers' count}"
   [samples sample-value-group]
-  (if-let [first-sample-value (:value (first samples))]
+  (if-let [first-sample-value (get (first samples) "value")]
     (count-answer (count samples)
                   (if (map? first-sample-value)
                     (mapcat (fn [sample]
                               (map (fn [[question-label answer]]
-                                     (str (name question-label) ":" (:answer answer answer)))
-                                   (:value sample)))
+                                     (str question-label ":" (get answer "answer" answer)))
+                                   (get sample "value")))
                             samples)
                     (let [sample-value-translations (get-sample-value-translations sample-value-group)]
-                      (map (fn [sample] (get sample-value-translations (:value sample) "NoValue"))
+                      (map (fn [sample] (get sample-value-translations (get sample "value") "NoValue"))
                            samples))))
     {}))
 
@@ -967,9 +967,6 @@
                                             ext-plot-data (tc/jsonb->clj (:ext_plot_data row))]
                                         (str/join ","
                                                   (concat (map->csv (merge (-> row
-                                                                               (dissoc :samples
-                                                                                       :analysis_duration
-                                                                                       :collection_time)
                                                                                (assoc  :sample_points
                                                                                        (count samples))
                                                                                (update :collection_time str)
@@ -1001,7 +998,7 @@
 (defn- extract-answers [value sample-value-trans]
   (if value
     (if (ffirst value)
-      (reduce (fn [acc [k v]] (merge acc {(name k) (:answer v)})) {} value)
+      (reduce (fn [acc [k v]] (merge acc {k (get v "answer")})) {} value)
       (let [[q a] (str/split (sample-value-trans value) #":")]
         {q a}))
     ""))
@@ -1033,7 +1030,7 @@
             text-headers       (concat sample-base-headers
                                        (get-ext-plot-headers project-id)
                                        (get-ext-sample-headers project-id)
-                                       (map question-key sample-value-group))
+                                       (map #(get % question-key) sample-value-group))
             headers-out        (str/join "," (map #(-> % name csv-quotes) text-headers))
             data-rows          (map (fn [row]
                                       (let [value           (tc/jsonb->clj (:value row))
@@ -1044,7 +1041,6 @@
                                                                         %))]
                                         (str/join ","
                                                   (map->csv (merge (-> row
-                                                                       (dissoc :value :confidence)
                                                                        (update :collection_time format-time)
                                                                        (update :flagged pos?)
                                                                        (update :analysis_duration #(when % (str % " secs")))

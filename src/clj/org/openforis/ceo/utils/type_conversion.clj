@@ -63,7 +63,7 @@
    (json->clj json nil))
   ([json default]
    (try
-     (read-str json :key-fn keyword)
+     (read-str json :key-fn str)
      (catch Exception _ default))))
 
 (def jsonb->json str)
