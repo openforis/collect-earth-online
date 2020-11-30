@@ -784,7 +784,7 @@ class NewImagery extends React.Component {
         : type.includes("MapBox")
             ? "© Mapbox"
         : type === "OSM"
-            ? "Open Street Maps"
+            ? "Open Street Map"
         : "";
 
     imageryTypeChangeHandler = (val) => {

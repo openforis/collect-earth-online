@@ -219,7 +219,7 @@ export const imageryOptions = [
     },
     {
         type: "OSM",
-        label: "Open Street Maps",
+        label: "Open Street Map",
         params: [],
     },
 ];
