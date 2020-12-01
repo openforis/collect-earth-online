@@ -1,19 +1,19 @@
-(ns org.openforis.ceo.db.users
+(ns ceo.db.users
   (:import java.time.Duration
            java.time.format.DateTimeFormatter
            java.time.LocalDateTime
            java.util.UUID)
   (:require [clojure.string :as str]
-            [org.openforis.ceo.utils.type-conversion :as tc]
-            [org.openforis.ceo.database   :refer [call-sql sql-primitive]]
-            [org.openforis.ceo.utils.mail :refer [email?
+            [ceo.utils.type-conversion :as tc]
+            [ceo.database   :refer [call-sql sql-primitive]]
+            [ceo.utils.mail :refer [email?
                                                   send-mail
                                                   send-to-mailing-list
                                                   get-base-url
                                                   get-mailing-list-interval
                                                   get-mailing-list-last-sent
                                                   set-mailing-list-last-sent!]]
-            [org.openforis.ceo.views      :refer [data-response]]))
+            [ceo.views      :refer [data-response]]))
 
 (defn login [{:keys [params]}]
   (let [{:keys [email password]} params]

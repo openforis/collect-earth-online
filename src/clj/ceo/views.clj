@@ -1,4 +1,4 @@
-(ns org.openforis.ceo.views
+(ns ceo.views
   (:require [clojure.data.json :as json]
             [clojure.string :as str]
             [cognitect.transit :as transit]

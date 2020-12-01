@@ -1,4 +1,4 @@
-(ns org.openforis.ceo.build-db
+(ns ceo.build-db
   (:require [clojure.java.io :as io]
             [clojure.java.shell :as sh]
             [clojure.string :as str]))

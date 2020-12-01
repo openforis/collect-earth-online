@@ -1,11 +1,11 @@
-(ns org.openforis.ceo.db.institutions
+(ns ceo.db.institutions
   (:import java.util.Date)
   (:require [clojure.string :as str]
             [clojure.java.io :as io]
-            [org.openforis.ceo.utils.type-conversion :as tc]
-            [org.openforis.ceo.database         :refer [call-sql sql-primitive]]
-            [org.openforis.ceo.views            :refer [data-response]]
-            [org.openforis.ceo.utils.part-utils :refer [write-file-part-base64]]))
+            [ceo.utils.type-conversion :as tc]
+            [ceo.database         :refer [call-sql sql-primitive]]
+            [ceo.views            :refer [data-response]]
+            [ceo.utils.part-utils :refer [write-file-part-base64]]))
 
 (defn is-inst-admin? [user-id institution-id]
   (and (pos? user-id)

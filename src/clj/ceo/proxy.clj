@@ -1,9 +1,9 @@
-(ns org.openforis.ceo.proxy
+(ns ceo.proxy
   (:require [clojure.string  :as str]
             [clj-http.client :as client]
-            [org.openforis.ceo.utils.type-conversion :as tc]
-            [org.openforis.ceo.utils.part-utils      :as pu]
-            [org.openforis.ceo.db.imagery :refer [get-imagery-source-config]]))
+            [ceo.utils.type-conversion :as tc]
+            [ceo.utils.part-utils      :as pu]
+            [ceo.db.imagery :refer [get-imagery-source-config]]))
 
 (defn- planet-url [source-config query-params]
   (let [{:strs [year month tile x y z]} query-params]

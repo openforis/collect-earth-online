@@ -1,4 +1,4 @@
-(ns org.openforis.ceo.utils.type-conversion
+(ns ceo.utils.type-conversion
   (:import org.postgresql.util.PGobject)
   (:require [clojure.data.json :refer [read-str write-str]]))
 

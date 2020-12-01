@@ -1,4 +1,4 @@
-(ns org.openforis.ceo.handler
+(ns ceo.handler
   (:require [clojure.data.json :as json]
             [clojure.edn       :as edn]
             [clojure.string    :as str]
@@ -20,12 +20,12 @@
             [ring.middleware.x-headers          :refer [wrap-frame-options wrap-content-type-options wrap-xss-protection]]
             [ring.util.response                 :refer [redirect]]
             [ring.util.codec                    :refer [url-encode url-decode]]
-            [org.openforis.ceo.logging          :refer [log-str]]
-            [org.openforis.ceo.routing          :refer [routes]]
-            [org.openforis.ceo.views            :refer [not-found-page data-response]]
-            [org.openforis.ceo.db.projects      :refer [can-collect? is-proj-admin?]]
-            [org.openforis.ceo.db.institutions  :refer [is-inst-admin?]]
-            [org.openforis.ceo.utils.type-conversion :as tc]))
+            [ceo.logging          :refer [log-str]]
+            [ceo.routing          :refer [routes]]
+            [ceo.views            :refer [not-found-page data-response]]
+            [ceo.db.projects      :refer [can-collect? is-proj-admin?]]
+            [ceo.db.institutions  :refer [is-inst-admin?]]
+            [ceo.utils.type-conversion :as tc]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Routing Handler

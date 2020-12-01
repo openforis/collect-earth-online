@@ -1,8 +1,8 @@
-(ns org.openforis.ceo.db.imagery
-  (:require [org.openforis.ceo.database :refer [call-sql sql-primitive]]
-            [org.openforis.ceo.db.institutions :refer [is-inst-admin?]]
-            [org.openforis.ceo.utils.type-conversion :as tc]
-            [org.openforis.ceo.views :refer [data-response]]))
+(ns ceo.db.imagery
+  (:require [ceo.database :refer [call-sql sql-primitive]]
+            [ceo.db.institutions :refer [is-inst-admin?]]
+            [ceo.utils.type-conversion :as tc]
+            [ceo.views :refer [data-response]]))
 
 (defn- clean-source [source-config]
   (if (#{"GeoServer" "SecureWatch" "Planet"} (:type source-config))

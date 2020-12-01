@@ -1,9 +1,9 @@
-(ns org.openforis.ceo.utils.mail
+(ns ceo.utils.mail
   (:import java.time.LocalDateTime)
   (:require [clojure.edn :as edn]
             [clojure.string :as str]
             [postal.core :refer [send-message]]
-            [org.openforis.ceo.logging :refer [log-str]]))
+            [ceo.logging :refer [log-str]]))
 
 ;; Example value:
 ;; {:host                  "smtp.gmail.com"

@@ -1,10 +1,10 @@
-(ns org.openforis.ceo.db.plots
+(ns ceo.db.plots
   (:import java.sql.Timestamp)
   (:require [clojure.set :as set]
-            [org.openforis.ceo.utils.type-conversion :as tc]
-            [org.openforis.ceo.database    :refer [call-sql sql-primitive]]
-            [org.openforis.ceo.db.projects :refer [is-proj-admin?]]
-            [org.openforis.ceo.views       :refer [data-response]]))
+            [ceo.utils.type-conversion :as tc]
+            [ceo.database    :refer [call-sql sql-primitive]]
+            [ceo.db.projects :refer [is-proj-admin?]]
+            [ceo.views       :refer [data-response]]))
 
 (defn- time-plus-five-min []
   (Timestamp. (+ (System/currentTimeMillis) (* 5 60 1000))))
