@@ -709,16 +709,27 @@
                           (str/join "\n" causes)
                           "Unknown server error.")))))
 
+;; TODO: I don't think this will work for multi polygon.  We only have the basic Polygon type at the moment.
+(defn- extract-coords [coords]
+  (->> (first coords)
+       (map (fn [[a b]] [(tc/val->double a) (tc/val->double b)]))
+       (sort-by (juxt #(get % 0) #(get % 1)))))
+
+(defn- same-geom? [geom1 geom2]
+  (and (= (get geom1 "type") (get geom1 "type"))
+       (= (extract-coords (get geom1 "coordinates"))
+          (extract-coords (get geom2 "coordinates")))))
+
 (defn update-project [{:keys [params]}]
   (let [project-id           (tc/val->int (:projectId params))
         imagery-id           (or (:imageryId params) (get-first-public-imagery))
         name                 (:name params)
         description          (:description params)
         privacy-level        (:privacyLevel params)
-        lon-min              (tc/val->float (:lonMin params))
-        lat-min              (tc/val->float (:latMin params))
-        lon-max              (tc/val->float (:lonMax params))
-        lat-max              (tc/val->float (:latMax params))
+        lon-min              (tc/val->double (:lonMin params))
+        lat-min              (tc/val->double (:latMin params))
+        lon-max              (tc/val->double (:lonMax params))
+        lat-max              (tc/val->double (:latMax params))
         boundary             (make-geo-json-polygon lon-min
                                                     lat-min
                                                     lon-max
@@ -770,7 +781,7 @@
           (or (not= plot-distribution (:plot_distribution original-project))
               (if (#{"csv" "shp"} plot-distribution)
                 plot-file-base64
-                (or (not= (tc/jsonb->clj boundary) (tc/jsonb->clj (:boundary original-project)))
+                (or (not (same-geom? (tc/jsonb->clj boundary) (tc/jsonb->clj (:boundary original-project))))
                     (not= num-plots (:num_plots original-project))
                     (not= plot-shape (:plot_shape original-project))
                     (not= plot-size (:plot_size original-project))
