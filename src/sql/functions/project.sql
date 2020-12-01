@@ -1530,10 +1530,8 @@ CREATE OR REPLACE FUNCTION check_user_plots(_plot_id integer)
  RETURNS integer AS $$
 
     SELECT user_plot_uid
-    FROM plots p
-    INNER JOIN user_plots up
-        ON plot_uid = up.plot_rid
-        AND up.plot_rid = _plot_id
+    FROM user_plots up
+        ON up.plot_rid = _plot_id
 
 $$ LANGUAGE SQL;
 
