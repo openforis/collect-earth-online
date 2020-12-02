@@ -113,7 +113,7 @@
         user-images      (:userImages params)
         plot-samples     (:plotSamples params)
         user-plot-id     (when (not plot-samples)
-                           (sql-primitive (call-sql "check_user_plots" project-id plot-id user-id)))
+                           (sql-primitive (call-sql "check_user_plots" plot-id)))
         id-translation   (when plot-samples
                            (call-sql "delete_user_plot_by_plot" plot-id)
                            (call-sql "delete_samples_by_plot" plot-id)
