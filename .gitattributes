@@ -1,3 +1,6 @@
 # Declare files that will always have LF line endings on checkout.
 *.sh text eol=lf
 *.js text eol=lf
+*.css text eol=lf
+*.clj text eol=lf
+*.sql text eol=lf
