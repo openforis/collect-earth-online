@@ -1531,7 +1531,7 @@ CREATE OR REPLACE FUNCTION check_user_plots(_plot_id integer)
 
     SELECT user_plot_uid
     FROM user_plots up
-        ON up.plot_rid = _plot_id
+    WHERE up.plot_rid = _plot_id
 
 $$ LANGUAGE SQL;
 
