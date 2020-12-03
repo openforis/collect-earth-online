@@ -381,23 +381,23 @@
                           (sh-wrapper folder-name {} (str "7z e -y " ext-file " -o" type))
                           (let [table-name (str "project_" project-id "_" type "_shp")
                                 shp-name   (find-file-by-ext (str folder-name type) "shp")]
-                            (let [[info geom _] (-> (sh-wrapper-slurp (str folder-name type)
+                            (let [[info body _] (-> (sh-wrapper-slurp (str folder-name type)
                                                                       {:PASSWORD "ceo"}
                                                                       (str "shp2pgsql -s 4326 -t 2D -D " shp-name))
                                                     (str/split #"stdin;\n|\n\\\."))
-                                  col-string    (as-> info i
+                                  column-string (as-> info i
                                                   (str/replace i #"\n" "")
                                                   (re-find #"(?<=CREATE TABLE.*gid serial,).*?(?=\);)" i)
                                                   (str i ",geom geometry (geometry,4326)"))]
                               ;; TODO: Check headers before creating new table.
                               (call-sql "create_new_table"
                                         table-name
-                                        col-string)
+                                        column-string)
                               (sh-wrapper-spit (str folder-name type)
                                                {:PASSWORD "ceo"}
                                                (format-simple "psql -h localhost -U ceo -d ceo -c `\\copy ext_tables.%1 FROM stdin`"
                                                               table-name)
-                                               geom)
+                                               body)
                               (call-sql "add_index_col" table-name))
                             table-name))
                         ;; TODO: Explore loading CSVs with a bulk insert.
