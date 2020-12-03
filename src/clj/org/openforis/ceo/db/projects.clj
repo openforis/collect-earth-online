@@ -347,9 +347,9 @@
                       :else                      " text")))
        (str/join ",")))
 
-(defn- get-csv-headers [ext-file must-include]
-  (let [data (slurp ext-file)]
-    (if-let [header-row (re-find #".+(?=[\r\n|\n|\r])" data)]
+(defn- get-csv [ext-file must-include]
+  (let [[header-row body] (str/split (slurp ext-file) #"\r\n|\n|\r" 2)]
+    (if body
       (let [headers     (as-> header-row hr
                           (str/split hr #",")
                           (mapv #(-> %
@@ -370,9 +370,7 @@
           :else
           (if-let [invalid-headers (seq (remove #(re-matches #"^[a-zA-Z_][a-zA-Z0-9_]*$" %) headers))]
             (init-throw (str "One or more CSV columns are invalid: " (str/join ", " invalid-headers)))
-            (do
-              (spit ext-file (str/replace-first data header-row (str/join ", " headers)))
-              (type-columns headers)))))
+            [(type-columns headers) (str/replace body #"," "\t")])))
       (init-throw "CSV file contains no rows of data."))))
 
 (defn- load-external-data [distribution project-id ext-file type must-include]
@@ -401,15 +399,16 @@
                                                body)
                               (call-sql "add_index_col" table-name))
                             table-name))
-                        ;; TODO: Explore loading CSVs with a bulk insert.
-                        (let [table-name (str "project_" project-id "_" type "_csv")]
+                        (let [table-name     (str "project_" project-id "_" type "_csv")
+                              [headers body] (get-csv ext-file must-include)]
                           (call-sql "create_new_table"
                                     table-name
-                                    (get-csv-headers ext-file must-include))
-                          (sh-wrapper folder-name
-                                      {:PASSWORD "ceo"}
-                                      (format-simple "psql -h localhost -U ceo -d ceo -c `\\copy ext_tables.%1 FROM %2 DELIMITER ',' CSV HEADER`"
-                                                     table-name ext-file))
+                                    headers)
+                          (sh-wrapper-spit folder-name
+                                           {:PASSWORD "ceo"}
+                                           (format-simple "psql -h localhost -U ceo -d ceo -c `\\copy ext_tables.%1 FROM stdin`"
+                                                          table-name)
+                                           body)
                           (call-sql "add_index_col" table-name) ; Add index for reference
                           table-name))
                      "Error importing file into SQL.")))
