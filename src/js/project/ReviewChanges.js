@@ -34,7 +34,7 @@ export default class ReviewChanges extends React.Component {
                     .then(response => Promise.all([response.ok, response.json()]))
                     .then(data => {
                         if (data[0] && Number.isInteger(data[1].projectId)) {
-                            window.location = `/review-project?projectId=${data[1].projectId}`;
+                            // window.location = `/review-project?projectId=${data[1].projectId}`;
                             return Promise.resolve();
                         } else {
                             return Promise.reject(data[1]);

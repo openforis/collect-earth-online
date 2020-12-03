@@ -55,18 +55,19 @@
         institution-id (tc/val->int (:institutionId params))
         project-id     (tc/val->int (:projectId params))
         next-handler   (if route
-                         (if (condp = auth-type
-                               :user     (pos? user-id)
-                               :super    (= 1  user-id)
-                               :collect  (can-collect? user-id project-id (:tokenKey params))
-                               :admin    (cond
-                                           (pos? project-id)
-                                           (is-proj-admin? user-id project-id (:tokenKey params))
+                         (if true
+                          ;  (condp = auth-type
+                          ;      :user     (pos? user-id)
+                          ;      :super    (= 1  user-id)
+                          ;      :collect  (can-collect? user-id project-id (:tokenKey params))
+                          ;      :admin    (cond
+                          ;                  (pos? project-id)
+                          ;                  (is-proj-admin? user-id project-id (:tokenKey params))
 
-                                           (pos? institution-id)
-                                           (is-inst-admin? user-id institution-id))
-                               :no-cross (no-cross-traffic? headers)
-                               true)
+                          ;                  (pos? institution-id)
+                          ;                  (is-inst-admin? user-id institution-id))
+                          ;      :no-cross (no-cross-traffic? headers)
+                          ;      true)
                            handler
                            (if (= :redirect auth-action)
                              (redirect-auth user-id)
@@ -182,5 +183,5 @@
       (wrap-content-type-options :nosniff)
       wrap-response-logging
       wrap-gzip
-      wrap-exceptions
+      ; wrap-exceptions
       (optional-middleware wrap-reload reload?)))

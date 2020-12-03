@@ -346,70 +346,71 @@
                       :else                      " text")))
        (str/join ",")))
 
-(defn- get-csv [ext-file must-include]
+(defmulti get-file-data (fn [distribution _ _ _] (keyword distribution)))
+
+(defmethod get-file-data :shp [_ type ext-file folder-name]
+  (sh-wrapper folder-name {} (str "7z e -y " ext-file " -o" type))
+  (let [[info body _] (-> (sh-wrapper-slurp (str folder-name type)
+                                            {:PASSWORD "ceo"}
+                                            (format-simple "shp2pgsql -s 4326 -t 2D -D %1"
+                                                           (find-file-by-ext (str folder-name type) "shp")))
+                          (str/split #"stdin;\n|\n\\\."))
+        column-string (as-> info i
+                        (str/replace i #"\n" "")
+                        (re-find #"(?<=CREATE TABLE.*gid serial,).*?(?=\);)" i)
+                        (str i ",geom geometry (geometry, 4326)"))
+        columns       (as-> column-string i
+                        (str/split i #",[^ ]")
+                        (map (fn [col]
+                               (-> (first (str/split col #" "))
+                                   (str/replace #"\"" "")
+                                   (str/upper-case)))
+                             i))]
+    [columns column-string body]))
+
+(defmethod get-file-data :csv [_ _ ext-file _]
   (let [[header-row body] (str/split (slurp ext-file) #"\r\n|\n|\r" 2)]
-    (if body
-      (let [headers     (as-> header-row hr
-                          (str/split hr #",")
-                          (mapv #(-> %
-                                     (str/upper-case)
-                                     (str/replace #"-| |," "_")
-                                     (str/replace #"X|LONGITUDE|LONG|CENTER_X" "LON")
-                                     (str/replace #"Y|LATITUDE|CENTER_Y" "LAT"))
-                                hr))
-            header-set  (set headers)
-            header-diff (set/difference (set must-include) header-set)]
-        (cond
-          (not (str/includes? header-row ","))
-          (init-throw "The CSV file must use commas for the delimiter. This error may indicate that the csv file contains only one column.")
+    (when (not (str/includes? header-row ","))
+      (init-throw "The CSV file must use commas for the delimiter. This error may indicate that the csv file contains only one column."))
+    (let [headers (as-> header-row hr
+                    (str/split hr #",")
+                    (mapv #(-> %
+                               (str/upper-case)
+                               (str/replace #"-| " "_")
+                               (str/replace #"X|LONGITUDE|LONG|CENTER_X" "LON")
+                               (str/replace #"Y|LATITUDE|CENTER_Y" "LAT"))
+                          hr))]
+      [headers (type-columns headers) (str/replace body #"," "\t")])))
 
-          (seq header-diff)
-          (init-throw (str "The required header field(s) " (str/join ", " header-diff) " are missing."))
+(defmethod get-file-data :default [distribution _ _ _]
+  (throw (str "No such distribution (" distribution ") defined for ceo/get-file-data")))
 
-          :else
-          (if-let [invalid-headers (seq (remove #(re-matches #"^[a-zA-Z_][a-zA-Z0-9_]*$" %) headers))]
-            (init-throw (str "One or more CSV columns are invalid: " (str/join ", " invalid-headers)))
-            [(type-columns headers) (str/replace body #"," "\t")])))
-      (init-throw "CSV file contains no rows of data."))))
+(defn- check-headers [headers must-include]
+  (let [header-set      (set headers)
+        header-diff     (set/difference (set must-include) header-set)
+        invalid-headers (seq (remove #(re-matches #"^[a-zA-Z_][a-zA-Z0-9_]*$" %) headers))]
+    (when (seq header-diff)
+      (init-throw (str "The required header field(s) " (str/join ", " header-diff) " are missing.")))
+    (when invalid-headers
+      (init-throw (str "One or more columns contains invalid characters: " (str/join ", " invalid-headers))))))
 
 (defn- load-external-data [distribution project-id ext-file type must-include]
   (let [folder-name (str tmp-dir "/ceo-tmp-" project-id "/")]
-    (try-catch-throw #(if (= "shp" distribution)
-                        (do
-                          (sh-wrapper folder-name {} (str "7z e -y " ext-file " -o" type))
-                          (let [table-name (str "project_" project-id "_" type "_shp")
-                                shp-name   (find-file-by-ext (str folder-name type) "shp")]
-                            (let [[info body _] (-> (sh-wrapper-slurp (str folder-name type)
-                                                                      {:PASSWORD "ceo"}
-                                                                      (str "shp2pgsql -s 4326 -t 2D -D " shp-name))
-                                                    (str/split #"stdin;\n|\n\\\."))
-                                  column-string (as-> info i
-                                                  (str/replace i #"\n" "")
-                                                  (re-find #"(?<=CREATE TABLE.*gid serial,).*?(?=\);)" i)
-                                                  (str i ",geom geometry (geometry,4326)"))]
-                              ;; TODO: Check headers before creating new table.
-                              (call-sql "create_new_table"
-                                        table-name
-                                        column-string)
-                              (sh-wrapper-spit (str folder-name type)
-                                               {:PASSWORD "ceo"}
-                                               (format-simple "psql -h localhost -U ceo -d ceo -c `\\copy ext_tables.%1 FROM stdin`"
-                                                              table-name)
-                                               body)
-                              (call-sql "add_index_col" table-name))
-                            table-name))
-                        (let [table-name     (str "project_" project-id "_" type "_csv")
-                              [headers body] (get-csv ext-file must-include)]
-                          (call-sql "create_new_table"
-                                    table-name
-                                    headers)
-                          (sh-wrapper-spit folder-name
-                                           {:PASSWORD "ceo"}
-                                           (format-simple "psql -h localhost -U ceo -d ceo -c `\\copy ext_tables.%1 FROM stdin`"
-                                                          table-name)
-                                           body)
-                          (call-sql "add_index_col" table-name) ; Add index for reference
-                          table-name))
+    (try-catch-throw #((let [table-name                   (str "project_" project-id "_" type "_" distribution)
+                             [headers column-string body] (get-file-data distribution type ext-file folder-name)]
+                         (when (nil? body)
+                           (init-throw (str "The " type " file contains no rows of data.")))
+                         (check-headers headers must-include)
+                         (call-sql "create_new_table"
+                                   table-name
+                                   column-string)
+                         (sh-wrapper-spit folder-name
+                                          {:PASSWORD "ceo"}
+                                          (format-simple "psql -h localhost -U ceo -d ceo -c `\\copy ext_tables.%1 FROM stdin`"
+                                                         table-name)
+                                          body)
+                         (call-sql "add_index_col" table-name)
+                         table-name))
                      "Error importing file into SQL.")))
 
 (defn- check-load-ext [distribution project-id ext-file type must-include]
@@ -656,7 +657,7 @@
                       :tokenKey  token-key})
       (catch Exception e
         (try
-          (call-sql "delete_project" project-id)
+          ; (call-sql "delete_project" project-id)
           (catch Exception _))
         (data-response (if-let [causes (:causes (ex-data e))]
                          (str "-" (str/join "\n-" causes))
