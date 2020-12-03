@@ -418,20 +418,12 @@ $$ LANGUAGE SQL;
 
 -- CSV REQUIRED FUNCTIONS
 
--- Create empty table before loading csv
+-- Create empty table before loading external data
 CREATE OR REPLACE FUNCTION create_new_table(_table_name text, _cols text)
  RETURNS void AS $$
 
- DECLARE
-    iter text;
  BEGIN
-    EXECUTE 'CREATE TABLE ext_tables.' || _table_name || '()';
-
-    FOREACH iter IN ARRAY string_to_array(_cols, ',,')
-    LOOP
-        EXECUTE format('ALTER TABLE ext_tables.' || _table_name || ' add column %s;', iter);
-    END LOOP;
-
+    EXECUTE 'CREATE TABLE ext_tables.' || _table_name || '(' || _cols || ')';
  END
 
 $$ LANGUAGE PLPGSQL;
