@@ -427,7 +427,7 @@ CREATE OR REPLACE FUNCTION create_new_table(_table_name text, _cols text)
  BEGIN
     EXECUTE 'CREATE TABLE ext_tables.' || _table_name || '()';
 
-    FOREACH iter IN ARRAY string_to_array(_cols, ',')
+    FOREACH iter IN ARRAY string_to_array(_cols, ',,')
     LOOP
         EXECUTE format('ALTER TABLE ext_tables.' || _table_name || ' add column %s;', iter);
     END LOOP;
