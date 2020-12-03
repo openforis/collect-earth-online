@@ -69,8 +69,9 @@
           (println "ERROR:\n"
                    "  An SSL key is required if an HTTPS port is specified.\n"
                    "  Create an SSL key for HTTPS or run without the --https-port (-P) option.")
-          (do (reset! server (run-jetty handler config))
-              (reset! clean-up-service (start-clean-up-service!))))))))
+          (do
+            (reset! server (run-jetty handler config))
+            (reset! clean-up-service (start-clean-up-service!))))))))
 
 (defn stop-server! []
   (when @clean-up-service

@@ -358,9 +358,9 @@
         column-string (as-> info i
                         (str/replace i #"\n" "")
                         (re-find #"(?<=CREATE TABLE.*gid serial,).*?(?=\);)" i)
-                        (str i ",geom geometry (geometry, 4326)"))
+                        (str i ",\"geom\" geometry (geometry, 4326)"))
         columns       (as-> column-string i
-                        (str/split i #",[^ ]")
+                        (str/split i #",\"")
                         (map (fn [col]
                                (-> (first (str/split col #" "))
                                    (str/replace #"\"" "")
@@ -387,7 +387,7 @@
 
 (defn- check-headers [headers must-include]
   (let [header-set      (set headers)
-        header-diff     (set/difference (set must-include) header-set)
+        header-diff     (set/difference must-include header-set)
         invalid-headers (seq (remove #(re-matches #"^[a-zA-Z_][a-zA-Z0-9_]*$" %) headers))]
     (when (seq header-diff)
       (init-throw (str "The required header field(s) " (str/join ", " header-diff) " are missing.")))
@@ -395,44 +395,26 @@
       (init-throw (str "One or more columns contains invalid characters: " (str/join ", " invalid-headers))))))
 
 (defn- load-external-data [distribution project-id ext-file type must-include]
-  (let [folder-name (str tmp-dir "/ceo-tmp-" project-id "/")]
-    (try-catch-throw #((let [table-name                   (str "project_" project-id "_" type "_" distribution)
-                             [headers column-string body] (get-file-data distribution type ext-file folder-name)]
-                         (when (nil? body)
-                           (init-throw (str "The " type " file contains no rows of data.")))
-                         (check-headers headers must-include)
-                         (call-sql "create_new_table"
-                                   table-name
-                                   column-string)
-                         (sh-wrapper-spit folder-name
-                                          {:PASSWORD "ceo"}
-                                          (format-simple "psql -h localhost -U ceo -d ceo -c `\\copy ext_tables.%1 FROM stdin`"
-                                                         table-name)
-                                          body)
-                         (call-sql "add_index_col" table-name)
-                         table-name))
-                     "Error importing file into SQL.")))
-
-(defn- check-load-ext [distribution project-id ext-file type must-include]
   (when (#{"csv" "shp"} distribution)
-    (try-catch-throw (fn []
-                       (let [table (load-external-data distribution
-                                                       project-id
-                                                       ext-file
-                                                       type
-                                                       must-include)]
-                         (try-catch-throw #(if (= "plots" type)
-                                             (call-sql "select_partial_table_by_name" table)
-                                             (call-sql "select_partial_sample_table_by_name" table))
-                                          (str (str/capitalize type) " " distribution " file failed to load."))
-                         table))
-                     (if (= "csv" distribution)
-                       (str "Malformed " type " CSV.")
-                       (str "Malformed "
-                            type
-                            " Shapefile. All features must be of type polygon and include "
-                            (str/join ", " must-include)
-                            " field(s).")))))
+    (let [folder-name (str tmp-dir "/ceo-tmp-" project-id "/")]
+      (try-catch-throw #(let [table-name                   (str "project_" project-id "_" type "_" distribution)
+                              [headers column-string body] (get-file-data distribution type ext-file folder-name)]
+                          (when (nil? body)
+                            (init-throw (str "The " type " file contains no rows of data.")))
+                          (check-headers headers must-include)
+                          (call-sql "create_new_table"
+                                    table-name
+                                    (str "gid serial primary key," column-string))
+                          (sh-wrapper-spit folder-name
+                                           {:PASSWORD "ceo"}
+                                           (format-simple "psql -h localhost -U ceo -d ceo -c `\\copy ext_tables.%1(%2) FROM stdin`"
+                                                          table-name (str/join "," headers))
+                                           body)
+                          (if (= "plots" type)
+                            (call-sql "select_partial_table_by_name" table-name)
+                            (call-sql "select_partial_sample_table_by_name" table-name))
+                          table-name)
+                       (str (str/capitalize type) " " distribution " file failed to load.")))))
 
 (defn- create-project-samples [plot-id
                                sample-distribution
@@ -491,48 +473,48 @@
                                                           write-dir
                                                           (str "project-" project-id "-samples"))))]
     (if (#{"csv" "shp"} plot-distribution)
-      (do (try-catch-throw  #(call-sql "update_project_tables"
-                                       project-id
-                                       (check-load-ext plot-distribution project-id plots-file "plots" ["PLOTID"])
-                                       (check-load-ext sample-distribution project-id samples-file "samples" ["PLOTID" "SAMPLEID"]))
-                            "SQL Error: cannot update project table.")
-          (try-catch-throw #(call-sql "cleanup_project_tables" project-id plot-size)
-                           "SQL Error: cannot clean external tables.")
-          (let [counts           (try-catch-throw #(first (call-sql "ext_table_count" project-id))
-                                                  "SQL Error: cannot count data.")
-                ext-plot-count   (:plot_count counts)
-                ext-sample-count (:sample_count counts)]
-            (check-plot-limits ext-plot-count
-                               50000.0
-                               (case sample-distribution
-                                 "gridded" (count-gridded-sample-set plot-size sample-resolution)
-                                 "random"  samples-per-plot
-                                 "center"  1.0
-                                 "none"    1.0
-                                 (/ ext-sample-count ext-plot-count))
-                               200.0
-                               350000.0))
-          (if (#{"csv" "shp"} sample-distribution)
-            (try-catch-throw #(call-sql "samples_from_plots_with_files" project-id)
-                             "Error importing samples file after importing plots file.")
-            (try-catch-throw #(doseq [plot (call-sql "add_file_plots" project-id)]
-                                (create-project-samples (:plot_uid plot)
-                                                        sample-distribution
-                                                        [(:lon plot) (:lat plot)]
-                                                        plot-shape
-                                                        plot-size
-                                                        samples-per-plot
-                                                        sample-resolution))
-                             "Error adding plot file with generated samples."))
-          ;; The SQL function only checks against plots with external tables.
-          (when (not allow-drawn-samples?)
-            (let [bad-plots (map :plot_id (call-sql "plots_missing_samples" project-id))]
-              (when (seq bad-plots)
-                (init-throw (str "The uploaded plot and sample files do not have correctly overlapping data. "
-                                 (count bad-plots)
-                                 " plots have no samples. The first 10 are: ["
-                                 (str/join ", " (take 10 bad-plots))
-                                 "]"))))))
+      (do
+        (try-catch-throw #(call-sql "cleanup_project_tables" project-id plot-size)
+                         "SQL Error: cannot clean external tables.")
+        (let [plot-table       (load-external-data plot-distribution project-id plots-file "plots" #{"PLOTID"})
+              sample-table     (load-external-data sample-distribution project-id samples-file "samples" #{"PLOTID" "SAMPLEID"})
+              counts           (try-catch-throw #(first (call-sql "ext_table_count" project-id))
+                                                "SQL Error: cannot count data.")
+              ext-plot-count   (:plot_count counts)
+              ext-sample-count (:sample_count counts)]
+          (check-plot-limits ext-plot-count
+                             50000.0
+                             (case sample-distribution
+                               "gridded" (count-gridded-sample-set plot-size sample-resolution)
+                               "random"  samples-per-plot
+                               "center"  1.0
+                               "none"    1.0
+                               (/ ext-sample-count ext-plot-count))
+                             200.0
+                             350000.0)
+          (try-catch-throw  #(call-sql "update_project_tables" project-id plot-table sample-table)
+                            "SQL Error: cannot update project table."))
+        (if (#{"csv" "shp"} sample-distribution)
+          (try-catch-throw #(call-sql "samples_from_plots_with_files" project-id)
+                           "Error importing samples file after importing plots file.")
+          (try-catch-throw #(doseq [plot (call-sql "add_file_plots" project-id)]
+                              (create-project-samples (:plot_uid plot)
+                                                      sample-distribution
+                                                      [(:lon plot) (:lat plot)]
+                                                      plot-shape
+                                                      plot-size
+                                                      samples-per-plot
+                                                      sample-resolution))
+                           "Error adding plot file with generated samples."))
+        ;; The SQL function only checks against plots with external tables.
+        (when (not allow-drawn-samples?)
+          (let [bad-plots (map :plot_id (call-sql "plots_missing_samples" project-id))]
+            (when (seq bad-plots)
+              (init-throw (str "The uploaded plot and sample files do not have correctly overlapping data. "
+                               (count bad-plots)
+                               " plots have no samples. The first 10 are: ["
+                               (str/join ", " (take 10 bad-plots))
+                               "]"))))))
       (let [[[left bottom] [top right]] (pu/EPSG:4326->3857 [lon-min lat-min] [lon-max lat-max])
             [left bottom right top] (pad-bounds left bottom top right (/ 2.0 plot-size))]
         (check-plot-limits (if (= "gridded" plot-distribution)
@@ -703,19 +685,19 @@
                         sample-file-name
                         sample-file-base64]
   (try (if (#{"csv" "shp"} sample-distribution)
-         (let [write-dir    (str tmp-dir "/ceo-tmp-" project-id "/")
-               samples-file (and (#{"csv" "shp"} sample-distribution)
-                                 (str write-dir
-                                      (pu/write-file-part-base64 sample-file-name
-                                                                 sample-file-base64
-                                                                 write-dir
-                                                                 (str "project-" project-id "-samples"))))]
-           (try-catch-throw #(call-sql "update_project_sample_table"
-                                       project-id
-                                       (check-load-ext sample-distribution project-id samples-file "samples" ["PLOTID" "SAMPLEID"]))
-                            "SQL Error: cannot update project table.")
-           (try-catch-throw #(call-sql "samples_from_plots_with_files" project-id)
-                            "Error importing samples file."))
+         (let [write-dir     (str tmp-dir "/ceo-tmp-" project-id "/")
+               samples-file  (str write-dir
+                                  (pu/write-file-part-base64 sample-file-name
+                                                             sample-file-base64
+                                                             write-dir
+                                                             (str "project-" project-id "-samples")))
+               samples-table (load-external-data sample-distribution
+                                                 project-id
+                                                 samples-file
+                                                 "samples"
+                                                 #{"PLOTID" "SAMPLEID"})]
+           (try-catch-throw #(call-sql "update_project_sample_table" project-id samples-table)
+                            "SQL Error: cannot update project table."))
          (doseq [{:keys [plot_id lon lat]} (call-sql "get_plot_centers_by_project" project-id)]
            (create-project-samples plot_id
                                    sample-distribution
