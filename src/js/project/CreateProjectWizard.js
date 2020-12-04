@@ -112,10 +112,6 @@ export default class CreateProjectWizard extends React.Component {
     componentDidMount() {
         this.getTemplateProjects();
         if (this.context.name !== "" || this.context.description !== "") this.checkAllSteps();
-        this.context.setProjectDetails({
-            plotFileBase64: null,
-            sampleFileBase64: null,
-        });
     }
 
     /// API Calls
@@ -149,10 +145,14 @@ export default class CreateProjectWizard extends React.Component {
             .then(data => {
                 const newSurveyQuestions = convertSampleValuesToSurveyQuestions(data.sampleValues);
                 this.setState({templateProject: {...data, surveyQuestions: newSurveyQuestions}});
+                const institutionImageryIds = this.context.institutionImagery.map(i => i.id);
                 this.context.setProjectDetails({
                     ...data,
                     surveyQuestions: newSurveyQuestions,
                     templateProjectId: projectId,
+                    imageryId: institutionImageryIds.includes(data.imageryId)
+                        ? data.imageryId
+                        : institutionImageryIds[0],
                     useTemplatePlots: true,
                     useTemplateWidgets: true,
                 }, this.checkAllSteps);
