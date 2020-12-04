@@ -57,13 +57,8 @@ class WidgetLayoutEditor extends React.PureComponent {
         };
     }
 
-    componentDidMount() {
-        this.fetchProject(this.state.projectId, true)
-            .catch(response => {
-                console.log(response);
-                alert("Error downloading the widget list. See console for details.");
-            });
-        fetch(`/get-institution-imagery?institutionId=${this.state.institutionID}`)
+    getInstitutionImagery = institutionId => {
+        fetch(`/get-institution-imagery?institutionId=${institutionId}`)
             .then(response => response.ok ? response.json() : Promise.reject(response))
             .then(data => {
                 this.setState({
@@ -75,6 +70,15 @@ class WidgetLayoutEditor extends React.PureComponent {
                 console.log(response);
                 alert("Error downloading the imagery list. See console for details.");
             });
+    }
+
+    componentDidMount() {
+        this.fetchProject(this.state.projectId, true)
+            .catch(response => {
+                console.log(response);
+                alert("Error downloading the widget list. See console for details.");
+            });
+        this.getInstitutionImagery(this.state.institutionID);
         this.getProjectList();
     }
 
@@ -913,8 +917,17 @@ class WidgetLayoutEditor extends React.PureComponent {
              "ImageElevation",
              "DegradationTool",
              "polygonCompare"].includes(this.state.selectedWidgetType)) {
-            return <React.Fragment>
-                <label htmlFor="widgetIndicesSelect">Basemap</label>
+            return <div className="form-group">
+                <div style={{display: "flex", justifyContent: "space-between", alignItems: "center"}}>
+                    <label htmlFor="widgetIndicesSelect">Basemap</label>
+                    <button
+                        type="button"
+                        className="btn btn-sm btn-secondary mb-1"
+                        onClick={() => this.getInstitutionImagery(this.state.institutionID)}
+                    >
+                        Refresh
+                    </button>
+                </div>
                 <select
                     name="widgetIndicesSelect"
                     value={this.state.widgetBaseMap}
@@ -922,15 +935,13 @@ class WidgetLayoutEditor extends React.PureComponent {
                     id="widgetIndicesSelect"
                     onChange={this.onDataBaseMapSelectChanged}
                 >
-                    {this.baseMapOptions()}
+                    {this.state.imagery && this.state.imagery.length > 0 && this.state.imagery.map(imagery =>
+                        <option key={imagery.id} value={imagery.id}> {imagery.title} </option>
+                    )}
                 </select>
-            </React.Fragment>;
+            </div>;
         }
     };
-
-    baseMapOptions = () => _.map(this.state.imagery, function (imagery) {
-        return <option key={imagery.id} value={imagery.id}> {imagery.title} </option>;
-    });
 
     getDataTypeSelectionControl = () => {
         if (["-1", "imageAsset", "imageCollectionAsset", "ImageElevation", "DegradationTool"].includes(this.state.selectedWidgetType)) {
