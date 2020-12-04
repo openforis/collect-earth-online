@@ -192,7 +192,7 @@ export class NavigationBar extends React.Component {
                         <ul className="navbar-nav mr-auto">
                             {["Home", "About", "Support","Blog"].map(page =>
                                 <li className={"nav-item" + ("/" + page.toLowerCase() === uri && " active")} key={page}>
-                                    <a className="nav-link" href={page.toLowerCase()==="blog"?"https://blog.collect.earth":"/" + page.toLowerCase()}>{page}</a>
+                                    <a className="nav-link" href={page === "Blog" ? "https://blog.collect.earth" : "/" + page.toLowerCase()}>{page}</a>
                                 </li>
                             )}
                             {!loggedOut &&
