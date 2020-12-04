@@ -108,13 +108,13 @@ class ProjectManagement extends React.Component {
                 button: "Publish",
                 update: this.publishProject,
                 description: "Admins can review, edit, and test collecting the project.  Publish the project in order for users to begin collection.",
-                canEdit: false,
+                canEdit: true,
             },
             published: {
                 button: "Close",
                 update: this.closeProject,
                 description: "Users can begin collecting.  Limited changes to the project details can be made.  Close the project to prevent anymore updates.",
-                canEdit: false,
+                canEdit: true,
             },
             closed: {
                 button: "Reopen",
@@ -227,8 +227,13 @@ class ProjectManagement extends React.Component {
                             className="btn btn-outline-red btn-sm w-100"
                             type="button"
                             value="Edit Project"
-                            disabled={!canEdit}
-                            onClick={() => this.context.setContextState({designMode: "wizard"})}
+                            onClick={() => {
+                                if (canEdit) {
+                                    this.context.setContextState({designMode: "wizard"});
+                                } else {
+                                    alert("You cannot edit a closed project.");
+                                }
+                            }}
                         />
                         <input
                             className="btn btn-outline-red btn-sm w-100"
