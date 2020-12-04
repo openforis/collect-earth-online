@@ -714,7 +714,7 @@
        (first coords)))
 
 (defn- same-ring? [[start1 :as ring1] ring2]
-  (and (some #(= % start1) ring2)
+  (and (some #(= start1 %) ring2)
        (or (= ring1 ring2)
            (= ring1 (reverse ring2))
            (= ring1 (take (count ring1) (drop-while #(not= start1 %) (cycle (rest ring2)))))
