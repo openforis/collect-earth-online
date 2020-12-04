@@ -123,7 +123,9 @@ export default class CreateProjectWizard extends React.Component {
     getTemplateProjects = () =>
         fetch("/get-template-projects")
             .then(response => response.ok ? response.json() : Promise.reject(response))
-            .then(data => this.setState({templateProjectList: data}))
+            .then(data =>
+                this.setState({templateProjectList: data && data.length > 0 ? data : [{id: -1, name: "No template projects found"}]}
+            ))
             .catch(response => {
                 console.log(response);
                 this.setState({templateProjectList: [{id: -1, name: "Failed to load"}]});
