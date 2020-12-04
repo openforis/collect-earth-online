@@ -711,7 +711,7 @@
 
 (defn- exterior-ring [coords]
   (map (fn [[a b]] [(tc/val->double a) (tc/val->double b)])
-        (first coords)))
+       (first coords)))
 
 (defn- same-ring? [[start1 :as ring1] ring2]
   (and (some #(= % start1) ring2)
@@ -785,62 +785,64 @@
         (when-let [imagery-list (:projectImageryList params)]
           (call-sql "delete_project_imagery" project-id)
           (insert-project-imagery project-id imagery-list))
-        (when (= "unpublished" (:availability original-project))
-          (cond
-            (or (not= plot-distribution (:plot_distribution original-project))
-                (if (#{"csv" "shp"} plot-distribution)
-                  plot-file-base64
-                  (or (not (same-polygon-boundary? (tc/jsonb->clj boundary) (tc/jsonb->clj (:boundary original-project))))
-                      (not= num-plots (:num_plots original-project))
-                      (not= plot-shape (:plot_shape original-project))
-                      (not= plot-size (:plot_size original-project))
-                      (not= plot-spacing (:plot_spacing original-project)))))
-            (do
-              (call-sql "delete_plots_by_project" project-id)
-              (when (#{"csv" "shp"} (:plot_distribution original-project))
-                (call-sql "delete_project_tables" project-id))
-              (create-project-plots project-id
-                                    lon-min
-                                    lat-min
-                                    lon-max
-                                    lat-max
-                                    plot-distribution
-                                    num-plots
-                                    plot-spacing
-                                    plot-shape
-                                    plot-size
-                                    sample-distribution
-                                    samples-per-plot
-                                    sample-resolution
-                                    plot-file-name
-                                    plot-file-base64
-                                    sample-file-name
-                                    sample-file-base64
-                                    allow-drawn-samples?))
+        (cond
+          (not= "unpublished" (:availability original-project))
+          nil
 
-            (or (not= sample-distribution (:sample_distribution original-project))
-                (if (#{"csv" "shp"} sample-distribution)
-                  sample-file-base64
-                  (or (not= samples-per-plot (:samples_per_plot original-project))
-                      (not= sample-resolution (:sample_resolution original-project)))))
-            (do
-              (call-sql "delete_all_samples_by_project" project-id)
-              (when (#{"csv" "shp"} (:sample_distribution original-project))
-                (call-sql "delete_project_sample_table" project-id))
-              (recreate-samples project-id
-                                sample-distribution
-                                plot-shape
-                                plot-size
-                                samples-per-plot
-                                sample-resolution
-                                sample-file-name
-                                sample-file-base64))
+          (or (not= plot-distribution (:plot_distribution original-project))
+              (if (#{"csv" "shp"} plot-distribution)
+                plot-file-base64
+                (or (not (same-polygon-boundary? (tc/jsonb->clj boundary) (tc/jsonb->clj (:boundary original-project))))
+                    (not= num-plots (:num_plots original-project))
+                    (not= plot-shape (:plot_shape original-project))
+                    (not= plot-size (:plot_size original-project))
+                    (not= plot-spacing (:plot_spacing original-project)))))
+          (do
+            (call-sql "delete_plots_by_project" project-id)
+            (when (#{"csv" "shp"} (:plot_distribution original-project))
+              (call-sql "delete_project_tables" project-id))
+            (create-project-plots project-id
+                                  lon-min
+                                  lat-min
+                                  lon-max
+                                  lat-max
+                                  plot-distribution
+                                  num-plots
+                                  plot-spacing
+                                  plot-shape
+                                  plot-size
+                                  sample-distribution
+                                  samples-per-plot
+                                  sample-resolution
+                                  plot-file-name
+                                  plot-file-base64
+                                  sample-file-name
+                                  sample-file-base64
+                                  allow-drawn-samples?))
+
+          (or (not= sample-distribution (:sample_distribution original-project))
+              (if (#{"csv" "shp"} sample-distribution)
+                sample-file-base64
+                (or (not= samples-per-plot (:samples_per_plot original-project))
+                    (not= sample-resolution (:sample_resolution original-project)))))
+          (do
+            (call-sql "delete_all_samples_by_project" project-id)
+            (when (#{"csv" "shp"} (:sample_distribution original-project))
+              (call-sql "delete_project_sample_table" project-id))
+            (recreate-samples project-id
+                              sample-distribution
+                              plot-shape
+                              plot-size
+                              samples-per-plot
+                              sample-resolution
+                              sample-file-name
+                              sample-file-base64))
 
           ;; NOTE: Old stored questions can have a different format than when passed from the UI.
           ;;       This is why we check whether the survey questions are different on the front (for now).
-            (or update-survey
-                (and (:allow_drawn_samples original-project) (not allow-drawn-samples?)))
-            (reset-collected-samples project-id)))
+          (or update-survey
+              (and (:allow_drawn_samples original-project) (not allow-drawn-samples?)))
+          (reset-collected-samples project-id))
         (data-response ""))
       (data-response (str "Project " project-id " not found.")))))
 
