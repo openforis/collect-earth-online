@@ -57,6 +57,16 @@ class WidgetLayoutEditor extends React.PureComponent {
         };
     }
 
+    componentDidMount() {
+        this.fetchProject(this.state.projectId, true)
+            .catch(response => {
+                console.log(response);
+                alert("Error downloading the widget list. See console for details.");
+            });
+        this.getInstitutionImagery(this.state.institutionID);
+        this.getProjectList();
+    }
+
     getInstitutionImagery = institutionId => {
         fetch(`/get-institution-imagery?institutionId=${institutionId}`)
             .then(response => response.ok ? response.json() : Promise.reject(response))
@@ -70,16 +80,6 @@ class WidgetLayoutEditor extends React.PureComponent {
                 console.log(response);
                 alert("Error downloading the imagery list. See console for details.");
             });
-    }
-
-    componentDidMount() {
-        this.fetchProject(this.state.projectId, true)
-            .catch(response => {
-                console.log(response);
-                alert("Error downloading the widget list. See console for details.");
-            });
-        this.getInstitutionImagery(this.state.institutionID);
-        this.getProjectList();
     }
 
     getParameterByName = (name, url) => {
@@ -764,7 +764,7 @@ class WidgetLayoutEditor extends React.PureComponent {
 
     getWidgetTemplateByProjectId = id => {
         this.fetchProject(id)
-            .then(() =>{
+            .then(() => {
                 this.state.widgets.forEach(widget => {
                     this.addTemplateWidget(widget);
                 });
@@ -917,29 +917,31 @@ class WidgetLayoutEditor extends React.PureComponent {
              "ImageElevation",
              "DegradationTool",
              "polygonCompare"].includes(this.state.selectedWidgetType)) {
-            return <div className="form-group">
-                <div style={{display: "flex", justifyContent: "space-between", alignItems: "center"}}>
-                    <label htmlFor="widgetIndicesSelect">Basemap</label>
-                    <button
-                        type="button"
-                        className="btn btn-sm btn-secondary mb-1"
-                        onClick={() => this.getInstitutionImagery(this.state.institutionID)}
+            return (
+                <div className="form-group">
+                    <div style={{display: "flex", justifyContent: "space-between", alignItems: "center"}}>
+                        <label htmlFor="widgetIndicesSelect">Basemap</label>
+                        <button
+                            type="button"
+                            className="btn btn-sm btn-secondary mb-1"
+                            onClick={() => this.getInstitutionImagery(this.state.institutionID)}
+                        >
+                            Refresh
+                        </button>
+                    </div>
+                    <select
+                        name="widgetIndicesSelect"
+                        value={this.state.widgetBaseMap}
+                        className="form-control"
+                        id="widgetIndicesSelect"
+                        onChange={this.onDataBaseMapSelectChanged}
                     >
-                        Refresh
-                    </button>
+                        {(this.state.imagery || []).length > 0 && this.state.imagery.map(({id, title}) =>
+                            <option key={id} value={id}> {title} </option>
+                        )}
+                    </select>
                 </div>
-                <select
-                    name="widgetIndicesSelect"
-                    value={this.state.widgetBaseMap}
-                    className="form-control"
-                    id="widgetIndicesSelect"
-                    onChange={this.onDataBaseMapSelectChanged}
-                >
-                    {this.state.imagery && this.state.imagery.length > 0 && this.state.imagery.map(imagery =>
-                        <option key={imagery.id} value={imagery.id}> {imagery.title} </option>
-                    )}
-                </select>
-            </div>;
+            );
         }
     };
 
