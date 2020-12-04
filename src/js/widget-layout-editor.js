@@ -73,7 +73,9 @@ class WidgetLayoutEditor extends React.PureComponent {
             .then(data => {
                 this.setState({
                     imagery: data,
-                    widgetBaseMap: data[0].id,
+                    widgetBaseMap: data.map(o => o.id.toString()).includes(this.state.widgetBaseMap)
+                        ? this.state.widgetBaseMap
+                        : data[0].id,
                 });
             })
             .catch(response => {
