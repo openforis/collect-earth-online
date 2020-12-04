@@ -938,9 +938,9 @@ class WidgetLayoutEditor extends React.PureComponent {
                         id="widgetIndicesSelect"
                         onChange={this.onDataBaseMapSelectChanged}
                     >
-                        {(this.state.imagery || []).length > 0 && this.state.imagery.map(({id, title}) =>
-                            <option key={id} value={id}> {title} </option>
-                        )}
+                        {this.state.imagery && this.state.imagery
+                            .map(({id, title}) => <option key={id} value={id}>{title}</option>)
+                        }
                     </select>
                 </div>
             );
