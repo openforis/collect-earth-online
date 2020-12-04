@@ -63,19 +63,25 @@ class WidgetLayoutEditor extends React.PureComponent {
                 console.log(response);
                 alert("Error downloading the widget list. See console for details.");
             });
-        fetch(`/get-institution-imagery?institutionId=${this.state.institutionID}`)
+        this.getInstitutionImagery(this.state.institutionID);
+        this.getProjectList();
+    }
+
+    getInstitutionImagery = institutionId => {
+        fetch(`/get-institution-imagery?institutionId=${institutionId}`)
             .then(response => response.ok ? response.json() : Promise.reject(response))
             .then(data => {
                 this.setState({
                     imagery: data,
-                    widgetBaseMap: data[0].id,
+                    widgetBaseMap: data.map(o => o.id.toString()).includes(this.state.widgetBaseMap)
+                        ? this.state.widgetBaseMap
+                        : data[0].id,
                 });
             })
             .catch(response => {
                 console.log(response);
                 alert("Error downloading the imagery list. See console for details.");
             });
-        this.getProjectList();
     }
 
     getParameterByName = (name, url) => {
@@ -760,7 +766,7 @@ class WidgetLayoutEditor extends React.PureComponent {
 
     getWidgetTemplateByProjectId = id => {
         this.fetchProject(id)
-            .then(() =>{
+            .then(() => {
                 this.state.widgets.forEach(widget => {
                     this.addTemplateWidget(widget);
                 });
@@ -913,24 +919,33 @@ class WidgetLayoutEditor extends React.PureComponent {
              "ImageElevation",
              "DegradationTool",
              "polygonCompare"].includes(this.state.selectedWidgetType)) {
-            return <React.Fragment>
-                <label htmlFor="widgetIndicesSelect">Basemap</label>
-                <select
-                    name="widgetIndicesSelect"
-                    value={this.state.widgetBaseMap}
-                    className="form-control"
-                    id="widgetIndicesSelect"
-                    onChange={this.onDataBaseMapSelectChanged}
-                >
-                    {this.baseMapOptions()}
-                </select>
-            </React.Fragment>;
+            return (
+                <div className="form-group">
+                    <div style={{display: "flex", justifyContent: "space-between", alignItems: "center"}}>
+                        <label htmlFor="widgetIndicesSelect">Basemap</label>
+                        <button
+                            type="button"
+                            className="btn btn-sm btn-secondary mb-1"
+                            onClick={() => this.getInstitutionImagery(this.state.institutionID)}
+                        >
+                            Refresh
+                        </button>
+                    </div>
+                    <select
+                        name="widgetIndicesSelect"
+                        value={this.state.widgetBaseMap}
+                        className="form-control"
+                        id="widgetIndicesSelect"
+                        onChange={this.onDataBaseMapSelectChanged}
+                    >
+                        {this.state.imagery && this.state.imagery
+                            .map(({id, title}) => <option key={id} value={id}>{title}</option>)
+                        }
+                    </select>
+                </div>
+            );
         }
     };
-
-    baseMapOptions = () => _.map(this.state.imagery, function (imagery) {
-        return <option key={imagery.id} value={imagery.id}> {imagery.title} </option>;
-    });
 
     getDataTypeSelectionControl = () => {
         if (["-1", "imageAsset", "imageCollectionAsset", "ImageElevation", "DegradationTool"].includes(this.state.selectedWidgetType)) {
