@@ -12,6 +12,10 @@ export default class ManageProject extends React.Component {
 
     componentDidMount() {
         this.context.processModal("Loading Project Details", this.getProjectDetails);
+        this.context.setProjectDetails({
+            plotFileBase64: null,
+            sampleFileBase64: null,
+        });
     }
 
     /// API Calls
