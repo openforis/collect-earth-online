@@ -1,14 +1,14 @@
 [
     {
-        "body": "You can create a project based on an existing project template. You can only use your institution’s projects or publicly available projects as templates. \nAfter you select a project template to use, click Load. You can choose whether to Copy Template Plots and Samples and/or to Copy Template Widgets.\n Click Clear if you decide not to use that template.",
+        "body": "You can create a project based on an existing project template. You can only use your institution’s projects or publicly available projects as templates. \nAfter you select a project template to use, click \"Load.\" You can choose whether to \"Copy Template Plots and Samples\" and/or to \"Copy Template Widgets.\"\nClick \"Clear\" if you decide not to use that template.",
         "img": "/img/create-project1.webp"
     },
     {
-        "body": "Specify the project name, description, and privacy level of your project. The project name is displayed on the home page and at the top of the project page. \nThe project description will appear on the home page for public projects. \nProject Visibility determines who can view your project.",
+        "body": "Specify the project name, description, and privacy level of your project. The project name is displayed on the home page and at the top of the project page. \nThe project description will appear on the home page for public projects. \nProject visibility determines who can view your project.",
         "img": "/img/create-project2.webp"
     },
     {
-        "body": "Project Options allows you to customize the data collectors’ experience for your project. \n Show GEE Script Link will allow data collectors to access GEE forest degradation information, including historic NDVI trends. \nShow Extra Plot Columns is used with .csv and .shp plot designs to show any additional data columns (e.g. plot elevation or tree height). \nAuto-launch Geo-Dash will launch the Geo-Dash every time the data collector moves between plots.",
+        "body": "Project Options allows you to customize the data collectors’ experience for your project. \n\"Show GEE Script Link\" will allow data collectors to access GEE forest degradation information, including historic NDVI trends. \n\"Show Extra Plot Columns\" is used with .csv and .shp plot designs to show any additional data columns (e.g. plot elevation or tree height). \n\"Auto-launch Geo-Dash\" will launch the Geo-Dash every time the data collector moves between plots.",
         "img":"/img/create-project3.webp"
     },
     {
@@ -32,7 +32,7 @@
         "img": "/img/create-project8.jpg"
     },
     {
-        "body": "You will create survey questions that data collectors will answer for each sample plot. A preview will appear in the Question Preview pane. Type your question under New Question. \n The different question (component) types include button, radiobutton, and dropdown (user selects one answer per sample) as well as input (user types freely their answer). \nYou can select Parent Questions and Parent Answers for your question. If you do, your question will appear when specific answers are chosen (e.g. ask what type of forest after forest is chosen).",
+        "body": "You will create survey questions that data collectors will answer for each sample plot. A preview will appear in the \"Question Preview\" pane. Type your question under \"New Question.\" \nThe different question (component) types include button, radiobutton, and dropdown (user selects one answer per sample) as well as input (user types freely their answer). \nYou can select \"Parent Questions\" and \"Parent Answers\" for your question. If you do, your question will appear when specific answers are chosen (e.g. ask what type of forest after forest is chosen).",
         "img": "/img/create-project9.jpg"
     },
     {
@@ -44,7 +44,7 @@
         "img": "/img/create-project11.jpg"
     },
     {
-        "body": "Review your project settings. If any of the settings are incorrect, you can go back and fix them by clicking Continue Editing. \nOnce you’re satisfied with your project settings, click on Create Project. ",
+        "body": "Review your project settings. If any of the settings are incorrect, you can go back and fix them by clicking \"Continue Editing.\" \nOnce you’re satisfied with your project settings, click on \"Create Project.\"",
         "img":"/img/create-project12.webp"
     },
     {
