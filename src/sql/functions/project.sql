@@ -1716,11 +1716,12 @@ CREATE OR REPLACE FUNCTION dump_project_plot_data(_project_id integer)
             MAX(collection_time) as collection_time,
             MAX(analysis_duration) as analysis_duration,
             format('[%s]', string_agg(
-                (CASE WHEN "saved_answers" IS NULL THEN
+                (CASE WHEN saved_answers IS NULL THEN
                     format('{"%s":"%s"}', 'id', sample_uid)
                 ELSE
-                    format('{"%s":"%s", "%s":%s}', 'id', sample_uid, 'saved_answers', "saved_answers")
-                END) , ', ')) as samples,
+                    format('{"%s":"%s", "%s":%s}', 'id', sample_uid, 'saved_answers', saved_answers)
+                END),', '
+            )) as samples,
             pl_ext_id,
             project_id,
             MODE() WITHIN GROUP (ORDER BY imagerySecureWatchDate) as common_securewatch_date,
