@@ -256,54 +256,21 @@ CREATE OR REPLACE FUNCTION archive_institution(_institution_id integer)
 $$ LANGUAGE SQL;
 
 -- Returns all institutions
-CREATE OR REPLACE FUNCTION select_all_institutions()
+CREATE OR REPLACE FUNCTION select_all_institutions(_user_id integer)
  RETURNS TABLE (
-    institution_id    integer,
-    name              text,
-    description       text,
-    url               text,
-    members           jsonb,
-    admins            jsonb,
-    pending           jsonb
+    institution_id        integer,
+    name                  text,
+    institution_member    boolean
 ) AS $$
-
-    WITH inst_roles AS (
-        SELECT user_rid, title, institution_rid
-        FROM institution_users as iu
-        LEFT JOIN roles
-            ON role_uid = iu.role_rid
-    ), members AS (
-        SELECT jsonb_agg(user_rid) as member_list, institution_rid
-        FROM inst_roles
-        WHERE title = 'member'
-            OR title = 'admin'
-        GROUP BY institution_rid
-    ), admins AS (
-        SELECT jsonb_agg(user_rid) as admin_list, institution_rid
-        FROM inst_roles
-        WHERE title = 'admin'
-        GROUP BY institution_rid
-    ), pending AS (
-        SELECT jsonb_agg(user_rid) as pending_list, institution_rid
-        FROM inst_roles
-        WHERE title = 'pending'
-        GROUP BY institution_rid
-    )
 
     SELECT institution_uid,
         i.name,
-        i.description,
-        i.url,
-        (CASE WHEN member_list IS NULL THEN '[]' ELSE member_list END),
-        (CASE WHEN admin_list IS NULL THEN '[]' ELSE admin_list END),
-        (CASE WHEN pending_list IS NULL THEN '[]' ELSE pending_list END)
+        (SELECT count(*) > 0
+         FROM institution_users
+         WHERE institution_uid = institution_rid
+            AND user_rid = _user_id
+            AND role_rid <= 2)
     FROM institutions as i
-    LEFT JOIN members as m
-        ON institution_uid = m.institution_rid
-    LEFT JOIN admins as a
-        ON institution_uid = a.institution_rid
-    LEFT JOIN pending as p
-        ON institution_uid = p.institution_rid
     WHERE archived = false
     ORDER by institution_uid
 

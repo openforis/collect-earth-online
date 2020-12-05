@@ -9,19 +9,12 @@
        (pos? institution-id)
        (sql-primitive (call-sql "is_institution_admin" {:log? false} user-id institution-id))))
 
-;; TODO: this is only used on the home page.  Can drop all the role arrays for a single institutionMember column.
-(defn- prepare-institution [{:keys [institution_id name description url members admins pending]}]
-  {:id          institution_id
-   :name        name
-   :description description
-   :url         url
-   :members     (tc/jsonb->clj members)
-   :admins      (tc/jsonb->clj admins)
-   :pending     (tc/jsonb->clj pending)})
-
-(defn get-all-institutions [_]
-  (->> (call-sql "select_all_institutions")
-       (mapv prepare-institution)
+(defn get-all-institutions [{:keys [params]}]
+  (->> (call-sql "select_all_institutions" (:userId params -1))
+       (mapv (fn [{:keys [institution_id name institution_member]}]
+               {:id                institution_id
+                :name              name
+                :institutionMember institution_member}))
        (data-response)))
 
 (defn get-institution-details [{:keys [params]}]
