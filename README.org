@@ -76,28 +76,38 @@ replacing the values with your own:
 
 ** Enabling https
 
-Create a certificate with certbot following the installation instructions
-for your OS and environment. Then use openssl to package the certificates
-into pkcs12 format. The server looks for keystore.pkcs12 in .key/ and
-uses the passcode "foobar". To get the initial key the server must be
-running in dev mode to allow http access to certbot.
-
-An example process for an Ubuntu Linux system is as follows:
+To automatically create an SSL certificate signed by [[https://letsencrypt.org][Let's Encrypt]],
+simply run the following command from your shell:
 
 #+begin_src sh
-sudo certbot certonly --webroot -w ./resources/public -d mydomain.com
-sudo openssl pkcs12 -export \
-             -in /etc/letsencrypt/live/mydomain.com/fullchain.pem \
-             -inkey /etc/letsencrypt/live/mydomain.com/privkey.pem \
-             -out ./.key/keystore.pkcs12 \
-             -passout pass:foobar
+clojure -A:certbot-init mydomain.com [certbot-dir]
 #+end_src
 
-The cert creation and renewal can be run automatically with the following command:
+Note: If your certbot installation stores its config files in a
+directory other than /etc/letsencrypt, you should specify it with the
+optional certbot-dir argument to certbot-init.
+
+The certbot-init command will first create a shell script in the
+directory containing this README, called certbot-deploy-hook.sh. Next,
+it sends a request to the Let's Encrypt servers for a new signed SSL
+certificate and sets certbot-deploy-hook.sh to run automatically when
+the new certificate is received. When executed, this script will
+repackage the new certificate into a format that can be understood by
+our web server.
+
+While there should be no need to do so, if you ever want to perform
+this repackaging step manually, simply run this command from your
+shell:
 
 #+begin_src sh
-clojure -A:ssl-key-gen mydomain.com
+clojure -A:package-cert mydomain.com [certbot-dir]
 #+end_src
+
+Certbot runs as a background task every 12 hours and will renew any
+certificate that is set to expire in 30 days or less. Each time the
+certificate is renewed, certbot-deploy-hook.sh will be run
+automatically to repackage the updated certificate into the correct
+format.
 
 ** Forwarding Ports
 
