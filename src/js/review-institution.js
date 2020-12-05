@@ -129,7 +129,6 @@ class InstitutionDescription extends React.Component {
         super(props);
         this.state = {
             institutionDetails: {
-                id: "-1",
                 name: "",
                 base64Image: "",
                 url: "",
@@ -137,7 +136,6 @@ class InstitutionDescription extends React.Component {
                 institutionAdmin: false,
             },
             newInstitutionDetails: {
-                id: "-1",
                 name: "",
                 logo: "",
                 base64Image: "",
