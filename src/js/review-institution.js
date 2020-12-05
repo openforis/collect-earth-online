@@ -554,10 +554,11 @@ class NewImagery extends React.Component {
 
     uploadCustomImagery = (isNew) => {
         const sourceConfig = this.buildSecureWatch(this.stackParams()); // TODO define SecureWatch so stack params works correctly.
-        const message = this.validateData(sourceConfig); // TODO this should really be done on unstacked params.
+        const sanitizedSourceConfig = this.sanitizeSourceConfig(sourceConfig);
+        const message = this.validateData(sanitizedSourceConfig); // TODO this should really be done on unstacked params.
         if (!this.checkAllParamsFilled()) {
             alert("You must fill out all fields.");
-        } else if (!this.checkJSONParams() || Object.keys(sourceConfig).length === 0) { // TODO we may no longer need to check for .length if checkJSONParams works
+        } else if (!this.checkJSONParams() || Object.keys(sanitizedSourceConfig).length === 0) { // TODO we may no longer need to check for .length if checkJSONParams works
             alert("Invalid JSON in JSON field(s).");
         } else if (message) {
             alert(message);
@@ -577,7 +578,7 @@ class NewImagery extends React.Component {
                           imageryTitle: this.state.newImageryTitle,
                           imageryAttribution: this.state.newImageryAttribution,
                           addToAllProjects: this.state.addToAllProjects,
-                          sourceConfig: sourceConfig,
+                          sourceConfig: sanitizedSourceConfig,
                       }),
                   }
             ).then(response => {
@@ -652,9 +653,20 @@ class NewImagery extends React.Component {
             .every(o => o.required === false
                         || (this.state.newImageryParams[o.key] && this.state.newImageryParams[o.key].length > 0));
 
+    sanitizeSourceConfig = sourceConfig => {
+        imageryOptions[this.state.selectedType].params
+            .every(o => o.sanitizers && o.sanitizers
+                .every(s => sourceConfig[o.key] = s(sourceConfig[o.key]))
+            );
+        return sourceConfig;
+    }
+
     // TODO make all of these generic by adding min / max values to imageryOptions and checking against those.
     validateData = (sourceConfig) => {
-        if (sourceConfig.type === "Sentinel1" || sourceConfig.type === "Sentinel2") {
+        if (sourceConfig.type === "GeoServer") {
+            const geoserverUrl = sourceConfig.geoserverUrl;
+            return /\?.+/.test(geoserverUrl) ? "WMS Url should not contain query string!" : null;
+        } else if (sourceConfig.type === "Sentinel1" || sourceConfig.type === "Sentinel2") {
             const year = parseInt(sourceConfig.year);
             const yearMinimum = sourceConfig.type === "Sentinel1" ? 2014 : 2015;
             const month = parseInt(sourceConfig.month);
