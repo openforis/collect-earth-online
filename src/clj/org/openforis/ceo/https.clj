@@ -67,6 +67,6 @@
       "package-cert" (package-certificate domain (or certbot-dir "/etc/letsencrypt"))
       (println "Valid options are:"
                "\n  certbot-init domain [certbot-dir]    to initialize certbot"
-               "\n  package-cert domian [certbot-dir]    to repackage certificates after an update"))
+               "\n  package-cert domain [certbot-dir]    to repackage certificates after an update"))
     (println "You must provide a domain to create an SSL key."))
   (shutdown-agents))
