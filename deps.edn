@@ -17,8 +17,8 @@
         seancorfield/next.jdbc    {:mvn/version "1.1.613"}}
 
  :aliases {:build-db     {:main-opts ["-m" "org.openforis.ceo.build-db"]}
-           :certbot-init {:main-opts ["-m" "carbon-tool.https" "certbot-init"]}
-           :package-cert {:main-opts ["-m" "carbon-tool.https" "package-cert"]}
+           :certbot-init {:main-opts ["-m" "org.openforis.ceo.https" "certbot-init"]}
+           :package-cert {:main-opts ["-m" "org.openforis.ceo.https" "package-cert"]}
            :rebel        {:extra-deps {com.bhauman/rebel-readline {:mvn/version "0.1.4"}}
                           :main-opts  ["-m" "rebel-readline.main"]}
            :production   {:jvm-opts  ["-Xmx4096m" "-XX:+PrintFlagsFinal"]}
