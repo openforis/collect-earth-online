@@ -161,7 +161,7 @@ class InstitutionDescription extends React.Component {
     }
 
     getInstitutionDetails = () => {
-        fetch(`/get-institution-details?institutionId=${this.props.institutionId}`)
+        fetch(`/get-institution-by-id?institutionId=${this.props.institutionId}`)
             .then(response => response.ok ? response.json() : Promise.reject(response))
             .then(data => {
                 this.setState({
