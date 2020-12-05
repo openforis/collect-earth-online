@@ -30,9 +30,9 @@
     (if-let [institution (first (call-sql "select_institution_by_id" institution-id user-id))]
       (data-response (let [{:keys [name base64_image url description institution_admin]} institution]
                        {:name             name
-                        :base64Image      base64_image
                         :url              url
                         :description      description
+                        :base64Image      base64_image
                         :institutionAdmin institution_admin}))
       (data-response (str "Institution with " institution-id " is not found.")))))
 
