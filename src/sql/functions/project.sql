@@ -1524,20 +1524,14 @@ CREATE OR REPLACE FUNCTION select_plot_samples(_plot_id integer, _project_id int
 
 $$ LANGUAGE SQL;
 
--- FIXME _project_id should not be needed
--- FIXME this does not account for someone submitting to a plot already saved
 -- FIXME this can probably be eliminate with a rewrite to update_user_samples
 -- Returns user plots table id if available
-CREATE OR REPLACE FUNCTION check_user_plots(_project_id integer, _plot_id integer, _user_id integer)
+CREATE OR REPLACE FUNCTION check_user_plots(_plot_id integer)
  RETURNS integer AS $$
 
     SELECT user_plot_uid
-    FROM plots p
-    INNER JOIN user_plots up
-        ON plot_uid = up.plot_rid
-        AND p.project_rid = _project_id
-        AND up.user_rid = _user_id
-        AND up.plot_rid = _plot_id
+    FROM user_plots up
+    WHERE up.plot_rid = _plot_id
 
 $$ LANGUAGE SQL;
 
