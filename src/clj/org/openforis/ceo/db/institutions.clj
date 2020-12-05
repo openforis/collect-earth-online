@@ -1,25 +1,20 @@
 (ns org.openforis.ceo.db.institutions
-  (:import java.util.Date)
   (:require [clojure.string :as str]
-            [clojure.java.io :as io]
             [org.openforis.ceo.utils.type-conversion :as tc]
             [org.openforis.ceo.database         :refer [call-sql sql-primitive]]
-            [org.openforis.ceo.views            :refer [data-response]]
-            [org.openforis.ceo.utils.part-utils :refer [write-file-part-base64]]))
+            [org.openforis.ceo.views            :refer [data-response]]))
 
 (defn is-inst-admin? [user-id institution-id]
   (and (pos? user-id)
        (pos? institution-id)
        (sql-primitive (call-sql "is_institution_admin" {:log? false} user-id institution-id))))
 
-;; TODO the front end uses get-institution-members, don't return members here.
-(defn- prepare-institution [{:keys [institution_id name logo description url archived members admins pending]}]
+;; TODO: this is only used on the home page.  Can drop all the role arrays for a single institutionMember column.
+(defn- prepare-institution [{:keys [institution_id name description url members admins pending]}]
   {:id          institution_id
    :name        name
-   :logo        (str logo "?t=" (Date.))
    :description description
    :url         url
-   :archived    archived
    :members     (tc/jsonb->clj members)
    :admins      (tc/jsonb->clj admins)
    :pending     (tc/jsonb->clj pending)})
@@ -29,62 +24,47 @@
        (mapv prepare-institution)
        (data-response)))
 
-;; TODO: Return an error instead of an empty institution map
-(defn- get-institution-by-id [institution-id]
-  (if-let [institution (first (call-sql "select_institution_by_id" institution-id))]
-    (prepare-institution institution)
-    {:id           -1
-     :name         (str "No institution with ID=" institution-id)
-     :logo         ""
-     :description  ""
-     :url          ""
-     :archived     false
-     :members      []
-     :admins       []
-     :pending      []}))
-
 (defn get-institution-details [{:keys [params]}]
-  (let [institution-id (tc/val->int (:institutionId params))]
-    (data-response (get-institution-by-id institution-id))))
+  (let [institution-id (tc/val->int (:institutionId params))
+        user-id        (:userId params -1)]
+    (if-let [institution (first (call-sql "select_institution_by_id" institution-id user-id))]
+      (data-response (let [{:keys [name base64_image url description institution_admin]} institution]
+                       {:name             name
+                        :base64Image      base64_image
+                        :url              url
+                        :description      description
+                        :institutionAdmin institution_admin}))
+      (data-response (str "Institution with " institution-id " is not found.")))))
 
 (defn create-institution [{:keys [params]}]
   (let [user-id      (:userId params -1)
         name         (:name params)
-        url          (:url params)
-        logo         (:logo params)
         base64-image (:base64Image params)
+        url          (:url params)
         description  (:description params)]
-    (if-let [institution-id (sql-primitive (call-sql "add_institution" name "" description url false))]
+    (if-let [institution-id (sql-primitive (call-sql "add_institution" name url description))]
       (do
-        (when-not (str/blank? logo)
-          (let [logo-file-name (write-file-part-base64 logo
-                                                       base64-image
-                                                       (io/resource "public/img/institution-logos/")
-                                                       (str "institution-" institution-id))]
-            (call-sql "update_institution_logo" institution-id (str "img/institution-logos/" logo-file-name))))
+        (when (pos? (count base64-image))
+          (call-sql "update_institution_logo" {:log? false} institution-id (second (str/split base64-image #","))))
         (doseq [admin-id (set [user-id 1])]
           (call-sql "add_institution_user" institution-id admin-id 1))
         (data-response institution-id))
       (data-response ""))))
 
 (defn update-institution [{:keys [params]}]
-  (let [institution-id (tc/val->int (:institutionId params))
+  (let [user-id        (:userId params -1)
+        institution-id (tc/val->int (:institutionId params))
         name           (:name params)
-        url            (:url params)
-        logo           (:logo params)
         base64-image   (:base64Image params)
+        url            (:url params)
         description    (:description params)]
-    (if-let [institution (first (call-sql "select_institution_by_id" institution-id))]
-      (let [logo-file-name (if (str/blank? logo)
-                             (:logo institution)
-                             (str "img/institution-logos/"
-                                  (write-file-part-base64 logo
-                                                          base64-image
-                                                          (io/resource "public/img/institution-logos/")
-                                                          (str "institution-" institution-id))))]
-        (call-sql "update_institution" institution-id name logo-file-name description url)
+    (if (first (call-sql "select_institution_by_id" institution-id user-id))
+      (do
+        (call-sql "update_institution" institution-id name url description)
+        (when (pos? (count base64-image))
+          (call-sql "update_institution_logo" {:log? false} institution-id (second (str/split base64-image #","))))
         (data-response ""))
-      (data-response "")))) ; FIXME: Return "Institution not found." and update front-end code accordingly.
+      (data-response (str "Institution " institution-id " is not found.")))))
 
 (defn archive-institution [{:keys [params]}]
   (let [institution-id (tc/val->int (:institutionId params))]

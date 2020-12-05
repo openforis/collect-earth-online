@@ -2,8 +2,8 @@ import React, {Fragment} from "react";
 import ReactDOM from "react-dom";
 
 import InstitutionEditor from "./components/InstitutionEditor";
-import {NavigationBar, SafeImage} from "./components/PageComponents";
-import {sortAlphabetically, capitalizeFirst, UnicodeIcon} from "./utils/generalUtils";
+import {NavigationBar} from "./components/PageComponents";
+import {sortAlphabetically, capitalizeFirst, UnicodeIcon, KBtoBase64Length, safeLength} from "./utils/generalUtils";
 import {imageryOptions} from "./imagery/imageryOptions";
 
 class ReviewInstitution extends React.Component {
@@ -131,10 +131,10 @@ class InstitutionDescription extends React.Component {
             institutionDetails: {
                 id: "-1",
                 name: "",
-                logo: "",
+                base64Image: "",
                 url: "",
                 description: "",
-                admins: [],
+                institutionAdmin: false,
             },
             newInstitutionDetails: {
                 id: "-1",
@@ -159,7 +159,6 @@ class InstitutionDescription extends React.Component {
                 this.setState({
                     institutionDetails: data,
                     newInstitutionDetails: {
-                        id: data.id,
                         name: data.name,
                         url: data.url,
                         description: data.description,
@@ -167,7 +166,7 @@ class InstitutionDescription extends React.Component {
                         base64Image: "",
                     },
                 });
-                this.props.setIsAdmin(this.props.userId > 0 && data.admins.includes(this.props.userId));
+                this.props.setIsAdmin(data.institutionAdmin);
             })
             .catch(response => {
                 this.setState({
@@ -181,25 +180,35 @@ class InstitutionDescription extends React.Component {
     };
 
     updateInstitution = () => {
-        fetch(`/update-institution?institutionId=${this.props.institutionId}`,
-              {
-                  method: "POST",
-                  headers: {
-                      "Accept": "application/json",
-                      "Content-Type": "application/json",
-                  },
-                  body: JSON.stringify(this.state.newInstitutionDetails),
-              }
-        )
-            .then(response => {
-                if (response.ok) {
-                    this.getInstitutionDetails();
-                    this.setState({editMode: false});
-                } else {
-                    console.log(response);
-                    alert("Error updating institution details. See console for details.");
-                }
-            });
+        if (this.state.newInstitutionDetails.base64Image.length > KBtoBase64Length(500)) {
+            alert("Institution logos must be smaller than 500kb");
+        } else {
+            fetch(`/update-institution?institutionId=${this.props.institutionId}`,
+                  {
+                      method: "POST",
+                      headers: {
+                          "Accept": "application/json",
+                          "Content-Type": "application/json",
+                      },
+                      body: JSON.stringify({
+                          institutionId: this.props.institutionId,
+                          name: this.state.newInstitutionDetails.name,
+                          base64Image: this.state.newInstitutionDetails.base64Image,
+                          url: this.state.newInstitutionDetails.url,
+                          description: this.state.newInstitutionDetails.description,
+                      }),
+                  }
+            )
+                .then(response => {
+                    if (response.ok) {
+                        this.getInstitutionDetails();
+                        this.setState({editMode: false});
+                    } else {
+                        console.log(response);
+                        alert("Error updating institution details. See console for details.");
+                    }
+                });
+        }
     };
 
     toggleEditMode = () => this.setState({editMode: !this.state.editMode});
@@ -257,6 +266,8 @@ class InstitutionDescription extends React.Component {
         </div>
     </div>;
 
+    httpAddress = (url) => url.includes("://") ? url : "https://" + url;
+
     render() {
         return this.state.editMode
         ?
@@ -270,21 +281,19 @@ class InstitutionDescription extends React.Component {
             />
         :
             <div id="institution-details" className="row justify-content-center">
-                <div id="institution-view" className="col-xl-6 col-lg-8 ">
+                <div id="institution-view" className="col-8">
                     <div className="row mb-4">
                         <div className="col-md-3" id="institution-logo-container">
-                            <a href={this.state.institutionDetails.url}>
-                                {this.state.institutionDetails.id !== "-1" &&
-                                    <SafeImage
-                                        className="img-fluid"
-                                        src={`/${this.state.institutionDetails.logo}`}
-                                        fallbackSrc={"/img/ceo-logo.png"}
-                                        alt={"logo"}
-                                    />
+                            <img
+                                style={{maxWidth: "100%"}}
+                                src={safeLength(this.state.institutionDetails.base64Image) > 1
+                                        ? `data:*/*;base64,${this.state.institutionDetails.base64Image}`
+                                        : "/img/ceo-logo.png"
                                 }
-                            </a>
+                                onClick={() => window.open(this.httpAddress(this.state.institutionDetails.url))}
+                            />
                         </div>
-                        <div className="col-md-9">
+                        <div className="col-md-8">
                             <h1>
                                 <a href={this.state.institutionDetails.url}>
                                     {this.state.institutionDetails.name}

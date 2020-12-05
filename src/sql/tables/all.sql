@@ -18,7 +18,6 @@ CREATE TABLE users (
 CREATE TABLE institutions (
     institution_uid    SERIAL PRIMARY KEY,
     name               text NOT NULL,
-    logo               text NOT NULL,
     logo_data          bytea,
     description        text NOT NULL,
     url                text NOT NULL,
@@ -275,18 +274,6 @@ CREATE UNIQUE INDEX image_preference_project_plot_user_packet_year ON image_pref
 
 -- Types and views, to be defined once
 -- TODO get rid of types or add them to the namespaces in a way they get rebuild each time.
-CREATE TYPE institution_return AS (
-    institution_id    integer,
-    name              text,
-    logo              text,
-    description       text,
-    url               text,
-    archived          boolean,
-    members           jsonb,
-    admins            jsonb,
-    pending           jsonb
-);
-
 CREATE TYPE imagery_return AS (
     imagery_id         integer,
     institution_id     integer,
