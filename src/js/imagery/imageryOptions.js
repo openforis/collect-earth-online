@@ -13,9 +13,12 @@ export const imageryOptions = [
             {key: "LAYERS", display: "WMS Layer Name", parent: "geoserverParams"},
             {
                 key: "geoserverParams",
-                display: "Additional WMS Params (as JSON object)", // TODO, add {} around params if missing
+                display: "Additional WMS Params (as JSON object)",
                 required: false,
                 type: "JSON",
+                sanitizer: url => url && !url.trim() && url.length !== 0 ?
+                    `{${url.split(",").filter(v => v !== "").map(v => v.split(":")).map(([k, v]) => `"${k.replace(/[ "']/g, "")}": ${v}`).join(",")}}`
+                : "{}",
             },
         ],
         // FIXME, add url if help document is created.
