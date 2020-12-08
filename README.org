@@ -56,7 +56,7 @@ include = 'performance.conf'
 Note that the Postgresql server will need to be restarted for these
 changes to take effect.
 
-** Web Server
+** Development Web Server
 
 To compile and run the web application, navigate to the top level
 project directory and run:
@@ -148,7 +148,7 @@ sudo iptables-save
 sudo apt -y install iptables-persistent
 #+end_src
 
-** Web Server
+** Production Web Server
 
 To compile and run the web application, navigate to the top level
 project directory and run:
