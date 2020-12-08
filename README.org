@@ -13,11 +13,6 @@ Crowd-sourced visual interpretation of on-demand satellite imagery
 - [[https://www.7-zip.org/][p7zip]]
 - [[https://nodejs.org/en/][node 10]]
 
-*** Optional / For Production
-
-- [[https://certbot.eff.org/][certbot]]
-- [[https://www.openssl.org/source/][openssl]]
-
 ** Postgresql Database Setup
 
 *Postgresql* needs to be installed on the machine that will be hosting
@@ -60,6 +55,31 @@ include = 'performance.conf'
 
 Note that the Postgresql server will need to be restarted for these
 changes to take effect.
+
+** Web Server
+
+To compile and run the web application, navigate to the top level
+project directory and run:
+
+#+begin_src sh
+npm install
+npm run webpack-dev
+clojure -M:build-db only-functions
+clojure -M:run-server -m dev [-p 8080] [-P 8443]
+#+end_src
+
+The website will then be available at http://localhost:8080 unless a
+port is specified. An http port can be specified with -p and an https
+port can be specified with -P. In dev mode, server-side exceptions
+will be displayed in the browser and Clojure source files will be
+reloaded whenever you refresh the page.
+
+** Production Only Installation Requirements
+
+*** Required
+
+- [[https://certbot.eff.org/][certbot]]
+- [[https://www.openssl.org/source/][openssl]]
 
 ** Email Server
 
@@ -135,17 +155,15 @@ project directory and run:
 
 #+begin_src sh
 npm install
-npm run webpack-<dev|prod>
-clojure -M:run-server [-m <dev|prod>] [-p 8080] [-P 8443]
+npm run webpack-prod
+clojure -M:build-db only-functions
+clojure -M:run-server -m prod [-p 8080] [-P 8443]
 #+end_src
 
 The website will then be available at http://localhost:8080 unless a
 port is specified. An http port can be specified with -p and an https
-port can be specified with -P. In dev mode, server-side exceptions
-will be displayed in the browser and Clojure source files will be
-reloaded whenever you refresh the page. These features are disabled in
-prod mode. If the second argument to run-server is omitted, it will
-default to prod mode.
+port can be specified with -P. -m prod is optional because production
+is the default.
 
 ** Building GEE-Gateway
 
