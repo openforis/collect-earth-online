@@ -554,9 +554,11 @@ class NewImagery extends React.Component {
 
     sanitizeSourceConfig = sourceConfig => {
         const sourceConfigCopy = {...sourceConfig};
-        imageryOptions[this.state.selectedType].params.forEach(o =>
-            o.sanitizer ? sourceConfigCopy[o.key] = o.sanitizer(sourceConfigCopy[o.key]) : null
-        );
+        imageryOptions[this.state.selectedType].params.forEach(o => {
+            if (o.sanitizer) {
+                sourceConfigCopy[o.key] = o.sanitizer(sourceConfigCopy[o.key]);
+            }
+        });
         return sourceConfigCopy;
     }
 
@@ -664,7 +666,7 @@ class NewImagery extends React.Component {
     validateData = (sourceConfig) => {
         if (sourceConfig.type === "GeoServer") {
             const geoserverUrl = sourceConfig.geoserverUrl;
-            return /\?.+/.test(geoserverUrl) ? "WMS Url should not contain query string!" : null;
+            return /\?.+/.test(geoserverUrl) ? "The field \"WMS Url\" should not contain the query string. Please put those values in the field \"Additional WMS Params (as JSON object)\"." : null;
         } else if (sourceConfig.type === "Sentinel1" || sourceConfig.type === "Sentinel2") {
             const year = parseInt(sourceConfig.year);
             const yearMinimum = sourceConfig.type === "Sentinel1" ? 2014 : 2015;

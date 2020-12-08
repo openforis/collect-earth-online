@@ -8,7 +8,7 @@ export const imageryOptions = [
             {
                 key: "geoserverUrl",
                 display: "WMS URL",
-                sanitizer: url => url && url.length !== 0 && url.slice(-1) === "?" ? url.slice(0, -1) : url,
+                sanitizer: url => url.endsWith("?") && url.slice(-1) === "?" ? url.slice(0, -1) : url,
             },
             {key: "LAYERS", display: "WMS Layer Name", parent: "geoserverParams"},
             {
