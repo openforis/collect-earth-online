@@ -217,4 +217,9 @@ export const imageryOptions = [
         ],
         url: "https://docs.mapbox.com/help/glossary/static-tiles-api/",
     },
+    {
+        type: "OSM",
+        label: "Open Street Map",
+        params: [],
+    },
 ];
