@@ -8,7 +8,7 @@ import {SurveyRuleDesign} from "./SurveyRules";
 import AOIMap from "./AOIMap";
 import {SampleDesign, SampleReview, SamplePreview} from "./SampleDesign";
 
-import {SvgIcon} from "../utils/svgIcons";
+import SvgIcon from "../components/SvgIcon";
 import {mercator} from "../utils/mercator.js";
 import {last, removeFromSet} from "../utils/generalUtils";
 import {convertSampleValuesToSurveyQuestions} from "../utils/surveyUtils";
