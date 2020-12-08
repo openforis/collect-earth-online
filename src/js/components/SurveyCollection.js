@@ -498,7 +498,7 @@ class AnswerInput extends React.Component {
         this.setState({
             newInput: matchingNode ? matchingNode.answerText : "",
         });
-    }
+    };
 
     updateInputValue = (value) => this.setState({newInput: value});
 

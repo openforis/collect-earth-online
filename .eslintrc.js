@@ -6,7 +6,7 @@ module.exports = {
             jsx: true,
         },
     },
-    // plugins: ["react"],
+    plugins: ["@babel"],
     env: {
         es6: true,
         browser: true,
@@ -40,11 +40,11 @@ module.exports = {
             "error",
             "double",
         ],
-        semi: [
-            "error",
-            "always",
-        ],
         // From Matt
+        "@babel/no-invalid-this": "error",
+        "@babel/no-unused-expressions": "error",
+        "@babel/object-curly-spacing": "error",
+        "@babel/semi": "error",
         "arrow-body-style": ["error", "as-needed"],
         "arrow-spacing": 2,
         "brace-style": 2,

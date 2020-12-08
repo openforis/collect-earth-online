@@ -151,7 +151,7 @@ export class NavigationBar extends React.Component {
             .then(response => response.ok ? response.json() : Promise.reject(response))
             .then(data => this.setState({helpSlides: data, page: page}))
             .catch(error => console.log(page, getLanguage(availableLanguages), error));
-    }
+    };
 
     closeHelpMenu = () => this.setState({showHelpMenu: false});
 

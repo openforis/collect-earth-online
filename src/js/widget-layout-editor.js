@@ -1112,7 +1112,7 @@ class WidgetLayoutEditor extends React.PureComponent {
             institution review page
         </a>
         &nbsp;in the imagery tab.
-    </div>
+    </div>;
 
     getNextStepButton = () => this.state.selectedWidgetType === "DualImageCollection"
         ?
