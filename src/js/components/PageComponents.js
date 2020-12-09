@@ -1,7 +1,7 @@
 import "../../css/custom.css";
 
 import React from "react";
-import {SvgIcon} from "../utils/svgIcons";
+import SvgIcon from "../components/SvgIcon";
 import {getLanguage, capitalizeFirst} from "../utils/generalUtils";
 
 function LogOutButton({userName, uri}) {
