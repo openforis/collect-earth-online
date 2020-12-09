@@ -88,7 +88,7 @@
         "build-db-functions": "clojure -M:build-db only-functions",
         "webpack-dev": "webpack --config webpack.config.js --env.dev",
         "webpack-prod": "webpack --config webpack.config.js --env.prod",
-        "server-dev": "clojure -M:run-server 8080 dev",
-        "server-prod": "clojure -M:production:run-server"
+        "server-dev": "clojure -M:run-server -p 8080 -m dev",
+        "server-prod": "clojure -M:production:run-server -P 8443 -m prod"
     }
 }
