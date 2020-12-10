@@ -1,4 +1,4 @@
-const dateRangeValidator = ([startDate, endDate]) => startDate && endDate &&
+const dateRangeValidator = ({startDate, endDate}) => startDate && endDate &&
     new Date(startDate) > new Date(endDate) ? "Start date must be smaller than the end date." : "";
 
 export const imageryOptions = [
@@ -11,9 +11,7 @@ export const imageryOptions = [
             {
                 key: "geoserverUrl",
                 display: "WMS URL",
-                validators: [
-                    value => /\?.+/.test(value) ? "The field \"WMS Url\" should not contain the query string. Please put those values in the field \"Additional WMS Params (as JSON object)\"." : "",
-                ],
+                validator: value => /\?.+/.test(value) ? "The field \"WMS Url\" should not contain the query string. Please put those values in the field \"Additional WMS Params (as JSON object)\"." : "",
             },
             {key: "LAYERS", display: "WMS Layer Name", parent: "geoserverParams"},
             {
@@ -50,17 +48,13 @@ export const imageryOptions = [
                 key: "year",
                 display: "Default Year",
                 type: "number",
-                validators: [
-                    value => isNaN(value) || (value.toString().length !== 4) ? "Year should be 4 digit number" : "",
-                ],
+                validator: value => isNaN(value) || (value.toString().length !== 4) ? "Year should be 4 digit number" : "",
             },
             {
                 key: "month",
                 display: "Default Month",
                 type: "number",
-                validators: [
-                    value => isNaN(value) || value < 1 || value > 12 ? "Month should be between 1 and 12!" : "",
-                ],
+                validator: value => isNaN(value) || value < 1 || value > 12 ? "Month should be between 1 and 12!" : "",
             },
             {key: "accessToken", display: "Access Token"},
         ],
@@ -75,10 +69,7 @@ export const imageryOptions = [
             {key: "endDate", display: "End Date", type: "date"},
         ],
         validators: [
-            {
-                keys: ["startDate", "endDate"],
-                validateFunction: dateRangeValidator,
-            },
+            dateRangeValidator,
         ],
         url: "https://developers.planet.com/docs/quickstart/getting-started/",
     },

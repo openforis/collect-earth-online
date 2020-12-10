@@ -555,16 +555,13 @@ class NewImagery extends React.Component {
     validateParams = (type, imageryParams) => {
         let message = "";
         imageryOptions[type].params.forEach(param => {
-            if (param.validators) {
-                param.validators.forEach(validator => {
-                    if (message === "") message = validator(imageryParams[param.key]);
-                });
+            if (message === "" && param.validator) {
+                message = param.validator(imageryParams[param.key]);
             }
         });
         if (message === "" && imageryOptions[type].validators) {
             imageryOptions[type].validators.forEach(validator => {
-                const values = validator.keys.map(key => imageryParams[key]);
-                message = validator.validateFunction(values);
+                message = validator(imageryParams);
             });
         }
         return message;
