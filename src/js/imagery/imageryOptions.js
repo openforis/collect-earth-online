@@ -1,3 +1,6 @@
+const dateRangeValidator = ([startDate, endDate]) => startDate && endDate &&
+    new Date(startDate) > new Date(endDate) ? "Start date must be smaller than the end date." : "";
+
 export const imageryOptions = [
     // Default type is text, default parent is none, a referenced parent must be entered as a json string
     // Parameters can be defined one level deep. {paramParent: {paramChild: "", fields: "", fromJsonStr: ""}}
@@ -5,7 +8,13 @@ export const imageryOptions = [
         type: "GeoServer",
         label: "WMS Imagery",
         params: [
-            {key: "geoserverUrl", display: "WMS URL"},
+            {
+                key: "geoserverUrl",
+                display: "WMS URL",
+                validators: [
+                    value => /\?.+/.test(value) ? "The field \"WMS Url\" should not contain the query string. Please put those values in the field \"Additional WMS Params (as JSON object)\"." : "",
+                ],
+            },
             {key: "LAYERS", display: "WMS Layer Name", parent: "geoserverParams"},
             {
                 key: "geoserverParams",
@@ -37,8 +46,22 @@ export const imageryOptions = [
         type: "Planet",
         label: "Planet Monthly",
         params: [
-            {key: "year", display: "Default Year", type: "number"},
-            {key: "month", display: "Default Month", type: "number"},
+            {
+                key: "year",
+                display: "Default Year",
+                type: "number",
+                validators: [
+                    value => isNaN(value) || (value.toString().length !== 4) ? "Year should be 4 digit number" : "",
+                ],
+            },
+            {
+                key: "month",
+                display: "Default Month",
+                type: "number",
+                validators: [
+                    value => isNaN(value) || value < 1 || value > 12 ? "Month should be between 1 and 12!" : "",
+                ],
+            },
             {key: "accessToken", display: "Access Token"},
         ],
         url: "https://developers.planet.com/docs/quickstart/getting-started/",
@@ -50,6 +73,12 @@ export const imageryOptions = [
             {key: "accessToken", display: "Access Token"},
             {key: "startDate", display: "Start Date", type: "date"},
             {key: "endDate", display: "End Date", type: "date"},
+        ],
+        validators: [
+            {
+                keys: ["startDate", "endDate"],
+                validateFunction: dateRangeValidator,
+            },
         ],
         url: "https://developers.planet.com/docs/quickstart/getting-started/",
     },

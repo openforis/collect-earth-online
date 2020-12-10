@@ -552,43 +552,63 @@ class NewImagery extends React.Component {
 
     //    Remote Calls    //
 
-    uploadCustomImagery = (isNew) => {
-        const sourceConfig = this.buildSecureWatch(this.stackParams()); // TODO define SecureWatch so stack params works correctly.
-        const message = this.validateData(sourceConfig); // TODO this should really be done on unstacked params.
-        if (!this.checkAllParamsFilled()) {
-            alert("You must fill out all fields.");
-        } else if (!this.checkJSONParams() || Object.keys(sourceConfig).length === 0) { // TODO we may no longer need to check for .length if checkJSONParams works
-            alert("Invalid JSON in JSON field(s).");
-        } else if (message) {
-            alert(message);
-        } else if (this.props.titleIsTaken(this.state.newImageryTitle, this.props.imageryToEdit.id)) {
-            alert("The title '" + this.state.newImageryTitle + "' is already taken.");
-        } else {
-            fetch(isNew ? "/add-institution-imagery" : "/update-institution-imagery",
-                  {
-                      method: "POST",
-                      headers: {
-                          "Accept": "application/json",
-                          "Content-Type": "application/json",
-                      },
-                      body: JSON.stringify({
-                          institutionId: this.props.institutionId,
-                          imageryId: this.props.imageryToEdit.id,
-                          imageryTitle: this.state.newImageryTitle,
-                          imageryAttribution: this.state.newImageryAttribution,
-                          addToAllProjects: this.state.addToAllProjects,
-                          sourceConfig: sourceConfig,
-                      }),
-                  }
-            ).then(response => {
-                if (response.ok) {
-                    this.props.getImageryList();
-                    this.props.hideEditMode();
-                } else {
-                    console.log(response);
-                    alert("Error uploading imagery data. See console for details.");
-                }
+    validateParams = (type, imageryParams) => {
+        let message = "";
+        imageryOptions[type].params.forEach(param => {
+            if (param.validators) {
+                param.validators.forEach(validator => {
+                    if (message === "") message = validator(imageryParams[param.key]);
+                });
+            }
+        });
+        if (message === "" && imageryOptions[type].validators) {
+            imageryOptions[type].validators.forEach(validator => {
+                const values = validator.keys.map(key => imageryParams[key]);
+                message = validator.validateFunction(values);
             });
+        }
+        return message;
+    };
+
+    uploadCustomImagery = (isNew) => {
+        const message = this.validateParams(this.state.selectedType, this.state.newImageryParams);
+        if (message) {
+            alert(message);
+        } else {
+            const sourceConfig = this.buildSecureWatch(this.stackParams()); // TODO define SecureWatch so stack params works correctly.
+            if (!this.checkAllParamsFilled()) {
+                alert("You must fill out all fields.");
+            } else if (!this.checkJSONParams() || Object.keys(sourceConfig).length === 0) { // TODO we may no longer need to check for .length if checkJSONParams works
+                alert("Invalid JSON in JSON field(s).");
+            } else if (this.props.titleIsTaken(this.state.newImageryTitle, this.props.imageryToEdit.id)) {
+                alert("The title '" + this.state.newImageryTitle + "' is already taken.");
+            } else {
+                fetch(isNew ? "/add-institution-imagery" : "/update-institution-imagery",
+                      {
+                          method: "POST",
+                          headers: {
+                              "Accept": "application/json",
+                              "Content-Type": "application/json",
+                          },
+                          body: JSON.stringify({
+                              institutionId: this.props.institutionId,
+                              imageryId: this.props.imageryToEdit.id,
+                              imageryTitle: this.state.newImageryTitle,
+                              imageryAttribution: this.state.newImageryAttribution,
+                              addToAllProjects: this.state.addToAllProjects,
+                              sourceConfig: sourceConfig,
+                          }),
+                      }
+                ).then(response => {
+                    if (response.ok) {
+                        this.props.getImageryList();
+                        this.props.hideEditMode();
+                    } else {
+                        console.log(response);
+                        alert("Error uploading imagery data. See console for details.");
+                    }
+                });
+            }
         }
     };
 
