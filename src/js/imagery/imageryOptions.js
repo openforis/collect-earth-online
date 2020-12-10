@@ -68,9 +68,7 @@ export const imageryOptions = [
             {key: "startDate", display: "Start Date", type: "date"},
             {key: "endDate", display: "End Date", type: "date"},
         ],
-        validators: [
-            dateRangeValidator,
-        ],
+        validator: dateRangeValidator,
         url: "https://developers.planet.com/docs/quickstart/getting-started/",
     },
     {

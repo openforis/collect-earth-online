@@ -554,12 +554,10 @@ class NewImagery extends React.Component {
 
     validateParams = (type, imageryParams) => {
         const parameterErrors = imageryOptions[type].params.map(param =>
-            param.validator ? param.validator(imageryParams[param.key]) : ""
-        ).filter(error => error);
-        const imageryErrors = imageryOptions[type].validators ?
-            imageryOptions[type].validators.map(validator => validator(imageryParams)).filter(error => error)
-        : [];
-        return [...parameterErrors, ...imageryErrors];
+            param.validator && param.validator(imageryParams[param.key])
+        );
+        const imageryError = imageryOptions[type].validator && imageryOptions[type].validator(imageryParams);
+        return [...parameterErrors, imageryError].filter(error => error);
     };
 
     uploadCustomImagery = (isNew) => {
