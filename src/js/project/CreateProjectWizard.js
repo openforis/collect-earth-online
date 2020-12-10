@@ -163,7 +163,7 @@ export default class CreateProjectWizard extends React.Component {
             });
 
     getProjectPlots = (projectId) =>
-        fetch(`/get-project-plots?projectId=${projectId}&max=300`)
+        fetch(`/get-project-plots?projectId=${projectId}`)
             .then(response => response.ok ? response.json() : Promise.reject(response))
             .then(data => {
                 this.setState({templatePlots: data});

@@ -9,14 +9,13 @@
 (defn- time-plus-five-min []
   (Timestamp. (+ (System/currentTimeMillis) (* 5 60 1000))))
 
-;; TODO if we use a more efficient SQL call, we can return more plots.
 (defn get-project-plots [{:keys [params]}]
   (let [project-id (tc/val->int (:projectId params))
-        max-plots  (tc/val->int (:max params) 1000)]
+        max-plots  (tc/val->int (:max params) 100000)] ; 100000 loads in ~1.5 seconds.
     (data-response (mapv (fn [{:keys [plot_id center flagged assigned]}]
                            {:id       plot_id
                             :center   center
-                            :flagged  (< 0 (or flagged -1))
+                            :flagged  flagged
                             :analyses assigned})
                          (call-sql "select_limited_project_plots" project-id max-plots)))))
 

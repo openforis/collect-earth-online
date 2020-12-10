@@ -1210,25 +1210,22 @@ CREATE OR REPLACE FUNCTION select_all_unlocked_project_plots(_project_id integer
 $$ LANGUAGE SQL;
 
 -- Select plots but only return a maximum number
--- FIXME not all of plots_return are needed here.
 CREATE OR REPLACE FUNCTION select_limited_project_plots(_project_id integer, _maximum integer)
- RETURNS setOf plots_return AS $$
+ RETURNS table (
+    plot_id     integer,
+    center      text,
+    flagged     boolean,
+    assigned    integer
+ ) AS $$
 
-    SELECT all_plots.plot_id,     all_plots.project_id,
-        all_plots.center,         all_plots.flagged,
-        all_plots.assigned,       all_plots.username,
-        all_plots.confidence,     all_plots.collection_time,
-        all_plots.ext_id,         all_plots.plotId,
-        all_plots.geom,           all_plots.analysis_duration
-     FROM (
-        SELECT *,
-            row_number() OVER(ORDER BY plot_id) AS rows,
-            COUNT(*) OVER() as total_plots
-        FROM select_all_project_plots(_project_id)
-        WHERE project_id = _project_id
-    ) as all_plots
-    WHERE all_plots.rows %
-        (CASE WHEN _maximum > all_plots.total_plots THEN 0.5 ELSE all_plots.total_plots / _maximum END) = 0
+    SELECT plot_uid,
+        ST_AsGeoJSON(center) as center,
+        CASE WHEN flagged IS NULL THEN FALSE ELSE flagged END,
+        CASE WHEN user_plot_uid IS NULL THEN 0 ELSE 1 END
+    FROM plots
+    LEFT JOIN user_plots
+        ON plot_uid = plot_rid
+    WHERE project_rid = _project_id
     LIMIT _maximum;
 
 $$ LANGUAGE SQL;
