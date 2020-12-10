@@ -662,35 +662,6 @@ class NewImagery extends React.Component {
             .every(o => o.required === false
                         || (this.state.newImageryParams[o.key] && this.state.newImageryParams[o.key].length > 0));
 
-    // TODO make all of these generic by adding min / max values to imageryOptions and checking against those.
-    validateData = (sourceConfig) => {
-        if (sourceConfig.type === "Sentinel1" || sourceConfig.type === "Sentinel2") {
-            const year = parseInt(sourceConfig.year);
-            const yearMinimum = sourceConfig.type === "Sentinel1" ? 2014 : 2015;
-            const month = parseInt(sourceConfig.month);
-            const cloudScore = sourceConfig.type === "Sentinel2" ? parseInt(sourceConfig.cloudScore) : null;
-            return (isNaN(year) || year.toString().length !== 4 || year < yearMinimum || year > new Date().getFullYear())
-                ? "Year should be 4 digit number and between " + yearMinimum + " and " + new Date().getFullYear()
-                : (isNaN(month) || month < 1 || month > 12)
-                    ? "Month should be between 1 and 12!"
-                    : (cloudScore && (isNaN(cloudScore) || cloudScore < 0 || cloudScore > 100))
-                        ? "Cloud Score should be between 0 and 100!"
-                        : null;
-        } else if (sourceConfig.type === "Planet") {
-            const year = parseInt(sourceConfig.year);
-            const month = parseInt(sourceConfig.month);
-            return (isNaN(year) || year.toString().length !== 4) ? "Year should be 4 digit number"
-                 : (isNaN(month) || month < 1 || month > 12) ? "Month should be between 1 and 12!"
-                 : null;
-        } else if (sourceConfig.startDate
-            && sourceConfig.endDate
-            && (new Date(sourceConfig.startDate) > new Date(sourceConfig.endDate))) {
-            return "Start date must be smaller than the end date.";
-        } else {
-            return null;
-        }
-    };
-
     //    Render Functions    //
 
     formInput = (title, type, value, callback, link = null, options = {}) => (

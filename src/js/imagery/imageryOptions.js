@@ -1,6 +1,19 @@
 const dateRangeValidator = ({startDate, endDate}) => startDate && endDate &&
     new Date(startDate) > new Date(endDate) ? "Start date must be smaller than the end date." : "";
 
+const sentinelValidator = (year, month, yearMinimum, cloudScore) => {
+    year = parseInt(year);
+    month = parseInt(month);
+    cloudScore = cloudScore ? parseInt(cloudScore) : null;
+    return (isNaN(year) || year.toString().length !== 4 || year < yearMinimum || year > new Date().getFullYear())
+        ? "Year should be 4 digit number and between " + yearMinimum + " and " + new Date().getFullYear()
+        : (isNaN(month) || month < 1 || month > 12)
+            ? "Month should be between 1 and 12!"
+            : (cloudScore && (isNaN(cloudScore) || cloudScore < 0 || cloudScore > 100))
+                ? "Cloud Score should be between 0 and 100!"
+                : "";
+};
+
 export const imageryOptions = [
     // Default type is text, default parent is none, a referenced parent must be entered as a json string
     // Parameters can be defined one level deep. {paramParent: {paramChild: "", fields: "", fromJsonStr: ""}}
@@ -114,6 +127,7 @@ export const imageryOptions = [
                 type: "date",
             },
         ],
+        validator: dateRangeValidator,
     },
     {
         type: "Sentinel1",
@@ -140,6 +154,7 @@ export const imageryOptions = [
             {key: "min", display: "Min", type: "number", options: {step: "0.01"}},
             {key: "max", display: "Max", type: "number", options: {step: "0.01"}},
         ],
+        validator: ({year, month}) => sentinelValidator(year, month, 2014, null),
     },
     {
         type: "Sentinel2",
@@ -169,6 +184,7 @@ export const imageryOptions = [
             {key: "max", display: "Max", type: "number", options: {step: "0.01"}},
             {key: "cloudScore", display: "Cloud Score", type: "number", options: {min: "0", max: "100", step: "1"}},
         ],
+        validator: ({year, month, cloudScore}) => sentinelValidator(year, month, 2015, cloudScore),
     },
     {
         type: "GEEImage",
@@ -215,6 +231,7 @@ export const imageryOptions = [
                 options: {placeholder: "{\"bands\": [\"B4\", \"B3\", \"B2\"], \"min\": 0, \"max\": 2000}"},
             },
         ],
+        validator: dateRangeValidator,
     },
     {
         type: "MapBoxRaster",
