@@ -553,24 +553,19 @@ class NewImagery extends React.Component {
     //    Remote Calls    //
 
     validateParams = (type, imageryParams) => {
-        let message = "";
-        imageryOptions[type].params.forEach(param => {
-            if (message === "" && param.validator) {
-                message = param.validator(imageryParams[param.key]);
-            }
-        });
-        if (message === "" && imageryOptions[type].validators) {
-            imageryOptions[type].validators.forEach(validator => {
-                message = validator(imageryParams);
-            });
-        }
-        return message;
+        const parameterErrors = imageryOptions[type].params.map(param =>
+            param.validator ? param.validator(imageryParams[param.key]) : ""
+        ).filter(error => error);
+        const imageryErrors = imageryOptions[type].validators ?
+            imageryOptions[type].validators.map(validator => validator(imageryParams)).filter(error => error)
+        : [];
+        return [...parameterErrors, ...imageryErrors];
     };
 
     uploadCustomImagery = (isNew) => {
-        const message = this.validateParams(this.state.selectedType, this.state.newImageryParams);
-        if (message) {
-            alert(message);
+        const messages = this.validateParams(this.state.selectedType, this.state.newImageryParams);
+        if (messages.length > 0) {
+            alert(messages);
         } else {
             const sourceConfig = this.buildSecureWatch(this.stackParams()); // TODO define SecureWatch so stack params works correctly.
             if (!this.checkAllParamsFilled()) {
