@@ -190,7 +190,7 @@ class Collection extends React.Component {
             });
 
     getProjectPlots = () =>
-        fetch(`/get-project-plots?projectId=${this.props.projectId}&max=1000`)
+        fetch(`/get-project-plots?projectId=${this.props.projectId}`)
             .then(response => response.ok ? response.json() : Promise.reject(response))
             .then(data => {
                 if (data.length > 0) {
