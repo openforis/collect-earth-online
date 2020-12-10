@@ -702,48 +702,46 @@ export class GEEImageCollectionMenu extends React.Component {
     render() {
         return (
             <div className="GEEImageCollectionMenu my-2" style={{display: this.props.visible ? "block" : "none"}}>
-                <div>
-                    <label>Start Date</label>
-                    <div className="slide-container">
-                        <input
-                            type="date"
-                            id="geeImageCollectionStartDate"
-                            value={this.state.startDate}
-                            max={new Date().toJSON().split("T")[0]}
-                            style={{width: "100%"}}
-                            onChange={e => this.setState({startDate: e.target.value})}
-                        />
-                    </div>
-                    <label>End Date</label>
-                    <div className="slide-container">
-                        <input
-                            type="date"
-                            id="geeImageCollectionEndDate"
-                            value={this.state.endDate}
-                            max={new Date().toJSON().split("T")[0]}
-                            style={{width: "100%"}}
-                            onChange={e => this.setState({endDate: e.target.value})}
-                        />
-                    </div>
-                    <label>Visualization Parameters</label>
-                    <textarea
-                        className="form-control"
-                        id="geeImageCollectionVisParams"
-                        value={this.state.visParams}
-                        onChange={e => this.setState({visParams: e.target.value})}
-                    >
-                        {this.state.visParams}
-                    </textarea>
-                    <br />
-                    <button
-                        type="button"
-                        className="btn btn-lightgreen btn-sm btn-block"
-                        id="update-gee-image-button"
-                        onClick={this.updateGEEImageCollection}
-                    >
-                        Update Image
-                    </button>
+                <label>Start Date</label>
+                <div className="slide-container">
+                    <input
+                        type="date"
+                        id="geeImageCollectionStartDate"
+                        value={this.state.startDate}
+                        max={new Date().toJSON().split("T")[0]}
+                        style={{width: "100%"}}
+                        onChange={e => this.setState({startDate: e.target.value})}
+                    />
                 </div>
+                <label>End Date</label>
+                <div className="slide-container">
+                    <input
+                        type="date"
+                        id="geeImageCollectionEndDate"
+                        value={this.state.endDate}
+                        max={new Date().toJSON().split("T")[0]}
+                        style={{width: "100%"}}
+                        onChange={e => this.setState({endDate: e.target.value})}
+                    />
+                </div>
+                <label>Visualization Parameters</label>
+                <textarea
+                    className="form-control"
+                    id="geeImageCollectionVisParams"
+                    value={this.state.visParams}
+                    onChange={e => this.setState({visParams: e.target.value})}
+                >
+                    {this.state.visParams}
+                </textarea>
+                <br />
+                <button
+                    type="button"
+                    className="btn btn-lightgreen btn-sm btn-block"
+                    id="update-gee-image-button"
+                    onClick={this.updateGEEImageCollection}
+                >
+                    Update Image
+                </button>
             </div>
         );
     }
