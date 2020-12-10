@@ -12,11 +12,11 @@
         "img": "/img/samplepoints.webp"
     },
     {
-        "body": "This is the plot navigation menu. The arrows allow you to move one plot forward or backward. You can enter a plot number and click \"Go to plot\" to go to a specific plot. By default, you will navigate through your unanalyzed plots. To return to plots you have previously analyzed, switch the dropdown menu next to \"Navigate through\": to 'My analyzed plots'.",
+        "body": "This is the plot navigation menu. The arrows allow you to move one plot forward or backward. You can enter a plot number and click \"Go to plot\" to go to a specific plot. By default, you will navigate through your unanalyzed plots. To return to plots you have previously analyzed, switch the dropdown menu next to \"Navigate through\": to \"My analyzed plots\".",
         "img": "/img/plotnavigation.webp"
     },
     {
-        "body": "These are your External Tools. Re-Zoom will refocus the window on the current plot. Geodash will open a new window with additional information about the plot if the institution has set it up. \"Download Plot KML\" will download KML information. If you have Google Earth installed, you can see the plot there. (Optional) 'Go to GEE Script' will open a Google Earth Engine degradation widget in a new window. It shows multiple panels of information including NDVI time series information.",
+        "body": "These are your External Tools. Re-Zoom will refocus the window on the current plot. Geodash will open a new window with additional information about the plot if the institution has set it up. \"Download Plot KML\" will download KML information. If you have Google Earth installed, you can see the plot there. (Optional) \"Go to GEE Script\" will open a Google Earth Engine degradation widget in a new window. It shows multiple panels of information including NDVI time series information.",
         "img": "/img/externaltools.webp"
     },
     {
