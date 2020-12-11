@@ -563,7 +563,7 @@ class NewImagery extends React.Component {
     uploadCustomImagery = (isNew) => {
         const messages = this.validateParams(this.state.selectedType, this.state.newImageryParams);
         if (messages.length > 0) {
-            alert(messages);
+            alert(messages.join(", "));
         } else {
             const sourceConfig = this.buildSecureWatch(this.stackParams()); // TODO define SecureWatch so stack params works correctly.
             if (!this.checkAllParamsFilled()) {
