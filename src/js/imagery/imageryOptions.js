@@ -1,3 +1,17 @@
+const outOfRange = (num, low, high) => isNaN(num) || parseInt(num) < low || parseInt(num) > high;
+
+const dateRangeValidator = ({startDate, endDate}) => startDate && endDate
+    && new Date(startDate) > new Date(endDate) ? "Start date must be smaller than the end date." : "";
+
+const isValidJSON = str => {
+    try {
+        JSON.parse(str);
+        return true;
+    } catch (e) {
+        return false;
+    }
+};
+
 export const imageryOptions = [
     // Default type is text, default parent is none, a referenced parent must be entered as a json string
     // Parameters can be defined one level deep. {paramParent: {paramChild: "", fields: "", fromJsonStr: ""}}
@@ -5,13 +19,18 @@ export const imageryOptions = [
         type: "GeoServer",
         label: "WMS Imagery",
         params: [
-            {key: "geoserverUrl", display: "WMS URL"},
+            {
+                key: "geoserverUrl",
+                display: "WMS URL",
+                validator: value => /\?.+/.test(value) ? "The field \"WMS Url\" should not contain the query string. Please put those values in the field \"Additional WMS Params (as JSON object)\"." : "",
+            },
             {key: "LAYERS", display: "WMS Layer Name", parent: "geoserverParams"},
             {
                 key: "geoserverParams",
-                display: "Additional WMS Params (as JSON object)", // TODO, add {} around params if missing
+                display: "Additional WMS Params (JSON format)", // TODO, add {} around params if missing
                 required: false,
                 type: "JSON",
+                validator: value => isValidJSON(value) ? "Invalid JSON in the \"Additional WMS Params\" field." : "",
             },
         ],
         // FIXME, add url if help document is created.
@@ -37,8 +56,18 @@ export const imageryOptions = [
         type: "Planet",
         label: "Planet Monthly",
         params: [
-            {key: "year", display: "Default Year", type: "number"},
-            {key: "month", display: "Default Month", type: "number"},
+            {
+                key: "year",
+                display: "Default Year",
+                type: "number",
+                validator: value => isNaN(value) || (value.toString().length !== 4) ? "Year should be 4 digit number" : "",
+            },
+            {
+                key: "month",
+                display: "Default Month",
+                type: "number",
+                validator: value => outOfRange(value, 1, 12) ? "Month should be between 1 and 12!" : "",
+            },
             {key: "accessToken", display: "Access Token"},
         ],
         url: "https://developers.planet.com/docs/quickstart/getting-started/",
@@ -51,6 +80,7 @@ export const imageryOptions = [
             {key: "startDate", display: "Start Date", type: "date"},
             {key: "endDate", display: "End Date", type: "date"},
         ],
+        validator: dateRangeValidator,
         url: "https://developers.planet.com/docs/quickstart/getting-started/",
     },
     {
@@ -96,6 +126,7 @@ export const imageryOptions = [
                 type: "date",
             },
         ],
+        validator: dateRangeValidator,
     },
     {
         type: "Sentinel1",
@@ -106,8 +137,17 @@ export const imageryOptions = [
                 display: "Default Year",
                 type: "number",
                 options: {min: "2014", max: new Date().getFullYear().toString(), step: "1"},
+                validator: value => outOfRange(value, 2014, new Date().getFullYear()) || value.toString().length !== 4 ?
+                    "Year should be 4 digit number and between 2014 and " + new Date().getFullYear()
+                : "",
             },
-            {key: "month", display: "Default Month", type: "number", options: {min: "1", max: "12", step: "1"}},
+            {
+                key: "month",
+                display: "Default Month",
+                type: "number",
+                options: {min: "1", max: "12", step: "1"},
+                validator: value => outOfRange(value, 1, 12) ? "Month should be between 1 and 12!" : "",
+            },
             {
                 key: "bandCombination",
                 display: "Band Combination",
@@ -132,8 +172,17 @@ export const imageryOptions = [
                 display: "Default Year",
                 type: "number",
                 options: {min: "2015", max: new Date().getFullYear().toString(), step: "1"},
+                validator: value => outOfRange(value, 2015, new Date().getFullYear()) || value.toString().length !== 4 ?
+                    "Year should be 4 digit number and between 2015 and " + new Date().getFullYear()
+                : "",
             },
-            {key: "month", display: "Default Month", type: "number", options: {min: "1", max: "12", step: "1"}},
+            {
+                key: "month",
+                display: "Default Month",
+                type: "number",
+                options: {min: "1", max: "12", step: "1"},
+                validator: value => outOfRange(value, 1, 12) ? "Month should be between 1 and 12!" : "",
+            },
             {
                 key: "bandCombination",
                 display: "Band Combination",
@@ -149,7 +198,13 @@ export const imageryOptions = [
             },
             {key: "min", display: "Min", type: "number", options: {step: "0.01"}},
             {key: "max", display: "Max", type: "number", options: {step: "0.01"}},
-            {key: "cloudScore", display: "Cloud Score", type: "number", options: {min: "0", max: "100", step: "1"}},
+            {
+                key: "cloudScore",
+                display: "Cloud Score",
+                type: "number",
+                options: {min: "0", max: "100", step: "1"},
+                validator: value => value && outOfRange(value, 0, 100) ? "Cloud Score should be between 0 and 100!" : "",
+            },
         ],
     },
     {
@@ -166,6 +221,7 @@ export const imageryOptions = [
                 display: "Visualization Parameters (JSON format)",
                 type: "JSON",
                 options: {placeholder: "{\"bands\": [\"R\", \"G\", \"B\"], \"min\": 90, \"max\": 210}"},
+                validator: value => isValidJSON(value) ? "Invalid JSON in the \"Visualization Parameters\" field." : "",
             },
         ],
     },
@@ -195,8 +251,10 @@ export const imageryOptions = [
                 display: "Visualization Parameters (JSON format)",
                 type: "JSON",
                 options: {placeholder: "{\"bands\": [\"B4\", \"B3\", \"B2\"], \"min\": 0, \"max\": 2000}"},
+                validator: value => isValidJSON(value) ? "Invalid JSON in the \"Visualization Parameters\" field." : "",
             },
         ],
+        validator: dateRangeValidator,
     },
     {
         type: "MapBoxRaster",
