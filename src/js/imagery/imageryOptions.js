@@ -1,18 +1,5 @@
-const dateRangeValidator = ({startDate, endDate}) => startDate && endDate &&
-    new Date(startDate) > new Date(endDate) ? "Start date must be smaller than the end date." : "";
-
-const sentinelValidator = (year, month, yearMinimum, cloudScore) => {
-    year = parseInt(year);
-    month = parseInt(month);
-    cloudScore = cloudScore ? parseInt(cloudScore) : null;
-    return (isNaN(year) || year.toString().length !== 4 || year < yearMinimum || year > new Date().getFullYear())
-        ? "Year should be 4 digit number and between " + yearMinimum + " and " + new Date().getFullYear()
-        : (isNaN(month) || month < 1 || month > 12)
-            ? "Month should be between 1 and 12!"
-            : (cloudScore && (isNaN(cloudScore) || cloudScore < 0 || cloudScore > 100))
-                ? "Cloud Score should be between 0 and 100!"
-                : "";
-};
+const dateRangeValidator = ({startDate, endDate}) => startDate && endDate
+    && new Date(startDate) > new Date(endDate) ? "Start date must be smaller than the end date." : "";
 
 export const imageryOptions = [
     // Default type is text, default parent is none, a referenced parent must be entered as a json string
@@ -138,8 +125,17 @@ export const imageryOptions = [
                 display: "Default Year",
                 type: "number",
                 options: {min: "2014", max: new Date().getFullYear().toString(), step: "1"},
+                validator: value => isNaN(value) || value.toString().length !== 4 || value < 2014 || value > new Date().getFullYear() ?
+                    "Year should be 4 digit number and between 2014 and " + new Date().getFullYear()
+                : "",
             },
-            {key: "month", display: "Default Month", type: "number", options: {min: "1", max: "12", step: "1"}},
+            {
+                key: "month",
+                display: "Default Month",
+                type: "number",
+                options: {min: "1", max: "12", step: "1"},
+                validator: value => isNaN(value) || value < 1 || value > 12 ? "Month should be between 1 and 12!" : "",
+            },
             {
                 key: "bandCombination",
                 display: "Band Combination",
@@ -154,7 +150,6 @@ export const imageryOptions = [
             {key: "min", display: "Min", type: "number", options: {step: "0.01"}},
             {key: "max", display: "Max", type: "number", options: {step: "0.01"}},
         ],
-        validator: ({year, month}) => sentinelValidator(year, month, 2014, null),
     },
     {
         type: "Sentinel2",
@@ -165,8 +160,17 @@ export const imageryOptions = [
                 display: "Default Year",
                 type: "number",
                 options: {min: "2015", max: new Date().getFullYear().toString(), step: "1"},
+                validator: value => isNaN(value) || value.toString().length !== 4 || value < 2015 || value > new Date().getFullYear() ?
+                    "Year should be 4 digit number and between 2015 and " + new Date().getFullYear()
+                : "",
             },
-            {key: "month", display: "Default Month", type: "number", options: {min: "1", max: "12", step: "1"}},
+            {
+                key: "month",
+                display: "Default Month",
+                type: "number",
+                options: {min: "1", max: "12", step: "1"},
+                validator: value => isNaN(value) || value < 1 || value > 12 ? "Month should be between 1 and 12!" : "",
+            },
             {
                 key: "bandCombination",
                 display: "Band Combination",
@@ -182,9 +186,16 @@ export const imageryOptions = [
             },
             {key: "min", display: "Min", type: "number", options: {step: "0.01"}},
             {key: "max", display: "Max", type: "number", options: {step: "0.01"}},
-            {key: "cloudScore", display: "Cloud Score", type: "number", options: {min: "0", max: "100", step: "1"}},
+            {
+                key: "cloudScore",
+                display: "Cloud Score",
+                type: "number",
+                options: {min: "0", max: "100", step: "1"},
+                validator: value => value && (isNaN(value) || parseInt(value) < 0 || parseInt(value) > 100) ?
+                    "Cloud Score should be between 0 and 100!"
+                : "",
+            },
         ],
-        validator: ({year, month, cloudScore}) => sentinelValidator(year, month, 2015, cloudScore),
     },
     {
         type: "GEEImage",
