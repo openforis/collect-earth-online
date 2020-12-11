@@ -1,3 +1,5 @@
+const outOfRange = (num, low, high) => isNaN(num) || parseInt(num) < low || parseInt(num) > high;
+
 const dateRangeValidator = ({startDate, endDate}) => startDate && endDate
     && new Date(startDate) > new Date(endDate) ? "Start date must be smaller than the end date." : "";
 
@@ -54,7 +56,7 @@ export const imageryOptions = [
                 key: "month",
                 display: "Default Month",
                 type: "number",
-                validator: value => isNaN(value) || value < 1 || value > 12 ? "Month should be between 1 and 12!" : "",
+                validator: value => outOfRange(value, 1, 12) ? "Month should be between 1 and 12!" : "",
             },
             {key: "accessToken", display: "Access Token"},
         ],
@@ -125,7 +127,7 @@ export const imageryOptions = [
                 display: "Default Year",
                 type: "number",
                 options: {min: "2014", max: new Date().getFullYear().toString(), step: "1"},
-                validator: value => isNaN(value) || value.toString().length !== 4 || value < 2014 || value > new Date().getFullYear() ?
+                validator: value => isNaN(value) || value.toString().length !== 4 || parseInt(value) < 2014 || parseInt(value) > new Date().getFullYear() ?
                     "Year should be 4 digit number and between 2014 and " + new Date().getFullYear()
                 : "",
             },
@@ -134,7 +136,7 @@ export const imageryOptions = [
                 display: "Default Month",
                 type: "number",
                 options: {min: "1", max: "12", step: "1"},
-                validator: value => isNaN(value) || value < 1 || value > 12 ? "Month should be between 1 and 12!" : "",
+                validator: value => outOfRange(value, 1, 12) ? "Month should be between 1 and 12!" : "",
             },
             {
                 key: "bandCombination",
@@ -169,7 +171,7 @@ export const imageryOptions = [
                 display: "Default Month",
                 type: "number",
                 options: {min: "1", max: "12", step: "1"},
-                validator: value => isNaN(value) || value < 1 || value > 12 ? "Month should be between 1 and 12!" : "",
+                validator: value => outOfRange(value, 1, 12) ? "Month should be between 1 and 12!" : "",
             },
             {
                 key: "bandCombination",
@@ -191,9 +193,7 @@ export const imageryOptions = [
                 display: "Cloud Score",
                 type: "number",
                 options: {min: "0", max: "100", step: "1"},
-                validator: value => value && (isNaN(value) || parseInt(value) < 0 || parseInt(value) > 100) ?
-                    "Cloud Score should be between 0 and 100!"
-                : "",
+                validator: value => value && outOfRange(value, 0, 100) ? "Cloud Score should be between 0 and 100!" : "",
             },
         ],
     },
