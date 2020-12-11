@@ -568,8 +568,6 @@ class NewImagery extends React.Component {
             const sourceConfig = this.buildSecureWatch(this.stackParams()); // TODO define SecureWatch so stack params works correctly.
             if (!this.checkAllParamsFilled()) {
                 alert("You must fill out all fields.");
-            } else if (!this.checkJSONParams() || Object.keys(sourceConfig).length === 0) { // TODO we may no longer need to check for .length if checkJSONParams works
-                alert("Invalid JSON in JSON field(s).");
             } else if (this.props.titleIsTaken(this.state.newImageryTitle, this.props.imageryToEdit.id)) {
                 alert("The title '" + this.state.newImageryTitle + "' is already taken.");
             } else {
@@ -640,21 +638,6 @@ class NewImagery extends React.Component {
             return sourceConfig;
         }
     };
-
-    isValidJson = (str) => {
-        try {
-            JSON.parse(str);
-            return true;
-        } catch (e) {
-            return false;
-        }
-    };
-
-    checkJSONParams = () => this.state.newImageryTitle.length > 0
-        && this.state.newImageryAttribution.length > 0
-        && imageryOptions[this.state.selectedType].params
-            .every(o => o.type !== "JSON"
-                        || this.isValidJson(this.state.newImageryParams[o.key]));
 
     checkAllParamsFilled = () => this.state.newImageryTitle.length > 0
         && this.state.newImageryAttribution.length > 0

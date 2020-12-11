@@ -3,6 +3,15 @@ const outOfRange = (num, low, high) => isNaN(num) || parseInt(num) < low || pars
 const dateRangeValidator = ({startDate, endDate}) => startDate && endDate
     && new Date(startDate) > new Date(endDate) ? "Start date must be smaller than the end date." : "";
 
+const isValidJSON = str => {
+    try {
+        JSON.parse(str);
+        return true;
+    } catch (e) {
+        return false;
+    }
+};
+
 export const imageryOptions = [
     // Default type is text, default parent is none, a referenced parent must be entered as a json string
     // Parameters can be defined one level deep. {paramParent: {paramChild: "", fields: "", fromJsonStr: ""}}
@@ -21,6 +30,7 @@ export const imageryOptions = [
                 display: "Additional WMS Params (as JSON object)", // TODO, add {} around params if missing
                 required: false,
                 type: "JSON",
+                validator: value => isValidJSON(value) ? "Invalid JSON in JSON field(s)." : "",
             },
         ],
         // FIXME, add url if help document is created.
@@ -211,6 +221,7 @@ export const imageryOptions = [
                 display: "Visualization Parameters (JSON format)",
                 type: "JSON",
                 options: {placeholder: "{\"bands\": [\"R\", \"G\", \"B\"], \"min\": 90, \"max\": 210}"},
+                validator: value => isValidJSON(value) ? "Invalid JSON in JSON field(s)." : "",
             },
         ],
     },
@@ -240,6 +251,7 @@ export const imageryOptions = [
                 display: "Visualization Parameters (JSON format)",
                 type: "JSON",
                 options: {placeholder: "{\"bands\": [\"B4\", \"B3\", \"B2\"], \"min\": 0, \"max\": 2000}"},
+                validator: value => isValidJSON(value) ? "Invalid JSON in JSON field(s)." : "",
             },
         ],
         validator: dateRangeValidator,
