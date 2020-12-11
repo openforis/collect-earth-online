@@ -1231,23 +1231,22 @@ CREATE OR REPLACE FUNCTION select_limited_project_plots(_project_id integer, _ma
 $$ LANGUAGE SQL;
 
 -- Returns next plot by id
-CREATE OR REPLACE FUNCTION select_plot_by_id(_project_id integer, _plot_id integer)
- RETURNS setOf plot_collection_return AS $$
+CREATE OR REPLACE FUNCTION select_plot_geom(_plot_id integer)
+ RETURNS text AS $$
 
     WITH tablenames AS (
         SELECT plots_ext_table
         FROM projects
-        WHERE project_uid = _project_id
+        WHERE project_uid = (SELECT project_rid FROM plots WHERE plot_uid = _plot_id)
     ), plots_file_data AS (
-        SELECT * FROM select_json_table_by_name((SELECT plots_ext_table FROM tablenames))
+        SELECT * FROM select_partial_table_by_name((SELECT plots_ext_table FROM tablenames))
     )
 
-    SELECT spp.*,
-       pfd.rem_data
-    FROM select_all_project_plots(_project_id) as spp
+    SELECT ST_AsGeoJSON(geom)
+    FROM plots p
     LEFT JOIN plots_file_data pfd
-        ON spp.ext_id = pfd.ext_id
-    WHERE spp.plotId = _plot_id
+        ON p.ext_id = pfd.ext_id
+    WHERE p.plot_uid = _plot_id
 
 $$ LANGUAGE SQL;
 
@@ -1285,7 +1284,7 @@ CREATE OR REPLACE FUNCTION select_next_user_plot(
     _plot_id       integer,
     _username      text,
     _review_all    boolean
-) RETURNS setOf plot_collection_return AS $$
+ ) RETURNS setOf plot_collection_return AS $$
 
     WITH tablenames AS (
         SELECT plots_ext_table
@@ -1391,7 +1390,7 @@ CREATE OR REPLACE FUNCTION select_by_id_user_plot(
     _plot_id       integer,
     _username      text,
     _review_all    boolean
-) RETURNS setOf plot_collection_return AS $$
+ ) RETURNS setOf plot_collection_return AS $$
 
     WITH tablenames AS (
         SELECT plots_ext_table
@@ -1498,6 +1497,26 @@ CREATE OR REPLACE FUNCTION select_plot_samples(_plot_id integer, _project_id int
     LEFT JOIN file_data fd
         ON samples.ext_id = fd.ext_id
     WHERE samples.plot_rid = _plot_id
+
+$$ LANGUAGE SQL;
+
+-- Select sample geoms. GEOM comes from shp file table, if it exists, otherwise return sample_geom.
+CREATE OR REPLACE FUNCTION select_plot_sample_geoms(_plot_id integer)
+ RETURNS table (geom text) AS $$
+
+    WITH tablename AS (
+        SELECT samples_ext_table
+        FROM projects
+        WHERE project_uid = (SELECT project_rid FROM plots WHERE plot_uid = _plot_id)
+    ), file_data AS (
+        SELECT * FROM select_partial_sample_table_by_name((SELECT samples_ext_table FROM tablename))
+    )
+
+    SELECT CASE WHEN fd.geom IS NULL THEN ST_AsGeoJSON(sample_geom) ELSE ST_AsGeoJSON(fd.geom) END
+    FROM samples s
+    LEFT JOIN file_data fd
+        ON s.ext_id = fd.ext_id
+    WHERE s.plot_rid = _plot_id
 
 $$ LANGUAGE SQL;
 

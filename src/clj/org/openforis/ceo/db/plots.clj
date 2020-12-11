@@ -42,13 +42,12 @@
      :extraPlotInfo (dissoc (tc/jsonb->clj extra_plot_info {}) :gid :lat :lon :plotid)
      :samples       (prepare-samples-array plot_id project-id)}))
 
-(defn get-project-plot [{:keys [params]}]
-  (let [project-id (tc/val->int (:projectId params))
-        plot-id    (tc/val->int (:plotId params))]
-    (data-response (if-let [plot-info (first (call-sql "select_plot_by_id"
-                                                       project-id
-                                                       plot-id))]
-                     (prepare-plot-object plot-info project-id)
+(defn get-plot-sample-geom [{:keys [params]}]
+  (let [plot-id (tc/val->int (:plotId params))]
+    (data-response (if-let [geom (sql-primitive (call-sql "select_plot_geom" plot-id))]
+                     {:geom    geom
+                      :samples (->> (call-sql "select_plot_sample_geoms" plot-id)
+                                    (mapv (fn [{:keys [geom]}] {:geom geom})))}
                      ""))))
 
 (defn- unlock-plots [user-id]
