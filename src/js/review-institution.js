@@ -557,7 +557,10 @@ class NewImagery extends React.Component {
             param.validator && param.validator(imageryParams[param.key])
         );
         const imageryError = imageryOptions[type].validator && imageryOptions[type].validator(imageryParams);
-        return [...parameterErrors, imageryError].filter(error => error);
+        const mandatoryError = imageryOptions[type].params.every(param =>
+            param.required === false || (imageryParams[param.key] && imageryParams[param.key].length > 0)) ?
+            "" : "You must fill out all fields.";
+        return [...parameterErrors, imageryError, mandatoryError].filter(error => error);
     };
 
     uploadCustomImagery = (isNew) => {
@@ -566,7 +569,7 @@ class NewImagery extends React.Component {
             alert(messages);
         } else {
             const sourceConfig = this.buildSecureWatch(this.stackParams()); // TODO define SecureWatch so stack params works correctly.
-            if (!this.checkAllParamsFilled()) {
+            if (this.state.newImageryTitle.length === 0 || this.state.newImageryAttribution.length === 0) {
                 alert("You must fill out all fields.");
             } else if (this.props.titleIsTaken(this.state.newImageryTitle, this.props.imageryToEdit.id)) {
                 alert("The title '" + this.state.newImageryTitle + "' is already taken.");
@@ -638,12 +641,6 @@ class NewImagery extends React.Component {
             return sourceConfig;
         }
     };
-
-    checkAllParamsFilled = () => this.state.newImageryTitle.length > 0
-        && this.state.newImageryAttribution.length > 0
-        && imageryOptions[this.state.selectedType].params
-            .every(o => o.required === false
-                        || (this.state.newImageryParams[o.key] && this.state.newImageryParams[o.key].length > 0));
 
     //    Render Functions    //
 
