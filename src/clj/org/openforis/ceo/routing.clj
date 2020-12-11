@@ -125,9 +125,7 @@
    [:get  "/get-project-plots"]              {:handler     plots/get-project-plots
                                               :auth-type   :collect
                                               :auth-action :block}
-   [:get  "/get-proj-plot"]                  {:handler     plots/get-project-plot
-                                              :auth-type   :collect
-                                              :auth-action :block}
+   [:get  "/get-plot-sample-geom"]           {:handler     plots/get-plot-sample-geom}
    [:post "/add-user-samples"]               {:handler     plots/add-user-samples
                                               :auth-type   :collect
                                               :auth-action :block}
