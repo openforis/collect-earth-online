@@ -554,7 +554,8 @@ class NewImagery extends React.Component {
 
     validateParams = (type, imageryParams) => {
         const parameterErrors = imageryOptions[type].params.map(param =>
-            param.validator && param.validator(imageryParams[param.key])
+            (param.validator && param.validator(imageryParams[param.key]))
+            || (param.required !== false && (!imageryParams[param.key] || imageryParams[param.key].length === 0)) && `${param.display} is required.`
         );
         const imageryError = imageryOptions[type].validator && imageryOptions[type].validator(imageryParams);
         return [...parameterErrors, imageryError].filter(error => error);
@@ -566,8 +567,8 @@ class NewImagery extends React.Component {
             alert(messages.join(", "));
         } else {
             const sourceConfig = this.buildSecureWatch(this.stackParams()); // TODO define SecureWatch so stack params works correctly.
-            if (!this.checkAllParamsFilled()) {
-                alert("You must fill out all fields.");
+            if (this.state.newImageryTitle.length === 0 || this.state.newImageryAttribution.length === 0) {
+                alert("You must include a title and attribution.");
             } else if (this.props.titleIsTaken(this.state.newImageryTitle, this.props.imageryToEdit.id)) {
                 alert("The title '" + this.state.newImageryTitle + "' is already taken.");
             } else {
@@ -638,12 +639,6 @@ class NewImagery extends React.Component {
             return sourceConfig;
         }
     };
-
-    checkAllParamsFilled = () => this.state.newImageryTitle.length > 0
-        && this.state.newImageryAttribution.length > 0
-        && imageryOptions[this.state.selectedType].params
-            .every(o => o.required === false
-                        || (this.state.newImageryParams[o.key] && this.state.newImageryParams[o.key].length > 0));
 
     //    Render Functions    //
 
