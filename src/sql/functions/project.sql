@@ -777,13 +777,10 @@ CREATE OR REPLACE FUNCTION valid_boundary(_boundary geometry)
 
     SELECT EXISTS(
         SELECT 1
-        WHERE ST_IsValid(_boundary)
-            AND NOT (ST_XMax(_boundary) > 180
-                OR ST_XMin(_boundary) < -180
-                OR ST_YMax(_boundary) > 90
-                OR ST_YMin(_boundary) < -90
-                OR ST_XMax(_boundary) <= ST_XMin(_boundary)
-                OR ST_YMax(_boundary) <= ST_YMin(_boundary))
+        WHERE _boundary IS NOT NULL
+            AND ST_Contains(ST_MakeEnvelope(-180, -90, 180, 90, 4326), _boundary)
+            AND ST_XMax(_boundary) > ST_XMin(_boundary)
+            AND ST_YMax(_boundary) > ST_YMin(_boundary)
     )
 
 $$ LANGUAGE SQL;
@@ -794,33 +791,6 @@ CREATE OR REPLACE FUNCTION valid_project_boundary(_project_id integer)
     SELECT * FROM valid_boundary((SELECT boundary FROM projects WHERE project_uid = _project_id))
 
 $$ LANGUAGE SQL;
-
-CREATE VIEW project_boundary AS
- SELECT
-    project_uid,
-    institution_rid,
-    imagery_rid,
-    availability,
-    name,
-    description,
-    privacy_level,
-    ST_AsGeoJSON(boundary),
-    plot_distribution,
-    num_plots,
-    plot_spacing,
-    plot_shape,
-    plot_size,
-    sample_distribution,
-    samples_per_plot,
-    sample_resolution,
-    allow_drawn_samples,
-    survey_questions,
-    survey_rules,
-    classification_times,
-    valid_boundary(boundary),
-    token_key,
-    options
-FROM projects;
 
 -- Returns a row in projects by id
 CREATE OR REPLACE FUNCTION select_project_by_id(_project_id integer)
@@ -881,78 +851,67 @@ CREATE OR REPLACE FUNCTION select_project_by_id(_project_id integer)
 
 $$ LANGUAGE SQL;
 
--- FIXME this list does not need to contain all fields in project_boundary
--- FIXME Rename to select_public_projects()
--- FIXME this may not be needed, passing -1 to select_all_user_projects should give the same results (test performance)
--- Returns all public projects
-CREATE OR REPLACE FUNCTION select_all_projects()
- RETURNS setOf project_return AS $$
-
-    SELECT *, FALSE AS editable
-    FROM project_boundary
-    WHERE privacy_level = 'public'
-      AND availability = 'published'
-    ORDER BY project_uid
-
-$$ LANGUAGE SQL;
-
--- Returns projects for institution_rid
-CREATE OR REPLACE FUNCTION select_all_institution_projects(_institution_id integer)
- RETURNS setOf project_return AS $$
-
-    SELECT *
-    FROM select_all_projects()
-    WHERE institution_id = _institution_id
-    ORDER BY project_id
-
-$$ LANGUAGE SQL;
-
--- Returns institution user roles from the database
-CREATE OR REPLACE FUNCTION get_institution_user_roles(_user_id integer)
- RETURNS TABLE (
-    institution_rid    integer,
-    role               text
+-- Returns all projects the user can see. This is used only on the home page
+CREATE OR REPLACE FUNCTION select_user_projects(_user_id integer)
+ RETURNS table (
+    project_id        integer,
+    institution_id    integer,
+    name              text,
+    description       text,
+    boundary          text,
+    num_plots         integer,
+    editable          boolean
  ) AS $$
 
-    SELECT institution_rid, title
-    FROM institution_users as iu
-    INNER JOIN roles as r
-        ON iu.role_rid = role_uid
-    WHERE iu.user_rid = _user_id
-    ORDER BY institution_rid
-
-$$ LANGUAGE SQL;
-
--- FIXME this list does not need to contain all fields in project_boundary
--- Returns all rows in projects for a user_id with roles
-CREATE OR REPLACE FUNCTION select_all_user_projects(_user_id integer)
- RETURNS setOf project_return AS $$
-
-    SELECT p.*, (CASE WHEN role IS NULL THEN FALSE ELSE role = 'admin' END) AS editable
-    FROM project_boundary as p
-    LEFT JOIN get_institution_user_roles(_user_id) AS roles
-        USING (institution_rid)
-    WHERE (role = 'admin' AND p.availability <> 'archived')
-        OR (role = 'member'
-            AND p.privacy_level IN ('public', 'institution', 'users')
-            AND p.availability = 'published')
-        OR (_user_id > 0
-            AND p.privacy_level IN ('public', 'users')
-            AND p.availability = 'published')
-        OR (p.privacy_level IN ('public')
-            AND p.availability = 'published')
+    SELECT project_uid,
+        p.institution_rid,
+        name,
+        description,
+        ST_AsGeoJSON(ST_Centroid(boundary)),
+        num_plots,
+        (CASE WHEN role_rid IS NULL THEN FALSE ELSE role_rid = 1 END) AS editable
+    FROM projects as p
+    LEFT JOIN institution_users iu
+        ON user_rid = _user_id
+        AND p.institution_rid = iu.institution_rid
+    WHERE ((role_rid = 1 AND p.availability <> 'archived')
+            OR (p.privacy_level = 'public' AND p.availability = 'published')
+            OR (_user_id > 0 AND p.privacy_level = 'users' AND p.availability = 'published')
+            OR (role_rid = 2 AND p.privacy_level = 'institution' AND p.availability = 'published'))
+        AND valid_boundary(boundary) = TRUE
     ORDER BY project_uid
 
 $$ LANGUAGE SQL;
 
 -- Returns all rows in projects for a user_id and institution_rid with roles
-CREATE OR REPLACE FUNCTION select_institution_projects_with_roles(_user_id integer, _institution_id integer)
- RETURNS setOf project_return AS $$
+CREATE OR REPLACE FUNCTION select_institution_projects(_user_id integer, _institution_id integer)
+ RETURNS table (
+    project_id        integer,
+    institution_id    integer,
+    imagery_id        integer,
+    availability      text,
+    name              text,
+    description       text,
+    privacy_level     text
+ ) AS $$
 
-    SELECT *
-    FROM select_all_user_projects(_user_id)
-    WHERE institution_id = _institution_id
-    ORDER BY project_id
+    SELECT project_uid,
+        p.institution_rid,
+        imagery_rid,
+        availability,
+        name,
+        description,
+        privacy_level
+    FROM projects as p
+    LEFT JOIN institution_users iu
+        ON user_rid = _user_id
+        AND p.institution_rid = iu.institution_rid
+    WHERE p.institution_rid = _institution_id
+        AND ((role_rid = 1 AND p.availability <> 'archived')
+            OR (p.privacy_level = 'public' AND p.availability = 'published')
+            OR (_user_id > 0 AND p.privacy_level = 'users' AND p.availability = 'published')
+            OR (role_rid = 2 AND p.privacy_level = 'institution' AND p.availability = 'published'))
+    ORDER BY project_uid
 
 $$ LANGUAGE SQL;
 
@@ -964,10 +923,11 @@ CREATE OR REPLACE FUNCTION select_template_projects(_user_id integer)
 
     SELECT project_uid, name
     FROM projects as p
-    LEFT JOIN get_institution_user_roles(_user_id) AS roles
-        USING (institution_rid)
-    WHERE (role = 'admin' AND p.availability <> 'archived')
-        OR (role = 'member'
+    LEFT JOIN institution_users iu
+        ON user_rid = _user_id
+        AND p.institution_rid = iu.institution_rid
+    WHERE (role_rid = 1 AND p.availability <> 'archived')
+        OR (role_rid = 2
             AND p.privacy_level IN ('public', 'institution', 'users')
             AND p.availability = 'published')
         OR (_user_id > 0
