@@ -318,7 +318,7 @@ function InstitutionList({
                                     ? inst.name.toLocaleLowerCase().startsWith(filterTextLower)
                                     : inst.name.toLocaleLowerCase().includes(filterTextLower);
 
-    const filterHasProj = (inst) => filteredProjects.some(proj => inst.id === proj.institution)
+    const filterHasProj = (inst) => filteredProjects.some(proj => inst.id === proj.institutionId)
                                     || showEmptyInstitutions
                                     || inst.admins.includes(userId)
                                     || inst.members.includes(userId);
@@ -328,10 +328,10 @@ function InstitutionList({
         .filter(inst => !filterInstitution || filterString(inst))
         .filter(inst => !filterInstitution || filterTextLower.length > 0 || filterHasProj(inst))
         // Filtering by projects, and has projects to show
-        .filter(inst => filterInstitution || filteredProjects.some(proj => inst.id === proj.institution))
+        .filter(inst => filterInstitution || filteredProjects.some(proj => inst.id === proj.institutionId))
         .sort((a, b) => sortByNumber
-                            ? projects.filter(proj => b.id === proj.institution).length
-                                - projects.filter(proj => a.id === proj.institution).length
+                            ? projects.filter(proj => b.id === proj.institutionId).length
+                                - projects.filter(proj => a.id === proj.institutionId).length
                             : sortAlphabetically(a.name, b.name));
 
     const userInstStyle = institutionListType === "user" ? {maxHeight: "fit-content"} : {};
@@ -355,7 +355,7 @@ function InstitutionList({
                         id={institution.id}
                         name={institution.name}
                         projects={filteredProjects
-                            .filter(project => project.institution === institution.id)}
+                            .filter(project => project.institutionId === institution.id)}
                         forceInstitutionExpand={!filterInstitution && filterText.length > 0}
                     />
                 )}
