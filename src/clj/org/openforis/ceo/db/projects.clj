@@ -49,9 +49,8 @@
 (defn get-institution-projects [{:keys [params]}]
   (let [user-id        (:userId params -1)
         institution-id (tc/val->int (:institutionId params))]
-    (data-response (mapv (fn [{:keys [project_id institution_id name privacy_level]}]
+    (data-response (mapv (fn [{:keys [project_id name privacy_level]}]
                            {:id           project_id
-                            :institution  institution_id ; TODO legacy variable name, update to institutionId
                             :name         name
                             :privacyLevel privacy_level})
                          (call-sql "select_institution_projects" user-id institution-id)))))
