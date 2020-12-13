@@ -11,6 +11,10 @@ export default class ManageProject extends React.Component {
 
     componentDidMount() {
         this.context.processModal("Loading Project Details", this.getProjectDetails);
+        this.context.setProjectDetails({
+            plotFileBase64: null,
+            sampleFileBase64: null,
+        });
     }
 
     /// API Calls
@@ -221,8 +225,13 @@ class ProjectManagement extends React.Component {
                             className="btn btn-outline-red btn-sm w-100"
                             type="button"
                             value="Edit Project"
-                            disabled={!canEdit}
-                            onClick={() => this.context.setContextState({designMode: "wizard"})}
+                            onClick={() => {
+                                if (canEdit) {
+                                    this.context.setContextState({designMode: "wizard"});
+                                } else {
+                                    alert("You cannot edit a closed project.");
+                                }
+                            }}
                         />
                         <input
                             className="btn btn-outline-red btn-sm w-100"

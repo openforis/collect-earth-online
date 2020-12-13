@@ -2,7 +2,7 @@ import React, {Fragment} from "react";
 
 import {UnicodeIcon, removeEnumerator} from "../utils/generalUtils";
 import {CollapsibleTitle} from "./FormComponents";
-import {SvgIcon} from "../utils/svgIcons";
+import SvgIcon from "../components/SvgIcon";
 import {mercator} from "../utils/mercator";
 
 export class SurveyCollection extends React.Component {
@@ -497,7 +497,7 @@ class AnswerInput extends React.Component {
         this.setState({
             newInput: matchingNode ? matchingNode.answerText : "",
         });
-    }
+    };
 
     updateInputValue = (value) => this.setState({newInput: value});
 

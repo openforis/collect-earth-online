@@ -33,7 +33,7 @@ class ReviewInstitution extends React.Component {
                 console.log(response);
                 alert("Error retrieving the project info. See console for details.");
             });
-    }
+    };
 
     archiveProject = (projectId) => {
         if (confirm("Do you REALLY want to delete this project? This operation cannot be undone.")) {
@@ -552,43 +552,52 @@ class NewImagery extends React.Component {
 
     //    Remote Calls    //
 
+    validateParams = (type, imageryParams) => {
+        const parameterErrors = imageryOptions[type].params.map(param =>
+            (param.validator && param.validator(imageryParams[param.key]))
+            || (param.required !== false && (!imageryParams[param.key] || imageryParams[param.key].length === 0)) && `${param.display} is required.`
+        );
+        const imageryError = imageryOptions[type].validator && imageryOptions[type].validator(imageryParams);
+        return [...parameterErrors, imageryError].filter(error => error);
+    };
+
     uploadCustomImagery = (isNew) => {
-        const sourceConfig = this.buildSecureWatch(this.stackParams()); // TODO define SecureWatch so stack params works correctly.
-        const message = this.validateData(sourceConfig); // TODO this should really be done on unstacked params.
-        if (!this.checkAllParamsFilled()) {
-            alert("You must fill out all fields.");
-        } else if (!this.checkJSONParams() || Object.keys(sourceConfig).length === 0) { // TODO we may no longer need to check for .length if checkJSONParams works
-            alert("Invalid JSON in JSON field(s).");
-        } else if (message) {
-            alert(message);
-        } else if (this.props.titleIsTaken(this.state.newImageryTitle, this.props.imageryToEdit.id)) {
-            alert("The title '" + this.state.newImageryTitle + "' is already taken.");
+        const messages = this.validateParams(this.state.selectedType, this.state.newImageryParams);
+        if (messages.length > 0) {
+            alert(messages.join(", "));
         } else {
-            fetch(isNew ? "/add-institution-imagery" : "/update-institution-imagery",
-                  {
-                      method: "POST",
-                      headers: {
-                          "Accept": "application/json",
-                          "Content-Type": "application/json",
-                      },
-                      body: JSON.stringify({
-                          institutionId: this.props.institutionId,
-                          imageryId: this.props.imageryToEdit.id,
-                          imageryTitle: this.state.newImageryTitle,
-                          imageryAttribution: this.state.newImageryAttribution,
-                          addToAllProjects: this.state.addToAllProjects,
-                          sourceConfig: sourceConfig,
-                      }),
-                  }
-            ).then(response => {
-                if (response.ok) {
-                    this.props.getImageryList();
-                    this.props.hideEditMode();
-                } else {
-                    console.log(response);
-                    alert("Error uploading imagery data. See console for details.");
-                }
-            });
+            const sourceConfig = this.buildSecureWatch(this.stackParams()); // TODO define SecureWatch so stack params works correctly.
+            if (this.state.newImageryTitle.length === 0 || this.state.newImageryAttribution.length === 0) {
+                alert("You must include a title and attribution.");
+            } else if (this.props.titleIsTaken(this.state.newImageryTitle, this.props.imageryToEdit.id)) {
+                alert("The title '" + this.state.newImageryTitle + "' is already taken.");
+            } else {
+                fetch(isNew ? "/add-institution-imagery" : "/update-institution-imagery",
+                      {
+                          method: "POST",
+                          headers: {
+                              "Accept": "application/json",
+                              "Content-Type": "application/json",
+                          },
+                          body: JSON.stringify({
+                              institutionId: this.props.institutionId,
+                              imageryId: this.props.imageryToEdit.id,
+                              imageryTitle: this.state.newImageryTitle,
+                              imageryAttribution: this.state.newImageryAttribution,
+                              addToAllProjects: this.state.addToAllProjects,
+                              sourceConfig: sourceConfig,
+                          }),
+                      }
+                ).then(response => {
+                    if (response.ok) {
+                        this.props.getImageryList();
+                        this.props.hideEditMode();
+                    } else {
+                        console.log(response);
+                        alert("Error uploading imagery data. See console for details.");
+                    }
+                });
+            }
         }
     };
 
@@ -628,56 +637,6 @@ class NewImagery extends React.Component {
             return sourceConfig;
         } else {
             return sourceConfig;
-        }
-    };
-
-    isValidJson = (str) => {
-        try {
-            JSON.parse(str);
-            return true;
-        } catch (e) {
-            return false;
-        }
-    };
-
-    checkJSONParams = () => this.state.newImageryTitle.length > 0
-        && this.state.newImageryAttribution.length > 0
-        && imageryOptions[this.state.selectedType].params
-            .every(o => o.type !== "JSON"
-                        || this.isValidJson(this.state.newImageryParams[o.key]));
-
-    checkAllParamsFilled = () => this.state.newImageryTitle.length > 0
-        && this.state.newImageryAttribution.length > 0
-        && imageryOptions[this.state.selectedType].params
-            .every(o => o.required === false
-                        || (this.state.newImageryParams[o.key] && this.state.newImageryParams[o.key].length > 0));
-
-    // TODO make all of these generic by adding min / max values to imageryOptions and checking against those.
-    validateData = (sourceConfig) => {
-        if (sourceConfig.type === "Sentinel1" || sourceConfig.type === "Sentinel2") {
-            const year = parseInt(sourceConfig.year);
-            const yearMinimum = sourceConfig.type === "Sentinel1" ? 2014 : 2015;
-            const month = parseInt(sourceConfig.month);
-            const cloudScore = sourceConfig.type === "Sentinel2" ? parseInt(sourceConfig.cloudScore) : null;
-            return (isNaN(year) || year.toString().length !== 4 || year < yearMinimum || year > new Date().getFullYear())
-                ? "Year should be 4 digit number and between " + yearMinimum + " and " + new Date().getFullYear()
-                : (isNaN(month) || month < 1 || month > 12)
-                    ? "Month should be between 1 and 12!"
-                    : (cloudScore && (isNaN(cloudScore) || cloudScore < 0 || cloudScore > 100))
-                        ? "Cloud Score should be between 0 and 100!"
-                        : null;
-        } else if (sourceConfig.type === "Planet") {
-            const year = parseInt(sourceConfig.year);
-            const month = parseInt(sourceConfig.month);
-            return (isNaN(year) || year.toString().length !== 4) ? "Year should be 4 digit number"
-                 : (isNaN(month) || month < 1 || month > 12) ? "Month should be between 1 and 12!"
-                 : null;
-        } else if (sourceConfig.startDate
-            && sourceConfig.endDate
-            && (new Date(sourceConfig.startDate) > new Date(sourceConfig.endDate))) {
-            return "Start date must be smaller than the end date.";
-        } else {
-            return null;
         }
     };
 
@@ -783,6 +742,8 @@ class NewImagery extends React.Component {
             ? "Google Earth Engine | © Google LLC"
         : type.includes("MapBox")
             ? "© Mapbox"
+        : type === "OSM"
+            ? "Open Street Map"
         : "";
 
     imageryTypeChangeHandler = (val) => {

@@ -251,7 +251,7 @@ class Collection extends React.Component {
                 this.setImageryAttribution("");
             }
         });
-    }
+    };
 
     updateMapImagery = () => mercator.setVisibleLayer(this.state.mapConfig, this.state.currentImagery.id);
 
