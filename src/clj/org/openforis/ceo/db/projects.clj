@@ -49,10 +49,11 @@
 (defn get-institution-projects [{:keys [params]}]
   (let [user-id        (:userId params -1)
         institution-id (tc/val->int (:institutionId params))]
-    (data-response (mapv (fn [{:keys [project_id name privacy_level]}]
+    (data-response (mapv (fn [{:keys [project_id name privacy_level status]}]
                            {:id           project_id
                             :name         name
-                            :privacyLevel privacy_level})
+                            :privacyLevel privacy_level
+                            :status       status})
                          (call-sql "select_institution_projects" user-id institution-id)))))
 
 (defn get-template-projects [{:keys [params]}]
