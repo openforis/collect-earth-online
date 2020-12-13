@@ -38,13 +38,13 @@
 
 (defn get-all-projects [{:keys [params]}]
   (data-response (mapv (fn [{:keys [project_id institution_id name description num_plots boundary editable]}]
-                         {:id          project_id
-                          :institution institution_id
-                          :name        name
-                          :description description
-                          :numPlots    num_plots
-                          :boundary    boundary
-                          :editable    editable})
+                         {:id            project_id
+                          :institutionId institution_id
+                          :name          name
+                          :description   description
+                          :numPlots      num_plots
+                          :boundary      boundary
+                          :editable      editable})
                        (call-sql "select_user_projects" (:userId params -1)))))
 
 (defn get-institution-projects [{:keys [params]}]
