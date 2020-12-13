@@ -867,20 +867,12 @@ $$ LANGUAGE SQL;
 CREATE OR REPLACE FUNCTION select_institution_projects(_user_id integer, _institution_id integer)
  RETURNS table (
     project_id        integer,
-    institution_id    integer,
-    imagery_id        integer,
-    availability      text,
     name              text,
-    description       text,
     privacy_level     text
  ) AS $$
 
     SELECT project_uid,
-        p.institution_rid,
-        imagery_rid,
-        availability,
         name,
-        description,
         privacy_level
     FROM projects as p
     LEFT JOIN institution_users iu
