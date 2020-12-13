@@ -941,44 +941,9 @@ function ProjectList({isAdmin, isLoggedIn, institutionId, projectList, isVisible
     );
 }
 
-class Project extends React.Component {
-    constructor(props) {
-        super(props);
-        this.state = {
-            boxShadow: "",
-        };
-    }
-
-    componentDidMount() {
-        if (this.props.isLoggedIn) {
-            this.projectHighlight();
-        }
-    }
-
-    projectHighlight = () => {
-        fetch(`/get-project-stats?projectId=${this.props.project.id}`)
-            .then(response => response.ok ? response.json() : Promise.reject(response))
-            .then(data => this.setState({
-                boxShadow: data.unanalyzedPlots === 0
-                    ? "0px 0px 6px 2px #3bb9d6 inset"
-                    : (data.flaggedPlots + data.analyzedPlots) > 0
-                        ? "0px 0px 6px 1px yellow inset"
-                        : "0px 0px 6px 1px red inset",
-            }))
-            .catch(response => console.log(response));
-    };
-
-    downloadPlotData = () => {
-        window.open(`/dump-project-aggregate-data?projectId=${this.props.project.id}`, "_blank");
-    };
-
-    downloadSampleData = () => {
-        window.open(`/dump-project-raw-data?projectId=${this.props.project.id}`, "_blank");
-    };
-
-    render() {
-        const {project, isAdmin} = this.props;
-        return <div className="row mb-1 d-flex">
+function Project({project, isAdmin}) {
+    return (
+        <div className="row mb-1 d-flex">
             <div className="col-2 pr-0">
                 <div className="btn btn-sm btn-outline-lightgreen btn-block">
                     {capitalizeFirst(project.privacyLevel)}
@@ -991,52 +956,56 @@ class Project extends React.Component {
                     title={project.name}
                     onClick={() => window.location = `/collection?projectId=${project.id}`}
                     style={{
-                        boxShadow: this.state.boxShadow,
+                        boxShadow: project.status === 0
+                            ? "0px 0px 6px 1px red inset"
+                            : project.status === 1
+                                ? "0px 0px 6px 1px yellow inset"
+                                : "0px 0px 6px 2px #3bb9d6 inset",
                     }}
                 >
                     {project.name}
                 </button>
             </div>
             {isAdmin &&
-            <>
-                <div className="mr-3">
-                    <a
-                        className="edit-project btn btn-sm btn-outline-yellow btn-block px-3"
-                        href={`/review-project?projectId=${project.id}`}
-                    >
-                        <UnicodeIcon icon="edit"/>
-                    </a>
-                </div>
-                <div className="mr-3">
-                    <a
-                        className="delete-project btn btn-sm btn-outline-red btn-block px-3"
-                        onClick={() => this.props.deleteProject(project.id)}
-                    >
-                        <UnicodeIcon icon="trash"/>
-                    </a>
-                </div>
-                <div className="mr-3">
-                    <div
-                        className="btn btn-sm btn-outline-lightgreen btn-block px-3"
-                        title="Download Plot Data"
-                        onClick={this.downloadPlotData}
-                    >
-                        P
+                <>
+                    <div className="mr-3">
+                        <a
+                            className="edit-project btn btn-sm btn-outline-yellow btn-block px-3"
+                            href={`/review-project?projectId=${project.id}`}
+                        >
+                            <UnicodeIcon icon="edit"/>
+                        </a>
                     </div>
-                </div>
-                <div className="mr-3">
-                    <div
-                        className="btn btn-sm btn-outline-lightgreen btn-block px-3"
-                        title="Download Sample Data"
-                        onClick={this.downloadSampleData}
-                    >
-                        S
+                    <div className="mr-3">
+                        <a
+                            className="delete-project btn btn-sm btn-outline-red btn-block px-3"
+                            onClick={() => this.props.deleteProject(project.id)}
+                        >
+                            <UnicodeIcon icon="trash"/>
+                        </a>
                     </div>
-                </div>
-            </>
+                    <div className="mr-3">
+                        <div
+                            className="btn btn-sm btn-outline-lightgreen btn-block px-3"
+                            title="Download Plot Data"
+                            onClick={() => window.open(`/dump-project-aggregate-data?projectId=${this.props.project.id}`, "_blank")}
+                        >
+                            P
+                        </div>
+                    </div>
+                    <div className="mr-3">
+                        <div
+                            className="btn btn-sm btn-outline-lightgreen btn-block px-3"
+                            title="Download Sample Data"
+                            onClick={() => window.open(`/dump-project-raw-data?projectId=${this.props.project.id}`, "_blank")}
+                        >
+                            S
+                        </div>
+                    </div>
+                </>
             }
-        </div>;
-    }
+        </div>
+    );
 }
 
 class UserList extends React.Component {
