@@ -872,25 +872,19 @@ CREATE OR REPLACE FUNCTION select_user_home_projects(_user_id integer)
 $$ LANGUAGE SQL;
 
 -- Returns integer value for status of no, some, or all plots collected.
-CREATE OR REPLACE FUNCTION select_project_status(_project_id integer)
- RETURNS integer AS $$
+CREATE OR REPLACE FUNCTION select_project_completion(_project_id integer)
+ RETURNS real AS $$
 
-        WITH plot_cnt AS (
-        SELECT count(distinct(plot_uid)) as pc, count(user_plot_uid) as upc
-        FROM plots
-        LEFT JOIN user_plots
-            ON plot_uid = plot_rid
-        WHERE project_rid = _project_id
-    )
+    SELECT CASE WHEN count(distinct(plot_uid)) > 0
+        THEN (count(user_plot_uid) / count(distinct(plot_uid))::real)
+        ELSE 0
+        END::real
+    FROM plots
+    LEFT JOIN user_plots
+        ON plot_uid = plot_rid
+    WHERE project_rid = _project_id
 
-    SELECT CASE
-        WHEN upc = 0 THEN 0
-        WHEN pc > upc THEN 1
-        ELSE 2
-        END
-    FROM plot_cnt
-
-$$ LANGUAGE SQL;
+$$ LANGUAGE SQL;;
 
 -- Returns all rows in projects for a user_id and institution_rid with roles
 CREATE OR REPLACE FUNCTION select_institution_projects(_user_id integer, _institution_id integer)
@@ -898,13 +892,13 @@ CREATE OR REPLACE FUNCTION select_institution_projects(_user_id integer, _instit
     project_id       integer,
     name             text,
     privacy_level    text,
-    status           integer
+    status           real
  ) AS $$
 
     SELECT project_uid,
         name,
         privacy_level,
-        (SELECT select_project_status(project_uid))
+        (SELECT select_project_completion(project_uid))
     FROM projects as p
     LEFT JOIN institution_users iu
         ON user_rid = _user_id
