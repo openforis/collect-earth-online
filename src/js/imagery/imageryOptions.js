@@ -22,6 +22,7 @@ export const imageryOptions = [
             {
                 key: "geoserverUrl",
                 display: "WMS URL",
+                sanitizer: value => value.endsWith("?") ? value.slice(0, -1) : value,
                 validator: value => /\?.+/.test(value) ? "The field \"WMS Url\" should not contain the query string. Please put those values in the field \"Additional WMS Params (as JSON object)\"." : "",
             },
             {key: "LAYERS", display: "WMS Layer Name", parent: "geoserverParams"},
@@ -30,7 +31,7 @@ export const imageryOptions = [
                 display: "Additional WMS Params (JSON format)", // TODO, add {} around params if missing
                 required: false,
                 type: "JSON",
-                validator: value => isValidJSON(value) ? "Invalid JSON in the \"Additional WMS Params\" field." : "",
+                validator: value => !isValidJSON(value) ? "Invalid JSON in the \"Additional WMS Params\" field." : "",
             },
         ],
         // FIXME, add url if help document is created.
@@ -221,7 +222,7 @@ export const imageryOptions = [
                 display: "Visualization Parameters (JSON format)",
                 type: "JSON",
                 options: {placeholder: "{\"bands\": [\"R\", \"G\", \"B\"], \"min\": 90, \"max\": 210}"},
-                validator: value => isValidJSON(value) ? "Invalid JSON in the \"Visualization Parameters\" field." : "",
+                validator: value => !isValidJSON(value) ? "Invalid JSON in the \"Visualization Parameters\" field." : "",
             },
         ],
     },
@@ -251,7 +252,7 @@ export const imageryOptions = [
                 display: "Visualization Parameters (JSON format)",
                 type: "JSON",
                 options: {placeholder: "{\"bands\": [\"B4\", \"B3\", \"B2\"], \"min\": 0, \"max\": 2000}"},
-                validator: value => isValidJSON(value) ? "Invalid JSON in the \"Visualization Parameters\" field." : "",
+                validator: value => !isValidJSON(value) ? "Invalid JSON in the \"Visualization Parameters\" field." : "",
             },
         ],
         validator: dateRangeValidator,
