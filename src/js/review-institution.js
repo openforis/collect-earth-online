@@ -376,7 +376,7 @@ class ImageryList extends React.Component {
         if (imageryOptions.find(io => io.type === imagery.sourceConfig.type)) {
             this.setState({imageryToEdit: imagery});
         } else {
-            alert("This imagery type is no longer supported and connot be edited.");
+            alert("This imagery type is no longer supported and cannot be edited.");
         }
     };
 
@@ -572,7 +572,7 @@ class NewImagery extends React.Component {
     };
 
     uploadCustomImagery = (isNew) => {
-        const sanitizedParams = this.sanitizeParams(this.state.selectedType, this.state.newImageryParams)
+        const sanitizedParams = this.sanitizeParams(this.state.selectedType, this.state.newImageryParams);
         const messages = this.validateParams(this.state.selectedType, sanitizedParams);
         if (messages.length > 0) {
             alert(messages.join(", "));
