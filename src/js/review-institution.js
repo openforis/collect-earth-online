@@ -376,7 +376,7 @@ class ImageryList extends React.Component {
         if (imageryOptions.find(io => io.type === imagery.sourceConfig.type)) {
             this.setState({imageryToEdit: imagery});
         } else {
-            alert("This imagery type is no longer supported and connot be edited.");
+            alert("This imagery type is no longer supported and cannot be edited.");
         }
     };
 

@@ -28,7 +28,7 @@ export const imageryOptions = [
             {key: "LAYERS", display: "WMS Layer Name", parent: "geoserverParams"},
             {
                 key: "geoserverParams",
-                display: "Additional WMS Params (JSON format)", // TODO, add {} around params if missing
+                display: "Additional WMS Params (JSON format)",
                 required: false,
                 type: "JSON",
                 sanitizer: value => `{${value
