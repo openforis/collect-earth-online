@@ -31,7 +31,7 @@ export const imageryOptions = [
                 display: "Additional WMS Params (JSON format)", // TODO, add {} around params if missing
                 required: false,
                 type: "JSON",
-                validator: value => isValidJSON(value) ? "Invalid JSON in the \"Additional WMS Params\" field." : "",
+                validator: value => !isValidJSON(value) ? "Invalid JSON in the \"Additional WMS Params\" field." : "",
             },
         ],
         // FIXME, add url if help document is created.
@@ -222,7 +222,7 @@ export const imageryOptions = [
                 display: "Visualization Parameters (JSON format)",
                 type: "JSON",
                 options: {placeholder: "{\"bands\": [\"R\", \"G\", \"B\"], \"min\": 90, \"max\": 210}"},
-                validator: value => isValidJSON(value) ? "Invalid JSON in the \"Visualization Parameters\" field." : "",
+                validator: value => !isValidJSON(value) ? "Invalid JSON in the \"Visualization Parameters\" field." : "",
             },
         ],
     },
@@ -252,7 +252,7 @@ export const imageryOptions = [
                 display: "Visualization Parameters (JSON format)",
                 type: "JSON",
                 options: {placeholder: "{\"bands\": [\"B4\", \"B3\", \"B2\"], \"min\": 0, \"max\": 2000}"},
-                validator: value => isValidJSON(value) ? "Invalid JSON in the \"Visualization Parameters\" field." : "",
+                validator: value => !isValidJSON(value) ? "Invalid JSON in the \"Visualization Parameters\" field." : "",
             },
         ],
         validator: dateRangeValidator,
