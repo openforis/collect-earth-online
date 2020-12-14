@@ -32,25 +32,9 @@ CREATE OR REPLACE FUNCTION convert_name_to_question(json_arr jsonb)
 
 $$ LANGUAGE SQL;
 
-CREATE OR REPLACE FUNCTION find_json_id(json_arr jsonb, key text, match text)
- RETURNS integer AS $$
-
-    SELECT (value->>'id')::int
-    FROM jsonb_array_elements(json_arr)
-    WHERE value->>key = match
-
-$$ LANGUAGE SQL;
-
-CREATE OR REPLACE FUNCTION find_json_index(json_arr jsonb, key text, match text)
- RETURNS integer AS $$
-
-    SELECT (row_number() over() -1)::int
-    FROM jsonb_array_elements(json_arr)
-    WHERE value->>key = match
-
-$$ LANGUAGE SQL;
+UPDATE projects
+SET survey_questions = (SELECT convert_name_to_question(survey_questions))
+WHERE survey_questions->0->'values' IS NOT NULL;
 
 DROP FUNCTION convert_values_to_answers;
 DROP FUNCTION convert_name_to_question;
-DROP FUNCTION find_json_id;
-DROP FUNCTION find_json_index;
