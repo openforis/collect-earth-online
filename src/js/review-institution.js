@@ -936,8 +936,8 @@ function Project({project, isAdmin}) {
                         boxShadow: project.status === 0
                             ? "0px 0px 6px 1px red inset"
                             : project.status >= 1
-                                ? "0px 0px 6px 1px yellow inset"
-                                : "0px 0px 6px 2px #3bb9d6 inset",
+                                ? "0px 0px 6px 2px #3bb9d6 inset"
+                                : "0px 0px 6px 1px yellow inset",
                     }}
                 >
                     {project.name}
