@@ -31,6 +31,15 @@ export const imageryOptions = [
                 display: "Additional WMS Params (JSON format)", // TODO, add {} around params if missing
                 required: false,
                 type: "JSON",
+                sanitizer: value => `{${value
+                    .replace(/[{} ]/g, "")
+                    .split(",")
+                    .filter(u => u !== "")
+                    .map(u => {
+                        const [k, v] = u.split(":");
+                        return v && `"${k.replace(/["']/g, "")}": ${v}`;
+                    })
+                    .join(",")}}`,
                 validator: value => !isValidJSON(value) ? "Invalid JSON in the \"Additional WMS Params\" field." : "",
             },
         ],

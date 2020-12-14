@@ -572,7 +572,7 @@ class NewImagery extends React.Component {
     };
 
     uploadCustomImagery = (isNew) => {
-        const sanitizedParams = this.sanitizeParams(this.state.selectedType, this.state.newImageryParams)
+        const sanitizedParams = this.sanitizeParams(this.state.selectedType, this.state.newImageryParams);
         const messages = this.validateParams(this.state.selectedType, sanitizedParams);
         if (messages.length > 0) {
             alert(messages);
