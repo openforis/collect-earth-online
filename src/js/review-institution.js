@@ -552,6 +552,16 @@ class NewImagery extends React.Component {
 
     //    Remote Calls    //
 
+    sanitizeParams = (type, imageryParams) => {
+        const sanitizedParams = {...imageryParams};
+        imageryOptions[type].params.forEach(param => {
+            if (param.sanitizer) {
+                sanitizedParams[param.key] = param.sanitizer(sanitizedParams[param.key]);
+            }
+        });
+        return sanitizedParams;
+    };
+
     validateParams = (type, imageryParams) => {
         const parameterErrors = imageryOptions[type].params.map(param =>
             (param.validator && param.validator(imageryParams[param.key]))
@@ -562,11 +572,12 @@ class NewImagery extends React.Component {
     };
 
     uploadCustomImagery = (isNew) => {
-        const messages = this.validateParams(this.state.selectedType, this.state.newImageryParams);
+        const sanitizedParams = this.sanitizeParams(this.state.selectedType, this.state.newImageryParams)
+        const messages = this.validateParams(this.state.selectedType, sanitizedParams);
         if (messages.length > 0) {
             alert(messages);
         } else {
-            const sourceConfig = this.buildSecureWatch(this.stackParams()); // TODO define SecureWatch so stack params works correctly.
+            const sourceConfig = this.buildSecureWatch(this.stackParams(sanitizedParams)); // TODO define SecureWatch so stack params works correctly.
             if (this.state.newImageryTitle.length === 0 || this.state.newImageryAttribution.length === 0) {
                 alert("You must include a title and attribution.");
             } else if (this.props.titleIsTaken(this.state.newImageryTitle, this.props.imageryToEdit.id)) {
@@ -603,18 +614,18 @@ class NewImagery extends React.Component {
 
     //    Helper Functions    //
 
-    stackParams = () => {
+    stackParams = params => {
         try {
             const imageryParams = imageryOptions[this.state.selectedType].params;
-            return Object.keys(this.state.newImageryParams)
+            return Object.keys(params)
                 .sort(a => imageryParams.find(p => p.key === a).parent ? 1 : -1) // Sort params that require a parent to the bottom
                 .reduce((a, c) => {
                     const parentStr = imageryParams.find(p => p.key === c).parent;
                     if (parentStr) {
                         const parentObj = JSON.parse(a[parentStr] || "{}");
-                        return {...a, [parentStr]: {...parentObj, [c]: this.state.newImageryParams[c]}};
+                        return {...a, [parentStr]: {...parentObj, [c]: params[c]}};
                     } else {
-                        return {...a, [c]: this.state.newImageryParams[c]};
+                        return {...a, [c]: params[c]};
                     }
                 }, {type: imageryOptions[this.state.selectedType].type});
         } catch (e) {

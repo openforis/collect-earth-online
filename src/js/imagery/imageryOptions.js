@@ -22,6 +22,7 @@ export const imageryOptions = [
             {
                 key: "geoserverUrl",
                 display: "WMS URL",
+                sanitizer: value => value.endsWith("?") ? value.slice(0, -1) : value,
                 validator: value => /\?.+/.test(value) ? "The field \"WMS Url\" should not contain the query string. Please put those values in the field \"Additional WMS Params (as JSON object)\"." : "",
             },
             {key: "LAYERS", display: "WMS Layer Name", parent: "geoserverParams"},
