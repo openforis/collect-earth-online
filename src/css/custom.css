@@ -10,8 +10,12 @@
     padding: 5px;
     text-align: center;
 }
-.slidecontainer {
+.slide-container {
     width: 100%;
+    margin-bottom: .5rem;
+    padding: .3rem .5rem .15rem .5rem;
+    border: 1px solid #ced4da;
+    border-radius: .2rem;
 }
 .slider {
     -webkit-appearance: none;
