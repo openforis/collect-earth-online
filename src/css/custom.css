@@ -647,3 +647,31 @@ ul.samplevalue {
 .ck-editor__editable {
     min-height: 200px;
 }
+
+.surveyrule_tooltip {
+    position: relative;
+    display: inline-block;
+    border-bottom: 1px dotted black;
+}
+
+.surveyrule_tooltip .surveyrule_tooltiptext {
+    visibility: hidden;
+    width: 120px;
+    background-color: black;
+    color: #fff;
+    text-align: center;
+    border-radius: 6px;
+    padding: 5px 0;
+
+    /* Position the tooltip */
+    position: absolute;
+    z-index: 1;
+}
+
+.surveyrule_tooltip:hover .surveyrule_tooltiptext {
+    visibility: visible;
+}
+
+.surveyrule_select{
+    overflow: scroll;
+}

@@ -197,7 +197,7 @@ export class SurveyRuleDesign extends React.Component {
                 inDesignMode
             >
                 <tr>
-                    <td colSpan="2">
+                    <td colSpan="6">
                         <table>
                             <tbody>
                                 <tr>
@@ -262,7 +262,7 @@ export class SurveyRuleDesign extends React.Component {
                     ) : <tr><td></td><td></td></tr>
                 }
                 <tr>
-                    <td>
+                    <td colSpan="6">
                         <input
                             type="button"
                             className="button"
@@ -270,7 +270,6 @@ export class SurveyRuleDesign extends React.Component {
                             onClick={() => this.addSurveyRule(this.state.selectedRuleType)}
                         />
                     </td>
-                    <td></td>
                 </tr>
             </SurveyRulesList>
         );
@@ -284,7 +283,7 @@ function TextMatch(props) {
     return surveyQuestions.length > 0
         ?
             <tr>
-                <td colSpan="2">
+                <td colSpan="6">
                     <table>
                         <tbody>
                             <tr>
@@ -317,7 +316,7 @@ function TextMatch(props) {
                 </td>
             </tr>
         :
-            <tr><td><label>No questions for this rule type</label></td></tr>;
+            <tr><td colSpan="5"><label>No questions for this rule type</label></td></tr>;
 }
 
 function NumericRange(props) {
@@ -326,12 +325,12 @@ function NumericRange(props) {
     return surveyQuestions.length > 0
         ?
             <tr>
-                <td colSpan="2">
+                <td colSpan="6">
                     <table>
                         <tbody>
                             <tr>
                                 <td><label>Survey Question: </label></td>
-                                <td>
+                                <td colSpan="4">
                                     <select
                                         className="form-control form-control-sm"
                                         onChange={e => props.updateOptions(e.target, "")}
@@ -371,7 +370,7 @@ function NumericRange(props) {
                 </td>
             </tr>
         :
-            <tr><td><label>No questions for this rule type</label></td></tr>;
+            <tr><td colSpan="6"><label>No questions for this rule type</label></td></tr>;
 }
 
 function SumOfAnswers(props) {
@@ -379,7 +378,7 @@ function SumOfAnswers(props) {
     return surveyQuestions.length > 0
         ?
             <tr>
-                <td>
+                <td colSpan="6">
                     <table>
                         <tbody>
                             <tr>
@@ -388,9 +387,9 @@ function SumOfAnswers(props) {
                                         <p>Select survey question:</p><p>(Hold ctrl/cmd and select multiple questions)</p>
                                     </label>
                                 </td>
-                                <td>
+                                <td colSpan="3">
                                     <select
-                                        className="form-control form-control-sm"
+                                        className="form-control form-control-sm surveyrule_select"
                                         multiple="multiple"
                                         onChange={e => props.updateOptions(e.target, "")}
                                     >
@@ -417,7 +416,7 @@ function SumOfAnswers(props) {
                 </td>
             </tr>
         :
-            <tr><td><label>No questions for this rule type</label></td></tr>;
+            <tr><td colSpan="6"><label>No questions for this rule type</label></td></tr>;
 }
 
 function MatchingSums(props) {
@@ -425,7 +424,7 @@ function MatchingSums(props) {
     return surveyQuestions.length > 1
         ?
             <tr>
-                <td>
+                <td colSpan="6">
                     <table>
                         <tbody>
                             <tr>
@@ -434,9 +433,9 @@ function MatchingSums(props) {
                                         <p>Select first question set:</p><p>(Hold ctrl/cmd and select multiple questions)</p>
                                     </label>
                                 </td>
-                                <td>
+                                <td colSpan="4">
                                     <select
-                                        className="form-control form-control-sm"
+                                        className="form-control form-control-sm surveyrule_select"
                                         multiple="multiple"
                                         onChange={e => props.updateOptions(e.target, "questionSet1")}
                                     >
@@ -454,7 +453,7 @@ function MatchingSums(props) {
                                 </td>
                                 <td>
                                     <select
-                                        className="form-control form-control-sm"
+                                        className="form-control form-control-sm surveyrule_select"
                                         multiple="multiple"
                                         onChange={e => props.updateOptions(e.target, "questionSet2")}
                                     >
@@ -469,7 +468,7 @@ function MatchingSums(props) {
                 </td>
             </tr>
         :
-            <tr><td><label>There must be at least 2 matching questions for this rule type</label></td></tr>;
+            <tr><td colSpan="6"><label>There must be at least 2 matching questions for this rule type</label></td></tr>;
 }
 
 function IncompatibleAnswers(props) {
@@ -478,15 +477,15 @@ function IncompatibleAnswers(props) {
     return surveyQuestions.length > 1
         ?
             <tr>
-                <td colSpan="2">
+                <td colSpan="6">
                     <table>
                         <tbody>
                             <tr>
-                                <td colSpan="2"><label>Select the incompatible questions and answers: </label></td>
+                                <td colSpan="4"><label>Select the incompatible questions and answers: </label></td>
                             </tr>
                             <tr>
                                 <td>Question 1:</td>
-                                <td>
+                                <td colSpan="3">
                                     <select
                                         className="form-control form-control-sm"
                                         id="question1"
@@ -546,7 +545,7 @@ function IncompatibleAnswers(props) {
                 </td>
             </tr>
         :
-            <tr><td><label>There must be at least 2 matching questions for this rule type</label></td></tr>;
+            <tr><td colSpan="6"><label>There must be at least 2 matching questions for this rule type</label></td></tr>;
 }
 
 export class SurveyRulesList extends React.Component {
@@ -641,7 +640,7 @@ export class SurveyRulesList extends React.Component {
                             })
                         :
                             <tr>
-                                <td colSpan="5"><span>No rules set for this survey</span></td>
+                                <td colSpan="6"><span>No rules set for this survey</span></td>
                             </tr>
                         }
                         {children}
