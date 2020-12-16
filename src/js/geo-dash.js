@@ -43,7 +43,7 @@ class Geodash extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
-            widgets: [ ],
+            widgets: [],
             callbackComplete: false,
             left: 0,
             ptop: 0,
@@ -83,9 +83,9 @@ class Geodash extends React.Component {
                     .then(response => response.json())
                     .then(data => data.widgets.map(widget => {
                         widget.isFull = false;
-                        widget.opacity = "0.9";
+                        widget.opacity = 0.9;
                         widget.sliderType = widget.swipeAsDefault ? "swipe" : "opacity";
-                        widget.swipeValue = "1.0";
+                        widget.swipeValue = 1.0;
                         return widget;
                     }))
                     .then(data => this.setState({widgets: data, callbackComplete: true}))
@@ -122,11 +122,10 @@ class Geodash extends React.Component {
         this.setState({widgets});
     };
 
-    handleSwipeChange = (widget, id, evt) => {
+    handleSwipeChange = (widget, evt) => {
         const widgets = [...this.state.widgets];
         const index = widgets.indexOf(widget);
-        widgets[index] = {...widget};
-        widgets[index].swipeValue = evt.target.value;
+        widgets[index] = {...widget, swipeValue: Number(evt.target.value)};
         this.setState({widgets});
     };
 
@@ -417,7 +416,7 @@ class Widget extends React.Component {
         const {widget} = this.props;
         return (
             <React.Fragment>
-                { this.getWidgetHtml(widget, this.props.onSliderChange, this.props.onSwipeChange) }
+                {this.getWidgetHtml(widget, this.props.onSliderChange, this.props.onSwipeChange)}
             </React.Fragment>
         );
     }
@@ -495,7 +494,7 @@ class MapWidget extends React.Component {
         super(props);
         this.state = {
             mapRef: null,
-            opacity: 90,
+            opacity: .9, // FIXME, opacity is being kept separately here even though it is also part of widget
             geeTimeOut: null,
             stretch: 321,
         };
@@ -957,81 +956,82 @@ class MapWidget extends React.Component {
         const onSwipeChange = this.props.onSwipeChange;
 
         if (widget.dualLayer || widget.dualImageCollection) {
-            return <div>
-                <div className="toggleSwitchContainer">
-                    <img
-                        src={"img/opacity.png"}
-                        style={{
-                            opacity: widget.sliderType === "opacity" ? "1.0" : "0.25",
-                            cursor: "pointer",
-                        }}
-                        height="20px"
-                        width="40px"
-                        title="Opacity"
-                        alt="Opacity"
-                        onClick={() => onSliderChange(widget)}
+            return (
+                <div>
+                    <div className="toggleSwitchContainer">
+                        <img
+                            src={"img/opacity.png"}
+                            style={{
+                                opacity: widget.sliderType === "opacity" ? "1.0" : "0.25",
+                                cursor: "pointer",
+                            }}
+                            height="20px"
+                            width="40px"
+                            title="Opacity"
+                            alt="Opacity"
+                            onClick={() => onSliderChange(widget)}
+                        />
+                        <br/>
+                        <img
+                            src={"img/swipe.png"}
+                            style={{
+                                opacity: widget.sliderType === "swipe" ? "1.0" : "0.25",
+                                cursor: "pointer",
+                            }}
+                            height="20px"
+                            width="40px"
+                            title="Swipe"
+                            alt="Swipe"
+                            onClick={() => onSliderChange(widget)}
+                        />
+                    </div>
+                    <input
+                        type="range"
+                        className="mapRange dual"
+                        id={"rangeWidget_" + widget.id}
+                        value={this.state.opacity}
+                        min="0"
+                        max="1"
+                        step=".01"
+                        onChange={evt => this.onOpacityChange(evt)}
+                        style={{display: widget.sliderType === "opacity" ? "block" : "none"}}
                     />
-                    <br/>
-                    <img
-                        src={"img/swipe.png"}
-                        style={{
-                            opacity: widget.sliderType === "swipe" ? "1.0" : "0.25",
-                            cursor: "pointer",
-                        }}
-                        height="20px"
-                        width="40px"
-                        title="Swipe"
-                        alt="Swipe"
-                        onClick={() => onSliderChange(widget)}
+                    <input
+                        type="range"
+                        className="mapRange dual"
+                        id={"swipeWidget_" + widget.id}
+                        min="0"
+                        max="1"
+                        step=".01"
+                        value={this.props.widget.swipeValue}
+                        onChange={evt => onSwipeChange(widget, evt )}
+                        style={{display: widget.sliderType === "swipe" ? "block" : "none"}}
                     />
                 </div>
-                <input
-                    type = "range"
-                    className = "mapRange dual"
-                    id = {"rangeWidget_" + widget.id}
-                    value = {this.state.opacity}
-                    min = "0"
-                    max = "1"
-                    step = ".01"
-                    onChange = {evt => this.onOpacityChange(evt)}
-                    onInput = {evt => this.onOpacityChange(evt)}
-                    style={{display: widget.sliderType === "opacity" ? "block" : "none"}}
-                />
-                <input
-                    type="range"
-                    className="mapRange dual"
-                    id={"swipeWidget_" + widget.id}
-                    min="0"
-                    max="1"
-                    step=".01"
-                    value={this.props.widget.swipeValue}
-                    onChange = {evt => onSwipeChange(widget, widget.id, evt )}
-                    onInput = {evt => onSwipeChange(widget, widget.id, evt )}
-                    style={{display: widget.sliderType === "swipe" ? "block" : "none"}}
-                />
-            </div>;
+            );
         } else {
             return (
                 <input
-                    type = "range"
-                    className = "mapRange"
-                    id = {"rangeWidget_" + widget.id}
-                    value = {this.state.opacity}
-                    min = "0"
-                    max = "1"
-                    step = ".01"
-                    onChange = {evt => this.onOpacityChange(evt)}
-                    onInput = {evt => this.onOpacityChange(evt)}
-                />);
+                    type="range"
+                    className="mapRange"
+                    id={"rangeWidget_" + widget.id}
+                    value={this.state.opacity}
+                    min="0"
+                    max="1"
+                    step=".01"
+                    onChange={evt => this.onOpacityChange(evt)}
+                />
+            );
         }
     };
 
     onOpacityChange = evt => {
         try {
-            this.setState({opacity: evt.target.value});
+            const opacity = Number(evt.target.value);
+            this.setState({opacity: opacity});
             this.state.mapRef.getLayers().forEach(lyr => {
-                if ("widgetmap_" + this.props.widget.id === lyr.get("id") || "widgetmap_" + this.props.widget.id + "_dual" === lyr.get("id")) {
-                    lyr.setOpacity(evt.target.value);
+                if (lyr.get("id") && lyr.get("id").includes(this.props.widget.id)) {
+                    lyr.setOpacity(opacity);
                 }
             });
         } catch (e) {
@@ -1103,7 +1103,7 @@ class MapWidget extends React.Component {
         });
         this.state.mapRef.addLayer(googleLayer);
         const swipe = document.getElementById("swipeWidget_" + mapdiv.replace("widgetmap_", ""));
-        googleLayer.on("precompose", event => {
+        googleLayer.on("prerender", event => {
             const ctx = event.context;
             const width = ctx.canvas.width * (swipe.value);
             ctx.save();
@@ -1112,7 +1112,7 @@ class MapWidget extends React.Component {
             ctx.clip();
         });
 
-        googleLayer.on("postcompose", event => {
+        googleLayer.on("postrender", event => {
             const ctx = event.context;
             ctx.restore();
         });
