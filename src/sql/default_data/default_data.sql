@@ -6,3 +6,8 @@ VALUES
     (1, 'admin'),
     (2, 'member'),
     (3, 'pending');
+
+INSERT INTO users
+    (user_uid, email, password, administrator, reset_key, on_mailing_list)
+VALUES
+    (-1, 'guest@collect.earth', crypt('', gen_salt('bf')), false, null, false);
