@@ -112,6 +112,13 @@
        (apply sh-wrapper "./" {:PGPASSWORD "ceo"} verbose)
        (println)))
 
+(defn load-dev-data [verbose]
+  (println "Loading development data...")
+  (->> (map #(format "psql -h localhost -U ceo -d ceo -f %s" %)
+          (topo-sort-files-by-namespace "./src/sql/dev_data"))
+      (apply sh-wrapper "./" {:PGPASSWORD "ceo"} verbose)
+      (println)))
+
 (defn build-everything [verbose]
   (println "Building database...")
   (print "Please enter the postgres user's password:")
@@ -132,8 +139,11 @@
           #{"build-all" "verbose"}      (build-everything true)
           #{"only-functions"}           (load-functions false)
           #{"only-functions" "verbose"} (load-functions true)
+          #{"dev-data"}                 (load-dev-data false)
+          #{"dev-data" "verbose"}       (load-dev-data true)
           (println "Valid options are:"
                    "\n  build-all            to build the database and all components"
                    "\n  only-functions       to only build functions"
+                   "\n  dev-data             to load development data"
                    "\n  verbose              to show standard output from Postgres\n")))
   (shutdown-agents))
