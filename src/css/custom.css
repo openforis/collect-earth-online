@@ -675,7 +675,3 @@ ul.samplevalue {
 .surveyrule_tooltip:hover .surveyrule_tooltiptext {
     visibility: visible;
 }
-
-.surveyrule_select{
-    overflow: scroll;
-}

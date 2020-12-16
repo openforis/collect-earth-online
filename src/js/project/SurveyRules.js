@@ -389,7 +389,7 @@ function SumOfAnswers(props) {
                                 </td>
                                 <td colSpan="3">
                                     <select
-                                        className="form-control form-control-sm surveyrule_select"
+                                        className="form-control form-control-sm overflow-auto"
                                         multiple="multiple"
                                         onChange={e => props.updateOptions(e.target, "")}
                                     >
@@ -435,7 +435,7 @@ function MatchingSums(props) {
                                 </td>
                                 <td colSpan="4">
                                     <select
-                                        className="form-control form-control-sm surveyrule_select"
+                                        className="form-control form-control-sm overflow-auto"
                                         multiple="multiple"
                                         onChange={e => props.updateOptions(e.target, "questionSet1")}
                                     >
@@ -453,7 +453,7 @@ function MatchingSums(props) {
                                 </td>
                                 <td>
                                     <select
-                                        className="form-control form-control-sm surveyrule_select"
+                                        className="form-control form-control-sm overflow-auto"
                                         multiple="multiple"
                                         onChange={e => props.updateOptions(e.target, "questionSet2")}
                                     >
