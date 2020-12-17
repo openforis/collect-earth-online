@@ -6,7 +6,7 @@ INSERT INTO users
 VALUES
     (1, 'admin@ceo.dev', crypt('admin', gen_salt('bf')), TRUE, FALSE);
 
-SELECT setval(pg_get_serial_sequence('users', 'user_uid', [max_id + 1]));
+SELECT setval(pg_get_serial_sequence('users', 'user_uid'), (SELECT MAX(user_uid) FROM users) + 1);
 
 -- Adds a user
 INSERT INTO users
@@ -14,7 +14,7 @@ INSERT INTO users
 VALUES
     (2, 'user@ceo.dev', crypt('user', gen_salt('bf')), FALSE, FALSE);
 
-SELECT setval(pg_get_serial_sequence('users', 'user_uid', [max_id + 1]));
+SELECT setval(pg_get_serial_sequence('users', 'user_uid'), (SELECT MAX(user_uid) FROM users) + 1);
 
 -- Adds an institution
 INSERT INTO institutions
@@ -22,7 +22,7 @@ INSERT INTO institutions
 VALUES
     (1, 'DEV Institution', 'institution-3.png', 'DEV Institution Description', 'https://collect.earth');
 
-SELECT setval(pg_get_serial_sequence('institutions', 'institution_uid', [max_id + 1]));
+SELECT setval(pg_get_serial_sequence('institutions', 'institution_uid'), (SELECT MAX(institution_uid) FROM institutions) + 1);
 
 -- Adds administrator and user to an institution
 INSERT INTO institution_users
@@ -31,7 +31,7 @@ VALUES
     (1, 1, 1, 1),
     (2, 1, 2, 2);
 
-SELECT setval(pg_get_serial_sequence('institution_users', 'inst_user_uid', [max_id + 1]));
+SELECT setval(pg_get_serial_sequence('institution_users', 'inst_user_uid'), (SELECT MAX(inst_user_uid) FROM institution_users) + 2);
 
 -- Adds an intitutiom imagery
 INSERT INTO imagery
@@ -57,8 +57,6 @@ INSERT INTO projects (
     sample_resolution,
     survey_questions,
     survey_rules,
-    plots_ext_table,
-    samples_ext_table,
     created_date,
     ts_plot_size,
     options,
@@ -88,6 +86,8 @@ INSERT INTO projects (
     FALSE
 );
 
+SELECT setval(pg_get_serial_sequence('projects', 'project_uid'), (SELECT MAX(project_uid) FROM projects) + 1);
+
 -- Adds imagery associated with a project
 INSERT INTO project_imagery
     (project_rid, imagery_rid)
@@ -102,7 +102,7 @@ VALUES
     (2, 1, ST_SetSRID(ST_GeomFromGeoJSON('{"type":"Point","coordinates":[98.5680216776391,12.3793535946933]}'), 4326)),
     (3, 1, ST_SetSRID(ST_GeomFromGeoJSON('{"type":"Point","coordinates":[106.718471401115,13.7459074361384]}'), 4326));
 
-SELECT setval(pg_get_serial_sequence('plots', 'plot_uid', [max_id + 3]));
+SELECT setval(pg_get_serial_sequence('plots', 'plot_uid'), (SELECT MAX(plot_uid) FROM plots) + 3);
 
 -- Add 10 samples per 3 plots
 INSERT INTO samples
