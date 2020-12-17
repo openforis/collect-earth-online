@@ -52,19 +52,20 @@ class SurveyCard extends React.Component {
                 })),
         });
     };
+
     getRulesById = (id) =>
         (this.props.surveyRules || [])
             .filter(r => r.id === id)
             .map(r =>
                 r.questionId
                     ? r.regex
-                        ? "Rule: " + r.ruleType + " | Question '" + r.questionsText + "' should match the pattern: " + r.regex + "."
-                        : "Rule: " + r.ruleType + " | Question '" + r.questionsText + "' should be between " + r.min + " and " + r.max + "."
+                        ? "Question '" + r.questionsText + "' should match the pattern: " + r.regex + "."
+                        : "Question '" + r.questionsText + "' should be between " + r.min + " and " + r.max + "."
                     : r.questions
-                        ? "Rule: " + r.ruleType + " | Questions '" + r.questionsText + "' should sum up to " + r.validSum + "."
+                        ? "Questions '" + r.questionsText + "' should sum up to " + r.validSum + "."
                         : r.questionSetIds1
-                            ? "Rule: " + r.ruleType + " | Sum of '" + r.questionSetText1 + "' should be equal to sum of  '" + r.questionSetText2 + "'."
-                            : "Rule: " + r.ruleType + " | 'Question1: " + r.questionText1 + ", Answer1: " + r.answerText1 + "' is not compatible with 'Question2: " + r.questionText2 + ", Answer2: " + r.answerText2 + "'.");
+                            ? "Sum of '" + r.questionSetText1 + "' should be equal to sum of  '" + r.questionSetText2 + "'."
+                            : "Question1: " + r.questionText1 + ", Answer1: " + r.answerText1 + "' is not compatible with 'Question2: " + r.questionText2 + ", Answer2: " + r.answerText2 + "'.");
 
     render() {
         const {cardNumber, surveyQuestion, inDesignMode, topLevelNodeIds} = this.props;
@@ -142,7 +143,7 @@ function SurveyQuestionTree({
     surveyQuestion,
     surveyQuestions,
     surveyRules,
-    getRulesById
+    getRulesById,
 }) {
     const childNodes = surveyQuestions.filter(sq => sq.parentQuestion === surveyQuestion.id);
     const parentQuestion = surveyQuestions.find(sq => sq.id === surveyQuestion.parentQuestion);
@@ -188,7 +189,7 @@ function SurveyQuestionTree({
                                                 .concat(rule.questionSetIds1)
                                                 .concat(rule.questionSetIds2)
                                                 .includes(surveyQuestion.id)
-                                                    ? <li key={uid}><p style={{color: "#279b93"}} title={getRulesById(rule.id).length > 0 ? getRulesById(rule.id) : "No rules."}>{"Rule " + rule.id + ": " + rule.ruleType}</p></li> : null
+                                                    ? <li key={uid}><p className="surveyrule_tooltip" title={getRulesById(rule.id)}>{"Rule " + rule.id + ": " + rule.ruleType}</p></li> : null
                                         )}
                                     </ul>
                                 </li>
