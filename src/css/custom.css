@@ -666,3 +666,6 @@ ul.samplevalue {
 .ck-editor__editable {
     min-height: 200px;
 }
+.surveyrule_tooltip {
+    color: #279b93;
+}
