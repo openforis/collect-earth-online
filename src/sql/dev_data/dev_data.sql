@@ -6,11 +6,15 @@ INSERT INTO users
 VALUES
     (1, 'admin@ceo.dev', crypt('admin', gen_salt('bf')), TRUE, FALSE);
 
+SELECT setval(pg_get_serial_sequence('users', 'user_uid', [max_id + 1]));
+
 -- Adds a user
 INSERT INTO users
     (user_uid, email, password, administrator, on_mailing_list)
 VALUES
     (2, 'user@ceo.dev', crypt('user', gen_salt('bf')), FALSE, FALSE);
+
+SELECT setval(pg_get_serial_sequence('users', 'user_uid', [max_id + 1]));
 
 -- Adds an institution
 INSERT INTO institutions
@@ -18,12 +22,16 @@ INSERT INTO institutions
 VALUES
     (1, 'DEV Institution', 'institution-3.png', 'DEV Institution Description', 'https://collect.earth');
 
+SELECT setval(pg_get_serial_sequence('institutions', 'institution_uid', [max_id + 1]));
+
 -- Adds administrator and user to an institution
 INSERT INTO institution_users
     (inst_user_uid, institution_rid, user_rid, role_rid)
 VALUES
     (1, 1, 1, 1),
     (2, 1, 2, 2);
+
+SELECT setval(pg_get_serial_sequence('institution_users', 'inst_user_uid', [max_id + 1]));
 
 -- Adds an intitutiom imagery
 INSERT INTO imagery
@@ -93,6 +101,8 @@ VALUES
     (1, 1, ST_SetSRID(ST_GeomFromGeoJSON('{"type":"Point","coordinates":[102.999640127073,22.0468074686287]}'), 4326)),
     (2, 1, ST_SetSRID(ST_GeomFromGeoJSON('{"type":"Point","coordinates":[98.5680216776391,12.3793535946933]}'), 4326)),
     (3, 1, ST_SetSRID(ST_GeomFromGeoJSON('{"type":"Point","coordinates":[106.718471401115,13.7459074361384]}'), 4326));
+
+SELECT setval(pg_get_serial_sequence('plots', 'plot_uid', [max_id + 3]));
 
 -- Add 10 samples per 3 plots
 INSERT INTO samples
