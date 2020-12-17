@@ -1,20 +1,13 @@
 -- NAMESPACE: dev-data
 
--- Adds an administrator
+-- Adds an administrator and a user
 INSERT INTO users
     (user_uid, email, password, administrator, on_mailing_list)
 VALUES
-    (1, 'admin@ceo.dev', crypt('admin', gen_salt('bf')), TRUE, FALSE);
-
-SELECT setval(pg_get_serial_sequence('users', 'user_uid'), (SELECT MAX(user_uid) FROM users) + 1);
-
--- Adds a user
-INSERT INTO users
-    (user_uid, email, password, administrator, on_mailing_list)
-VALUES
+    (1, 'admin@ceo.dev', crypt('admin', gen_salt('bf')), TRUE, FALSE),
     (2, 'user@ceo.dev', crypt('user', gen_salt('bf')), FALSE, FALSE);
 
-SELECT setval(pg_get_serial_sequence('users', 'user_uid'), (SELECT MAX(user_uid) FROM users) + 1);
+SELECT setval(pg_get_serial_sequence('users', 'user_uid'), (SELECT MAX(user_uid) FROM users) + 2);
 
 -- Adds an institution
 INSERT INTO institutions
@@ -54,11 +47,9 @@ INSERT INTO projects (
     plot_size,
     sample_distribution,
     samples_per_plot,
-    sample_resolution,
     survey_questions,
     survey_rules,
     created_date,
-    ts_plot_size,
     options,
     imagery_rid,
     allow_drawn_samples
@@ -74,13 +65,11 @@ INSERT INTO projects (
     3,
     'circle',
     200,
-    'center',
+    'random',
     1,
-    -1,
     '[{"id": 1, "name": "Land Use", "values": [{"color": "#1EC61B", "name": "Forest", "id": 1, "image": null}, {"color": "#9CF135", "name": "Grassland", "id": 2, "image": null}, {"color": "#D5DE85", "name": "Bare Surface", "id": 3, "image": null}, {"color": "#8B9084", "name": "Impervious Surface", "id": 4, "image": null}, {"color": "#F2C613", "name": "Agriculture", "id": 5, "image": null}, {"color": "#6A3A75", "name": "Urban", "id": 6, "image": null}, {"color": "#2F4DC0", "name": "Water", "id": 7, "image": null}, {"color": "#FFFFFF", "name": "Cloud", "id": 8, "image": null}, {"color": "#000000", "name": "Unknown", "id": 9, "image": null}]}]',
     '[]',
     Now(),
-    1,
     '{"showGEEScript": false, "autoLaunchGeoDash": true, "showPlotInformation": false}',
     1,
     FALSE
