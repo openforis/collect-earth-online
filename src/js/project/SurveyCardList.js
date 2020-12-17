@@ -1,4 +1,4 @@
-import React, {Fragment} from "react";
+import React from "react";
 
 import {removeEnumerator} from "../utils/surveyUtils";
 import {UnicodeIcon} from "../utils/generalUtils";
@@ -82,10 +82,9 @@ class SurveyCard extends React.Component {
                             </button>
                             <h2 className="font-weight-bold mt-2 pt-1 ml-2">Survey Card Number {cardNumber}</h2>
                             <h3 className="m-3">
-                                {
-                                    !this.state.showQuestions && `-- ${inDesignMode
-                                        ? surveyQuestion.question
-                                        : removeEnumerator(surveyQuestion.question)}`
+                                {!this.state.showQuestions && `-- ${inDesignMode
+                                    ? surveyQuestion.question
+                                    : removeEnumerator(surveyQuestion.question)}`
                                 }
                             </h3>
                         </div>
@@ -147,14 +146,13 @@ function SurveyQuestionTree({
     const childNodes = surveyQuestions.filter(sq => sq.parentQuestion === surveyQuestion.id);
     const parentQuestion = surveyQuestions.find(sq => sq.id === surveyQuestion.parentQuestion);
     return (
-        <Fragment>
+        <>
             <div className="SurveyQuestionTree__question d-flex border-top pt-3 pb-1">
                 {[...Array(indentLevel)].map((e, i) =>
                     <div key={i} className="pl-4">
                         <UnicodeIcon icon="rightArrow"/>
                     </div>
                 )}
-
                 <div className="Question__answers container mb-2">
                     <div className="SurveyQuestionTree__question-description pb-1 d-flex">
                         {inDesignMode &&
@@ -200,10 +198,13 @@ function SurveyQuestionTree({
                                 </li>
                             }
                             {surveyQuestion.parentQuestion > -1 &&
-                                <Fragment>
+                                <>
                                     <li>
                                         <span className="font-weight-bold">Parent Question:  </span>
-                                        {inDesignMode ? parentQuestion.question : removeEnumerator(parentQuestion.question)}
+                                        {inDesignMode
+                                            ? parentQuestion.question
+                                            : removeEnumerator(parentQuestion.question)
+                                        }
                                     </li>
                                     <li>
                                         <span className="font-weight-bold">Parent Answer:  </span>
@@ -213,7 +214,7 @@ function SurveyQuestionTree({
                                                 .find(ans => ans.id === surveyQuestion.parentAnswer).answer
                                         }
                                     </li>
-                                </Fragment>
+                                </>
                             }
                         </ul>
                         <h3 className="font-weight-bold ml-3">Answers:  </h3>
@@ -224,7 +225,7 @@ function SurveyQuestionTree({
                                 key={uid}
                                 answer={surveyAnswer.answer}
                                 color={surveyAnswer.color}
-                                removeAnswer={inDesignMode ? () => removeAnswer(surveyQuestion.id, surveyAnswer.id) : null}
+                                removeAnswer={() => inDesignMode && removeAnswer(surveyQuestion.id, surveyAnswer.id)}
                             />
                         )}
                         {inDesignMode && newAnswerComponent(surveyQuestion)}
@@ -244,7 +245,7 @@ function SurveyQuestionTree({
                     surveyRules={surveyRules}
                 />
             )}
-        </Fragment>
+        </>
     );
 }
 
