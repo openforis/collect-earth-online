@@ -94,11 +94,11 @@ class WidgetLayoutEditor extends React.PureComponent {
             : null;
     };
 
-    getImageByType = (which) =>
-        (which === "getStats") ? "/img/geodash/statssample.gif"
-        : (which.toLowerCase().includes("image") || which === "") ? "/img/geodash/mapsample.gif"
-        : (which.toLowerCase().includes("degradationtool")) ? "/img/geodash/degsample.gif"
-        : "/img/geodash/graphsample.gif";
+    getImageByType = (imageType) =>
+        imageType === "getStats" ? "/img/geodash/statssample.gif"
+            : (!imageType || imageType.toLowerCase().includes("image")) ? "/img/geodash/mapsample.gif"
+            : (imageType.toLowerCase().includes("degradationtool")) ? "/img/geodash/degsample.gif"
+            : "/img/geodash/graphsample.gif";
 
     checkWidgetStructure = (updatedWidgets) => {
         let changed = false;
