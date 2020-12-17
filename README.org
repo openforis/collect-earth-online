@@ -165,7 +165,7 @@ To automatically create an SSL certificate signed by [[https://letsencrypt.org][
 simply run the following command from your shell:
 
 #+begin_src sh
-clojure -A:certbot-init mydomain.com [certbot-dir]
+clojure -M:certbot-init mydomain.com [certbot-dir]
 #+end_src
 
 Note: If your certbot installation stores its config files in a
