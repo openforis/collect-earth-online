@@ -335,7 +335,7 @@ class Widget extends React.Component {
                     title="Recenter"
                     style={{marginRight: "10px"}}
                 >
-                    <img src={"img/ceoicon.png"} alt="Collect Earth Online"/>
+                    <img src={"img/geodash/ceoicon.png"} alt="Collect Earth Online"/>
                 </a>
             </li>;
         }
@@ -960,7 +960,7 @@ class MapWidget extends React.Component {
                 <div>
                     <div className="toggleSwitchContainer">
                         <img
-                            src={"img/opacity.png"}
+                            src={"img/geodash/opacity.png"}
                             style={{
                                 opacity: widget.sliderType === "opacity" ? "1.0" : "0.25",
                                 cursor: "pointer",
@@ -973,7 +973,7 @@ class MapWidget extends React.Component {
                         />
                         <br/>
                         <img
-                            src={"img/swipe.png"}
+                            src={"img/geodash/swipe.png"}
                             style={{
                                 opacity: widget.sliderType === "swipe" ? "1.0" : "0.25",
                                 cursor: "pointer",
@@ -1565,7 +1565,7 @@ class GraphWidget extends React.Component {
                             />
                         :
                             <img
-                                src={"img/ceo-loading.gif"}
+                                src={"img/geodash/ceo-loading.gif"}
                                 alt={"Loading"}
                                 style={{
                                     position: "absolute",
@@ -1654,7 +1654,7 @@ class StatsWidget extends React.Component {
                     <div className="input-group">
                         <div className="input-group-addon">
                             <img
-                                src={"img/icon-population.png"}
+                                src={"img/geodash/icon-population.png"}
                                 style={{
                                     width: "50px",
                                     height: "50px",
@@ -1680,7 +1680,7 @@ class StatsWidget extends React.Component {
                     <div className="input-group">
                         <div className="input-group-addon">
                             <img
-                                src={"img/icon-area.png"}
+                                src={"img/geodash/icon-area.png"}
                                 style={{
                                     width: "50px",
                                     height: "50px",
@@ -1706,7 +1706,7 @@ class StatsWidget extends React.Component {
                     <div className="input-group">
                         <div className="input-group-addon">
                             <img
-                                src={"img/icon-elevation.png"}
+                                src={"img/geodash/icon-elevation.png"}
                                 style={{
                                     width: "50px",
                                     height: "50px",

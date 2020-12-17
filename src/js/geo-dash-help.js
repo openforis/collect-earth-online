@@ -37,7 +37,7 @@ class GeoDashHelp extends React.Component {
                     <div className="col-xl-10 offset-xl-1 col-lg-10 offset-lg-1 justify-content-center">
                         <h1>{lngObject.title}</h1>
                         <CollapsibleSectionBlock title={lngObject.head_image_collection_widget}>
-                            {this.expandableImageWrapper("/img/image_collection_widget.gif")}
+                            {this.expandableImageWrapper("/img/geodash/image_collection_widget.gif")}
                             <ol>
                                 <li>{lngObject.click_add_widget}</li>
                                 <li>{lngObject.select_image_collection}</li>
@@ -74,7 +74,7 @@ class GeoDashHelp extends React.Component {
                             </ol>
                         </CollapsibleSectionBlock>
                         <CollapsibleSectionBlock title={lngObject.add_time_series_graph}>
-                            {this.expandableImageWrapper("/img/time_series_graph_widget.gif")}
+                            {this.expandableImageWrapper("/img/geodash/time_series_graph_widget.gif")}
                             <ol>
                                 <li>{lngObject.click_add_widget}</li>
                                 <li>{lngObject.select_time_series}</li>
@@ -98,7 +98,7 @@ class GeoDashHelp extends React.Component {
                             </ol>
                         </CollapsibleSectionBlock>
                         <CollapsibleSectionBlock title={lngObject.add_stats_widget}>
-                            {this.expandableImageWrapper("/img/statistics_widget.gif")}
+                            {this.expandableImageWrapper("/img/geodash/statistics_widget.gif")}
                             <ol>
                                 <li>{lngObject.click_add_widget}</li>
                                 <li>{lngObject.select_stats}</li>
@@ -108,7 +108,7 @@ class GeoDashHelp extends React.Component {
                             </ol>
                         </CollapsibleSectionBlock>
                         <CollapsibleSectionBlock title={lngObject.add_dual_image_collection}>
-                            {this.expandableImageWrapper("/img/dual_image_collection_widget.gif")}
+                            {this.expandableImageWrapper("/img/geodash/dual_image_collection_widget.gif")}
                             <ol>
                                 <li>{lngObject.click_add_widget}</li>
                                 <li>{lngObject.select_dual_image_collection}</li>
@@ -190,7 +190,7 @@ class GeoDashHelp extends React.Component {
                             </ol>
                         </CollapsibleSectionBlock>
                         <CollapsibleSectionBlock title={lngObject.add_image_asset}>
-                            {this.expandableImageWrapper("/img/image_asset_widget.gif")}
+                            {this.expandableImageWrapper("/img/geodash/image_asset_widget.gif")}
                             <ol>
                                 <li>{lngObject.click_add_widget}</li>
                                 <li>{lngObject.select_image_asset}</li>
@@ -208,7 +208,7 @@ class GeoDashHelp extends React.Component {
                             </ol>
                         </CollapsibleSectionBlock>
                         <CollapsibleSectionBlock title={lngObject.add_image_collection_widget}>
-                            {this.expandableImageWrapper("/img/image_collection_asset_widget.gif")}
+                            {this.expandableImageWrapper("/img/geodash/image_collection_asset_widget.gif")}
                             <ol>
                                 <li>{lngObject.click_add_widget}</li>
                                 <li>{lngObject.select_image_collection_asset}</li>
@@ -221,7 +221,7 @@ class GeoDashHelp extends React.Component {
                             </ol>
                         </CollapsibleSectionBlock>
                         <CollapsibleSectionBlock title={lngObject.add_degradation_widget}>
-                            {this.expandableImageWrapper("/img/create_degradation_widget.gif")}
+                            {this.expandableImageWrapper("/img/geodash/create_degradation_widget.gif")}
                             <ol>
                                 <li>{lngObject.select_degradation}</li>
                                 <li>{lngObject.choose_basemap}</li>
@@ -233,7 +233,7 @@ class GeoDashHelp extends React.Component {
                             </ol>
                         </CollapsibleSectionBlock>
                         <CollapsibleSectionBlock title={lngObject.to_move_resize}>
-                            {this.expandableImageWrapper("/img/change_widget_layout.gif")}
+                            {this.expandableImageWrapper("/img/geodash/change_widget_layout.gif")}
                             <ol>
                                 <li>{lngObject.drag_drop}</li>
                                 <li>{lngObject.resize_by}</li>

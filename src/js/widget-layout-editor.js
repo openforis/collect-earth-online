@@ -82,7 +82,7 @@ class WidgetLayoutEditor extends React.PureComponent {
                 console.log(response);
                 alert("Error downloading the imagery list. See console for details.");
             });
-    }
+    };
 
     getParameterByName = (name, url) => {
         const regex = new RegExp("[?&]" + name.replace(/[[\]]/g, "\\$&") + "(=([^&#]*)|&|#|$)");
@@ -94,11 +94,11 @@ class WidgetLayoutEditor extends React.PureComponent {
             : null;
     };
 
-    getImageByType = (which) =>
-        (which === "getStats") ? "/img/statssample.gif"
-        : (which.toLowerCase().includes("image") || which === "") ? "/img/mapsample.gif"
-        : (which.toLowerCase().includes("degradationtool")) ? "/img/degsample.gif"
-        : "/img/graphsample.gif";
+    getImageByType = (imageType) =>
+        imageType === "getStats" ? "/img/geodash/statssample.gif"
+            : (!imageType || imageType.toLowerCase().includes("image")) ? "/img/geodash/mapsample.gif"
+            : (imageType.toLowerCase().includes("degradationtool")) ? "/img/geodash/degsample.gif"
+            : "/img/geodash/graphsample.gif";
 
     checkWidgetStructure = (updatedWidgets) => {
         let changed = false;
