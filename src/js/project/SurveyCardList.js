@@ -82,9 +82,10 @@ class SurveyCard extends React.Component {
                             </button>
                             <h2 className="font-weight-bold mt-2 pt-1 ml-2">Survey Card Number {cardNumber}</h2>
                             <h3 className="m-3">
-                                {!this.state.showQuestions && `-- ${inDesignMode
-                                    ? surveyQuestion.question
-                                    : removeEnumerator(surveyQuestion.question)}`
+                                {!this.state.showQuestions &&
+                                    `-- ${inDesignMode
+                                        ? surveyQuestion.question
+                                        : removeEnumerator(surveyQuestion.question)}`
                                 }
                             </h3>
                         </div>
