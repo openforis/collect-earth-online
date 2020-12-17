@@ -32,14 +32,53 @@ VALUES
     (1, 'public', 'Open Street Maps', 'Open Street Maps', null, '{"type": "OSM"}');
 
 -- Adds a project
-INSERT INTO projects
-    (project_uid, institution_rid, availability, name, description, privacy_level, boundary, plot_distribution, num_plots, plot_spacing, plot_shape, plot_size, sample_distribution, samples_per_plot, sample_resolution,
-     survey_questions,
-      survey_rules, plots_ext_table, samples_ext_table, created_date, published_date, closed_date, archived_date, classification_times, ts_start_year, ts_end_year, ts_target_day, ts_plot_size, token_key, options, imagery_rid, allow_drawn_samples)
-VALUES
-    (1, 1, 'unpublished', 'Mekong River Region', 'Laos, Cambodia, Vietnam, Thailand, Myanmar', 'public', ST_SetSRID(ST_GeomFromGeoJSON('{"type":"Polygon","coordinates":[[[95,10.5],[95,22.5],[107,22.5],[107,10.5],[95,10.5]]]}'), 4326), 'random', 3, null, 'circle', 200, 'center', 1, -1,
-     '[{"id": 1, "name": "Land Use", "values": [{"color": "#1EC61B", "name": "Forest", "id": 1, "image": null}, {"color": "#9CF135", "name": "Grassland", "id": 2, "image": null}, {"color": "#D5DE85", "name": "Bare Surface", "id": 3, "image": null}, {"color": "#8B9084", "name": "Impervious Surface", "id": 4, "image": null}, {"color": "#F2C613", "name": "Agriculture", "id": 5, "image": null}, {"color": "#6A3A75", "name": "Urban", "id": 6, "image": null}, {"color": "#2F4DC0", "name": "Water", "id": 7, "image": null}, {"color": "#FFFFFF", "name": "Cloud", "id": 8, "image": null}, {"color": "#000000", "name": "Unknown", "id": 9, "image": null}]}]',
-      '[]', null, null, Now(), null, null, null, null, 1985, null, 215, 1, null, '{"showGEEScript": false, "autoLaunchGeoDash": true, "showPlotInformation": false}', 1, false);
+INSERT INTO projects (
+    project_uid,
+    institution_rid,
+    availability,
+    name,
+    description,
+    privacy_level,
+    boundary,
+    plot_distribution,
+    num_plots,
+    plot_shape,
+    plot_size,
+    sample_distribution,
+    samples_per_plot,
+    sample_resolution,
+    survey_questions,
+    survey_rules,
+    plots_ext_table,
+    samples_ext_table,
+    created_date,
+    ts_plot_size,
+    options,
+    imagery_rid,
+    allow_drawn_samples
+) VALUES (
+    1,
+    1,
+    'unpublished',
+    'Mekong River Region',
+    'Laos, Cambodia, Vietnam, Thailand, Myanmar',
+    'public',
+    ST_SetSRID(ST_GeomFromGeoJSON('{"type":"Polygon","coordinates":[[[95,10.5],[95,22.5],[107,22.5],[107,10.5],[95,10.5]]]}'), 4326),
+    'random',
+    3,
+    'circle',
+    200,
+    'center',
+    1,
+    -1,
+    '[{"id": 1, "name": "Land Use", "values": [{"color": "#1EC61B", "name": "Forest", "id": 1, "image": null}, {"color": "#9CF135", "name": "Grassland", "id": 2, "image": null}, {"color": "#D5DE85", "name": "Bare Surface", "id": 3, "image": null}, {"color": "#8B9084", "name": "Impervious Surface", "id": 4, "image": null}, {"color": "#F2C613", "name": "Agriculture", "id": 5, "image": null}, {"color": "#6A3A75", "name": "Urban", "id": 6, "image": null}, {"color": "#2F4DC0", "name": "Water", "id": 7, "image": null}, {"color": "#FFFFFF", "name": "Cloud", "id": 8, "image": null}, {"color": "#000000", "name": "Unknown", "id": 9, "image": null}]}]',
+    '[]',
+    Now(),
+    1,
+    '{"showGEEScript": false, "autoLaunchGeoDash": true, "showPlotInformation": false}',
+    1,
+    FALSE
+);
 
 -- Adds imagery associated with a project
 INSERT INTO project_imagery
