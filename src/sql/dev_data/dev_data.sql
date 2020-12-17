@@ -7,7 +7,7 @@ VALUES
     (1, 'admin@ceo.dev', crypt('admin', gen_salt('bf')), TRUE, FALSE),
     (2, 'user@ceo.dev', crypt('user', gen_salt('bf')), FALSE, FALSE);
 
-SELECT setval(pg_get_serial_sequence('users', 'user_uid'), (SELECT MAX(user_uid) FROM users) + 2);
+SELECT setval(pg_get_serial_sequence('users', 'user_uid'), (SELECT MAX(user_uid) FROM users) + 1);
 
 -- Adds an institution
 INSERT INTO institutions
@@ -24,7 +24,7 @@ VALUES
     (1, 1, 1, 1),
     (2, 1, 2, 2);
 
-SELECT setval(pg_get_serial_sequence('institution_users', 'inst_user_uid'), (SELECT MAX(inst_user_uid) FROM institution_users) + 2);
+SELECT setval(pg_get_serial_sequence('institution_users', 'inst_user_uid'), (SELECT MAX(inst_user_uid) FROM institution_users) + 1);
 
 -- Adds an intitutiom imagery
 INSERT INTO imagery
@@ -66,7 +66,7 @@ INSERT INTO projects (
     'circle',
     200,
     'random',
-    1,
+    10,
     '[{"id": 1, "name": "Land Use", "values": [{"color": "#1EC61B", "name": "Forest", "id": 1, "image": null}, {"color": "#9CF135", "name": "Grassland", "id": 2, "image": null}, {"color": "#D5DE85", "name": "Bare Surface", "id": 3, "image": null}, {"color": "#8B9084", "name": "Impervious Surface", "id": 4, "image": null}, {"color": "#F2C613", "name": "Agriculture", "id": 5, "image": null}, {"color": "#6A3A75", "name": "Urban", "id": 6, "image": null}, {"color": "#2F4DC0", "name": "Water", "id": 7, "image": null}, {"color": "#FFFFFF", "name": "Cloud", "id": 8, "image": null}, {"color": "#000000", "name": "Unknown", "id": 9, "image": null}]}]',
     '[]',
     Now(),
@@ -91,7 +91,7 @@ VALUES
     (2, 1, ST_SetSRID(ST_GeomFromGeoJSON('{"type":"Point","coordinates":[98.5680216776391,12.3793535946933]}'), 4326)),
     (3, 1, ST_SetSRID(ST_GeomFromGeoJSON('{"type":"Point","coordinates":[106.718471401115,13.7459074361384]}'), 4326));
 
-SELECT setval(pg_get_serial_sequence('plots', 'plot_uid'), (SELECT MAX(plot_uid) FROM plots) + 3);
+SELECT setval(pg_get_serial_sequence('plots', 'plot_uid'), (SELECT MAX(plot_uid) FROM plots) + 1);
 
 -- Add 10 samples per 3 plots
 INSERT INTO samples
