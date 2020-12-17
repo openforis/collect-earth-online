@@ -52,7 +52,7 @@ export class PlanetMenu extends React.Component {
 
     render() {
         return (
-            <div className="PlanetsMenu my-2" style={{display: this.props.visible ? "block" : "none"}}>
+            <div className="my-2" style={{display: this.props.visible ? "block" : "none"}}>
                 <div className="slide-container">
                     <input
                         type="range"
@@ -146,17 +146,17 @@ export class PlanetDailyMenu extends React.Component {
         }
     };
 
-    render () {
+    render() {
         return (
-            <div className="PlanetsDailyMenu my-2" style={{display: this.props.visible ? "block" : "none"}}>
+            <div className="my-2" style={{display: this.props.visible ? "block" : "none"}}>
                 <div className="slide-container">
                     <label>Start Date</label>
                     <input
                         type="date"
                         id="planetDailyStartDate"
+                        className="form-control"
                         value={this.state.startDate || ""}
                         max={new Date().toJSON().split("T")[0]}
-                        style={{width: "100%"}}
                         onChange={e => this.setStateAndUpdate("startDate", e.target.value)}
                     />
                 </div>
@@ -165,9 +165,9 @@ export class PlanetDailyMenu extends React.Component {
                     <input
                         type="date"
                         id="planetDailyEndDate"
+                        className="form-control"
                         value={this.state.endDate || ""}
                         max={new Date().toJSON().split("T")[0]}
-                        style={{width: "100%"}}
                         onChange={e => this.setStateAndUpdate("endDate", e.target.value)}
                     />
                 </div>
@@ -221,58 +221,59 @@ export class PlanetNICFIMenu extends React.Component {
 
     render() {
         return (
-            <div className="PlanetsMenu my-2" style={{display: this.props.visible ? "block" : "none"}}>
-                <div className="d-flex flex-column">
-                    <div className="d-flex align-items-center mb-2">
-                        <label htmlFor="time-selection" className="mb-0 mr-3">Select Time</label>
-                        <select
-                            id="time-selection"
-                            onChange={e => this.setState({selectedTime: e.target.value})}
-                            value={this.state.selectedTime}
-                        >
-                            {["2018-12_2019-05",
-                              "2019-06_2019-11",
-                              "2019-12_2020-05",
-                              "2020-06_2020-08",
-                              "2020-09"]
-                                .map(time => <option key={time} value={time}>{time}</option>)
-                            }
-                        </select>
-                    </div>
-                    <div className="d-flex align-items-center mb-2">
-                        <div id="radio-group">
-                            <div className="form-check form-check-inline">
-                                <input
-                                    id="visible"
-                                    className="form-check-input"
-                                    type="radio"
-                                    checked={this.state.selectedBand === "rgb"}
-                                    onChange={() => this.setState({selectedBand: "rgb"})}
-                                />
-                                <label
-                                    className="form-check-label"
-                                    htmlFor="visible"
-                                >
-                                    Visible
-                                </label>
-                            </div>
-                            <div className="form-check form-check-inline">
-                                <input
-                                    id="infrared"
-                                    className="form-check-input"
-                                    type="radio"
-                                    checked={this.state.selectedBand === "cir"}
-                                    onChange={() => this.setState({selectedBand: "cir"})}
-                                />
-                                <label
-                                    className="form-check-label"
-                                    htmlFor="infrared"
-                                >
-                                    Infrared
-                                </label>
-                            </div>
+            <div className="my-2" style={{display: this.props.visible ? "block" : "none"}}>
+                <div className="slide-container">
+                    <label htmlFor="time-selection">Select Time</label>
+                    <select
+                        id="time-selection"
+                        className="form-control"
+                        onChange={e => this.setState({selectedTime: e.target.value})}
+                        value={this.state.selectedTime}
+                    >
+                        {["2018-12_2019-05",
+                          "2019-06_2019-11",
+                          "2019-12_2020-05",
+                          "2020-06_2020-08",
+                          "2020-09"]
+                            .map(time => <option key={time} value={time}>{time}</option>)
+                        }
+                    </select>
+                </div>
+                <div className="slide-container">
+                    <div id="radio-group">
+                        <div className="form-check form-check-inline">
+                            <input
+                                id="visible"
+                                className="form-check-input"
+                                type="radio"
+                                checked={this.state.selectedBand === "rgb"}
+                                onChange={() => this.setState({selectedBand: "rgb"})}
+                            />
+                            <label
+                                className="form-check-label"
+                                htmlFor="visible"
+                            >
+                                Visible
+                            </label>
+                        </div>
+                        <div className="form-check form-check-inline">
+                            <input
+                                id="infrared"
+                                className="form-check-input"
+                                type="radio"
+                                checked={this.state.selectedBand === "cir"}
+                                onChange={() => this.setState({selectedBand: "cir"})}
+                            />
+                            <label
+                                className="form-check-label"
+                                htmlFor="infrared"
+                            >
+                                Infrared
+                            </label>
                         </div>
                     </div>
+                </div>
+                <div className="slide-container">
                     <button
                         className="btn btn-lightgreen btn-sm"
                         type="button"
@@ -418,14 +419,14 @@ export class SecureWatchMenu extends React.Component {
 
     render() {
         return (
-            <div className="SecureWatchMenu my-2 mb-3" style={{display: this.props.visible ? "block" : "none"}}>
-                <div className="form-control form-control-sm">
+            <div className="my-2" style={{display: this.props.visible ? "block" : "none"}}>
+                <div className="slide-container">
                     <label>Available Layers</label>
                     {this.state.availableDates
                         && this.state.availableDates.length > 0
                         ?
                             <select
-                                className="form-control form-control-sm"
+                                className="form-control"
                                 onChange={e => this.onChangeSingleLayer(e.target)}
                                 id="securewatch-option-select"
                             >
@@ -442,8 +443,8 @@ export class SecureWatchMenu extends React.Component {
                             </select>
                         :
                             <select
-                                className="form-control form-control-sm"
                                 id="securewatch-option-select"
+                                className="form-control"
                                 disabled
                             >
                                 <option>
@@ -532,7 +533,7 @@ export class SentinelMenu extends React.Component {
             ];
 
         return (
-            <div className="SentinelMenu my-2" style={{display: this.props.visible ? "block" : "none"}}>
+            <div className="my-2" style={{display: this.props.visible ? "block" : "none"}}>
                 <div className="slide-container">
                     <input
                         type="range"
@@ -617,8 +618,8 @@ export class GEEImageMenu extends React.Component {
 
     render() {
         return (
-            <div className="GEEImageMenu my-2" style={{display: this.props.visible ? "block" : "none"}}>
-                <div className="form-control form-control-sm">
+            <div className="my-2" style={{display: this.props.visible ? "block" : "none"}}>
+                <div className="slide-container">
                     <label>Visualization Parameters</label>
                     <textarea
                         className="form-control"
@@ -628,7 +629,8 @@ export class GEEImageMenu extends React.Component {
                     >
                         {this.state.visParams}
                     </textarea>
-                    <br />
+                </div>
+                <div className="slide-container">
                     <button
                         type="button"
                         className="btn btn-lightgreen btn-sm btn-block"
@@ -701,47 +703,48 @@ export class GEEImageCollectionMenu extends React.Component {
 
     render() {
         return (
-            <div className="GEEImageCollectionMenu my-2" style={{display: this.props.visible ? "block" : "none"}}>
-                <label>Start Date</label>
+            <div className="my-2" style={{display: this.props.visible ? "block" : "none"}}>
                 <div className="slide-container">
+                    <label>Start Date</label>
                     <input
                         type="date"
                         id="geeImageCollectionStartDate"
+                        className="form-control"
                         value={this.state.startDate}
                         max={new Date().toJSON().split("T")[0]}
-                        style={{width: "100%"}}
                         onChange={e => this.setState({startDate: e.target.value})}
                     />
                 </div>
-                <label>End Date</label>
                 <div className="slide-container">
+                    <label>End Date</label>
                     <input
                         type="date"
                         id="geeImageCollectionEndDate"
+                        className="form-control"
                         value={this.state.endDate}
                         max={new Date().toJSON().split("T")[0]}
-                        style={{width: "100%"}}
                         onChange={e => this.setState({endDate: e.target.value})}
                     />
                 </div>
-                <label>Visualization Parameters</label>
-                <textarea
-                    className="form-control"
-                    id="geeImageCollectionVisParams"
-                    value={this.state.visParams}
-                    onChange={e => this.setState({visParams: e.target.value})}
-                >
-                    {this.state.visParams}
-                </textarea>
-                <br />
-                <button
-                    type="button"
-                    className="btn btn-lightgreen btn-sm btn-block"
-                    id="update-gee-image-button"
-                    onClick={this.updateGEEImageCollection}
-                >
-                    Update Image
-                </button>
+                <div className="slide-container">
+                    <label>Visualization Parameters</label>
+                    <textarea
+                        className="form-control"
+                        value={this.state.visParams}
+                        onChange={e => this.setState({visParams: e.target.value})}
+                    >
+                        {this.state.visParams}
+                    </textarea>
+                </div>
+                <div className="slide-container">
+                    <button
+                        type="button"
+                        className="btn btn-lightgreen btn-sm btn-block"
+                        onClick={this.updateGEEImageCollection}
+                    >
+                        Update Image
+                    </button>
+                </div>
             </div>
         );
     }
