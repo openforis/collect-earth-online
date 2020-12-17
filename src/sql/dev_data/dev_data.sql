@@ -4,19 +4,19 @@
 INSERT INTO users
     (user_uid, email, password, administrator, reset_key, on_mailing_list)
 VALUES
-    (1, 'admin@collect.earth', crypt('admin', gen_salt('bf')), true, null, false);
+    (1, 'admin@ceo.dev', crypt('admin', gen_salt('bf')), true, null, FALSE);
 
 -- Adds a user
 INSERT INTO users
     (user_uid, email, password, administrator, reset_key, on_mailing_list)
 VALUES
-    (2, 'user@collect.earth', crypt('user', gen_salt('bf')), false, null, false);
+    (2, 'user@ceo.dev', crypt('user', gen_salt('bf')), FALSE, null, FALSE);
 
 -- Adds an institution
 INSERT INTO institutions
     (institution_uid, name, logo, description, url)
 VALUES
-    (1, 'DEV Institution', 'img/institution-logos/institution-3.png', 'DEV Institution Description', 'https://collect.earth');
+    (1, 'DEV Institution', 'institution-3.png', 'DEV Institution Description', 'https://collect.earth');
 
 -- Adds administrator and user to an institution
 INSERT INTO institution_users
