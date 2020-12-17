@@ -106,7 +106,7 @@ export class PlanetDailyMenu extends React.Component {
         if (this.props.visible &&
             (this.props.currentPlot && this.props.currentPlot !== prevProps.currentPlot
                 || prevProps.visible !== this.props.visible)) {
-            this.updatePlanetDailyLayer();
+            this.updateImageryInformation();
         }
     }
 
@@ -117,9 +117,6 @@ export class PlanetDailyMenu extends React.Component {
             imageryEndDatePlanetDaily: this.state.endDate,
         });
     };
-
-    setStateAndUpdate = (key, newValue) =>
-        this.setState({[key]: newValue}, () => this.updatePlanetDailyLayer());
 
     updatePlanetDailyLayer = () => {
         if (this.props.visible) {
@@ -157,7 +154,7 @@ export class PlanetDailyMenu extends React.Component {
                         className="form-control"
                         value={this.state.startDate || ""}
                         max={new Date().toJSON().split("T")[0]}
-                        onChange={e => this.setStateAndUpdate("startDate", e.target.value)}
+                        onChange={e => this.setState({startDate: e.target.value})}
                     />
                 </div>
                 <div className="slide-container">
@@ -168,8 +165,17 @@ export class PlanetDailyMenu extends React.Component {
                         className="form-control"
                         value={this.state.endDate || ""}
                         max={new Date().toJSON().split("T")[0]}
-                        onChange={e => this.setStateAndUpdate("endDate", e.target.value)}
+                        onChange={e => this.setState({endDate: e.target.value})}
                     />
+                </div>
+                <div className="slide-container">
+                    <button
+                        type="button"
+                        className="btn btn-lightgreen btn-sm btn-block"
+                        onClick={this.updatePlanetDailyLayer}
+                    >
+                        Update Image
+                    </button>
                 </div>
             </div>
         );
