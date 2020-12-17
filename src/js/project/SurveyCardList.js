@@ -188,7 +188,13 @@ function SurveyQuestionTree({
                                                 .concat(rule.questionSetIds1)
                                                 .concat(rule.questionSetIds2)
                                                 .includes(surveyQuestion.id)
-                                                    ? <li key={uid}><p className="surveyrule_tooltip" title={getRulesById(rule.id)}>{"Rule " + rule.id + ": " + rule.ruleType}</p></li> : null
+                                                && (
+                                                    <li key={uid}>
+                                                        <p className="surveyrule_tooltip" title={getRulesById(rule.id)}>
+                                                            {"Rule " + rule.id + ": " + rule.ruleType}
+                                                        </p>
+                                                    </li>
+                                                )
                                         )}
                                     </ul>
                                 </li>
