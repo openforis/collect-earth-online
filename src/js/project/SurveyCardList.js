@@ -173,10 +173,10 @@ function SurveyQuestionTree({
                     <div className="SurveyQuestionTree__question-information pb-1">
                         <ul className="mb-1">
                             {surveyQuestion.componentType &&
-                            <li>
-                                <span className="font-weight-bold">Component Type:  </span>
-                                {surveyQuestion.componentType + " - " + surveyQuestion.dataType}
-                            </li>
+                                <li>
+                                    <span className="font-weight-bold">Component Type:  </span>
+                                    {surveyQuestion.componentType + " - " + surveyQuestion.dataType}
+                                </li>
                             }
                             {surveyRules && surveyRules.length > 0 &&
                                 <li>
@@ -200,20 +200,20 @@ function SurveyQuestionTree({
                                 </li>
                             }
                             {surveyQuestion.parentQuestion > -1 &&
-                            <Fragment>
-                                <li>
-                                    <span className="font-weight-bold">Parent Question:  </span>
-                                    {inDesignMode ? parentQuestion.question : removeEnumerator(parentQuestion.question)}
-                                </li>
-                                <li>
-                                    <span className="font-weight-bold">Parent Answer:  </span>
-                                    {surveyQuestion.parentAnswer === -1
-                                                ? "Any"
-                                                : parentQuestion.answers
-                                                    .find(ans => ans.id === surveyQuestion.parentAnswer).answer
-                                    }
-                                </li>
-                            </Fragment>
+                                <Fragment>
+                                    <li>
+                                        <span className="font-weight-bold">Parent Question:  </span>
+                                        {inDesignMode ? parentQuestion.question : removeEnumerator(parentQuestion.question)}
+                                    </li>
+                                    <li>
+                                        <span className="font-weight-bold">Parent Answer:  </span>
+                                        {surveyQuestion.parentAnswer === -1
+                                            ? "Any"
+                                            : parentQuestion.answers
+                                                .find(ans => ans.id === surveyQuestion.parentAnswer).answer
+                                        }
+                                    </li>
+                                </Fragment>
                             }
                         </ul>
                         <h3 className="font-weight-bold ml-3">Answers:  </h3>
