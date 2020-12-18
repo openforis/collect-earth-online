@@ -322,7 +322,7 @@
           (when-not (= 0 exit)
             (init-throw err)))))))
 
-(defn sh-wrapper-slurp [dir env cmd]
+(defn sh-wrapper-stdout [dir env cmd]
   (sh/with-sh-dir dir
     (sh/with-sh-env (merge {:PATH path-env} env)
       (let [{:keys [exit err out]} (apply sh/sh (parse-as-sh-cmd cmd))]
@@ -330,7 +330,7 @@
           out
           (init-throw err))))))
 
-(defn sh-wrapper-spit [dir env cmd stdin]
+(defn sh-wrapper-stdin [dir env cmd stdin]
   (sh/with-sh-dir dir
     (sh/with-sh-env (merge {:PATH path-env} env)
       (let [{:keys [exit err]} (apply sh/sh (conj (parse-as-sh-cmd cmd)
@@ -379,9 +379,9 @@
                           (sh-wrapper folder-name {} (str "7z e -y " ext-file " -o" type))
                           (let [table-name (str "project_" project-id "_" type "_shp")
                                 shp-name   (find-file-by-ext (str folder-name type) "shp")]
-                            (let [[info body _] (-> (sh-wrapper-slurp (str folder-name type)
-                                                                      {:PASSWORD "ceo"}
-                                                                      (str "shp2pgsql -s 4326 -t 2D -D " shp-name))
+                            (let [[info body _] (-> (sh-wrapper-stdout (str folder-name type)
+                                                                       {:PASSWORD "ceo"}
+                                                                       (str "shp2pgsql -s 4326 -t 2D -D " shp-name))
                                                     (str/split #"stdin;\n|\n\\\."))
                                   column-string (as-> info i
                                                   (str/replace i #"\n" "")
@@ -391,11 +391,11 @@
                               (call-sql "create_new_table"
                                         table-name
                                         column-string)
-                              (sh-wrapper-spit (str folder-name type)
-                                               {:PASSWORD "ceo"}
-                                               (format-simple "psql -h localhost -U ceo -d ceo -c `\\copy ext_tables.%1 FROM stdin`"
-                                                              table-name)
-                                               body)
+                              (sh-wrapper-stdin (str folder-name type)
+                                                {:PASSWORD "ceo"}
+                                                (format-simple "psql -h localhost -U ceo -d ceo -c `\\copy ext_tables.%1 FROM stdin`"
+                                                               table-name)
+                                                body)
                               (call-sql "add_index_col" table-name))
                             table-name))
                         (let [table-name     (str "project_" project-id "_" type "_csv")
@@ -403,11 +403,11 @@
                           (call-sql "create_new_table"
                                     table-name
                                     headers)
-                          (sh-wrapper-spit folder-name
-                                           {:PASSWORD "ceo"}
-                                           (format-simple "psql -h localhost -U ceo -d ceo -c `\\copy ext_tables.%1 FROM stdin`"
-                                                          table-name)
-                                           body)
+                          (sh-wrapper-stdin folder-name
+                                            {:PASSWORD "ceo"}
+                                            (format-simple "psql -h localhost -U ceo -d ceo -c `\\copy ext_tables.%1 FROM stdin`"
+                                                           table-name)
+                                            body)
                           (call-sql "add_index_col" table-name) ; Add index for reference
                           table-name))
                      "Error importing file into SQL.")))
