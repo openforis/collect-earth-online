@@ -80,7 +80,7 @@ export class PlanetMenu extends React.Component {
                         className="btn btn-lightgreen btn-sm btn-block"
                         onClick={this.updatePlanetLayer}
                     >
-                        Update Image
+                        Update Map
                     </button>
                 </div>
             </div>
@@ -180,7 +180,7 @@ export class PlanetDailyMenu extends React.Component {
                         className="btn btn-lightgreen btn-sm btn-block"
                         onClick={this.updatePlanetDailyLayer}
                     >
-                        Update Image
+                        Update Map
                     </button>
                 </div>
             </div>
@@ -291,7 +291,7 @@ export class PlanetNICFIMenu extends React.Component {
                         type="button"
                         onClick={this.updatePlanetLayer}
                     >
-                        Update Imagery
+                        Update Map
                     </button>
                 </div>
             </div>
@@ -584,7 +584,7 @@ export class SentinelMenu extends React.Component {
                         className="btn btn-lightgreen btn-sm btn-block"
                         onClick={this.updateSentinelLayer}
                     >
-                        Update Image
+                        Update Map
                     </button>
                 </div>
             </div>
@@ -655,7 +655,7 @@ export class GEEImageMenu extends React.Component {
                         id="update-gee-image-button"
                         onClick={this.updateGEEImagery}
                     >
-                        Update Image
+                        Update Map
                     </button>
                 </div>
             </div>
@@ -760,7 +760,7 @@ export class GEEImageCollectionMenu extends React.Component {
                         className="btn btn-lightgreen btn-sm btn-block"
                         onClick={this.updateGEEImageCollection}
                     >
-                        Update Image
+                        Update Map
                     </button>
                 </div>
             </div>
