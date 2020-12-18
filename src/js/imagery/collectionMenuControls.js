@@ -35,9 +35,6 @@ export class PlanetMenu extends React.Component {
         }
     };
 
-    setStateAndUpdate = (key, newValue) =>
-        this.setState({[key]: newValue}, () => this.updatePlanetLayer());
-
     updatePlanetLayer = () => {
         this.updateImageryInformation();
         mercator.updateLayerSource(this.props.mapConfig,
@@ -61,7 +58,7 @@ export class PlanetMenu extends React.Component {
                         value={this.state.year || ""}
                         className="slider"
                         id="myRange"
-                        onChange={e => this.setStateAndUpdate("year", e.target.value)}
+                        onChange={e => this.setState({year: e.target.value})}
                     />
                     <label>Year: {this.state.year}</label>
                 </div>
@@ -73,9 +70,18 @@ export class PlanetMenu extends React.Component {
                         value={this.state.month || ""}
                         className="slider"
                         id="myRangemonth"
-                        onChange={e => this.setStateAndUpdate("month", e.target.value)}
+                        onChange={e => this.setState({month: e.target.value})}
                     />
                     <label>Month: {monthlyMapping[this.state.month]}</label>
+                </div>
+                <div className="slide-container">
+                    <button
+                        type="button"
+                        className="btn btn-lightgreen btn-sm btn-block"
+                        onClick={this.updatePlanetLayer}
+                    >
+                        Update Map
+                    </button>
                 </div>
             </div>
         );
@@ -106,7 +112,7 @@ export class PlanetDailyMenu extends React.Component {
         if (this.props.visible &&
             (this.props.currentPlot && this.props.currentPlot !== prevProps.currentPlot
                 || prevProps.visible !== this.props.visible)) {
-            this.updatePlanetDailyLayer();
+            this.updateImageryInformation();
         }
     }
 
@@ -117,9 +123,6 @@ export class PlanetDailyMenu extends React.Component {
             imageryEndDatePlanetDaily: this.state.endDate,
         });
     };
-
-    setStateAndUpdate = (key, newValue) =>
-        this.setState({[key]: newValue}, () => this.updatePlanetDailyLayer());
 
     updatePlanetDailyLayer = () => {
         if (this.props.visible) {
@@ -157,7 +160,7 @@ export class PlanetDailyMenu extends React.Component {
                         className="form-control"
                         value={this.state.startDate || ""}
                         max={new Date().toJSON().split("T")[0]}
-                        onChange={e => this.setStateAndUpdate("startDate", e.target.value)}
+                        onChange={e => this.setState({startDate: e.target.value})}
                     />
                 </div>
                 <div className="slide-container">
@@ -168,8 +171,17 @@ export class PlanetDailyMenu extends React.Component {
                         className="form-control"
                         value={this.state.endDate || ""}
                         max={new Date().toJSON().split("T")[0]}
-                        onChange={e => this.setStateAndUpdate("endDate", e.target.value)}
+                        onChange={e => this.setState({endDate: e.target.value})}
                     />
+                </div>
+                <div className="slide-container">
+                    <button
+                        type="button"
+                        className="btn btn-lightgreen btn-sm btn-block"
+                        onClick={this.updatePlanetDailyLayer}
+                    >
+                        Update Map
+                    </button>
                 </div>
             </div>
         );
@@ -279,7 +291,7 @@ export class PlanetNICFIMenu extends React.Component {
                         type="button"
                         onClick={this.updatePlanetLayer}
                     >
-                        Update Imagery
+                        Update Map
                     </button>
                 </div>
             </div>
@@ -497,9 +509,6 @@ export class SentinelMenu extends React.Component {
         }
     };
 
-    setStateAndUpdate = (key, newValue) =>
-        this.setState({[key]: newValue}, () => this.updateSentinelLayer());
-
     updateSentinelLayer = () => {
         this.updateImageryInformation();
         mercator.updateLayerSource(this.props.mapConfig,
@@ -542,7 +551,7 @@ export class SentinelMenu extends React.Component {
                         value={this.state.year}
                         className="slider"
                         id="sentinel-year"
-                        onChange={e => this.setStateAndUpdate("year", e.target.value)}
+                        onChange={e => this.setState({year: e.target.value})}
                     />
                     <label>Year: <span>{this.state.year}</span></label>
                 </div>
@@ -554,7 +563,7 @@ export class SentinelMenu extends React.Component {
                         value={this.state.month}
                         className="slider"
                         id="sentinel-month"
-                        onChange={e => this.setStateAndUpdate("month", e.target.value)}
+                        onChange={e => this.setState({month: e.target.value})}
                     />
                     <label>Month: {monthlyMapping[this.state.month]}</label>
                 </div>
@@ -564,10 +573,19 @@ export class SentinelMenu extends React.Component {
                         className="form-control"
                         id="sentinel-bandCombination"
                         value={this.state.bandCombination}
-                        onChange={e => this.setStateAndUpdate("bandCombination", e.target.value)}
+                        onChange={e => this.setState({bandCombination: e.target.value})}
                     >
                         {bandCombinationOptions.map(el => <option value={el.value} key={el.value}>{el.label}</option>)}
                     </select>
+                </div>
+                <div className="slide-container">
+                    <button
+                        type="button"
+                        className="btn btn-lightgreen btn-sm btn-block"
+                        onClick={this.updateSentinelLayer}
+                    >
+                        Update Map
+                    </button>
                 </div>
             </div>
         );
@@ -637,7 +655,7 @@ export class GEEImageMenu extends React.Component {
                         id="update-gee-image-button"
                         onClick={this.updateGEEImagery}
                     >
-                        Update Image
+                        Update Map
                     </button>
                 </div>
             </div>
@@ -742,7 +760,7 @@ export class GEEImageCollectionMenu extends React.Component {
                         className="btn btn-lightgreen btn-sm btn-block"
                         onClick={this.updateGEEImageCollection}
                     >
-                        Update Image
+                        Update Map
                     </button>
                 </div>
             </div>
