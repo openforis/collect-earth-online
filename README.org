@@ -27,7 +27,7 @@ should navigate to the toplevel directory (i.e., the directory
 containing this README) and run the database build command as follows:
 
 #+begin_src sh
-clojure -A:build-db build-all
+clojure -M:build-db build-all
 #+end_src
 
 This will begin by creating a new database and role called ceo and
@@ -100,7 +100,7 @@ this repackaging step manually, simply run this command from your
 shell:
 
 #+begin_src sh
-clojure -A:package-cert mydomain.com [certbot-dir]
+clojure -M:package-cert mydomain.com [certbot-dir]
 #+end_src
 
 Certbot runs as a background task every 12 hours and will renew any
@@ -131,7 +131,7 @@ project directory and run:
 #+begin_src sh
 npm install
 npm run webpack-<dev|prod>
-clojure -A:run-server [-m <dev|prod>] [-p 8080] [-P 8443]
+clojure -M:run-server [-m <dev|prod>] [-p 8080] [-P 8443]
 #+end_src
 
 The website will then be available at http://localhost:8080 unless a
