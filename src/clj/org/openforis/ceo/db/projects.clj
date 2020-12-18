@@ -308,7 +308,7 @@
           (when-not (= 0 exit)
             (init-throw err)))))))
 
-(defn sh-wrapper-slurp [dir env cmd]
+(defn sh-wrapper-stdout [dir env cmd]
   (sh/with-sh-dir dir
     (sh/with-sh-env (merge {:PATH path-env} env)
       (let [{:keys [exit err out]} (apply sh/sh (parse-as-sh-cmd cmd))]
@@ -316,7 +316,7 @@
           out
           (init-throw err))))))
 
-(defn sh-wrapper-spit [dir env cmd stdin]
+(defn sh-wrapper-stdin [dir env cmd stdin]
   (sh/with-sh-dir dir
     (sh/with-sh-env (merge {:PATH path-env} env)
       (let [{:keys [exit err]} (apply sh/sh (conj (parse-as-sh-cmd cmd)
@@ -336,10 +336,10 @@
 
 (defmethod get-file-data :shp [_ type ext-file folder-name]
   (sh-wrapper folder-name {} (str "7z e -y " ext-file " -o" type))
-  (let [[info body _] (-> (sh-wrapper-slurp (str folder-name type)
-                                            {:PASSWORD "ceo"}
-                                            (format-simple "shp2pgsql -s 4326 -t 2D -D %1"
-                                                           (find-file-by-ext (str folder-name type) "shp")))
+  (let [[info body _] (-> (sh-wrapper-stdout (str folder-name type)
+                                             {:PASSWORD "ceo"}
+                                             (format-simple "shp2pgsql -s 4326 -t 2D -D %1"
+                                                            (find-file-by-ext (str folder-name type) "shp")))
                           (str/split #"stdin;\n|\n\\\."))
         column-string (as-> info i
                         (str/replace i #"\n" "")
@@ -391,11 +391,11 @@
                           (call-sql "create_new_table"
                                     table-name
                                     (str "gid serial primary key," column-string))
-                          (sh-wrapper-spit folder-name
-                                           {:PASSWORD "ceo"}
-                                           (format-simple "psql -h localhost -U ceo -d ceo -c `\\copy ext_tables.%1(%2) FROM stdin`"
-                                                          table-name (str/join "," headers))
-                                           body)
+                          (sh-wrapper-stdin folder-name
+                                            {:PASSWORD "ceo"}
+                                            (format-simple "psql -h localhost -U ceo -d ceo -c `\\copy ext_tables.%1(%2) FROM stdin`"
+                                                           table-name (str/join "," headers))
+                                            body)
                           (if (= "plots" type)
                             (call-sql "select_partial_table_by_name" table-name)
                             (call-sql "select_partial_sample_table_by_name" table-name))
