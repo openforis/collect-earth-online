@@ -310,21 +310,13 @@ export class SecureWatchMenu extends React.Component {
         };
     }
 
-    componentDidMount() {
-        mercator.updateLayerWmsParams(this.props.mapConfig,
-                                      this.props.thisImageryId,
-                                      {},
-                                      "img/securewatch-go-to-plot.png");
-    }
-
     componentDidUpdate(prevProps) {
-        const {extent, mapConfig, thisImageryId, visible} = this.props;
+        const {extent, visible} = this.props;
         if (extent.length > 0
              && JSON.stringify(extent) !== JSON.stringify(prevProps.extent)) {
             this.getAvailableDates();
         }
         if (prevProps.visible !== visible) {
-            mercator.updateLayerWmsParams(mapConfig, thisImageryId, {}, "img/go-to-plot.png");
             this.updateImageryInformation();
         }
     }

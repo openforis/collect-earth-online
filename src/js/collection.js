@@ -100,6 +100,7 @@ class Collection extends React.Component {
             }
             clearInterval(this.state.storedInterval);
             this.setState({storedInterval: setInterval(this.resetPlotLock, 2.3 * 60 * 1000)});
+            this.updateMapImagery();
         }
 
         // Conditions required for samples to be shown
@@ -219,6 +220,13 @@ class Collection extends React.Component {
                                              1,
                                              this.state.imageryList,
                                              this.state.currentProject.boundary);
+        mapConfig.map.addLayer(mercator.createLayer({
+            id: -1,
+            sourceConfig: {
+                layerName: "GOTOPLOT",
+                type: "GOTOPLOT",
+            },
+        }, null));
         mercator.addVectorLayer(mapConfig,
                                 "currentAOI",
                                 mercator.geometryToVectorSource(mercator.parseGeoJson(this.state.currentProject.boundary,
@@ -255,7 +263,14 @@ class Collection extends React.Component {
         });
     };
 
-    updateMapImagery = () => mercator.setVisibleLayer(this.state.mapConfig, this.state.currentImagery.id);
+    updateMapImagery = () => {
+        const {currentPlot, mapConfig, currentImagery} = this.state;
+        if (currentPlot && !currentPlot.id && (currentImagery.sourceConfig.type === "PlanetDaily" || currentImagery.sourceConfig.type === "SecureWatch")) {
+            mercator.setVisibleLayer(mapConfig, -1);
+        } else {
+            mercator.setVisibleLayer(mapConfig, currentImagery.id);
+        }
+    };
 
     getImageryById = (imageryId) => this.state.imageryList.find(imagery => imagery.id === imageryId);
 
@@ -1429,9 +1444,6 @@ class ImageryOptions extends React.Component {
                                               props.currentProject.plotShape).getExtent()
                 : [],
         };
-        const filteredImageryList = props.showPlanetDaily
-            ? props.imageryList
-            : props.imageryList.filter(layerConfig => layerConfig.sourceConfig.type !== "PlanetDaily");
 
         return (
             <div className="justify-content-center text-center">
@@ -1451,11 +1463,11 @@ class ImageryOptions extends React.Component {
                             value={props.currentImageryId || ""}
                             onChange={e => props.setBaseMapSource(parseInt(e.target.value))}
                         >
-                            {filteredImageryList
+                            {props.imageryList
                                 .map(imagery => <option key={imagery.id} value={imagery.id}>{imagery.title}</option>)}
                         </select>
                     }
-                    {props.currentImageryId && filteredImageryList.map(imagery => {
+                    {props.currentImageryId && props.imageryList.map(imagery => {
                         const individualProps = {
                             ...commonProps,
                             key: imagery.id,
