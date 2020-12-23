@@ -947,7 +947,7 @@
 (defn dump-project-aggregate-data [{:keys [params]}]
   (let [project-id (tc/val->int (:projectId params))]
     (if-let [project-info (first (call-sql "select_project_by_id" project-id))]
-      (let [survey-questions (tc/jsonb->clj (:survey_questions project-info)) ; TODO rename var
+      (let [survey-questions (tc/jsonb->clj (:survey_questions project-info))
             text-headers     (concat plot-base-headers
                                      (get-ext-plot-headers project-id))
             number-headers   (get-value-distribution-headers survey-questions)
