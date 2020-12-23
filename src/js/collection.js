@@ -220,13 +220,6 @@ class Collection extends React.Component {
                                              1,
                                              this.state.imageryList,
                                              this.state.currentProject.boundary);
-        mapConfig.map.addLayer(mercator.createLayer({
-            id: -1,
-            sourceConfig: {
-                layerName: "GOTOPLOT",
-                type: "GOTOPLOT",
-            },
-        }, null));
         mercator.addVectorLayer(mapConfig,
                                 "currentAOI",
                                 mercator.geometryToVectorSource(mercator.parseGeoJson(this.state.currentProject.boundary,
@@ -265,10 +258,10 @@ class Collection extends React.Component {
 
     updateMapImagery = () => {
         const {currentPlot, mapConfig, currentImagery} = this.state;
-        if (currentPlot && !currentPlot.id && (currentImagery.sourceConfig.type === "PlanetDaily" || currentImagery.sourceConfig.type === "SecureWatch")) {
-            mercator.setVisibleLayer(mapConfig, -1);
+        if (currentPlot && !currentPlot.id && ["PlanetDaily", "SecureWatch"].includes(currentImagery.sourceConfig.type)) {
+            mercator.setLayerVisibilityByLayerId(mapConfig, "goToPlot", true);
         } else {
-            mercator.setVisibleLayer(mapConfig, currentImagery.id);
+            mercator.setLayerVisibilityByLayerId(mapConfig, "goToPlot", false);
         }
     };
 
@@ -1064,7 +1057,6 @@ class Collection extends React.Component {
                         currentPlot={this.state.currentPlot}
                         currentProject={this.state.currentProject}
                         currentProjectBoundary={this.state.currentProject.boundary}
-                        showPlanetDaily={this.state.currentPlot.plotId}
                         loadingImages={this.state.imageryList.length === 0}
                     />
                     {this.state.currentPlot.id

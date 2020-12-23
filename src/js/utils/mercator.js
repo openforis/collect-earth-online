@@ -460,13 +460,6 @@ mercator.createSource = function (sourceConfig, imageryId, attribution,
         });
     } else if (sourceConfig.type === "OSM") {
         return new OSM();
-    } else if (sourceConfig.type === "GOTOPLOT") {
-        return new TileWMS({
-            serverType: "geoserver",
-            url: "/img/go-to-plot.png",
-            params: {},
-            attributions: "",
-        });
     } else {
         return new XYZ({url: "img/source-not-found.png"});
     }
@@ -651,6 +644,20 @@ mercator.createMap = function (divName, centerCoords, zoomLevel, layerConfigs, p
             controls: controls,
             view: view,
         });
+
+        // Add goToPlot layer
+        map.addLayer(new TileLayer({
+            id: "goToPlot",
+            visible: false,
+            source: new TileWMS({
+                serverType: "geoserver",
+                url: "/img/go-to-plot.png",
+                params: {},
+                attributions: "",
+            }),
+            zIndex: 100,
+        }));
+
         mercator.currentMap = map;
         // Return the map configuration object
         return {
