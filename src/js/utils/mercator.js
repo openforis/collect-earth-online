@@ -649,11 +649,8 @@ mercator.createMap = function (divName, centerCoords, zoomLevel, layerConfigs, p
         map.addLayer(new TileLayer({
             id: "goToPlot",
             visible: false,
-            source: new TileWMS({
-                serverType: "geoserver",
+            source: new XYZ({
                 url: "/img/go-to-plot.png",
-                params: {},
-                attributions: "",
             }),
             zIndex: 100,
         }));
