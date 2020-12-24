@@ -344,7 +344,7 @@
         column-string (as-> info i
                         (str/replace i #"\n" "")
                         (re-find #"(?<=CREATE TABLE.*gid serial,).*?(?=\);)" i)
-                        (str i ",\"geom\" geometry (geometry, 4326)"))
+                        (str i ",\"geom\" geometry(geometry, 4326)"))
         columns       (as-> column-string i
                         (str/split i #",\"")
                         (map (fn [col]
