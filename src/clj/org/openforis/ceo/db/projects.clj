@@ -388,28 +388,28 @@
                                   column-string (as-> info i
                                                   (str/replace i #"\n" "")
                                                   (re-find #"(?<=CREATE TABLE.*gid serial,).*?(?=\);)" i)
-                                                  (str i ",geom geometry (geometry,4326)"))]
+                                                  (str i ",\"geom\" geometry(geometry,4326)"))]
                               ;; TODO: Check headers before creating new table.
                               (call-sql "create_new_table"
-                                        table-name
+                                        (str "ext_tables." table-name)
                                         column-string)
                               (sh-wrapper-stdin (str folder-name type)
                                                 {:PASSWORD "ceo"}
                                                 (format-simple "psql -h localhost -U ceo -d ceo -c `\\copy ext_tables.%1 FROM stdin`"
                                                                table-name)
                                                 body)
-                              (call-sql "add_index_col" table-name))
+                              (call-sql "add_index_col" (str "ext_tables." table-name)))
                             table-name))
                         ;; TODO: Explore loading CSVs with a bulk insert.
                         (let [table-name (str "project_" project-id "_" type "_csv")]
                           (call-sql "create_new_table"
-                                    table-name
+                                    (str "ext_tables." table-name)
                                     (get-csv-headers ext-file must-include))
                           (sh-wrapper folder-name
                                       {:PASSWORD "ceo"}
                                       (format-simple "psql -h localhost -U ceo -d ceo -c `\\copy ext_tables.%1 FROM %2 DELIMITER ',' CSV HEADER`"
                                                      table-name ext-file))
-                          (call-sql "add_index_col" table-name) ; Add index for reference
+                          (call-sql "add_index_col" (str "ext_tables." table-name)) ; Add index for reference
                           table-name))
                      "Error importing file into SQL.")))
 
