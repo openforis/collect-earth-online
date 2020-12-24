@@ -460,8 +460,6 @@
                                                           (str "project-" project-id "-samples"))))]
     (if (#{"csv" "shp"} plot-distribution)
       (do
-        (try-catch-throw #(call-sql "cleanup_project_tables" project-id plot-size)
-                         "SQL Error: cannot clean external tables.")
         (let [plot-table       (load-external-data plot-distribution project-id plots-file "plots" #{"PLOTID"})
               sample-table     (load-external-data sample-distribution project-id samples-file "samples" #{"PLOTID" "SAMPLEID"})
               counts           (try-catch-throw #(first (call-sql "ext_table_count" project-id))
@@ -492,6 +490,8 @@
                                                       samples-per-plot
                                                       sample-resolution))
                            "Error adding plot file with generated samples."))
+        (try-catch-throw #(call-sql "cleanup_project_tables" project-id plot-size)
+                         "SQL Error: cannot clean external tables.")
         ;; The SQL function only checks against plots with external tables.
         (when (not allow-drawn-samples?)
           (let [bad-plots (map :plot_id (call-sql "plots_missing_samples" project-id))]
@@ -670,32 +670,35 @@
                         sample-resolution
                         sample-file-name
                         sample-file-base64]
-  (try (if (#{"csv" "shp"} sample-distribution)
-         (let [write-dir     (str tmp-dir "/ceo-tmp-" project-id "/")
-               samples-file  (str write-dir
-                                  (pu/write-file-part-base64 sample-file-name
-                                                             sample-file-base64
-                                                             write-dir
-                                                             (str "project-" project-id "-samples")))
-               samples-table (load-external-data sample-distribution
-                                                 project-id
-                                                 samples-file
-                                                 "samples"
-                                                 #{"PLOTID" "SAMPLEID"})]
-           (try-catch-throw #(call-sql "update_project_sample_table" project-id samples-table)
-                            "SQL Error: cannot update project table."))
-         (doseq [{:keys [plot_id lon lat]} (call-sql "get_plot_centers_by_project" project-id)]
-           (create-project-samples plot_id
-                                   sample-distribution
-                                   [lon lat]
-                                   plot-shape
-                                   plot-size
-                                   samples-per-plot
-                                   sample-resolution)))
-       (catch Exception e
-         (data-response (if-let [causes (:causes (ex-data e))]
-                          (str/join "\n" causes)
-                          "Unknown server error.")))))
+  (try
+    (if (#{"csv" "shp"} sample-distribution)
+      (let [write-dir     (str tmp-dir "/ceo-tmp-" project-id "/")
+            samples-file  (str write-dir
+                               (pu/write-file-part-base64 sample-file-name
+                                                          sample-file-base64
+                                                          write-dir
+                                                          (str "project-" project-id "-samples")))
+            samples-table (load-external-data sample-distribution
+                                              project-id
+                                              samples-file
+                                              "samples"
+                                              #{"PLOTID" "SAMPLEID"})]
+        (try-catch-throw #(call-sql "samples_from_plots_with_files" project-id)
+                         "Error importing samples file.")
+        (try-catch-throw #(call-sql "update_project_sample_table" project-id samples-table)
+                         "SQL Error: cannot update project table."))
+      (doseq [{:keys [plot_id lon lat]} (call-sql "get_plot_centers_by_project" project-id)]
+        (create-project-samples plot_id
+                                sample-distribution
+                                [lon lat]
+                                plot-shape
+                                plot-size
+                                samples-per-plot
+                                sample-resolution)))
+    (catch Exception e
+      (data-response (if-let [causes (:causes (ex-data e))]
+                       (str/join "\n" causes)
+                       "Unknown server error.")))))
 
 (defn- exterior-ring [coords]
   (map (fn [[a b]] [(tc/val->double a) (tc/val->double b)])
