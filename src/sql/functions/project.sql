@@ -115,6 +115,16 @@ CREATE OR REPLACE FUNCTION get_sample_headers(_project_id integer)
 
 $$ LANGUAGE PLPGSQL;
 
+-- Create empty table before loading external data
+CREATE OR REPLACE FUNCTION create_new_table(_table_name text, _cols text)
+ RETURNS void AS $$
+
+ BEGIN
+    EXECUTE 'CREATE TABLE ' || _table_name || '(' || _cols || ')';
+ END
+
+$$ LANGUAGE PLPGSQL;
+
 --
 --  WIDGET FUNCTIONS
 --
@@ -415,28 +425,6 @@ CREATE OR REPLACE FUNCTION update_project_counts(_project_id integer)
     WHERE project_uid = _project_id
 
 $$ LANGUAGE SQL;
-
--- CSV REQUIRED FUNCTIONS
-
--- Create empty table before loading external data
-CREATE OR REPLACE FUNCTION create_new_table(_table_name text, _cols text)
- RETURNS void AS $$
-
- BEGIN
-    EXECUTE 'CREATE TABLE ' || _table_name || '(' || _cols || ')';
- END
-
-$$ LANGUAGE PLPGSQL;
-
--- Add index to csv file for reference later
-CREATE OR REPLACE FUNCTION add_index_col(_table_name text)
- RETURNS void AS $$
-
- BEGIN
-    EXECUTE 'ALTER TABLE ' || _table_name || ' ADD COLUMN gid serial primary key';
- END
-
-$$ LANGUAGE PLPGSQL;
 
 --  CLEAN UP FUNCTIONS
 
