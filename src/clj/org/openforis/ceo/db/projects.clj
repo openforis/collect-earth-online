@@ -351,7 +351,7 @@
 (defmethod get-file-data :shp [_ type ext-file folder-name]
   (sh-wrapper folder-name {} (str "7z e -y " ext-file " -o" type))
   (let [[info body _] (-> (sh-wrapper-stdout (str folder-name type)
-                                             {:PASSWORD "ceo"}
+                                             {}
                                              (format-simple "shp2pgsql -s 4326 -t 2D -D %1"
                                                             (find-file-by-ext (str folder-name type) "shp")))
                           (str/split #"stdin;\n|\n\\\."))
@@ -383,34 +383,33 @@
       [headers (type-columns headers) (str/replace body #"," "\t")])))
 
 (defmethod get-file-data :default [distribution _ _ _]
-  (throw (str "No such distribution (" distribution ") defined for ceo/get-file-data")))
+  (throw (str "No such distribution (" distribution ") defined for ceo.db.projects/get-file-data")))
 
 (defn- check-headers [headers must-include]
-  (let [header-set      (set headers)
-        header-diff     (set/difference (set must-include) header-set)
-        invalid-headers (seq (remove #(re-matches #"^[a-zA-Z_][a-zA-Z0-9_]*$" %) headers))]
-    (when (seq header-diff)
-      (init-throw (str "The required header field(s) " (str/join ", " header-diff) " are missing.")))
-    (when invalid-headers
-      (init-throw (str "One or more columns contains invalid characters: " (str/join ", " invalid-headers))))))
+  (let [missing-headers (set/difference (set must-include) (set headers))
+        invalid-headers (remove #(re-matches #"^[a-zA-Z_][a-zA-Z0-9_]*$" %) headers)]
+    (when (seq missing-headers)
+      (init-throw (str "The required header field(s) " (str/join ", " missing-headers) " are missing.")))
+    (when (seq invalid-headers)
+      (init-throw (str "One or more columns contain invalid characters: " (str/join ", " invalid-headers))))))
 
 (defn- load-external-data [distribution project-id ext-file type must-include]
   (let [folder-name (str tmp-dir "/ceo-tmp-" project-id "/")]
-    (try-catch-throw #((let [table-name                   (str "project_" project-id "_" type "_" distribution)
-                             [headers column-string body] (get-file-data distribution type ext-file folder-name)]
-                         (when (nil? body)
-                           (init-throw (str "The " type " file contains no rows of data.")))
-                         (check-headers headers must-include)
-                         (call-sql "create_new_table"
-                                   (str "ext_tables." table-name)
-                                   column-string)
-                         (sh-wrapper-stdin folder-name
-                                           {:PASSWORD "ceo"}
-                                           (format-simple "psql -h localhost -U ceo -d ceo -c `\\copy ext_tables.%1 FROM stdin`"
-                                                          table-name)
-                                           body)
-                         (call-sql "add_index_col" (str "ext_tables." table-name))
-                         table-name))
+    (try-catch-throw #(let [table-name                   (str "project_" project-id "_" type "_" distribution)
+                            [headers column-string body] (get-file-data distribution type ext-file folder-name)]
+                        (when (nil? body)
+                          (init-throw (str "The " type " file contains no rows of data.")))
+                        (check-headers headers must-include)
+                        (call-sql "create_new_table"
+                                  (str "ext_tables." table-name)
+                                  column-string)
+                        (sh-wrapper-stdin folder-name
+                                          {:PASSWORD "ceo"}
+                                          (format-simple "psql -h localhost -U ceo -d ceo -c `\\copy ext_tables.%1 FROM stdin`"
+                                                         table-name)
+                                          body)
+                        (call-sql "add_index_col" (str "ext_tables." table-name))
+                        table-name)
                      "Error importing file into SQL.")))
 
 (defn- check-load-ext [distribution project-id ext-file type must-include]
