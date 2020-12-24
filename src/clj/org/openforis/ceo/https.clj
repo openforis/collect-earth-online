@@ -21,38 +21,52 @@
         (recur (->> chars (drop-while #(not= \` %)))
                (->> chars (take-while #(not= \` %)) (apply str) (str/trim) (#(str/split % #" ")) (remove str/blank?) (into acc)))))))
 
-(defn format-simple
-  "Use any char after % for format."
-  [f-str & args]
-  (apply format (str/replace f-str #"(%[^ ])" "%s") args))
-
 (defn sh-wrapper [dir env & commands]
   (io/make-parents (str dir "/dummy"))
   (sh/with-sh-dir dir
     (sh/with-sh-env (merge {:PATH path-env} env)
       (every?
-       (fn [cmd]
-         (log-str cmd)
+       (fn [cmd] (log-str cmd)
          (let [{:keys [out err]} (apply sh/sh (parse-as-sh-cmd cmd))]
            (log-str "out: "   out)
            (log-str "error: " err)
            (= err "")))
        commands))))
 
-(defn -main [& [domain path]]
+(defn package-certificate [domain certbot-dir]
+  (sh-wrapper "./"
+              {}
+              (str "sudo openssl pkcs12 -export -out ./.key/keystore.pkcs12"
+                   " -in " certbot-dir "/live/" domain "/fullchain.pem"
+                   " -inkey " certbot-dir "/live/" domain "/privkey.pem"
+                   " -passout pass:foobar")))
+
+(defn initial-certificate [domain certbot-dir]
+  (let [repo-path (.getAbsolutePath (io/file ""))]
+    (spit "certbot-deploy-hook.sh"
+          (str "#!/bin/sh"
+               "\ncd " repo-path
+               "\nclojure -A:package-cert " domain " " certbot-dir))
+    (sh-wrapper "./"
+                {}
+                "chmod +x certbot-deploy-hook.sh"
+                (str "sudo certbot certonly"
+                     " --quiet"
+                     " --non-interactive"
+                     " --agree-tos"
+                     " -m support@sig-gis.com"
+                     " --webroot"
+                     " -w ./resources/public"
+                     " -d " domain
+                     " --deploy-hook " repo-path "/certbot-deploy-hook.sh"))))
+
+(defn -main [& [type domain certbot-dir]]
   (if domain
-    (let [certbot-path (.getPath (io/file (or path "/etc/letsencrypt/live/") domain))]
-      (io/make-parents "./.key/dummy")
-      (sh-wrapper "./"
-                  {}
-                  (format-simple "sudo certbot certonly --quiet --non-interactive --agree-tos -m support@sig-gis.com --webroot -w ./resources/public -d %1"
-                                 domain)
-                  (format-simple (str "sudo openssl pkcs12 -export -out ./.key/keystore.pkcs12"
-                                      " -in %1/fullchain.pem"
-                                      " -inkey %2/privkey.pem"
-                                      " -passout pass:foobar")
-                                 certbot-path
-                                 certbot-path)))
-    (println "You must provide a domain to create a SSL key.\n\n"
-             "Usage: clojure -A:ssl-key-gen domain [certbot-path-root]"))
+    (case type
+      "certbot-init" (initial-certificate domain (or certbot-dir "/etc/letsencrypt"))
+      "package-cert" (package-certificate domain (or certbot-dir "/etc/letsencrypt"))
+      (println "Valid options are:"
+               "\n  certbot-init domain [certbot-dir]    to initialize certbot"
+               "\n  package-cert domain [certbot-dir]    to repackage certificates after an update"))
+    (println "You must provide a domain to create an SSL key."))
   (shutdown-agents))

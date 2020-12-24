@@ -8,10 +8,9 @@ import {SurveyRuleDesign} from "./SurveyRules";
 import AOIMap from "./AOIMap";
 import {SampleDesign, SampleReview, SamplePreview} from "./SampleDesign";
 
-import {SvgIcon} from "../utils/svgIcons";
+import SvgIcon from "../components/SvgIcon";
 import {mercator} from "../utils/mercator.js";
 import {last, removeFromSet} from "../utils/generalUtils";
-import {convertSampleValuesToSurveyQuestions} from "../utils/surveyUtils";
 import {ProjectContext, plotLimit, perPlotLimit, sampleLimit} from "./constants";
 
 export default class CreateProjectWizard extends React.Component {
@@ -112,10 +111,6 @@ export default class CreateProjectWizard extends React.Component {
     componentDidMount() {
         this.getTemplateProjects();
         if (this.context.name !== "" || this.context.description !== "") this.checkAllSteps();
-        this.context.setProjectDetails({
-            plotFileBase64: null,
-            sampleFileBase64: null,
-        });
     }
 
     /// API Calls
@@ -123,7 +118,9 @@ export default class CreateProjectWizard extends React.Component {
     getTemplateProjects = () =>
         fetch("/get-template-projects")
             .then(response => response.ok ? response.json() : Promise.reject(response))
-            .then(data => this.setState({templateProjectList: data}))
+            .then(data =>
+                this.setState({templateProjectList: data && data.length > 0 ? data : [{id: -1, name: "No template projects found"}]}
+            ))
             .catch(response => {
                 console.log(response);
                 this.setState({templateProjectList: [{id: -1, name: "Failed to load"}]});
@@ -145,12 +142,14 @@ export default class CreateProjectWizard extends React.Component {
         fetch(`/get-template-by-id?projectId=${projectId}`)
             .then(response => response.ok ? response.json() : Promise.reject(response))
             .then(data => {
-                const newSurveyQuestions = convertSampleValuesToSurveyQuestions(data.sampleValues);
-                this.setState({templateProject: {...data, surveyQuestions: newSurveyQuestions}});
+                this.setState({templateProject: data});
+                const institutionImageryIds = this.context.institutionImagery.map(i => i.id);
                 this.context.setProjectDetails({
                     ...data,
-                    surveyQuestions: newSurveyQuestions,
                     templateProjectId: projectId,
+                    imageryId: institutionImageryIds.includes(data.imageryId)
+                        ? data.imageryId
+                        : institutionImageryIds[0],
                     useTemplatePlots: true,
                     useTemplateWidgets: true,
                 }, this.checkAllSteps);

@@ -3,7 +3,7 @@ import React from "react";
 import SurveyCardList from "./SurveyCardList";
 import {SurveyCollection} from "../components/SurveyCollection";
 
-import {removeEnumerator} from "../utils/surveyUtils";
+import {removeEnumerator} from "../utils/generalUtils";
 import {ProjectContext} from "./constants";
 
 export class SurveyQuestionDesign extends React.Component {

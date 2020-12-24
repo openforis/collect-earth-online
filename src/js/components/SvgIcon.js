@@ -162,7 +162,7 @@ const iconMap = {
     "check": checkIcon,
 };
 
-export function SvgIcon({icon, color, size}) {
+export default function SvgIcon({icon, color, size}) {
     return (
         <div
             style={{
