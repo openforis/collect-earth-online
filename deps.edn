@@ -16,11 +16,12 @@
         ring/ring-json            {:mvn/version "0.5.0"}
         seancorfield/next.jdbc    {:mvn/version "1.1.613"}}
 
- :aliases {:build-db    {:main-opts ["-m" "org.openforis.ceo.build-db"]}
-           :ssl-key-gen {:main-opts ["-m" "org.openforis.ceo.https"]}
-           :rebel       {:extra-deps {com.bhauman/rebel-readline {:mvn/version "0.1.4"}}
-                         :main-opts  ["-m" "rebel-readline.main"]}
-           :production  {:jvm-opts  ["-Xmx4096m" "-XX:+PrintFlagsFinal"]}
-           :run-server  {:main-opts ["-m" "org.openforis.ceo.server"]}
-           :check-deps  {:extra-deps {olical/depot {:mvn/version "1.8.4"}}
-                         :main-opts ["-m" "depot.outdated.main"]}}}
+ :aliases {:build-db     {:main-opts ["-m" "org.openforis.ceo.build-db"]}
+           :certbot-init {:main-opts ["-m" "org.openforis.ceo.https" "certbot-init"]}
+           :package-cert {:main-opts ["-m" "org.openforis.ceo.https" "package-cert"]}
+           :rebel        {:extra-deps {com.bhauman/rebel-readline {:mvn/version "0.1.4"}}
+                          :main-opts  ["-m" "rebel-readline.main"]}
+           :production   {:jvm-opts  ["-Xmx4096m" "-XX:+PrintFlagsFinal"]}
+           :run-server   {:main-opts ["-m" "org.openforis.ceo.server"]}
+           :check-deps   {:extra-deps {olical/depot {:mvn/version "1.8.4"}}
+                          :main-opts ["-m" "depot.outdated.main"]}}}

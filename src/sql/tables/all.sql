@@ -179,7 +179,7 @@ CREATE TABLE sample_values (
     sample_rid            integer NOT NULL REFERENCES samples (sample_uid) ON DELETE CASCADE ON UPDATE CASCADE,
     imagery_rid           integer REFERENCES imagery (imagery_uid),
     imagery_attributes    jsonb,
-    value                 jsonb,
+    saved_answers         jsonb,
     CONSTRAINT per_sample_per_user UNIQUE(sample_rid, user_plot_rid)
 );
 

@@ -58,12 +58,18 @@
        (Boolean/parseBoolean val)
        (catch Exception _ (boolean default))))))
 
+;; TODO: This is a temporary fix for survey questions
+(defn- keyword-str [str]
+  (if (and (string? str) (re-matches #"[\p{L}*+!_?-][\p{L}\d*+!_?-]*" str))
+    (keyword str)
+    str))
+
 (defn json->clj
   ([json]
    (json->clj json nil))
   ([json default]
    (try
-     (read-str json :key-fn keyword)
+     (read-str json :key-fn keyword-str)
      (catch Exception _ default))))
 
 (def jsonb->json str)

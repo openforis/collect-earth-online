@@ -12,16 +12,10 @@ function Support() {
                         <a className="btn btn-outline-lightgreen btn-block" href="/downloads/CEO_Planet_new_imagery_user_doc.pdf" role="button">
                             &#x1F4BE; Public Planet Imagery
                         </a>
-                        <a className="btn btn-outline-lightgreen btn-block" href="/downloads/CEO_Manual_DataCollector_20201105_DRAFT.pdf" role="button">
-                            &#x1F4BE; Data Collection Manual (English, Draft Update)
-                        </a>
-                        <a className="btn btn-outline-lightgreen btn-block" href="/downloads/CEO_Manual_InstitutionProject_20201105_DRAFT.pdf" role="button">
-                            &#x1F4BE; Institution & Project Creation Manual (For Admin, Draft Update)
-                        </a>
                     </div>
                     <h1>Collect Earth Online Manuals</h1>
                     <div className="btn-group-vertical btn-block mb-4">
-                        <a className="btn btn-outline-lightgreen btn-block" href="/downloads/CEO_Manual_DataCollector_20200520.pdf" role="button">
+                        <a className="btn btn-outline-lightgreen btn-block" href="/downloads/CEO_Manual_DataCollector_20201115.pdf" role="button">
                             &#x1F4BE; Data Collection Manual (English)
                         </a>
                         <a className="btn btn-outline-lightgreen btn-block" href="/downloads/CEO_Manual_DataCollector_20200520_espanol.pdf" role="button">
@@ -30,9 +24,12 @@ function Support() {
                         <a className="btn btn-outline-lightgreen btn-block" href="/downloads/CEO_Manual_DataCollector_20200831_francais.pdf" role="button">
                             &#x1F4BE; Manuel pour la collecte de données (Français)
                         </a>
+                        <a className="btn btn-outline-lightgreen btn-block" href="/downloads/CEO_Manual_DataCollector_20201124_portugese.pdf" role="button">
+                            &#x1F4BE; Manual de Coleta de Dados (Português)
+                        </a>
                     </div>
                     <div className="btn-group-vertical btn-block mb-4">
-                        <a className="btn btn-outline-lightgreen btn-block" href="/downloads/CEO_Manual_InstitutionProject_20200520.pdf" role="button">
+                        <a className="btn btn-outline-lightgreen btn-block" href="/downloads/CEO_Manual_InstitutionProject_20201115.pdf" role="button">
                             &#x1F4BE; Institution & Project Creation Manual (For Admin)
                         </a>
                         <a className="btn btn-outline-lightgreen btn-block" href="/downloads/CEO_Manual_InstitutionProject_20200708_espanol.pdf" role="button">
@@ -40,6 +37,9 @@ function Support() {
                         </a>
                         <a className="btn btn-outline-lightgreen btn-block" href="/downloads/CEO_Manual_InstitutionProject_20200826_francais.pdf" role="button">
                             &#x1F4BE; Manuel de création de projets et de profils d’institution (pour l’administrateur)
+                        </a>
+                        <a className="btn btn-outline-lightgreen btn-block" href="/downloads/CEO_Manual_InstitutionProject_20201124_portugese.pdf" role="button">
+                            &#x1F4BE; Manual de Criação de Instituições e Projetos (para Administrador)
                         </a>
                     </div>
                     <div className="btn-group-vertical btn-block mb-4">
