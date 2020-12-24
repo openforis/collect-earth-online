@@ -337,7 +337,7 @@
 (defmethod get-file-data :shp [_ type ext-file folder-name]
   (sh-wrapper folder-name {} (str "7z e -y " ext-file " -o" type))
   (let [[info body _] (-> (sh-wrapper-stdout (str folder-name type)
-                                             {:PASSWORD "ceo"}
+                                             {}
                                              (format-simple "shp2pgsql -s 4326 -t 2D -D %1"
                                                             (find-file-by-ext (str folder-name type) "shp")))
                           (str/split #"stdin;\n|\n\\\."))
@@ -369,7 +369,7 @@
       [headers (type-columns headers) (str/replace body #"," "\t")])))
 
 (defmethod get-file-data :default [distribution _ _ _]
-  (throw (str "No such distribution (" distribution ") defined for ceo/get-file-data")))
+  (throw (str "No such distribution (" distribution ") defined for ceo.db.projects/get-file-data")))
 
 (defn- check-headers [headers must-include]
   (let [header-set      (set headers)
