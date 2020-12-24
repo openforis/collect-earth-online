@@ -396,7 +396,7 @@
                                                 (format-simple "psql -h localhost -U ceo -d ceo -c `\\copy ext_tables.%1 FROM stdin`"
                                                                table-name)
                                                 body)
-                              (call-sql "add_index_col" table-name))
+                              (call-sql "add_index_col" (str "ext_tables." table-name)))
                             table-name))
                         (let [table-name     (str "project_" project-id "_" type "_csv")
                               [headers body] (get-csv ext-file must-include)]
