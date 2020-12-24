@@ -131,17 +131,19 @@ class Geodash extends React.Component {
     };
 
     setCenterAndZoom = (center, zoom) => {
-        !this.state.initCenter
-            ? this.setState({
+        if (this.state.initCenter) {
+            this.setState({
+                mapCenter:center,
+                mapZoom:zoom,
+            });
+        } else {
+            this.setState({
                 initCenter:center,
                 initZoom:zoom,
                 mapCenter:center,
                 mapZoom:zoom,
-            })
-            : this.setState({
-                mapCenter:center,
-                mapZoom:zoom,
             });
+        }
     };
 
     resetCenterAndZoom = () => {
@@ -149,7 +151,11 @@ class Geodash extends React.Component {
     };
 
     updateSize = which => {
-        which.isFull ? document.body.classList.remove("bodyfull") : document.body.classList.add("bodyfull");
+        if (which.isFull) {
+            document.body.classList.remove("bodyfull");
+        } else {
+            document.body.classList.add("bodyfull");
+        }
         const doc = document.documentElement;
         if ((window.pageXOffset || doc.scrollLeft) - (doc.clientLeft || 0) === 0 && (window.pageYOffset || doc.scrollTop) - (doc.clientTop || 0) === 0) {
             window.scrollTo(this.state.left, this.state.ptop);
@@ -318,7 +324,7 @@ class Widget extends React.Component {
             <div id={"widget-container_" + widget.id} className="widget-container">
                 {this.getWidgetInnerHtml(widget, onSliderChange, onSwipeChange)}
             </div>
-        </div>
+        </div>;
 
     getResetMapButton = widget => {
         if (this.isMapWidget(widget)) {
@@ -1245,7 +1251,7 @@ class MapWidget extends React.Component {
                 <span className="switchslider round"/>
             </label>
             <span className="ctrlText"> SAR</span>
-        </div>
+        </div>;
 
     render() {
         return <React.Fragment>
@@ -1535,7 +1541,7 @@ class GraphWidget extends React.Component {
                             : []
                     : _.cloneDeep(nonDegChartData),
         };
-    }
+    };
 
     render() {
         const {widget, degDataType} = this.props;

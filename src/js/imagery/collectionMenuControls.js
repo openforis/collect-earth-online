@@ -53,7 +53,7 @@ export class PlanetMenu extends React.Component {
     render() {
         return (
             <div className="PlanetsMenu my-2" style={{display: this.props.visible ? "block" : "none"}}>
-                <div className="slidecontainer form-control form-control-sm">
+                <div className="slide-container">
                     <input
                         type="range"
                         min="2016"
@@ -63,9 +63,9 @@ export class PlanetMenu extends React.Component {
                         id="myRange"
                         onChange={e => this.setStateAndUpdate("year", e.target.value)}
                     />
-                    <p>Year: <span id="demo">{this.state.year}</span></p>
+                    <label>Year: {this.state.year}</label>
                 </div>
-                <div className="slidecontainer form-control form-control-sm">
+                <div className="slide-container">
                     <input
                         type="range"
                         min="1"
@@ -75,7 +75,7 @@ export class PlanetMenu extends React.Component {
                         id="myRangemonth"
                         onChange={e => this.setStateAndUpdate("month", e.target.value)}
                     />
-                    <p>Month: <span id="demo">{monthlyMapping[this.state.month]}</span></p>
+                    <label>Month: {monthlyMapping[this.state.month]}</label>
                 </div>
             </div>
         );
@@ -149,8 +149,8 @@ export class PlanetDailyMenu extends React.Component {
     render () {
         return (
             <div className="PlanetsDailyMenu my-2" style={{display: this.props.visible ? "block" : "none"}}>
-                <label>Start Date</label>
-                <div className="slidecontainer form-control form-control-sm">
+                <div className="slide-container">
+                    <label>Start Date</label>
                     <input
                         type="date"
                         id="planetDailyStartDate"
@@ -160,8 +160,8 @@ export class PlanetDailyMenu extends React.Component {
                         onChange={e => this.setStateAndUpdate("startDate", e.target.value)}
                     />
                 </div>
-                <label>End Date</label>
-                <div className="slidecontainer form-control form-control-sm">
+                <div className="slide-container">
+                    <label>End Date</label>
                     <input
                         type="date"
                         id="planetDailyEndDate"
@@ -533,7 +533,7 @@ export class SentinelMenu extends React.Component {
 
         return (
             <div className="SentinelMenu my-2" style={{display: this.props.visible ? "block" : "none"}}>
-                <div className="slidecontainer form-control form-control-sm">
+                <div className="slide-container">
                     <input
                         type="range"
                         min="2015"
@@ -543,9 +543,9 @@ export class SentinelMenu extends React.Component {
                         id="sentinel-year"
                         onChange={e => this.setStateAndUpdate("year", e.target.value)}
                     />
-                    <p>Year: <span>{this.state.year}</span></p>
+                    <label>Year: <span>{this.state.year}</span></label>
                 </div>
-                <div className="slidecontainer form-control form-control-sm">
+                <div className="slide-container">
                     <input
                         type="range"
                         min="1"
@@ -555,20 +555,18 @@ export class SentinelMenu extends React.Component {
                         id="sentinel-month"
                         onChange={e => this.setStateAndUpdate("month", e.target.value)}
                     />
-                    <p>Month: <span id="demo">{monthlyMapping[this.state.month]}</span></p>
+                    <label>Month: {monthlyMapping[this.state.month]}</label>
                 </div>
-                <div className="form-control form-control-sm" >
-                    <div className="mb-3">
-                        <label>Band Combination</label>
-                        <select
-                            className="form-control"
-                            id="sentinel-bandCombination"
-                            value={this.state.bandCombination}
-                            onChange={e => this.setStateAndUpdate("bandCombination", e.target.value)}
-                        >
-                            {bandCombinationOptions.map(el => <option value={el.value} key={el.value}>{el.label}</option>)}
-                        </select>
-                    </div>
+                <div className="slide-container">
+                    <label>Band Combination</label>
+                    <select
+                        className="form-control"
+                        id="sentinel-bandCombination"
+                        value={this.state.bandCombination}
+                        onChange={e => this.setStateAndUpdate("bandCombination", e.target.value)}
+                    >
+                        {bandCombinationOptions.map(el => <option value={el.value} key={el.value}>{el.label}</option>)}
+                    </select>
                 </div>
             </div>
         );
@@ -704,48 +702,46 @@ export class GEEImageCollectionMenu extends React.Component {
     render() {
         return (
             <div className="GEEImageCollectionMenu my-2" style={{display: this.props.visible ? "block" : "none"}}>
-                <div className="form-control form-control-sm">
-                    <label>Start Date</label>
-                    <div className="slidecontainer form-control form-control-sm">
-                        <input
-                            type="date"
-                            id="geeImageCollectionStartDate"
-                            value={this.state.startDate}
-                            max={new Date().toJSON().split("T")[0]}
-                            style={{width: "100%"}}
-                            onChange={e => this.setState({startDate: e.target.value})}
-                        />
-                    </div>
-                    <label>End Date</label>
-                    <div className="slidecontainer form-control form-control-sm">
-                        <input
-                            type="date"
-                            id="geeImageCollectionEndDate"
-                            value={this.state.endDate}
-                            max={new Date().toJSON().split("T")[0]}
-                            style={{width: "100%"}}
-                            onChange={e => this.setState({endDate: e.target.value})}
-                        />
-                    </div>
-                    <label>Visualization Parameters</label>
-                    <textarea
-                        className="form-control"
-                        id="geeImageCollectionVisParams"
-                        value={this.state.visParams}
-                        onChange={e => this.setState({visParams: e.target.value})}
-                    >
-                        {this.state.visParams}
-                    </textarea>
-                    <br />
-                    <button
-                        type="button"
-                        className="btn btn-lightgreen btn-sm btn-block"
-                        id="update-gee-image-button"
-                        onClick={this.updateGEEImageCollection}
-                    >
-                        Update Image
-                    </button>
+                <label>Start Date</label>
+                <div className="slide-container">
+                    <input
+                        type="date"
+                        id="geeImageCollectionStartDate"
+                        value={this.state.startDate}
+                        max={new Date().toJSON().split("T")[0]}
+                        style={{width: "100%"}}
+                        onChange={e => this.setState({startDate: e.target.value})}
+                    />
                 </div>
+                <label>End Date</label>
+                <div className="slide-container">
+                    <input
+                        type="date"
+                        id="geeImageCollectionEndDate"
+                        value={this.state.endDate}
+                        max={new Date().toJSON().split("T")[0]}
+                        style={{width: "100%"}}
+                        onChange={e => this.setState({endDate: e.target.value})}
+                    />
+                </div>
+                <label>Visualization Parameters</label>
+                <textarea
+                    className="form-control"
+                    id="geeImageCollectionVisParams"
+                    value={this.state.visParams}
+                    onChange={e => this.setState({visParams: e.target.value})}
+                >
+                    {this.state.visParams}
+                </textarea>
+                <br />
+                <button
+                    type="button"
+                    className="btn btn-lightgreen btn-sm btn-block"
+                    id="update-gee-image-button"
+                    onClick={this.updateGEEImageCollection}
+                >
+                    Update Image
+                </button>
             </div>
         );
     }
