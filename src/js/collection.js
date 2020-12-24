@@ -100,6 +100,7 @@ class Collection extends React.Component {
             }
             clearInterval(this.state.storedInterval);
             this.setState({storedInterval: setInterval(this.resetPlotLock, 2.3 * 60 * 1000)});
+            this.updateMapImagery();
         }
 
         // Conditions required for samples to be shown
@@ -255,7 +256,14 @@ class Collection extends React.Component {
         });
     };
 
-    updateMapImagery = () => mercator.setVisibleLayer(this.state.mapConfig, this.state.currentImagery.id);
+    updateMapImagery = () => {
+        const {currentPlot, mapConfig, currentImagery} = this.state;
+        if (currentPlot && !currentPlot.id && ["PlanetDaily", "SecureWatch"].includes(currentImagery.sourceConfig.type)) {
+            mercator.setLayerVisibilityByLayerId(mapConfig, "goToPlot", true);
+        } else {
+            mercator.setLayerVisibilityByLayerId(mapConfig, "goToPlot", false);
+        }
+    };
 
     getImageryById = (imageryId) => this.state.imageryList.find(imagery => imagery.id === imageryId);
 
@@ -1049,7 +1057,6 @@ class Collection extends React.Component {
                         currentPlot={this.state.currentPlot}
                         currentProject={this.state.currentProject}
                         currentProjectBoundary={this.state.currentProject.boundary}
-                        showPlanetDaily={this.state.currentPlot.plotId}
                         loadingImages={this.state.imageryList.length === 0}
                     />
                     {this.state.currentPlot.id
@@ -1429,9 +1436,6 @@ class ImageryOptions extends React.Component {
                                               props.currentProject.plotShape).getExtent()
                 : [],
         };
-        const filteredImageryList = props.showPlanetDaily
-            ? props.imageryList
-            : props.imageryList.filter(layerConfig => layerConfig.sourceConfig.type !== "PlanetDaily");
 
         return (
             <div className="justify-content-center text-center">
@@ -1451,11 +1455,11 @@ class ImageryOptions extends React.Component {
                             value={props.currentImageryId || ""}
                             onChange={e => props.setBaseMapSource(parseInt(e.target.value))}
                         >
-                            {filteredImageryList
+                            {props.imageryList
                                 .map(imagery => <option key={imagery.id} value={imagery.id}>{imagery.title}</option>)}
                         </select>
                     }
-                    {props.currentImageryId && filteredImageryList.map(imagery => {
+                    {props.currentImageryId && props.imageryList.map(imagery => {
                         const individualProps = {
                             ...commonProps,
                             key: imagery.id,
