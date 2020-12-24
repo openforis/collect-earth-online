@@ -322,15 +322,21 @@
           (when-not (= 0 exit)
             (init-throw err)))))))
 
-(defn sh-wrapper-pipe
-  ([dir env cmd1 cmd2]
-   (sh/with-sh-dir dir
-     (sh/with-sh-env (merge {:PATH path-env} env)
-       (let [{:keys [exit err]} (apply sh/sh (conj (parse-as-sh-cmd cmd2)
-                                                   :in
-                                                   (:out (apply sh/sh (parse-as-sh-cmd cmd1)))))]
-         (when-not (= 0 exit)
-           (init-throw err)))))))
+(defn sh-wrapper-stdout [dir env cmd]
+  (sh/with-sh-dir dir
+    (sh/with-sh-env (merge {:PATH path-env} env)
+      (let [{:keys [exit err out]} (apply sh/sh (parse-as-sh-cmd cmd))]
+        (if (= 0 exit)
+          out
+          (init-throw err))))))
+
+(defn sh-wrapper-stdin [dir env cmd stdin]
+  (sh/with-sh-dir dir
+    (sh/with-sh-env (merge {:PATH path-env} env)
+      (let [{:keys [exit err]} (apply sh/sh (conj (parse-as-sh-cmd cmd)
+                                                  :in stdin))]
+        (when-not (= 0 exit)
+          (init-throw err))))))
 
 (defn- type-columns [headers]
   (->> headers
@@ -371,25 +377,39 @@
 (defn- load-external-data [distribution project-id ext-file type must-include]
   (let [folder-name (str tmp-dir "/ceo-tmp-" project-id "/")]
     (try-catch-throw #(if (= "shp" distribution)
-                        (do (sh-wrapper folder-name {} (str "7z e -y " ext-file " -o" type))
-                            (let [table-name (str "project_" project-id "_" type "_shp")
-                                  shp-name   (find-file-by-ext (str folder-name type) "shp")]
-                              (sh-wrapper-pipe (str folder-name type)
-                                               {:PASSWORD "ceo"}
-                                               (format-simple "shp2pgsql -s 4326 -t 2D %1 ext_tables.%2"
-                                                              shp-name table-name)
-                                               (format-simple "psql -h localhost -U ceo -d ceo"))
-                              table-name))
-                        ;; TODO Explore loading CSVs with a bulk insert
+                        (do
+                          (sh-wrapper folder-name {} (str "7z e -y " ext-file " -o" type))
+                          (let [table-name (str "project_" project-id "_" type "_shp")
+                                shp-name   (find-file-by-ext (str folder-name type) "shp")]
+                            (let [[info body _] (-> (sh-wrapper-stdout (str folder-name type)
+                                                                       {:PASSWORD "ceo"}
+                                                                       (str "shp2pgsql -s 4326 -t 2D -D " shp-name))
+                                                    (str/split #"stdin;\n|\n\\\."))
+                                  column-string (as-> info i
+                                                  (str/replace i #"\n" "")
+                                                  (re-find #"(?<=CREATE TABLE.*gid serial,).*?(?=\);)" i)
+                                                  (str i ",\"geom\" geometry(geometry,4326)"))]
+                              ;; TODO: Check headers before creating new table.
+                              (call-sql "create_new_table"
+                                        (str "ext_tables." table-name)
+                                        column-string)
+                              (sh-wrapper-stdin (str folder-name type)
+                                                {:PASSWORD "ceo"}
+                                                (format-simple "psql -h localhost -U ceo -d ceo -c `\\copy ext_tables.%1 FROM stdin`"
+                                                               table-name)
+                                                body)
+                              (call-sql "add_index_col" (str "ext_tables." table-name)))
+                            table-name))
+                        ;; TODO: Explore loading CSVs with a bulk insert.
                         (let [table-name (str "project_" project-id "_" type "_csv")]
                           (call-sql "create_new_table"
-                                    table-name
+                                    (str "ext_tables." table-name)
                                     (get-csv-headers ext-file must-include))
                           (sh-wrapper folder-name
                                       {:PASSWORD "ceo"}
                                       (format-simple "psql -h localhost -U ceo -d ceo -c `\\copy ext_tables.%1 FROM %2 DELIMITER ',' CSV HEADER`"
                                                      table-name ext-file))
-                          (call-sql "add_index_col" table-name) ; Add index for reference
+                          (call-sql "add_index_col" (str "ext_tables." table-name)) ; Add index for reference
                           table-name))
                      "Error importing file into SQL.")))
 
