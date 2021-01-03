@@ -296,6 +296,7 @@ function TextMatch(props) {
                                 className="form-control form-control-sm"
                                 onChange={e => props.updateOptions(e.target, "")}
                             >
+                                <option value="-1">None</option>
                                 {surveyQuestions && surveyQuestions.map((question, uid) =>
                                     <option key={uid} value={question.id}>{question.question}</option>)
                                 }
@@ -338,6 +339,7 @@ function NumericRange(props) {
                                 className="form-control form-control-sm"
                                 onChange={e => props.updateOptions(e.target, "")}
                             >
+                                <option value="-1">None</option>
                                 {surveyQuestions && surveyQuestions.map((question, uid) =>
                                     <option key={uid} value={question.id}>{question.question}</option>)
                                 }
