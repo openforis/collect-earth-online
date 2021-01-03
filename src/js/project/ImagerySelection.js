@@ -41,11 +41,9 @@ export function ImagerySelection() {
                                 value={imageryId || -1}
                                 onChange={e => setProjectDetails({imageryId: parseInt(e.target.value)})}
                             >
-                                {institutionImagery.filter(layerConfig => layerConfig.sourceConfig.type !== "PlanetDaily")
-                                    .map((imagery, uid) =>
-                                        <option key={uid} value={imagery.id}>{imagery.title}</option>
-                                    )
-                                }
+                                {institutionImagery.map((imagery, uid) =>
+                                    <option key={uid} value={imagery.id}>{imagery.title}</option>
+                                )}
                             </select>
                         </div>
                         <div className="form-group">

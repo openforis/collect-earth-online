@@ -1,7 +1,7 @@
 import "../../css/custom.css";
 
 import React from "react";
-import {SvgIcon} from "../utils/svgIcons";
+import SvgIcon from "../components/SvgIcon";
 import {getLanguage, capitalizeFirst} from "../utils/generalUtils";
 
 function LogOutButton({userName, uri}) {
@@ -151,7 +151,7 @@ export class NavigationBar extends React.Component {
             .then(response => response.ok ? response.json() : Promise.reject(response))
             .then(data => this.setState({helpSlides: data, page: page}))
             .catch(error => console.log(page, getLanguage(availableLanguages), error));
-    }
+    };
 
     closeHelpMenu = () => this.setState({showHelpMenu: false});
 

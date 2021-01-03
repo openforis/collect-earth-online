@@ -35,9 +35,6 @@ export class PlanetMenu extends React.Component {
         }
     };
 
-    setStateAndUpdate = (key, newValue) =>
-        this.setState({[key]: newValue}, () => this.updatePlanetLayer());
-
     updatePlanetLayer = () => {
         this.updateImageryInformation();
         mercator.updateLayerSource(this.props.mapConfig,
@@ -52,7 +49,7 @@ export class PlanetMenu extends React.Component {
 
     render() {
         return (
-            <div className="PlanetsMenu my-2" style={{display: this.props.visible ? "block" : "none"}}>
+            <div className="my-2" style={{display: this.props.visible ? "block" : "none"}}>
                 <div className="slide-container">
                     <input
                         type="range"
@@ -61,7 +58,7 @@ export class PlanetMenu extends React.Component {
                         value={this.state.year || ""}
                         className="slider"
                         id="myRange"
-                        onChange={e => this.setStateAndUpdate("year", e.target.value)}
+                        onChange={e => this.setState({year: e.target.value})}
                     />
                     <label>Year: {this.state.year}</label>
                 </div>
@@ -73,9 +70,18 @@ export class PlanetMenu extends React.Component {
                         value={this.state.month || ""}
                         className="slider"
                         id="myRangemonth"
-                        onChange={e => this.setStateAndUpdate("month", e.target.value)}
+                        onChange={e => this.setState({month: e.target.value})}
                     />
                     <label>Month: {monthlyMapping[this.state.month]}</label>
+                </div>
+                <div className="slide-container">
+                    <button
+                        type="button"
+                        className="btn btn-lightgreen btn-sm btn-block"
+                        onClick={this.updatePlanetLayer}
+                    >
+                        Update Map
+                    </button>
                 </div>
             </div>
         );
@@ -106,7 +112,7 @@ export class PlanetDailyMenu extends React.Component {
         if (this.props.visible &&
             (this.props.currentPlot && this.props.currentPlot !== prevProps.currentPlot
                 || prevProps.visible !== this.props.visible)) {
-            this.updatePlanetDailyLayer();
+            this.updateImageryInformation();
         }
     }
 
@@ -117,9 +123,6 @@ export class PlanetDailyMenu extends React.Component {
             imageryEndDatePlanetDaily: this.state.endDate,
         });
     };
-
-    setStateAndUpdate = (key, newValue) =>
-        this.setState({[key]: newValue}, () => this.updatePlanetDailyLayer());
 
     updatePlanetDailyLayer = () => {
         if (this.props.visible) {
@@ -146,18 +149,18 @@ export class PlanetDailyMenu extends React.Component {
         }
     };
 
-    render () {
+    render() {
         return (
-            <div className="PlanetsDailyMenu my-2" style={{display: this.props.visible ? "block" : "none"}}>
+            <div className="my-2" style={{display: this.props.visible ? "block" : "none"}}>
                 <div className="slide-container">
                     <label>Start Date</label>
                     <input
                         type="date"
                         id="planetDailyStartDate"
+                        className="form-control"
                         value={this.state.startDate || ""}
                         max={new Date().toJSON().split("T")[0]}
-                        style={{width: "100%"}}
-                        onChange={e => this.setStateAndUpdate("startDate", e.target.value)}
+                        onChange={e => this.setState({startDate: e.target.value})}
                     />
                 </div>
                 <div className="slide-container">
@@ -165,11 +168,20 @@ export class PlanetDailyMenu extends React.Component {
                     <input
                         type="date"
                         id="planetDailyEndDate"
+                        className="form-control"
                         value={this.state.endDate || ""}
                         max={new Date().toJSON().split("T")[0]}
-                        style={{width: "100%"}}
-                        onChange={e => this.setStateAndUpdate("endDate", e.target.value)}
+                        onChange={e => this.setState({endDate: e.target.value})}
                     />
+                </div>
+                <div className="slide-container">
+                    <button
+                        type="button"
+                        className="btn btn-lightgreen btn-sm btn-block"
+                        onClick={this.updatePlanetDailyLayer}
+                    >
+                        Update Map
+                    </button>
                 </div>
             </div>
         );
@@ -221,64 +233,65 @@ export class PlanetNICFIMenu extends React.Component {
 
     render() {
         return (
-            <div className="PlanetsMenu my-2" style={{display: this.props.visible ? "block" : "none"}}>
-                <div className="d-flex flex-column">
-                    <div className="d-flex align-items-center mb-2">
-                        <label htmlFor="time-selection" className="mb-0 mr-3">Select Time</label>
-                        <select
-                            id="time-selection"
-                            onChange={e => this.setState({selectedTime: e.target.value})}
-                            value={this.state.selectedTime}
-                        >
-                            {["2018-12_2019-05",
-                              "2019-06_2019-11",
-                              "2019-12_2020-05",
-                              "2020-06_2020-08",
-                              "2020-09"]
-                                .map(time => <option key={time} value={time}>{time}</option>)
-                            }
-                        </select>
-                    </div>
-                    <div className="d-flex align-items-center mb-2">
-                        <div id="radio-group">
-                            <div className="form-check form-check-inline">
-                                <input
-                                    id="visible"
-                                    className="form-check-input"
-                                    type="radio"
-                                    checked={this.state.selectedBand === "rgb"}
-                                    onChange={() => this.setState({selectedBand: "rgb"})}
-                                />
-                                <label
-                                    className="form-check-label"
-                                    htmlFor="visible"
-                                >
-                                    Visible
-                                </label>
-                            </div>
-                            <div className="form-check form-check-inline">
-                                <input
-                                    id="infrared"
-                                    className="form-check-input"
-                                    type="radio"
-                                    checked={this.state.selectedBand === "cir"}
-                                    onChange={() => this.setState({selectedBand: "cir"})}
-                                />
-                                <label
-                                    className="form-check-label"
-                                    htmlFor="infrared"
-                                >
-                                    Infrared
-                                </label>
-                            </div>
+            <div className="my-2" style={{display: this.props.visible ? "block" : "none"}}>
+                <div className="slide-container">
+                    <label htmlFor="time-selection">Select Time</label>
+                    <select
+                        id="time-selection"
+                        className="form-control"
+                        onChange={e => this.setState({selectedTime: e.target.value})}
+                        value={this.state.selectedTime}
+                    >
+                        {["2018-12_2019-05",
+                          "2019-06_2019-11",
+                          "2019-12_2020-05",
+                          "2020-06_2020-08",
+                          "2020-09"]
+                            .map(time => <option key={time} value={time}>{time}</option>)
+                        }
+                    </select>
+                </div>
+                <div className="slide-container">
+                    <div id="radio-group">
+                        <div className="form-check form-check-inline">
+                            <input
+                                id="visible"
+                                className="form-check-input"
+                                type="radio"
+                                checked={this.state.selectedBand === "rgb"}
+                                onChange={() => this.setState({selectedBand: "rgb"})}
+                            />
+                            <label
+                                className="form-check-label"
+                                htmlFor="visible"
+                            >
+                                Visible
+                            </label>
+                        </div>
+                        <div className="form-check form-check-inline">
+                            <input
+                                id="infrared"
+                                className="form-check-input"
+                                type="radio"
+                                checked={this.state.selectedBand === "cir"}
+                                onChange={() => this.setState({selectedBand: "cir"})}
+                            />
+                            <label
+                                className="form-check-label"
+                                htmlFor="infrared"
+                            >
+                                Infrared
+                            </label>
                         </div>
                     </div>
+                </div>
+                <div className="slide-container">
                     <button
                         className="btn btn-lightgreen btn-sm"
                         type="button"
                         onClick={this.updatePlanetLayer}
                     >
-                        Update Imagery
+                        Update Map
                     </button>
                 </div>
             </div>
@@ -297,21 +310,13 @@ export class SecureWatchMenu extends React.Component {
         };
     }
 
-    componentDidMount() {
-        mercator.updateLayerWmsParams(this.props.mapConfig,
-                                      this.props.thisImageryId,
-                                      {},
-                                      "img/securewatch-go-to-plot.png");
-    }
-
     componentDidUpdate(prevProps) {
-        const {extent, mapConfig, thisImageryId, visible} = this.props;
+        const {extent, visible} = this.props;
         if (extent.length > 0
              && JSON.stringify(extent) !== JSON.stringify(prevProps.extent)) {
             this.getAvailableDates();
         }
         if (prevProps.visible !== visible) {
-            mercator.updateLayerWmsParams(mapConfig, thisImageryId, {}, "img/go-to-plot.png");
             this.updateImageryInformation();
         }
     }
@@ -418,14 +423,14 @@ export class SecureWatchMenu extends React.Component {
 
     render() {
         return (
-            <div className="SecureWatchMenu my-2 mb-3" style={{display: this.props.visible ? "block" : "none"}}>
-                <div className="form-control form-control-sm">
+            <div className="my-2" style={{display: this.props.visible ? "block" : "none"}}>
+                <div className="slide-container">
                     <label>Available Layers</label>
                     {this.state.availableDates
                         && this.state.availableDates.length > 0
                         ?
                             <select
-                                className="form-control form-control-sm"
+                                className="form-control"
                                 onChange={e => this.onChangeSingleLayer(e.target)}
                                 id="securewatch-option-select"
                             >
@@ -442,8 +447,8 @@ export class SecureWatchMenu extends React.Component {
                             </select>
                         :
                             <select
-                                className="form-control form-control-sm"
                                 id="securewatch-option-select"
+                                className="form-control"
                                 disabled
                             >
                                 <option>
@@ -496,9 +501,6 @@ export class SentinelMenu extends React.Component {
         }
     };
 
-    setStateAndUpdate = (key, newValue) =>
-        this.setState({[key]: newValue}, () => this.updateSentinelLayer());
-
     updateSentinelLayer = () => {
         this.updateImageryInformation();
         mercator.updateLayerSource(this.props.mapConfig,
@@ -532,7 +534,7 @@ export class SentinelMenu extends React.Component {
             ];
 
         return (
-            <div className="SentinelMenu my-2" style={{display: this.props.visible ? "block" : "none"}}>
+            <div className="my-2" style={{display: this.props.visible ? "block" : "none"}}>
                 <div className="slide-container">
                     <input
                         type="range"
@@ -541,7 +543,7 @@ export class SentinelMenu extends React.Component {
                         value={this.state.year}
                         className="slider"
                         id="sentinel-year"
-                        onChange={e => this.setStateAndUpdate("year", e.target.value)}
+                        onChange={e => this.setState({year: e.target.value})}
                     />
                     <label>Year: {this.state.year}</label>
                 </div>
@@ -553,7 +555,7 @@ export class SentinelMenu extends React.Component {
                         value={this.state.month}
                         className="slider"
                         id="sentinel-month"
-                        onChange={e => this.setStateAndUpdate("month", e.target.value)}
+                        onChange={e => this.setState({month: e.target.value})}
                     />
                     <label>Month: {monthlyMapping[this.state.month]}</label>
                 </div>
@@ -563,10 +565,19 @@ export class SentinelMenu extends React.Component {
                         className="form-control"
                         id="sentinel-bandCombination"
                         value={this.state.bandCombination}
-                        onChange={e => this.setStateAndUpdate("bandCombination", e.target.value)}
+                        onChange={e => this.setState({bandCombination: e.target.value})}
                     >
                         {bandCombinationOptions.map(el => <option value={el.value} key={el.value}>{el.label}</option>)}
                     </select>
+                </div>
+                <div className="slide-container">
+                    <button
+                        type="button"
+                        className="btn btn-lightgreen btn-sm btn-block"
+                        onClick={this.updateSentinelLayer}
+                    >
+                        Update Map
+                    </button>
                 </div>
             </div>
         );
@@ -617,8 +628,8 @@ export class GEEImageMenu extends React.Component {
 
     render() {
         return (
-            <div className="GEEImageMenu my-2" style={{display: this.props.visible ? "block" : "none"}}>
-                <div className="form-control form-control-sm">
+            <div className="my-2" style={{display: this.props.visible ? "block" : "none"}}>
+                <div className="slide-container">
                     <label>Visualization Parameters</label>
                     <textarea
                         className="form-control"
@@ -628,14 +639,15 @@ export class GEEImageMenu extends React.Component {
                     >
                         {this.state.visParams}
                     </textarea>
-                    <br />
+                </div>
+                <div className="slide-container">
                     <button
                         type="button"
                         className="btn btn-lightgreen btn-sm btn-block"
                         id="update-gee-image-button"
                         onClick={this.updateGEEImagery}
                     >
-                        Update Image
+                        Update Map
                     </button>
                 </div>
             </div>
@@ -701,47 +713,48 @@ export class GEEImageCollectionMenu extends React.Component {
 
     render() {
         return (
-            <div className="GEEImageCollectionMenu my-2" style={{display: this.props.visible ? "block" : "none"}}>
-                <label>Start Date</label>
+            <div className="my-2" style={{display: this.props.visible ? "block" : "none"}}>
                 <div className="slide-container">
+                    <label>Start Date</label>
                     <input
                         type="date"
                         id="geeImageCollectionStartDate"
+                        className="form-control"
                         value={this.state.startDate}
                         max={new Date().toJSON().split("T")[0]}
-                        style={{width: "100%"}}
                         onChange={e => this.setState({startDate: e.target.value})}
                     />
                 </div>
-                <label>End Date</label>
                 <div className="slide-container">
+                    <label>End Date</label>
                     <input
                         type="date"
                         id="geeImageCollectionEndDate"
+                        className="form-control"
                         value={this.state.endDate}
                         max={new Date().toJSON().split("T")[0]}
-                        style={{width: "100%"}}
                         onChange={e => this.setState({endDate: e.target.value})}
                     />
                 </div>
-                <label>Visualization Parameters</label>
-                <textarea
-                    className="form-control"
-                    id="geeImageCollectionVisParams"
-                    value={this.state.visParams}
-                    onChange={e => this.setState({visParams: e.target.value})}
-                >
-                    {this.state.visParams}
-                </textarea>
-                <br />
-                <button
-                    type="button"
-                    className="btn btn-lightgreen btn-sm btn-block"
-                    id="update-gee-image-button"
-                    onClick={this.updateGEEImageCollection}
-                >
-                    Update Image
-                </button>
+                <div className="slide-container">
+                    <label>Visualization Parameters</label>
+                    <textarea
+                        className="form-control"
+                        value={this.state.visParams}
+                        onChange={e => this.setState({visParams: e.target.value})}
+                    >
+                        {this.state.visParams}
+                    </textarea>
+                </div>
+                <div className="slide-container">
+                    <button
+                        type="button"
+                        className="btn btn-lightgreen btn-sm btn-block"
+                        onClick={this.updateGEEImageCollection}
+                    >
+                        Update Map
+                    </button>
+                </div>
             </div>
         );
     }

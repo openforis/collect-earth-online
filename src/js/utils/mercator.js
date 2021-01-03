@@ -24,7 +24,7 @@ import {Circle, LineString, Point} from "ol/geom";
 import {DragBox, Select, Draw, Modify, Snap} from "ol/interaction";
 import {GeoJSON, KML} from "ol/format";
 import {Tile as TileLayer, Vector as VectorLayer, Group as LayerGroup} from "ol/layer";
-import {BingMaps, Cluster, TileWMS, Vector as VectorSource, XYZ} from "ol/source";
+import {BingMaps, Cluster, OSM, TileWMS, Vector as VectorSource, XYZ} from "ol/source";
 import {Circle as CircleStyle, Fill, Stroke, Style, Text as StyleText} from "ol/style";
 import {fromLonLat, transform, transformExtent} from "ol/proj";
 import {fromExtent, fromCircle} from "ol/geom/Polygon";
@@ -458,6 +458,8 @@ mercator.createSource = function (sourceConfig, imageryId, attribution,
             attributions:  mapboxAttributionText,
             attributionsCollapsible: false,
         });
+    } else if (sourceConfig.type === "OSM") {
+        return new OSM();
     } else {
         return new XYZ({url: "img/source-not-found.png"});
     }
@@ -622,9 +624,7 @@ mercator.createMap = function (divName, centerCoords, zoomLevel, layerConfigs, p
         return null;
     } else {
         // Create each of the layers that will be shown in the map from layerConfigs
-        // Don't create PlanetDaily layer while loading collection page
-        const layers = layerConfigs.filter(layerConfig => layerConfig.sourceConfig.type !== "PlanetDaily")
-            .map(layerConfig => mercator.createLayer(layerConfig, projectAOI));
+        const layers = layerConfigs.map(layerConfig => mercator.createLayer(layerConfig, projectAOI));
 
         // Add a scale line to the default map controls
         const controls = [new ScaleLine(), new Attribution({collapsed: false}), new Zoom(), new Rotate()];
@@ -644,6 +644,17 @@ mercator.createMap = function (divName, centerCoords, zoomLevel, layerConfigs, p
             controls: controls,
             view: view,
         });
+
+        // Add goToPlot layer
+        map.addLayer(new TileLayer({
+            id: "goToPlot",
+            visible: false,
+            source: new XYZ({
+                url: "/img/go-to-plot.png",
+            }),
+            zIndex: 100,
+        }));
+
         mercator.currentMap = map;
         // Return the map configuration object
         return {
@@ -760,11 +771,6 @@ mercator.updateLayerSource = function (mapConfig, imageryId, projectBoundary, tr
                                                   layerConfig.attribution,
                                                   projectAOI));
         }
-    } else if (layerConfig.sourceConfig.type === "PlanetDaily") {
-        // since PlanetDaily layer is not created when collection page is loaded
-        mapConfig.map.addLayer(mercator.createLayer({...layerConfig, sourceConfig: newSourceConfig},
-                                                    projectAOI,
-                                                    true));
     }
 };
 

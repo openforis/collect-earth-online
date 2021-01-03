@@ -87,7 +87,7 @@ export default class AOIMap extends React.Component {
 
     hideDragBoxDraw = () => {
         mercator.disableDragBoxDraw(this.state.mapConfig);
-    }
+    };
 
     hidePlots = () => {
         mercator.removeLayerById(this.state.mapConfig, "projectPlots");
