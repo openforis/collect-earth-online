@@ -168,13 +168,6 @@ class WidgetLayoutEditor extends React.PureComponent {
         }
     };
 
-    updateServerWidgets = () => {
-        this.state.widgets.forEach( widget => {
-            const ajaxurl = this.state.theURI + "/update-widget?widgetId=" + widget.id;
-            this.serveItUp(ajaxurl, widget);
-        });
-    };
-
     serveItUp = (url, widget) => {
         fetch(url,
               {
@@ -195,9 +188,14 @@ class WidgetLayoutEditor extends React.PureComponent {
             });
     };
 
+    updateServerWidgets = () => {
+        this.state.widgets.forEach(widget => {
+            this.serveItUp(`${this.state.theURI}/update-widget?widgetId=${widget.id}`, widget);
+        });
+    };
+
     deleteWidgetFromServer = widget => {
-        const ajaxurl = this.state.theURI + "/delete-widget?widgetId=" + widget.id;
-        this.serveItUp(ajaxurl, widget);
+        this.serveItUp(`${this.state.theURI}/delete-widget?widgetId=${widget.id}`, widget);
     };
 
     generateDOM = () => {
@@ -1756,15 +1754,12 @@ class WidgetLayoutEditor extends React.PureComponent {
 
     onLayoutChange = layout => {
         if (this.state.haveWidgets) {
-            const w = this.state.widgets;
-            layout.forEach(function (lay, i) {
-                w[i].layout = lay;
-            });
+            const widgets = this.state.widgets;
+            layout.forEach((lay, i) => widgets[i].layout = lay);
             this.setState({
-                widgets: w,
+                widgets: widgets,
                 layout: layout,
-            },
-                          this.updateServerWidgets);
+            }, this.updateServerWidgets);
         } else {
             this.setState({layout: layout});
         }
