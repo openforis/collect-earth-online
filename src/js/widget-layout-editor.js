@@ -164,7 +164,7 @@ class WidgetLayoutEditor extends React.PureComponent {
         });
         this.setState({widgets: widgets});
         if (changed) {
-            this.updateAllServerWidgets();
+            this.updateServerWidgets();
         }
     };
 
@@ -186,12 +186,6 @@ class WidgetLayoutEditor extends React.PureComponent {
                     console.log(response);
                 }
             });
-    };
-
-    updateServerWidgets = widgets => {
-        widgets.forEach(widget => {
-            this.serveItUp(`${this.state.theURI}/update-widget?widgetId=${widget.id}`, widget);
-        });
     };
 
     updateAllServerWidgets = () => {
@@ -1759,17 +1753,19 @@ class WidgetLayoutEditor extends React.PureComponent {
     };
 
     onLayoutChange = layout => {
-        if (this.state.haveWidgets) {
-            const widgets = this.state.widgets;
-            const widgetsToUpdate = widgets.filter((widget, i) => !_.isEqual(widget.layout, layout[i]));
-            layout.forEach((lay, i) => widgets[i].layout = lay);
-            this.setState({
-                widgets: widgets,
-                layout: layout,
-            }, () => this.updateServerWidgets(widgetsToUpdate));
-        } else {
-            this.setState({layout: layout});
-        }
+        const newWidgets = this.state.widgets.map((w, i) => {
+            if (_.isEqual(w.layout, layout[i])) {
+                return w;
+            } else {
+                const newWidget = {...w, layout: layout[i]};
+                this.serveItUp(`${this.state.theURI}/update-widget?widgetId=${newWidget.id}`, newWidget);
+                return newWidget;
+            }
+        });
+        this.setState({
+            widgets: newWidgets,
+            layout: layout,
+        });
     };
 
     render() {
