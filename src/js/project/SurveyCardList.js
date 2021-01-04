@@ -189,9 +189,10 @@ function SurveyQuestionTree({
                                                 .includes(surveyQuestion.id)
                                                 && (
                                                     <li key={uid}>
-                                                        <p className="surveyrule_tooltip" title={getRulesById(rule.id)}>
+                                                        <div className="surveyrule_tooltip">
                                                             {"Rule " + rule.id + ": " + rule.ruleType}
-                                                        </p>
+                                                            <span className="surveyrule_tooltiptext">{getRulesById(rule.id)}</span>
+                                                        </div>
                                                     </li>
                                                 )
                                         )}
