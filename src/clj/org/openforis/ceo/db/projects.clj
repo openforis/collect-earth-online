@@ -35,16 +35,16 @@
                       :showPlotInformation false
                       :autoLaunchGeoDash   true})
 
-(defn get-all-projects [{:keys [params]}]
-  (data-response (mapv (fn [{:keys [project_id institution_id name description num_plots boundary editable]}]
+(defn get-home-projects [{:keys [params]}]
+  (data-response (mapv (fn [{:keys [project_id institution_id name description num_plots centroid editable]}]
                          {:id          project_id
                           :institution institution_id
                           :name        name
                           :description description
                           :numPlots    num_plots
-                          :boundary    boundary
+                          :centroid    centroid
                           :editable    editable})
-                       (call-sql "select_user_projects" (:userId params -1)))))
+                       (call-sql "select_user_home_projects" (:userId params -1)))))
 
 (defn get-institution-projects [{:keys [params]}]
   (let [user-id        (:userId params -1)
