@@ -164,7 +164,7 @@ class WidgetLayoutEditor extends React.PureComponent {
         });
         this.setState({widgets: widgets});
         if (changed) {
-            this.updateServerWidgets();
+            this.updateAllServerWidgets();
         }
     };
 
@@ -188,7 +188,13 @@ class WidgetLayoutEditor extends React.PureComponent {
             });
     };
 
-    updateServerWidgets = () => {
+    updateServerWidgets = widgets => {
+        widgets.forEach(widget => {
+            this.serveItUp(`${this.state.theURI}/update-widget?widgetId=${widget.id}`, widget);
+        });
+    };
+
+    updateAllServerWidgets = () => {
         this.state.widgets.forEach(widget => {
             this.serveItUp(`${this.state.theURI}/update-widget?widgetId=${widget.id}`, widget);
         });
@@ -1755,11 +1761,12 @@ class WidgetLayoutEditor extends React.PureComponent {
     onLayoutChange = layout => {
         if (this.state.haveWidgets) {
             const widgets = this.state.widgets;
+            const widgetsToUpdate = widgets.filter((widget, i) => !_.isEqual(widget.layout, layout[i]));
             layout.forEach((lay, i) => widgets[i].layout = lay);
             this.setState({
                 widgets: widgets,
                 layout: layout,
-            }, this.updateServerWidgets);
+            }, () => this.updateServerWidgets(widgetsToUpdate));
         } else {
             this.setState({layout: layout});
         }
