@@ -4,14 +4,14 @@ Crowd-sourced visual interpretation of on-demand satellite imagery
 
 ** Installation Requirements
 
+*** Required
+
 - [[https://jdk.java.net][Java Development Kit (version 14)]]
-- [[https://clojure.org/guides/getting_started][Clojure CLI tools]]
+- [[https://clojure.org/guides/getting_started][Clojure CLI tools 1.10]]
 - [[https://www.postgresql.org/download][Postgresql (version 12)]]
 - [[https://postgis.net/install/][PostGIS (version 3)]]
 - [[https://www.7-zip.org/][p7zip]]
-- [[https://www.npmjs.com/][npm]]
-- [[https://certbot.eff.org/][certbot]]
-- [[https://www.openssl.org/source/][openssl]]
+- [[https://nodejs.org/en/][node 10]]
 
 ** Postgresql Database Setup
 
@@ -27,7 +27,7 @@ should navigate to the toplevel directory (i.e., the directory
 containing this README) and run the database build command as follows:
 
 #+begin_src sh
-clojure -A:build-db build-all
+clojure -M:build-db build-all
 #+end_src
 
 This will begin by creating a new database and role called ceo and
@@ -37,11 +37,13 @@ that are necessary for storing and processing ceo's data. Finally, it
 will load some default data into these tables that is necessary for
 the website to function properly.
 
+*** Performance Settings
+
 If you want to improve the performance of your Postgresql server, one
-way is to visit the [[https://pgtune.leopard.in.ua/][pgtune]] website and input your system settings.
-This will generate a set of configuration options that you can add to
-the postgresql.conf file in your system-specific Postgresql data
-directory.
+way is to visit the [[https://pgtune.leopard.in.ua/][pgtune]] website
+and input your system settings. This will generate a set of configuration
+options that you can add to the postgresql.conf file in your system-specific
+Postgresql data directory.
 
 If you would like to keep these settings separate for your own
 reference, you can add them to a file called "performance.conf" that
@@ -56,7 +58,90 @@ include = 'performance.conf'
 Note that the Postgresql server will need to be restarted for these
 changes to take effect.
 
-** Email Server
+** Environment Variable Setup
+
+In order for your command line shell to find the programs installed
+above, you will need to update your environment variables. Under
+GNU/Linux, *BSD, or MacOS X, you can set these through your shell's
+.*rc or .*profile configuration files in your $HOME directory. In a
+Windows environment, you will need to set either the USER (for the
+current user only) or SYSTEM (for any user) environment variables
+under your system settings menu.
+
+*** Step 1: Add JAVA_HOME
+
+On a Unix machine using bash (e.g., GNU/Linux or MacOS X):
+
+#+begin_src sh
+export JAVA_HOME=<jdk-installation-directory>
+#+end_src
+
+On a Unix machine using csh or tcsh (e.g., *BSD):
+
+#+begin_src sh
+setenv JAVA_HOME <jdk-installation-directory>
+#+end_src
+
+On a Windows machine:
+
+#+begin_example
+JAVA_HOME = C:\Program Files\Java\jdk-X.X.X
+#+end_example
+
+Replace *X.X.X* with the JDK version installed on your computer.
+
+*** Step 2: Update PATH
+
+On a Unix machine using bash (e.g., GNU/Linux or MacOS X):
+
+#+begin_src sh
+export PATH=$PATH:$JAVA_HOME/bin
+#+end_src
+
+On a Unix machine using csh or tcsh (e.g., *BSD):
+
+#+begin_src sh
+setenv PATH $PATH\:$JAVA_HOME/bin
+#+end_src
+
+On a Windows machine, add these entries to the PATH environment
+variable:
+
+#+begin_example
+%JAVA_HOME%\bin
+C:\Program Files\PostgreSQL\X\lib
+C:\Program Files\PostgreSQL\X\bin
+C:\Program Files\7-Zip
+#+end_example
+
+Replace *X* with the PostgreSQL version installed on your computer.
+
+** Development Web Server
+
+To compile and run the web application, navigate to the top level
+project directory and run:
+
+#+begin_src sh
+npm install
+npm run webpack-dev
+clojure -M:build-db only-functions
+clojure -M:run-server -m dev [-p 8080] [-P 8443]
+#+end_src
+
+The website will then be available at http://localhost:8080 unless a
+port is specified. An http port can be specified with -p and an https
+port can be specified with -P. In dev mode, server-side exceptions
+will be displayed in the browser and Clojure source files will be
+reloaded whenever you refresh the page.
+
+** Production Web Server
+
+*** Installation Requirements
+
+- [[https://certbot.eff.org/][certbot]]
+- [[https://www.openssl.org/source/][openssl]]
+
+*** Email Server
 
 To set up the email server for system emails, start by creating a file
 named "mail-config.edn" in the root directory of the application. Add
@@ -74,13 +159,13 @@ replacing the values with your own:
  :mailing-list-interval 600}
 #+end_src
 
-** Enabling https
+*** Enabling HTTPS
 
 To automatically create an SSL certificate signed by [[https://letsencrypt.org][Let's Encrypt]],
 simply run the following command from your shell:
 
 #+begin_src sh
-clojure -A:certbot-init mydomain.com [certbot-dir]
+clojure -M:certbot-init mydomain.com [certbot-dir]
 #+end_src
 
 Note: If your certbot installation stores its config files in a
@@ -100,7 +185,7 @@ this repackaging step manually, simply run this command from your
 shell:
 
 #+begin_src sh
-clojure -A:package-cert mydomain.com [certbot-dir]
+clojure -M:package-cert mydomain.com [certbot-dir]
 #+end_src
 
 Certbot runs as a background task every 12 hours and will renew any
@@ -109,7 +194,7 @@ certificate is renewed, certbot-deploy-hook.sh will be run
 automatically to repackage the updated certificate into the correct
 format.
 
-** Forwarding Ports
+*** Forwarding Ports
 
 Forwarding ports from the defaults for http and https allows the web server
 to run without sudo privileges. To forward ports use iptables. Installing
@@ -123,32 +208,30 @@ sudo iptables-save
 sudo apt -y install iptables-persistent
 #+end_src
 
-** Web Server
-
-To compile and run the web application, navigate to the toplevel
-project directory and run:
-
-#+begin_src sh
-npm install
-npm run webpack-<dev|prod>
-clojure -A:run-server [-m <dev|prod>] [-p 8080] [-P 8443]
-#+end_src
-
-The website will then be available at http://localhost:8080 unless a
-port is specified. An http port can be specified with -p and an https
-port can be specified with -P. In dev mode, server-side exceptions
-will be displayed in the browser and Clojure source files will be
-reloaded whenever you refresh the page. These features are disabled in
-prod mode. If the second argument to run-server is omitted, it will
-default to prod mode.
-
-** Building GEE-Gateway
+*** Building GEE-Gateway
 
 In order to use the Geo-Dash portion of CEO, we need to install an
 application to communicate with Google Earth Engine called
 GEE-Gateway. To build and launch GEE-Gateway, download its source code
 from https://github.com/openforis/gee-gateway and follow the steps in
 its README file.
+
+*** Launching the Web Server
+
+To compile and run the web application, navigate to the top level
+project directory and run:
+
+#+begin_src sh
+npm install
+npm run webpack-prod
+clojure -M:build-db only-functions
+clojure -M:run-server -m prod [-p 8080] [-P 8443]
+#+end_src
+
+The website will then be available at http://localhost:8080 unless a
+port is specified. An http port can be specified with -p and an https
+port can be specified with -P. -m prod is optional because production
+is the default.
 
 ** Contact
 

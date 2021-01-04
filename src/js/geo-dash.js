@@ -1004,7 +1004,7 @@ class MapWidget extends React.Component {
                         max="1"
                         step=".01"
                         value={this.props.widget.swipeValue}
-                        onChange={evt => onSwipeChange(widget, evt )}
+                        onChange={evt => onSwipeChange(widget, evt)}
                         style={{display: widget.sliderType === "swipe" ? "block" : "none"}}
                     />
                 </div>

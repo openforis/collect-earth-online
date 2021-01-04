@@ -85,11 +85,11 @@
         "webpack-cli": "^3.3.12"
     },
     "scripts": {
-        "build-db-all": "clojure -A:build-db build-all",
-        "build-db-functions": "clojure -A:build-db only-functions",
+        "build-db-all": "clojure -M:build-db build-all",
+        "build-db-functions": "clojure -M:build-db only-functions",
         "webpack-dev": "webpack --config webpack.config.js --env.dev",
         "webpack-prod": "webpack --config webpack.config.js --env.prod",
-        "server-dev": "clojure -A:run-server 8080 dev",
-        "server-prod": "clojure -A:production:run-server"
+        "server-dev": "clojure -M:run-server -p 8080 -m dev",
+        "server-prod": "clojure -M:production:run-server -P 8443 -m prod"
     }
 }

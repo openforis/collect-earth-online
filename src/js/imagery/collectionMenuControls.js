@@ -545,7 +545,7 @@ export class SentinelMenu extends React.Component {
                         id="sentinel-year"
                         onChange={e => this.setState({year: e.target.value})}
                     />
-                    <label>Year: <span>{this.state.year}</span></label>
+                    <label>Year: {this.state.year}</label>
                 </div>
                 <div className="slide-container">
                     <input

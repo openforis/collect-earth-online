@@ -1,22 +1,19 @@
 # Developer Tool Config Files
-.meghanada/
 .cpcache
-.nrepl-port
-.tern-port
-.project
-.settings/
 .idea/
-collect-earth-online.iml
+.nrepl-port
+.project
 .rebel_readline_history
+.settings/
+.tern-port
+collect-earth-online.iml
 mail-config.edn
 
 # Build Directories and Files
-/target/
+/logs/*.log
 /node_modules/
+/target/
 package-lock.json
 
 # MacOS X Backups
 .DS_Store
-
-# Log files
-/logs/*.log
