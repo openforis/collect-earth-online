@@ -1,5 +1,6 @@
 # Developer Tool Config Files
 .cpcache
+.clj-kondo
 .idea/
 .nrepl-port
 .project
