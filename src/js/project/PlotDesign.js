@@ -197,33 +197,38 @@ export class PlotDesign extends React.Component {
     };
 
     renderFileInput = (fileType) => (
-        <div style={{display: "flex"}}>
-            <label
-                id="custom-upload"
-                className="btn btn-sm btn-block btn-outline-lightgreen btn-file py-0 text-nowrap"
-                style={{display: "flex", alignItems: "center", width: "fit-content"}}
-                htmlFor="plot-distribution-file"
-            >
-                Upload plot file
-                <input
-                    type="file"
-                    accept={fileType === "csv" ? "text/csv" : "application/zip"}
-                    id="plot-distribution-file"
-                    defaultValue=""
-                    onChange={e => {
-                        const file = e.target.files[0];
-                        encodeFileAsBase64(file, base64 =>
-                            this.setPlotDetails({
-                                plotFileName: file.name,
-                                plotFileBase64: base64,
-                            }));
-                    }}
-                    style={{display: "none"}}
-                />
-            </label>
-            <label className="ml-3 text-nowrap">
-                File: {this.context.plotFileName || (this.context.projectId > 0 ? "Use existing data" : "None")}
-            </label>
+        <div>
+            <div style={{display: "flex"}}>
+                <label
+                    id="custom-upload"
+                    className="btn btn-sm btn-block btn-outline-lightgreen btn-file py-0 text-nowrap"
+                    style={{display: "flex", alignItems: "center", width: "fit-content"}}
+                    htmlFor="plot-distribution-file"
+                >
+                    Upload plot file
+                    <input
+                        type="file"
+                        accept={fileType === "csv" ? "text/csv" : "application/zip"}
+                        id="plot-distribution-file"
+                        defaultValue=""
+                        onChange={e => {
+                            const file = e.target.files[0];
+                            encodeFileAsBase64(file, base64 =>
+                                this.setPlotDetails({
+                                    plotFileName: file.name,
+                                    plotFileBase64: base64,
+                                }));
+                        }}
+                        style={{display: "none"}}
+                    />
+                </label>
+                <label className="ml-3 text-nowrap">
+                    File: {this.context.plotFileName || (this.context.projectId > 0 ? "Use existing data" : "None")}
+                </label>
+            </div>
+            <a href={fileType === "csv" ? "test_data/plot-csv-example.csv" : "test_data/plot-shape-example.zip"}>
+                Download example plot {fileType === "csv" ? "csv" : "shape"} file
+            </a>
         </div>
     );
 

@@ -26,34 +26,39 @@ export class SampleDesign extends React.Component {
     );
 
     renderFileInput = (fileType) => (
-        <div style={{display: "flex"}}>
-            <label
-                id="custom-upload"
-                className="btn btn-sm btn-block btn-outline-lightgreen btn-file py-0 text-nowrap"
-                style={{display: "flex", alignItems: "center", width: "fit-content"}}
-                htmlFor="sample-distribution-file"
-            >
-                Upload sample file
-                <input
-                    type="file"
-                    accept={fileType === "csv" ? "text/csv" : "application/zip"}
-                    id="sample-distribution-file"
-                    defaultValue=""
-                    onChange={e => {
-                        const file = e.target.files[0];
-                        encodeFileAsBase64(file, base64 =>
-                            this.context.setProjectDetails({
-                                sampleFileName: file.name,
-                                sampleFileBase64: base64,
-                            }));
-                    }}
-                    style={{display: "none"}}
-                />
-            </label>
-            <label className="ml-3 text-nowrap">
-                File: {this.context.sampleFileName
-                        || ((this.context.projectId === -1 || this.context.plotFileName) ? " None" : " Use existing data")}
-            </label>
+        <div>
+            <div style={{display: "flex"}}>
+                <label
+                    id="custom-upload"
+                    className="btn btn-sm btn-block btn-outline-lightgreen btn-file py-0 text-nowrap"
+                    style={{display: "flex", alignItems: "center", width: "fit-content"}}
+                    htmlFor="sample-distribution-file"
+                >
+                    Upload sample file
+                    <input
+                        type="file"
+                        accept={fileType === "csv" ? "text/csv" : "application/zip"}
+                        id="sample-distribution-file"
+                        defaultValue=""
+                        onChange={e => {
+                            const file = e.target.files[0];
+                            encodeFileAsBase64(file, base64 =>
+                                this.context.setProjectDetails({
+                                    sampleFileName: file.name,
+                                    sampleFileBase64: base64,
+                                }));
+                        }}
+                        style={{display: "none"}}
+                    />
+                </label>
+                <label className="ml-3 text-nowrap">
+                    File: {this.context.sampleFileName
+                            || ((this.context.projectId === -1 || this.context.plotFileName) ? " None" : " Use existing data")}
+                </label>
+            </div>
+            <a href={fileType === "csv" ? "test_data/sample-csv-example.csv" : "test_data/sample-shape-example.zip"}>
+                Download example sample {fileType === "csv" ? "csv" : "shape"} file
+            </a>
         </div>
     );
 
