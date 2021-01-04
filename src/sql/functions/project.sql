@@ -831,14 +831,25 @@ CREATE OR REPLACE FUNCTION select_project_by_id(_project_id integer)
 
 $$ LANGUAGE SQL;
 
+CREATE OR REPLACE FUNCTION user_project(_user_id integer, _role_id integer, _privacy_level text, _availability text)
+ RETURNS boolean AS $$
+
+    SELECT (_role_id = 1 AND _availability <> 'archived')
+            OR (_availability = 'published'
+                AND (_privacy_level = 'public'
+                    OR (_user_id > 0 AND _privacy_level = 'users')
+                    OR (_role_id = 2 AND _privacy_level = 'institution')))
+
+$$ LANGUAGE SQL IMMUTABLE;
+
 -- Returns all projects the user can see. This is used only on the home page
-CREATE OR REPLACE FUNCTION select_user_projects(_user_id integer)
+CREATE OR REPLACE FUNCTION select_user_home_projects(_user_id integer)
  RETURNS table (
     project_id        integer,
     institution_id    integer,
     name              text,
     description       text,
-    boundary          text,
+    centroid          text,
     num_plots         integer,
     editable          boolean
  ) AS $$
@@ -854,10 +865,7 @@ CREATE OR REPLACE FUNCTION select_user_projects(_user_id integer)
     LEFT JOIN institution_users iu
         ON user_rid = _user_id
         AND p.institution_rid = iu.institution_rid
-    WHERE ((role_rid = 1 AND p.availability <> 'archived')
-            OR (p.privacy_level = 'public' AND p.availability = 'published')
-            OR (_user_id > 0 AND p.privacy_level = 'users' AND p.availability = 'published')
-            OR (role_rid = 2 AND p.privacy_level = 'institution' AND p.availability = 'published'))
+    WHERE user_project(_user_id, role_rid, p.privacy_level, p.availability)
         AND valid_boundary(boundary) = TRUE
     ORDER BY project_uid
 
@@ -866,9 +874,9 @@ $$ LANGUAGE SQL;
 -- Returns all rows in projects for a user_id and institution_rid with roles
 CREATE OR REPLACE FUNCTION select_institution_projects(_user_id integer, _institution_id integer)
  RETURNS table (
-    project_id        integer,
-    name              text,
-    privacy_level     text
+    project_id       integer,
+    name             text,
+    privacy_level    text
  ) AS $$
 
     SELECT project_uid,
@@ -879,10 +887,7 @@ CREATE OR REPLACE FUNCTION select_institution_projects(_user_id integer, _instit
         ON user_rid = _user_id
         AND p.institution_rid = iu.institution_rid
     WHERE p.institution_rid = _institution_id
-        AND ((role_rid = 1 AND p.availability <> 'archived')
-            OR (p.privacy_level = 'public' AND p.availability = 'published')
-            OR (_user_id > 0 AND p.privacy_level = 'users' AND p.availability = 'published')
-            OR (role_rid = 2 AND p.privacy_level = 'institution' AND p.availability = 'published'))
+        AND user_project(_user_id, role_rid, p.privacy_level, p.availability)
     ORDER BY project_uid
 
 $$ LANGUAGE SQL;

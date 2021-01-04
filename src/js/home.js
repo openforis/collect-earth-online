@@ -30,7 +30,7 @@ class Home extends React.Component {
         });
     }
 
-    getProjects = () => fetch("/get-all-projects")
+    getProjects = () => fetch("/get-home-projects")
         .then(response => response.ok ? response.json() : Promise.reject(response))
         .then(data => {
             if (data.length > 0) {
@@ -136,7 +136,7 @@ class MapPanel extends React.Component {
     }
 
     addProjectMarkers(mapConfig, projects, clusterDistance) {
-        const projectSource = mercator.projectsToVectorSource(projects.filter(project => project.boundary));
+        const projectSource = mercator.projectsToVectorSource(projects.filter(project => project.centroid));
         if (clusterDistance == null) {
             mercator.addVectorLayer(mapConfig,
                                     "projectMarkers",
