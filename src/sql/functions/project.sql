@@ -871,12 +871,12 @@ CREATE OR REPLACE FUNCTION select_user_home_projects(_user_id integer)
 
 $$ LANGUAGE SQL;
 
--- Returns integer value for status of no, some, or all plots collected.
-CREATE OR REPLACE FUNCTION select_project_completion(_project_id integer)
+-- Returns percent of plots collected.
+CREATE OR REPLACE FUNCTION project_percent_complete(_project_id integer)
  RETURNS real AS $$
 
     SELECT CASE WHEN count(distinct(plot_uid)) > 0
-        THEN (count(user_plot_uid) / count(distinct(plot_uid))::real)
+        THEN (100.0 * count(user_plot_uid) / count(distinct(plot_uid))::real)
         ELSE 0
         END::real
     FROM plots
@@ -892,13 +892,13 @@ CREATE OR REPLACE FUNCTION select_institution_projects(_user_id integer, _instit
     project_id       integer,
     name             text,
     privacy_level    text,
-    status           real
+    pct_complete     real
  ) AS $$
 
     SELECT project_uid,
         name,
         privacy_level,
-        (SELECT select_project_completion(project_uid))
+        (SELECT project_percent_complete(project_uid))
     FROM projects as p
     LEFT JOIN institution_users iu
         ON user_rid = _user_id
