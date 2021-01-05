@@ -115,6 +115,16 @@ CREATE OR REPLACE FUNCTION get_sample_headers(_project_id integer)
 
 $$ LANGUAGE PLPGSQL;
 
+-- Create empty table before loading external data
+CREATE OR REPLACE FUNCTION create_new_table(_table_name text, _cols text)
+ RETURNS void AS $$
+
+ BEGIN
+    EXECUTE 'CREATE TABLE ' || _table_name || '(' || _cols || ')';
+ END
+
+$$ LANGUAGE PLPGSQL;
+
 --
 --  WIDGET FUNCTIONS
 --
@@ -415,36 +425,6 @@ CREATE OR REPLACE FUNCTION update_project_counts(_project_id integer)
     WHERE project_uid = _project_id
 
 $$ LANGUAGE SQL;
-
--- CSV REQUIRED FUNCTIONS
-
--- Create empty table before loading csv
-CREATE OR REPLACE FUNCTION create_new_table(_table_name text, _cols text)
- RETURNS void AS $$
-
- DECLARE
-    iter text;
- BEGIN
-    EXECUTE 'CREATE TABLE ext_tables.' || _table_name || '()';
-
-    FOREACH iter IN ARRAY string_to_array(_cols, ',')
-    LOOP
-        EXECUTE format('ALTER TABLE ext_tables.' || _table_name || ' add column %s;', iter);
-    END LOOP;
-
- END
-
-$$ LANGUAGE PLPGSQL;
-
--- Add index to csv file for reference later
-CREATE OR REPLACE FUNCTION add_index_col(_table_name text)
- RETURNS void AS $$
-
- BEGIN
-    EXECUTE 'ALTER TABLE ext_tables.' || _table_name || ' ADD COLUMN gid serial primary key';
- END
-
-$$ LANGUAGE PLPGSQL;
 
 --  CLEAN UP FUNCTIONS
 
@@ -1450,7 +1430,7 @@ CREATE OR REPLACE FUNCTION select_plot_samples(_plot_id integer, _project_id int
     plotId                integer,
     sampleId              integer,
     geom                  text,
-    value                 jsonb,
+    saved_answers         jsonb,
     imagery_id            integer,
     imagery_attributes    jsonb
  ) AS $$
@@ -1469,7 +1449,7 @@ CREATE OR REPLACE FUNCTION select_plot_samples(_plot_id integer, _project_id int
         fd.sampleId,
         fd.sampleId,
         ST_AsGeoJSON(fd.geom) as geom,
-        (CASE WHEN sv.value IS NULL THEN '{}' ELSE sv.value END),
+        (CASE WHEN sv.saved_answers IS NULL THEN '{}' ELSE sv.saved_answers END),
         sv.imagery_rid,
         sv.imagery_attributes
     FROM samples
@@ -1520,11 +1500,11 @@ CREATE OR REPLACE FUNCTION add_user_samples(
     )
 
     INSERT INTO sample_values
-        (user_plot_rid, sample_rid, imagery_rid, imagery_attributes, value)
-    (SELECT user_plot_uid, sv.sample_id, iv.imagery_id, iv.imagery_attributes::jsonb, sv.value
+        (user_plot_rid, sample_rid, imagery_rid, imagery_attributes, saved_answers)
+    (SELECT user_plot_uid, nsv.sample_id, iv.imagery_id, iv.imagery_attributes::jsonb, nsv.value
         FROM user_plot_table AS upt, samples AS s
-            INNER JOIN new_sample_values as sv
-                ON sample_uid = sv.sample_id
+            INNER JOIN new_sample_values as nsv
+                ON sample_uid = nsv.sample_id
             INNER JOIN image_values as iv
                 ON sample_uid = iv.sample_id
         WHERE s.plot_rid = _plot_id)
@@ -1562,22 +1542,22 @@ CREATE OR REPLACE FUNCTION update_user_samples(
         CROSS JOIN LATERAL
         jsonb_to_record(a.value) as (id int, attributes text)
     ), plot_samples AS (
-        SELECT user_plot_uid, sv.sample_id, iv.imagery_id, iv.imagery_attributes::jsonb, sv.value
+        SELECT user_plot_uid, nsv.sample_id, iv.imagery_id, iv.imagery_attributes::jsonb, nsv.value
         FROM user_plot_table AS upt, samples AS s
-        INNER JOIN new_sample_values as sv ON sample_uid = sv.sample_id
+        INNER JOIN new_sample_values as nsv ON sample_uid = nsv.sample_id
         INNER JOIN image_values as iv ON sample_uid = iv.sample_id
         WHERE s.plot_rid = _plot_id
     )
 
     INSERT INTO sample_values
-        (user_plot_rid, sample_rid, imagery_rid, imagery_attributes, value)
+        (user_plot_rid, sample_rid, imagery_rid, imagery_attributes, saved_answers)
         (SELECT user_plot_uid, sample_id, imagery_id, imagery_attributes, value FROM plot_samples)
     ON CONFLICT (user_plot_rid, sample_rid) DO
         UPDATE
         SET user_plot_rid = excluded.user_plot_rid,
             imagery_rid = excluded.imagery_rid,
             imagery_attributes = excluded.imagery_attributes,
-            value = excluded.value
+            saved_answers = excluded.saved_answers
 
     RETURNING sample_values.sample_rid
 
@@ -1720,11 +1700,12 @@ CREATE OR REPLACE FUNCTION dump_project_plot_data(_project_id integer)
             MAX(collection_time) as collection_time,
             MAX(analysis_duration) as analysis_duration,
             format('[%s]', string_agg(
-                (CASE WHEN "value" IS NULL THEN
+                (CASE WHEN saved_answers IS NULL THEN
                     format('{"%s":"%s"}', 'id', sample_uid)
                 ELSE
-                    format('{"%s":"%s", "%s":%s}', 'id', sample_uid, 'value', "value")
-                END) , ', ')) as samples,
+                    format('{"%s":"%s", "%s":%s}', 'id', sample_uid, 'saved_answers', saved_answers)
+                END),', '
+            )) as samples,
             pl_ext_id,
             project_id,
             MODE() WITHIN GROUP (ORDER BY imagerySecureWatchDate) as common_securewatch_date,
@@ -1773,7 +1754,7 @@ CREATE OR REPLACE FUNCTION dump_project_sample_data(_project_id integer)
         imagery_title         text,
         imagery_attributes    text,
         sample_geom           text,
-        value                 jsonb,
+        saved_answers         jsonb,
         ext_plot_data         jsonb,
         ext_sample_data       jsonb
  ) AS $$
@@ -1801,7 +1782,7 @@ CREATE OR REPLACE FUNCTION dump_project_sample_data(_project_id integer)
         title AS imagery_title,
         imagery_attributes::text,
         ST_AsText(sample_geom),
-        value,
+        saved_answers,
         pfd.rem_data,
         sfd.rem_data
     FROM select_all_project_plots(_project_id) p
