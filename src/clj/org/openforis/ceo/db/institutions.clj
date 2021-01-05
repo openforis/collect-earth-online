@@ -30,10 +30,10 @@
     (if-let [institution (first (call-sql "select_institution_by_id" institution-id user-id))]
       (data-response (let [{:keys [name base64_image url description institution_admin]} institution]
                        {:name             name
-                        :base64Image      base64_image
                         :url              url
                         :description      description
-                        :institutionAdmin institution_admin}))
+                        :institutionAdmin institution_admin
+                        :base64Image      base64_image})) ; base64Image is last so it does not appear in the logs.
       (data-response (str "Institution with " institution-id " is not found.")))))
 
 (defn create-institution [{:keys [params]}]
