@@ -164,7 +164,7 @@ class WidgetLayoutEditor extends React.PureComponent {
         });
         this.setState({widgets: widgets});
         if (changed) {
-            this.updateServerWidgets();
+            this.updateAllServerWidgets();
         }
     };
 
