@@ -289,32 +289,32 @@ function TextMatch(props) {
                 <td colSpan="6">
                     <table>
                         <tbody>
-                        <tr>
-                            <td><label>Survey Question: </label></td>
-                            <td>
-                                <select
-                                    className="form-control form-control-sm"
-                                    onChange={e => props.updateOptions(e.target, "")}
-                                >
-                                    <option value="-1">None</option>
-                                    {surveyQuestions && surveyQuestions.map((question, uid) =>
-                                        <option key={uid} value={question.id}>{question.question}</option>)
-                                    }
-                                </select>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td><label>Enter regular expression: </label></td>
-                            <td>
-                                <input
-                                    id="text-match"
-                                    className="form-control form-control-sm"
-                                    type="text"
-                                    placeholder="Regular expression"
-                                    onChange={e => props.updateRegex(e.target.value)}
-                                />
-                            </td>
-                        </tr>
+                            <tr>
+                                <td><label>Survey Question: </label></td>
+                                <td>
+                                    <select
+                                        className="form-control form-control-sm"
+                                        onChange={e => props.updateOptions(e.target, "")}
+                                    >
+                                        <option value="-1">None</option>
+                                        {surveyQuestions && surveyQuestions.map((question, uid) =>
+                                            <option key={uid} value={question.id}>{question.question}</option>)
+                                        }
+                                    </select>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><label>Enter regular expression: </label></td>
+                                <td>
+                                    <input
+                                        id="text-match"
+                                        className="form-control form-control-sm"
+                                        type="text"
+                                        placeholder="Regular expression"
+                                        onChange={e => props.updateRegex(e.target.value)}
+                                    />
+                                </td>
+                            </tr>
                         </tbody>
                     </table>
                 </td>
@@ -581,75 +581,75 @@ export class SurveyRulesList extends React.Component {
                 <table id="srd">
                     <tbody>
                         {(surveyRules || []).length > 0
-                            ?
-                                surveyRules.map((rule, uid) => {
-                                    if (rule.ruleType === "text-match") {
-                                        return <tr id={"rule" + rule.id} key={uid}>
-                                            {inDesignMode &&
-                                            <td>
-                                                {this.removeButton(rule.id)}
-                                            </td>
-                                            }
-                                            <td>{"Rule " + rule.id}</td>
-                                            <td>Type: Text Regex Match</td>
-                                            <td>Regex: {rule.regex}</td>
-                                            <td colSpan="2">Questions: {rule.questionsText.toString()}</td>
-                                        </tr>;
-                                    } else if (rule.ruleType === "numeric-range") {
-                                        return <tr id={"rule" + rule.id} key={uid}>
-                                            {inDesignMode &&
-                                            <td>
-                                                {this.removeButton(rule.id)}
-                                            </td>
-                                            }
-                                            <td>{"Rule " + rule.id}</td>
-                                            <td>Type: Numeric Range</td>
-                                            <td>Min: {rule.min}</td>
-                                            <td>Max: {rule.max}</td>
-                                            <td>Questions: {rule.questionsText.toString()}</td>
-                                        </tr>;
-                                    } else if (rule.ruleType === "sum-of-answers") {
-                                        return <tr id={"rule" + rule.id} key={uid}>
-                                            {inDesignMode &&
-                                            <td>
-                                                {this.removeButton(rule.id)}
-                                            </td>
-                                            }
-                                            <td>{"Rule " + rule.id}</td>
-                                            <td>Type: Sum of Answers</td>
-                                            <td>Valid Sum: {rule.validSum}</td>
-                                            <td colSpan="2">Questions: {rule.questionsText.toString()}</td>
-                                        </tr>;
-                                    } else if (rule.ruleType === "matching-sums") {
-                                        return <tr id={"rule" + rule.id} key={uid}>
-                                            {inDesignMode &&
-                                            <td>
-                                                {this.removeButton(rule.id)}
-                                            </td>
-                                            }
-                                            <td>{"Rule " + rule.id}</td>
-                                            <td>Type: Matching Sums</td>
-                                            <td>Questions Set 1: {rule.questionSetText1.toString()}</td>
-                                            <td colSpan="2">Questions Set 2: {rule.questionSetText2.toString()}</td>
-                                        </tr>;
-                                    } else if (rule.ruleType === "incompatible-answers") {
-                                        return <tr id={"rule" + rule.id} key={uid}>
-                                            {inDesignMode &&
-                                            <td>
-                                                {this.removeButton(rule.id)}
-                                            </td>
-                                            }
-                                            <td>{"Rule " + rule.id}</td>
-                                            <td>Type: Incompatible Answers</td>
-                                            <td>Question 1: {rule.questionText1}, Answer 1: {rule.answerText1}</td>
-                                            <td colSpan="2">Question 2: {rule.questionText2}, Answer 2: {rule.answerText2}</td>
-                                        </tr>;
-                                    }
-                                })
-                            :
-                                <tr>
-                                    <td colSpan="6"><span>No rules set for this survey</span></td>
-                                </tr>
+                        ?
+                            surveyRules.map((rule, uid) => {
+                                if (rule.ruleType === "text-match") {
+                                    return <tr id={"rule" + rule.id} key={uid}>
+                                        {inDesignMode &&
+                                        <td>
+                                            {this.removeButton(rule.id)}
+                                        </td>
+                                        }
+                                        <td>{"Rule " + rule.id}</td>
+                                        <td>Type: Text Regex Match</td>
+                                        <td>Regex: {rule.regex}</td>
+                                        <td colSpan="2">Questions: {rule.questionsText.toString()}</td>
+                                    </tr>;
+                                } else if (rule.ruleType === "numeric-range") {
+                                    return <tr id={"rule" + rule.id} key={uid}>
+                                        {inDesignMode &&
+                                        <td>
+                                            {this.removeButton(rule.id)}
+                                        </td>
+                                        }
+                                        <td>{"Rule " + rule.id}</td>
+                                        <td>Type: Numeric Range</td>
+                                        <td>Min: {rule.min}</td>
+                                        <td>Max: {rule.max}</td>
+                                        <td>Questions: {rule.questionsText.toString()}</td>
+                                    </tr>;
+                                } else if (rule.ruleType === "sum-of-answers") {
+                                    return <tr id={"rule" + rule.id} key={uid}>
+                                        {inDesignMode &&
+                                        <td>
+                                            {this.removeButton(rule.id)}
+                                        </td>
+                                        }
+                                        <td>{"Rule " + rule.id}</td>
+                                        <td>Type: Sum of Answers</td>
+                                        <td>Valid Sum: {rule.validSum}</td>
+                                        <td colSpan="2">Questions: {rule.questionsText.toString()}</td>
+                                    </tr>;
+                                } else if (rule.ruleType === "matching-sums") {
+                                    return <tr id={"rule" + rule.id} key={uid}>
+                                        {inDesignMode &&
+                                        <td>
+                                            {this.removeButton(rule.id)}
+                                        </td>
+                                        }
+                                        <td>{"Rule " + rule.id}</td>
+                                        <td>Type: Matching Sums</td>
+                                        <td>Questions Set 1: {rule.questionSetText1.toString()}</td>
+                                        <td colSpan="2">Questions Set 2: {rule.questionSetText2.toString()}</td>
+                                    </tr>;
+                                } else if (rule.ruleType === "incompatible-answers") {
+                                    return <tr id={"rule" + rule.id} key={uid}>
+                                        {inDesignMode &&
+                                        <td>
+                                            {this.removeButton(rule.id)}
+                                        </td>
+                                        }
+                                        <td>{"Rule " + rule.id}</td>
+                                        <td>Type: Incompatible Answers</td>
+                                        <td>Question 1: {rule.questionText1}, Answer 1: {rule.answerText1}</td>
+                                        <td colSpan="2">Question 2: {rule.questionText2}, Answer 2: {rule.answerText2}</td>
+                                    </tr>;
+                                }
+                            })
+                        :
+                            <tr>
+                                <td colSpan="6"><span>No rules set for this survey</span></td>
+                            </tr>
                         }
                         {children}
                     </tbody>
