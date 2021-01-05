@@ -61,9 +61,6 @@ export class SurveyRuleDesign extends React.Component {
                     const dropdownQuestions = this.context.surveyQuestions.filter(question => question.id !== questionId && question.componentType !== "input");
                     const currentQuestion = this.context.surveyQuestions.find(ques => ques.id === questionId);
                     const answers = currentQuestion.answers;
-                    const nextId = dropdownQuestions[0].id;
-                    const nextQuestion = this.context.surveyQuestions.find(ques => ques.id === nextId);
-                    const nextAnswers = nextQuestion.answers;
                     this.setState({
                         question1: questionId,
                         dropdownQuestions: dropdownQuestions,
