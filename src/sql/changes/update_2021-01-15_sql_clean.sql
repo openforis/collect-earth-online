@@ -150,3 +150,7 @@ DROP FUNCTION find_json_by_id;
 DROP FUNCTION convert_values_to_answers;
 DROP FUNCTION convert_name_to_question;
 DROP FUNCTION answer_short_to_long;
+
+-- Update project routes
+DROP TYPE IF EXISTS project_return IF EXISTS CASCADE;
+DROP VIEW IF EXISTS project_boundary CASCADE;

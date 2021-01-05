@@ -35,40 +35,25 @@
                       :showPlotInformation false
                       :autoLaunchGeoDash   true})
 
-(defn- get-project-list [sql-results]
-  (mapv (fn [project]
-          {:id            (:project_id project)
-           :institution   (:institution_id project) ; TODO legacy variable name, update to institutionId
-           :imageryId     (:imagery_id project)
-           :availability  (:availability project)
-           :name          (:name project)
-           :description   (:description project)
-           :privacyLevel  (:privacy_level project)
-           :numPlots      (:num_plots project)
-           :boundary      (:boundary project)
-           :editable      (:editable project)
-           :validBoundary (:valid_boundary project)}) ; TODO set the visibility or availability for projects with invalid bounds so they dont show in the list in the first place
-        sql-results))
+(defn get-home-projects [{:keys [params]}]
+  (data-response (mapv (fn [{:keys [project_id institution_id name description num_plots centroid editable]}]
+                         {:id          project_id
+                          :institution institution_id
+                          :name        name
+                          :description description
+                          :numPlots    num_plots
+                          :centroid    centroid
+                          :editable    editable})
+                       (call-sql "select_user_home_projects" (:userId params -1)))))
 
-;; TODO These long project lists do not need all of those values returned.
-;; TODO Match the SQL function and returned values for each query separately
-(defn get-all-projects [{:keys [params]}]
+(defn get-institution-projects [{:keys [params]}]
   (let [user-id        (:userId params -1)
         institution-id (tc/val->int (:institutionId params))]
-    (data-response (get-project-list (cond
-                                       (= -1 user-id institution-id)
-                                       (call-sql "select_all_projects")
-
-                                       (and (neg? user-id) (pos? institution-id))
-                                       (call-sql "select_all_institution_projects" institution-id)
-
-                                       (and (pos? user-id) (neg? institution-id))
-                                       (call-sql "select_all_user_projects" user-id)
-
-                                       :else
-                                       (call-sql "select_institution_projects_with_roles"
-                                                 user-id
-                                                 institution-id))))))
+    (data-response (mapv (fn [{:keys [project_id name privacy_level]}]
+                           {:id           project_id
+                            :name         name
+                            :privacyLevel privacy_level})
+                         (call-sql "select_institution_projects" user-id institution-id)))))
 
 (defn get-template-projects [{:keys [params]}]
   (let [user-id (:userId params -1)]
