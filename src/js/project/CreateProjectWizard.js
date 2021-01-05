@@ -11,7 +11,6 @@ import {SampleDesign, SampleReview, SamplePreview} from "./SampleDesign";
 import SvgIcon from "../components/SvgIcon";
 import {mercator} from "../utils/mercator.js";
 import {last, removeFromSet} from "../utils/generalUtils";
-import {convertSampleValuesToSurveyQuestions} from "../utils/surveyUtils";
 import {ProjectContext, plotLimit, perPlotLimit, sampleLimit} from "./constants";
 
 export default class CreateProjectWizard extends React.Component {
@@ -143,12 +142,10 @@ export default class CreateProjectWizard extends React.Component {
         fetch(`/get-template-by-id?projectId=${projectId}`)
             .then(response => response.ok ? response.json() : Promise.reject(response))
             .then(data => {
-                const newSurveyQuestions = convertSampleValuesToSurveyQuestions(data.sampleValues);
-                this.setState({templateProject: {...data, surveyQuestions: newSurveyQuestions}});
+                this.setState({templateProject: data});
                 const institutionImageryIds = this.context.institutionImagery.map(i => i.id);
                 this.context.setProjectDetails({
                     ...data,
-                    surveyQuestions: newSurveyQuestions,
                     templateProjectId: projectId,
                     imageryId: institutionImageryIds.includes(data.imageryId)
                         ? data.imageryId
