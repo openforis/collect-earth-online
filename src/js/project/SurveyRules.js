@@ -386,36 +386,36 @@ function SumOfAnswers(props) {
                 <td colSpan="6">
                     <table>
                         <tbody>
-                        <tr>
-                            <td>
-                                <label>
-                                    <p>Select survey question:</p><p>(Hold ctrl/cmd and select multiple questions)</p>
-                                </label>
-                            </td>
-                            <td colSpan="3">
-                                <select
-                                    className="form-control form-control-sm overflow-auto"
-                                    multiple="multiple"
-                                    onChange={e => props.updateOptions(e.target, "")}
-                                >
-                                    {surveyQuestions.length > 1 && surveyQuestions.map((question, uid) =>
-                                        <option key={uid} value={question.id}>{question.question}</option>)
-                                    }
-                                </select>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td><label>Enter valid sum: </label></td>
-                            <td>
-                                <input
-                                    className="form-control form-control-sm"
-                                    id="expected-sum"
-                                    type="number"
-                                    placeholder="Valid sum"
-                                    onChange={e => props.updateMaxSum(parseInt(e.target.value))}
-                                />
-                            </td>
-                        </tr>
+                            <tr>
+                                <td>
+                                    <label>
+                                        <p>Select survey question:</p><p>(Hold ctrl/cmd and select multiple questions)</p>
+                                    </label>
+                                </td>
+                                <td colSpan="3">
+                                    <select
+                                        className="form-control form-control-sm overflow-auto"
+                                        multiple="multiple"
+                                        onChange={e => props.updateOptions(e.target, "")}
+                                    >
+                                        {surveyQuestions.length > 1 && surveyQuestions.map((question, uid) =>
+                                            <option key={uid} value={question.id}>{question.question}</option>)
+                                        }
+                                    </select>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><label>Enter valid sum: </label></td>
+                                <td>
+                                    <input
+                                        className="form-control form-control-sm"
+                                        id="expected-sum"
+                                        type="number"
+                                        placeholder="Valid sum"
+                                        onChange={e => props.updateMaxSum(parseInt(e.target.value))}
+                                    />
+                                </td>
+                            </tr>
                         </tbody>
                     </table>
                 </td>
