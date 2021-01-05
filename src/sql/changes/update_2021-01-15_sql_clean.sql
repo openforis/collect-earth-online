@@ -152,4 +152,5 @@ DROP FUNCTION convert_name_to_question;
 DROP FUNCTION answer_short_to_long;
 
 -- Update project routes
-DROP TYPE project_return;
+DROP TYPE IF EXISTS project_return IF EXISTS CASCADE;
+DROP VIEW IF EXISTS project_boundary CASCADE;
