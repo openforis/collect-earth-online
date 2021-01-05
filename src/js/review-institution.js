@@ -933,9 +933,9 @@ function Project({project, isAdmin}) {
                     title={project.name}
                     onClick={() => window.location = `/collection?projectId=${project.id}`}
                     style={{
-                        boxShadow: project.status === 0
+                        boxShadow: project.percentComplete === 0.0
                             ? "0px 0px 6px 1px red inset"
-                            : project.status >= 1
+                            : project.percentComplete >= 100.0
                                 ? "0px 0px 6px 2px #3bb9d6 inset"
                                 : "0px 0px 6px 1px yellow inset",
                     }}
