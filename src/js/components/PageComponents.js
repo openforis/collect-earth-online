@@ -238,7 +238,7 @@ export class GeoDashNavigationBar extends React.Component {
     });
 
     render() {
-        const {userName, page} = this.props;
+        const {userName, page, plotId} = this.props;
         const uri = window.location.pathname;
 
         return (
@@ -263,13 +263,18 @@ export class GeoDashNavigationBar extends React.Component {
                         >
                             <span className="navbar-toggler-icon"></span>
                         </button>
-                        <div className="collapse navbar-collapse" id="navbarSupportedContent">
-                            <ul id="login-info" className="navbar-nav mr-auto">
+                        <div className="collapse navbar-collapse justify-content-between" id="navbarSupportedContent">
+                            <ul className="navbar-nav">
                                 <li className="nav-item my-auto">
                                     <h1>GEO-DASH</h1>
                                 </li>
                             </ul>
-                            <ul className="navbar-nav mr-0">
+                            <ul className="navbar-nav" style={{flex: 1, justifyContent: "flex-end"}}>
+                                {uri !== "/widget-layout-editor" &&
+                                    <li className="nav-item" style={{flex: 1, textAlign: "center"}}>
+                                        Plot ID: {plotId}
+                                    </li>
+                                }
                                 {uri === "/widget-layout-editor" &&
                                     <>
                                         <li className="nav-item my-auto ml-1" id="copyWidgetLayout">
