@@ -164,15 +164,8 @@ class WidgetLayoutEditor extends React.PureComponent {
         });
         this.setState({widgets: widgets});
         if (changed) {
-            this.updateServerWidgets();
+            this.updateAllServerWidgets();
         }
-    };
-
-    updateServerWidgets = () => {
-        this.state.widgets.forEach( widget => {
-            const ajaxurl = this.state.theURI + "/update-widget?widgetId=" + widget.id;
-            this.serveItUp(ajaxurl, widget);
-        });
     };
 
     serveItUp = (url, widget) => {
@@ -195,9 +188,14 @@ class WidgetLayoutEditor extends React.PureComponent {
             });
     };
 
+    updateAllServerWidgets = () => {
+        this.state.widgets.forEach(widget => {
+            this.serveItUp(`${this.state.theURI}/update-widget?widgetId=${widget.id}`, widget);
+        });
+    };
+
     deleteWidgetFromServer = widget => {
-        const ajaxurl = this.state.theURI + "/delete-widget?widgetId=" + widget.id;
-        this.serveItUp(ajaxurl, widget);
+        this.serveItUp(`${this.state.theURI}/delete-widget?widgetId=${widget.id}`, widget);
     };
 
     generateDOM = () => {
@@ -1755,19 +1753,19 @@ class WidgetLayoutEditor extends React.PureComponent {
     };
 
     onLayoutChange = layout => {
-        if (this.state.haveWidgets) {
-            const w = this.state.widgets;
-            layout.forEach(function (lay, i) {
-                w[i].layout = lay;
-            });
-            this.setState({
-                widgets: w,
-                layout: layout,
-            },
-                          this.updateServerWidgets);
-        } else {
-            this.setState({layout: layout});
-        }
+        const newWidgets = this.state.widgets.map((w, i) => {
+            if (_.isEqual(w.layout, layout[i])) {
+                return w;
+            } else {
+                const newWidget = {...w, layout: layout[i]};
+                this.serveItUp(`${this.state.theURI}/update-widget?widgetId=${newWidget.id}`, newWidget);
+                return newWidget;
+            }
+        });
+        this.setState({
+            widgets: newWidgets,
+            layout: layout,
+        });
     };
 
     render() {
