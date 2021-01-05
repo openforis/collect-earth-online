@@ -69,7 +69,7 @@ export class SurveyRuleDesign extends React.Component {
                         dropdownQuestions: dropdownQuestions,
                         answers1: answers,
                         questionText1: currentQuestion.question,
-                        answers2: nextAnswers,
+                        answers2: [],
                     });
                 } else if (target.id === "question2") {
                     const currentQuestion = this.context.surveyQuestions.find(ques => ques.id === questionId);
@@ -296,7 +296,7 @@ function TextMatch(props) {
                                         className="form-control form-control-sm"
                                         onChange={e => props.updateOptions(e.target, "")}
                                     >
-                                        <option value="-1">None</option>
+                                        <option value="-1">- Select Question -</option>
                                         {surveyQuestions && surveyQuestions.map((question, uid) =>
                                             <option key={uid} value={question.id}>{question.question}</option>)
                                         }
@@ -339,7 +339,7 @@ function NumericRange(props) {
                                         className="form-control form-control-sm"
                                         onChange={e => props.updateOptions(e.target, "")}
                                     >
-                                        <option value="-1">None</option>
+                                        <option value="-1">- Select Question -</option>
                                         {surveyQuestions && surveyQuestions.map((question, uid) =>
                                             <option key={uid} value={question.id}>{question.question}</option>)
                                         }
@@ -496,7 +496,7 @@ function IncompatibleAnswers(props) {
                                         id="question1"
                                         onChange={e => props.updateOptions(e.target, "")}
                                     >
-                                        <option value="-1">None</option>
+                                        <option value="-1">- Select Question 1 -</option>
                                         {surveyQuestions && surveyQuestions.map((question, uid) =>
                                             <option key={uid} value={question.id}>{question.question}</option>)
                                         }
@@ -511,7 +511,7 @@ function IncompatibleAnswers(props) {
                                         id="answer1"
                                         onChange={e => props.updateOptions(e.target, "")}
                                     >
-                                        <option value="-1">None</option>
+                                        <option value="-1">- Select Answer 1 -</option>
                                         {props.answers1 && props.answers1.map((answer, uid) =>
                                             <option key={uid} value={answer.id}>{answer.answer}</option>)
                                         }
@@ -526,7 +526,7 @@ function IncompatibleAnswers(props) {
                                         id="question2"
                                         onChange={e => props.updateOptions(e.target, "")}
                                     >
-                                        <option value="-1">None</option>
+                                        <option value="-1">- Select Question 2 -</option>
                                         {dropdownQuestions && dropdownQuestions.map((question, uid) =>
                                             <option key={uid} value={question.id}>{question.question}</option>)
                                         }
@@ -541,7 +541,7 @@ function IncompatibleAnswers(props) {
                                         id="answer2"
                                         onChange={e => props.updateOptions(e.target, "")}
                                     >
-                                        <option value="-1">None</option>
+                                        <option value="-1">- Select Answer 2 -</option>
                                         {props.answers2 && props.answers2.map((answer, uid) =>
                                             <option key={uid} value={answer.id}>{answer.answer}</option>)
                                         }
