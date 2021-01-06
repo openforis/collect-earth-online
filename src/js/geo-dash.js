@@ -1581,6 +1581,7 @@ class GraphWidget extends React.Component {
         );
     }
 }
+
 class StatsWidget extends React.Component {
     constructor(props) {
         super(props);
@@ -1729,6 +1730,7 @@ export function pageInit(args) {
     ReactDOM.render(
         <GeoDashNavigationBar
             userName={args.userName || "guest"}
+            plotId={parseInt(args.plotId) || -1}
             page={() => <Geodash/>}
         />,
         document.getElementById("app")

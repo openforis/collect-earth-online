@@ -190,7 +190,7 @@ export class NavigationBar extends React.Component {
                     </button>
                     <div className="collapse navbar-collapse" id="navbarSupportedContent">
                         <ul className="navbar-nav mr-auto">
-                            {["Home", "About", "Support","Blog"].map(page =>
+                            {["Home", "About", "Support", "Blog"].map(page =>
                                 <li className={"nav-item" + ("/" + page.toLowerCase() === uri && " active")} key={page}>
                                     <a className="nav-link" href={page === "Blog" ? "https://blog.collect.earth" : "/" + page.toLowerCase()}>{page}</a>
                                 </li>
@@ -238,74 +238,73 @@ export class GeoDashNavigationBar extends React.Component {
     });
 
     render() {
-        const {userName, page} = this.props;
+        const {userName, page, plotId} = this.props;
         const uri = window.location.pathname;
 
         return (
             <>
                 <nav
-                    className="navbar navbar-expand-lg navbar-light fixed-top pt-0 pb-0"
+                    className="navbar navbar-expand-lg navbar-light fixed-top py-0"
                     style={{backgroundColor: "white"}}
                     id="geodash-nav"
                 >
-                    <div className="container-fluid">
-                        <a className="navbar-brand" href="home">
-                            <img className= "img-fluid" id="ceo-site-logo" src="/img/ceo-logo.png" />
-                        </a>
-                        <button
-                            className="navbar-toggler"
-                            type="button"
-                            data-toggle="collapse"
-                            data-target="#navbarSupportedContent"
-                            aria-controls="navbarSupportedContent"
-                            aria-expanded="false"
-                            aria-label="Toggle navigation"
-                        >
-                            <span className="navbar-toggler-icon"></span>
-                        </button>
-                        <div className="collapse navbar-collapse" id="navbarSupportedContent">
-                            <ul id="login-info" className="navbar-nav mr-auto">
-                                <li className="nav-item my-auto">
-                                    <h1>GEO-DASH</h1>
+                    <a className="navbar-brand pt-1 pb-1" href="home">
+                        <img className= "img-fluid" id="ceo-site-logo" src="/img/ceo-logo.png" />
+                    </a>
+                    <button
+                        className="navbar-toggler"
+                        type="button"
+                        data-toggle="collapse"
+                        data-target="#navbarSupportedContent"
+                        aria-controls="navbarSupportedContent"
+                        aria-expanded="false"
+                        aria-label="Toggle navigation"
+                    >
+                        <span className="navbar-toggler-icon"></span>
+                    </button>
+                    <div className="collapse navbar-collapse justify-content-between" id="navbarSupportedContent">
+                        <h1 className="mb-0">GEO-DASH</h1>
+                        <ul className="navbar-nav" style={{flex: 1, justifyContent: "flex-end"}}>
+                            {uri === "/widget-layout-editor"
+                            ?
+                                <>
+                                    <li className="nav-item my-auto ml-1" id="copyWidgetLayout">
+                                        <button
+                                            className="btn btn-outline-lightgreen btn-sm"
+                                            type="button"
+                                            onClick={() => this.setState({copyDialog: true})}
+                                            alt="This will remove any existing widgets currently configured."
+                                            title="This will remove any existing widgets currently configured."
+                                        >
+                                            Copy Layout
+                                        </button>
+                                    </li>
+                                    <li className="nav-item my-auto ml-1">
+                                        <button
+                                            className="btn btn-outline-lightgreen btn-sm"
+                                            type="button"
+                                            onClick={() => this.setState({addDialog : true})}
+                                        >
+                                            Add Widget
+                                        </button>
+                                    </li>
+                                </>
+                            :
+                                <li className="nav-item" style={{flex: 1, textAlign: "center"}}>
+                                    Plot ID: {plotId}
                                 </li>
-                            </ul>
-                            <ul className="navbar-nav mr-0">
-                                {uri === "/widget-layout-editor" &&
-                                    <>
-                                        <li className="nav-item my-auto ml-1" id="copyWidgetLayout">
-                                            <button
-                                                className="btn btn-outline-lightgreen btn-sm"
-                                                type="button"
-                                                onClick={() => this.setState({copyDialog: true})}
-                                                alt="This will remove any existing widgets currently configured."
-                                                title="This will remove any existing widgets currently configured."
-                                            >
-                                                Copy Layout
-                                            </button>
-                                        </li>
-                                        <li className="nav-item my-auto ml-1">
-                                            <button
-                                                className="btn btn-outline-lightgreen btn-sm"
-                                                type="button"
-                                                onClick={() => this.setState({addDialog : true})}
-                                            >
-                                                Add Widget
-                                            </button>
-                                        </li>
-                                    </>
-                                }
-                                <li className="nav-item my-auto ml-1">
-                                    <button
-                                        className="btn btn-outline-lightgreen btn-sm"
-                                        type="button"
-                                        onClick={() => window.open("geo-dash/geo-dash-help", "_blank")}
-                                    >
-                                        Geo-Dash Help
-                                    </button>
-                                </li>
-                                <LogOutButton userName={userName} uri={uri} />
-                            </ul>
-                        </div>
+                            }
+                            <li className="nav-item my-auto ml-1">
+                                <button
+                                    className="btn btn-outline-lightgreen btn-sm"
+                                    type="button"
+                                    onClick={() => window.open("geo-dash/geo-dash-help", "_blank")}
+                                >
+                                    Geo-Dash Help
+                                </button>
+                            </li>
+                            <LogOutButton userName={userName} uri={uri} />
+                        </ul>
                     </div>
                 </nav>
                 {page(this.state.addDialog, this.state.copyDialog, this.closeDialogs)}
