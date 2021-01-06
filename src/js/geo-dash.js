@@ -1730,7 +1730,7 @@ export function pageInit(args) {
     ReactDOM.render(
         <GeoDashNavigationBar
             userName={args.userName || "guest"}
-            plotId={args.plotId || "0"}
+            plotId={parseInt(args.plotId) || -1}
             page={() => <Geodash/>}
         />,
         document.getElementById("app")
