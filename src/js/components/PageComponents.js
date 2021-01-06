@@ -190,7 +190,7 @@ export class NavigationBar extends React.Component {
                     </button>
                     <div className="collapse navbar-collapse" id="navbarSupportedContent">
                         <ul className="navbar-nav mr-auto">
-                            {["Home", "About", "Support","Blog"].map(page =>
+                            {["Home", "About", "Support", "Blog"].map(page =>
                                 <li className={"nav-item" + ("/" + page.toLowerCase() === uri && " active")} key={page}>
                                     <a className="nav-link" href={page === "Blog" ? "https://blog.collect.earth" : "/" + page.toLowerCase()}>{page}</a>
                                 </li>
@@ -265,7 +265,8 @@ export class GeoDashNavigationBar extends React.Component {
                     <div className="collapse navbar-collapse justify-content-between" id="navbarSupportedContent">
                         <h1 className="mb-0">GEO-DASH</h1>
                         <ul className="navbar-nav" style={{flex: 1, justifyContent: "flex-end"}}>
-                            {uri === "/widget-layout-editor" ?
+                            {uri === "/widget-layout-editor"
+                            ?
                                 <>
                                     <li className="nav-item my-auto ml-1" id="copyWidgetLayout">
                                         <button
@@ -288,7 +289,8 @@ export class GeoDashNavigationBar extends React.Component {
                                         </button>
                                     </li>
                                 </>
-                                : <li className="nav-item" style={{flex: 1, textAlign: "center"}}>
+                            :
+                                <li className="nav-item" style={{flex: 1, textAlign: "center"}}>
                                     Plot ID: {plotId}
                                 </li>
                             }
