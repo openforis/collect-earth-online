@@ -88,7 +88,8 @@
    [:get  "/dump-project-raw-data"]          {:handler     projects/dump-project-raw-data
                                               :auth-type   :admin
                                               :auth-action :block}
-   [:get  "/get-all-projects"]               {:handler     projects/get-all-projects}
+   [:get  "/get-home-projects"]              {:handler     projects/get-home-projects}
+   [:get  "/get-institution-projects"]       {:handler     projects/get-institution-projects}
    [:get  "/get-project-by-id"]              {:handler     projects/get-project-by-id
                                               :auth-type   :collect
                                               :auth-action :block}

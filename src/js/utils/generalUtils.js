@@ -121,3 +121,7 @@ export function removeFromSet(set, value) {
 export function safeLength(arr) {
     return (arr || []).length;
 }
+
+export function removeEnumerator(questionText) {
+    return questionText.replace(/[\s][(][\d]*[[)]$/, "");
+}

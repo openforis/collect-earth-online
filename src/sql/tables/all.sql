@@ -178,7 +178,7 @@ CREATE TABLE sample_values (
     sample_rid            integer NOT NULL REFERENCES samples (sample_uid) ON DELETE CASCADE ON UPDATE CASCADE,
     imagery_rid           integer REFERENCES imagery (imagery_uid),
     imagery_attributes    jsonb,
-    value                 jsonb,
+    saved_answers         jsonb,
     CONSTRAINT per_sample_per_user UNIQUE(sample_rid, user_plot_rid)
 );
 
@@ -282,33 +282,6 @@ CREATE TYPE imagery_return AS (
     attribution        text,
     extent             jsonb,
     source_config      jsonb
-);
-
-CREATE TYPE project_return AS (
-    project_id              integer,
-    institution_id          integer,
-    imagery_id              integer,
-    availability            text,
-    name                    text,
-    description             text,
-    privacy_level           text,
-    boundary                text,
-    plot_distribution       text,
-    num_plots               integer,
-    plot_spacing            real,
-    plot_shape              text,
-    plot_size               real,
-    sample_distribution     text,
-    samples_per_plot        integer,
-    sample_resolution       real,
-    allow_drawn_samples     boolean,
-    survey_questions        jsonb,
-    survey_rules            jsonb,
-    classification_times    jsonb,
-    valid_boundary          boolean,
-    token_key               text,
-    options                 jsonb,
-    editable                boolean
 );
 
 CREATE TYPE plots_return AS (
