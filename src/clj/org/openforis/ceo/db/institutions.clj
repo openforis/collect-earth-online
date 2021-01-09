@@ -34,7 +34,7 @@
                         :description      description
                         :institutionAdmin institution_admin
                         :base64Image      base64_image})) ; base64Image is last so it does not appear in the logs.
-      (data-response (str "Institution with " institution-id " is not found.")))))
+      (data-response (str "Institution " institution-id " is not found.")))))
 
 (defn create-institution [{:keys [params]}]
   (let [user-id      (:userId params -1)

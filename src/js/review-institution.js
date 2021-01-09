@@ -137,7 +137,6 @@ class InstitutionDescription extends React.Component {
             },
             newInstitutionDetails: {
                 name: "",
-                logo: "",
                 base64Image: "",
                 url: "",
                 description: "",
@@ -160,18 +159,12 @@ class InstitutionDescription extends React.Component {
                         name: data.name,
                         url: data.url,
                         description: data.description,
-                        logo: "",
                         base64Image: "",
                     },
                 });
                 this.props.setIsAdmin(data.institutionAdmin);
             })
             .catch(response => {
-                this.setState({
-                    institutionDetails: {id: "-1", name: "", logo: "", url: "", description: "", admins: []},
-                    newInstitutionDetails: {id: "-1", name: "", logo: "", url: "", description: "", base64Image: ""},
-                });
-                this.props.setIsAdmin(false);
                 console.log(response);
                 alert("Error retrieving the institution details. See console for details.");
             });

@@ -196,7 +196,7 @@
         (data-response (str "User " email " has been removed.")))
 
       :else
-      (let [institution-name (:name (first (call-sql "select_institution_by_id" institution-id)))
+      (let [institution-name (:name (first (call-sql "select_institution_by_id" institution-id -1)))
             timestamp        (-> (DateTimeFormatter/ofPattern "yyyy/MM/dd HH:mm:ss")
                                  (.format (LocalDateTime/now)))
             inst-user-id     (sql-primitive (call-sql "update_institution_user_role"

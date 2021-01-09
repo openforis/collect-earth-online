@@ -216,7 +216,7 @@ $$ LANGUAGE SQL;
 --
 
 -- Adds a new institution to the database
-CREATE OR REPLACE FUNCTION add_institution(_name text, _description text, _url text)
+CREATE OR REPLACE FUNCTION add_institution(_name text, _url text, _description text)
  RETURNS integer AS $$
 
     INSERT INTO institutions
@@ -243,10 +243,9 @@ CREATE OR REPLACE FUNCTION archive_institution(_institution_id integer)
 
 $$ LANGUAGE SQL;
 
--- FIXME all institutions does not need to return the whole institution_return
 -- Returns all institutions
 CREATE OR REPLACE FUNCTION select_all_institutions()
- RETURNS table (
+ RETURNS TABLE (
     institution_id    integer,
     name              text,
     description       text,
@@ -300,7 +299,7 @@ $$ LANGUAGE SQL;
 
 -- Returns one institution
 CREATE OR REPLACE FUNCTION select_institution_by_id(_institution_id integer, _user_id integer)
- RETURNS table (
+ RETURNS TABLE (
     institution_id       integer,
     name                 text,
     base64_image         text,

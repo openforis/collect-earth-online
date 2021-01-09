@@ -11,7 +11,6 @@ class CreateInstitution extends React.Component {
             institutions: [],
             newInstitutionDetails: {
                 name: "",
-                logo: "",
                 base64Image: "",
                 url: "",
                 description: "",
@@ -91,7 +90,6 @@ class CreateInstitution extends React.Component {
             <InstitutionEditor
                 title="Create New Institution"
                 name={this.state.newInstitutionDetails.name}
-                logo={this.state.newInstitutionDetails.logo}
                 url={this.state.newInstitutionDetails.url}
                 description={this.state.newInstitutionDetails.description}
                 buttonGroup={this.renderButtonGroup}
