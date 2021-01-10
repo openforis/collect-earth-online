@@ -64,7 +64,7 @@ class SurveyCard extends React.Component {
                         ? "Questions '" + r.questionsText + "' should sum up to " + r.validSum + "."
                         : r.ruleType === "matching-sums"
                             ? "Sum of '" + r.questionSetText1 + "' should be equal to sum of  '" + r.questionSetText2 + "'."
-                            : "Question1: " + r.questionText1 + ", Answer1: " + r.answerText1 + "' is not compatible with 'Question2: " + r.questionText2 + ", Answer2: " + r.answerText2 + "'.");
+                            : "'Question1: " + r.questionText1 + ", Answer1: " + r.answerText1 + "' is not compatible with 'Question2: " + r.questionText2 + ", Answer2: " + r.answerText2 + "'.");
 
     render() {
         const {cardNumber, surveyQuestion, inDesignMode, topLevelNodeIds} = this.props;

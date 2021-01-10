@@ -673,23 +673,24 @@ ul.samplevalue {
 }
 .surveyrule_tooltip .surveyrule_tooltiptext {
     visibility: hidden;
-    width: 500px;
+    width: 400px;
     background-color: black;
     color: #ffffff;
     text-align: center;
     border-radius: 6px;
-    padding: 5px 0;
+    padding: 5px 5px;
     position: absolute;
     z-index: 1;
     top: 150%;
-    left: 50%;
-    margin-left: -60px;
+    left: 35%;
+    margin-left: -80px;
+    font-weight: normal;
 }
 .surveyrule_tooltip .surveyrule_tooltiptext::after {
     content: "";
     position: absolute;
     bottom: 100%;
-    left: 15%;
+    left: 25%;
     margin-left: -5px;
     border-width: 5px;
     border-style: solid;
