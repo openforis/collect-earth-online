@@ -8,7 +8,6 @@ class CreateInstitution extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
-            institutions: [],
             newInstitutionDetails: {
                 name: "",
                 base64Image: "",
@@ -22,21 +21,8 @@ class CreateInstitution extends React.Component {
         this.getInstitutions();
     }
 
-    getInstitutions = () => fetch("/get-all-institutions")
-        .then(response => response.ok ? response.json() : Promise.reject(response))
-        .then(data => this.setState({institutions: data}))
-        .catch(response => {
-            console.log(response);
-            alert("Error downloading institution list. See console for details.");
-        });
-
     createInstitution = () => {
-        const duplicateInst = this.state.institutions.find(inst => inst.name === this.state.newInstitutionDetails.name);
-        if (duplicateInst) {
-            alert("An institution with this name already exists. "
-                + "Either select a different name or change the name of the duplicate institution here: "
-                + window.location.origin + "/review-institution?institutionId=" + duplicateInst.id);
-        } else if (this.state.newInstitutionDetails.base64Image.length > KBtoBase64Length(500)) {
+        if (this.state.newInstitutionDetails.base64Image.length > KBtoBase64Length(500)) {
             alert("Institution logos must be smaller than 500kb");
         } else {
             fetch("/create-institution",

@@ -201,15 +201,16 @@ class InstitutionDescription extends React.Component {
                       }),
                   }
             )
-                .then(response => {
-                    if (response.ok) {
+                .then(response => Promise.all([response.ok, response.json()]))
+                .then(data => {
+                    if (data[0] && data[1] === "") {
                         this.getInstitutionDetails();
                         this.setState({editMode: false});
                     } else {
-                        console.log(response);
-                        alert("Error updating institution details. See console for details.");
+                        alert(data[1]);
                     }
-                });
+                })
+                .catch(() => alert("Error updating institution details."));
         }
     };
 

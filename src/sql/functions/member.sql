@@ -79,11 +79,11 @@ CREATE OR REPLACE FUNCTION check_login(_email text, _password text)
 
 $$ LANGUAGE SQL;
 
--- Returns all of the user fields associated with the provided email
-CREATE OR REPLACE FUNCTION email_taken(_email text, _user_id integer)
+-- Checks if email is already in use.  Ignores the current user.
+CREATE OR REPLACE FUNCTION email_taken(_email text, _user_id_to_ignore integer)
  RETURNS boolean AS $$
 
-    SELECT EXISTS(SELECT 1 FROM users WHERE email = _email AND user_uid <> _user_id)
+    SELECT EXISTS(SELECT 1 FROM users WHERE email = _email AND user_uid <> _user_id_to_ignore)
 
 $$ LANGUAGE SQL;
 
@@ -214,6 +214,18 @@ $$ LANGUAGE SQL;
 --
 --  INSTITUTION FUNCTIONS
 --
+
+-- Checks if institution name is in use.  Ignores the current institution.
+CREATE OR REPLACE FUNCTION institution_name_taken(_name text, _institution_id_to_ignore integer)
+ RETURNS boolean AS $$
+
+    SELECT count(1) > 0
+    FROM institutions
+    WHERE name = _name
+        AND institution_uid <> _institution_id_to_ignore
+        AND archived = FALSE
+
+$$ LANGUAGE SQL;
 
 -- Adds a new institution to the database
 CREATE OR REPLACE FUNCTION add_institution(_name text, _url text, _description text)
