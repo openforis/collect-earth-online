@@ -216,13 +216,13 @@ $$ LANGUAGE SQL;
 --
 
 -- Adds a new institution to the database
-CREATE OR REPLACE FUNCTION add_institution(_name text, _logo text, _description text, _url text, _archived boolean)
+CREATE OR REPLACE FUNCTION add_institution(_name text, _url text, _description text)
  RETURNS integer AS $$
 
     INSERT INTO institutions
-        (name, logo, description, url, archived)
+        (name, url, description, archived)
     VALUES
-        (_name, _logo, _description, _url, _archived)
+        (_name, _url, _description, FALSE)
     RETURNING institution_uid
 
 $$ LANGUAGE SQL;
@@ -243,10 +243,17 @@ CREATE OR REPLACE FUNCTION archive_institution(_institution_id integer)
 
 $$ LANGUAGE SQL;
 
--- FIXME all institutions does not need to return the whole institution_return
 -- Returns all institutions
 CREATE OR REPLACE FUNCTION select_all_institutions()
- RETURNS setOf institution_return AS $$
+ RETURNS TABLE (
+    institution_id    integer,
+    name              text,
+    description       text,
+    url               text,
+    members           jsonb,
+    admins            jsonb,
+    pending           jsonb
+) AS $$
 
     WITH inst_roles AS (
         SELECT user_rid, title, institution_rid
@@ -273,10 +280,8 @@ CREATE OR REPLACE FUNCTION select_all_institutions()
 
     SELECT institution_uid,
         i.name,
-        i.logo,
         i.description,
         i.url,
-        i.archived,
         (CASE WHEN member_list IS NULL THEN '[]' ELSE member_list END),
         (CASE WHEN admin_list IS NULL THEN '[]' ELSE admin_list END),
         (CASE WHEN pending_list IS NULL THEN '[]' ELSE pending_list END)
@@ -293,35 +298,47 @@ CREATE OR REPLACE FUNCTION select_all_institutions()
 $$ LANGUAGE SQL;
 
 -- Returns one institution
-CREATE OR REPLACE FUNCTION select_institution_by_id(_institution_id integer)
- RETURNS setOf institution_return AS $$
+CREATE OR REPLACE FUNCTION select_institution_by_id(_institution_id integer, _user_id integer)
+ RETURNS TABLE (
+    institution_id       integer,
+    name                 text,
+    base64_image         text,
+    url                  text,
+    description          text,
+    institution_admin    boolean
+ ) AS $$
 
-    SELECT * FROM select_all_institutions()
-    WHERE institution_id = _institution_id
+    SELECT institution_uid,
+        name,
+        encode(logo_data, 'base64'),
+        url,
+        description,
+        (SELECT count(*) > 0 FROM institution_users WHERE user_rid = _user_id AND role_rid = 1)
+    FROM institutions
+    WHERE institution_uid = _institution_id
         AND archived = false
 
 $$ LANGUAGE SQL;
 
 -- Updates institution details
-CREATE OR REPLACE FUNCTION update_institution(_institution_id integer, _name text, _logo_path text, _description text, _url text)
+CREATE OR REPLACE FUNCTION update_institution(_institution_id integer, _name text, _url text, _description text)
  RETURNS integer AS $$
 
     UPDATE institutions
     SET name = _name,
         url = _url,
-        description = _description,
-        logo = _logo_path
+        description = _description
     WHERE institution_uid = _institution_id
     RETURNING institution_uid
 
 $$ LANGUAGE SQL;
 
--- Update only logo. Id is not known during add_institution.
-CREATE OR REPLACE FUNCTION update_institution_logo(_institution_id integer, _logo text)
+-- Update only logo.
+CREATE OR REPLACE FUNCTION update_institution_logo(_institution_id integer, _base64_image text)
  RETURNS integer AS $$
 
     UPDATE institutions
-    SET logo = _logo
+    SET logo_data = decode(_base64_image, 'base64')
     WHERE institution_uid = _institution_id
     RETURNING institution_uid
 

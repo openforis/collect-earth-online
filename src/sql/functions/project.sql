@@ -844,7 +844,7 @@ $$ LANGUAGE SQL IMMUTABLE;
 
 -- Returns all projects the user can see. This is used only on the home page
 CREATE OR REPLACE FUNCTION select_user_home_projects(_user_id integer)
- RETURNS table (
+ RETURNS TABLE (
     project_id        integer,
     institution_id    integer,
     name              text,
@@ -873,7 +873,7 @@ $$ LANGUAGE SQL;
 
 -- Returns all rows in projects for a user_id and institution_rid with roles
 CREATE OR REPLACE FUNCTION select_institution_projects(_user_id integer, _institution_id integer)
- RETURNS table (
+ RETURNS TABLE (
     project_id       integer,
     name             text,
     privacy_level    text
