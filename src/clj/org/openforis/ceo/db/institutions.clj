@@ -24,7 +24,7 @@
        (mapv prepare-institution)
        (data-response)))
 
-(defn get-institution-details [{:keys [params]}]
+(defn get-institution-by-id [{:keys [params]}]
   (let [institution-id (tc/val->int (:institutionId params))
         user-id        (:userId params -1)]
     (if-let [institution (first (call-sql "select_institution_by_id" institution-id user-id))]
