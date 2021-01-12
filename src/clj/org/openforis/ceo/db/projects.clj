@@ -33,6 +33,7 @@
 
 (def default-options {:showGEEScript       false
                       :showPlotInformation false
+                      :collectConfidence   false
                       :autoLaunchGeoDash   true})
 
 (defn- get-project-list [sql-results]

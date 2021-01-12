@@ -12,7 +12,7 @@ export function Overview(props) {
                 privacyLevel,
                 setProjectDetails,
                 projectOptions,
-                projectOptions: {showGEEScript, showPlotInformation, autoLaunchGeoDash},
+                projectOptions: {showGEEScript, showPlotInformation, collectConfidence, autoLaunchGeoDash},
                 projectId,
             }) =>
                 <div id="project-info">
@@ -123,6 +123,20 @@ export function Overview(props) {
                         />
                         <label htmlFor="showPlotInformation" className="form-check-label">
                             Show Extra Plot Columns on Collection Page
+                        </label>
+                    </div>
+                    <div className="form-check">
+                        <input
+                            id="collectConfidence"
+                            className="form-check-input"
+                            type="checkbox"
+                            checked={collectConfidence}
+                            onChange={() => setProjectDetails({
+                                projectOptions: {...projectOptions, collectConfidence: !collectConfidence},
+                            })}
+                        />
+                        <label htmlFor="showPlotInformation" className="form-check-label">
+                            Collect Confidance on Collection Page
                         </label>
                     </div>
                     <div className="form-check">
@@ -276,6 +290,10 @@ export function OverviewReview() {
                         <li>
                             <b>{projectOptions.showPlotInformation ? "Show " : "Don't Show "}</b>
                             Extra Plot Columns on Collection Page
+                        </li>
+                        <li>
+                            <b>{projectOptions.collectConfidence ? "Collect " : "Don't Collect "}</b>
+                            Confidence
                         </li>
                         <li>
                             <b>{projectOptions.autoLaunchGeoDash ? "Auto-launch " : "Don't Auto-launch "}</b>
