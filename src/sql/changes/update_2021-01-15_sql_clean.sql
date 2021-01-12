@@ -171,3 +171,6 @@ CREATE OR REPLACE FUNCTION add_institution_logo_by_file(_institution_id integer,
     RETURNING institution_uid
 
 $$ LANGUAGE SQL;
+
+-- Clean up
+DELETE FROM institution_users WHERE user_rid = -1;
