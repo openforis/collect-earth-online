@@ -135,8 +135,8 @@ export function Overview(props) {
                                 projectOptions: {...projectOptions, collectConfidence: !collectConfidence},
                             })}
                         />
-                        <label htmlFor="showPlotInformation" className="form-check-label">
-                            Collect Confidance on Collection Page
+                        <label htmlFor="collectConfidence" className="form-check-label">
+                            Collect Plot Confidence on Collection Page
                         </label>
                     </div>
                     <div className="form-check">
@@ -293,7 +293,7 @@ export function OverviewReview() {
                         </li>
                         <li>
                             <b>{projectOptions.collectConfidence ? "Collect " : "Don't Collect "}</b>
-                            Confidence
+                            Plot Confidence
                         </li>
                         <li>
                             <b>{projectOptions.autoLaunchGeoDash ? "Auto-launch " : "Don't Auto-launch "}</b>

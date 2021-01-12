@@ -1083,7 +1083,7 @@ class Collection extends React.Component {
                                     answerMode={this.state.answerMode}
                                     setAnswerMode={this.setAnswerMode}
                                     collectConfidence={this.state.currentProject.projectOptions.collectConfidence}
-                                    confidence={this.state.currentPlot.confidence || "100"}
+                                    confidence={this.state.currentPlot.confidence || 100}
                                     setConfidence={this.setConfidence}
                                     resetPlotValues={this.resetPlotValues}
                                     toggleFlagged={this.toggleFlagged}
