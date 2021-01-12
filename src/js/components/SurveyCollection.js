@@ -310,6 +310,21 @@ export class SurveyCollection extends React.Component {
                             {this.props.answerMode === "question"
                                 ? this.renderQuestions()
                                 : this.renderDrawTools()}
+                            {(this.props.collectConfidence && <div className="row mb-3">
+                                <div className="col-12">
+                                    <div className="slide-container">
+                                        <input
+                                            type="range"
+                                            min="0"
+                                            max="100"
+                                            value={this.props.confidence}
+                                            className="slider"
+                                            onChange={e => this.props.setConfidence(e.target.value)}
+                                        />
+                                        <label>Plot Confidence: {this.props.confidence}</label>
+                                    </div>
+                                </div>
+                            </div>)}
                             {this.renderFlagClearButtons()}
                         </>
                     :
