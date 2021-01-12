@@ -143,7 +143,7 @@
                                               :auth-action :block}
    ;; Institutions API
    [:get  "/get-all-institutions"]           {:handler     institutions/get-all-institutions}
-   [:get  "/get-institution-by-id"]        {:handler     institutions/get-institution-by-id}
+   [:get  "/get-institution-by-id"]          {:handler     institutions/get-institution-by-id}
    [:post "/archive-institution"]            {:handler     institutions/archive-institution
                                               :auth-type   :admin
                                               :auth-action :block}
