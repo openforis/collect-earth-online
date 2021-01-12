@@ -351,15 +351,13 @@ class SurveyQuestionTree extends React.Component {
                         {this.state.showAnswers ? <span>-</span> : <span>+</span>}
                     </button>
 
-                    {this.props.getRulesById(this.props.surveyNode.id).length > 0
-                        ?
+                    {this.props.getRulesById(this.props.surveyNode.id).length > 0 &&
                             <div className="text-center btn btn-outline-lightgreen mr-1 surveyrule_tooltip">
                                 <SvgIcon icon="rule" size="1.5rem"/>
                                 <span className="surveyrule_tooltiptext">
                                     {this.props.getRulesById(this.props.surveyNode.id)}
                                 </span>
                             </div>
-                        :   <div></div>
                     }
 
                     <button

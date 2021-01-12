@@ -683,8 +683,9 @@ ul.samplevalue {
     z-index: 1;
     top: 150%;
     left: 35%;
-    margin-left: -80px;
+    margin-left: -70px;
     font-weight: normal;
+    max-width: max-content;
 }
 .surveyrule_tooltip .surveyrule_tooltiptext::after {
     content: "";
