@@ -1077,7 +1077,7 @@ class MapWidget extends React.Component {
                 try {
                     window.setTimeout(function() {
                         error.tile.attempt = error.tile.attempt ? error.tile.attempt + 1 : 1;
-                        console.log(`Trying to reload Tile ${error.tile.tileCoord.join("-")} (${error.tile.attempt}): `, error.tile);
+                        // console.log(`Trying to reload Tile ${error.tile.tileCoord.join("-")} (${error.tile.attempt}): `, error.tile);
                         if (error.tile.attempt < 5) error.tile.load();
                     }, Math.floor(Math.random() * (1250 - 950 + 1) + 950));
                 } catch (e) {
