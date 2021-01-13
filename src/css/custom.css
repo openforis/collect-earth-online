@@ -686,7 +686,6 @@ ul.samplevalue {
     margin-left: -70px;
     font-weight: normal;
     max-width: max-content;
-    list-style-type: disc;
 }
 .surveyrule_tooltip .surveyrule_tooltiptext::after {
     content: "";
