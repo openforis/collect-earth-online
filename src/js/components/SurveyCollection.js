@@ -86,17 +86,16 @@ export class SurveyCollection extends React.Component {
                     || (rule.questions && rule.questions.includes(id))
                     || (rule.questionSetIds1 && (rule.questionSetIds1.includes(id) || rule.questionSetIds2.includes(id)))
                     || (rule.question1 && (rule.question1 === id || rule.question2 === id)))
-            .map(r =>
+            .map((r, uid) =>
                 r.questionId
                     ? r.regex
-                        ? "Rule: " + r.ruleType + " | Question '" + r.questionsText + "' should match the pattern: " + r.regex + "."
-                        : "Rule: " + r.ruleType + " | Question '" + r.questionsText + "' should be between " + r.min + " and " + r.max + "."
+                        ? <li key={uid}>{"Rule: " + r.ruleType + " | Question '" + r.questionsText + "' should match the pattern: " + r.regex + "."}</li>
+                        : <li key={uid}>{"Rule: " + r.ruleType + " | Question '" + r.questionsText + "' should be between " + r.min + " and " + r.max + "."}</li>
                     : r.questions
-                        ? "Rule: " + r.ruleType + " | Questions '" + r.questionsText + "' should sum up to " + r.validSum + "."
+                        ? <li key={uid}>{"Rule: " + r.ruleType + " | Questions '" + r.questionsText + "' should sum up to " + r.validSum + "."}</li>
                         : r.questionSetIds1
-                            ? "Rule: " + r.ruleType + " | Sum of '" + r.questionSetText1 + "' should be equal to sum of  '" + r.questionSetText2 + "'."
-                            : "Rule: " + r.ruleType + " | 'Question1: " + r.questionText1 + ", Answer1: " + r.answerText1 + "' is not compatible with 'Question2: " + r.questionText2 + ", Answer2: " + r.answerText2 + "'.")
-            .join("\n");
+                            ? <li key={uid}>{"Rule: " + r.ruleType + " | Sum of '" + r.questionSetText1 + "' should be equal to sum of  '" + r.questionSetText2 + "'."}</li>
+                            : <li key={uid}>{"Rule: " + r.ruleType + " | 'Question1: " + r.questionText1 + ", Answer1: " + r.answerText1 + "' is not compatible with 'Question2: " + r.questionText2 + ", Answer2: " + r.answerText2 + "'."}</li>);
 
     setDrawTool = (newTool) => {
         this.setState({drawTool: newTool});
@@ -354,9 +353,10 @@ class SurveyQuestionTree extends React.Component {
                     {this.props.getRulesById(this.props.surveyNode.id).length > 0 &&
                             <div className="text-center btn btn-outline-lightgreen mr-1 surveyrule_tooltip">
                                 <SvgIcon icon="rule" size="1.5rem"/>
-                                <span className="surveyrule_tooltiptext">
+
+                                <ul className="surveyrule_tooltiptext_collection">
                                     {this.props.getRulesById(this.props.surveyNode.id)}
-                                </span>
+                                </ul>
                             </div>
                     }
 
