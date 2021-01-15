@@ -596,7 +596,7 @@ class Collection extends React.Component {
                           body: JSON.stringify({
                               projectId: this.props.projectId,
                               plotId: this.state.currentPlot.id,
-                              confidence: -1,
+                              confidence: this.state.currentPlot.confidence || -1,
                               collectionStart: this.state.collectionStart,
                               userSamples: this.state.userSamples,
                               userImages: this.state.userImages,
@@ -979,6 +979,10 @@ class Collection extends React.Component {
         }
     };
 
+    setConfidence = confidence => {
+        this.setState({currentPlot: {...this.state.currentPlot, confidence: confidence}});
+    };
+
     render() {
         const plotId = this.state.currentPlot.plotId ? this.state.currentPlot.plotId : this.state.currentPlot.id;
         return (
@@ -1078,6 +1082,9 @@ class Collection extends React.Component {
                                     setUnansweredColor={this.setUnansweredColor}
                                     answerMode={this.state.answerMode}
                                     setAnswerMode={this.setAnswerMode}
+                                    collectConfidence={this.state.currentProject.projectOptions.collectConfidence}
+                                    confidence={this.state.currentPlot.confidence || 100}
+                                    setConfidence={this.setConfidence}
                                     resetPlotValues={this.resetPlotValues}
                                     toggleFlagged={this.toggleFlagged}
                                 />

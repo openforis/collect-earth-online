@@ -19,6 +19,7 @@ class Project extends React.Component {
             projectOptions: {
                 showGEEScript: false,
                 showPlotInformation: false,
+                collectConfidence: false,
                 autoLaunchGeoDash: true,
             },
             plotDistribution: "random",
