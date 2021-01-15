@@ -309,8 +309,9 @@ export class SurveyCollection extends React.Component {
                         <>
                             {this.props.answerMode === "question"
                                 ? this.renderQuestions()
-                                : this.renderDrawTools()}
-                            {this.props.collectConfidence &&
+                                : this.renderDrawTools()
+                            }
+                            {this.props.collectConfidence && !this.props.flagged &&
                                 <div className="row mb-3">
                                     <div className="col-12">
                                         <div className="slide-container">
