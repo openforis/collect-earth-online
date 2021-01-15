@@ -79,7 +79,8 @@ export const imageryOptions = [
                 type: "select",
                 options: [
                     {label: "Newest Available", value: "newest"},
-                    ...nicfiLayers.map(layer => ({label: layer, value: layer}))],
+                    ...nicfiLayers.map(layer => ({label: layer, value: layer})),
+                ],
             },
             {
                 key: "band",
