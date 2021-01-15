@@ -1,6 +1,7 @@
 import React from "react";
 import {mercator} from "../utils/mercator";
-import {monthlyMapping} from "../utils/generalUtils";
+import {monthlyMapping, last} from "../utils/generalUtils";
+import {nicfiLayers} from "./imageryOptions";
 
 export class PlanetMenu extends React.Component {
     constructor(props) {
@@ -187,7 +188,9 @@ export class PlanetNICFIMenu extends React.Component {
 
     componentDidMount() {
         this.setState({
-            selectedTime: this.props.sourceConfig.time,
+            selectedTime: this.props.sourceConfig.time === "newest"
+                ? last(nicfiLayers)
+                : this.props.sourceConfig.time,
             selectedBand: this.props.sourceConfig.band,
         }, () => this.updatePlanetLayer());
     }
@@ -230,13 +233,7 @@ export class PlanetNICFIMenu extends React.Component {
                             onChange={e => this.setState({selectedTime: e.target.value})}
                             value={this.state.selectedTime}
                         >
-                            {["2018-12_2019-05",
-                              "2019-06_2019-11",
-                              "2019-12_2020-05",
-                              "2020-06_2020-08",
-                              "2020-09"]
-                                .map(time => <option key={time} value={time}>{time}</option>)
-                            }
+                            {nicfiLayers.map(time => <option key={time} value={time}>{time}</option>)}
                         </select>
                     </div>
                     <div className="d-flex align-items-center mb-2">
