@@ -70,7 +70,7 @@ INSERT INTO projects (
     '[{"id": 1, "name": "Land Use", "values": [{"color": "#1EC61B", "name": "Forest", "id": 1, "image": null}, {"color": "#9CF135", "name": "Grassland", "id": 2, "image": null}, {"color": "#D5DE85", "name": "Bare Surface", "id": 3, "image": null}, {"color": "#8B9084", "name": "Impervious Surface", "id": 4, "image": null}, {"color": "#F2C613", "name": "Agriculture", "id": 5, "image": null}, {"color": "#6A3A75", "name": "Urban", "id": 6, "image": null}, {"color": "#2F4DC0", "name": "Water", "id": 7, "image": null}, {"color": "#FFFFFF", "name": "Cloud", "id": 8, "image": null}, {"color": "#000000", "name": "Unknown", "id": 9, "image": null}]}]',
     '[]',
     Now(),
-    '{"showGEEScript": false, "autoLaunchGeoDash": true, "showPlotInformation": false}',
+    '{"showGEEScript": false, "autoLaunchGeoDash": true, "collectConfidence": false, "showPlotInformation": false}',
     1,
     FALSE
 );
