@@ -356,6 +356,7 @@ class SurveyQuestionTree extends React.Component {
                             : this.props.surveyNode.answered.length === this.props.surveyNode.visible.length
                                 ? "0px 0px 6px 5px #3bb9d6 inset"
                                 : "0px 0px 6px 4px yellow inset";
+        const rules = this.props.getRulesById(this.props.surveyNode.id);
         return (
             <fieldset className={"mb-1 justify-content-center text-center"}>
                 <div className="SurveyQuestionTree__question-buttons btn-block my-2 d-flex">
@@ -367,17 +368,12 @@ class SurveyQuestionTree extends React.Component {
                     >
                         {this.state.showAnswers ? <span>-</span> : <span>+</span>}
                     </button>
-
-                    {this.props.getRulesById(this.props.surveyNode.id).length > 0 &&
-                            <div className="text-center btn btn-outline-lightgreen mr-1 surveyrule_tooltip">
-                                <SvgIcon icon="rule" size="1.5rem"/>
-
-                                <ul className="surveyrule_tooltiptext surveyrule_tooltiptext_collection">
-                                    {this.props.getRulesById(this.props.surveyNode.id)}
-                                </ul>
-                            </div>
+                    {rules.length > 0 &&
+                        <div className="text-center btn btn-outline-lightgreen mr-1 tooltip_wrapper">
+                            <SvgIcon icon="rule" size="1.5rem"/>
+                            <ul className="tooltip_content survey_tree">{rules}</ul>
+                        </div>
                     }
-
                     <button
                         type="button"
                         id={this.props.surveyNode.question + "_" + this.props.surveyNode.id}
@@ -403,25 +399,23 @@ class SurveyQuestionTree extends React.Component {
                         surveyQuestions={this.props.surveyQuestions}
                     />
                 }
-                {
-                    childNodes.map((childNode, uid) =>
-                        <Fragment key={uid}>
-                            {this.props.surveyQuestions.find(sq => sq.id === childNode.id).visible.length > 0 &&
-                                <SurveyQuestionTree
-                                    key={uid}
-                                    surveyNode={childNode}
-                                    surveyQuestions={this.props.surveyQuestions}
-                                    setCurrentValue={this.props.setCurrentValue}
-                                    selectedQuestion={this.props.selectedQuestion}
-                                    selectedSampleId={this.props.selectedSampleId}
-                                    setSelectedQuestion={this.props.setSelectedQuestion}
-                                    hierarchyLabel={this.props.hierarchyLabel + "- "}
-                                    getRulesById={this.props.getRulesById}
-                                />
-                            }
-                        </Fragment>
-                    )
-                }
+                {childNodes.map((childNode, uid) =>
+                    <Fragment key={uid}>
+                        {this.props.surveyQuestions.find(sq => sq.id === childNode.id).visible.length > 0 &&
+                        <SurveyQuestionTree
+                            key={uid}
+                            surveyNode={childNode}
+                            surveyQuestions={this.props.surveyQuestions}
+                            setCurrentValue={this.props.setCurrentValue}
+                            selectedQuestion={this.props.selectedQuestion}
+                            selectedSampleId={this.props.selectedSampleId}
+                            setSelectedQuestion={this.props.setSelectedQuestion}
+                            hierarchyLabel={this.props.hierarchyLabel + "- "}
+                            getRulesById={this.props.getRulesById}
+                        />
+                        }
+                    </Fragment>
+                )}
             </fieldset>
         );
     }
