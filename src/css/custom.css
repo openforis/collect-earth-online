@@ -700,34 +700,9 @@ ul.samplevalue {
 .surveyrule_tooltip:hover .surveyrule_tooltiptext {
     visibility: visible;
 }
-
 .surveyrule_tooltip .surveyrule_tooltiptext_collection {
-    visibility: hidden;
     width: 300px;
-    background-color: black;
-    color: #ffffff;
     text-align: initial;
-    border-radius: 6px;
     padding: 5px 5px 5px 25px;
-    position: absolute;
-    z-index: 1;
-    top: 150%;
-    left: 35%;
-    margin-left: -70px;
-    font-weight: normal;
-    max-width: max-content;
     list-style-type: disc;
-}
-.surveyrule_tooltip .surveyrule_tooltiptext_collection::after {
-    content: "";
-    position: absolute;
-    bottom: 100%;
-    left: 25%;
-    margin-left: -5px;
-    border-width: 5px;
-    border-style: solid;
-    border-color: transparent transparent black transparent;
-}
-.surveyrule_tooltip:hover .surveyrule_tooltiptext_collection {
-    visibility: visible;
 }

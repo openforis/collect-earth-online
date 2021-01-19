@@ -372,7 +372,7 @@ class SurveyQuestionTree extends React.Component {
                             <div className="text-center btn btn-outline-lightgreen mr-1 surveyrule_tooltip">
                                 <SvgIcon icon="rule" size="1.5rem"/>
 
-                                <ul className="surveyrule_tooltiptext_collection">
+                                <ul className="surveyrule_tooltiptext surveyrule_tooltiptext_collection">
                                     {this.props.getRulesById(this.props.surveyNode.id)}
                                 </ul>
                             </div>
