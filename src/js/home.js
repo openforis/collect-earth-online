@@ -57,7 +57,7 @@ class Home extends React.Component {
         .then(data => {
             if (data.length > 0) {
                 const userInstitutions = (this.props.userRole !== "admin")
-                    ? data.filter(institution => institution.institutionMember)
+                    ? data.filter(institution => institution.isMember)
                     : [];
                 const institutions = (userInstitutions.length > 0)
                     ? data.filter(institution => !userInstitutions.includes(institution))
@@ -325,7 +325,7 @@ function InstitutionList({
 
     const filterHasProj = (inst) => filteredProjects.some(proj => inst.id === proj.institutionId)
                                     || showEmptyInstitutions
-                                    || inst.institutionMember;
+                                    || inst.isMember;
 
     const filteredInstitutions = institutions
         // Filtering by institution, contains search string and contains projects or user is member

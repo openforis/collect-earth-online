@@ -11,10 +11,10 @@
 
 (defn get-all-institutions [{:keys [params]}]
   (->> (call-sql "select_all_institutions" (:userId params -1))
-       (mapv (fn [{:keys [institution_id name institution_member]}]
-               {:id                institution_id
-                :name              name
-                :institutionMember institution_member}))
+       (mapv (fn [{:keys [institution_id name is_member]}]
+               {:id       institution_id
+                :name     name
+                :isMember is_member}))
        (data-response)))
 
 (defn get-institution-by-id [{:keys [params]}]

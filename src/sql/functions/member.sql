@@ -258,9 +258,9 @@ $$ LANGUAGE SQL;
 -- Returns all institutions
 CREATE OR REPLACE FUNCTION select_all_institutions(_user_id integer)
  RETURNS TABLE (
-    institution_id        integer,
-    name                  text,
-    institution_member    boolean
+    institution_id    integer,
+    name              text,
+    is_member         boolean
 ) AS $$
 
     SELECT institution_uid,
