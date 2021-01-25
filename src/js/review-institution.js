@@ -2,7 +2,7 @@ import React, {Fragment} from "react";
 import ReactDOM from "react-dom";
 
 import InstitutionEditor from "./components/InstitutionEditor";
-import {NavigationBar, SafeImage} from "./components/PageComponents";
+import {LoadingModal, NavigationBar, SafeImage} from "./components/PageComponents";
 import {sortAlphabetically, capitalizeFirst, UnicodeIcon} from "./utils/generalUtils";
 import {imageryOptions} from "./imagery/imageryOptions";
 
@@ -15,8 +15,15 @@ class ReviewInstitution extends React.Component {
             projectList: null,
             isAdmin: false,
             selectedTab: 0,
+            modalMessage: null,
         };
     }
+
+    processModal = (message, callBack) => {
+        this.setState({modalMessage: message},
+            () => callBack()
+                .finally(() => this.setState({modalMessage: null})));
+    };
 
     componentDidMount() {
         // Load the projectList
@@ -25,14 +32,16 @@ class ReviewInstitution extends React.Component {
 
     getProjectList = () => {
         //get projects
-        fetch(`/get-all-projects?institutionId=${this.props.institutionId}`
-        )
-            .then(response => response.ok ? response.json() : Promise.reject(response))
-            .then(data => this.setState({projectList: data}))
-            .catch(response => {
-                console.log(response);
-                alert("Error retrieving the project info. See console for details.");
-            });
+        this.processModal("Loading institution data", () =>
+            fetch(`/get-all-projects?institutionId=${this.props.institutionId}`
+            )
+                .then(response => response.ok ? response.json() : Promise.reject(response))
+                .then(data => this.setState({projectList: data}))
+                .catch(response => {
+                    console.log(response);
+                    alert("Error retrieving the project info. See console for details.");
+                })
+        );
     };
 
     archiveProject = (projectId) => {
@@ -115,10 +124,12 @@ class ReviewInstitution extends React.Component {
                                 setUsersCount={this.setUsersCount}
                                 userId={this.props.userId}
                                 isVisible={this.state.selectedTab === 2}
+                                processModal={this.processModal}
                             />
                         }
                     </div>
                 </div>
+                {this.state.modalMessage && <LoadingModal message={this.state.modalMessage}/>}
             </div>
         );
     }
@@ -1062,29 +1073,31 @@ class UserList extends React.Component {
     };
 
     updateUserInstitutionRole = (accountId, newUserEmail, institutionRole) => {
-        fetch("/update-user-institution-role",
-              {
-                  method: "POST",
-                  headers: {
-                      "Accept": "application/json",
-                      "Content-Type": "application/json",
-                  },
-                  body: JSON.stringify({
-                      accountId: accountId,
-                      newUserEmail: newUserEmail,
-                      institutionId: this.props.institutionId,
-                      institutionRole: institutionRole,
-                  }),
-              })
-            .then(response => response.ok ? response.json() : Promise.reject(response))
-            .then(message => {
-                alert(message);
-                this.getInstitutionUserList();
-            })
-            .catch(response => {
-                console.log(response);
-                alert("Error updating institution details. See console for details.");
-            });
+        this.props.processModal("Updating user", () =>
+            fetch("/update-user-institution-role",
+                  {
+                      method: "POST",
+                      headers: {
+                          "Accept": "application/json",
+                          "Content-Type": "application/json",
+                      },
+                      body: JSON.stringify({
+                          accountId: accountId,
+                          newUserEmail: newUserEmail,
+                          institutionId: this.props.institutionId,
+                          institutionRole: institutionRole,
+                      }),
+                  })
+                .then(response => response.ok ? response.json() : Promise.reject(response))
+                .then(message => {
+                    alert(message);
+                    this.getInstitutionUserList();
+                })
+                .catch(response => {
+                    console.log(response);
+                    alert("Error updating institution details. See console for details.");
+                })
+        );
     };
 
     requestMembership = () => {
