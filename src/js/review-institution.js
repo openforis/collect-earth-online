@@ -19,16 +19,16 @@ class ReviewInstitution extends React.Component {
         };
     }
 
-    processModal = (message, callBack) => {
-        this.setState({modalMessage: message},
-            () => callBack()
-                .finally(() => this.setState({modalMessage: null})));
-    };
-
     componentDidMount() {
         // Load the projectList
         this.getProjectList();
     }
+
+    processModal = (message, callBack) => {
+        this.setState({modalMessage: message},
+                      () => callBack()
+                          .finally(() => this.setState({modalMessage: null})));
+    };
 
     getProjectList = () => {
         //get projects

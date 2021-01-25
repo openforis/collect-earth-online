@@ -26,7 +26,7 @@ class Home extends React.Component {
                     console.log(response);
                     alert("Error retrieving the collection data. See console for details.");
                 })
-                .finally(() => this.setState({modalMessage: null}))
+                .finally(() => this.setState({modalMessage: null}));
         });
     }
 
