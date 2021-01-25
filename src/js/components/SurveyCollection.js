@@ -86,17 +86,16 @@ export class SurveyCollection extends React.Component {
                     || (rule.questions && rule.questions.includes(id))
                     || (rule.questionSetIds1 && (rule.questionSetIds1.includes(id) || rule.questionSetIds2.includes(id)))
                     || (rule.question1 && (rule.question1 === id || rule.question2 === id)))
-            .map(r =>
+            .map((r, uid) =>
                 r.questionId
                     ? r.regex
-                        ? "Rule: " + r.ruleType + " | Question '" + r.questionsText + "' should match the pattern: " + r.regex + "."
-                        : "Rule: " + r.ruleType + " | Question '" + r.questionsText + "' should be between " + r.min + " and " + r.max + "."
+                        ? <li key={uid}>{"Rule: " + r.ruleType + " | Question '" + r.questionsText + "' should match the pattern: " + r.regex + "."}</li>
+                        : <li key={uid}>{"Rule: " + r.ruleType + " | Question '" + r.questionsText + "' should be between " + r.min + " and " + r.max + "."}</li>
                     : r.questions
-                        ? "Rule: " + r.ruleType + " | Questions '" + r.questionsText + "' should sum up to " + r.validSum + "."
+                        ? <li key={uid}>{"Rule: " + r.ruleType + " | Questions '" + r.questionsText + "' should sum up to " + r.validSum + "."}</li>
                         : r.questionSetIds1
-                            ? "Rule: " + r.ruleType + " | Sum of '" + r.questionSetText1 + "' should be equal to sum of  '" + r.questionSetText2 + "'."
-                            : "Rule: " + r.ruleType + " | 'Question1: " + r.questionText1 + ", Answer1: " + r.answerText1 + "' is not compatible with 'Question2: " + r.questionText2 + ", Answer2: " + r.answerText2 + "'.")
-            .join("\n");
+                            ? <li key={uid}>{"Rule: " + r.ruleType + " | Sum of '" + r.questionSetText1 + "' should be equal to sum of  '" + r.questionSetText2 + "'."}</li>
+                            : <li key={uid}>{"Rule: " + r.ruleType + " | 'Question1: " + r.questionText1 + ", Answer1: " + r.answerText1 + "' is not compatible with 'Question2: " + r.questionText2 + ", Answer2: " + r.answerText2 + "'."}</li>);
 
     setDrawTool = (newTool) => {
         this.setState({drawTool: newTool});
@@ -357,6 +356,7 @@ class SurveyQuestionTree extends React.Component {
                             : this.props.surveyNode.answered.length === this.props.surveyNode.visible.length
                                 ? "0px 0px 6px 5px #3bb9d6 inset"
                                 : "0px 0px 6px 4px yellow inset";
+        const rules = this.props.getRulesById(this.props.surveyNode.id);
         return (
             <fieldset className={"mb-1 justify-content-center text-center"}>
                 <div className="SurveyQuestionTree__question-buttons btn-block my-2 d-flex">
@@ -368,11 +368,16 @@ class SurveyQuestionTree extends React.Component {
                     >
                         {this.state.showAnswers ? <span>-</span> : <span>+</span>}
                     </button>
+                    {rules.length > 0 &&
+                        <div className="text-center btn btn-outline-lightgreen mr-1 tooltip_wrapper">
+                            <SvgIcon icon="rule" size="1.5rem"/>
+                            <ul className="tooltip_content survey_tree">{rules}</ul>
+                        </div>
+                    }
                     <button
                         type="button"
                         id={this.props.surveyNode.question + "_" + this.props.surveyNode.id}
                         className="text-center btn btn-outline-lightgreen btn-sm col overflow-hidden text-truncate"
-                        title={this.props.getRulesById(this.props.surveyNode.id).length > 0 ? this.props.getRulesById(this.props.surveyNode.id) : "No rules apply to this question."}
                         style={{
                             boxShadow: `${(this.props.surveyNode.id === this.props.selectedQuestion.id)
                                     ? "0px 0px 2px 2px black inset,"
@@ -394,25 +399,23 @@ class SurveyQuestionTree extends React.Component {
                         surveyQuestions={this.props.surveyQuestions}
                     />
                 }
-                {
-                    childNodes.map((childNode, uid) =>
-                        <Fragment key={uid}>
-                            {this.props.surveyQuestions.find(sq => sq.id === childNode.id).visible.length > 0 &&
-                                <SurveyQuestionTree
-                                    key={uid}
-                                    surveyNode={childNode}
-                                    surveyQuestions={this.props.surveyQuestions}
-                                    setCurrentValue={this.props.setCurrentValue}
-                                    selectedQuestion={this.props.selectedQuestion}
-                                    selectedSampleId={this.props.selectedSampleId}
-                                    setSelectedQuestion={this.props.setSelectedQuestion}
-                                    hierarchyLabel={this.props.hierarchyLabel + "- "}
-                                    getRulesById={this.props.getRulesById}
-                                />
-                            }
-                        </Fragment>
-                    )
-                }
+                {childNodes.map((childNode, uid) =>
+                    <Fragment key={uid}>
+                        {this.props.surveyQuestions.find(sq => sq.id === childNode.id).visible.length > 0 &&
+                        <SurveyQuestionTree
+                            key={uid}
+                            surveyNode={childNode}
+                            surveyQuestions={this.props.surveyQuestions}
+                            setCurrentValue={this.props.setCurrentValue}
+                            selectedQuestion={this.props.selectedQuestion}
+                            selectedSampleId={this.props.selectedSampleId}
+                            setSelectedQuestion={this.props.setSelectedQuestion}
+                            hierarchyLabel={this.props.hierarchyLabel + "- "}
+                            getRulesById={this.props.getRulesById}
+                        />
+                        }
+                    </Fragment>
+                )}
             </fieldset>
         );
     }
