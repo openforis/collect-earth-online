@@ -14,7 +14,6 @@ class Home extends React.Component {
             institutions: [],
             showSidePanel: true,
             userInstitutions: [],
-            designMode: "loading",
             modalMessage: null,
         };
     }
@@ -86,8 +85,6 @@ class Home extends React.Component {
         {showSidePanel: !this.state.showSidePanel},
         () => mercator.resize(mapConfig)
     );
-
-
 
     render() {
         return (
