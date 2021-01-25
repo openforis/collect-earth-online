@@ -1,6 +1,6 @@
 import React, {Fragment} from "react";
 import ReactDOM from "react-dom";
-import {NavigationBar} from "./components/PageComponents";
+import {LoadingModal, NavigationBar} from "./components/PageComponents";
 import {mercator} from "./utils/mercator.js";
 import {sortAlphabetically, UnicodeIcon} from "./utils/generalUtils";
 import SvgIcon from "./components/SvgIcon";
@@ -14,16 +14,30 @@ class Home extends React.Component {
             institutions: [],
             showSidePanel: true,
             userInstitutions: [],
+            designMode: "loading",
+            modalMessage: null,
         };
     }
 
     componentDidMount() {
         // Fetch projects
-        Promise.all([this.getImagery(), this.getInstitutions(), this.getProjects()])
-            .catch(response => {
+        this.setState({modalMessage: "Loading institutions"}, () => {
+            this.getImagery().catch(response => {
                 console.log(response);
                 alert("Error retrieving the collection data. See console for details.");
-            });
+            }).finally(() => this.setState({modalMessage: null}));
+
+            this.getInstitutions().catch(response => {
+                console.log(response);
+                alert("Error retrieving the collection data. See console for details.");
+            }).finally(() => this.setState({modalMessage: null}));
+
+            this.getProjects().catch(response => {
+                console.log(response);
+                alert("Error retrieving the collection data. See console for details.");
+
+            }).finally(() => this.setState({modalMessage: null}));
+        });
     }
 
     getProjects = () => fetch("/get-all-projects")
@@ -73,6 +87,8 @@ class Home extends React.Component {
         () => mercator.resize(mapConfig)
     );
 
+
+
     render() {
         return (
             <div id="bcontainer">
@@ -95,6 +111,8 @@ class Home extends React.Component {
                         />
                     </div>
                 </div>
+                {this.state.modalMessage && <LoadingModal message={this.state.modalMessage}/>}
+
             </div>
         );
     }
