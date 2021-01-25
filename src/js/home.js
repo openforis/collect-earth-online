@@ -21,21 +21,12 @@ class Home extends React.Component {
     componentDidMount() {
         // Fetch projects
         this.setState({modalMessage: "Loading institutions"}, () => {
-            this.getImagery().catch(response => {
-                console.log(response);
-                alert("Error retrieving the collection data. See console for details.");
-            }).finally(() => this.setState({modalMessage: null}));
-
-            this.getInstitutions().catch(response => {
-                console.log(response);
-                alert("Error retrieving the collection data. See console for details.");
-            }).finally(() => this.setState({modalMessage: null}));
-
-            this.getProjects().catch(response => {
-                console.log(response);
-                alert("Error retrieving the collection data. See console for details.");
-
-            }).finally(() => this.setState({modalMessage: null}));
+            Promise.all([this.getImagery(), this.getInstitutions(), this.getProjects()])
+                .catch(response => {
+                    console.log(response);
+                    alert("Error retrieving the collection data. See console for details.");
+                })
+                .finally(() => this.setState({modalMessage: null}))
         });
     }
 
@@ -109,7 +100,6 @@ class Home extends React.Component {
                     </div>
                 </div>
                 {this.state.modalMessage && <LoadingModal message={this.state.modalMessage}/>}
-
             </div>
         );
     }

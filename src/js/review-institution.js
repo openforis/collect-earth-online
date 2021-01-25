@@ -1073,7 +1073,7 @@ class UserList extends React.Component {
     };
 
     updateUserInstitutionRole = (accountId, newUserEmail, institutionRole) => {
-        this.props.processModal("Updating users", () =>
+        this.props.processModal("Updating user", () =>
             fetch("/update-user-institution-role",
                   {
                       method: "POST",
@@ -1143,7 +1143,6 @@ class UserList extends React.Component {
                     isInstitutionMember={this.isInstitutionMember}
                     updateUserInstitutionRole={this.updateUserInstitutionRole}
                     userId={this.props.userId}
-                    processModal={this.props.processModal}
                 />
                 {this.state.institutionUserList
                     .filter(iu => iu.id === this.props.userId || this.props.isAdmin)
