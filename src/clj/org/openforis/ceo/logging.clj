@@ -42,7 +42,7 @@
              (io/delete-file file))
            (catch Exception _)))))
 
-(defn set-output-path! [path]
+(defn set-log-path! [path]
   (cond
     (pos? (count path))
     (try

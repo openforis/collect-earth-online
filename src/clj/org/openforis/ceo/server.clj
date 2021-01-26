@@ -4,7 +4,7 @@
             [clojure.tools.cli  :refer [parse-opts]]
             [ring.adapter.jetty :refer [run-jetty]]
             [org.openforis.ceo.handler :refer [create-handler-stack]]
-            [org.openforis.ceo.logging :refer [log-str set-output-path!]]))
+            [org.openforis.ceo.logging :refer [log-str set-log-path!]]))
 
 (defonce server           (atom nil))
 (defonce clean-up-service (atom nil))
@@ -73,7 +73,7 @@
                    "  Create an SSL key for HTTPS or run without the --https-port (-P) option.")
           (do (reset! server (run-jetty handler config))
               (reset! clean-up-service (start-clean-up-service!))
-              (set-output-path! (:output-dir options))))))))
+              (set-log-path! (:output-dir options))))))))
 
 (defn stop-server! []
   (when @clean-up-service
