@@ -9,7 +9,7 @@
 .tern-port
 
 # Build Directories and Files
-
+logs
 node_modules/
 target/
 mail-config.edn
