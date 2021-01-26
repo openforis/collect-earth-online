@@ -9,9 +9,9 @@
 .tern-port
 
 # Build Directories and Files
-/logs/*.log
-/node_modules/
-/target/
+
+node_modules/
+target/
 mail-config.edn
 package-lock.json
 
