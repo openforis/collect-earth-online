@@ -7,12 +7,12 @@
 .settings/
 .tern-port
 collect-earth-online.iml
-mail-config.edn
 
 # Build Directories and Files
-/logs/*.log
-/node_modules/
-/target/
+
+node_modules/
+target/
+mail-config.edn
 package-lock.json
 
 # MacOS X Backups
