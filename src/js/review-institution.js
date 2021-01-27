@@ -948,12 +948,14 @@ function Project({project, isAdmin}) {
                 <div className="d-flex">
                     <span
                         className="btn btn-sm btn-outline-yellow btn-block px-3 mr-1"
+                        title="Edit Project"
                         onClick={() => window.location = `/review-project?projectId=${project.id}`}
                     >
                         <UnicodeIcon icon="edit"/>
                     </span>
                     <span
                         className="btn btn-sm btn-outline-red btn-block px-3 mt-0 mr-1"
+                        title="Delete Project"
                         onClick={() => this.props.deleteProject(project.id)}
                     >
                         <UnicodeIcon icon="trash"/>
