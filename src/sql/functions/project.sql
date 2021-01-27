@@ -871,17 +871,36 @@ CREATE OR REPLACE FUNCTION select_user_home_projects(_user_id integer)
 
 $$ LANGUAGE SQL;
 
+-- Returns percent of plots collected.
+CREATE OR REPLACE FUNCTION project_percent_complete(_project_id integer)
+ RETURNS real AS $$
+
+    SELECT (
+        CASE WHEN count(distinct(plot_uid)) > 0
+        THEN (100.0 * count(user_plot_uid) / count(distinct(plot_uid))::real)
+        ELSE 0
+        END
+    )::real
+    FROM plots
+    LEFT JOIN user_plots
+        ON plot_uid = plot_rid
+    WHERE project_rid = _project_id
+
+$$ LANGUAGE SQL;
+
 -- Returns all rows in projects for a user_id and institution_rid with roles
 CREATE OR REPLACE FUNCTION select_institution_projects(_user_id integer, _institution_id integer)
  RETURNS TABLE (
     project_id       integer,
     name             text,
-    privacy_level    text
+    privacy_level    text,
+    pct_complete     real
  ) AS $$
 
     SELECT project_uid,
         name,
-        privacy_level
+        privacy_level,
+        (SELECT project_percent_complete(project_uid))
     FROM projects as p
     LEFT JOIN institution_users iu
         ON user_rid = _user_id
