@@ -17,10 +17,6 @@ class CreateInstitution extends React.Component {
         };
     }
 
-    componentDidMount() {
-        this.getInstitutions();
-    }
-
     createInstitution = () => {
         if (this.state.newInstitutionDetails.base64Image.length > KBtoBase64Length(500)) {
             alert("Institution logos must be smaller than 500kb");
