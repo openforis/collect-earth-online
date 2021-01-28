@@ -19,8 +19,8 @@
         max-data     (max-length data 500)
         line         (str timestamp
                           " "
-                          (if pprint? (pp/pprint max-data) max-data)
-                          (when newline? "\n"))]
+                          (if pprint? (with-out-str (pp/pprint data)) max-data)
+                          (when (and newline? (not pprint?)) "\n"))]
     (send-off synchronized-log-writer
               (if (or force-stdout? (= "" @output-path))
                 (fn [_] (print line) (flush))
