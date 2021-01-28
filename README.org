@@ -134,6 +134,20 @@ port can be specified with -P. In dev mode, server-side exceptions
 will be displayed in the browser and Clojure source files will be
 reloaded whenever you refresh the page.
 
+*** Checking for Reflection Warnings
+
+From the toplevel project directory run:
+
+#+begin_src sh
+clojure -M:check-reflection
+#+end_src
+
+This will emit warnings when reflection is needed to resolve Java
+method calls or field accesses. To resolve any that appear, add
+[[https://clojure.org/reference/java_interop#typehints][type hints]]
+to your code. Resolving all reflection warnings can improve
+system performance.
+
 ** Production Web Server
 
 *** Installation Requirements
