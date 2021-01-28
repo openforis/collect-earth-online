@@ -232,13 +232,23 @@ project directory and run:
 npm install
 npm run webpack-prod
 clojure -M:build-db only-functions
-clojure -M:run-server -m prod [-p 8080] [-P 8443]
+clojure -M:run-server -m [dev|prod] [-p 8080] [-P 8443]
 #+end_src
 
 The website will then be available at http://localhost:8080 unless a
 port is specified. An http port can be specified with -p and an https
-port can be specified with -P. -m prod is optional because production
-is the default.
+port can be specified with -P. In dev mode, server-side exceptions
+will be displayed in the browser and Clojure source files will be
+reloaded whenever you refresh the page. These features are disabled in
+prod mode. If -m is unspecified, it will default to prod mode.
+
+*** Maintaining Daily Logs
+
+By default the server will log to standard out. If you would like to
+have the system log to YYYY-DD-MM.log, use the "-o path" option to
+specify an output path. You can either specify a path relative to
+the toplevel directory of this repository or an absolute path on
+your filesystem. The logger will keep the 10 most recent logs.
 
 ** Contact
 
