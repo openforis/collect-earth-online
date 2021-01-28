@@ -97,7 +97,6 @@ class ReviewInstitution extends React.Component {
                             isAdmin={this.state.isAdmin}
                             institutionId={this.props.institutionId}
                             projectList={this.state.projectList}
-                            isLoggedIn={this.props.userId > 0}
                             isVisible={this.state.selectedTab === 0}
                             deleteProject={this.archiveProject}
                         />
@@ -880,7 +879,7 @@ function Imagery({title, canEdit, visibility, toggleVisibility, selectEditImager
     );
 }
 
-function ProjectList({isAdmin, isLoggedIn, institutionId, projectList, isVisible, deleteProject}) {
+function ProjectList({isAdmin, institutionId, projectList, isVisible, deleteProject}) {
     return (
         <div style={!isVisible ? {display: "none"} : {}}>
             <div className="mb-3">
@@ -908,9 +907,8 @@ function ProjectList({isAdmin, isLoggedIn, institutionId, projectList, isVisible
                     ? <h3>There are no projects</h3>
                     : projectList.map((project, uid) =>
                         <Project
-                            isAdmin={isAdmin}
-                            isLoggedIn={isLoggedIn}
                             key={uid}
+                            isAdmin={isAdmin}
                             project={project}
                             deleteProject={deleteProject}
                         />
@@ -919,7 +917,7 @@ function ProjectList({isAdmin, isLoggedIn, institutionId, projectList, isVisible
     );
 }
 
-function Project({project, isAdmin}) {
+function Project({project, isAdmin, deleteProject}) {
     return (
         <div className="row mb-1 d-flex">
             <div className="col-2 pr-0">
@@ -945,42 +943,36 @@ function Project({project, isAdmin}) {
                 </button>
             </div>
             {isAdmin &&
-                <>
-                    <div className="mr-3">
-                        <a
-                            className="edit-project btn btn-sm btn-outline-yellow btn-block px-3"
-                            href={`/review-project?projectId=${project.id}`}
-                        >
-                            <UnicodeIcon icon="edit"/>
-                        </a>
-                    </div>
-                    <div className="mr-3">
-                        <a
-                            className="delete-project btn btn-sm btn-outline-red btn-block px-3"
-                            onClick={() => this.props.deleteProject(project.id)}
-                        >
-                            <UnicodeIcon icon="trash"/>
-                        </a>
-                    </div>
-                    <div className="mr-3">
-                        <div
-                            className="btn btn-sm btn-outline-lightgreen btn-block px-3"
-                            title="Download Plot Data"
-                            onClick={() => window.open(`/dump-project-aggregate-data?projectId=${this.props.project.id}`, "_blank")}
-                        >
-                            P
-                        </div>
-                    </div>
-                    <div className="mr-3">
-                        <div
-                            className="btn btn-sm btn-outline-lightgreen btn-block px-3"
-                            title="Download Sample Data"
-                            onClick={() => window.open(`/dump-project-raw-data?projectId=${this.props.project.id}`, "_blank")}
-                        >
-                            S
-                        </div>
-                    </div>
-                </>
+                <div className="d-flex">
+                    <span
+                        className="btn btn-sm btn-outline-yellow btn-block px-3 mr-1"
+                        title="Edit Project"
+                        onClick={() => window.location = `/review-project?projectId=${project.id}`}
+                    >
+                        <UnicodeIcon icon="edit"/>
+                    </span>
+                    <span
+                        className="btn btn-sm btn-outline-red btn-block px-3 mt-0 mr-1"
+                        title="Delete Project"
+                        onClick={() => deleteProject(project.id)}
+                    >
+                        <UnicodeIcon icon="trash"/>
+                    </span>
+                    <span
+                        className="btn btn-sm btn-outline-lightgreen btn-block px-3 mt-0 mr-1"
+                        title="Download Plot Data"
+                        onClick={() => window.open(`/dump-project-aggregate-data?projectId=${project.id}`, "_blank")}
+                    >
+                        P
+                    </span>
+                    <span
+                        className="btn btn-sm btn-outline-lightgreen btn-block px-3 mt-0"
+                        title="Download Sample Data"
+                        onClick={() => window.open(`/dump-project-raw-data?projectId=${project.id}`, "_blank")}
+                    >
+                        S
+                    </span>
+                </div>
             }
         </div>
     );
