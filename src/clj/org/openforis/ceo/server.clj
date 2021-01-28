@@ -76,6 +76,7 @@
               (set-log-path! (:output-dir options))))))))
 
 (defn stop-server! []
+  (set-log-path! "")
   (when @clean-up-service
     (future-cancel @clean-up-service)
     (reset! clean-up-service nil))
