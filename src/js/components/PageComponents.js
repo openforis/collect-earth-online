@@ -1,7 +1,7 @@
 import "../../css/custom.css";
 
 import React from "react";
-import {SvgIcon} from "../utils/svgIcons";
+import SvgIcon from "../components/SvgIcon";
 import {getLanguage, capitalizeFirst} from "../utils/generalUtils";
 
 function LogOutButton({userName, uri}) {
@@ -151,7 +151,7 @@ export class NavigationBar extends React.Component {
             .then(response => response.ok ? response.json() : Promise.reject(response))
             .then(data => this.setState({helpSlides: data, page: page}))
             .catch(error => console.log(page, getLanguage(availableLanguages), error));
-    }
+    };
 
     closeHelpMenu = () => this.setState({showHelpMenu: false});
 
@@ -190,9 +190,9 @@ export class NavigationBar extends React.Component {
                     </button>
                     <div className="collapse navbar-collapse" id="navbarSupportedContent">
                         <ul className="navbar-nav mr-auto">
-                            {["Home", "About", "Support"].map(page =>
+                            {["Home", "About", "Support","Blog"].map(page =>
                                 <li className={"nav-item" + ("/" + page.toLowerCase() === uri && " active")} key={page}>
-                                    <a className="nav-link" href={"/" + page.toLowerCase()}>{page}</a>
+                                    <a className="nav-link" href={page === "Blog" ? "https://blog.collect.earth" : "/" + page.toLowerCase()}>{page}</a>
                                 </li>
                             )}
                             {!loggedOut &&
@@ -382,33 +382,6 @@ export function LogoBanner() {
             </div>
         </div>
     );
-}
-
-export class SafeImage extends React.Component {
-    constructor(props) {
-        super(props);
-        this.state = {
-            error: false,
-        };
-    }
-
-    componentDidUpdate(prevProps) {
-        if (prevProps.src !== this.props.src) {
-            this.setState({error: false});
-        }
-    }
-
-    render() {
-        const {src, fallbackSrc, ...extraProps} = this.props;
-        return (
-            <img
-                src={this.state.error ? fallbackSrc : src}
-                onError={() => this.setState({error: true})}
-                {...extraProps}
-            />
-        );
-    }
-
 }
 
 export function LoadingModal({message}) {

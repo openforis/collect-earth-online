@@ -14,7 +14,6 @@ import {
 } from "./imagery/collectionMenuControls";
 import {CollapsibleTitle} from "./components/FormComponents";
 
-import {convertSampleValuesToSurveyQuestions} from "./utils/surveyUtils";
 import {UnicodeIcon, getQueryString, safeLength} from "./utils/generalUtils";
 import {mercator} from "./utils/mercator.js";
 
@@ -163,8 +162,7 @@ class Collection extends React.Component {
             .then(response => response.ok ? response.json() : Promise.reject(response))
             .then(project => {
                 if (project.id > 0 && project.availability !== "archived") {
-                    const surveyQuestions = convertSampleValuesToSurveyQuestions(project.sampleValues);
-                    this.setState({currentProject: {...project, surveyQuestions: surveyQuestions}});
+                    this.setState({currentProject: project});
                     return Promise.resolve("resolved");
                 } else {
                     return Promise.reject(
@@ -253,7 +251,7 @@ class Collection extends React.Component {
                 this.setImageryAttribution("");
             }
         });
-    }
+    };
 
     updateMapImagery = () => mercator.setVisibleLayer(this.state.mapConfig, this.state.currentImagery.id);
 
@@ -391,7 +389,7 @@ class Collection extends React.Component {
         newPlotInput: newPlot.plotId ? newPlot.plotId : newPlot.id,
         userSamples: newPlot.samples
             ? newPlot.samples.reduce((obj, s) => {
-                obj[s.id] = copyValues ? (s.value || {}) : {};
+                obj[s.id] = copyValues ? (s.savedAnswers || {}) : {};
                 return obj;
             }, {})
             : {},

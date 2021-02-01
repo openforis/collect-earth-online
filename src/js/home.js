@@ -3,7 +3,7 @@ import ReactDOM from "react-dom";
 import {NavigationBar} from "./components/PageComponents";
 import {mercator} from "./utils/mercator.js";
 import {sortAlphabetically, UnicodeIcon} from "./utils/generalUtils";
-import {SvgIcon} from "./utils/svgIcons";
+import SvgIcon from "./components/SvgIcon";
 
 class Home extends React.Component {
     constructor(props) {
@@ -26,11 +26,11 @@ class Home extends React.Component {
             });
     }
 
-    getProjects = () => fetch("/get-all-projects")
+    getProjects = () => fetch("/get-home-projects")
         .then(response => response.ok ? response.json() : Promise.reject(response))
         .then(data => {
             if (data.length > 0) {
-                this.setState({projects: data.filter(d => d.validBoundary)});
+                this.setState({projects: data});
                 return Promise.resolve();
             } else {
                 return Promise.reject("No projects found");
@@ -53,7 +53,7 @@ class Home extends React.Component {
         .then(data => {
             if (data.length > 0) {
                 const userInstitutions = (this.props.userRole !== "admin")
-                    ? data.filter(institution => institution.members.includes(this.props.userId))
+                    ? data.filter(institution => institution.isMember)
                     : [];
                 const institutions = (userInstitutions.length > 0)
                     ? data.filter(institution => !userInstitutions.includes(institution))
@@ -131,7 +131,7 @@ class MapPanel extends React.Component {
     }
 
     addProjectMarkers(mapConfig, projects, clusterDistance) {
-        const projectSource = mercator.projectsToVectorSource(projects.filter(project => project.boundary));
+        const projectSource = mercator.projectsToVectorSource(projects.filter(project => project.centroid));
         if (clusterDistance == null) {
             mercator.addVectorLayer(mapConfig,
                                     "projectMarkers",
@@ -318,20 +318,19 @@ function InstitutionList({
                                     ? inst.name.toLocaleLowerCase().startsWith(filterTextLower)
                                     : inst.name.toLocaleLowerCase().includes(filterTextLower);
 
-    const filterHasProj = (inst) => filteredProjects.some(proj => inst.id === proj.institution)
+    const filterHasProj = (inst) => filteredProjects.some(proj => inst.id === proj.institutionId)
                                     || showEmptyInstitutions
-                                    || inst.admins.includes(userId)
-                                    || inst.members.includes(userId);
+                                    || inst.isMember;
 
     const filteredInstitutions = institutions
         // Filtering by institution, contains search string and contains projects or user is member
         .filter(inst => !filterInstitution || filterString(inst))
         .filter(inst => !filterInstitution || filterTextLower.length > 0 || filterHasProj(inst))
         // Filtering by projects, and has projects to show
-        .filter(inst => filterInstitution || filteredProjects.some(proj => inst.id === proj.institution))
+        .filter(inst => filterInstitution || filteredProjects.some(proj => inst.id === proj.institutionId))
         .sort((a, b) => sortByNumber
-                            ? projects.filter(proj => b.id === proj.institution).length
-                                - projects.filter(proj => a.id === proj.institution).length
+                            ? projects.filter(proj => b.id === proj.institutionId).length
+                                - projects.filter(proj => a.id === proj.institutionId).length
                             : sortAlphabetically(a.name, b.name));
 
     const userInstStyle = institutionListType === "user" ? {maxHeight: "fit-content"} : {};
@@ -355,7 +354,7 @@ function InstitutionList({
                         id={institution.id}
                         name={institution.name}
                         projects={filteredProjects
-                            .filter(project => project.institution === institution.id)}
+                            .filter(project => project.institutionId === institution.id)}
                         forceInstitutionExpand={!filterInstitution && filterText.length > 0}
                     />
                 )}

@@ -20,13 +20,12 @@
                          (call-sql "select_limited_project_plots" project-id max-plots)))))
 
 (defn- prepare-samples-array [plot-id project-id]
-  (mapv (fn [{:keys [sample_id sample_geom sampleid geom value]}]
-          (merge {:id         sample_id
-                  :sampleGeom sample_geom
-                  :sampleId   sampleid ;TODO I don't think we distinguish between sample_id and sampleId so this could go away
-                  :geom       geom}
-                 (when (< 2 (count (str value)))
-                   {:value (tc/jsonb->clj value)})))
+  (mapv (fn [{:keys [sample_id sample_geom sampleid geom saved_answers]}]
+          {:id           sample_id
+           :sampleGeom   sample_geom
+           :sampleId     sampleid ;TODO I don't think we distinguish between sample_id and sampleId so this could go away
+           :geom         geom
+           :savedAnswers (tc/jsonb->clj saved_answers)})
         (call-sql "select_plot_samples" plot-id project-id)))
 
 (defn- prepare-plot-object [plot-info project-id]
@@ -111,7 +110,7 @@
         user-images      (:userImages params)
         plot-samples     (:plotSamples params)
         user-plot-id     (when (not plot-samples)
-                           (sql-primitive (call-sql "check_user_plots" project-id plot-id user-id)))
+                           (sql-primitive (call-sql "check_user_plots" plot-id)))
         id-translation   (when plot-samples
                            (call-sql "delete_user_plot_by_plot" plot-id)
                            (call-sql "delete_samples_by_plot" plot-id)

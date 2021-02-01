@@ -92,14 +92,16 @@ export function ImageryReview() {
         <ProjectContext.Consumer>
             {({imageryId, projectImageryList, institutionImagery}) =>
                 <div className="d-flex flex-column">
-                    <label><b>Default Imagery:</b> {findImageryName(imageryId, institutionImagery)}</label>
-                    <label><b>Additional Imagery:</b></label>
-                    <ul>
-                        {projectImageryList
-                            .filter(id => id !== imageryId)
-                            .map(id => <li key={id}>{findImageryName(id, institutionImagery)}</li>)
-                        }
-                    </ul>
+                    <label><b>Default Imagery:</b>  {findImageryName(imageryId, institutionImagery)}</label>
+                    <label><b>Additional Imagery:</b>  {projectImageryList.length === 0 && "None"}</label>
+                    {projectImageryList.length > 0 &&
+                        <ul>
+                            {projectImageryList
+                                .filter(id => id !== imageryId)
+                                .map(id => <li key={id}>{findImageryName(id, institutionImagery)}</li>)
+                            }
+                        </ul>
+                    }
                 </div>
             }
         </ProjectContext.Consumer>

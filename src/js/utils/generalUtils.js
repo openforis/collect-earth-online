@@ -105,6 +105,10 @@ export function encodeFileAsBase64(file, callback) {
     reader.readAsDataURL(file);
 }
 
+export function KBtoBase64Length(kb) {
+    return kb * 1024 * 4 / 3;
+}
+
 export function last(array) {
     return array[array.length - 1];
 }
@@ -116,4 +120,8 @@ export function removeFromSet(set, value) {
 
 export function safeLength(arr) {
     return (arr || []).length;
+}
+
+export function removeEnumerator(questionText) {
+    return questionText.replace(/[\s][(][\d]*[[)]$/, "");
 }

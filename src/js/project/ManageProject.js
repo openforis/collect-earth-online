@@ -2,7 +2,6 @@ import React from "react";
 
 import ReviewForm from "./ReviewForm";
 
-import {convertSampleValuesToSurveyQuestions} from "../utils/surveyUtils";
 import {ProjectContext} from "./constants";
 
 export default class ManageProject extends React.Component {
@@ -12,6 +11,10 @@ export default class ManageProject extends React.Component {
 
     componentDidMount() {
         this.context.processModal("Loading Project Details", this.getProjectDetails);
+        this.context.setProjectDetails({
+            plotFileBase64: null,
+            sampleFileBase64: null,
+        });
     }
 
     /// API Calls
@@ -33,9 +36,8 @@ export default class ManageProject extends React.Component {
                     alert("No project found with ID " + projectId + ".");
                     window.location = "/home";
                 } else {
-                    const newSurveyQuestions = convertSampleValuesToSurveyQuestions(data.sampleValues);
-                    this.context.setProjectDetails({...data, surveyQuestions: newSurveyQuestions});
-                    this.context.setContextState({originalProject: {...data, surveyQuestions: newSurveyQuestions}});
+                    this.context.setProjectDetails(data);
+                    this.context.setContextState({originalProject: data});
                 }
             })
             .catch(() => Promise.reject("Error retrieving the project."));
@@ -223,8 +225,13 @@ class ProjectManagement extends React.Component {
                             className="btn btn-outline-red btn-sm w-100"
                             type="button"
                             value="Edit Project"
-                            disabled={!canEdit}
-                            onClick={() => this.context.setContextState({designMode: "wizard"})}
+                            onClick={() => {
+                                if (canEdit) {
+                                    this.context.setContextState({designMode: "wizard"});
+                                } else {
+                                    alert("You cannot edit a closed project.");
+                                }
+                            }}
                         />
                         <input
                             className="btn btn-outline-red btn-sm w-100"

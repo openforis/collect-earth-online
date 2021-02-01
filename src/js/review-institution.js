@@ -2,8 +2,8 @@ import React, {Fragment} from "react";
 import ReactDOM from "react-dom";
 
 import InstitutionEditor from "./components/InstitutionEditor";
-import {NavigationBar, SafeImage} from "./components/PageComponents";
-import {sortAlphabetically, capitalizeFirst, UnicodeIcon} from "./utils/generalUtils";
+import {NavigationBar} from "./components/PageComponents";
+import {sortAlphabetically, capitalizeFirst, UnicodeIcon, KBtoBase64Length, safeLength} from "./utils/generalUtils";
 import {imageryOptions} from "./imagery/imageryOptions";
 
 class ReviewInstitution extends React.Component {
@@ -25,7 +25,7 @@ class ReviewInstitution extends React.Component {
 
     getProjectList = () => {
         //get projects
-        fetch(`/get-all-projects?institutionId=${this.props.institutionId}`
+        fetch(`/get-institution-projects?institutionId=${this.props.institutionId}`
         )
             .then(response => response.ok ? response.json() : Promise.reject(response))
             .then(data => this.setState({projectList: data}))
@@ -33,7 +33,7 @@ class ReviewInstitution extends React.Component {
                 console.log(response);
                 alert("Error retrieving the project info. See console for details.");
             });
-    }
+    };
 
     archiveProject = (projectId) => {
         if (confirm("Do you REALLY want to delete this project? This operation cannot be undone.")) {
@@ -97,7 +97,6 @@ class ReviewInstitution extends React.Component {
                             isAdmin={this.state.isAdmin}
                             institutionId={this.props.institutionId}
                             projectList={this.state.projectList}
-                            isLoggedIn={this.props.userId > 0}
                             isVisible={this.state.selectedTab === 0}
                             deleteProject={this.archiveProject}
                         />
@@ -129,17 +128,14 @@ class InstitutionDescription extends React.Component {
         super(props);
         this.state = {
             institutionDetails: {
-                id: "-1",
                 name: "",
-                logo: "",
+                base64Image: "",
                 url: "",
                 description: "",
-                admins: [],
+                institutionAdmin: false,
             },
             newInstitutionDetails: {
-                id: "-1",
                 name: "",
-                logo: "",
                 base64Image: "",
                 url: "",
                 description: "",
@@ -153,53 +149,57 @@ class InstitutionDescription extends React.Component {
     }
 
     getInstitutionDetails = () => {
-        fetch(`/get-institution-details?institutionId=${this.props.institutionId}`)
+        fetch(`/get-institution-by-id?institutionId=${this.props.institutionId}`)
             .then(response => response.ok ? response.json() : Promise.reject(response))
             .then(data => {
                 this.setState({
                     institutionDetails: data,
                     newInstitutionDetails: {
-                        id: data.id,
                         name: data.name,
                         url: data.url,
                         description: data.description,
-                        logo: "",
                         base64Image: "",
                     },
                 });
-                this.props.setIsAdmin(this.props.userId > 0 && data.admins.includes(this.props.userId));
+                this.props.setIsAdmin(data.institutionAdmin);
             })
             .catch(response => {
-                this.setState({
-                    institutionDetails: {id: "-1", name: "", logo: "", url: "", description: "", admins: []},
-                    newInstitutionDetails: {id: "-1", name: "", logo: "", url: "", description: "", base64Image: ""},
-                });
-                this.props.setIsAdmin(false);
                 console.log(response);
                 alert("Error retrieving the institution details. See console for details.");
             });
     };
 
     updateInstitution = () => {
-        fetch(`/update-institution?institutionId=${this.props.institutionId}`,
-              {
-                  method: "POST",
-                  headers: {
-                      "Accept": "application/json",
-                      "Content-Type": "application/json",
-                  },
-                  body: JSON.stringify(this.state.newInstitutionDetails),
-              }
-        )
-            .then(response => {
-                if (response.ok) {
-                    this.getInstitutionDetails();
-                    this.setState({editMode: false});
-                } else {
-                    console.log(response);
-                    alert("Error updating institution details. See console for details.");
-                }
-            });
+        if (this.state.newInstitutionDetails.base64Image.length > KBtoBase64Length(500)) {
+            alert("Institution logos must be smaller than 500kb");
+        } else {
+            fetch(`/update-institution?institutionId=${this.props.institutionId}`,
+                  {
+                      method: "POST",
+                      headers: {
+                          "Accept": "application/json",
+                          "Content-Type": "application/json",
+                      },
+                      body: JSON.stringify({
+                          institutionId: this.props.institutionId,
+                          name: this.state.newInstitutionDetails.name,
+                          base64Image: this.state.newInstitutionDetails.base64Image,
+                          url: this.state.newInstitutionDetails.url,
+                          description: this.state.newInstitutionDetails.description,
+                      }),
+                  }
+            )
+                .then(response => Promise.all([response.ok, response.json()]))
+                .then(data => {
+                    if (data[0] && data[1] === "") {
+                        this.getInstitutionDetails();
+                        this.setState({editMode: false});
+                    } else {
+                        alert(data[1]);
+                    }
+                })
+                .catch(() => alert("Error updating institution details."));
+        }
     };
 
     toggleEditMode = () => this.setState({editMode: !this.state.editMode});
@@ -257,6 +257,8 @@ class InstitutionDescription extends React.Component {
         </div>
     </div>;
 
+    httpAddress = (url) => url.includes("://") ? url : "https://" + url;
+
     render() {
         return this.state.editMode
         ?
@@ -270,21 +272,19 @@ class InstitutionDescription extends React.Component {
             />
         :
             <div id="institution-details" className="row justify-content-center">
-                <div id="institution-view" className="col-xl-6 col-lg-8 ">
+                <div id="institution-view" className="col-8">
                     <div className="row mb-4">
                         <div className="col-md-3" id="institution-logo-container">
-                            <a href={this.state.institutionDetails.url}>
-                                {this.state.institutionDetails.id !== "-1" &&
-                                    <SafeImage
-                                        className="img-fluid"
-                                        src={`/${this.state.institutionDetails.logo}`}
-                                        fallbackSrc={"/img/ceo-logo.png"}
-                                        alt={"logo"}
-                                    />
+                            <img
+                                style={{maxWidth: "100%"}}
+                                src={safeLength(this.state.institutionDetails.base64Image) > 1
+                                        ? `data:*/*;base64,${this.state.institutionDetails.base64Image}`
+                                        : "/img/ceo-logo.png"
                                 }
-                            </a>
+                                onClick={() => window.open(this.httpAddress(this.state.institutionDetails.url))}
+                            />
                         </div>
-                        <div className="col-md-9">
+                        <div className="col-md-8">
                             <h1>
                                 <a href={this.state.institutionDetails.url}>
                                     {this.state.institutionDetails.name}
@@ -552,43 +552,52 @@ class NewImagery extends React.Component {
 
     //    Remote Calls    //
 
+    validateParams = (type, imageryParams) => {
+        const parameterErrors = imageryOptions[type].params.map(param =>
+            (param.validator && param.validator(imageryParams[param.key]))
+            || (param.required !== false && (!imageryParams[param.key] || imageryParams[param.key].length === 0)) && `${param.display} is required.`
+        );
+        const imageryError = imageryOptions[type].validator && imageryOptions[type].validator(imageryParams);
+        return [...parameterErrors, imageryError].filter(error => error);
+    };
+
     uploadCustomImagery = (isNew) => {
-        const sourceConfig = this.buildSecureWatch(this.stackParams()); // TODO define SecureWatch so stack params works correctly.
-        const message = this.validateData(sourceConfig); // TODO this should really be done on unstacked params.
-        if (!this.checkAllParamsFilled()) {
-            alert("You must fill out all fields.");
-        } else if (!this.checkJSONParams() || Object.keys(sourceConfig).length === 0) { // TODO we may no longer need to check for .length if checkJSONParams works
-            alert("Invalid JSON in JSON field(s).");
-        } else if (message) {
-            alert(message);
-        } else if (this.props.titleIsTaken(this.state.newImageryTitle, this.props.imageryToEdit.id)) {
-            alert("The title '" + this.state.newImageryTitle + "' is already taken.");
+        const messages = this.validateParams(this.state.selectedType, this.state.newImageryParams);
+        if (messages.length > 0) {
+            alert(messages.join(", "));
         } else {
-            fetch(isNew ? "/add-institution-imagery" : "/update-institution-imagery",
-                  {
-                      method: "POST",
-                      headers: {
-                          "Accept": "application/json",
-                          "Content-Type": "application/json",
-                      },
-                      body: JSON.stringify({
-                          institutionId: this.props.institutionId,
-                          imageryId: this.props.imageryToEdit.id,
-                          imageryTitle: this.state.newImageryTitle,
-                          imageryAttribution: this.state.newImageryAttribution,
-                          addToAllProjects: this.state.addToAllProjects,
-                          sourceConfig: sourceConfig,
-                      }),
-                  }
-            ).then(response => {
-                if (response.ok) {
-                    this.props.getImageryList();
-                    this.props.hideEditMode();
-                } else {
-                    console.log(response);
-                    alert("Error uploading imagery data. See console for details.");
-                }
-            });
+            const sourceConfig = this.buildSecureWatch(this.stackParams()); // TODO define SecureWatch so stack params works correctly.
+            if (this.state.newImageryTitle.length === 0 || this.state.newImageryAttribution.length === 0) {
+                alert("You must include a title and attribution.");
+            } else if (this.props.titleIsTaken(this.state.newImageryTitle, this.props.imageryToEdit.id)) {
+                alert("The title '" + this.state.newImageryTitle + "' is already taken.");
+            } else {
+                fetch(isNew ? "/add-institution-imagery" : "/update-institution-imagery",
+                      {
+                          method: "POST",
+                          headers: {
+                              "Accept": "application/json",
+                              "Content-Type": "application/json",
+                          },
+                          body: JSON.stringify({
+                              institutionId: this.props.institutionId,
+                              imageryId: this.props.imageryToEdit.id,
+                              imageryTitle: this.state.newImageryTitle,
+                              imageryAttribution: this.state.newImageryAttribution,
+                              addToAllProjects: this.state.addToAllProjects,
+                              sourceConfig: sourceConfig,
+                          }),
+                      }
+                ).then(response => {
+                    if (response.ok) {
+                        this.props.getImageryList();
+                        this.props.hideEditMode();
+                    } else {
+                        console.log(response);
+                        alert("Error uploading imagery data. See console for details.");
+                    }
+                });
+            }
         }
     };
 
@@ -628,56 +637,6 @@ class NewImagery extends React.Component {
             return sourceConfig;
         } else {
             return sourceConfig;
-        }
-    };
-
-    isValidJson = (str) => {
-        try {
-            JSON.parse(str);
-            return true;
-        } catch (e) {
-            return false;
-        }
-    };
-
-    checkJSONParams = () => this.state.newImageryTitle.length > 0
-        && this.state.newImageryAttribution.length > 0
-        && imageryOptions[this.state.selectedType].params
-            .every(o => o.type !== "JSON"
-                        || this.isValidJson(this.state.newImageryParams[o.key]));
-
-    checkAllParamsFilled = () => this.state.newImageryTitle.length > 0
-        && this.state.newImageryAttribution.length > 0
-        && imageryOptions[this.state.selectedType].params
-            .every(o => o.required === false
-                        || (this.state.newImageryParams[o.key] && this.state.newImageryParams[o.key].length > 0));
-
-    // TODO make all of these generic by adding min / max values to imageryOptions and checking against those.
-    validateData = (sourceConfig) => {
-        if (sourceConfig.type === "Sentinel1" || sourceConfig.type === "Sentinel2") {
-            const year = parseInt(sourceConfig.year);
-            const yearMinimum = sourceConfig.type === "Sentinel1" ? 2014 : 2015;
-            const month = parseInt(sourceConfig.month);
-            const cloudScore = sourceConfig.type === "Sentinel2" ? parseInt(sourceConfig.cloudScore) : null;
-            return (isNaN(year) || year.toString().length !== 4 || year < yearMinimum || year > new Date().getFullYear())
-                ? "Year should be 4 digit number and between " + yearMinimum + " and " + new Date().getFullYear()
-                : (isNaN(month) || month < 1 || month > 12)
-                    ? "Month should be between 1 and 12!"
-                    : (cloudScore && (isNaN(cloudScore) || cloudScore < 0 || cloudScore > 100))
-                        ? "Cloud Score should be between 0 and 100!"
-                        : null;
-        } else if (sourceConfig.type === "Planet") {
-            const year = parseInt(sourceConfig.year);
-            const month = parseInt(sourceConfig.month);
-            return (isNaN(year) || year.toString().length !== 4) ? "Year should be 4 digit number"
-                 : (isNaN(month) || month < 1 || month > 12) ? "Month should be between 1 and 12!"
-                 : null;
-        } else if (sourceConfig.startDate
-            && sourceConfig.endDate
-            && (new Date(sourceConfig.startDate) > new Date(sourceConfig.endDate))) {
-            return "Start date must be smaller than the end date.";
-        } else {
-            return null;
         }
     };
 
@@ -783,6 +742,8 @@ class NewImagery extends React.Component {
             ? "Google Earth Engine | © Google LLC"
         : type.includes("MapBox")
             ? "© Mapbox"
+        : type === "OSM"
+            ? "Open Street Map"
         : "";
 
     imageryTypeChangeHandler = (val) => {
@@ -918,7 +879,7 @@ function Imagery({title, canEdit, visibility, toggleVisibility, selectEditImager
     );
 }
 
-function ProjectList({isAdmin, isLoggedIn, institutionId, projectList, isVisible, deleteProject}) {
+function ProjectList({isAdmin, institutionId, projectList, isVisible, deleteProject}) {
     return (
         <div style={!isVisible ? {display: "none"} : {}}>
             <div className="mb-3">
@@ -946,9 +907,8 @@ function ProjectList({isAdmin, isLoggedIn, institutionId, projectList, isVisible
                     ? <h3>There are no projects</h3>
                     : projectList.map((project, uid) =>
                         <Project
-                            isAdmin={isAdmin}
-                            isLoggedIn={isLoggedIn}
                             key={uid}
+                            isAdmin={isAdmin}
                             project={project}
                             deleteProject={deleteProject}
                         />
@@ -957,44 +917,9 @@ function ProjectList({isAdmin, isLoggedIn, institutionId, projectList, isVisible
     );
 }
 
-class Project extends React.Component {
-    constructor(props) {
-        super(props);
-        this.state = {
-            boxShadow: "",
-        };
-    }
-
-    componentDidMount() {
-        if (this.props.isLoggedIn) {
-            this.projectHighlight();
-        }
-    }
-
-    projectHighlight = () => {
-        fetch(`/get-project-stats?projectId=${this.props.project.id}`)
-            .then(response => response.ok ? response.json() : Promise.reject(response))
-            .then(data => this.setState({
-                boxShadow: data.unanalyzedPlots === 0
-                    ? "0px 0px 6px 2px #3bb9d6 inset"
-                    : (data.flaggedPlots + data.analyzedPlots) > 0
-                        ? "0px 0px 6px 1px yellow inset"
-                        : "0px 0px 6px 1px red inset",
-            }))
-            .catch(response => console.log(response));
-    };
-
-    downloadPlotData = () => {
-        window.open(`/dump-project-aggregate-data?projectId=${this.props.project.id}`, "_blank");
-    };
-
-    downloadSampleData = () => {
-        window.open(`/dump-project-raw-data?projectId=${this.props.project.id}`, "_blank");
-    };
-
-    render() {
-        const {project, isAdmin} = this.props;
-        return <div className="row mb-1 d-flex">
+function Project({project, isAdmin, deleteProject}) {
+    return (
+        <div className="row mb-1 d-flex">
             <div className="col-2 pr-0">
                 <div className="btn btn-sm btn-outline-lightgreen btn-block">
                     {capitalizeFirst(project.privacyLevel)}
@@ -1007,52 +932,50 @@ class Project extends React.Component {
                     title={project.name}
                     onClick={() => window.location = `/collection?projectId=${project.id}`}
                     style={{
-                        boxShadow: this.state.boxShadow,
+                        boxShadow: project.percentComplete === 0.0
+                            ? "0px 0px 6px 1px red inset"
+                            : project.percentComplete >= 100.0
+                                ? "0px 0px 6px 2px #3bb9d6 inset"
+                                : "0px 0px 6px 1px yellow inset",
                     }}
                 >
                     {project.name}
                 </button>
             </div>
             {isAdmin &&
-            <>
-                <div className="mr-3">
-                    <a
-                        className="edit-project btn btn-sm btn-outline-yellow btn-block px-3"
-                        href={`/review-project?projectId=${project.id}`}
+                <div className="d-flex">
+                    <span
+                        className="btn btn-sm btn-outline-yellow btn-block px-3 mr-1"
+                        title="Edit Project"
+                        onClick={() => window.location = `/review-project?projectId=${project.id}`}
                     >
                         <UnicodeIcon icon="edit"/>
-                    </a>
-                </div>
-                <div className="mr-3">
-                    <a
-                        className="delete-project btn btn-sm btn-outline-red btn-block px-3"
-                        onClick={() => this.props.deleteProject(project.id)}
+                    </span>
+                    <span
+                        className="btn btn-sm btn-outline-red btn-block px-3 mt-0 mr-1"
+                        title="Delete Project"
+                        onClick={() => deleteProject(project.id)}
                     >
                         <UnicodeIcon icon="trash"/>
-                    </a>
-                </div>
-                <div className="mr-3">
-                    <div
-                        className="btn btn-sm btn-outline-lightgreen btn-block px-3"
+                    </span>
+                    <span
+                        className="btn btn-sm btn-outline-lightgreen btn-block px-3 mt-0 mr-1"
                         title="Download Plot Data"
-                        onClick={this.downloadPlotData}
+                        onClick={() => window.open(`/dump-project-aggregate-data?projectId=${project.id}`, "_blank")}
                     >
                         P
-                    </div>
-                </div>
-                <div className="mr-3">
-                    <div
-                        className="btn btn-sm btn-outline-lightgreen btn-block px-3"
+                    </span>
+                    <span
+                        className="btn btn-sm btn-outline-lightgreen btn-block px-3 mt-0"
                         title="Download Sample Data"
-                        onClick={this.downloadSampleData}
+                        onClick={() => window.open(`/dump-project-raw-data?projectId=${project.id}`, "_blank")}
                     >
                         S
-                    </div>
+                    </span>
                 </div>
-            </>
             }
-        </div>;
-    }
+        </div>
+    );
 }
 
 class UserList extends React.Component {
