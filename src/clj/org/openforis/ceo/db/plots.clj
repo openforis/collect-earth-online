@@ -44,8 +44,7 @@
   (let [plot-id (tc/val->int (:plotId params))]
     (data-response (if-let [geom (sql-primitive (call-sql "select_plot_geom" plot-id))]
                      {:geom    geom
-                      :samples (->> (call-sql "select_plot_sample_geoms" plot-id)
-                                    (mapv (fn [{:keys [geom]}] {:geom geom})))}
+                      :samples (call-sql "select_plot_sample_geoms" plot-id)}
                      ""))))
 
 (defn- unlock-plots [user-id]
