@@ -52,7 +52,7 @@ export default class ManageProject extends React.Component {
             .catch(() => Promise.reject("Error retrieving the project imagery list."));
 
     getProjectPlots = (projectId) =>
-        fetch(`/get-project-plots?projectId=${projectId}&max=300`)
+        fetch(`/get-project-plots?projectId=${projectId}`)
             .then(response => response.ok ? response.json() : Promise.reject(response))
             .then(data => this.context.setProjectDetails({plots: data}))
             .catch(() => Promise.reject("Error retrieving the plot list."));

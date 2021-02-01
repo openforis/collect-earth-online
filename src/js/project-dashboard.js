@@ -22,7 +22,7 @@ class ProjectDashboard extends React.Component {
     componentDidMount() {
         this.getProjectById(this.props.projectId);
         this.getProjectStats(this.props.projectId);
-        this.getPlotList(this.props.projectId, 500);
+        this.getPlotList(this.props.projectId);
     }
 
     componentDidUpdate(prevProps, prevState) {
@@ -97,8 +97,8 @@ class ProjectDashboard extends React.Component {
             });
     }
 
-    getPlotList(projectId, maxPlots) {
-        fetch(`/get-project-plots?projectId=${projectId}&max=${maxPlots}`)
+    getPlotList(projectId) {
+        fetch(`/get-project-plots?projectId=${projectId}`)
             .then(response => {
                 if (response.ok) {
                     return response.json();
