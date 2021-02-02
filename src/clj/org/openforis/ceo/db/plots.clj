@@ -143,9 +143,9 @@
     (data-response "")))
 
 (defn flag-plot [{:keys [params]}]
-  (let [plot-id (tc/val->int (:plotId params))
-        user-id (:userId params -1)
+  (let [plot-id          (tc/val->int (:plotId params))
+        user-id          (:userId params -1)
         collection-start (tc/val->long (:collectionStart params))]
-    (call-sql "flag_plot" plot-id user-id nil (Timestamp. collection-start))
+    (call-sql "flag_plot" plot-id user-id (Timestamp. collection-start))
     (unlock-plots user-id)
     (data-response "")))

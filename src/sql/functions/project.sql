@@ -1138,7 +1138,7 @@ CREATE OR REPLACE FUNCTION create_project_plot(_project_id integer, _center json
 $$ LANGUAGE SQL;
 
 -- Flag plot
-CREATE OR REPLACE FUNCTION flag_plot(_plot_id integer, _user_id integer, _confidence integer, _collection_start timestamp)
+CREATE OR REPLACE FUNCTION flag_plot(_plot_id integer, _user_id integer, _collection_start timestamp)
  RETURNS integer AS $$
 
     DELETE
@@ -1151,14 +1151,14 @@ CREATE OR REPLACE FUNCTION flag_plot(_plot_id integer, _user_id integer, _confid
     );
 
     INSERT INTO user_plots
-        (user_rid, plot_rid, flagged, confidence, collection_start, collection_time)
+        (user_rid, plot_rid, flagged, collection_start, collection_time)
     VALUES
-        (_user_id, _plot_id, true, _confidence, _collection_start, Now())
+        (_user_id, _plot_id, true, _collection_start, Now())
     ON CONFLICT (user_rid, plot_rid) DO
         UPDATE
         SET flagged = excluded.flagged,
             user_rid = excluded.user_rid,
-            confidence = excluded.confidence,
+            confidence = null,
             collection_start = excluded.collection_start,
             collection_time = Now()
 
