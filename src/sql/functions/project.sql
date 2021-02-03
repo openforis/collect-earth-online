@@ -1158,11 +1158,10 @@ CREATE OR REPLACE FUNCTION flag_plot(_plot_id integer, _user_id integer, _collec
         UPDATE
         SET flagged = excluded.flagged,
             user_rid = excluded.user_rid,
-            confidence = null,
+            confidence = NULL,
             collection_start = excluded.collection_start,
             collection_time = Now()
-
-    RETURNING _plot_id
+    RETURNING _plot_id;
 
 $$ LANGUAGE SQL;
 
