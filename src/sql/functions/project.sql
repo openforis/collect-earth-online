@@ -1138,7 +1138,7 @@ CREATE OR REPLACE FUNCTION create_project_plot(_project_id integer, _center json
 $$ LANGUAGE SQL;
 
 -- Flag plot
-CREATE OR REPLACE FUNCTION flag_plot(_plot_id integer, _user_id integer, _collection_start timestamp)
+CREATE OR REPLACE FUNCTION flag_plot(_plot_id integer, _user_id integer, _collection_start timestamp, _flagging_reason text)
  RETURNS integer AS $$
 
     DELETE
@@ -1151,16 +1151,17 @@ CREATE OR REPLACE FUNCTION flag_plot(_plot_id integer, _user_id integer, _collec
     );
 
     INSERT INTO user_plots
-        (user_rid, plot_rid, flagged, collection_start, collection_time)
+        (user_rid, plot_rid, flagged, collection_start, collection_time, flagging_reason)
     VALUES
-        (_user_id, _plot_id, true, _collection_start, Now())
+        (_user_id, _plot_id, true, _collection_start, Now(), _flagging_reason)
     ON CONFLICT (user_rid, plot_rid) DO
         UPDATE
         SET flagged = excluded.flagged,
             user_rid = excluded.user_rid,
             confidence = null,
             collection_start = excluded.collection_start,
-            collection_time = Now()
+            collection_time = Now(),
+            flagging_reason = excluded.flagging_reason
 
     RETURNING _plot_id
 
@@ -1184,9 +1185,10 @@ CREATE OR REPLACE FUNCTION select_all_project_plots(_project_id integer)
             MAX(confidence) as confidence,
             MAX(collection_time) as collection_time,
             ROUND(AVG(EXTRACT(EPOCH FROM (collection_time - collection_start)))::numeric, 1) as analysis_duration,
+            flagging_reason,
             plot_rid
         FROM user_plots
-        GROUP BY plot_rid
+        GROUP BY plot_rid, flagging_reason
     ), tablename AS (
         SELECT plots_ext_table
         FROM projects
@@ -1206,7 +1208,8 @@ CREATE OR REPLACE FUNCTION select_all_project_plots(_project_id integer)
         fd.ext_id,
         (CASE WHEN fd.plotId IS NULL THEN plot_uid ELSE fd.plotId END) as plotId,
         ST_AsGeoJSON(fd.geom) as geom,
-        plotsum.analysis_duration
+        plotsum.analysis_duration,
+        plotsum.flagging_reason
     FROM plots
     LEFT JOIN plotsum
         ON plot_uid = plotsum.plot_rid
@@ -1240,7 +1243,8 @@ CREATE OR REPLACE FUNCTION select_limited_project_plots(_project_id integer, _ma
         all_plots.assigned,       all_plots.username,
         all_plots.confidence,     all_plots.collection_time,
         all_plots.ext_id,         all_plots.plotId,
-        all_plots.geom,           all_plots.analysis_duration
+        all_plots.geom,           all_plots.analysis_duration,
+        all_plots.flagging_reason
      FROM (
         SELECT *,
             row_number() OVER(ORDER BY plot_id) AS rows,
@@ -1595,7 +1599,8 @@ CREATE OR REPLACE FUNCTION update_user_samples(
             SET confidence = _confidence,
                 collection_start = _collection_start,
                 collection_time = localtimestamp,
-                flagged = FALSE
+                flagged = FALSE,
+                flagging_reason = null
         WHERE user_plot_uid = _user_plots_uid
         RETURNING user_plot_uid
     ), new_sample_values AS (
