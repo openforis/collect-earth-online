@@ -117,3 +117,7 @@ export function removeFromSet(set, value) {
 export function safeLength(arr) {
     return (arr || []).length;
 }
+
+export function arraysSameElements(array1, array2) {
+    return array1.every(e => array2.includes(e)) && array2.every(e => array1.includes(e));
+}
