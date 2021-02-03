@@ -156,7 +156,10 @@ export class SurveyCollection extends React.Component {
             {this.unansweredColor()}
             {this.props.flagged
             ?
-                <div style={{color: "red", fontSize: "1.5rem", padding: "2rem"}}>This plot has been flagged.</div>
+                <>
+                    <div style={{color: "red", fontSize: "1.5rem", padding: "2rem"}}>This plot has been flagged.</div>
+                    <textarea value={this.props.flaggingReason} onChange={e => this.props.setFlaggingReason(e.target.value)}></textarea>
+                </>
             :
                 <>
                     <div className="SurveyQuestions__top-questions">
