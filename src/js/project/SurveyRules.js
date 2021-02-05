@@ -1,6 +1,6 @@
 import React from "react";
-import {isNumber, arraysSameElements} from "../utils/generalUtils";
 
+import {isNumber, sameContents} from "../utils/generalUtils";
 import {ProjectContext} from "./constants";
 
 const getNextId = (array) => array.reduce((maxId, obj) => Math.max(maxId, obj.id), 0) + 1;
@@ -14,50 +14,47 @@ export class SurveyRuleDesign extends React.Component {
         };
     }
 
-
     render() {
         return (
-            <SurveyRulesList
-                surveyRules={this.context.surveyRules}
-                setProjectDetails={this.context.setProjectDetails}
-                inDesignMode
-            >
-                <tr>
-                    <td colSpan="6">
-                        <table>
-                            <tbody>
-                                <tr>
-                                    <td>
-                                        <label htmlFor="ruletype">Rule Type:</label>
-                                    </td>
-                                    <td>
-                                        <select
-                                            className="form-control form-control-sm"
-                                            value={this.selectedRuleType}
-                                            onChange={e => this.setState({selectedRuleType: e.target.value})}
-                                        >
-                                            <option value="text-match">Text Regex Match</option>
-                                            <option value="numeric-range">Numeric Range</option>
-                                            <option value="sum-of-answers">Sum of Answers</option>
-                                            <option value="matching-sums">Matching Sums</option>
-                                            <option value="incompatible-answers">Incompatible Answers</option>
-                                        </select>
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </td>
-                </tr>
-                {
-                    {
-                        "text-match": <TextMatch/>,
-                        "numeric-range": <NumericRange/>,
-                        "sum-of-answers": <SumOfAnswers/>,
-                        "matching-sums": <MatchingSums/>,
-                        "incompatible-answers": <IncompatibleAnswers/>,
-                    }[this.state.selectedRuleType]
-                }
-            </SurveyRulesList>
+            <div id="survey-rule-design">
+                <SurveyRulesList
+                    surveyRules={this.context.surveyRules}
+                    setProjectDetails={this.context.setProjectDetails}
+                    inDesignMode
+                />
+                <table id="ruleDesigner">
+                    <label className="font-weight-bold mt-2">New Rule:</label>
+                    <tbody className="srd">
+                        <tr>
+                            <td>
+                                <div style={{display: "flex"}}>
+                                    <label className="text-nowrap m-2">Rule Type:</label>
+                                    <select
+                                        className="form-control form-control-sm"
+                                        value={this.state.selectedRuleType}
+                                        onChange={e => this.setState({selectedRuleType: e.target.value})}
+                                    >
+                                        <option value="text-match">Text Regex Match</option>
+                                        <option value="numeric-range">Numeric Range</option>
+                                        <option value="sum-of-answers">Sum of Answers</option>
+                                        <option value="matching-sums">Matching Sums</option>
+                                        <option value="incompatible-answers">Incompatible Answers</option>
+                                    </select>
+                                </div>
+                            </td>
+                        </tr>
+                        {
+                            {
+                                "text-match": <TextMatch/>,
+                                "numeric-range": <NumericRange/>,
+                                "sum-of-answers": <SumOfAnswers/>,
+                                "matching-sums": <MatchingSums/>,
+                                "incompatible-answers": <IncompatibleAnswers/>,
+                            }[this.state.selectedRuleType]
+                        }
+                    </tbody>
+                </table>
+            </div>
         );
     }
 }
@@ -80,88 +77,86 @@ export class SurveyRulesList extends React.Component {
         </button>
     );
 
-    render() {
-        const {surveyRules, inDesignMode, children} = this.props;
+    ruleTypeLabel = {
+        "text-match": "Text Regex Match",
+        "numeric-range": "Numeric Range",
+        "sum-of-answers": "Sum of Answers",
+        "matching-sums": "Matching Sums",
+        "incompatible-answers": "Incompatible Answers",
+    };
+
+    ruleSpecificColumns = {
+        "text-match": ({regex, questionsText}) => (
+            <>
+                <td>Regex: {regex}</td>
+                <td>Questions: {questionsText.toString()}</td>
+            </>
+        ),
+
+        "numeric-range": ({min, max, questionsText}) => (
+            <>
+                <td>Min: {min}</td>
+                <td>Max: {max}</td>
+                <td>Questions: {questionsText.toString()}</td>
+            </>
+        ),
+
+        "sum-of-answers": ({validSum, questionsText}) => (
+            <>
+                <td>Valid Sum: {validSum}</td>
+                <td>Questions: {questionsText.toString()}</td>
+            </>
+        ),
+
+        "matching-sums": ({questionSetText1, questionSetText2}) => (
+            <>
+                <td>Questions Set 1: {questionSetText1.toString()}</td>
+                <td>Questions Set 2: {questionSetText2.toString()}</td>
+            </>
+        ),
+
+        "incompatible-answers": ({questionText1, answerText1, questionText2, answerText2}) => (
+            <>
+                <td>Question 1: {questionText1}, Answer 1: {answerText1}</td>
+                <td>Question 2: {questionText2}, Answer 2: {answerText2}</td>
+            </>
+        ),
+    };
+
+    renderRuleRow = (rule, uid) => {
+        const {id, ruleType} = rule;
         return (
-            <div id="survey-rule-design">
-                <span className="font-weight-bold">Rules:</span>
-                <table id="srd">
-                    <tbody>
-                        {(surveyRules || []).length > 0
-                        ?
-                            surveyRules.map((rule, uid) => {
-                                if (rule.ruleType === "text-match") {
-                                    return <tr id={"rule" + rule.id} key={uid}>
-                                        {inDesignMode &&
-                                        <td>
-                                            {this.removeButton(rule.id)}
-                                        </td>
-                                        }
-                                        <td>{"Rule " + rule.id}</td>
-                                        <td>Type: Text Regex Match</td>
-                                        <td>Regex: {rule.regex}</td>
-                                        <td colSpan="2">Questions: {rule.questionsText.toString()}</td>
-                                    </tr>;
-                                } else if (rule.ruleType === "numeric-range") {
-                                    return <tr id={"rule" + rule.id} key={uid}>
-                                        {inDesignMode &&
-                                        <td>
-                                            {this.removeButton(rule.id)}
-                                        </td>
-                                        }
-                                        <td>{"Rule " + rule.id}</td>
-                                        <td>Type: Numeric Range</td>
-                                        <td>Min: {rule.min}</td>
-                                        <td>Max: {rule.max}</td>
-                                        <td>Questions: {rule.questionsText.toString()}</td>
-                                    </tr>;
-                                } else if (rule.ruleType === "sum-of-answers") {
-                                    return <tr id={"rule" + rule.id} key={uid}>
-                                        {inDesignMode &&
-                                        <td>
-                                            {this.removeButton(rule.id)}
-                                        </td>
-                                        }
-                                        <td>{"Rule " + rule.id}</td>
-                                        <td>Type: Sum of Answers</td>
-                                        <td>Valid Sum: {rule.validSum}</td>
-                                        <td colSpan="2">Questions: {rule.questionsText.toString()}</td>
-                                    </tr>;
-                                } else if (rule.ruleType === "matching-sums") {
-                                    return <tr id={"rule" + rule.id} key={uid}>
-                                        {inDesignMode &&
-                                        <td>
-                                            {this.removeButton(rule.id)}
-                                        </td>
-                                        }
-                                        <td>{"Rule " + rule.id}</td>
-                                        <td>Type: Matching Sums</td>
-                                        <td>Questions Set 1: {rule.questionSetText1.toString()}</td>
-                                        <td colSpan="2">Questions Set 2: {rule.questionSetText2.toString()}</td>
-                                    </tr>;
-                                } else if (rule.ruleType === "incompatible-answers") {
-                                    return <tr id={"rule" + rule.id} key={uid}>
-                                        {inDesignMode &&
-                                        <td>
-                                            {this.removeButton(rule.id)}
-                                        </td>
-                                        }
-                                        <td>{"Rule " + rule.id}</td>
-                                        <td>Type: Incompatible Answers</td>
-                                        <td>Question 1: {rule.questionText1}, Answer 1: {rule.answerText1}</td>
-                                        <td colSpan="2">Question 2: {rule.questionText2}, Answer 2: {rule.answerText2}</td>
-                                    </tr>;
-                                }
-                            })
-                        :
-                            <tr>
-                                <td colSpan="6"><span>No rules set for this survey</span></td>
-                            </tr>
-                        }
-                        {children}
-                    </tbody>
-                </table>
-            </div>
+            <tr id={"rule" + id} key={uid}>
+                {this.props.inDesignMode &&
+                    <td>{this.removeButton(id)}</td>
+                }
+                <td>{"Rule " + id}</td>
+                <td>Type: {this.ruleTypeLabel[ruleType]}</td>
+                {this.ruleSpecificColumns[ruleType].call(null, rule)}
+            </tr>
+        );
+    };
+
+    render() {
+        const {surveyRules} = this.props;
+        return (
+            <>
+                <label className="font-weight-bold">Rules:</label>
+                {(surveyRules || []).length > 0
+                ?
+                    <table
+                        id="rules"
+                        className="srd"
+                        style={{width: "100%"}}
+                    >
+                        <tbody>
+                            {surveyRules.map(this.renderRuleRow)}
+                        </tbody>
+                    </table>
+                :
+                    <label className="ml-3">No rules have been created for this survey.</label>
+                }
+            </>
         );
     }
 }
@@ -177,27 +172,29 @@ export class TextMatch extends React.Component {
     }
 
     addSurveyRule = () => {
-        const conflictingRule = this.context.surveyRules.find(rule => rule.ruleType === "text-match"
-            && rule.questionId === this.state.questionId);
+        const {surveyRules, surveyQuestions, setProjectDetails} = this.context;
+        const {questionId, regex} = this.state;
+        const conflictingRule = surveyRules.find(rule => rule.ruleType === "text-match"
+            && rule.questionId === questionId);
         const errorMessages = [
-            conflictingRule && "A Text Regex Match rule already exists for this question. (Rule #" + conflictingRule.id + ")",
-            this.state.questionId < 1 && "You must select a question.",
-            this.state.regex.length === 0 && "The regex string is missing.",
+            conflictingRule && "A text regex match rule already exists for this question. (Rule " + conflictingRule.id + ")",
+            questionId < 1 && "You must select a question.",
+            regex.length === 0 && "The regex string is missing.",
         ].filter(m => m);
         if (errorMessages.length > 0) {
             alert(errorMessages.map(s => "- " + s).join("\n"));
         } else {
-            this.context.setProjectDetails({
-                surveyRules: [...this.context.surveyRules, {
-                    id: getNextId(this.context.surveyRules),
+            setProjectDetails({
+                surveyRules: [...surveyRules, {
+                    id: getNextId(surveyRules),
                     ruleType: "text-match",
-                    questionId: this.state.questionId,
-                    questionsText: [this.context.surveyQuestions.find(q => q.id === this.state.questionId).question],
-                    regex: this.state.regex,
+                    questionId: questionId,
+                    questionsText: [surveyQuestions.find(q => q.id === questionId).question],
+                    regex: regex,
                 }],
             });
         }
-    }
+    };
 
     render() {
         const availableQuestions = this.context.surveyQuestions
@@ -205,7 +202,7 @@ export class TextMatch extends React.Component {
         return availableQuestions.length > 0
         ?
             <tr>
-                <td colSpan="6">
+                <td>
                     <table>
                         <tbody>
                             <tr>
@@ -251,7 +248,7 @@ export class TextMatch extends React.Component {
                 </td>
             </tr>
         :
-            <tr><td colSpan="5"><label>No questions for this rule type</label></td></tr>;
+            <tr><td><label>This rule requires a question of type input-text.</label></td></tr>;
     }
 }
 TextMatch.contextType = ProjectContext;
@@ -268,28 +265,30 @@ export class NumericRange extends React.Component {
     }
 
     addSurveyRule = () => {
-        const conflictingRule = this.context.surveyRules.find(rule => rule.ruleType === "numeric-range"
-            && rule.questionId === this.state.questionId);
+        const {surveyRules, surveyQuestions, setProjectDetails} = this.context;
+        const {questionId, min, max} = this.state;
+        const conflictingRule = surveyRules.find(rule => rule.ruleType === "numeric-range"
+            && rule.questionId === questionId);
         const errorMessages = [
-            conflictingRule && "This numeric range rule already exists. (Rule #" + conflictingRule.id + ")",
-            this.state.questionId < 1 && "You must select a question.",
-            (this.state.max <= this.state.min) && "Max must be larger than min.",
+            conflictingRule && "A numeric range rule already exists for this question. (Rule " + conflictingRule.id + ")",
+            questionId < 1 && "You must select a question.",
+            (max <= min) && "Max must be larger than min.",
         ].filter(m => m);
         if (errorMessages.length > 0) {
             alert(errorMessages.map(s => "- " + s).join("\n"));
         } else {
-            this.context.setProjectDetails({
-                surveyRules: [...this.context.surveyRules, {
-                    id: getNextId(this.context.surveyRules),
+            setProjectDetails({
+                surveyRules: [...surveyRules, {
+                    id: getNextId(surveyRules),
                     ruleType: "numeric-range",
-                    questionId: this.state.questionId,
-                    questionsText: [this.context.surveyQuestions.find(q => q.id === this.state.questionId).question],
-                    min: this.state.min,
-                    max: this.state.max,
+                    questionId: questionId,
+                    questionsText: [surveyQuestions.find(q => q.id === questionId).question],
+                    min: min,
+                    max: max,
                 }],
             });
         }
-    }
+    };
 
     render() {
         const availableQuestions = this.context.surveyQuestions
@@ -297,12 +296,12 @@ export class NumericRange extends React.Component {
         return availableQuestions.length > 0
         ?
             <tr>
-                <td colSpan="6">
+                <td>
                     <table>
                         <tbody>
                             <tr>
                                 <td><label>Survey Question: </label></td>
-                                <td colSpan="4">
+                                <td>
                                     <select
                                         className="form-control form-control-sm"
                                         value={this.state.questionId}
@@ -355,7 +354,7 @@ export class NumericRange extends React.Component {
                 </td>
             </tr>
         :
-            <tr><td colSpan="6"><label>No questions for this rule type</label></td></tr>;
+            <tr><td><label>This rule requires a question of type input-number.</label></td></tr>;
     }
 }
 NumericRange.contextType = ProjectContext;
@@ -371,36 +370,38 @@ export class SumOfAnswers extends React.Component {
     }
 
     addSurveyRule = () => {
-        const conflictingRule = this.context.surveyRules.find(rule => rule.ruleType === "sum-of-answers"
-            && arraysSameElements(this.state.questionIds, rule.questions));
+        const {surveyRules, surveyQuestions, setProjectDetails} = this.context;
+        const {questionIds, validSum} = this.state;
+        const conflictingRule = surveyRules.find(rule => rule.ruleType === "sum-of-answers"
+            && sameContents(questionIds, rule.questions));
         const errorMessages = [
-            conflictingRule && "This sum of answers rule already exists. (Rule #" + conflictingRule.id + ")",
-            (this.state.questionIds.length < 2) && "Sum of answers rule requires the selection of two or more questions.",
-            !isNumber(this.state.validSum) && "You must ender a valid sum number.",
+            conflictingRule && "A sum of answers rule already exists for these questions. (Rule " + conflictingRule.id + ")",
+            (questionIds.length < 2) && "Sum of answers rule requires the selection of two or more questions.",
+            !isNumber(validSum) && "You must ender a valid sum number.",
         ].filter(m => m);
         if (errorMessages.length > 0) {
             alert(errorMessages.map(s => "- " + s).join("\n"));
         } else {
-            this.context.setProjectDetails({
-                surveyRules: [...this.context.surveyRules, {
-                    id: getNextId(this.context.surveyRules),
+            setProjectDetails({
+                surveyRules: [...surveyRules, {
+                    id: getNextId(surveyRules),
                     ruleType: "sum-of-answers",
-                    questions: this.state.questionIds,
-                    questionsText: this.context.surveyQuestions
-                        .filter(q => this.state.questionIds.includes(q.id))
+                    questions: questionIds,
+                    questionsText: surveyQuestions
+                        .filter(q => questionIds.includes(q.id))
                         .map(q => q.question),
-                    validSum: this.state.validSum,
+                    validSum: validSum,
                 }],
             });
         }
-    }
+    };
 
     render() {
         const availableQuestions = this.context.surveyQuestions.filter(q => q.dataType === "number");
         return availableQuestions.length > 1
         ?
             <tr>
-                <td colSpan="6">
+                <td>
                     <table>
                         <tbody>
                             <tr>
@@ -410,7 +411,7 @@ export class SumOfAnswers extends React.Component {
                                         <p>(Hold ctrl/cmd and select multiple questions)</p>
                                     </label>
                                 </td>
-                                <td colSpan="3">
+                                <td>
                                     <select
                                         className="form-control form-control-sm overflow-auto"
                                         multiple="multiple"
@@ -453,7 +454,7 @@ export class SumOfAnswers extends React.Component {
                 </td>
             </tr>
         :
-            <tr><td colSpan="6"><label>There must be at least 2 number questions for this rule type</label></td></tr>;
+            <tr><td><label>There must be at least 2 number questions for this rule type.</label></td></tr>;
     }
 }
 SumOfAnswers.contextType = ProjectContext;
@@ -469,44 +470,46 @@ export class MatchingSums extends React.Component {
     }
 
     addSurveyRule = () => {
-        const conflictingRule = this.context.surveyRules.find(rule => rule.ruleType === "matching-sums"
-            && arraysSameElements(this.state.questionSetIds1, rule.questionSetIds1)
-            && arraysSameElements(this.state.questionSetIds2, rule.questionSetIds2));
+        const {surveyRules, surveyQuestions, setProjectDetails} = this.context;
+        const {questionSetIds1, questionSetIds2} = this.state;
+        const conflictingRule = surveyRules.find(rule => rule.ruleType === "matching-sums"
+            && sameContents(questionSetIds1, rule.questionSetIds1)
+            && sameContents(questionSetIds2, rule.questionSetIds2));
         const errorMessages = [
-            conflictingRule && "This matching sums rule already exists. (Rule #" + conflictingRule.id + ")",
-            (this.state.questionSetIds1.length < 2 && this.state.questionSetIds2.length < 2)
-                && "Matching sums rule requires that of the selections contain two or more questions.",
-            this.state.questionSetIds1.length === 0 && "You must select at least one question from the first set",
-            this.state.questionSetIds2.length === 0 && "You must select at least one question from the second set",
-            this.state.questionSetIds1.some(id => this.state.questionSetIds2.includes(id))
+            conflictingRule && "A matching sums rule already exists for these questions. (Rule " + conflictingRule.id + ")",
+            (questionSetIds1.length < 2 && questionSetIds2.length < 2)
+                && "Matching sums rule requires that at least one of the question sets contain two or more questions.",
+            questionSetIds1.length === 0 && "You must select at least one question from the first set.",
+            questionSetIds2.length === 0 && "You must select at least one question from the second set.",
+            questionSetIds1.some(id => questionSetIds2.includes(id))
                 && "Question set 1 and 2 cannot contain the same question.",
         ].filter(m => m);
         if (errorMessages.length > 0) {
             alert(errorMessages.map(s => "- " + s).join("\n"));
         } else {
-            this.context.setProjectDetails({
-                surveyRules: [...this.context.surveyRules, {
-                    id: getNextId(this.context.surveyRules),
+            setProjectDetails({
+                surveyRules: [...surveyRules, {
+                    id: getNextId(surveyRules),
                     ruleType: "matching-sums",
-                    questionSetIds1: this.state.questionSetIds1,
-                    questionSetIds2: this.state.questionSetIds2,
-                    questionSetText1: this.context.surveyQuestions
-                        .filter(q => this.state.questionSetIds1.includes(q.id))
+                    questionSetIds1: questionSetIds1,
+                    questionSetIds2: questionSetIds2,
+                    questionSetText1: surveyQuestions
+                        .filter(q => questionSetIds1.includes(q.id))
                         .map(q => q.question),
-                    questionSetText2: this.context.surveyQuestions
-                        .filter(q => this.state.questionSetIds2.includes(q.id))
+                    questionSetText2: surveyQuestions
+                        .filter(q => questionSetIds2.includes(q.id))
                         .map(q => q.question),
                 }],
             });
         }
-    }
+    };
 
     render() {
         const availableQuestions = this.context.surveyQuestions.filter(q => q.dataType === "number");
         return availableQuestions.length > 1
         ?
             <tr>
-                <td colSpan="6">
+                <td>
                     <table>
                         <tbody>
                             <tr>
@@ -516,7 +519,7 @@ export class MatchingSums extends React.Component {
                                         <p>(Hold ctrl/cmd and select multiple questions)</p>
                                     </label>
                                 </td>
-                                <td colSpan="4">
+                                <td>
                                     <select
                                         className="form-control form-control-sm overflow-auto"
                                         multiple="multiple"
@@ -569,7 +572,7 @@ export class MatchingSums extends React.Component {
                 </td>
             </tr>
         :
-            <tr><td colSpan="6"><label>There must be at least 2 number questions for this rule type</label></td></tr>;
+            <tr><td><label>There must be at least 2 number questions for this rule type.</label></td></tr>;
     }
 }
 MatchingSums.contextType = ProjectContext;
@@ -593,66 +596,72 @@ export class IncompatibleAnswers extends React.Component {
         || (this.checkPair(q1, a1, q4, a4) && this.checkPair(q2, a2, q3, a3));
 
     addSurveyRule = () => {
-        const conflictingRule = this.context.surveyRules.find(rule => rule.ruleType === "incompatible-answers"
+        const {surveyRules, surveyQuestions, setProjectDetails} = this.context;
+        const {questionId1, answerId1, questionId2, answerId2} = this.state;
+        const conflictingRule = surveyRules.find(({question1, answer1, question2, answer2, ruleType}) =>
+            ruleType === "incompatible-answers"
             && this.checkEquivalent(
-                rule.question1,
-                rule.answer1,
-                rule.question2,
-                rule.answer2,
-                this.state.questionId1,
-                this.state.answerId1,
-                this.state.questionId2,
-                this.state.answerId2
+                question1,
+                answer1,
+                question2,
+                answer2,
+                questionId1,
+                answerId1,
+                questionId2,
+                answerId2
             ));
         const errorMessages = [
-            conflictingRule && "This incompatible answers rule already exists. (Rule #" + conflictingRule.id + ")",
-            (this.state.questionId1 === this.state.questionId2) && "You must select two different questions.",
-            this.state.questionId1 < 1 && "You must select a valid first question.",
-            this.state.questionId2 < 1 && "You must select a valid second question.",
-            (this.state.answerId1 < 1 || this.state.answerId2 < 1) && "You must select an answer for each question.",
+            conflictingRule
+                && "A incompatible answers rule already exists for these question / answer pairs. (Rule "
+                + conflictingRule.id
+                + ")",
+            (questionId1 === questionId2) && "You must select two different questions.",
+            questionId1 < 1 && "You must select a valid first question.",
+            questionId2 < 1 && "You must select a valid second question.",
+            (answerId1 < 1 || answerId2 < 1) && "You must select an answer for each question.",
         ].filter(m => m);
         if (errorMessages.length > 0) {
             alert(errorMessages.map(s => "- " + s).join("\n"));
         } else {
-            const q1 = this.context.surveyQuestions.find(q => q.id === this.state.questionId1);
-            const q2 = this.context.surveyQuestions.find(q => q.id === this.state.questionId2);
-            this.context.setProjectDetails({
-                surveyRules: [...this.context.surveyRules, {
-                    id: getNextId(this.context.surveyRules),
+            const q1 = surveyQuestions.find(q => q.id === questionId1);
+            const q2 = surveyQuestions.find(q => q.id === questionId2);
+            setProjectDetails({
+                surveyRules: [...surveyRules, {
+                    id: getNextId(surveyRules),
                     ruleType: "incompatible-answers",
-                    question1: this.state.questionId1,
-                    question2: this.state.questionId2,
-                    answer1: this.state.answerId1,
-                    answer2: this.state.answerId2,
+                    question1: questionId1,
+                    question2: questionId2,
+                    answer1: answerId1,
+                    answer2: answerId2,
                     questionText1: q1.question,
                     questionText2: q2.question,
-                    answerText1: q1.answers.find(a => a.id === this.state.answerId1).answer,
-                    answerText2: q2.answers.find(a => a.id === this.state.answerId2).answer,
+                    answerText1: q1.answers.find(a => a.id === answerId1).answer,
+                    answerText2: q2.answers.find(a => a.id === answerId2).answer,
                 }],
             });
         }
-    }
+    };
 
     safeFindAnswers = (questionId) => {
         const question = this.context.surveyQuestions.find(q => q.id === questionId);
         const answers = question && question.answers;
         return answers || [];
-    }
+    };
 
     render() {
         const availableQuestions = this.context.surveyQuestions.filter(q => q.componentType !== "input");
         return availableQuestions.length > 1
         ?
             <tr>
-                <td colSpan="6">
+                <td>
                     <table>
                         <tbody>
                             <tr>
-                                <td colSpan="4"><label>Select the incompatible questions and answers: </label></td>
+                                <td><label>Select the incompatible questions and answers: </label></td>
                             </tr>
                             <tr>
                                 <td>Question 1:</td>
-                                <td colSpan="3">
+                                <td>
                                     <select
                                         className="form-control form-control-sm"
                                         value={this.state.questionId1}
@@ -733,9 +742,9 @@ export class IncompatibleAnswers extends React.Component {
             </tr>
         :
             <tr>
-                <td colSpan="6">
+                <td>
                     <label>
-                        There must be at least 2 questions where type is not input for this rule
+                        There must be at least 2 questions where type is not input for this rule.
                     </label>
                 </td>
             </tr>;
