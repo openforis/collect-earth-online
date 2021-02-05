@@ -1175,7 +1175,7 @@ class MapWidget extends React.Component {
                 });
                 whichMap.addLayer(layer);
             } else {
-                fetch(`/get-plot-sample-geom?&plotId=${this.props.getParameterByName("plotId")}`)
+                fetch(`/get-plot-sample-geom?plotId=${this.props.getParameterByName("plotId")}`)
                     .then(res => res.json())
                     .then(data => {
                         const plotJsonObject = typeof(data) === "string" ? JSON.parse(data) : data;

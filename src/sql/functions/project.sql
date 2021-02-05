@@ -1187,7 +1187,7 @@ $$ LANGUAGE SQL;
 
 -- Select plots but only return a maximum number
 CREATE OR REPLACE FUNCTION select_limited_project_plots(_project_id integer, _maximum integer)
- RETURNS table (
+ RETURNS TABLE (
     plot_id     integer,
     center      text,
     flagged     boolean,
@@ -1478,7 +1478,7 @@ $$ LANGUAGE SQL;
 
 -- Select sample geoms. GEOM comes from shp file table, if it exists, otherwise return sample_geom.
 CREATE OR REPLACE FUNCTION select_plot_sample_geoms(_plot_id integer)
- RETURNS table (geom text) AS $$
+ RETURNS TABLE (geom text) AS $$
 
     WITH tablename AS (
         SELECT samples_ext_table
