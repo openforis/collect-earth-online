@@ -805,7 +805,7 @@ class NewImagery extends React.Component {
                                 e => this.setState({newImageryTitle: e.target.value})
                 )}
                 {/* This should be generalized into the imageryOptions */}
-                {imageryOptions[this.state.selectedType].type === "GeoServer"
+                {["GeoServer", "xyz"].includes(imageryOptions[this.state.selectedType].type)
                     && this.formInput(
                         "Attribution",
                         "text",
@@ -1050,21 +1050,15 @@ class UserList extends React.Component {
         this.getInstitutionUserList();
     }
 
-    componentDidUpdate(prevProps, prevState) {
-        if (this.state.institutionUserList.length !== prevState.institutionUserList.length
-            || this.props.isAdmin !== prevProps.isAdmin) {
-            this.props.setUsersCount(
-                this.props.isAdmin
-                    ? this.state.institutionUserList.length
-                    : this.state.institutionUserList.filter(user => user.institutionRole !== "pending").length
-            );
-        }
-    }
-
     getInstitutionUserList = () => {
         fetch(`/get-institution-users?institutionId=${this.props.institutionId}`)
             .then(response => response.ok ? response.json() : Promise.reject(response))
-            .then(data => this.setState({institutionUserList: data}))
+            .then(data => {
+                this.props.setUsersCount(
+                    data.filter(user => user.institutionRole !== "pending").length
+                );
+                this.setState({institutionUserList: data});
+            })
             .catch(response => {
                 this.setState({institutionUserList: []});
                 console.log(response);
@@ -1145,7 +1139,9 @@ class UserList extends React.Component {
                     userId={this.props.userId}
                 />
                 {this.state.institutionUserList
-                    .filter(iu => iu.id === this.props.userId || this.props.isAdmin)
+                    .filter(iu => iu.id === this.props.userId
+                        || this.props.isAdmin
+                        || iu.institutionRole === "admin")
                     .sort((a, b) => sortAlphabetically(a.email, b.email))
                     .sort((a, b) => sortAlphabetically(a.institutionRole, b.institutionRole))
                     .map((iu, uid) =>

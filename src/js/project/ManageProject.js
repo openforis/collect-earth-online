@@ -21,9 +21,11 @@ export default class ManageProject extends React.Component {
     /// API Calls
 
     getProjectDetails = () =>
-        Promise.all([this.getProjectById(this.context.projectId),
-                     this.getProjectImagery(this.context.projectId),
-                     this.getProjectPlots(this.context.projectId)])
+        Promise.all([
+            this.getProjectById(this.context.projectId),
+            this.getProjectImagery(this.context.projectId),
+            this.getProjectPlots(this.context.projectId),
+        ])
             .catch(response => {
                 console.log(response);
                 alert("Error retrieving the project info. See console for details.");
