@@ -11,9 +11,9 @@ SELECT setval(pg_get_serial_sequence('users', 'user_uid'), (SELECT MAX(user_uid)
 
 -- Adds an institution
 INSERT INTO institutions
-    (institution_uid, name, logo, description, url)
+    (institution_uid, name, description, url)
 VALUES
-    (1, 'DEV Institution', 'institution-3.png', 'DEV Institution Description', 'https://collect.earth');
+    (1, 'DEV Institution', 'DEV Institution Description', 'https://collect.earth');
 
 SELECT setval(pg_get_serial_sequence('institutions', 'institution_uid'), (SELECT MAX(institution_uid) FROM institutions) + 1);
 

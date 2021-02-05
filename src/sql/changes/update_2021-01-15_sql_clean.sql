@@ -1,4 +1,3 @@
-DROP TYPE project_return;
 -- Helper functions
 
 CREATE OR REPLACE FUNCTION find_json_id(json_arr jsonb, key text, match text)
@@ -151,6 +150,8 @@ DROP FUNCTION find_json_by_id;
 DROP FUNCTION convert_values_to_answers;
 DROP FUNCTION convert_name_to_question;
 DROP FUNCTION answer_short_to_long;
+
+ALTER TABLE sample_values RENAME COLUMN value TO saved_answers;
 
 -- Update project routes
 DROP TYPE IF EXISTS project_return IF EXISTS CASCADE;

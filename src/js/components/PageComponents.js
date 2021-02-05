@@ -238,7 +238,7 @@ export class GeoDashNavigationBar extends React.Component {
     });
 
     render() {
-        const {userName, page, plotId} = this.props;
+        const {userName, page, visiblePlotId} = this.props;
         const uri = window.location.pathname;
 
         return (
@@ -291,7 +291,7 @@ export class GeoDashNavigationBar extends React.Component {
                                 </>
                             :
                                 <li className="nav-item" style={{flex: 1, textAlign: "center"}}>
-                                    Plot ID: {plotId}
+                                    Plot ID: {visiblePlotId}
                                 </li>
                             }
                             <li className="nav-item my-auto ml-1">
