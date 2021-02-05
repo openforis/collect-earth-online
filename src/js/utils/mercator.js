@@ -321,6 +321,8 @@ mercator.createSource = function (sourceConfig, imageryId, attribution,
             params: {imageryId: imageryId},
             attributions: attribution,
         });
+    } else if (sourceConfig.type === "xyz") {
+        return new XYZ({url: sourceConfig.url});
     } else if (sourceConfig.type === "SecureWatch") {
         return new TileWMS({
             serverType: "geoserver",

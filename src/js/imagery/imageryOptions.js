@@ -32,6 +32,11 @@ export const imageryOptions = [
         // FIXME, add url if help document is created.
     },
     {
+        type: "xyz",
+        label: "XYZ Imagery",
+        params: [{key: "url", display: "XYZ URL"}],
+    },
+    {
         type: "BingMaps",
         label: "Bing Maps",
         params: [
