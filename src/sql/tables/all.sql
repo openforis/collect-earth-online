@@ -283,34 +283,3 @@ CREATE TYPE imagery_return AS (
     extent             jsonb,
     source_config      jsonb
 );
-
-CREATE TYPE plots_return AS (
-    plot_id              integer,
-    project_id           integer,
-    center               text,
-    flagged              integer,
-    assigned             integer,
-    username             text,
-    confidence           integer,
-    collection_time      timestamp,
-    ext_id               integer,
-    plotId               integer,
-    geom                 text,
-    analysis_duration    numeric
-);
-
-CREATE TYPE plot_collection_return AS (
-    plot_id              integer,
-    project_id           integer,
-    center               text,
-    flagged              integer,
-    assigned             integer,
-    username             text,
-    confidence           integer,
-    collection_time      timestamp,
-    ext_id               integer,
-    plotId               integer,
-    geom                 text,
-    analysis_duration    numeric,
-    extra_plot_info      jsonb
-);

@@ -31,7 +31,6 @@
 (defn- prepare-plot-object [plot-info project-id]
   (let [{:keys [plot_id center flagged confidence assigned plotid geom extra_plot_info]} plot-info]
     {:id            plot_id
-     :projectId     project-id ;TODO why do we need to return a value that is already known
      :center        center
      :flagged       (< 0 (or flagged -1))
      :confidence    confidence
