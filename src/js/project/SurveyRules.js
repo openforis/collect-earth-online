@@ -23,7 +23,9 @@ export class SurveyRuleDesign extends React.Component {
                     inDesignMode
                 />
                 <table id="ruleDesigner">
-                    <label className="font-weight-bold mt-2">New Rule:</label>
+                    <caption style={{color: "black", captionSide: "top", fontWeight: "bold"}}>
+                        New Rule:
+                    </caption>
                     <tbody className="srd">
                         <tr>
                             <td>
@@ -95,8 +97,7 @@ export class SurveyRulesList extends React.Component {
 
         "numeric-range": ({min, max, questionsText}) => (
             <>
-                <td>Min: {min}</td>
-                <td>Max: {max}</td>
+                <td>Min: {min}, Max: {max}</td>
                 <td>Questions: {questionsText.toString()}</td>
             </>
         ),
@@ -612,7 +613,7 @@ export class IncompatibleAnswers extends React.Component {
             ));
         const errorMessages = [
             conflictingRule
-                && "A incompatible answers rule already exists for these question / answer pairs. (Rule "
+                && "An incompatible answers rule already exists for these question / answer pairs. (Rule "
                 + conflictingRule.id
                 + ")",
             (questionId1 === questionId2) && "You must select two different questions.",
