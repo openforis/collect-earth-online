@@ -2,7 +2,6 @@ import React from "react";
 
 import ReviewForm from "./ReviewForm";
 
-import {convertSampleValuesToSurveyQuestions} from "../utils/surveyUtils";
 import {ProjectContext} from "./constants";
 
 export default class ManageProject extends React.Component {
@@ -39,9 +38,8 @@ export default class ManageProject extends React.Component {
                     alert("No project found with ID " + projectId + ".");
                     window.location = "/home";
                 } else {
-                    const newSurveyQuestions = convertSampleValuesToSurveyQuestions(data.sampleValues);
-                    this.context.setProjectDetails({...data, surveyQuestions: newSurveyQuestions});
-                    this.context.setContextState({originalProject: {...data, surveyQuestions: newSurveyQuestions}});
+                    this.context.setProjectDetails(data);
+                    this.context.setContextState({originalProject: data});
                 }
             })
             .catch(() => Promise.reject("Error retrieving the project."));
@@ -56,7 +54,7 @@ export default class ManageProject extends React.Component {
             .catch(() => Promise.reject("Error retrieving the project imagery list."));
 
     getProjectPlots = (projectId) =>
-        fetch(`/get-project-plots?projectId=${projectId}&max=300`)
+        fetch(`/get-project-plots?projectId=${projectId}`)
             .then(response => response.ok ? response.json() : Promise.reject(response))
             .then(data => this.context.setProjectDetails({plots: data}))
             .catch(() => Promise.reject("Error retrieving the plot list."));

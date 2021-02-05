@@ -115,6 +115,16 @@ CREATE OR REPLACE FUNCTION get_sample_headers(_project_id integer)
 
 $$ LANGUAGE PLPGSQL;
 
+-- Create empty table before loading external data
+CREATE OR REPLACE FUNCTION create_new_table(_table_name text, _cols text)
+ RETURNS void AS $$
+
+ BEGIN
+    EXECUTE 'CREATE TABLE ext_tables.' || _table_name || '(' || _cols || ')';
+ END
+
+$$ LANGUAGE PLPGSQL;
+
 --
 --  WIDGET FUNCTIONS
 --
@@ -415,36 +425,6 @@ CREATE OR REPLACE FUNCTION update_project_counts(_project_id integer)
     WHERE project_uid = _project_id
 
 $$ LANGUAGE SQL;
-
--- CSV REQUIRED FUNCTIONS
-
--- Create empty table before loading csv
-CREATE OR REPLACE FUNCTION create_new_table(_table_name text, _cols text)
- RETURNS void AS $$
-
- DECLARE
-    iter text;
- BEGIN
-    EXECUTE 'CREATE TABLE ext_tables.' || _table_name || '()';
-
-    FOREACH iter IN ARRAY string_to_array(_cols, ',')
-    LOOP
-        EXECUTE format('ALTER TABLE ext_tables.' || _table_name || ' add column %s;', iter);
-    END LOOP;
-
- END
-
-$$ LANGUAGE PLPGSQL;
-
--- Add index to csv file for reference later
-CREATE OR REPLACE FUNCTION add_index_col(_table_name text)
- RETURNS void AS $$
-
- BEGIN
-    EXECUTE 'ALTER TABLE ext_tables.' || _table_name || ' ADD COLUMN gid serial primary key';
- END
-
-$$ LANGUAGE PLPGSQL;
 
 --  CLEAN UP FUNCTIONS
 
@@ -777,13 +757,10 @@ CREATE OR REPLACE FUNCTION valid_boundary(_boundary geometry)
 
     SELECT EXISTS(
         SELECT 1
-        WHERE ST_IsValid(_boundary)
-            AND NOT (ST_XMax(_boundary) > 180
-                OR ST_XMin(_boundary) < -180
-                OR ST_YMax(_boundary) > 90
-                OR ST_YMin(_boundary) < -90
-                OR ST_XMax(_boundary) <= ST_XMin(_boundary)
-                OR ST_YMax(_boundary) <= ST_YMin(_boundary))
+        WHERE _boundary IS NOT NULL
+            AND ST_Contains(ST_MakeEnvelope(-180, -90, 180, 90, 4326), _boundary)
+            AND ST_XMax(_boundary) > ST_XMin(_boundary)
+            AND ST_YMax(_boundary) > ST_YMin(_boundary)
     )
 
 $$ LANGUAGE SQL;
@@ -794,33 +771,6 @@ CREATE OR REPLACE FUNCTION valid_project_boundary(_project_id integer)
     SELECT * FROM valid_boundary((SELECT boundary FROM projects WHERE project_uid = _project_id))
 
 $$ LANGUAGE SQL;
-
-CREATE VIEW project_boundary AS
- SELECT
-    project_uid,
-    institution_rid,
-    imagery_rid,
-    availability,
-    name,
-    description,
-    privacy_level,
-    ST_AsGeoJSON(boundary),
-    plot_distribution,
-    num_plots,
-    plot_spacing,
-    plot_shape,
-    plot_size,
-    sample_distribution,
-    samples_per_plot,
-    sample_resolution,
-    allow_drawn_samples,
-    survey_questions,
-    survey_rules,
-    classification_times,
-    valid_boundary(boundary),
-    token_key,
-    options
-FROM projects;
 
 -- Returns a row in projects by id
 CREATE OR REPLACE FUNCTION select_project_by_id(_project_id integer)
@@ -881,78 +831,83 @@ CREATE OR REPLACE FUNCTION select_project_by_id(_project_id integer)
 
 $$ LANGUAGE SQL;
 
--- FIXME this list does not need to contain all fields in project_boundary
--- FIXME Rename to select_public_projects()
--- FIXME this may not be needed, passing -1 to select_all_user_projects should give the same results (test performance)
--- Returns all public projects
-CREATE OR REPLACE FUNCTION select_all_projects()
- RETURNS setOf project_return AS $$
+CREATE OR REPLACE FUNCTION user_project(_user_id integer, _role_id integer, _privacy_level text, _availability text)
+ RETURNS boolean AS $$
 
-    SELECT *, FALSE AS editable
-    FROM project_boundary
-    WHERE privacy_level = 'public'
-      AND availability = 'published'
-    ORDER BY project_uid
+    SELECT (_role_id = 1 AND _availability <> 'archived')
+            OR (_availability = 'published'
+                AND (_privacy_level = 'public'
+                    OR (_user_id > 0 AND _privacy_level = 'users')
+                    OR (_role_id = 2 AND _privacy_level = 'institution')))
 
-$$ LANGUAGE SQL;
+$$ LANGUAGE SQL IMMUTABLE;
 
--- Returns projects for institution_rid
-CREATE OR REPLACE FUNCTION select_all_institution_projects(_institution_id integer)
- RETURNS setOf project_return AS $$
-
-    SELECT *
-    FROM select_all_projects()
-    WHERE institution_id = _institution_id
-    ORDER BY project_id
-
-$$ LANGUAGE SQL;
-
--- Returns institution user roles from the database
-CREATE OR REPLACE FUNCTION get_institution_user_roles(_user_id integer)
+-- Returns all projects the user can see. This is used only on the home page
+CREATE OR REPLACE FUNCTION select_user_home_projects(_user_id integer)
  RETURNS TABLE (
-    institution_rid    integer,
-    role               text
+    project_id        integer,
+    institution_id    integer,
+    name              text,
+    description       text,
+    centroid          text,
+    num_plots         integer,
+    editable          boolean
  ) AS $$
 
-    SELECT institution_rid, title
-    FROM institution_users as iu
-    INNER JOIN roles as r
-        ON iu.role_rid = role_uid
-    WHERE iu.user_rid = _user_id
-    ORDER BY institution_rid
+    SELECT project_uid,
+        p.institution_rid,
+        name,
+        description,
+        ST_AsGeoJSON(ST_Centroid(boundary)),
+        num_plots,
+        (CASE WHEN role_rid IS NULL THEN FALSE ELSE role_rid = 1 END) AS editable
+    FROM projects as p
+    LEFT JOIN institution_users iu
+        ON user_rid = _user_id
+        AND p.institution_rid = iu.institution_rid
+    WHERE user_project(_user_id, role_rid, p.privacy_level, p.availability)
+        AND valid_boundary(boundary) = TRUE
+    ORDER BY project_uid
 
 $$ LANGUAGE SQL;
 
--- FIXME this list does not need to contain all fields in project_boundary
--- Returns all rows in projects for a user_id with roles
-CREATE OR REPLACE FUNCTION select_all_user_projects(_user_id integer)
- RETURNS setOf project_return AS $$
+-- Returns percent of plots collected.
+CREATE OR REPLACE FUNCTION project_percent_complete(_project_id integer)
+ RETURNS real AS $$
 
-    SELECT p.*, (CASE WHEN role IS NULL THEN FALSE ELSE role = 'admin' END) AS editable
-    FROM project_boundary as p
-    LEFT JOIN get_institution_user_roles(_user_id) AS roles
-        USING (institution_rid)
-    WHERE (role = 'admin' AND p.availability <> 'archived')
-        OR (role = 'member'
-            AND p.privacy_level IN ('public', 'institution', 'users')
-            AND p.availability = 'published')
-        OR (_user_id > 0
-            AND p.privacy_level IN ('public', 'users')
-            AND p.availability = 'published')
-        OR (p.privacy_level IN ('public')
-            AND p.availability = 'published')
-    ORDER BY project_uid
+    SELECT (
+        CASE WHEN count(distinct(plot_uid)) > 0
+        THEN (100.0 * count(user_plot_uid) / count(distinct(plot_uid))::real)
+        ELSE 0
+        END
+    )::real
+    FROM plots
+    LEFT JOIN user_plots
+        ON plot_uid = plot_rid
+    WHERE project_rid = _project_id
 
 $$ LANGUAGE SQL;
 
 -- Returns all rows in projects for a user_id and institution_rid with roles
-CREATE OR REPLACE FUNCTION select_institution_projects_with_roles(_user_id integer, _institution_id integer)
- RETURNS setOf project_return AS $$
+CREATE OR REPLACE FUNCTION select_institution_projects(_user_id integer, _institution_id integer)
+ RETURNS TABLE (
+    project_id       integer,
+    name             text,
+    privacy_level    text,
+    pct_complete     real
+ ) AS $$
 
-    SELECT *
-    FROM select_all_user_projects(_user_id)
-    WHERE institution_id = _institution_id
-    ORDER BY project_id
+    SELECT project_uid,
+        name,
+        privacy_level,
+        (SELECT project_percent_complete(project_uid))
+    FROM projects as p
+    LEFT JOIN institution_users iu
+        ON user_rid = _user_id
+        AND p.institution_rid = iu.institution_rid
+    WHERE p.institution_rid = _institution_id
+        AND user_project(_user_id, role_rid, p.privacy_level, p.availability)
+    ORDER BY project_uid
 
 $$ LANGUAGE SQL;
 
@@ -964,10 +919,11 @@ CREATE OR REPLACE FUNCTION select_template_projects(_user_id integer)
 
     SELECT project_uid, name
     FROM projects as p
-    LEFT JOIN get_institution_user_roles(_user_id) AS roles
-        USING (institution_rid)
-    WHERE (role = 'admin' AND p.availability <> 'archived')
-        OR (role = 'member'
+    LEFT JOIN institution_users iu
+        ON user_rid = _user_id
+        AND p.institution_rid = iu.institution_rid
+    WHERE (role_rid = 1 AND p.availability <> 'archived')
+        OR (role_rid = 2
             AND p.privacy_level IN ('public', 'institution', 'users')
             AND p.availability = 'published')
         OR (_user_id > 0
@@ -1230,47 +1186,43 @@ CREATE OR REPLACE FUNCTION select_all_unlocked_project_plots(_project_id integer
 $$ LANGUAGE SQL;
 
 -- Select plots but only return a maximum number
--- FIXME not all of plots_return are needed here.
 CREATE OR REPLACE FUNCTION select_limited_project_plots(_project_id integer, _maximum integer)
- RETURNS setOf plots_return AS $$
+ RETURNS TABLE (
+    plot_id     integer,
+    center      text,
+    flagged     boolean,
+    assigned    integer
+ ) AS $$
 
-    SELECT all_plots.plot_id,     all_plots.project_id,
-        all_plots.center,         all_plots.flagged,
-        all_plots.assigned,       all_plots.username,
-        all_plots.confidence,     all_plots.collection_time,
-        all_plots.ext_id,         all_plots.plotId,
-        all_plots.geom,           all_plots.analysis_duration
-     FROM (
-        SELECT *,
-            row_number() OVER(ORDER BY plot_id) AS rows,
-            COUNT(*) OVER() as total_plots
-        FROM select_all_project_plots(_project_id)
-        WHERE project_id = _project_id
-    ) as all_plots
-    WHERE all_plots.rows %
-        (CASE WHEN _maximum > all_plots.total_plots THEN 0.5 ELSE all_plots.total_plots / _maximum END) = 0
+    SELECT plot_uid,
+        ST_AsGeoJSON(center) as center,
+        CASE WHEN flagged IS NULL THEN FALSE ELSE flagged END,
+        CASE WHEN user_plot_uid IS NULL THEN 0 ELSE 1 END
+    FROM plots
+    LEFT JOIN user_plots
+        ON plot_uid = plot_rid
+    WHERE project_rid = _project_id
     LIMIT _maximum;
 
 $$ LANGUAGE SQL;
 
 -- Returns next plot by id
-CREATE OR REPLACE FUNCTION select_plot_by_id(_project_id integer, _plot_id integer)
- RETURNS setOf plot_collection_return AS $$
+CREATE OR REPLACE FUNCTION select_plot_geom(_plot_id integer)
+ RETURNS text AS $$
 
     WITH tablenames AS (
         SELECT plots_ext_table
         FROM projects
-        WHERE project_uid = _project_id
+        WHERE project_uid = (SELECT project_rid FROM plots WHERE plot_uid = _plot_id)
     ), plots_file_data AS (
-        SELECT * FROM select_json_table_by_name((SELECT plots_ext_table FROM tablenames))
+        SELECT * FROM select_partial_table_by_name((SELECT plots_ext_table FROM tablenames))
     )
 
-    SELECT spp.*,
-       pfd.rem_data
-    FROM select_all_project_plots(_project_id) as spp
+    SELECT ST_AsGeoJSON(geom)
+    FROM plots p
     LEFT JOIN plots_file_data pfd
-        ON spp.ext_id = pfd.ext_id
-    WHERE spp.plotId = _plot_id
+        ON p.ext_id = pfd.ext_id
+    WHERE p.plot_uid = _plot_id
 
 $$ LANGUAGE SQL;
 
@@ -1308,7 +1260,7 @@ CREATE OR REPLACE FUNCTION select_next_user_plot(
     _plot_id       integer,
     _username      text,
     _review_all    boolean
-) RETURNS setOf plot_collection_return AS $$
+ ) RETURNS setOf plot_collection_return AS $$
 
     WITH tablenames AS (
         SELECT plots_ext_table
@@ -1414,7 +1366,7 @@ CREATE OR REPLACE FUNCTION select_by_id_user_plot(
     _plot_id       integer,
     _username      text,
     _review_all    boolean
-) RETURNS setOf plot_collection_return AS $$
+ ) RETURNS setOf plot_collection_return AS $$
 
     WITH tablenames AS (
         SELECT plots_ext_table
@@ -1493,7 +1445,7 @@ CREATE OR REPLACE FUNCTION select_plot_samples(_plot_id integer, _project_id int
     plotId                integer,
     sampleId              integer,
     geom                  text,
-    value                 jsonb,
+    saved_answers         jsonb,
     imagery_id            integer,
     imagery_attributes    jsonb
  ) AS $$
@@ -1512,7 +1464,7 @@ CREATE OR REPLACE FUNCTION select_plot_samples(_plot_id integer, _project_id int
         fd.sampleId,
         fd.sampleId,
         ST_AsGeoJSON(fd.geom) as geom,
-        (CASE WHEN sv.value IS NULL THEN '{}' ELSE sv.value END),
+        (CASE WHEN sv.saved_answers IS NULL THEN '{}' ELSE sv.saved_answers END),
         sv.imagery_rid,
         sv.imagery_attributes
     FROM samples
@@ -1521,6 +1473,26 @@ CREATE OR REPLACE FUNCTION select_plot_samples(_plot_id integer, _project_id int
     LEFT JOIN file_data fd
         ON samples.ext_id = fd.ext_id
     WHERE samples.plot_rid = _plot_id
+
+$$ LANGUAGE SQL;
+
+-- Select sample geoms. GEOM comes from shp file table, if it exists, otherwise return sample_geom.
+CREATE OR REPLACE FUNCTION select_plot_sample_geoms(_plot_id integer)
+ RETURNS TABLE (geom text) AS $$
+
+    WITH tablename AS (
+        SELECT samples_ext_table
+        FROM projects
+        WHERE project_uid = (SELECT project_rid FROM plots WHERE plot_uid = _plot_id)
+    ), file_data AS (
+        SELECT * FROM select_partial_sample_table_by_name((SELECT samples_ext_table FROM tablename))
+    )
+
+    SELECT CASE WHEN fd.geom IS NULL THEN ST_AsGeoJSON(sample_geom) ELSE ST_AsGeoJSON(fd.geom) END
+    FROM samples s
+    LEFT JOIN file_data fd
+        ON s.ext_id = fd.ext_id
+    WHERE s.plot_rid = _plot_id
 
 $$ LANGUAGE SQL;
 
@@ -1563,11 +1535,11 @@ CREATE OR REPLACE FUNCTION add_user_samples(
     )
 
     INSERT INTO sample_values
-        (user_plot_rid, sample_rid, imagery_rid, imagery_attributes, value)
-    (SELECT user_plot_uid, sv.sample_id, iv.imagery_id, iv.imagery_attributes::jsonb, sv.value
+        (user_plot_rid, sample_rid, imagery_rid, imagery_attributes, saved_answers)
+    (SELECT user_plot_uid, nsv.sample_id, iv.imagery_id, iv.imagery_attributes::jsonb, nsv.value
         FROM user_plot_table AS upt, samples AS s
-            INNER JOIN new_sample_values as sv
-                ON sample_uid = sv.sample_id
+            INNER JOIN new_sample_values as nsv
+                ON sample_uid = nsv.sample_id
             INNER JOIN image_values as iv
                 ON sample_uid = iv.sample_id
         WHERE s.plot_rid = _plot_id)
@@ -1605,22 +1577,22 @@ CREATE OR REPLACE FUNCTION update_user_samples(
         CROSS JOIN LATERAL
         jsonb_to_record(a.value) as (id int, attributes text)
     ), plot_samples AS (
-        SELECT user_plot_uid, sv.sample_id, iv.imagery_id, iv.imagery_attributes::jsonb, sv.value
+        SELECT user_plot_uid, nsv.sample_id, iv.imagery_id, iv.imagery_attributes::jsonb, nsv.value
         FROM user_plot_table AS upt, samples AS s
-        INNER JOIN new_sample_values as sv ON sample_uid = sv.sample_id
+        INNER JOIN new_sample_values as nsv ON sample_uid = nsv.sample_id
         INNER JOIN image_values as iv ON sample_uid = iv.sample_id
         WHERE s.plot_rid = _plot_id
     )
 
     INSERT INTO sample_values
-        (user_plot_rid, sample_rid, imagery_rid, imagery_attributes, value)
+        (user_plot_rid, sample_rid, imagery_rid, imagery_attributes, saved_answers)
         (SELECT user_plot_uid, sample_id, imagery_id, imagery_attributes, value FROM plot_samples)
     ON CONFLICT (user_plot_rid, sample_rid) DO
         UPDATE
         SET user_plot_rid = excluded.user_plot_rid,
             imagery_rid = excluded.imagery_rid,
             imagery_attributes = excluded.imagery_attributes,
-            value = excluded.value
+            saved_answers = excluded.saved_answers
 
     RETURNING sample_values.sample_rid
 
@@ -1763,11 +1735,12 @@ CREATE OR REPLACE FUNCTION dump_project_plot_data(_project_id integer)
             MAX(collection_time) as collection_time,
             MAX(analysis_duration) as analysis_duration,
             format('[%s]', string_agg(
-                (CASE WHEN "value" IS NULL THEN
+                (CASE WHEN saved_answers IS NULL THEN
                     format('{"%s":"%s"}', 'id', sample_uid)
                 ELSE
-                    format('{"%s":"%s", "%s":%s}', 'id', sample_uid, 'value', "value")
-                END) , ', ')) as samples,
+                    format('{"%s":"%s", "%s":%s}', 'id', sample_uid, 'saved_answers', saved_answers)
+                END),', '
+            )) as samples,
             pl_ext_id,
             project_id,
             MODE() WITHIN GROUP (ORDER BY imagerySecureWatchDate) as common_securewatch_date,
@@ -1816,7 +1789,7 @@ CREATE OR REPLACE FUNCTION dump_project_sample_data(_project_id integer)
         imagery_title         text,
         imagery_attributes    text,
         sample_geom           text,
-        value                 jsonb,
+        saved_answers         jsonb,
         ext_plot_data         jsonb,
         ext_sample_data       jsonb
  ) AS $$
@@ -1844,7 +1817,7 @@ CREATE OR REPLACE FUNCTION dump_project_sample_data(_project_id integer)
         title AS imagery_title,
         imagery_attributes::text,
         ST_AsText(sample_geom),
-        value,
+        saved_answers,
         pfd.rem_data,
         sfd.rem_data
     FROM select_all_project_plots(_project_id) p
