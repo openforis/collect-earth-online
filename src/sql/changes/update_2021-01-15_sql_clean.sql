@@ -154,7 +154,7 @@ DROP FUNCTION IF EXISTS answer_short_to_long;
 ALTER TABLE sample_values RENAME COLUMN value TO saved_answers;
 
 -- Update project routes
-DROP TYPE IF EXISTS project_return IF EXISTS CASCADE;
+DROP TYPE IF EXISTS project_return CASCADE;
 DROP VIEW IF EXISTS project_boundary CASCADE;
 
 -- Convert logo to bytea
@@ -177,5 +177,5 @@ $$ LANGUAGE SQL;
 DELETE FROM institution_users WHERE user_rid = -1;
 
 -- Eliminate plots_return types
-DROP TYPE IF EXISTS plots_return;
-DROP TYPE IF EXISTS plot_collection_return;
+DROP TYPE IF EXISTS plots_return CASCADE;
+DROP TYPE IF EXISTS plot_collection_return CASCADE;
