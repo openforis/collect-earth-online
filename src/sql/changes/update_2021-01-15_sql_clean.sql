@@ -144,12 +144,12 @@ WHERE sample_value_uid IN (
         AND jsonb_typeof(val) = 'string'
 );
 
-DROP FUNCTION find_json_id;
-DROP FUNCTION find_json_index;
-DROP FUNCTION find_json_by_id;
-DROP FUNCTION convert_values_to_answers;
-DROP FUNCTION convert_name_to_question;
-DROP FUNCTION answer_short_to_long;
+DROP FUNCTION IF EXISTS find_json_id;
+DROP FUNCTION IF EXISTS find_json_index;
+DROP FUNCTION IF EXISTS find_json_by_id;
+DROP FUNCTION IF EXISTS convert_values_to_answers;
+DROP FUNCTION IF EXISTS convert_name_to_question;
+DROP FUNCTION IF EXISTS answer_short_to_long;
 
 ALTER TABLE sample_values RENAME COLUMN value TO saved_answers;
 
@@ -159,9 +159,9 @@ DROP VIEW IF EXISTS project_boundary CASCADE;
 
 -- Convert logo to bytea
 
-DROP TYPE institution_return CASCADE;
+DROP TYPE IF EXISTS institution_return CASCADE;
 
-ALTER TABLE institutions DROP COLUMN logo;
+ALTER TABLE institutions DROP COLUMN IF EXISTS logo;
 
 CREATE OR REPLACE FUNCTION add_institution_logo_by_file(_institution_id integer, _file_name text)
  RETURNS integer AS $$
@@ -175,3 +175,7 @@ $$ LANGUAGE SQL;
 
 -- Clean up
 DELETE FROM institution_users WHERE user_rid = -1;
+
+-- Eliminate plots_return types
+DROP TYPE IF EXISTS plots_return;
+DROP TYPE IF EXISTS plot_collection_return;
