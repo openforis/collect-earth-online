@@ -1124,7 +1124,7 @@ $$ LANGUAGE SQL;
 -- Select plots
 -- TODO when multiple users can be assigned to plots, returning a single username does not make sense
 CREATE OR REPLACE FUNCTION select_all_project_plots(_project_id integer)
- RETURNS table (
+ RETURNS TABLE (
     plot_id              integer,
     project_id           integer,
     center               text,
@@ -1225,7 +1225,7 @@ $$ LANGUAGE SQL;
 -- FIXME, I dont think we need 6 functions for navigating plots
 -- Returns next unanalyzed plot
 CREATE OR REPLACE FUNCTION select_next_unassigned_plot(_project_id integer, _plot_id integer)
- RETURNS table (
+ RETURNS TABLE (
     plot_id            integer,
     center             text,
     flagged            integer,
@@ -1271,7 +1271,7 @@ CREATE OR REPLACE FUNCTION select_next_user_plot(
     _plot_id       integer,
     _username      text,
     _review_all    boolean
- ) RETURNS table (
+ ) RETURNS TABLE (
     plot_id            integer,
     center             text,
     flagged            integer,
@@ -1309,7 +1309,7 @@ $$ LANGUAGE SQL;
 
 -- Returns prev unanalyzed plot
 CREATE OR REPLACE FUNCTION select_prev_unassigned_plot(_project_id integer, _plot_id integer)
- RETURNS table (
+ RETURNS TABLE (
     plot_id            integer,
     center             text,
     flagged            integer,
@@ -1355,7 +1355,7 @@ CREATE OR REPLACE FUNCTION select_prev_user_plot(
     _plot_id       integer,
     _username      text,
     _review_all    boolean
- ) RETURNS table (
+ ) RETURNS TABLE (
     plot_id            integer,
     center             text,
     flagged            integer,
@@ -1393,7 +1393,7 @@ $$ LANGUAGE SQL;
 
 -- Returns unanalyzed plots by plot id
 CREATE OR REPLACE FUNCTION select_by_id_unassigned_plot(_project_id integer, _plot_id integer)
- RETURNS table (
+ RETURNS TABLE (
     plot_id            integer,
     center             text,
     flagged            integer,
@@ -1437,7 +1437,7 @@ CREATE OR REPLACE FUNCTION select_by_id_user_plot(
     _plot_id       integer,
     _username      text,
     _review_all    boolean
- ) RETURNS table (
+ ) RETURNS TABLE (
     plot_id            integer,
     center             text,
     flagged            integer,
