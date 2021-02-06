@@ -31,18 +31,18 @@
         (call-sql "select_plot_samples" plot-id project-id)))
 
 (defn- prepare-plot-object [plot-info project-id]
-  (let [{:keys [plot_id center flagged confidence assigned flagging_reason plotid geom extra_plot_info]} plot-info]
-    {:id             plot_id
-     :projectId      project-id ;TODO why do we need to return a value that is already known
-     :center         center
-     :flagged        (< 0 (or flagged -1))
-     :confidence     confidence
-     :analyses       assigned
-     :flaggingReason flagging_reason
-     :plotId         plotid
-     :geom           geom
-     :extraPlotInfo  (dissoc (tc/jsonb->clj extra_plot_info {}) :gid :lat :lon :plotid)
-     :samples        (prepare-samples-array plot_id project-id)}))
+  (let [{:keys [plot_id center flagged confidence assigned flagged_reason plotid geom extra_plot_info]} plot-info]
+    {:id            plot_id
+     :projectId     project-id ;TODO why do we need to return a value that is already known
+     :center        center
+     :flagged       (< 0 (or flagged -1))
+     :confidence    confidence
+     :analyses      assigned
+     :flaggedReason flagged_reason
+     :plotId        plotid
+     :geom          geom
+     :extraPlotInfo (dissoc (tc/jsonb->clj extra_plot_info {}) :gid :lat :lon :plotid)
+     :samples       (prepare-samples-array plot_id project-id)}))
 
 (defn get-project-plot [{:keys [params]}]
   (let [project-id (tc/val->int (:projectId params))
@@ -147,7 +147,7 @@
   (let [plot-id          (tc/val->int (:plotId params))
         user-id          (:userId params -1)
         collection-start (tc/val->long (:collectionStart params))
-        flagging-reason  (:flaggingReason params)]
-    (call-sql "flag_plot" plot-id user-id (Timestamp. collection-start) flagging-reason)
+        flagged-reason  (:flaggedReason params)]
+    (call-sql "flag_plot" plot-id user-id (Timestamp. collection-start) flagged-reason)
     (unlock-plots user-id)
     (data-response "")))

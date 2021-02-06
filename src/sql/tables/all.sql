@@ -165,7 +165,7 @@ CREATE TABLE user_plots (
     confidence          integer CHECK (confidence >= 0 AND confidence <= 100),
     collection_start    timestamp,
     collection_time     timestamp,
-    flagging_reason     text,
+    flagged_reason      text,
     CONSTRAINT per_user_per_plot UNIQUE(user_rid, plot_rid)
 );
 
@@ -338,7 +338,7 @@ CREATE TYPE plots_return AS (
     plotId               integer,
     geom                 text,
     analysis_duration    numeric,
-    flagging_reason      text,
+    flagged_reason       text
 );
 
 CREATE TYPE plot_collection_return AS (
@@ -354,6 +354,6 @@ CREATE TYPE plot_collection_return AS (
     plotId               integer,
     geom                 text,
     analysis_duration    numeric,
-    flagging_reason      text,
-    extra_plot_info      jsonb,
+    flagged_reason       text,
+    extra_plot_info      jsonb
 );

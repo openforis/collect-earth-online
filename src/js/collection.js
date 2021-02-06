@@ -574,7 +574,7 @@ class Collection extends React.Component {
                               projectId: this.props.projectId,
                               plotId: this.state.currentPlot.id,
                               collectionStart: this.state.collectionStart,
-                              flaggingReason: this.state.currentPlot.flaggingReason,
+                              flaggedReason: this.state.currentPlot.flaggedReason,
                           }),
                       })
                     .then(response => {
@@ -985,8 +985,8 @@ class Collection extends React.Component {
         this.setState({currentPlot: {...this.state.currentPlot, confidence: confidence}});
     };
 
-    setFlaggingReason = flaggingReason => {
-        this.setState({currentPlot: {...this.state.currentPlot, flaggingReason: flaggingReason}});
+    setFlaggedReason = flaggedReason => {
+        this.setState({currentPlot: {...this.state.currentPlot, flaggedReason: flaggedReason}});
     };
 
     render() {
@@ -1093,8 +1093,8 @@ class Collection extends React.Component {
                                     setConfidence={this.setConfidence}
                                     resetPlotValues={this.resetPlotValues}
                                     toggleFlagged={this.toggleFlagged}
-                                    setFlaggingReason={this.setFlaggingReason}
-                                    flaggingReason={this.state.currentPlot.flaggingReason || ""}
+                                    setFlaggedReason={this.setFlaggedReason}
+                                    flaggedReason={this.state.currentPlot.flaggedReason || ""}
                                 />
                             </>
                         :
