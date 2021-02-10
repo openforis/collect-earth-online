@@ -7,7 +7,7 @@
 
 -- Select known columns from a shp or csv file
 CREATE OR REPLACE FUNCTION select_partial_table_by_name(_table_name text)
- RETURNS TABLE (
+ RETURNS table (
     ext_id    integer,
     plotId    integer,
     center    geometry,
@@ -35,7 +35,7 @@ $$ LANGUAGE PLPGSQL;
 
 -- Converts all columns (including uknown) to a single json column for processing
 CREATE OR REPLACE FUNCTION select_json_table_by_name(_table_name text)
- RETURNS TABLE (
+ RETURNS table (
     ext_id      integer,
     rem_data    jsonb
  ) AS $$
@@ -52,7 +52,7 @@ $$ LANGUAGE PLPGSQL;
 
 -- Select known columns from a shp or csv file
 CREATE OR REPLACE FUNCTION select_partial_sample_table_by_name(_table_name text)
- RETURNS TABLE (
+ RETURNS table (
     ext_id      integer,
     plotId      integer,
     sampleId    integer,
@@ -81,7 +81,7 @@ $$ LANGUAGE PLPGSQL;
 
 -- Returns all headers without prior knowledge
 CREATE OR REPLACE FUNCTION get_plot_headers(_project_id integer)
- RETURNS TABLE (column_names text) AS $$
+ RETURNS table (column_names text) AS $$
 
  DECLARE
     _plots_ext_table text;
@@ -99,7 +99,7 @@ $$ LANGUAGE PLPGSQL;
 
 -- Returns all headers without prior knowledge
 CREATE OR REPLACE FUNCTION get_sample_headers(_project_id integer)
- RETURNS TABLE (column_names text) AS $$
+ RETURNS table (column_names text) AS $$
 
  DECLARE
     _samples_ext_table text;
@@ -154,7 +154,7 @@ $$ LANGUAGE SQL;
 
 -- Gets project widgets by project id from the database
 CREATE OR REPLACE FUNCTION get_project_widgets_by_project_id(_project_id integer)
- RETURNS TABLE(
+ RETURNS table (
     widget_id        integer,
     project_id       integer,
     dashboard_id     uuid,
@@ -508,7 +508,7 @@ $$ LANGUAGE PLPGSQL;
 
 -- Add plots from file
 CREATE OR REPLACE FUNCTION add_file_plots(_project_id integer)
- RETURNS TABLE (
+ RETURNS table (
     plot_uid    integer,
     plotid      integer,
     lon         double precision,
@@ -696,7 +696,7 @@ $$ LANGUAGE SQL;
 -- Check if a project was created where plots have no samples
 -- This only checks plots with external data. It asssumes that auto generated samples generate correctly
 CREATE OR REPLACE FUNCTION plots_missing_samples(_project_id integer)
- RETURNS TABLE (plot_id integer) AS $$
+ RETURNS table (plot_id integer) AS $$
 
     WITH plot_tbl AS (
         SELECT * FROM select_partial_table_by_name((
@@ -720,7 +720,7 @@ $$ LANGUAGE SQL;
 
 -- Return table sizes for shp and csv to check against limits
 CREATE OR REPLACE FUNCTION ext_table_count(_project_id integer)
- RETURNS TABLE(plot_count integer, sample_count integer) AS $$
+ RETURNS table (plot_count integer, sample_count integer) AS $$
 
     DECLARE
         _plots_ext_table text;
@@ -774,7 +774,7 @@ $$ LANGUAGE SQL;
 
 -- Returns a row in projects by id
 CREATE OR REPLACE FUNCTION select_project_by_id(_project_id integer)
- RETURNS TABLE (
+ RETURNS table (
     project_id             integer,
     institution_id         integer,
     imagery_id             integer,
@@ -844,7 +844,7 @@ $$ LANGUAGE SQL IMMUTABLE;
 
 -- Returns all projects the user can see. This is used only on the home page
 CREATE OR REPLACE FUNCTION select_user_home_projects(_user_id integer)
- RETURNS TABLE (
+ RETURNS table (
     project_id        integer,
     institution_id    integer,
     name              text,
@@ -890,7 +890,7 @@ $$ LANGUAGE SQL;
 
 -- Returns all rows in projects for a user_id and institution_rid with roles
 CREATE OR REPLACE FUNCTION select_institution_projects(_user_id integer, _institution_id integer)
- RETURNS TABLE (
+ RETURNS table (
     project_id       integer,
     name             text,
     privacy_level    text,
@@ -912,7 +912,7 @@ CREATE OR REPLACE FUNCTION select_institution_projects(_user_id integer, _instit
 $$ LANGUAGE SQL;
 
 CREATE OR REPLACE FUNCTION select_template_projects(_user_id integer)
- RETURNS TABLE (
+ RETURNS table (
      project_id    integer,
      name          text
  ) AS $$
@@ -937,7 +937,7 @@ $$ LANGUAGE SQL;
 
 -- Returns project users (SQL helper functions)
 CREATE OR REPLACE FUNCTION select_project_users(_project_id integer)
- RETURNS TABLE (
+ RETURNS table (
     user_uid integer
  ) AS $$
 
@@ -985,7 +985,7 @@ $$ LANGUAGE SQL;
 -- Returns project statistics
 -- Overlapping queries, consider condensing. Query time is not an issue.
 CREATE OR REPLACE FUNCTION select_project_statistics(_project_id integer)
- RETURNS TABLE(
+ RETURNS table (
     flagged_plots       integer,
     assigned_plots      integer,
     unassigned_plots    integer,
@@ -1124,7 +1124,7 @@ $$ LANGUAGE SQL;
 -- Select plots
 -- TODO when multiple users can be assigned to plots, returning a single username does not make sense
 CREATE OR REPLACE FUNCTION select_all_project_plots(_project_id integer)
- RETURNS TABLE (
+ RETURNS table (
     plot_id              integer,
     project_id           integer,
     center               text,
@@ -1183,7 +1183,7 @@ $$ LANGUAGE SQL;
 
 -- Select plots but only return a maximum number
 CREATE OR REPLACE FUNCTION select_limited_project_plots(_project_id integer, _maximum integer)
- RETURNS TABLE (
+ RETURNS table (
     plot_id     integer,
     center      text,
     flagged     boolean,
@@ -1225,7 +1225,7 @@ $$ LANGUAGE SQL;
 -- FIXME, I dont think we need 6 functions for navigating plots
 -- Returns next unanalyzed plot
 CREATE OR REPLACE FUNCTION select_next_unassigned_plot(_project_id integer, _plot_id integer)
- RETURNS TABLE (
+ RETURNS table (
     plot_id            integer,
     center             text,
     flagged            integer,
@@ -1271,7 +1271,7 @@ CREATE OR REPLACE FUNCTION select_next_user_plot(
     _plot_id       integer,
     _username      text,
     _review_all    boolean
- ) RETURNS TABLE (
+ ) RETURNS table (
     plot_id            integer,
     center             text,
     flagged            integer,
@@ -1309,7 +1309,7 @@ $$ LANGUAGE SQL;
 
 -- Returns prev unanalyzed plot
 CREATE OR REPLACE FUNCTION select_prev_unassigned_plot(_project_id integer, _plot_id integer)
- RETURNS TABLE (
+ RETURNS table (
     plot_id            integer,
     center             text,
     flagged            integer,
@@ -1355,7 +1355,7 @@ CREATE OR REPLACE FUNCTION select_prev_user_plot(
     _plot_id       integer,
     _username      text,
     _review_all    boolean
- ) RETURNS TABLE (
+ ) RETURNS table (
     plot_id            integer,
     center             text,
     flagged            integer,
@@ -1393,7 +1393,7 @@ $$ LANGUAGE SQL;
 
 -- Returns unanalyzed plots by plot id
 CREATE OR REPLACE FUNCTION select_by_id_unassigned_plot(_project_id integer, _plot_id integer)
- RETURNS TABLE (
+ RETURNS table (
     plot_id            integer,
     center             text,
     flagged            integer,
@@ -1437,7 +1437,7 @@ CREATE OR REPLACE FUNCTION select_by_id_user_plot(
     _plot_id       integer,
     _username      text,
     _review_all    boolean
- ) RETURNS TABLE (
+ ) RETURNS table (
     plot_id            integer,
     center             text,
     flagged            integer,
@@ -1522,7 +1522,7 @@ $$ LANGUAGE SQL;
 
 -- Select samples. GEOM comes from shp file table.
 CREATE OR REPLACE FUNCTION select_plot_samples(_plot_id integer, _project_id integer)
- RETURNS TABLE (
+ RETURNS table (
     sample_id             integer,
     sample_geom           text,
     ext_id                integer,
@@ -1562,7 +1562,7 @@ $$ LANGUAGE SQL;
 
 -- Select sample geoms. GEOM comes from shp file table, if it exists, otherwise return sample_geom.
 CREATE OR REPLACE FUNCTION select_plot_sample_geoms(_plot_id integer)
- RETURNS TABLE (geom text) AS $$
+ RETURNS table (geom text) AS $$
 
     WITH tablename AS (
         SELECT samples_ext_table
@@ -1728,7 +1728,7 @@ $$ LANGUAGE SQL;
 
 -- For clearing user plots and collected samples for a project
 CREATE OR REPLACE FUNCTION get_deleted_user_plots_by_project(_project_id integer)
- RETURNS TABLE (
+ RETURNS table (
     plot_id    integer,
     lon        double precision,
     lat        double precision
@@ -1753,7 +1753,7 @@ $$ LANGUAGE SQL;
 
 -- Get all plots and centers to recreate samples.
 CREATE OR REPLACE FUNCTION get_plot_centers_by_project(_project_id integer)
- RETURNS TABLE (
+ RETURNS table (
     plot_id    integer,
     lon        double precision,
     lat        double precision
@@ -1773,7 +1773,7 @@ $$ LANGUAGE SQL;
 
 -- Returns project aggregate data
 CREATE OR REPLACE FUNCTION dump_project_plot_data(_project_id integer)
- RETURNS TABLE (
+ RETURNS table (
         plot_id                     integer,
         lon                         double precision,
         lat                         double precision,
@@ -1859,7 +1859,7 @@ $$ LANGUAGE SQL;
 
 -- Returns project raw data
 CREATE OR REPLACE FUNCTION dump_project_sample_data(_project_id integer)
- RETURNS TABLE (
+ RETURNS table (
         plot_id               integer,
         sample_id             integer,
         lon                   double precision,
