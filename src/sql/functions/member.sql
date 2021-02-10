@@ -19,7 +19,7 @@ $$ LANGUAGE SQL;
 
 -- Get information for single user
 CREATE OR REPLACE FUNCTION get_user(_email text)
- RETURNS TABLE (
+ RETURNS table (
     user_id          integer,
     administrator    boolean,
     reset_key        text
@@ -32,7 +32,7 @@ CREATE OR REPLACE FUNCTION get_user(_email text)
 $$ LANGUAGE SQL;
 
 CREATE OR REPLACE FUNCTION get_user_by_id(_user_id integer)
- RETURNS TABLE (
+ RETURNS table (
     email            text,
     administrator    boolean,
     reset_key        text
@@ -47,7 +47,7 @@ $$ LANGUAGE SQL;
 
 -- Get all users by institution ID, includes role
 CREATE OR REPLACE FUNCTION get_all_users_by_institution_id(_institution_id integer)
- RETURNS TABLE (
+ RETURNS table (
     user_id             integer,
     email               text,
     institution_role    text
@@ -67,7 +67,7 @@ $$ LANGUAGE SQL;
 
 -- Returns all of the user fields associated with the provided email
 CREATE OR REPLACE FUNCTION check_login(_email text, _password text)
- RETURNS TABLE (
+ RETURNS table (
     user_id          integer,
     administrator    boolean
  ) AS $$
@@ -89,7 +89,7 @@ $$ LANGUAGE SQL;
 
 -- Returns plot stats for user
 CREATE OR REPLACE FUNCTION get_user_stats(_user_id integer)
- RETURNS TABLE (
+ RETURNS table (
     total_projects     integer,
     total_plots        integer,
     average_time       numeric,
@@ -149,7 +149,7 @@ CREATE OR REPLACE FUNCTION set_mailing_list(_user_id integer, _on_mailing_list b
 $$ LANGUAGE SQL;
 
 CREATE OR REPLACE FUNCTION get_user_details(_user_id integer)
- RETURNS TABLE (
+ RETURNS table (
     on_mailing_list    boolean
  ) AS $$
 
@@ -158,7 +158,7 @@ CREATE OR REPLACE FUNCTION get_user_details(_user_id integer)
 $$ LANGUAGE SQL;
 
 CREATE OR REPLACE FUNCTION get_all_mailing_list_users()
- RETURNS TABLE (
+ RETURNS table (
     email    text
  ) AS $$
 
@@ -257,7 +257,7 @@ $$ LANGUAGE SQL;
 
 -- Returns all institutions
 CREATE OR REPLACE FUNCTION select_all_institutions(_user_id integer)
- RETURNS TABLE (
+ RETURNS table (
     institution_id    integer,
     name              text,
     is_member         boolean
@@ -278,7 +278,7 @@ $$ LANGUAGE SQL;
 
 -- Returns one institution
 CREATE OR REPLACE FUNCTION select_institution_by_id(_institution_id integer, _user_id integer)
- RETURNS TABLE (
+ RETURNS table (
     institution_id       integer,
     name                 text,
     base64_image         text,
