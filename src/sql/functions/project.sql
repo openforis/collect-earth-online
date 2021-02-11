@@ -1118,6 +1118,7 @@ CREATE OR REPLACE FUNCTION flag_plot(_plot_id integer, _user_id integer, _collec
             collection_start = excluded.collection_start,
             collection_time = Now(),
             flagged_reason = excluded.flagged_reason
+
     RETURNING _plot_id
 
 $$ LANGUAGE SQL;
@@ -1254,7 +1255,8 @@ CREATE OR REPLACE FUNCTION select_next_unassigned_plot(_project_id integer, _plo
         assigned,
         plotId,
         geom,
-        pfd.rem_data
+        pfd.rem_data,
+        flagged_reason
     FROM select_all_project_plots(_project_id) as spp
     LEFT JOIN plots_file_data pfd
         ON spp.ext_id = pfd.ext_id
@@ -1301,7 +1303,8 @@ CREATE OR REPLACE FUNCTION select_next_user_plot(
         assigned,
         plotId,
         geom,
-        pfd.rem_data
+        pfd.rem_data,
+        flagged_reason
     FROM select_all_project_plots(_project_id) as spp
     LEFT JOIN plots_file_data pfd
         ON spp.ext_id = pfd.ext_id
@@ -1340,7 +1343,8 @@ CREATE OR REPLACE FUNCTION select_prev_unassigned_plot(_project_id integer, _plo
         assigned,
         plotId,
         geom,
-        pfd.rem_data
+        pfd.rem_data,
+        flagged_reason
     FROM select_all_project_plots(_project_id) as spp
     LEFT JOIN plots_file_data pfd
         ON spp.ext_id = pfd.ext_id
@@ -1387,7 +1391,8 @@ CREATE OR REPLACE FUNCTION select_prev_user_plot(
         assigned,
         plotId,
         geom,
-        pfd.rem_data
+        pfd.rem_data,
+        flagged_reason
     FROM select_all_project_plots(_project_id) as spp
     LEFT JOIN plots_file_data pfd
         ON spp.ext_id = pfd.ext_id
@@ -1409,7 +1414,7 @@ CREATE OR REPLACE FUNCTION select_by_id_unassigned_plot(_project_id integer, _pl
     plotId             integer,
     geom               text,
     extra_plot_info    jsonb,
-    flagged_reason     text,
+    flagged_reason     text
 ) AS $$
 
     WITH tablenames AS (
@@ -1426,7 +1431,8 @@ CREATE OR REPLACE FUNCTION select_by_id_unassigned_plot(_project_id integer, _pl
         assigned,
         plotId,
         geom,
-        pfd.rem_data
+        pfd.rem_data,
+        flagged_reason
     FROM select_all_project_plots(_project_id) as spp
     LEFT JOIN plots_file_data pfd
         ON spp.ext_id = pfd.ext_id
@@ -1471,7 +1477,8 @@ CREATE OR REPLACE FUNCTION select_by_id_user_plot(
         assigned,
         plotId,
         geom,
-        pfd.rem_data
+        pfd.rem_data,
+        flagged_reason
     FROM select_all_project_plots(_project_id) as spp
     LEFT JOIN plots_file_data pfd
         ON spp.ext_id = pfd.ext_id
