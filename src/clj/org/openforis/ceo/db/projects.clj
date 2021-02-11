@@ -36,40 +36,26 @@
                       :collectConfidence   false
                       :autoLaunchGeoDash   true})
 
-(defn- get-project-list [sql-results]
-  (mapv (fn [project]
-          {:id            (:project_id project)
-           :institution   (:institution_id project) ; TODO legacy variable name, update to institutionId
-           :imageryId     (:imagery_id project)
-           :availability  (:availability project)
-           :name          (:name project)
-           :description   (:description project)
-           :privacyLevel  (:privacy_level project)
-           :numPlots      (:num_plots project)
-           :boundary      (:boundary project)
-           :editable      (:editable project)
-           :validBoundary (:valid_boundary project)}) ; TODO set the visibility or availability for projects with invalid bounds so they dont show in the list in the first place
-        sql-results))
+(defn get-home-projects [{:keys [params]}]
+  (data-response (mapv (fn [{:keys [project_id institution_id name description num_plots centroid editable]}]
+                         {:id            project_id
+                          :institutionId institution_id
+                          :name          name
+                          :description   description
+                          :numPlots      num_plots
+                          :centroid      centroid
+                          :editable      editable})
+                       (call-sql "select_user_home_projects" (:userId params -1)))))
 
-;; TODO These long project lists do not need all of those values returned.
-;; TODO Match the SQL function and returned values for each query separately
-(defn get-all-projects [{:keys [params]}]
+(defn get-institution-projects [{:keys [params]}]
   (let [user-id        (:userId params -1)
         institution-id (tc/val->int (:institutionId params))]
-    (data-response (get-project-list (cond
-                                       (= -1 user-id institution-id)
-                                       (call-sql "select_all_projects")
-
-                                       (and (neg? user-id) (pos? institution-id))
-                                       (call-sql "select_all_institution_projects" institution-id)
-
-                                       (and (pos? user-id) (neg? institution-id))
-                                       (call-sql "select_all_user_projects" user-id)
-
-                                       :else
-                                       (call-sql "select_institution_projects_with_roles"
-                                                 user-id
-                                                 institution-id))))))
+    (data-response (mapv (fn [{:keys [project_id name privacy_level pct_complete]}]
+                           {:id              project_id
+                            :name            name
+                            :privacyLevel    privacy_level
+                            :percentComplete pct_complete})
+                         (call-sql "select_institution_projects" user-id institution-id)))))
 
 (defn get-template-projects [{:keys [params]}]
   (let [user-id (:userId params -1)]
@@ -99,7 +85,7 @@
                     :samplesPerPlot     (:samples_per_plot project)
                     :sampleResolution   (:sample_resolution project)
                     :allowDrawnSamples  (:allow_drawn_samples project)
-                    :sampleValues       (tc/jsonb->clj (:survey_questions project) []) ; TODO update variable name
+                    :surveyQuestions    (tc/jsonb->clj (:survey_questions project) [])
                     :surveyRules        (tc/jsonb->clj (:survey_rules project) [])
                     :projectOptions     (merge default-options (tc/jsonb->clj (:options project)))
                     :createdDate        (str (:created_date project))
@@ -123,7 +109,7 @@
                     :samplesPerPlot     (:samples_per_plot project)
                     :sampleResolution   (:sample_resolution project)
                     :allowDrawnSamples  (:allow_drawn_samples project)
-                    :sampleValues       (tc/jsonb->clj (:survey_questions project) []) ; TODO update variable name
+                    :surveyQuestions    (tc/jsonb->clj (:survey_questions project) [])
                     :surveyRules        (tc/jsonb->clj (:survey_rules project) [])
                     :projectOptions     (merge default-options (tc/jsonb->clj (:options project)))})))
 
@@ -323,15 +309,21 @@
           (when-not (= 0 exit)
             (init-throw err)))))))
 
-(defn sh-wrapper-pipe
-  ([dir env cmd1 cmd2]
-   (sh/with-sh-dir dir
-     (sh/with-sh-env (merge {:PATH path-env} env)
-       (let [{:keys [exit err]} (apply sh/sh (conj (parse-as-sh-cmd cmd2)
-                                                   :in
-                                                   (:out (apply sh/sh (parse-as-sh-cmd cmd1)))))]
-         (when-not (= 0 exit)
-           (init-throw err)))))))
+(defn sh-wrapper-stdout [dir env cmd]
+  (sh/with-sh-dir dir
+    (sh/with-sh-env (merge {:PATH path-env} env)
+      (let [{:keys [exit err out]} (apply sh/sh (parse-as-sh-cmd cmd))]
+        (if (= 0 exit)
+          out
+          (init-throw err))))))
+
+(defn sh-wrapper-stdin [dir env cmd stdin]
+  (sh/with-sh-dir dir
+    (sh/with-sh-env (merge {:PATH path-env} env)
+      (let [{:keys [exit err]} (apply sh/sh (conj (parse-as-sh-cmd cmd)
+                                                  :in stdin))]
+        (when-not (= 0 exit)
+          (init-throw err))))))
 
 (defn- type-columns [headers]
   (->> headers
@@ -341,79 +333,75 @@
                       :else                      " text")))
        (str/join ",")))
 
-(defn- get-csv-headers [ext-file must-include]
-  (let [data (slurp ext-file)]
-    (if-let [header-row (re-find #".+(?=[\r\n|\n|\r])" data)]
-      (let [headers     (as-> header-row hr
-                          (str/split hr #",")
-                          (mapv #(-> %
-                                     (str/upper-case)
-                                     (str/replace #"-| |," "_")
-                                     (str/replace #"X|LONGITUDE|LONG|CENTER_X" "LON")
-                                     (str/replace #"Y|LATITUDE|CENTER_Y" "LAT"))
-                                hr))
-            header-set  (set headers)
-            header-diff (set/difference (set must-include) header-set)]
-        (cond
-          (not (str/includes? header-row ","))
-          (init-throw "The CSV file must use commas for the delimiter. This error may indicate that the csv file contains only one column.")
+(defmulti get-file-data (fn [distribution _ _ _] (keyword distribution)))
 
-          (seq header-diff)
-          (init-throw (str "The required header field(s) " (str/join ", " header-diff) " are missing."))
+(defmethod get-file-data :shp [_ type ext-file folder-name]
+  (sh-wrapper folder-name {} (str "7z e -y " ext-file " -o" type))
+  (let [[info body _] (-> (sh-wrapper-stdout (str folder-name type)
+                                             {}
+                                             (format-simple "shp2pgsql -s 4326 -t 2D -D %1"
+                                                            (find-file-by-ext (str folder-name type) "shp")))
+                          (str/split #"stdin;\n|\n\\\."))
+        column-string (as-> info i
+                        (str/replace i #"\n" "")
+                        (re-find #"(?<=CREATE TABLE.*gid serial,).*?(?=\);)" i)
+                        (str i ",\"geom\" geometry(geometry, 4326)"))
+        columns       (as-> column-string i
+                        (str/split i #",\"")
+                        (map (fn [col]
+                               (-> (first (str/split col #" "))
+                                   (str/replace #"\"" "")
+                                   (str/upper-case)))
+                             i))]
+    [columns column-string body]))
 
-          :else
-          (if-let [invalid-headers (seq (remove #(re-matches #"^[a-zA-Z_][a-zA-Z0-9_]*$" %) headers))]
-            (init-throw (str "One or more CSV columns are invalid: " (str/join ", " invalid-headers)))
-            (do
-              (spit ext-file (str/replace-first data header-row (str/join ", " headers)))
-              (type-columns headers)))))
-      (init-throw "CSV file contains no rows of data."))))
+(defmethod get-file-data :csv [_ _ ext-file _]
+  (let [[header-row body] (str/split (slurp ext-file) #"\r\n|\n|\r" 2)]
+    (when (not (str/includes? header-row ","))
+      (init-throw "The CSV file must use commas for the delimiter. This error may indicate that the csv file contains only one column."))
+    (let [headers (as-> header-row hr
+                    (str/split hr #",")
+                    (mapv #(-> %
+                               (str/upper-case)
+                               (str/replace #"-| " "_")
+                               (str/replace #"X|LONGITUDE|LONG|CENTER_X" "LON")
+                               (str/replace #"Y|LATITUDE|CENTER_Y" "LAT"))
+                          hr))]
+      [headers (type-columns headers) (str/replace body #"," "\t")])))
+
+(defmethod get-file-data :default [distribution _ _ _]
+  (throw (str "No such distribution (" distribution ") defined for ceo.db.projects/get-file-data")))
+
+(defn- check-headers [headers must-include]
+  (let [header-set      (set headers)
+        header-diff     (set/difference must-include header-set)
+        invalid-headers (seq (remove #(re-matches #"^[a-zA-Z_][a-zA-Z0-9_]*$" %) headers))]
+    (when (seq header-diff)
+      (init-throw (str "The required header field(s) " (str/join ", " header-diff) " are missing.")))
+    (when invalid-headers
+      (init-throw (str "One or more columns contains invalid characters: " (str/join ", " invalid-headers))))))
 
 (defn- load-external-data [distribution project-id ext-file type must-include]
-  (let [folder-name (str tmp-dir "/ceo-tmp-" project-id "/")]
-    (try-catch-throw #(if (= "shp" distribution)
-                        (do (sh-wrapper folder-name {} (str "7z e -y " ext-file " -o" type))
-                            (let [table-name (str "project_" project-id "_" type "_shp")
-                                  shp-name   (find-file-by-ext (str folder-name type) "shp")]
-                              (sh-wrapper-pipe (str folder-name type)
-                                               {:PASSWORD "ceo"}
-                                               (format-simple "shp2pgsql -s 4326 -t 2D %1 ext_tables.%2"
-                                                              shp-name table-name)
-                                               (format-simple "psql -h localhost -U ceo -d ceo"))
-                              table-name))
-                        ;; TODO Explore loading CSVs with a bulk insert
-                        (let [table-name (str "project_" project-id "_" type "_csv")]
+  (when (#{"csv" "shp"} distribution)
+    (let [folder-name (str tmp-dir "/ceo-tmp-" project-id "/")]
+      (try-catch-throw #(let [table-name                   (str "project_" project-id "_" type "_" distribution)
+                              [headers column-string body] (get-file-data distribution type ext-file folder-name)]
+                          (when (nil? body)
+                            (init-throw (str "The " type " file contains no rows of data.")))
+                          (check-headers headers must-include)
                           (call-sql "create_new_table"
                                     table-name
-                                    (get-csv-headers ext-file must-include))
-                          (sh-wrapper folder-name
-                                      {:PASSWORD "ceo"}
-                                      (format-simple "psql -h localhost -U ceo -d ceo -c `\\copy ext_tables.%1 FROM %2 DELIMITER ',' CSV HEADER`"
-                                                     table-name ext-file))
-                          (call-sql "add_index_col" table-name) ; Add index for reference
-                          table-name))
-                     "Error importing file into SQL.")))
-
-(defn- check-load-ext [distribution project-id ext-file type must-include]
-  (when (#{"csv" "shp"} distribution)
-    (try-catch-throw (fn []
-                       (let [table (load-external-data distribution
-                                                       project-id
-                                                       ext-file
-                                                       type
-                                                       must-include)]
-                         (try-catch-throw #(if (= "plots" type)
-                                             (call-sql "select_partial_table_by_name" table)
-                                             (call-sql "select_partial_sample_table_by_name" table))
-                                          (str (str/capitalize type) " " distribution " file failed to load."))
-                         table))
-                     (if (= "csv" distribution)
-                       (str "Malformed " type " CSV.")
-                       (str "Malformed "
-                            type
-                            " Shapefile. All features must be of type polygon and include "
-                            (str/join ", " must-include)
-                            " field(s).")))))
+                                    (str "gid serial primary key," column-string))
+                          (sh-wrapper-stdin folder-name
+                                            {:PASSWORD "ceo"}
+                                            (format-simple "psql -h localhost -U ceo -d ceo -c `\\copy ext_tables.%1(%2) FROM stdin`"
+                                                           table-name (str/join "," headers))
+                                            body)
+                          (if (= "plots" type)
+                            (call-sql "select_partial_table_by_name" table-name)
+                            (call-sql "select_partial_sample_table_by_name" table-name))
+                          table-name)
+                       (str (str/capitalize type) " " distribution " file failed to load.")))))
 
 (defn- create-project-samples [plot-id
                                sample-distribution
@@ -472,48 +460,48 @@
                                                           write-dir
                                                           (str "project-" project-id "-samples"))))]
     (if (#{"csv" "shp"} plot-distribution)
-      (do (try-catch-throw  #(call-sql "update_project_tables"
-                                       project-id
-                                       (check-load-ext plot-distribution project-id plots-file "plots" ["PLOTID"])
-                                       (check-load-ext sample-distribution project-id samples-file "samples" ["PLOTID" "SAMPLEID"]))
-                            "SQL Error: cannot update project table.")
-          (try-catch-throw #(call-sql "cleanup_project_tables" project-id plot-size)
-                           "SQL Error: cannot clean external tables.")
-          (let [counts           (try-catch-throw #(first (call-sql "ext_table_count" project-id))
-                                                  "SQL Error: cannot count data.")
-                ext-plot-count   (:plot_count counts)
-                ext-sample-count (:sample_count counts)]
-            (check-plot-limits ext-plot-count
-                               50000.0
-                               (case sample-distribution
-                                 "gridded" (count-gridded-sample-set plot-size sample-resolution)
-                                 "random"  samples-per-plot
-                                 "center"  1.0
-                                 "none"    1.0
-                                 (/ ext-sample-count ext-plot-count))
-                               200.0
-                               350000.0))
-          (if (#{"csv" "shp"} sample-distribution)
-            (try-catch-throw #(call-sql "samples_from_plots_with_files" project-id)
-                             "Error importing samples file after importing plots file.")
-            (try-catch-throw #(doseq [plot (call-sql "add_file_plots" project-id)]
-                                (create-project-samples (:plot_uid plot)
-                                                        sample-distribution
-                                                        [(:lon plot) (:lat plot)]
-                                                        plot-shape
-                                                        plot-size
-                                                        samples-per-plot
-                                                        sample-resolution))
-                             "Error adding plot file with generated samples."))
-          ;; The SQL function only checks against plots with external tables.
-          (when (not allow-drawn-samples?)
-            (let [bad-plots (map :plot_id (call-sql "plots_missing_samples" project-id))]
-              (when (seq bad-plots)
-                (init-throw (str "The uploaded plot and sample files do not have correctly overlapping data. "
-                                 (count bad-plots)
-                                 " plots have no samples. The first 10 are: ["
-                                 (str/join ", " (take 10 bad-plots))
-                                 "]"))))))
+      (do
+        (let [plot-table       (load-external-data plot-distribution project-id plots-file "plots" #{"PLOTID"})
+              sample-table     (load-external-data sample-distribution project-id samples-file "samples" #{"PLOTID" "SAMPLEID"})
+              counts           (try-catch-throw #(first (call-sql "ext_table_count" project-id))
+                                                "SQL Error: cannot count data.")
+              ext-plot-count   (:plot_count counts)
+              ext-sample-count (:sample_count counts)]
+          (check-plot-limits ext-plot-count
+                             50000.0
+                             (case sample-distribution
+                               "gridded" (count-gridded-sample-set plot-size sample-resolution)
+                               "random"  samples-per-plot
+                               "center"  1.0
+                               "none"    1.0
+                               (/ ext-sample-count ext-plot-count))
+                             200.0
+                             350000.0)
+          (try-catch-throw  #(call-sql "update_project_tables" project-id plot-table sample-table)
+                            "SQL Error: cannot update project table."))
+        (if (#{"csv" "shp"} sample-distribution)
+          (try-catch-throw #(call-sql "samples_from_plots_with_files" project-id)
+                           "Error importing samples file after importing plots file.")
+          (try-catch-throw #(doseq [plot (call-sql "add_file_plots" project-id)]
+                              (create-project-samples (:plot_uid plot)
+                                                      sample-distribution
+                                                      [(:lon plot) (:lat plot)]
+                                                      plot-shape
+                                                      plot-size
+                                                      samples-per-plot
+                                                      sample-resolution))
+                           "Error adding plot file with generated samples."))
+        (try-catch-throw #(call-sql "cleanup_project_tables" project-id plot-size)
+                         "SQL Error: cannot clean external tables.")
+        ;; The SQL function only checks against plots with external tables.
+        (when (not allow-drawn-samples?)
+          (let [bad-plots (map :plot_id (call-sql "plots_missing_samples" project-id))]
+            (when (seq bad-plots)
+              (init-throw (str "The uploaded plot and sample files do not have correctly overlapping data. "
+                               (count bad-plots)
+                               " plots have no samples. The first 10 are: ["
+                               (str/join ", " (take 10 bad-plots))
+                               "]"))))))
       (let [[[left bottom] [top right]] (pu/EPSG:4326->3857 [lon-min lat-min] [lon-max lat-max])
             [left bottom right top] (pad-bounds left bottom top right (/ 2.0 plot-size))]
         (check-plot-limits (if (= "gridded" plot-distribution)
@@ -683,32 +671,35 @@
                         sample-resolution
                         sample-file-name
                         sample-file-base64]
-  (try (if (#{"csv" "shp"} sample-distribution)
-         (let [write-dir    (str tmp-dir "/ceo-tmp-" project-id "/")
-               samples-file (and (#{"csv" "shp"} sample-distribution)
-                                 (str write-dir
-                                      (pu/write-file-part-base64 sample-file-name
-                                                                 sample-file-base64
-                                                                 write-dir
-                                                                 (str "project-" project-id "-samples"))))]
-           (try-catch-throw #(call-sql "update_project_sample_table"
-                                       project-id
-                                       (check-load-ext sample-distribution project-id samples-file "samples" ["PLOTID" "SAMPLEID"]))
-                            "SQL Error: cannot update project table.")
-           (try-catch-throw #(call-sql "samples_from_plots_with_files" project-id)
-                            "Error importing samples file."))
-         (doseq [{:keys [plot_id lon lat]} (call-sql "get_plot_centers_by_project" project-id)]
-           (create-project-samples plot_id
-                                   sample-distribution
-                                   [lon lat]
-                                   plot-shape
-                                   plot-size
-                                   samples-per-plot
-                                   sample-resolution)))
-       (catch Exception e
-         (data-response (if-let [causes (:causes (ex-data e))]
-                          (str/join "\n" causes)
-                          "Unknown server error.")))))
+  (try
+    (if (#{"csv" "shp"} sample-distribution)
+      (let [write-dir     (str tmp-dir "/ceo-tmp-" project-id "/")
+            samples-file  (str write-dir
+                               (pu/write-file-part-base64 sample-file-name
+                                                          sample-file-base64
+                                                          write-dir
+                                                          (str "project-" project-id "-samples")))
+            samples-table (load-external-data sample-distribution
+                                              project-id
+                                              samples-file
+                                              "samples"
+                                              #{"PLOTID" "SAMPLEID"})]
+        (try-catch-throw #(call-sql "samples_from_plots_with_files" project-id)
+                         "Error importing samples file.")
+        (try-catch-throw #(call-sql "update_project_sample_table" project-id samples-table)
+                         "SQL Error: cannot update project table."))
+      (doseq [{:keys [plot_id lon lat]} (call-sql "get_plot_centers_by_project" project-id)]
+        (create-project-samples plot_id
+                                sample-distribution
+                                [lon lat]
+                                plot-shape
+                                plot-size
+                                samples-per-plot
+                                sample-resolution)))
+    (catch Exception e
+      (data-response (if-let [causes (:causes (ex-data e))]
+                       (str/join "\n" causes)
+                       "Unknown server error.")))))
 
 (defn- exterior-ring [coords]
   (map (fn [[a b]] [(tc/val->double a) (tc/val->double b)])
@@ -882,31 +873,6 @@
           []
           key-set))
 
-(defn- get-sample-keys
-  "Returns different key combinations for old/new projects"
-  [sample-value-group]
-  (let [first-group (first sample-value-group)]
-    (cond
-      (:name first-group)
-      [:name :values :name]
-
-      (:question first-group)
-      [:question :answers :answer]
-
-      :else
-      [])))
-
-;; TODO should we write a SQL update to convert all these old sample values once and be able to drop this code?
-(defn- get-sample-value-translations
-  "This translate old question answers (index) into new question:answer"
-  [sample-value-group]
-  (let [[a b c] (get-sample-keys sample-value-group)
-        first-group      (first sample-value-group)
-        first-group-name (get first-group a)]
-    (->> (get first-group b)
-         (reduce (fn [acc cur]
-                   (assoc acc (:id cur) (str first-group-name ":" (name (get cur c)))))))))
-
 (defn- prepare-file-name [project-name data-type]
   (str/join "-"
             ["ceo"
@@ -920,35 +886,28 @@
 (defn- get-value-distribution-headers
   "Returns a list of every question answer combo like
    (question1:answer1 question1:answer2 question2:answer1)"
-  [sample-value-group]
-  (let [[a b c] (get-sample-keys sample-value-group)]
-    (->> sample-value-group
-         (mapcat (fn [group]
-                   (let [question-label (name (get group a))]
-                     (map (fn [answer]
-                            (str question-label ":" (name (get answer c))))
-                          (get group b))))))))
+  [survey-questions]
+  (->> survey-questions
+       (mapcat (fn [group]
+                 (let [question-label (name (get group :question))]
+                   (map (fn [answer]
+                          (str question-label ":" (name (get answer :answer))))
+                        (get group :answers)))))))
 
-(defn- count-answer [sample-size answers]
+(defn- count-answer [sample-size question-answers]
   (pu/mapm (fn [[question answers]]
              [question (* 100.0 (count answers) (/ sample-size))])
-           (group-by str answers)))
+           (group-by str question-answers)))
 
 (defn- get-value-distribution
-  "Count the answers given, and return a map of {:'question:answers' count}"
-  [samples sample-value-group]
-  (if-let [first-sample-value (:value (first samples))]
-    (count-answer (count samples)
-                  (if (map? first-sample-value)
-                    (mapcat (fn [sample]
-                              (map (fn [[question-label answer]]
-                                     (str (name question-label) ":" (:answer answer answer)))
-                                   (:value sample)))
-                            samples)
-                    (let [sample-value-translations (get-sample-value-translations sample-value-group)]
-                      (map (fn [sample] (get sample-value-translations (:value sample) "NoValue"))
-                           samples))))
-    {}))
+  "Count the answers given, and return a map of {'question:answers' count}"
+  [samples]
+  (count-answer (count samples)
+                (mapcat (fn [sample]
+                          (map (fn [[question-label answer]]
+                                 (str (name question-label) ":" (:answer answer)))
+                               (:saved_answers sample)))
+                        samples)))
 
 (defn- get-ext-plot-headers
   "Gets external plot headers"
@@ -980,32 +939,31 @@
 (defn dump-project-aggregate-data [{:keys [params]}]
   (let [project-id (tc/val->int (:projectId params))]
     (if-let [project-info (first (call-sql "select_project_by_id" project-id))]
-      (let [sample-value-group (tc/jsonb->clj (:survey_questions project-info)) ; TODO rename var
-            text-headers       (concat plot-base-headers
-                                       (get-ext-plot-headers project-id))
-            number-headers     (get-value-distribution-headers sample-value-group)
-            headers-out        (str/join "," (map #(-> % name csv-quotes) (concat text-headers number-headers)))
-            data-rows          (map (fn [row]
-                                      (let [samples       (tc/jsonb->clj (:samples row))
-                                            ext-plot-data (tc/jsonb->clj (:ext_plot_data row))]
-                                        (str/join ","
-                                                  (concat (map->csv (merge (-> row
-                                                                               (dissoc :samples
-                                                                                       :analysis_duration
-                                                                                       :collection_time)
-                                                                               (assoc  :sample_points
-                                                                                       (count samples))
-                                                                               (update :collection_time str)
-                                                                               (update :flagged pos?)
-                                                                               (set/rename-keys plot-key-names))
-                                                                           (prefix-keys "pl_" ext-plot-data))
-                                                                    text-headers
-                                                                    "")
-                                                          (map->csv (get-value-distribution samples
-                                                                                            sample-value-group)
-                                                                    number-headers
-                                                                    0)))))
-                                    (call-sql "dump_project_plot_data" project-id))]
+      (let [survey-questions (tc/jsonb->clj (:survey_questions project-info))
+            text-headers     (concat plot-base-headers
+                                     (get-ext-plot-headers project-id))
+            number-headers   (get-value-distribution-headers survey-questions)
+            headers-out      (str/join "," (map #(-> % name csv-quotes) (concat text-headers number-headers)))
+            data-rows        (map (fn [row]
+                                    (let [samples       (tc/jsonb->clj (:samples row))
+                                          ext-plot-data (tc/jsonb->clj (:ext_plot_data row))]
+                                      (str/join ","
+                                                (concat (map->csv (merge (-> row
+                                                                             (dissoc :samples
+                                                                                     :analysis_duration
+                                                                                     :collection_time)
+                                                                             (assoc  :sample_points
+                                                                                     (count samples))
+                                                                             (update :collection_time str)
+                                                                             (update :flagged pos?)
+                                                                             (set/rename-keys plot-key-names))
+                                                                         (prefix-keys "pl_" ext-plot-data))
+                                                                  text-headers
+                                                                  "")
+                                                        (map->csv (get-value-distribution samples)
+                                                                  number-headers
+                                                                  0)))))
+                                  (call-sql "dump_project_plot_data" project-id))]
         {:headers {"Content-Type" "text/csv"
                    "Content-Disposition" (str "attachment; filename="
                                               (prepare-file-name (:name project-info) "plot")
@@ -1021,12 +979,9 @@
        (remove #(#{"GID" "GEOM" "LAT" "LON" "SAMPLE_GEOM"} (str/upper-case %)))
        (map #(str "smpl_" %))))
 
-(defn- extract-answers [value sample-value-trans]
+(defn- extract-answers [value]
   (if value
-    (if (ffirst value)
-      (reduce (fn [acc [k v]] (merge acc {(name k) (:answer v)})) {} value)
-      (let [[q a] (str/split (sample-value-trans value) #":")]
-        {q a}))
+    (reduce (fn [acc [k v]] (merge acc {(name k) (:answer v)})) {} value)
     ""))
 
 (def sample-key-names {:assigned :analyses})
@@ -1050,34 +1005,32 @@
 (defn dump-project-raw-data [{:keys [params]}]
   (let [project-id (tc/val->int (:projectId params))]
     (if-let [project-info (first (call-sql "select_project_by_id" project-id))]
-      (let [sample-value-group (tc/jsonb->clj (:survey_questions project-info)) ; TODO rename var
-            sample-value-trans (get-sample-value-translations sample-value-group)
-            question-key       (first (get-sample-keys sample-value-group))
-            text-headers       (concat sample-base-headers
-                                       (get-ext-plot-headers project-id)
-                                       (get-ext-sample-headers project-id)
-                                       (map question-key sample-value-group))
-            headers-out        (str/join "," (map #(-> % name csv-quotes) text-headers))
-            data-rows          (map (fn [row]
-                                      (let [value           (tc/jsonb->clj (:value row))
-                                            ext-plot-data   (tc/jsonb->clj (:ext_plot_data row))
-                                            ext-sample-data (tc/jsonb->clj (:ext_sample_data row))
-                                            format-time     #(when %
-                                                               (.format (SimpleDateFormat. "YYYY-MM-dd HH:mm")
-                                                                        %))]
-                                        (str/join ","
-                                                  (map->csv (merge (-> row
-                                                                       (dissoc :value :confidence)
-                                                                       (update :collection_time format-time)
-                                                                       (update :flagged pos?)
-                                                                       (update :analysis_duration #(when % (str % " secs")))
-                                                                       (set/rename-keys sample-key-names))
-                                                                   (prefix-keys "pl_" ext-plot-data)
-                                                                   (prefix-keys "smpl_" ext-sample-data)
-                                                                   (extract-answers value sample-value-trans))
-                                                            text-headers
-                                                            ""))))
-                                    (call-sql "dump_project_sample_data" project-id))]
+      (let [survey-questions (tc/jsonb->clj (:survey_questions project-info))
+            text-headers     (concat sample-base-headers
+                                     (get-ext-plot-headers project-id)
+                                     (get-ext-sample-headers project-id)
+                                     (map :question survey-questions))
+            headers-out      (str/join "," (map #(-> % name csv-quotes) text-headers))
+            data-rows        (map (fn [row]
+                                    (let [saved-answers   (tc/jsonb->clj (:saved_answers row))
+                                          ext-plot-data   (tc/jsonb->clj (:ext_plot_data row))
+                                          ext-sample-data (tc/jsonb->clj (:ext_sample_data row))
+                                          format-time     #(when %
+                                                             (.format (SimpleDateFormat. "YYYY-MM-dd HH:mm")
+                                                                      %))]
+                                      (str/join ","
+                                                (map->csv (merge (-> row
+                                                                     (dissoc :saved_answers :confidence)
+                                                                     (update :collection_time format-time)
+                                                                     (update :flagged pos?)
+                                                                     (update :analysis_duration #(when % (str % " secs")))
+                                                                     (set/rename-keys sample-key-names))
+                                                                 (prefix-keys "pl_" ext-plot-data)
+                                                                 (prefix-keys "smpl_" ext-sample-data)
+                                                                 (extract-answers saved-answers))
+                                                          text-headers
+                                                          ""))))
+                                  (call-sql "dump_project_sample_data" project-id))]
         {:headers {"Content-Type" "text/csv"
                    "Content-Disposition" (str "attachment; filename="
                                               (prepare-file-name (:name project-info) "sample")

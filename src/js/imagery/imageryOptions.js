@@ -1,3 +1,18 @@
+export const nicfiLayers = ["2015-12_2016-05",
+                            "2016-06_2016-11",
+                            "2016-12_2017-05",
+                            "2017-06_2017-11",
+                            "2017-12_2018-05",
+                            "2018-06_2018-11",
+                            "2018-12_2019-05",
+                            "2019-06_2019-11",
+                            "2019-12_2020-05",
+                            "2020-06_2020-08",
+                            "2020-09",
+                            "2020-10",
+                            "2020-11",
+                            "2020-12"];
+
 const outOfRange = (num, low, high) => isNaN(num) || parseInt(num) < low || parseInt(num) > high;
 
 const dateRangeValidator = ({startDate, endDate}) => startDate && endDate
@@ -44,6 +59,11 @@ export const imageryOptions = [
             },
         ],
         // FIXME, add url if help document is created.
+    },
+    {
+        type: "xyz",
+        label: "XYZ Imagery",
+        params: [{key: "url", display: "XYZ URL"}],
     },
     {
         type: "BingMaps",
@@ -98,7 +118,15 @@ export const imageryOptions = [
         label: "Planet NICFI",
         params: [
             {key: "accessToken", display: "Access Token"},
-            {key: "time", display: "Default Time"},
+            {
+                key: "time",
+                display: "Default Time",
+                type: "select",
+                options: [
+                    {label: "Newest Available", value: "newest"},
+                    ...nicfiLayers.map(layer => ({label: layer, value: layer})),
+                ],
+            },
             {
                 key: "band",
                 display: "Default Band",

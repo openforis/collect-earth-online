@@ -9,31 +9,28 @@
 (defn- time-plus-five-min []
   (Timestamp. (+ (System/currentTimeMillis) (* 5 60 1000))))
 
-;; TODO if we use a more efficient SQL call, we can return more plots.
 (defn get-project-plots [{:keys [params]}]
   (let [project-id (tc/val->int (:projectId params))
-        max-plots  (tc/val->int (:max params) 1000)]
+        max-plots  (tc/val->int (:max params) 100000)] ; 100000 loads in ~1.5 seconds.
     (data-response (mapv (fn [{:keys [plot_id center flagged assigned]}]
                            {:id       plot_id
                             :center   center
-                            :flagged  (< 0 (or flagged -1))
+                            :flagged  flagged
                             :analyses assigned})
                          (call-sql "select_limited_project_plots" project-id max-plots)))))
 
 (defn- prepare-samples-array [plot-id project-id]
-  (mapv (fn [{:keys [sample_id sample_geom sampleid geom value]}]
-          (merge {:id         sample_id
-                  :sampleGeom sample_geom
-                  :sampleId   sampleid ;TODO I don't think we distinguish between sample_id and sampleId so this could go away
-                  :geom       geom}
-                 (when (< 2 (count (str value)))
-                   {:value (tc/jsonb->clj value)})))
+  (mapv (fn [{:keys [sample_id sample_geom sampleid geom saved_answers]}]
+          {:id           sample_id
+           :sampleGeom   sample_geom
+           :sampleId     sampleid ;TODO I don't think we distinguish between sample_id and sampleId so this could go away
+           :geom         geom
+           :savedAnswers (tc/jsonb->clj saved_answers)})
         (call-sql "select_plot_samples" plot-id project-id)))
 
 (defn- prepare-plot-object [plot-info project-id]
   (let [{:keys [plot_id center flagged confidence assigned flagged_reason plotid geom extra_plot_info]} plot-info]
     {:id            plot_id
-     :projectId     project-id ;TODO why do we need to return a value that is already known
      :center        center
      :flagged       (< 0 (or flagged -1))
      :confidence    confidence
@@ -44,13 +41,11 @@
      :extraPlotInfo (dissoc (tc/jsonb->clj extra_plot_info {}) :gid :lat :lon :plotid)
      :samples       (prepare-samples-array plot_id project-id)}))
 
-(defn get-project-plot [{:keys [params]}]
-  (let [project-id (tc/val->int (:projectId params))
-        plot-id    (tc/val->int (:plotId params))]
-    (data-response (if-let [plot-info (first (call-sql "select_plot_by_id"
-                                                       project-id
-                                                       plot-id))]
-                     (prepare-plot-object plot-info project-id)
+(defn get-plot-sample-geom [{:keys [params]}]
+  (let [plot-id (tc/val->int (:plotId params))]
+    (data-response (if-let [geom (sql-primitive (call-sql "select_plot_geom" plot-id))]
+                     {:geom    geom
+                      :samples (call-sql "select_plot_sample_geoms" plot-id)}
                      ""))))
 
 (defn- unlock-plots [user-id]

@@ -238,7 +238,7 @@ export class GeoDashNavigationBar extends React.Component {
     });
 
     render() {
-        const {userName, page, plotId} = this.props;
+        const {userName, page, visiblePlotId} = this.props;
         const uri = window.location.pathname;
 
         return (
@@ -291,7 +291,7 @@ export class GeoDashNavigationBar extends React.Component {
                                 </>
                             :
                                 <li className="nav-item" style={{flex: 1, textAlign: "center"}}>
-                                    Plot ID: {plotId}
+                                    Plot ID: {visiblePlotId}
                                 </li>
                             }
                             <li className="nav-item my-auto ml-1">
@@ -381,33 +381,6 @@ export function LogoBanner() {
             </div>
         </div>
     );
-}
-
-export class SafeImage extends React.Component {
-    constructor(props) {
-        super(props);
-        this.state = {
-            error: false,
-        };
-    }
-
-    componentDidUpdate(prevProps) {
-        if (prevProps.src !== this.props.src) {
-            this.setState({error: false});
-        }
-    }
-
-    render() {
-        const {src, fallbackSrc, ...extraProps} = this.props;
-        return (
-            <img
-                src={this.state.error ? fallbackSrc : src}
-                onError={() => this.setState({error: true})}
-                {...extraProps}
-            />
-        );
-    }
-
 }
 
 export function LoadingModal({message}) {

@@ -18,7 +18,6 @@ CREATE TABLE users (
 CREATE TABLE institutions (
     institution_uid    SERIAL PRIMARY KEY,
     name               text NOT NULL,
-    logo               text NOT NULL,
     logo_data          bytea,
     description        text NOT NULL,
     url                text NOT NULL,
@@ -180,7 +179,7 @@ CREATE TABLE sample_values (
     sample_rid            integer NOT NULL REFERENCES samples (sample_uid) ON DELETE CASCADE ON UPDATE CASCADE,
     imagery_rid           integer REFERENCES imagery (imagery_uid),
     imagery_attributes    jsonb,
-    value                 jsonb,
+    saved_answers         jsonb,
     CONSTRAINT per_sample_per_user UNIQUE(sample_rid, user_plot_rid)
 );
 
@@ -276,18 +275,6 @@ CREATE UNIQUE INDEX image_preference_project_plot_user_packet_year ON image_pref
 
 -- Types and views, to be defined once
 -- TODO get rid of types or add them to the namespaces in a way they get rebuild each time.
-CREATE TYPE institution_return AS (
-    institution_id    integer,
-    name              text,
-    logo              text,
-    description       text,
-    url               text,
-    archived          boolean,
-    members           jsonb,
-    admins            jsonb,
-    pending           jsonb
-);
-
 CREATE TYPE imagery_return AS (
     imagery_id         integer,
     institution_id     integer,
@@ -296,64 +283,4 @@ CREATE TYPE imagery_return AS (
     attribution        text,
     extent             jsonb,
     source_config      jsonb
-);
-
-CREATE TYPE project_return AS (
-    project_id              integer,
-    institution_id          integer,
-    imagery_id              integer,
-    availability            text,
-    name                    text,
-    description             text,
-    privacy_level           text,
-    boundary                text,
-    plot_distribution       text,
-    num_plots               integer,
-    plot_spacing            real,
-    plot_shape              text,
-    plot_size               real,
-    sample_distribution     text,
-    samples_per_plot        integer,
-    sample_resolution       real,
-    allow_drawn_samples     boolean,
-    survey_questions        jsonb,
-    survey_rules            jsonb,
-    classification_times    jsonb,
-    valid_boundary          boolean,
-    token_key               text,
-    options                 jsonb,
-    editable                boolean
-);
-
-CREATE TYPE plots_return AS (
-    plot_id              integer,
-    project_id           integer,
-    center               text,
-    flagged              integer,
-    assigned             integer,
-    username             text,
-    confidence           integer,
-    collection_time      timestamp,
-    ext_id               integer,
-    plotId               integer,
-    geom                 text,
-    analysis_duration    numeric,
-    flagged_reason       text
-);
-
-CREATE TYPE plot_collection_return AS (
-    plot_id              integer,
-    project_id           integer,
-    center               text,
-    flagged              integer,
-    assigned             integer,
-    username             text,
-    confidence           integer,
-    collection_time      timestamp,
-    ext_id               integer,
-    plotId               integer,
-    geom                 text,
-    analysis_duration    numeric,
-    flagged_reason       text,
-    extra_plot_info      jsonb
 );

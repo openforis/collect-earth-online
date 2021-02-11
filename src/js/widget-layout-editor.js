@@ -719,7 +719,7 @@ class WidgetLayoutEditor extends React.PureComponent {
     };
 
     getProjectList = () => {
-        fetch("/get-all-projects")
+        fetch("/get-template-projects")
             .then(response => response.ok ? response.json() : Promise.reject(response))
             .then(data => this.setState({projectList: data}))
             .catch(response => {
@@ -878,14 +878,11 @@ class WidgetLayoutEditor extends React.PureComponent {
                                                     onChange={e => this.setWidgetLayoutTemplate(parseInt(e.target.value))}
                                                 >
                                                     <option key={0} value={0}>None</option>
-                                                    {
-                                                        this.state.projectList
-                                                            .filter(proj => proj
-                                                                && proj.id > 0
-                                                                && proj.availability !== "archived"
-                                                                && (proj.id + proj.name.toLocaleLowerCase())
-                                                                    .includes(this.state.projectFilter.toLocaleLowerCase()))
-                                                            .map((proj, uid) => <option key={uid} value={proj.id}>{proj.id} - {proj.name}</option>)
+                                                    {this.state.projectList
+                                                        .filter(({id, name}) =>
+                                                            (id + name.toLocaleLowerCase())
+                                                                .includes(this.state.projectFilter.toLocaleLowerCase()))
+                                                        .map(({id, name}, uid) => <option key={uid} value={id}>{id} - {name}</option>)
                                                     }
                                                 </select>
                                             </div>

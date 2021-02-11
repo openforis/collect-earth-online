@@ -7,6 +7,7 @@
 .rebel_readline_history
 .settings/
 .tern-port
+collect-earth-online.iml
 
 # Build Directories and Files
 logs

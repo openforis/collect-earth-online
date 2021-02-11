@@ -2,15 +2,14 @@ import React from "react";
 import ReactDOM from "react-dom";
 import InstitutionEditor from "./components/InstitutionEditor";
 import {NavigationBar} from "./components/PageComponents";
+import {KBtoBase64Length} from "./utils/generalUtils";
 
 class CreateInstitution extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
-            institutions: [],
             newInstitutionDetails: {
                 name: "",
-                logo: "",
                 base64Image: "",
                 url: "",
                 description: "",
@@ -18,24 +17,9 @@ class CreateInstitution extends React.Component {
         };
     }
 
-    componentDidMount() {
-        this.getInstitutions();
-    }
-
-    getInstitutions = () => fetch("/get-all-institutions")
-        .then(response => response.ok ? response.json() : Promise.reject(response))
-        .then(data => this.setState({institutions: data}))
-        .catch(response => {
-            console.log(response);
-            alert("Error downloading institution list. See console for details.");
-        });
-
     createInstitution = () => {
-        const duplicateInst = this.state.institutions.find(inst => inst.name === this.state.newInstitutionDetails.name);
-        if (duplicateInst) {
-            alert("An institution with this name already exists. "
-                + "Either select a different name or change the name of the duplicate institution here: "
-                + window.location.origin + "/review-institution?institutionId=" + duplicateInst.id);
+        if (this.state.newInstitutionDetails.base64Image.length > KBtoBase64Length(500)) {
+            alert("Institution logos must be smaller than 500kb");
         } else {
             fetch("/create-institution",
                   {
@@ -46,7 +30,6 @@ class CreateInstitution extends React.Component {
                       },
                       body: JSON.stringify({
                           name: this.state.newInstitutionDetails.name,
-                          logo: this.state.newInstitutionDetails.logo,
                           base64Image: this.state.newInstitutionDetails.base64Image,
                           url: this.state.newInstitutionDetails.url,
                           description: this.state.newInstitutionDetails.description,
@@ -89,7 +72,6 @@ class CreateInstitution extends React.Component {
             <InstitutionEditor
                 title="Create New Institution"
                 name={this.state.newInstitutionDetails.name}
-                logo={this.state.newInstitutionDetails.logo}
                 url={this.state.newInstitutionDetails.url}
                 description={this.state.newInstitutionDetails.description}
                 buttonGroup={this.renderButtonGroup}
