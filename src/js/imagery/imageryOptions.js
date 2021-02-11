@@ -66,7 +66,7 @@ export const imageryOptions = [
         params: [{
             key: "url",
             display: "XYZ URL",
-            validator: value => !(/https?:\/\/.*{-?[xyz]}\/{-?[xyz]}\/{-?[xyz]}.*/gi).test(value) ? "Invalid URL or URL doesn't contain {z}, {x} or {y}." : "",
+            validator: value => !(/https?:\/\/.*(?=.*{-?x})(?=.*{-?z})(?=.*{-?y}).*/gi.test(value)) ? "The URL for an XYZ imagery type must include https://, {x}, {y}, and {z}." : "",
         }],
     },
     {
