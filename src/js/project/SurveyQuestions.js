@@ -387,37 +387,41 @@ export class SurveyQuestionHelp extends React.Component {
         });
     };
 
-    setCurrentValue = (questionToSet, answerId, answerText) => {
-        const sampleIds = [1];
-        // Move rules check into SurveyCollection so it can be accessed here
-        // const ruleError = rulesViolated(questionToSet, answerId, answerText);
+    getSelectedSampleIds = (question) => [1];
 
-        const newSamples = sampleIds.reduce((acc, sampleId) => {
-            const newQuestion = {
-                questionId: questionToSet.id,
-                answer: answerText,
-                answerId: answerId,
-            };
+    setCurrentValue = (questionToSet, answerId, answerText, ruleError) => {
+        const sampleIds = this.getSelectedSampleIds(questionToSet);
 
-            const childQuestionArray = this.getChildQuestions(questionToSet.id);
-            const clearedSubQuestions = Object.entries(this.state.userSamples[sampleId])
-                .filter(entry => !childQuestionArray.includes(entry[0]))
-                .reduce((acc, cur) => ({...acc, [cur[0]]: cur[1]}), {});
+        if (ruleError) {
+            alert(ruleError);
+        } else {
+            const newSamples = sampleIds.reduce((acc, sampleId) => {
+                const newQuestion = {
+                    questionId: questionToSet.id,
+                    answer: answerText,
+                    answerId: answerId,
+                };
 
-            return {
-                ...acc,
-                [sampleId]: {
-                    ...clearedSubQuestions,
-                    [questionToSet.question]: newQuestion,
-                },
-            };
+                const childQuestionArray = this.getChildQuestions(questionToSet.id);
+                const clearedSubQuestions = Object.entries(this.state.userSamples[sampleId])
+                    .filter(entry => !childQuestionArray.includes(entry[0]))
+                    .reduce((acc, cur) => ({...acc, [cur[0]]: cur[1]}), {});
 
-        }, {});
+                return {
+                    ...acc,
+                    [sampleId]: {
+                        ...clearedSubQuestions,
+                        [questionToSet.question]: newQuestion,
+                    },
+                };
 
-        this.setState({
-            userSamples: {...this.state.userSamples, ...newSamples},
-            selectedQuestion: questionToSet,
-        });
+            }, {});
+
+            this.setState({
+                userSamples: {...this.state.userSamples, ...newSamples},
+                selectedQuestion: questionToSet,
+            });
+        }
     };
 
     render() {
