@@ -1009,7 +1009,7 @@
                    "Content-Disposition" (str "attachment; filename="
                                               (prepare-file-name (:name project-info) "plot")
                                               ".csv")}
-         :body (str/join "\n" (conj data-rows headers-out))})
+         :body (str/join "\n" (conj data-rows (str "\uFEFF" headers-out)))})
       (data-response "Project not found."))))
 
 (defn- get-ext-sample-headers
@@ -1081,5 +1081,5 @@
                    "Content-Disposition" (str "attachment; filename="
                                               (prepare-file-name (:name project-info) "sample")
                                               ".csv")}
-         :body (str/join "\n" (conj data-rows headers-out))})
+         :body (str/join "\n" (conj data-rows (str "\uFEFF" headers-out)))})
       (data-response "Project not found."))))
