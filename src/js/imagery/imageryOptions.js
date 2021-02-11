@@ -63,7 +63,11 @@ export const imageryOptions = [
     {
         type: "xyz",
         label: "XYZ Imagery",
-        params: [{key: "url", display: "XYZ URL"}],
+        params: [{
+            key: "url",
+            display: "XYZ URL",
+            validator: value => !(/https?:\/\/.*(?=.*{-?x})(?=.*{-?z})(?=.*{-?y}).*/gi.test(value)) ? "The URL for an XYZ imagery type must include https://, {x}, {y}, and {z}." : "",
+        }],
     },
     {
         type: "BingMaps",
