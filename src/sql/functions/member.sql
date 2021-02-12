@@ -19,7 +19,7 @@ $$ LANGUAGE SQL;
 
 -- Get information for single user
 CREATE OR REPLACE FUNCTION get_user(_email text)
- RETURNS TABLE (
+ RETURNS table (
     user_id          integer,
     administrator    boolean,
     reset_key        text
@@ -32,7 +32,7 @@ CREATE OR REPLACE FUNCTION get_user(_email text)
 $$ LANGUAGE SQL;
 
 CREATE OR REPLACE FUNCTION get_user_by_id(_user_id integer)
- RETURNS TABLE (
+ RETURNS table (
     email            text,
     administrator    boolean,
     reset_key        text
@@ -47,7 +47,7 @@ $$ LANGUAGE SQL;
 
 -- Get all users by institution ID, includes role
 CREATE OR REPLACE FUNCTION get_all_users_by_institution_id(_institution_id integer)
- RETURNS TABLE (
+ RETURNS table (
     user_id             integer,
     email               text,
     institution_role    text
@@ -67,7 +67,7 @@ $$ LANGUAGE SQL;
 
 -- Returns all of the user fields associated with the provided email
 CREATE OR REPLACE FUNCTION check_login(_email text, _password text)
- RETURNS TABLE (
+ RETURNS table (
     user_id          integer,
     administrator    boolean
  ) AS $$
@@ -79,17 +79,17 @@ CREATE OR REPLACE FUNCTION check_login(_email text, _password text)
 
 $$ LANGUAGE SQL;
 
--- Returns all of the user fields associated with the provided email
-CREATE OR REPLACE FUNCTION email_taken(_email text, _user_id integer)
+-- Checks if email is already in use.  Ignores the current user.
+CREATE OR REPLACE FUNCTION email_taken(_email text, _user_id_to_ignore integer)
  RETURNS boolean AS $$
 
-    SELECT EXISTS(SELECT 1 FROM users WHERE email = _email AND user_uid <> _user_id)
+    SELECT EXISTS(SELECT 1 FROM users WHERE email = _email AND user_uid <> _user_id_to_ignore)
 
 $$ LANGUAGE SQL;
 
 -- Returns plot stats for user
 CREATE OR REPLACE FUNCTION get_user_stats(_user_id integer)
- RETURNS TABLE (
+ RETURNS table (
     total_projects     integer,
     total_plots        integer,
     average_time       numeric,
@@ -149,7 +149,7 @@ CREATE OR REPLACE FUNCTION set_mailing_list(_user_id integer, _on_mailing_list b
 $$ LANGUAGE SQL;
 
 CREATE OR REPLACE FUNCTION get_user_details(_user_id integer)
- RETURNS TABLE (
+ RETURNS table (
     on_mailing_list    boolean
  ) AS $$
 
@@ -158,7 +158,7 @@ CREATE OR REPLACE FUNCTION get_user_details(_user_id integer)
 $$ LANGUAGE SQL;
 
 CREATE OR REPLACE FUNCTION get_all_mailing_list_users()
- RETURNS TABLE (
+ RETURNS table (
     email    text
  ) AS $$
 
@@ -215,14 +215,26 @@ $$ LANGUAGE SQL;
 --  INSTITUTION FUNCTIONS
 --
 
+-- Checks if institution name is in use.  Ignores the current institution.
+CREATE OR REPLACE FUNCTION institution_name_taken(_name text, _institution_id_to_ignore integer)
+ RETURNS boolean AS $$
+
+    SELECT count(1) > 0
+    FROM institutions
+    WHERE name = _name
+        AND institution_uid <> _institution_id_to_ignore
+        AND archived = FALSE
+
+$$ LANGUAGE SQL;
+
 -- Adds a new institution to the database
-CREATE OR REPLACE FUNCTION add_institution(_name text, _logo text, _description text, _url text, _archived boolean)
+CREATE OR REPLACE FUNCTION add_institution(_name text, _url text, _description text)
  RETURNS integer AS $$
 
     INSERT INTO institutions
-        (name, logo, description, url, archived)
+        (name, url, description, archived)
     VALUES
-        (_name, _logo, _description, _url, _archived)
+        (_name, _url, _description, FALSE)
     RETURNING institution_uid
 
 $$ LANGUAGE SQL;
@@ -243,85 +255,69 @@ CREATE OR REPLACE FUNCTION archive_institution(_institution_id integer)
 
 $$ LANGUAGE SQL;
 
--- FIXME all institutions does not need to return the whole institution_return
 -- Returns all institutions
-CREATE OR REPLACE FUNCTION select_all_institutions()
- RETURNS setOf institution_return AS $$
-
-    WITH inst_roles AS (
-        SELECT user_rid, title, institution_rid
-        FROM institution_users as iu
-        LEFT JOIN roles
-            ON role_uid = iu.role_rid
-    ), members AS (
-        SELECT jsonb_agg(user_rid) as member_list, institution_rid
-        FROM inst_roles
-        WHERE title = 'member'
-            OR title = 'admin'
-        GROUP BY institution_rid
-    ), admins AS (
-        SELECT jsonb_agg(user_rid) as admin_list, institution_rid
-        FROM inst_roles
-        WHERE title = 'admin'
-        GROUP BY institution_rid
-    ), pending AS (
-        SELECT jsonb_agg(user_rid) as pending_list, institution_rid
-        FROM inst_roles
-        WHERE title = 'pending'
-        GROUP BY institution_rid
-    )
+CREATE OR REPLACE FUNCTION select_all_institutions(_user_id integer)
+ RETURNS table (
+    institution_id    integer,
+    name              text,
+    is_member         boolean
+) AS $$
 
     SELECT institution_uid,
         i.name,
-        i.logo,
-        i.description,
-        i.url,
-        i.archived,
-        (CASE WHEN member_list IS NULL THEN '[]' ELSE member_list END),
-        (CASE WHEN admin_list IS NULL THEN '[]' ELSE admin_list END),
-        (CASE WHEN pending_list IS NULL THEN '[]' ELSE pending_list END)
+        (SELECT count(*) > 0
+         FROM institution_users
+         WHERE institution_uid = institution_rid
+            AND user_rid = _user_id
+            AND role_rid <= 2)
     FROM institutions as i
-    LEFT JOIN members as m
-        ON institution_uid = m.institution_rid
-    LEFT JOIN admins as a
-        ON institution_uid = a.institution_rid
-    LEFT JOIN pending as p
-        ON institution_uid = p.institution_rid
     WHERE archived = false
     ORDER by institution_uid
 
 $$ LANGUAGE SQL;
 
 -- Returns one institution
-CREATE OR REPLACE FUNCTION select_institution_by_id(_institution_id integer)
- RETURNS setOf institution_return AS $$
+CREATE OR REPLACE FUNCTION select_institution_by_id(_institution_id integer, _user_id integer)
+ RETURNS table (
+    institution_id       integer,
+    name                 text,
+    base64_image         text,
+    url                  text,
+    description          text,
+    institution_admin    boolean
+ ) AS $$
 
-    SELECT * FROM select_all_institutions()
-    WHERE institution_id = _institution_id
+    SELECT institution_uid,
+        name,
+        encode(logo_data, 'base64'),
+        url,
+        description,
+        (SELECT count(*) > 0 FROM institution_users WHERE user_rid = _user_id AND role_rid = 1)
+    FROM institutions
+    WHERE institution_uid = _institution_id
         AND archived = false
 
 $$ LANGUAGE SQL;
 
 -- Updates institution details
-CREATE OR REPLACE FUNCTION update_institution(_institution_id integer, _name text, _logo_path text, _description text, _url text)
+CREATE OR REPLACE FUNCTION update_institution(_institution_id integer, _name text, _url text, _description text)
  RETURNS integer AS $$
 
     UPDATE institutions
     SET name = _name,
         url = _url,
-        description = _description,
-        logo = _logo_path
+        description = _description
     WHERE institution_uid = _institution_id
     RETURNING institution_uid
 
 $$ LANGUAGE SQL;
 
--- Update only logo. Id is not known during add_institution.
-CREATE OR REPLACE FUNCTION update_institution_logo(_institution_id integer, _logo text)
+-- Update only logo.
+CREATE OR REPLACE FUNCTION update_institution_logo(_institution_id integer, _base64_image text)
  RETURNS integer AS $$
 
     UPDATE institutions
-    SET logo = _logo
+    SET logo_data = decode(_base64_image, 'base64')
     WHERE institution_uid = _institution_id
     RETURNING institution_uid
 

@@ -196,7 +196,7 @@
         (data-response (str "User " email " has been removed.")))
 
       :else
-      (let [institution-name (:name (first (call-sql "select_institution_by_id" institution-id)))
+      (let [institution-name (:name (first (call-sql "select_institution_by_id" institution-id -1)))
             timestamp        (-> (DateTimeFormatter/ofPattern "yyyy/MM/dd HH:mm:ss")
                                  (.format (LocalDateTime/now)))
             inst-user-id     (sql-primitive (call-sql "update_institution_user_role"
@@ -241,11 +241,12 @@
                             (- (get-mailing-list-interval)))]
     (if-let [error-msg (get-mailing-list-errors subject body remaining-time)]
       (data-response error-msg)
-      (do (set-mailing-list-last-sent! (LocalDateTime/now))
-          (let [emails   (mapv :email (call-sql "get_all_mailing_list_users"))
-                response (send-to-mailing-list emails subject body)]
-            (data-response (str/join "\n" (:messages response []))
-                           {:status (:status response)}))))))
+      (do
+        (set-mailing-list-last-sent! (LocalDateTime/now))
+        (let [emails   (mapv :email (call-sql "get_all_mailing_list_users"))
+              response (send-to-mailing-list emails subject body)]
+          (data-response (str/join "\n" (:messages response []))
+                         {:status (:status response)}))))))
 
 (defn unsubscribe-from-mailing-list [{:keys [params]}]
   (let [email (:email params)]

@@ -7,11 +7,12 @@
 .rebel_readline_history
 .settings/
 .tern-port
+collect-earth-online.iml
 
 # Build Directories and Files
-/logs/*.log
-/node_modules/
-/target/
+logs
+node_modules/
+target/
 mail-config.edn
 package-lock.json
 
