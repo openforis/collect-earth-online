@@ -1065,8 +1065,7 @@ class UserList extends React.Component {
         fetch(`/get-institution-users?institutionId=${this.props.institutionId}`)
             .then(response => response.ok ? response.json() : Promise.reject(response))
             .then(data => {
-                this.setState({institutionUserList: data});
-            })
+                this.setState({institutionUserList: data});})
             .catch(response => {
                 this.setState({institutionUserList: []});
                 console.log(response);
@@ -1075,35 +1074,37 @@ class UserList extends React.Component {
     };
 
     updateUserInstitutionRole = (accountId, newUserEmail, institutionRole) => {
-        institutionRole === 'not-member' &&
-            (this.state.institutionUserList.filter(user => user.institutionRole === "member").length ==1 ||
-                this.state.institutionUserList.filter(user => user.institutionRole === "admin").length ==1)
-                ? alert("You cannot delete the last member/admin of an institution")
-                : this.props.processModal("Updating user", () =>
-                      fetch("/update-user-institution-role",
-                          {
-                              method: "POST",
-                              headers: {
-                                  "Accept": "application/json",
-                                  "Content-Type": "application/json",
-                              },
-                              body: JSON.stringify({
-                                  accountId: accountId,
-                                  newUserEmail: newUserEmail,
-                                  institutionId: this.props.institutionId,
-                                  institutionRole: institutionRole,
-                              }),
-                          })
-                          .then(response => response.ok ? response.json() : Promise.reject(response))
-                          .then(message => {
-                              alert(message);
-                              this.getInstitutionUserList();
-                          })
-                          .catch(response => {
-                              console.log(response);
-                              alert("Error updating institution details. See console for details.");
-                          })
-        );
+        if (institutionRole === 'not-member'
+            && this.state.institutionUserList.filter(user => user.institutionRole === "admin").length === 1) {
+                alert("You cannot delete the last admin of an institution.")
+        } else {
+            console.log("ine lse");
+            this.props.processModal("Updating user", () =>
+                fetch("/update-user-institution-role",
+                    {
+                        method: "POST",
+                        headers: {
+                            "Accept": "application/json",
+                            "Content-Type": "application/json",
+                        },
+                        body: JSON.stringify({
+                            accountId: accountId,
+                            newUserEmail: newUserEmail,
+                            institutionId: this.props.institutionId,
+                            institutionRole: institutionRole,
+                        }),
+                    })
+                    .then(response => response.ok ? response.json() : Promise.reject(response))
+                    .then(message => {
+                        alert(message);
+                        this.getInstitutionUserList();
+                    })
+                    .catch(response => {
+                        console.log(response);
+                        alert("Error updating institution details. See console for details.");
+                    })
+            );
+        }
     };
 
     requestMembership = () => {
