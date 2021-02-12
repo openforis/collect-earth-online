@@ -1029,25 +1029,26 @@ class UserList extends React.Component {
     };
 
     updateUserInstitutionRole = (accountId, newUserEmail, institutionRole) => {
-        if (institutionRole === 'not-member'
+        if (institutionRole === "admin"
             && this.state.institutionUserList.filter(user => user.institutionRole === "admin").length === 1) {
-            alert("You cannot delete the last admin of an institution.")
+            alert("You cannot delete the last admin of an institution.");
         } else {
             this.props.processModal("Updating user", () =>
                 fetch("/update-user-institution-role",
-                    {
-                        method: "POST",
-                        headers: {
-                            "Accept": "application/json",
-                            "Content-Type": "application/json",
-                        },
-                        body: JSON.stringify({
-                            accountId: accountId,
-                            newUserEmail: newUserEmail,
-                            institutionId: this.props.institutionId,
-                            institutionRole: institutionRole,
-                        }),
-                    })
+                      {
+                          method: "POST",
+                          headers: {
+                              "Accept": "application/json",
+                              "Content-Type": "application/json",
+                          },
+                          body: JSON.stringify({
+                              accountId: accountId,
+                              newUserEmail: newUserEmail,
+                              institutionId: this.props.institutionId,
+                              institutionRole: institutionRole,
+                          }),
+                      }
+                )
                     .then(response => response.ok ? response.json() : Promise.reject(response))
                     .then(message => {
                         alert(message);
