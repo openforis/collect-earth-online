@@ -1070,7 +1070,7 @@ class Collection extends React.Component {
                                     selectedQuestion={this.state.selectedQuestion}
                                     surveyQuestions={this.state.currentProject.surveyQuestions}
                                     surveyRules={this.state.currentProject.surveyRules}
-                                    flagged={this.state.currentPlot && this.state.currentPlot.flagged}
+                                    flagged={this.state.currentPlot.flagged}
                                     setCurrentValue={this.setCurrentValue}
                                     setSelectedQuestion={this.setSelectedQuestion}
                                     selectedSampleId={Object.keys(this.state.userSamples).length === 1
@@ -1459,7 +1459,7 @@ class ImageryOptions extends React.Component {
                             id="base-map-source"
                             name="base-map-source"
                             size="1"
-                            value={props.currentImageryId || ""}
+                            value={props.currentImageryId}
                             onChange={e => props.setBaseMapSource(parseInt(e.target.value))}
                         >
                             {props.imageryList
@@ -1474,7 +1474,7 @@ class ImageryOptions extends React.Component {
                             sourceConfig: imagery.sourceConfig,
                             visible: props.currentImageryId === imagery.id && this.state.showImageryOptions,
                         };
-                        return imagery && imagery.sourceConfig && {
+                        return imagery.sourceConfig && {
                             "Planet": <PlanetMenu {...individualProps}/>,
                             "PlanetDaily": <PlanetDailyMenu {...individualProps}/>,
                             "PlanetNICFI": <PlanetNICFIMenu {...individualProps}/>,

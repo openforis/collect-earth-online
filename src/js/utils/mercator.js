@@ -755,9 +755,9 @@ mercator.getLayerConfigById = function (mapConfig, layerConfigId) {
 mercator.updateLayerSource = function (mapConfig, imageryId, projectBoundary, transformer) {
     const layer = mercator.getLayerById(mapConfig, imageryId);
     const layerConfig = mercator.getLayerConfigById(mapConfig, imageryId);
-    const projectAOI = projectBoundary ? JSON.parse(projectBoundary).coordinates[0] : null;
-    const newSourceConfig = transformer(layerConfig.sourceConfig);
     if (layer && layerConfig) {
+        const projectAOI = projectBoundary ? JSON.parse(projectBoundary).coordinates[0] : null;
+        const newSourceConfig = transformer(layerConfig.sourceConfig);
         if (layer instanceof LayerGroup) {
             // This is a LayerGroup
             console.log("LayerGroup detected.");

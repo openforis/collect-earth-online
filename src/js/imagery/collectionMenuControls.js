@@ -632,9 +632,7 @@ export class GEEImageMenu extends React.Component {
                         id="geeImageVisParams"
                         value={this.state.visParams}
                         onChange={e => this.setState({visParams: e.target.value})}
-                    >
-                        {this.state.visParams}
-                    </textarea>
+                    />
                 </div>
                 <div className="slide-container">
                     <button
@@ -738,9 +736,7 @@ export class GEEImageCollectionMenu extends React.Component {
                         className="form-control"
                         value={this.state.visParams}
                         onChange={e => this.setState({visParams: e.target.value})}
-                    >
-                        {this.state.visParams}
-                    </textarea>
+                    />
                 </div>
                 <div className="slide-container">
                     <button

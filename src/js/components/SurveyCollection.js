@@ -607,7 +607,7 @@ class AnswerDropDown extends React.Component {
                     <div className="SelectedItem d-inline-flex border col-8">
                         {answers.map(ans =>
                             answered.some(a => a.answerId === ans.id && a.sampleId === selectedSampleId) &&
-                            <Fragment>
+                            <Fragment key={ans.id}>
                                 <div className="col-1 mt-2">
                                     <span
                                         className="dot"

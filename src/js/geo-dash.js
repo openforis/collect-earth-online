@@ -1603,15 +1603,9 @@ class StatsWidget extends React.Component {
                 if (data.errMsg) {
                     console.warn(data.errMsg);
                 } else {
-                    let area = "N/A";
-                    try {
-                        area = this.calculateArea(JSON.parse(projPairAOI));
-                    } catch (e) {
-                        area = "N/A";
-                    }
                     this.setState({
                         totalPop: this.numberWithCommas(data.pop),
-                        area: area + " ha",
+                        area: this.calculateArea(JSON.parse(projPairAOI)) + " ha",
                         elevation: this.numberWithCommas(data.minElev) + " - " + this.numberWithCommas(data.maxElev) + " m",
                     });
                 }

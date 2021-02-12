@@ -756,9 +756,8 @@ class WidgetLayoutEditor extends React.PureComponent {
             this.checkWidgetStructure(updatedWidgets);
             this.setState({
                 dashboardID: setDashboardID ? data.dashboardID : this.state.dashboardID,
-                widgets:     updatedWidgets,
-                haveWidgets: true,
-                layout:      this.generateLayout(),
+                widgets: updatedWidgets,
+                layout: this.generateLayout(),
             });
         });
 
@@ -1250,7 +1249,7 @@ class WidgetLayoutEditor extends React.PureComponent {
                         id="graphBandDegSelect"
                         onChange={this.onGraphBandDegChange}
                     >
-                        <option label="NDFI" value="NDFI" selected>NDFI</option>
+                        <option label="NDFI" value="NDFI">NDFI</option>
                         <option label="SWIR1" value="SWIR1">SWIR1</option>
                         <option label="NIR" value="NIR">NIR</option>
                         <option label="RED" value="RED">RED</option>
