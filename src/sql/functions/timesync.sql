@@ -40,7 +40,7 @@ CREATE OR REPLACE FUNCTION add_plots_to_packet(_plot_ids integer[], _packet_id i
 $$ LANGUAGE SQL;
 
 CREATE OR REPLACE FUNCTION get_plot_comments(_user_id integer, _project_id integer, _plot_id integer, _packet_id integer)
- RETURNS TABLE (
+ RETURNS table (
     project_id  integer,
     plot_id     integer,
     user_id     integer,
@@ -84,7 +84,7 @@ $$ LANGUAGE SQL;
 
 --TODO: Maybe convert this to a view
 CREATE OR REPLACE FUNCTION get_plot_vertices_for_project(_project_id integer)
- RETURNS TABLE (
+ RETURNS table (
     project_id                integer,
     plot_id                   integer,
     user_id                   integer,
@@ -115,7 +115,7 @@ CREATE OR REPLACE FUNCTION get_plot_vertices_for_project(_project_id integer)
 $$ LANGUAGE SQL;
 
 CREATE OR REPLACE FUNCTION get_plot_vertices(_user_id integer, _project_id integer, _plot_id integer, _packet_id integer)
- RETURNS TABLE (
+ RETURNS table (
     project_id                integer,
     plot_id                   integer,
     user_id                   integer,
@@ -203,7 +203,7 @@ CREATE OR REPLACE FUNCTION create_vertices (_project_id integer, _plot_id intege
 $$ LANGUAGE SQL;
 
 CREATE OR REPLACE FUNCTION get_image_preference(_user_id integer, _project_id integer, _packet_id integer, _plot_id integer)
- RETURNS TABLE (
+ RETURNS table (
     project_id    integer,
     plot_id       integer,
     user_id       integer,

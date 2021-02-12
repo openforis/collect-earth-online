@@ -664,7 +664,7 @@ class MapWidget extends React.Component {
             path = getGatewayPath(widget, collectionName);
             postObject.visParams = this.getImageParams(widget);
             postObject.featureCollection = widget.featureCollection;
-            postObject.matchID = this.props.getParameterByName("plotId");
+            postObject.matchID = this.props.getParameterByName("visiblePlotId");
             postObject.field = widget.field;
 
             if (postObject.visParams.cloudLessThan) {
@@ -766,7 +766,7 @@ class MapWidget extends React.Component {
                 }
             })
             .then(data => {
-                if (data.hasOwnProperty("url")) {
+                if (data && data.hasOwnProperty("url")) {
                     data.lastGatewayUpdate = new Date();
                     if (postObject.ImageAsset && JSON.stringify(postObject.visParams)) {
                         localStorage.setItem(postObject.ImageAsset + JSON.stringify(postObject.visParams), JSON.stringify(data));
@@ -1126,8 +1126,6 @@ class MapWidget extends React.Component {
             const bradius = this.props.getParameterByName("bradius");
             const bcenter = this.props.getParameterByName("bcenter");
             const plotshape = this.props.getParameterByName("plotShape");
-            const projectID = this.props.getParameterByName("projectId");
-            const plotID = this.props.getParameterByName("plotId");
             if (plotshape && plotshape === "square") {
                 const centerPoint = new Point(projTransform(JSON.parse(bcenter).coordinates, "EPSG:4326", "EPSG:3857"));
                 const pointFeature = new Feature(centerPoint);
@@ -1177,11 +1175,11 @@ class MapWidget extends React.Component {
                 });
                 whichMap.addLayer(layer);
             } else {
-                fetch(`/get-proj-plot?projectId=${projectID}&plotId=${plotID}`)
+                fetch(`/get-plot-sample-geom?plotId=${this.props.getParameterByName("plotId")}`)
                     .then(res => res.json())
                     .then(data => {
-                        const geoJsonObject = typeof(data) === "string" ? JSON.parse(data) : data;
-                        const vectorSource = mercator.geometryToVectorSource(mercator.parseGeoJson(geoJsonObject.geom, true));
+                        const plotJsonObject = typeof(data) === "string" ? JSON.parse(data) : data;
+                        const vectorSource = mercator.geometryToVectorSource(mercator.parseGeoJson(plotJsonObject.geom, true));
                         const mapConfig = {};
                         mapConfig.map = whichMap;
                         const style = [
@@ -1195,8 +1193,8 @@ class MapWidget extends React.Component {
                         ];
                         mercator.addVectorLayer(mapConfig, "geeLayer", vectorSource, style);
 
-                        if (geoJsonObject.samples) {
-                            geoJsonObject.samples.forEach(element => {
+                        if (plotJsonObject.samples) {
+                            plotJsonObject.samples.forEach(element => {
                                 if (element.geom) {
                                     const vectorSource = mercator.geometryToVectorSource(mercator.parseGeoJson(element.geom, true));
                                     mercator.addVectorLayer(mapConfig, "geeLayer", vectorSource, style);
@@ -1729,7 +1727,7 @@ export function pageInit(args) {
     ReactDOM.render(
         <GeoDashNavigationBar
             userName={args.userName || "guest"}
-            plotId={parseInt(args.plotId) || -1}
+            visiblePlotId={parseInt(args.visiblePlotId) || -1}
             page={() => <Geodash/>}
         />,
         document.getElementById("app")

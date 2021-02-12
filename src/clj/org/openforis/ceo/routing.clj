@@ -88,7 +88,8 @@
    [:get  "/dump-project-raw-data"]          {:handler     projects/dump-project-raw-data
                                               :auth-type   :admin
                                               :auth-action :block}
-   [:get  "/get-all-projects"]               {:handler     projects/get-all-projects}
+   [:get  "/get-home-projects"]              {:handler     projects/get-home-projects}
+   [:get  "/get-institution-projects"]       {:handler     projects/get-institution-projects}
    [:get  "/get-project-by-id"]              {:handler     projects/get-project-by-id
                                               :auth-type   :collect
                                               :auth-action :block}
@@ -125,9 +126,7 @@
    [:get  "/get-project-plots"]              {:handler     plots/get-project-plots
                                               :auth-type   :collect
                                               :auth-action :block}
-   [:get  "/get-proj-plot"]                  {:handler     plots/get-project-plot
-                                              :auth-type   :collect
-                                              :auth-action :block}
+   [:get  "/get-plot-sample-geom"]           {:handler     plots/get-plot-sample-geom}
    [:post "/add-user-samples"]               {:handler     plots/add-user-samples
                                               :auth-type   :collect
                                               :auth-action :block}
@@ -142,7 +141,7 @@
                                               :auth-action :block}
    ;; Institutions API
    [:get  "/get-all-institutions"]           {:handler     institutions/get-all-institutions}
-   [:get  "/get-institution-details"]        {:handler     institutions/get-institution-details}
+   [:get  "/get-institution-by-id"]          {:handler     institutions/get-institution-by-id}
    [:post "/archive-institution"]            {:handler     institutions/archive-institution
                                               :auth-type   :admin
                                               :auth-action :block}
