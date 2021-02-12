@@ -33,8 +33,7 @@ class ReviewInstitution extends React.Component {
     getProjectList = () => {
         //get projects
         this.processModal("Loading institution data", () =>
-            fetch(`/get-institution-projects?institutionId=${this.props.institutionId}`
-            )
+            fetch(`/get-institution-projects?institutionId=${this.props.institutionId}`)
                 .then(response => response.ok ? response.json() : Promise.reject(response))
                 .then(data => this.setState({projectList: data}))
                 .catch(response => {
@@ -46,10 +45,7 @@ class ReviewInstitution extends React.Component {
 
     archiveProject = (projectId) => {
         if (confirm("Do you REALLY want to delete this project? This operation cannot be undone.")) {
-            fetch(`/archive-project?projectId=${projectId}`,
-                  {
-                      method: "POST",
-                  })
+            fetch(`/archive-project?projectId=${projectId}`, {method: "POST"})
                 .then(response => {
                     if (response.ok) {
                         this.getProjectList();
@@ -226,11 +222,7 @@ class InstitutionDescription extends React.Component {
         if (confirm("This action will also delete all of the projects associated with this institution.\n\n"
                     + "This action is irreversible.\n\n"
                     + "Do you REALLY want to delete this institution?")) {
-            fetch(`/archive-institution?institutionId=${this.props.institutionId}`,
-                  {
-                      method: "POST",
-                  }
-            )
+            fetch(`/archive-institution?institutionId=${this.props.institutionId}`, {method: "POST"})
                 .then(response => {
                     if (response.ok) {
                         alert("Institution " + this.state.institutionDetails.name + " has been deleted.");
