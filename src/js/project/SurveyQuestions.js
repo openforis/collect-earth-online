@@ -387,41 +387,35 @@ export class SurveyQuestionHelp extends React.Component {
         });
     };
 
-    getSelectedSampleIds = (question) => [1];
+    setCurrentValue = (questionToSet, answerId, answerText) => {
+        const sampleIds = [1];
 
-    setCurrentValue = (questionToSet, answerId, answerText, ruleError) => {
-        const sampleIds = this.getSelectedSampleIds(questionToSet);
+        const newSamples = sampleIds.reduce((acc, sampleId) => {
+            const newQuestion = {
+                questionId: questionToSet.id,
+                answer: answerText,
+                answerId: answerId,
+            };
 
-        if (ruleError) {
-            alert(ruleError);
-        } else {
-            const newSamples = sampleIds.reduce((acc, sampleId) => {
-                const newQuestion = {
-                    questionId: questionToSet.id,
-                    answer: answerText,
-                    answerId: answerId,
-                };
+            const childQuestionArray = this.getChildQuestions(questionToSet.id);
+            const clearedSubQuestions = Object.entries(this.state.userSamples[sampleId])
+                .filter(entry => !childQuestionArray.includes(entry[0]))
+                .reduce((acc, cur) => ({...acc, [cur[0]]: cur[1]}), {});
 
-                const childQuestionArray = this.getChildQuestions(questionToSet.id);
-                const clearedSubQuestions = Object.entries(this.state.userSamples[sampleId])
-                    .filter(entry => !childQuestionArray.includes(entry[0]))
-                    .reduce((acc, cur) => ({...acc, [cur[0]]: cur[1]}), {});
+            return {
+                ...acc,
+                [sampleId]: {
+                    ...clearedSubQuestions,
+                    [questionToSet.question]: newQuestion,
+                },
+            };
 
-                return {
-                    ...acc,
-                    [sampleId]: {
-                        ...clearedSubQuestions,
-                        [questionToSet.question]: newQuestion,
-                    },
-                };
+        }, {});
 
-            }, {});
-
-            this.setState({
-                userSamples: {...this.state.userSamples, ...newSamples},
-                selectedQuestion: questionToSet,
-            });
-        }
+        this.setState({
+            userSamples: {...this.state.userSamples, ...newSamples},
+            selectedQuestion: questionToSet,
+        });
     };
 
     render() {

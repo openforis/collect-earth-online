@@ -645,7 +645,7 @@ class Collection extends React.Component {
         ).map(sf => sf.get("sampleId"));
     };
 
-    checkSelection = (sampleIds, ruleError, questionToSet) => {
+    checkSelection = (sampleIds, questionToSet) => {
         if (!this.warnOnNoSamples(this.state.currentPlot)) {
             return false;
         } else if (sampleIds.some(sid => questionToSet.visible.every(vs => vs.id !== sid))) {
@@ -654,18 +654,15 @@ class Collection extends React.Component {
         } else if (sampleIds.length === 0) {
             alert("Please select at least one sample before choosing an answer.");
             return false;
-        } else if (ruleError) {
-            alert(ruleError);
-            return false;
         } else {
             return true;
         }
     };
 
-    setCurrentValue = (questionToSet, answerId, answerText, ruleError) => {
+    setCurrentValue = (questionToSet, answerId, answerText) => {
         const sampleIds = this.getSelectedSampleIds(questionToSet);
 
-        if (this.checkSelection(sampleIds, ruleError, questionToSet)) {
+        if (this.checkSelection(sampleIds, questionToSet)) {
             const newSamples = sampleIds.reduce((acc, sampleId) => {
                 const newQuestion = {
                     questionId: questionToSet.id,

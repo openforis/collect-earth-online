@@ -303,7 +303,11 @@ export class SurveyCollection extends React.Component {
 
     validateAndSetCurrentValue = (questionToSet, answerId, answerText) => {
         const ruleError = this.rulesViolated(questionToSet, answerId, answerText);
-        this.props.setCurrentValue(questionToSet, answerId, answerText, ruleError);
+        if (ruleError) {
+            alert(ruleError);
+        } else {
+            this.props.setCurrentValue(questionToSet, answerId, answerText);
+        }
     };
 
     renderQuestions = () => (
