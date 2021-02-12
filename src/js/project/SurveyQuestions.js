@@ -389,8 +389,6 @@ export class SurveyQuestionHelp extends React.Component {
 
     setCurrentValue = (questionToSet, answerId, answerText) => {
         const sampleIds = [1];
-        // Move rules check into SurveyCollection so it can be accessed here
-        // const ruleError = rulesViolated(questionToSet, answerId, answerText);
 
         const newSamples = sampleIds.reduce((acc, sampleId) => {
             const newQuestion = {

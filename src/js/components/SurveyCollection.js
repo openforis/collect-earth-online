@@ -150,6 +150,166 @@ export class SurveyCollection extends React.Component {
         </div>
     );
 
+    checkRuleTextMatch = (surveyRule, questionToSet, answerId, answerText) => {
+        if (surveyRule.questionId === questionToSet.id &&
+            !RegExp(surveyRule.regex).test(answerText)) {
+            return "Text match validation failed: Please enter a regular expression that matches " + surveyRule.regex;
+        } else {
+            return null;
+        }
+    };
+
+    checkRuleNumericRange = (surveyRule, questionToSet, answerId, answerText) => {
+        if (surveyRule.questionId === questionToSet.id &&
+            (isNaN(parseInt(answerText)) ||
+             parseInt(answerText) < surveyRule.min ||
+             parseInt(answerText) > surveyRule.max)) {
+            return "Numeric range validation failed: Please select a value between " + surveyRule.min + " and " + surveyRule.max;
+        } else {
+            return null;
+        }
+    };
+
+    checkRuleSumOfAnswers = (surveyRule, questionToSet, answerId, answerText) => {
+        if (surveyRule.questions.includes(questionToSet.id)) {
+            const answeredQuestions = this.state.currentProject.surveyQuestions
+                .filter(q => surveyRule.questions.includes(q.id) && q.answered.length > 0 && q.id !== questionToSet.id);
+            if (surveyRule.questions.length === answeredQuestions.length + 1) {
+                const sampleIds = this.getSelectedSampleIds(questionToSet);
+                const answeredSampleIds = answeredQuestions.map(q => q.answered.map(a => a.sampleId));
+                const commonSampleIds = answeredSampleIds.reduce(this.intersection, sampleIds);
+                if (commonSampleIds.length > 0) {
+                    return commonSampleIds.map(sampleId => {
+                        const answeredSum = answeredQuestions
+                            .map(q => q.answered.find(ques => ques.sampleId === sampleId).answerText)
+                            .reduce((sum, num) => sum + parseInt(num), 0);
+                        if (answeredSum + parseInt(answerText) !== surveyRule.validSum) {
+                            return "Sum of answers validation failed: Possible sum for questions ["
+                                + surveyRule.questionsText.toString()
+                                + "] is "
+                                + (surveyRule.validSum - answeredSum).toString()
+                                + ".";
+                        } else {
+                            return null;
+                        }
+                    }).find(res => res !== null);
+                } else {
+                    return null;
+                }
+            } else {
+                return null;
+            }
+        } else {
+            return null;
+        }
+    };
+
+    checkRuleMatchingSums = (surveyRule, questionToSet, answerId, answerText) => {
+        if (surveyRule.questionSetIds1.includes(questionToSet.id) || surveyRule.questionSetIds2.includes(questionToSet.id)) {
+            const answeredQuestions1 = this.state.currentProject.surveyQuestions
+                .filter(q => surveyRule.questionSetIds1.includes(q.id) && q.answered.length > 0 && q.id !== questionToSet.id);
+            const answeredQuestions2 = this.state.currentProject.surveyQuestions
+                .filter(q => surveyRule.questionSetIds2.includes(q.id) && q.answered.length > 0 && q.id !== questionToSet.id);
+            if (surveyRule.questionSetIds1.length + surveyRule.questionSetIds2.length === answeredQuestions1.length + answeredQuestions2.length + 1) {
+                const sampleIds = this.getSelectedSampleIds(questionToSet);
+                const answeredSampleIds1 = answeredQuestions1.map(q => q.answered.map(a => a.sampleId));
+                const commonSampleIds1 = answeredSampleIds1.reduce(this.intersection, sampleIds);
+                const answeredSampleIds2 = answeredQuestions2.map(q => q.answered.map(a => a.sampleId));
+                const commonSampleIds2 = answeredSampleIds2.reduce(this.intersection, sampleIds);
+                const commonSampleIds = this.intersection(commonSampleIds1, commonSampleIds2);
+                if (commonSampleIds.length > 0) {
+                    const sampleSums = commonSampleIds.map(sampleId => {
+                        const sum1 = answeredQuestions1
+                            .map(q => q.answered.find(a => a.sampleId === sampleId).answerText)
+                            .reduce((sum, num) => sum + parseInt(num), 0);
+                        const sum2 = answeredQuestions2
+                            .map(q => q.answered.find(a => a.sampleId === sampleId).answerText)
+                            .reduce((sum, num) => sum + parseInt(num), 0);
+                        return [sum1, sum2];
+                    });
+                    const invalidSum = sampleSums.find(sums =>
+                        sums[0] + (surveyRule.questionSetIds1.includes(questionToSet.id) ? parseInt(answerText) : 0)
+                        !== sums[1] + (surveyRule.questionSetIds2.includes(questionToSet.id) ? parseInt(answerText) : 0)
+                    );
+                    if (invalidSum) {
+                        return "Matching sums validation failed: Totals of the question sets ["
+                                + surveyRule.questionSetText1.toString()
+                                + "] and ["
+                                + surveyRule.questionSetText2.toString()
+                                + "] do not match.\n\nValid total is "
+                                + Math.abs(invalidSum[0] - invalidSum[1])
+                                + ".";
+                    } else {
+                        return null;
+                    }
+                } else {
+                    return null;
+                }
+            } else {
+                return null;
+            }
+        } else {
+            return null;
+        }
+    };
+
+    checkRuleIncompatibleAnswers = (surveyRule, questionToSet, answerId, answerText) => {
+        if (surveyRule.question1 === questionToSet.id && surveyRule.answer1 === answerId) {
+            const ques2 = this.state.currentProject.surveyQuestions.find(q => q.id === surveyRule.question2);
+            if (ques2.answered.some(ans => ans.answerId === surveyRule.answer2)) {
+                const ques1Ids = this.getSelectedSampleIds(questionToSet);
+                const ques2Ids = ques2.answered.filter(ans => ans.answerId === surveyRule.answer2).map(a => a.sampleId);
+                const commonSampleIds = this.intersection(ques1Ids, ques2Ids);
+                if (commonSampleIds.length > 0) {
+                    return "Incompatible answer";
+                } else {
+                    return null;
+                }
+            } else {
+                return null;
+            }
+        } else if (surveyRule.question2 === questionToSet.id && surveyRule.answer2 === answerId) {
+            const ques1 = this.state.currentProject.surveyQuestions.find(q => q.id === surveyRule.question1);
+            if (ques1.answered.some(ans => ans.answerId === surveyRule.answer1)) {
+                const ques2Ids = this.getSelectedSampleIds(questionToSet);
+                const ques1Ids = ques1.answered.filter(ans => ans.answerId === surveyRule.answer1).map(a => a.sampleId);
+                const commonSampleIds = this.intersection(ques1Ids, ques2Ids);
+                if (commonSampleIds.length > 0) {
+                    return "Incompatible answer";
+                } else {
+                    return null;
+                }
+            } else {
+                return null;
+            }
+        } else {
+            return null;
+        }
+    };
+
+    ruleFunctions = {
+        "text-match":           this.checkRuleTextMatch,
+        "numeric-range":        this.checkRuleNumericRange,
+        "sum-of-answers":       this.checkRuleSumOfAnswers,
+        "matching-sums":        this.checkRuleMatchingSums,
+        "incompatible-answers": this.checkRuleIncompatibleAnswers,
+    };
+
+    rulesViolated = (questionToSet, answerId, answerText) =>
+        this.props.surveyRules
+        && this.props.surveyRules
+            .map(surveyRule => this.ruleFunctions[surveyRule.ruleType](surveyRule, questionToSet, answerId, answerText))
+            .find(msg => msg);
+
+    validateAndSetCurrentValue = (questionToSet, answerId, answerText) => {
+        const ruleError = this.rulesViolated(questionToSet, answerId, answerText);
+        if (ruleError) {
+            alert(ruleError);
+        } else {
+            this.props.setCurrentValue(questionToSet, answerId, answerText);
+        }
+    };
+
     renderQuestions = () => (
         <div className="SurveyQuestions__questions mx-1">
             {this.unansweredColor()}
@@ -205,7 +365,7 @@ export class SurveyCollection extends React.Component {
                             surveyNode={this.getNodeById(this.state.topLevelNodeIds[this.state.currentNodeIndex])}
                             surveyQuestions={this.props.surveyQuestions}
                             surveyRules={this.props.surveyRules}
-                            setCurrentValue={this.props.setCurrentValue}
+                            validateAndSetCurrentValue={this.validateAndSetCurrentValue}
                             selectedQuestion={this.props.selectedQuestion}
                             selectedSampleId={this.props.selectedSampleId}
                             setSelectedQuestion={this.props.setSelectedQuestion}
@@ -393,7 +553,7 @@ class SurveyQuestionTree extends React.Component {
                     <SurveyAnswers
                         surveyNode={this.props.surveyNode}
                         selectedSampleId={this.props.selectedSampleId}
-                        setCurrentValue={this.props.setCurrentValue}
+                        validateAndSetCurrentValue={this.props.validateAndSetCurrentValue}
                         surveyRules={this.props.surveyRules}
                         surveyQuestions={this.props.surveyQuestions}
                     />
@@ -405,7 +565,7 @@ class SurveyQuestionTree extends React.Component {
                             key={uid}
                             surveyNode={childNode}
                             surveyQuestions={this.props.surveyQuestions}
-                            setCurrentValue={this.props.setCurrentValue}
+                            validateAndSetCurrentValue={this.props.validateAndSetCurrentValue}
                             selectedQuestion={this.props.selectedQuestion}
                             selectedSampleId={this.props.selectedSampleId}
                             setSelectedQuestion={this.props.setSelectedQuestion}
@@ -420,7 +580,7 @@ class SurveyQuestionTree extends React.Component {
     }
 }
 
-function AnswerButton({surveyNode, surveyNode: {answers, answered}, selectedSampleId, setCurrentValue}) {
+function AnswerButton({surveyNode, surveyNode: {answers, answered}, selectedSampleId, validateAndSetCurrentValue}) {
     return <ul className={"samplevalue justify-content-center"}>
         {answers.map((ans, uid) =>
             <li key={uid} className="mb-1">
@@ -437,7 +597,7 @@ function AnswerButton({surveyNode, surveyNode: {answers, answered}, selectedSamp
                                 ? "0px 0px 8px 3px grey inset"
                                 : "initial",
                     }}
-                    onClick={() => setCurrentValue(surveyNode, ans.id, ans.answer)}
+                    onClick={() => validateAndSetCurrentValue(surveyNode, ans.id, ans.answer)}
                 >
                     <div
                         className="circle mr-2"
@@ -455,7 +615,7 @@ function AnswerButton({surveyNode, surveyNode: {answers, answered}, selectedSamp
     </ul>;
 }
 
-function AnswerRadioButton({surveyNode, surveyNode: {answers, answered}, selectedSampleId, setCurrentValue}) {
+function AnswerRadioButton({surveyNode, surveyNode: {answers, answered}, selectedSampleId, validateAndSetCurrentValue}) {
     return <ul className={"samplevalue justify-content-center"}>
         {answers.map((ans, uid) =>
             <li key={uid} className="mb-1">
@@ -465,7 +625,7 @@ function AnswerRadioButton({surveyNode, surveyNode: {answers, answered}, selecte
                     title={ans.answer}
                     id={ans.answer + "_" + ans.id}
                     name={ans.answer + "_" + ans.id}
-                    onClick={() => setCurrentValue(surveyNode, ans.id, ans.answer)}
+                    onClick={() => validateAndSetCurrentValue(surveyNode, ans.id, ans.answer)}
                 >
                     <div
                         className="circle ml-1"
@@ -523,7 +683,7 @@ class AnswerInput extends React.Component {
     updateInputValue = (value) => this.setState({newInput: value});
 
     render() {
-        const {surveyNode, surveyNode: {answers, dataType}, setCurrentValue} = this.props;
+        const {surveyNode, surveyNode: {answers, dataType}, validateAndSetCurrentValue} = this.props;
         return answers[0]
             ?
                 <div className="d-inline-flex">
@@ -551,7 +711,7 @@ class AnswerInput extends React.Component {
                         type="button"
                         name="save-input"
                         value="Save"
-                        onClick={() => setCurrentValue(surveyNode, answers[0].id, this.state.newInput)}
+                        onClick={() => validateAndSetCurrentValue(surveyNode, answers[0].id, this.state.newInput)}
                     />
                 </div>
             : null;
@@ -575,11 +735,11 @@ class AnswerDropDown extends React.Component {
     toggleDropDown = () => this.setState({showDropdown: !this.state.showDropdown});
 
     render () {
-        const {surveyNode, surveyNode: {answers, answered}, selectedSampleId, setCurrentValue} = this.props;
+        const {surveyNode, surveyNode: {answers, answered}, selectedSampleId, validateAndSetCurrentValue} = this.props;
         const options = answers.map((ans, uid) =>
             <div
                 key={uid}
-                onMouseDown={() => setCurrentValue(surveyNode, ans.id, ans.answer)}
+                onMouseDown={() => validateAndSetCurrentValue(surveyNode, ans.id, ans.answer)}
                 className="d-inline-flex py-2 border-bottom"
                 style={{backgroundColor: answered.some(a => a.answerId === ans.id) ? "#e8e8e8" : "#f1f1f1"}}
             >
