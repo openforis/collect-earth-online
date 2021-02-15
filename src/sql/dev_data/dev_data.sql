@@ -67,7 +67,7 @@ INSERT INTO projects (
     200,
     'random',
     10,
-    '[{"id": 1, "name": "Land Use", "values": [{"color": "#1EC61B", "name": "Forest", "id": 1, "image": null}, {"color": "#9CF135", "name": "Grassland", "id": 2, "image": null}, {"color": "#D5DE85", "name": "Bare Surface", "id": 3, "image": null}, {"color": "#8B9084", "name": "Impervious Surface", "id": 4, "image": null}, {"color": "#F2C613", "name": "Agriculture", "id": 5, "image": null}, {"color": "#6A3A75", "name": "Urban", "id": 6, "image": null}, {"color": "#2F4DC0", "name": "Water", "id": 7, "image": null}, {"color": "#FFFFFF", "name": "Cloud", "id": 8, "image": null}, {"color": "#000000", "name": "Unknown", "id": 9, "image": null}]}]',
+    '[{"id":1,"answers":[{"id":1,"color":"#1ec61b","answer":"Forest"},{"id":2,"color":"#9cf135","answer":"Grassland"},{"id":3,"color":"#d5de85","answer":"Bare Surface"},{"id":4,"color":"#8B9084","answer":"Impervious Surface"},{"id":5,"color":"#f2c613","answer":"Agriculture"},{"id":6,"color":"#6a3a75","answer":"Urban"},{"id":6,"color":"#2f4dc0","answer":"Water"},{"id":8,"color":"#ffffff","answer":"Cloud"},{"id":9,"color":"#000000","answer":"Unknown"}],"dataType":"text","question":"Land Use","parentAnswer":-1,"componentType":"button","parentQuestion":-1}]',
     '[]',
     Now(),
     '{"showGEEScript": false, "autoLaunchGeoDash": false, "collectConfidence": true, "showPlotInformation": false}',
