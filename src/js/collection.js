@@ -630,8 +630,6 @@ class Collection extends React.Component {
         }
     };
 
-    intersection = (array1, array2) => array1.filter(value => array2.includes(value));
-
     getSelectedSampleIds = (question) => {
         const allFeatures = mercator.getAllFeatures(this.state.mapConfig, "currentSamples") || [];
         const selectedSamples = mercator.getSelectedSamples(this.state.mapConfig);
