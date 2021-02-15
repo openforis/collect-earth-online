@@ -150,6 +150,8 @@ export class SurveyCollection extends React.Component {
         </div>
     );
 
+    intersection = (array1, array2) => array1.filter(value => array2.includes(value));
+
     checkRuleTextMatch = (surveyRule, questionToSet, answerId, answerText) => {
         if (surveyRule.questionId === questionToSet.id &&
             !RegExp(surveyRule.regex).test(answerText)) {
@@ -172,10 +174,10 @@ export class SurveyCollection extends React.Component {
 
     checkRuleSumOfAnswers = (surveyRule, questionToSet, answerId, answerText) => {
         if (surveyRule.questions.includes(questionToSet.id)) {
-            const answeredQuestions = this.state.currentProject.surveyQuestions
+            const answeredQuestions = this.props.surveyQuestions
                 .filter(q => surveyRule.questions.includes(q.id) && q.answered.length > 0 && q.id !== questionToSet.id);
             if (surveyRule.questions.length === answeredQuestions.length + 1) {
-                const sampleIds = this.getSelectedSampleIds(questionToSet);
+                const sampleIds = this.props.getSelectedSampleIds(questionToSet);
                 const answeredSampleIds = answeredQuestions.map(q => q.answered.map(a => a.sampleId));
                 const commonSampleIds = answeredSampleIds.reduce(this.intersection, sampleIds);
                 if (commonSampleIds.length > 0) {
@@ -206,12 +208,12 @@ export class SurveyCollection extends React.Component {
 
     checkRuleMatchingSums = (surveyRule, questionToSet, answerId, answerText) => {
         if (surveyRule.questionSetIds1.includes(questionToSet.id) || surveyRule.questionSetIds2.includes(questionToSet.id)) {
-            const answeredQuestions1 = this.state.currentProject.surveyQuestions
+            const answeredQuestions1 = this.props.surveyQuestions
                 .filter(q => surveyRule.questionSetIds1.includes(q.id) && q.answered.length > 0 && q.id !== questionToSet.id);
-            const answeredQuestions2 = this.state.currentProject.surveyQuestions
+            const answeredQuestions2 = this.props.surveyQuestions
                 .filter(q => surveyRule.questionSetIds2.includes(q.id) && q.answered.length > 0 && q.id !== questionToSet.id);
             if (surveyRule.questionSetIds1.length + surveyRule.questionSetIds2.length === answeredQuestions1.length + answeredQuestions2.length + 1) {
-                const sampleIds = this.getSelectedSampleIds(questionToSet);
+                const sampleIds = this.props.getSelectedSampleIds(questionToSet);
                 const answeredSampleIds1 = answeredQuestions1.map(q => q.answered.map(a => a.sampleId));
                 const commonSampleIds1 = answeredSampleIds1.reduce(this.intersection, sampleIds);
                 const answeredSampleIds2 = answeredQuestions2.map(q => q.answered.map(a => a.sampleId));
@@ -255,9 +257,9 @@ export class SurveyCollection extends React.Component {
 
     checkRuleIncompatibleAnswers = (surveyRule, questionToSet, answerId, answerText) => {
         if (surveyRule.question1 === questionToSet.id && surveyRule.answer1 === answerId) {
-            const ques2 = this.state.currentProject.surveyQuestions.find(q => q.id === surveyRule.question2);
+            const ques2 = this.props.surveyQuestions.find(q => q.id === surveyRule.question2);
             if (ques2.answered.some(ans => ans.answerId === surveyRule.answer2)) {
-                const ques1Ids = this.getSelectedSampleIds(questionToSet);
+                const ques1Ids = this.props.getSelectedSampleIds(questionToSet);
                 const ques2Ids = ques2.answered.filter(ans => ans.answerId === surveyRule.answer2).map(a => a.sampleId);
                 const commonSampleIds = this.intersection(ques1Ids, ques2Ids);
                 if (commonSampleIds.length > 0) {
@@ -269,9 +271,9 @@ export class SurveyCollection extends React.Component {
                 return null;
             }
         } else if (surveyRule.question2 === questionToSet.id && surveyRule.answer2 === answerId) {
-            const ques1 = this.state.currentProject.surveyQuestions.find(q => q.id === surveyRule.question1);
+            const ques1 = this.props.surveyQuestions.find(q => q.id === surveyRule.question1);
             if (ques1.answered.some(ans => ans.answerId === surveyRule.answer1)) {
-                const ques2Ids = this.getSelectedSampleIds(questionToSet);
+                const ques2Ids = this.props.getSelectedSampleIds(questionToSet);
                 const ques1Ids = ques1.answered.filter(ans => ans.answerId === surveyRule.answer1).map(a => a.sampleId);
                 const commonSampleIds = this.intersection(ques1Ids, ques2Ids);
                 if (commonSampleIds.length > 0) {

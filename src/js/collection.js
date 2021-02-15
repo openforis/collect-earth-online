@@ -915,6 +915,7 @@ class Collection extends React.Component {
                                     selectedQuestion={this.state.selectedQuestion}
                                     surveyQuestions={this.state.currentProject.surveyQuestions}
                                     surveyRules={this.state.currentProject.surveyRules}
+                                    getSelectedSampleIds={this.getSelectedSampleIds}
                                     flagged={this.state.currentPlot && this.state.currentPlot.flagged}
                                     setCurrentValue={this.setCurrentValue}
                                     setSelectedQuestion={this.setSelectedQuestion}
