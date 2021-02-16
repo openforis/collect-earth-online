@@ -1149,13 +1149,13 @@ CREATE OR REPLACE FUNCTION select_all_project_plots(_project_id integer)
             MAX(confidence) as confidence,
             MAX(collection_time) as collection_time,
             ROUND(AVG(EXTRACT(EPOCH FROM (collection_time - collection_start)))::numeric, 1) as analysis_duration,
-            flagged_reason,
+            MAX(flagged_reason) as flagged_reason,
             plot_rid
         FROM users, user_plots, plots
         WHERE user_uid = user_rid
             AND plot_uid = plot_rid
             AND project_rid = _project_id
-        GROUP BY plot_rid, flagged_reason
+        GROUP BY plot_rid
     ), file_data AS (
         SELECT * FROM select_partial_table_by_name((
             SELECT plots_ext_table

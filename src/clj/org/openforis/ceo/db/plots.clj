@@ -142,7 +142,7 @@
   (let [plot-id          (tc/val->int (:plotId params))
         user-id          (:userId params -1)
         collection-start (tc/val->long (:collectionStart params))
-        flagged-reason  (:flaggedReason params)]
+        flagged-reason   (:flaggedReason params)]
     (call-sql "flag_plot" plot-id user-id (Timestamp. collection-start) flagged-reason)
     (unlock-plots user-id)
     (data-response "")))
