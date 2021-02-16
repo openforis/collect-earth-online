@@ -164,6 +164,7 @@ CREATE TABLE user_plots (
     confidence          integer CHECK (confidence >= 0 AND confidence <= 100),
     collection_start    timestamp,
     collection_time     timestamp,
+    flagged_reason      text,
     CONSTRAINT per_user_per_plot UNIQUE(user_rid, plot_rid)
 );
 

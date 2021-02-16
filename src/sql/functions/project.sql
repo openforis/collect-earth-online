@@ -1094,7 +1094,7 @@ CREATE OR REPLACE FUNCTION create_project_plot(_project_id integer, _center json
 $$ LANGUAGE SQL;
 
 -- Flag plot
-CREATE OR REPLACE FUNCTION flag_plot(_plot_id integer, _user_id integer, _collection_start timestamp)
+CREATE OR REPLACE FUNCTION flag_plot(_plot_id integer, _user_id integer, _collection_start timestamp, _flagged_reason text)
  RETURNS integer AS $$
 
     DELETE
@@ -1107,17 +1107,19 @@ CREATE OR REPLACE FUNCTION flag_plot(_plot_id integer, _user_id integer, _collec
     );
 
     INSERT INTO user_plots
-        (user_rid, plot_rid, flagged, collection_start, collection_time)
+        (user_rid, plot_rid, flagged, collection_start, collection_time, flagged_reason)
     VALUES
-        (_user_id, _plot_id, true, _collection_start, Now())
+        (_user_id, _plot_id, true, _collection_start, Now(), _flagged_reason)
     ON CONFLICT (user_rid, plot_rid) DO
         UPDATE
         SET flagged = excluded.flagged,
             user_rid = excluded.user_rid,
             confidence = NULL,
             collection_start = excluded.collection_start,
-            collection_time = Now()
-    RETURNING _plot_id;
+            collection_time = Now(),
+            flagged_reason = excluded.flagged_reason
+
+    RETURNING _plot_id
 
 $$ LANGUAGE SQL;
 
@@ -1136,7 +1138,8 @@ CREATE OR REPLACE FUNCTION select_all_project_plots(_project_id integer)
     ext_id               integer,
     plotId               integer,
     geom                 text,
-    analysis_duration    numeric
+    analysis_duration    numeric,
+    flagged_reason       text
 ) AS $$
 
     WITH plotsum AS (
@@ -1146,6 +1149,7 @@ CREATE OR REPLACE FUNCTION select_all_project_plots(_project_id integer)
             MAX(confidence) as confidence,
             MAX(collection_time) as collection_time,
             ROUND(AVG(EXTRACT(EPOCH FROM (collection_time - collection_start)))::numeric, 1) as analysis_duration,
+            MAX(flagged_reason) as flagged_reason,
             plot_rid
         FROM users, user_plots, plots
         WHERE user_uid = user_rid
@@ -1171,7 +1175,8 @@ CREATE OR REPLACE FUNCTION select_all_project_plots(_project_id integer)
         fd.ext_id,
         (CASE WHEN fd.plotId IS NULL THEN plot_uid ELSE fd.plotId END) as plotId,
         ST_AsGeoJSON(fd.geom) as geom,
-        plotsum.analysis_duration
+        plotsum.analysis_duration,
+        plotsum.flagged_reason
     FROM plots
     LEFT JOIN plotsum
         ON plot_uid = plotsum.plot_rid
@@ -1232,7 +1237,8 @@ CREATE OR REPLACE FUNCTION select_next_unassigned_plot(_project_id integer, _plo
     assigned           integer,
     plotId             integer,
     geom               text,
-    extra_plot_info    jsonb
+    extra_plot_info    jsonb,
+    flagged_reason     text
 ) AS $$
 
     WITH tablenames AS (
@@ -1249,7 +1255,8 @@ CREATE OR REPLACE FUNCTION select_next_unassigned_plot(_project_id integer, _plo
         assigned,
         plotId,
         geom,
-        pfd.rem_data
+        pfd.rem_data,
+        flagged_reason
     FROM select_all_project_plots(_project_id) as spp
     LEFT JOIN plots_file_data pfd
         ON spp.ext_id = pfd.ext_id
@@ -1278,7 +1285,8 @@ CREATE OR REPLACE FUNCTION select_next_user_plot(
     assigned           integer,
     plotId             integer,
     geom               text,
-    extra_plot_info    jsonb
+    extra_plot_info    jsonb,
+    flagged_reason     text
 ) AS $$
 
     WITH tablenames AS (
@@ -1295,7 +1303,8 @@ CREATE OR REPLACE FUNCTION select_next_user_plot(
         assigned,
         plotId,
         geom,
-        pfd.rem_data
+        pfd.rem_data,
+        flagged_reason
     FROM select_all_project_plots(_project_id) as spp
     LEFT JOIN plots_file_data pfd
         ON spp.ext_id = pfd.ext_id
@@ -1316,7 +1325,8 @@ CREATE OR REPLACE FUNCTION select_prev_unassigned_plot(_project_id integer, _plo
     assigned           integer,
     plotId             integer,
     geom               text,
-    extra_plot_info    jsonb
+    extra_plot_info    jsonb,
+    flagged_reason     text
 ) AS $$
 
     WITH tablenames AS (
@@ -1333,7 +1343,8 @@ CREATE OR REPLACE FUNCTION select_prev_unassigned_plot(_project_id integer, _plo
         assigned,
         plotId,
         geom,
-        pfd.rem_data
+        pfd.rem_data,
+        flagged_reason
     FROM select_all_project_plots(_project_id) as spp
     LEFT JOIN plots_file_data pfd
         ON spp.ext_id = pfd.ext_id
@@ -1362,7 +1373,8 @@ CREATE OR REPLACE FUNCTION select_prev_user_plot(
     assigned           integer,
     plotId             integer,
     geom               text,
-    extra_plot_info    jsonb
+    extra_plot_info    jsonb,
+    flagged_reason     text
 ) AS $$
 
     WITH tablenames AS (
@@ -1379,7 +1391,8 @@ CREATE OR REPLACE FUNCTION select_prev_user_plot(
         assigned,
         plotId,
         geom,
-        pfd.rem_data
+        pfd.rem_data,
+        flagged_reason
     FROM select_all_project_plots(_project_id) as spp
     LEFT JOIN plots_file_data pfd
         ON spp.ext_id = pfd.ext_id
@@ -1400,7 +1413,8 @@ CREATE OR REPLACE FUNCTION select_by_id_unassigned_plot(_project_id integer, _pl
     assigned           integer,
     plotId             integer,
     geom               text,
-    extra_plot_info    jsonb
+    extra_plot_info    jsonb,
+    flagged_reason     text
 ) AS $$
 
     WITH tablenames AS (
@@ -1417,7 +1431,8 @@ CREATE OR REPLACE FUNCTION select_by_id_unassigned_plot(_project_id integer, _pl
         assigned,
         plotId,
         geom,
-        pfd.rem_data
+        pfd.rem_data,
+        flagged_reason
     FROM select_all_project_plots(_project_id) as spp
     LEFT JOIN plots_file_data pfd
         ON spp.ext_id = pfd.ext_id
@@ -1444,7 +1459,8 @@ CREATE OR REPLACE FUNCTION select_by_id_user_plot(
     assigned           integer,
     plotId             integer,
     geom               text,
-    extra_plot_info    jsonb
+    extra_plot_info    jsonb,
+    flagged_reason     text
 ) AS $$
 
     WITH tablenames AS (
@@ -1461,7 +1477,8 @@ CREATE OR REPLACE FUNCTION select_by_id_user_plot(
         assigned,
         plotId,
         geom,
-        pfd.rem_data
+        pfd.rem_data,
+        flagged_reason
     FROM select_all_project_plots(_project_id) as spp
     LEFT JOIN plots_file_data pfd
         ON spp.ext_id = pfd.ext_id
@@ -1650,7 +1667,8 @@ CREATE OR REPLACE FUNCTION update_user_samples(
             SET confidence = _confidence,
                 collection_start = _collection_start,
                 collection_time = localtimestamp,
-                flagged = FALSE
+                flagged = FALSE,
+                flagged_reason = null
         WHERE user_plot_uid = _user_plots_uid
         RETURNING user_plot_uid
     ), new_sample_values AS (
