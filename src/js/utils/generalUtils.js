@@ -129,3 +129,7 @@ export function removeEnumerator(questionText) {
 export function sameContents(array1, array2) {
     return array1.every(e => array2.includes(e)) && array2.every(e => array1.includes(e));
 }
+
+export function intersection(array1, array2) {
+    return array1.filter(value => array2.includes(value));
+}

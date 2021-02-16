@@ -631,8 +631,6 @@ class Collection extends React.Component {
         }
     };
 
-    intersection = (array1, array2) => array1.filter(value => array2.includes(value));
-
     getSelectedSampleIds = (question) => {
         const allFeatures = mercator.getAllFeatures(this.state.mapConfig, "currentSamples") || [];
         const selectedSamples = mercator.getSelectedSamples(this.state.mapConfig);
@@ -920,6 +918,7 @@ class Collection extends React.Component {
                                     selectedQuestion={this.state.selectedQuestion}
                                     surveyQuestions={this.state.currentProject.surveyQuestions}
                                     surveyRules={this.state.currentProject.surveyRules}
+                                    getSelectedSampleIds={this.getSelectedSampleIds}
                                     flagged={this.state.currentPlot && this.state.currentPlot.flagged}
                                     setCurrentValue={this.setCurrentValue}
                                     setSelectedQuestion={this.setSelectedQuestion}
