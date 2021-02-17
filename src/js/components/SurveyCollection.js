@@ -153,7 +153,7 @@ export class SurveyCollection extends React.Component {
     checkRuleTextMatch = (surveyRule, questionToSet, answerId, answerText) => {
         if (surveyRule.questionId === questionToSet.id &&
             !RegExp(surveyRule.regex).test(answerText)) {
-            return "Text match validation failed: Please enter a regular expression that matches " + surveyRule.regex;
+            return `Text match validation failed.\r\n\nPlease enter a regular expression that matches ${surveyRule.regex}`;
         } else {
             return null;
         }
@@ -164,7 +164,7 @@ export class SurveyCollection extends React.Component {
             (isNaN(parseInt(answerText)) ||
              parseInt(answerText) < surveyRule.min ||
              parseInt(answerText) > surveyRule.max)) {
-            return "Numeric range validation failed: Please select a value between " + surveyRule.min + " and " + surveyRule.max;
+            return `Numeric range validation failed.\r\n\n Please select a value between ${surveyRule.min} and ${surveyRule.max}`;
         } else {
             return null;
         }
@@ -184,11 +184,9 @@ export class SurveyCollection extends React.Component {
                             .map(q => q.answered.find(ques => ques.sampleId === sampleId).answerText)
                             .reduce((sum, num) => sum + parseInt(num), 0);
                         if (answeredSum + parseInt(answerText) !== surveyRule.validSum) {
-                            return "Sum of answers validation failed: Possible sum for questions ["
-                                + surveyRule.questionsText.toString()
-                                + "] is "
-                                + (surveyRule.validSum - answeredSum).toString()
-                                + ".";
+                            return "Sum of answers validation failed.\r\n\n" +
+                                `Sum for questions [${surveyRule.questionsText.toString()}] must be ${(surveyRule.validSum).toString()}.\r\n\n` +
+                                `An acceptable answer for "${questionToSet.question}" is ${(surveyRule.validSum - answeredSum).toString()}.`;
                         } else {
                             return null;
                         }
@@ -232,13 +230,9 @@ export class SurveyCollection extends React.Component {
                         !== sums[1] + (surveyRule.questionSetIds2.includes(questionToSet.id) ? parseInt(answerText) : 0)
                     );
                     if (invalidSum) {
-                        return "Matching sums validation failed: Totals of the question sets ["
-                                + surveyRule.questionSetText1.toString()
-                                + "] and ["
-                                + surveyRule.questionSetText2.toString()
-                                + "] do not match.\n\nValid total is "
-                                + Math.abs(invalidSum[0] - invalidSum[1])
-                                + ".";
+                        return "Matching sums validation failed.\r\n\n" +
+                            `Totals of the question sets [${surveyRule.questionSetText1.toString()}] and [${surveyRule.questionSetText2.toString()}] do not match.\r\n\n` +
+                            `An acceptable answer for "${questionToSet.question}" is ${Math.abs(invalidSum[0] - invalidSum[1])}.`;
                     } else {
                         return null;
                     }
@@ -261,7 +255,7 @@ export class SurveyCollection extends React.Component {
                 const ques2Ids = ques2.answered.filter(ans => ans.answerId === surveyRule.answer2).map(a => a.sampleId);
                 const commonSampleIds = intersection(ques1Ids, ques2Ids);
                 if (commonSampleIds.length > 0) {
-                    return "Incompatible answer";
+                    return "Incompatible answer.";
                 } else {
                     return null;
                 }
@@ -275,7 +269,7 @@ export class SurveyCollection extends React.Component {
                 const ques1Ids = ques1.answered.filter(ans => ans.answerId === surveyRule.answer1).map(a => a.sampleId);
                 const commonSampleIds = intersection(ques1Ids, ques2Ids);
                 if (commonSampleIds.length > 0) {
-                    return "Incompatible answer";
+                    return "Incompatible answer.";
                 } else {
                     return null;
                 }
