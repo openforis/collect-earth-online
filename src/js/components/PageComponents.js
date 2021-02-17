@@ -6,7 +6,7 @@ import {getLanguage, capitalizeFirst} from "../utils/generalUtils";
 
 function LogOutButton({userName, uri}) {
     const fullUri = uri + window.location.search;
-    const loggedOut = !userName || userName === "" || userName === "guest";
+    const loggedOut = !userName || userName === "guest";
 
     const logout = () => fetch("/logout", {method: "POST"})
         .then(() => window.location = "/home");
@@ -158,7 +158,7 @@ export class NavigationBar extends React.Component {
     render() {
         const {userName, userId, children} = this.props;
         const uri = window.location.pathname;
-        const loggedOut = !userName || userName === "" || userName === "guest";
+        const loggedOut = !userName || userName === "guest";
 
         return (
             <>

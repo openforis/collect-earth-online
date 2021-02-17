@@ -70,7 +70,7 @@ class UserStats extends React.Component {
                                     }
                                 </StatsCell>
                                 <StatsCell title="Average Plots per Project">
-                                    {Number(((totalPlots / totalProjects)).toFixed(1)) || 0} plots
+                                    {Number((totalPlots / totalProjects).toFixed(1)) || 0} plots
                                 </StatsCell>
                             </div>
                         </div>

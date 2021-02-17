@@ -301,7 +301,6 @@ class SideBar extends React.Component {
 }
 
 function InstitutionList({
-    userId,
     institutions,
     projects,
     filterText,
