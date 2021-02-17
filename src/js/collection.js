@@ -573,6 +573,7 @@ class Collection extends React.Component {
                               projectId: this.props.projectId,
                               plotId: this.state.currentPlot.id,
                               collectionStart: this.state.collectionStart,
+                              flaggedReason: this.state.currentPlot.flaggedReason,
                           }),
                       })
                     .then(response => {
@@ -630,8 +631,6 @@ class Collection extends React.Component {
         }
     };
 
-    intersection = (array1, array2) => array1.filter(value => array2.includes(value));
-
     getSelectedSampleIds = (question) => {
         const allFeatures = mercator.getAllFeatures(this.state.mapConfig, "currentSamples") || [];
         const selectedSamples = mercator.getSelectedSamples(this.state.mapConfig);
@@ -645,158 +644,7 @@ class Collection extends React.Component {
         ).map(sf => sf.get("sampleId"));
     };
 
-    checkRuleTextMatch = (surveyRule, questionToSet, answerId, answerText) => {
-        if (surveyRule.questionId === questionToSet.id &&
-            !RegExp(surveyRule.regex).test(answerText)) {
-            return "Text match validation failed: Please enter a regular expression that matches " + surveyRule.regex;
-        } else {
-            return null;
-        }
-    };
-
-    checkRuleNumericRange = (surveyRule, questionToSet, answerId, answerText) => {
-        if (surveyRule.questionId === questionToSet.id &&
-            (isNaN(parseInt(answerText)) ||
-             parseInt(answerText) < surveyRule.min ||
-             parseInt(answerText) > surveyRule.max)) {
-            return "Numeric range validation failed: Please select a value between " + surveyRule.min + " and " + surveyRule.max;
-        } else {
-            return null;
-        }
-    };
-
-    checkRuleSumOfAnswers = (surveyRule, questionToSet, answerId, answerText) => {
-        if (surveyRule.questions.includes(questionToSet.id)) {
-            const answeredQuestions = this.state.currentProject.surveyQuestions
-                .filter(q => surveyRule.questions.includes(q.id) && q.answered.length > 0 && q.id !== questionToSet.id);
-            if (surveyRule.questions.length === answeredQuestions.length + 1) {
-                const sampleIds = this.getSelectedSampleIds(questionToSet);
-                const answeredSampleIds = answeredQuestions.map(q => q.answered.map(a => a.sampleId));
-                const commonSampleIds = answeredSampleIds.reduce(this.intersection, sampleIds);
-                if (commonSampleIds.length > 0) {
-                    return commonSampleIds.map(sampleId => {
-                        const answeredSum = answeredQuestions
-                            .map(q => q.answered.find(ques => ques.sampleId === sampleId).answerText)
-                            .reduce((sum, num) => sum + parseInt(num), 0);
-                        if (answeredSum + parseInt(answerText) !== surveyRule.validSum) {
-                            return "Sum of answers validation failed: Possible sum for questions ["
-                                + surveyRule.questionsText.toString()
-                                + "] is "
-                                + (surveyRule.validSum - answeredSum).toString()
-                                + ".";
-                        } else {
-                            return null;
-                        }
-                    }).find(res => res !== null);
-                } else {
-                    return null;
-                }
-            } else {
-                return null;
-            }
-        } else {
-            return null;
-        }
-    };
-
-    checkRuleMatchingSums = (surveyRule, questionToSet, answerId, answerText) => {
-        if (surveyRule.questionSetIds1.includes(questionToSet.id) || surveyRule.questionSetIds2.includes(questionToSet.id)) {
-            const answeredQuestions1 = this.state.currentProject.surveyQuestions
-                .filter(q => surveyRule.questionSetIds1.includes(q.id) && q.answered.length > 0 && q.id !== questionToSet.id);
-            const answeredQuestions2 = this.state.currentProject.surveyQuestions
-                .filter(q => surveyRule.questionSetIds2.includes(q.id) && q.answered.length > 0 && q.id !== questionToSet.id);
-            if (surveyRule.questionSetIds1.length + surveyRule.questionSetIds2.length === answeredQuestions1.length + answeredQuestions2.length + 1) {
-                const sampleIds = this.getSelectedSampleIds(questionToSet);
-                const answeredSampleIds1 = answeredQuestions1.map(q => q.answered.map(a => a.sampleId));
-                const commonSampleIds1 = answeredSampleIds1.reduce(this.intersection, sampleIds);
-                const answeredSampleIds2 = answeredQuestions2.map(q => q.answered.map(a => a.sampleId));
-                const commonSampleIds2 = answeredSampleIds2.reduce(this.intersection, sampleIds);
-                const commonSampleIds = this.intersection(commonSampleIds1, commonSampleIds2);
-                if (commonSampleIds.length > 0) {
-                    const sampleSums = commonSampleIds.map(sampleId => {
-                        const sum1 = answeredQuestions1
-                            .map(q => q.answered.find(a => a.sampleId === sampleId).answerText)
-                            .reduce((sum, num) => sum + parseInt(num), 0);
-                        const sum2 = answeredQuestions2
-                            .map(q => q.answered.find(a => a.sampleId === sampleId).answerText)
-                            .reduce((sum, num) => sum + parseInt(num), 0);
-                        return [sum1, sum2];
-                    });
-                    const invalidSum = sampleSums.find(sums =>
-                        sums[0] + (surveyRule.questionSetIds1.includes(questionToSet.id) ? parseInt(answerText) : 0)
-                        !== sums[1] + (surveyRule.questionSetIds2.includes(questionToSet.id) ? parseInt(answerText) : 0)
-                    );
-                    if (invalidSum) {
-                        return "Matching sums validation failed: Totals of the question sets ["
-                                + surveyRule.questionSetText1.toString()
-                                + "] and ["
-                                + surveyRule.questionSetText2.toString()
-                                + "] do not match.\n\nValid total is "
-                                + Math.abs(invalidSum[0] - invalidSum[1])
-                                + ".";
-                    } else {
-                        return null;
-                    }
-                } else {
-                    return null;
-                }
-            } else {
-                return null;
-            }
-        } else {
-            return null;
-        }
-    };
-
-    checkRuleIncompatibleAnswers = (surveyRule, questionToSet, answerId, answerText) => {
-        if (surveyRule.question1 === questionToSet.id && surveyRule.answer1 === answerId) {
-            const ques2 = this.state.currentProject.surveyQuestions.find(q => q.id === surveyRule.question2);
-            if (ques2.answered.some(ans => ans.answerId === surveyRule.answer2)) {
-                const ques1Ids = this.getSelectedSampleIds(questionToSet);
-                const ques2Ids = ques2.answered.filter(ans => ans.answerId === surveyRule.answer2).map(a => a.sampleId);
-                const commonSampleIds = this.intersection(ques1Ids, ques2Ids);
-                if (commonSampleIds.length > 0) {
-                    return "Incompatible answer";
-                } else {
-                    return null;
-                }
-            } else {
-                return null;
-            }
-        } else if (surveyRule.question2 === questionToSet.id && surveyRule.answer2 === answerId) {
-            const ques1 = this.state.currentProject.surveyQuestions.find(q => q.id === surveyRule.question1);
-            if (ques1.answered.some(ans => ans.answerId === surveyRule.answer1)) {
-                const ques2Ids = this.getSelectedSampleIds(questionToSet);
-                const ques1Ids = ques1.answered.filter(ans => ans.answerId === surveyRule.answer1).map(a => a.sampleId);
-                const commonSampleIds = this.intersection(ques1Ids, ques2Ids);
-                if (commonSampleIds.length > 0) {
-                    return "Incompatible answer";
-                } else {
-                    return null;
-                }
-            } else {
-                return null;
-            }
-        } else {
-            return null;
-        }
-    };
-
-    ruleFunctions = {
-        "text-match":           this.checkRuleTextMatch,
-        "numeric-range":        this.checkRuleNumericRange,
-        "sum-of-answers":       this.checkRuleSumOfAnswers,
-        "matching-sums":        this.checkRuleMatchingSums,
-        "incompatible-answers": this.checkRuleIncompatibleAnswers,
-    };
-
-    rulesViolated = (questionToSet, answerId, answerText) =>
-        this.state.currentProject.surveyRules
-        && this.state.currentProject.surveyRules
-            .map(surveyRule => this.ruleFunctions[surveyRule.ruleType](surveyRule, questionToSet, answerId, answerText))
-            .find(msg => msg);
-
-    checkSelection = (sampleIds, ruleError, questionToSet) => {
+    checkSelection = (sampleIds, questionToSet) => {
         if (!this.warnOnNoSamples(this.state.currentPlot)) {
             return false;
         } else if (sampleIds.some(sid => questionToSet.visible.every(vs => vs.id !== sid))) {
@@ -805,9 +653,6 @@ class Collection extends React.Component {
         } else if (sampleIds.length === 0) {
             alert("Please select at least one sample before choosing an answer.");
             return false;
-        } else if (ruleError) {
-            alert(ruleError);
-            return false;
         } else {
             return true;
         }
@@ -815,9 +660,8 @@ class Collection extends React.Component {
 
     setCurrentValue = (questionToSet, answerId, answerText) => {
         const sampleIds = this.getSelectedSampleIds(questionToSet);
-        const ruleError = this.rulesViolated(questionToSet, answerId, answerText);
 
-        if (this.checkSelection(sampleIds, ruleError, questionToSet)) {
+        if (this.checkSelection(sampleIds, questionToSet)) {
             const newSamples = sampleIds.reduce((acc, sampleId) => {
                 const newQuestion = {
                     questionId: questionToSet.id,
@@ -983,6 +827,10 @@ class Collection extends React.Component {
         this.setState({currentPlot: {...this.state.currentPlot, confidence: confidence}});
     };
 
+    setFlaggedReason = flaggedReason => {
+        this.setState({currentPlot: {...this.state.currentPlot, flaggedReason: flaggedReason}});
+    };
+
     render() {
         const plotId = this.state.currentPlot.plotId ? this.state.currentPlot.plotId : this.state.currentPlot.id;
         return (
@@ -1070,7 +918,8 @@ class Collection extends React.Component {
                                     selectedQuestion={this.state.selectedQuestion}
                                     surveyQuestions={this.state.currentProject.surveyQuestions}
                                     surveyRules={this.state.currentProject.surveyRules}
-                                    flagged={this.state.currentPlot.flagged}
+                                    getSelectedSampleIds={this.getSelectedSampleIds}
+                                    flagged={this.state.currentPlot}
                                     setCurrentValue={this.setCurrentValue}
                                     setSelectedQuestion={this.setSelectedQuestion}
                                     selectedSampleId={Object.keys(this.state.userSamples).length === 1
@@ -1087,6 +936,8 @@ class Collection extends React.Component {
                                     setConfidence={this.setConfidence}
                                     resetPlotValues={this.resetPlotValues}
                                     toggleFlagged={this.toggleFlagged}
+                                    setFlaggedReason={this.setFlaggedReason}
+                                    flaggedReason={this.state.currentPlot.flaggedReason || ""}
                                 />
                             </>
                         :

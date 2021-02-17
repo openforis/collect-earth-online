@@ -389,8 +389,6 @@ export class SurveyQuestionHelp extends React.Component {
 
     setCurrentValue = (questionToSet, answerId, answerText) => {
         const sampleIds = [1];
-        // Move rules check into SurveyCollection so it can be accessed here
-        // const ruleError = rulesViolated(questionToSet, answerId, answerText);
 
         const newSamples = sampleIds.reduce((acc, sampleId) => {
             const newQuestion = {
@@ -427,6 +425,7 @@ export class SurveyQuestionHelp extends React.Component {
                     surveyQuestions={this.context.surveyQuestions
                         .map(q => ({...q, answered: [], visible: [], ...this.state.visibleAnswered[q.id]}))}
                     surveyRules={this.context.surveyRules}
+                    getSelectedSampleIds={(question) => [1]}
                     allowDrawnSamples={this.context.allowDrawnSamples}
                     answerMode={this.state.answerMode}
                     selectedQuestion={this.state.selectedQuestion}

@@ -29,12 +29,13 @@
         (call-sql "select_plot_samples" plot-id project-id)))
 
 (defn- prepare-plot-object [plot-info project-id]
-  (let [{:keys [plot_id center flagged confidence assigned plotid geom extra_plot_info]} plot-info]
+  (let [{:keys [plot_id center flagged confidence assigned flagged_reason plotid geom extra_plot_info]} plot-info]
     {:id            plot_id
      :center        center
      :flagged       (< 0 (or flagged -1))
      :confidence    confidence
      :analyses      assigned
+     :flaggedReason flagged_reason
      :plotId        plotid
      :geom          geom
      :extraPlotInfo (dissoc (tc/jsonb->clj extra_plot_info {}) :gid :lat :lon :plotid)
@@ -140,7 +141,8 @@
 (defn flag-plot [{:keys [params]}]
   (let [plot-id          (tc/val->int (:plotId params))
         user-id          (:userId params -1)
-        collection-start (tc/val->long (:collectionStart params))]
-    (call-sql "flag_plot" plot-id user-id (Timestamp. collection-start))
+        collection-start (tc/val->long (:collectionStart params))
+        flagged-reason   (:flaggedReason params)]
+    (call-sql "flag_plot" plot-id user-id (Timestamp. collection-start) flagged-reason)
     (unlock-plots user-id)
     (data-response "")))
