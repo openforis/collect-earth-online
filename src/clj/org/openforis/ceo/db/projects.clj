@@ -943,7 +943,10 @@
             text-headers     (concat plot-base-headers
                                      (get-ext-plot-headers project-id))
             number-headers   (get-value-distribution-headers survey-questions)
-            headers-out      (str/join "," (map #(-> % name csv-quotes) (concat text-headers number-headers)))
+            headers-out      (->> (concat text-headers number-headers)
+                                  (map #(-> % name csv-quotes))
+                                  (str/join ",")
+                                  (str "\uFEFF")) ; Prefix headers with a UTF-8 tag
             data-rows        (map (fn [row]
                                     (let [samples       (tc/jsonb->clj (:samples row))
                                           ext-plot-data (tc/jsonb->clj (:ext_plot_data row))]
@@ -968,7 +971,7 @@
                    "Content-Disposition" (str "attachment; filename="
                                               (prepare-file-name (:name project-info) "plot")
                                               ".csv")}
-         :body (str/join "\n" (conj data-rows headers-out))})
+         :body (str/join "\n" (cons headers-out data-rows))})
       (data-response "Project not found."))))
 
 (defn- get-ext-sample-headers
@@ -1010,7 +1013,10 @@
                                      (get-ext-plot-headers project-id)
                                      (get-ext-sample-headers project-id)
                                      (map :question survey-questions))
-            headers-out      (str/join "," (map #(-> % name csv-quotes) text-headers))
+            headers-out      (->> text-headers
+                                  (map #(-> % name csv-quotes))
+                                  (str/join ",")
+                                  (str "\uFEFF")) ; Prefix headers with a UTF-8 tag
             data-rows        (map (fn [row]
                                     (let [saved-answers   (tc/jsonb->clj (:saved_answers row))
                                           ext-plot-data   (tc/jsonb->clj (:ext_plot_data row))
@@ -1035,5 +1041,5 @@
                    "Content-Disposition" (str "attachment; filename="
                                               (prepare-file-name (:name project-info) "sample")
                                               ".csv")}
-         :body (str/join "\n" (conj data-rows headers-out))})
+         :body (str/join "\n" (cons headers-out data-rows))})
       (data-response "Project not found."))))
