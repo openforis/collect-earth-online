@@ -1170,7 +1170,8 @@ class MapWidget extends React.Component {
         try {
             const plotshape = this.props.getParameterByName("plotShape");
             if (plotshape && plotshape === "square") {
-                const vectorSource = new Vector({}).addFeatures([this.props.feature]);
+                const vectorSource = new Vector({});
+                vectorSource.addFeatures([this.props.feature]);
                 const layer = new VectorLayer({
                     source: vectorSource,
                     style: [
@@ -1185,7 +1186,8 @@ class MapWidget extends React.Component {
                 });
                 whichMap.addLayer(layer);
             } else if (plotshape && plotshape === "circle") {
-                const vectorSource = new Vector({}).addFeatures([this.props.feature]);
+                const vectorSource = new Vector({});
+                vectorSource.addFeatures([this.props.feature]);
                 const layer = new VectorLayer({
                     source: vectorSource,
                     style: [
