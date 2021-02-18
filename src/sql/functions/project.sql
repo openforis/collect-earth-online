@@ -1173,9 +1173,10 @@ CREATE OR REPLACE FUNCTION select_all_project_plots(_project_id integer)
 
     WITH username AS (
         SELECT MAX(email) as email, plot_rid
-        FROM users
-        INNER JOIN user_plots
-            ON user_uid = user_rid
+        FROM users, user_plots, plots
+        WHERE user_uid = user_rid
+            AND plot_uid = plot_rid
+            AND project_rid = _project_id
         GROUP BY plot_rid
     ), plotsum AS (
         SELECT cast(SUM(CASE WHEN flagged THEN 1 ELSE 0 END) as int) as flagged,
@@ -1184,7 +1185,9 @@ CREATE OR REPLACE FUNCTION select_all_project_plots(_project_id integer)
             MAX(collection_time) as collection_time,
             ROUND(AVG(EXTRACT(EPOCH FROM (collection_time - collection_start)))::numeric, 1) as analysis_duration,
             plot_rid
-        FROM user_plots
+        FROM user_plots, plots
+        WHERE plot_uid = plot_rid
+            AND project_rid = _project_id
         GROUP BY plot_rid
     ), tablename AS (
         SELECT plots_ext_table
