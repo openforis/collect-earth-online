@@ -75,39 +75,37 @@ class Geodash extends React.Component {
     }
 
     componentDidMount() {
-        Promise.all([this.getInstitutionImagery(), this.getWindgetsByProjectId(), this.getPlotSampleGeom()])
+        Promise.all([this.getInstitutionImagery(), this.getPlotSampleGeom()])
+            .then(() => this.getWindgetsByProjectId())
             .catch(response => {
                 console.log(response);
                 alert("Error initializing Geo-Dash. See console for details.");
             });
     }
 
-    getInstitutionImagery = () => {
-        fetch(`/get-institution-imagery?institutionId=${this.state.institutionId}`)
-            .then(response => response.ok ? response.json() : Promise.reject(response))
-            .then(data => this.setState({imageryList: data}));
-    };
+    getInstitutionImagery = () => fetch(`/get-institution-imagery?institutionId=${this.state.institutionId}`)
+        .then(response => response.ok ? response.json() : Promise.reject(response))
+        .then(data => this.setState({imageryList: data}));
 
-    getWindgetsByProjectId = () => {
-        fetch(`/geo-dash/get-by-projid?projectId=${this.state.projectId}`)
-            .then(response => response.json())
-            .then(data => data.widgets.map(widget => {
-                widget.isFull = false;
-                widget.opacity = 0.9;
-                widget.sliderType = widget.swipeAsDefault ? "swipe" : "opacity";
-                widget.swipeValue = 1.0;
-                return widget;
-            }))
-            .then(data => this.setState({widgets: data, callbackComplete: true}));
-    };
+    getWindgetsByProjectId = () => fetch(`/geo-dash/get-by-projid?projectId=${this.state.projectId}`)
+        .then(response => response.json())
+        .then(data => data.widgets.map(widget => {
+            widget.isFull = false;
+            widget.opacity = 0.9;
+            widget.sliderType = widget.swipeAsDefault ? "swipe" : "opacity";
+            widget.swipeValue = 1.0;
+            return widget;
+        }))
+        .then(data => this.setState({widgets: data, callbackComplete: true}));
 
     getPlotSampleGeom = () => {
         if (!["square", "circle"].includes(this.getParameterByName("plotShape"))) {
-            fetch(`/get-plot-sample-geom?plotId=${this.props.plotId}`)
+            return fetch(`/get-plot-sample-geom?plotId=${this.props.plotId}`)
                 .then(res => res.json())
                 .then(data => this.setState({plotSampleGeom: data}));
         } else {
             this.setState({plotSampleGeom: ""});
+            return Promise.resolve("buffer created");
         }
     };
 
