@@ -15,7 +15,7 @@ import {
 import {CollapsibleTitle} from "./components/FormComponents";
 
 import {convertSampleValuesToSurveyQuestions} from "./utils/surveyUtils";
-import {UnicodeIcon, getQueryString, safeLength} from "./utils/generalUtils";
+import {UnicodeIcon, getQueryString, safeLength, isNumber} from "./utils/generalUtils";
 import {mercator} from "./utils/mercator.js";
 
 class Collection extends React.Component {
@@ -301,7 +301,7 @@ class Collection extends React.Component {
         );
 
     getNextPlotData = (plotId) =>
-        this.processModal(plotId > 0 ? "Getting next plot" : "Getting first plot", () =>
+        this.processModal(plotId >= 0 ? "Getting next plot" : "Getting first plot", () =>
             fetch("/get-next-plot?" + getQueryString({
                 plotId: plotId,
                 projectId: this.props.projectId,
@@ -528,10 +528,10 @@ class Collection extends React.Component {
         });
     };
 
-    navToFirstPlot = () => this.getNextPlotData(-1);
+    navToFirstPlot = () => this.getNextPlotData(-10000000);
 
-    getPlotId = () => this.state.currentPlot.plotId
-        ? parseInt(this.state.currentPlot.plotId)
+    getPlotId = () => isNumber(this.state.currentPlot.plotId)
+        ? this.state.currentPlot.plotId
         : this.state.currentPlot.id;
 
     navToNextPlot = () => this.getNextPlotData(this.getPlotId());
@@ -972,7 +972,7 @@ class Collection extends React.Component {
     };
 
     render() {
-        const plotId = this.state.currentPlot.plotId ? this.state.currentPlot.plotId : this.state.currentPlot.id;
+        const plotId = this.getPlotId();
         return (
             <div className="row" style={{height: "-webkit-fill-available"}}>
                 {this.state.modalMessage && <LoadingModal message={this.state.modalMessage}/>}
