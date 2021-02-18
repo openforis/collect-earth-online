@@ -1152,8 +1152,8 @@ class MapWidget extends React.Component {
             if (plotshape && plotshape === "square") {
                 const centerPoint = new Point(projTransform(JSON.parse(bcenter).coordinates, "EPSG:4326", "EPSG:3857"));
                 const pointFeature = new Feature(centerPoint);
-                const poitnExtent = pointFeature.getGeometry().getExtent();
-                const bufferedExtent = new ExtentBuffer(poitnExtent, parseInt(bradius));
+                const pointExtent = pointFeature.getGeometry().getExtent();
+                const bufferedExtent = new ExtentBuffer(pointExtent, parseInt(bradius));
                 const bufferPolygon = new Polygon(
                     [
                         [[bufferedExtent[0], bufferedExtent[1]],
