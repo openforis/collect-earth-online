@@ -56,6 +56,7 @@ class Geodash extends React.Component {
             imageryList:[],
             initCenter:null,
             initZoom:null,
+            feature: "",
         };
         const theSplit = decodeURI(this.state.projAOI)
             .replace("[", "")
@@ -75,7 +76,7 @@ class Geodash extends React.Component {
     }
 
     componentDidMount() {
-        Promise.all([this.getInstitutionImagery(), this.getPlotSampleGeom()])
+        Promise.all([this.getInstitutionImagery(), this.getFeature()])
             .then(() => this.getWindgetsByProjectId())
             .catch(response => {
                 console.log(response);
@@ -98,13 +99,35 @@ class Geodash extends React.Component {
         }))
         .then(data => this.setState({widgets: data, callbackComplete: true}));
 
-    getPlotSampleGeom = () => {
-        if (!["square", "circle"].includes(this.getParameterByName("plotShape"))) {
+    getFeature = () => {
+        const plotshape = this.props.getParameterByName("plotShape");
+        if (!["square", "circle"].includes(plotshape)) {
             return fetch(`/get-plot-sample-geom?plotId=${this.props.plotId}`)
                 .then(res => res.json())
-                .then(data => this.setState({plotSampleGeom: data}));
+                .then(data => this.setState({feature: typeof(data) === "string" ? JSON.parse(data) : data}));
         } else {
-            this.setState({plotSampleGeom: ""});
+            const bradius = this.props.getParameterByName("bradius");
+            const bcenter = this.props.getParameterByName("bcenter");
+            if (plotshape === "square") {
+                const pointFeature = new Feature(
+                    new Point(projTransform(JSON.parse(bcenter).coordinates, "EPSG:4326", "EPSG:3857"))
+                );
+                const pointExtent = pointFeature.getGeometry().getExtent();
+                const bufferedExtent = new ExtentBuffer(pointExtent, parseInt(bradius));
+                const feature = new Feature(new Polygon(
+                    [
+                        [[bufferedExtent[0], bufferedExtent[1]],
+                         [bufferedExtent[0], bufferedExtent[3]],
+                         [bufferedExtent[2], bufferedExtent[3]],
+                         [bufferedExtent[2], bufferedExtent[1]],
+                         [bufferedExtent[0], bufferedExtent[1]]],
+                    ])
+                );
+                this.setState({feature: feature});
+            } else if (plotshape === "circle") {
+                const feature = new Feature(new Circle(projTransform(JSON.parse(bcenter).coordinates, "EPSG:4326", "EPSG:3857"), bradius * 1));
+                this.setState({feature: feature});
+            }
             return Promise.resolve("buffer created");
         }
     };
@@ -187,7 +210,7 @@ class Geodash extends React.Component {
             <div className="container-fluid">
                 <Widgets
                     widgets={this.state.widgets}
-                    plotSampleGeom={this.state.plotSampleGeom}
+                    feature={this.state.feature}
                     projAOI={this.state.projAOI}
                     projPairAOI={this.state.projPairAOI}
                     onFullScreen={this.handleFullScreen}
@@ -217,7 +240,7 @@ class Widgets extends React.Component {
                             key={widget.id}
                             id={widget.id}
                             widget={widget}
-                            plotSampleGeom={this.props.plotSampleGeom}
+                            feature={this.props.feature}
                             projAOI={this.props.projAOI}
                             projPairAOI={this.props.projPairAOI}
                             onFullScreen ={this.props.onFullScreen}
@@ -365,7 +388,7 @@ class Widget extends React.Component {
             return <div className="front">
                 <MapWidget
                     widget={widget}
-                    plotSampleGeom={this.props.plotSampleGeom}
+                    feature={this.props.feature}
                     mapCenter={this.props.mapCenter}
                     mapZoom={this.props.mapZoom}
                     projAOI={this.props.projAOI}
@@ -399,7 +422,7 @@ class Widget extends React.Component {
             return <div className="front">
                 <DegradationWidget
                     widget={widget}
-                    plotSampleGeom={this.state.plotSampleGeom}
+                    feature={this.state.feature}
                     projPairAOI={this.props.projPairAOI}
                     getParameterByName={this.props.getParameterByName}
                     initCenter={this.props.initCenter}
@@ -471,7 +494,7 @@ class DegradationWidget extends React.Component {
                             <div className="front">
                                 <MapWidget
                                     widget={this.props.widget}
-                                    plotSampleGeom={this.props.plotSampleGeom}
+                                    feature={this.props.feature}
                                     mapCenter={this.props.mapCenter}
                                     mapZoom={this.props.mapZoom}
                                     projAOI={this.props.projAOI}
@@ -1144,28 +1167,11 @@ class MapWidget extends React.Component {
     };
 
     addBuffer = whichMap => {
-        console.log(this.props.plotSampleGeom);
+        console.log(this.props.vectorSource);
         try {
-            const bradius = this.props.getParameterByName("bradius");
-            const bcenter = this.props.getParameterByName("bcenter");
             const plotshape = this.props.getParameterByName("plotShape");
             if (plotshape && plotshape === "square") {
-                const centerPoint = new Point(projTransform(JSON.parse(bcenter).coordinates, "EPSG:4326", "EPSG:3857"));
-                const pointFeature = new Feature(centerPoint);
-                const pointExtent = pointFeature.getGeometry().getExtent();
-                const bufferedExtent = new ExtentBuffer(pointExtent, parseInt(bradius));
-                const bufferPolygon = new Polygon(
-                    [
-                        [[bufferedExtent[0], bufferedExtent[1]],
-                         [bufferedExtent[0], bufferedExtent[3]],
-                         [bufferedExtent[2], bufferedExtent[3]],
-                         [bufferedExtent[2], bufferedExtent[1]],
-                         [bufferedExtent[0], bufferedExtent[1]]],
-                    ]
-                );
-                const bufferedFeature = new Feature(bufferPolygon);
-                const vectorSource = new Vector({});
-                vectorSource.addFeatures([bufferedFeature]);
+                const vectorSource = new Vector({}).addFeatures([this.props.feature]);
                 const layer = new VectorLayer({
                     source: vectorSource,
                     style: [
@@ -1180,10 +1186,7 @@ class MapWidget extends React.Component {
                 });
                 whichMap.addLayer(layer);
             } else if (plotshape && plotshape === "circle") {
-                const circle = new Circle(projTransform(JSON.parse(bcenter).coordinates, "EPSG:4326", "EPSG:3857"), bradius * 1);
-                const CircleFeature = new Feature(circle);
-                const vectorSource = new Vector({});
-                vectorSource.addFeatures([CircleFeature]);
+                const vectorSource = new Vector({}).addFeatures([this.props.feature]);
                 const layer = new VectorLayer({
                     source: vectorSource,
                     style: [
@@ -1198,10 +1201,8 @@ class MapWidget extends React.Component {
                 });
                 whichMap.addLayer(layer);
             } else {
-                const {plotSampleGeom} = this.props;
-                if (plotSampleGeom) {
-                    const plotJsonObject = typeof(plotSampleGeom) === "string" ? JSON.parse(plotSampleGeom) : plotSampleGeom;
-                    const vectorSource = mercator.geometryToVectorSource(mercator.parseGeoJson(plotJsonObject.geom, true));
+                if (this.props.feature) {
+                    const vectorSource = mercator.geometryToVectorSource(mercator.parseGeoJson(this.props.feature.geom, true));
                     const mapConfig = {};
                     const style = [
                         new Style({
@@ -1213,10 +1214,10 @@ class MapWidget extends React.Component {
                         }),
                     ];
                     mercator.addVectorLayer(mapConfig, "geeLayer", vectorSource, style);
-                    if (plotJsonObject.samples) {
-                        plotJsonObject.samples.forEach(element => {
+                    if (this.props.feature.samples) {
+                        this.props.feature.samples.forEach(element => {
                             if (element.geom) {
-                                const vectorSource = mercator.geometryToVectorSource(mercator.parseGeoJson(element.geom, true));
+                                const vectorSource = mercator.geometryToVectorSource(mercator.parseGeoJson(this.props.feature.geom, true));
                                 mercator.addVectorLayer(mapConfig, "geeLayer", vectorSource, style);
                             }
                         });
