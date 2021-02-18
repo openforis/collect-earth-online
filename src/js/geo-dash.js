@@ -100,14 +100,14 @@ class Geodash extends React.Component {
         .then(data => this.setState({widgets: data, callbackComplete: true}));
 
     getFeature = () => {
-        const plotshape = this.props.getParameterByName("plotShape");
+        const plotshape = this.getParameterByName("plotShape");
         if (!["square", "circle"].includes(plotshape)) {
             return fetch(`/get-plot-sample-geom?plotId=${this.props.plotId}`)
                 .then(res => res.json())
                 .then(data => this.setState({feature: typeof(data) === "string" ? JSON.parse(data) : data}));
         } else {
-            const bradius = this.props.getParameterByName("bradius");
-            const bcenter = this.props.getParameterByName("bcenter");
+            const bradius = this.getParameterByName("bradius");
+            const bcenter = this.getParameterByName("bcenter");
             if (plotshape === "square") {
                 const pointFeature = new Feature(
                     new Point(projTransform(JSON.parse(bcenter).coordinates, "EPSG:4326", "EPSG:3857"))
@@ -1167,7 +1167,6 @@ class MapWidget extends React.Component {
     };
 
     addBuffer = whichMap => {
-        console.log(this.props.vectorSource);
         try {
             const plotshape = this.props.getParameterByName("plotShape");
             if (plotshape && plotshape === "square") {
