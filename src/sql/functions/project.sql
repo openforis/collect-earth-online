@@ -719,18 +719,13 @@ CREATE OR REPLACE FUNCTION plots_missing_samples(_project_id integer)
 $$ LANGUAGE SQL;
 
 -- Return table sizes for shp and csv to check against limits
-CREATE OR REPLACE FUNCTION ext_table_count(_project_id integer)
+CREATE OR REPLACE FUNCTION ext_table_count(_project_id integer, _plots_ext_table text, _samples_ext_table text)
  RETURNS table (plot_count integer, sample_count integer) AS $$
 
     DECLARE
-        _plots_ext_table text;
-        _samples_ext_table text;
         _plots_count integer;
         _samples_count integer;
     BEGIN
-        SELECT plots_ext_table INTO _plots_ext_table FROM projects WHERE project_uid = _project_id;
-        SELECT samples_ext_table INTO _samples_ext_table FROM projects WHERE project_uid = _project_id;
-
         IF _plots_ext_table = '' OR _plots_ext_table IS NULL THEN
             _plots_count = 0;
         ELSE
