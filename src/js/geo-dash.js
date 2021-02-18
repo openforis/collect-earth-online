@@ -75,22 +75,41 @@ class Geodash extends React.Component {
     }
 
     componentDidMount() {
+        Promise.all([this.getInstitutionImagery(), this.getWindgetsByProjectId(), this.getPlotSampleGeom()])
+            .catch(response => {
+                console.log(response);
+                alert("Error initializing Geo-Dash. See console for details.");
+            });
+    }
+
+    getInstitutionImagery = () => {
         fetch(`/get-institution-imagery?institutionId=${this.state.institutionId}`)
             .then(response => response.ok ? response.json() : Promise.reject(response))
-            .then(data => this.setState({imageryList: data}))
-            .then(() =>
-                fetch(`/geo-dash/get-by-projid?projectId=${this.state.projectId}`)
-                    .then(response => response.json())
-                    .then(data => data.widgets.map(widget => {
-                        widget.isFull = false;
-                        widget.opacity = 0.9;
-                        widget.sliderType = widget.swipeAsDefault ? "swipe" : "opacity";
-                        widget.swipeValue = 1.0;
-                        return widget;
-                    }))
-                    .then(data => this.setState({widgets: data, callbackComplete: true}))
-            );
-    }
+            .then(data => this.setState({imageryList: data}));
+    };
+
+    getWindgetsByProjectId = () => {
+        fetch(`/geo-dash/get-by-projid?projectId=${this.state.projectId}`)
+            .then(response => response.json())
+            .then(data => data.widgets.map(widget => {
+                widget.isFull = false;
+                widget.opacity = 0.9;
+                widget.sliderType = widget.swipeAsDefault ? "swipe" : "opacity";
+                widget.swipeValue = 1.0;
+                return widget;
+            }))
+            .then(data => this.setState({widgets: data, callbackComplete: true}));
+    };
+
+    getPlotSampleGeom = () => {
+        if (!["square", "circle"].includes(this.getParameterByName("plotShape"))) {
+            fetch(`/get-plot-sample-geom?plotId=${this.props.plotId}`)
+                .then(res => res.json())
+                .then(data => this.setState({plotSampleGeom: data}));
+        } else {
+            this.setState({plotSampleGeom: ""});
+        }
+    };
 
     getParameterByName = (name, url) => {
         const regex = new RegExp("[?&]" + name.replace(/[[\]]/g, "\\$&") + "(=([^&#]*)|&|#|$)");
@@ -170,6 +189,7 @@ class Geodash extends React.Component {
             <div className="container-fluid">
                 <Widgets
                     widgets={this.state.widgets}
+                    plotSampleGeom={this.state.plotSampleGeom}
                     projAOI={this.state.projAOI}
                     projPairAOI={this.state.projPairAOI}
                     onFullScreen={this.handleFullScreen}
@@ -199,6 +219,7 @@ class Widgets extends React.Component {
                             key={widget.id}
                             id={widget.id}
                             widget={widget}
+                            plotSampleGeom={this.props.plotSampleGeom}
                             projAOI={this.props.projAOI}
                             projPairAOI={this.props.projPairAOI}
                             onFullScreen ={this.props.onFullScreen}
@@ -346,6 +367,7 @@ class Widget extends React.Component {
             return <div className="front">
                 <MapWidget
                     widget={widget}
+                    plotSampleGeom={this.props.plotSampleGeom}
                     mapCenter={this.props.mapCenter}
                     mapZoom={this.props.mapZoom}
                     projAOI={this.props.projAOI}
@@ -379,6 +401,7 @@ class Widget extends React.Component {
             return <div className="front">
                 <DegradationWidget
                     widget={widget}
+                    plotSampleGeom={this.state.plotSampleGeom}
                     projPairAOI={this.props.projPairAOI}
                     getParameterByName={this.props.getParameterByName}
                     initCenter={this.props.initCenter}
@@ -450,6 +473,7 @@ class DegradationWidget extends React.Component {
                             <div className="front">
                                 <MapWidget
                                     widget={this.props.widget}
+                                    plotSampleGeom={this.props.plotSampleGeom}
                                     mapCenter={this.props.mapCenter}
                                     mapZoom={this.props.mapZoom}
                                     projAOI={this.props.projAOI}
@@ -1122,6 +1146,7 @@ class MapWidget extends React.Component {
     };
 
     addBuffer = whichMap => {
+        console.log(this.props.plotSampleGeom);
         try {
             const bradius = this.props.getParameterByName("bradius");
             const bcenter = this.props.getParameterByName("bcenter");
@@ -1175,33 +1200,30 @@ class MapWidget extends React.Component {
                 });
                 whichMap.addLayer(layer);
             } else {
-                fetch(`/get-plot-sample-geom?plotId=${this.props.getParameterByName("plotId")}`)
-                    .then(res => res.json())
-                    .then(data => {
-                        const plotJsonObject = typeof(data) === "string" ? JSON.parse(data) : data;
-                        const vectorSource = mercator.geometryToVectorSource(mercator.parseGeoJson(plotJsonObject.geom, true));
-                        const mapConfig = {};
-                        mapConfig.map = whichMap;
-                        const style = [
-                            new Style({
-                                stroke: new Stroke({
-                                    color: "yellow",
-                                    width: 3,
-                                }),
-                                fill: null,
+                const {plotSampleGeom} = this.props;
+                if (plotSampleGeom) {
+                    const plotJsonObject = typeof(plotSampleGeom) === "string" ? JSON.parse(plotSampleGeom) : plotSampleGeom;
+                    const vectorSource = mercator.geometryToVectorSource(mercator.parseGeoJson(plotJsonObject.geom, true));
+                    const mapConfig = {};
+                    const style = [
+                        new Style({
+                            stroke: new Stroke({
+                                color: "yellow",
+                                width: 3,
                             }),
-                        ];
-                        mercator.addVectorLayer(mapConfig, "geeLayer", vectorSource, style);
-
-                        if (plotJsonObject.samples) {
-                            plotJsonObject.samples.forEach(element => {
-                                if (element.geom) {
-                                    const vectorSource = mercator.geometryToVectorSource(mercator.parseGeoJson(element.geom, true));
-                                    mercator.addVectorLayer(mapConfig, "geeLayer", vectorSource, style);
-                                }
-                            });
-                        }
-                    });
+                            fill: null,
+                        }),
+                    ];
+                    mercator.addVectorLayer(mapConfig, "geeLayer", vectorSource, style);
+                    if (plotJsonObject.samples) {
+                        plotJsonObject.samples.forEach(element => {
+                            if (element.geom) {
+                                const vectorSource = mercator.geometryToVectorSource(mercator.parseGeoJson(element.geom, true));
+                                mercator.addVectorLayer(mapConfig, "geeLayer", vectorSource, style);
+                            }
+                        });
+                    }
+                }
             }
         } catch (e) {
             console.warn("buffer failed: " + e.message);
