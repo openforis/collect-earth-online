@@ -10,6 +10,12 @@
            (transient {})
            coll)))
 
+(defn read-file-base64 [file]
+  (with-open [is (io/input-stream file)
+              os (java.io.ByteArrayOutputStream.)]
+    (io/copy is os)
+    (.encodeToString (Base64/getEncoder) (.toByteArray os))))
+
 (defn- decode64 [to-decode]
   (.decode (Base64/getDecoder) (second (str/split to-decode #","))))
 
