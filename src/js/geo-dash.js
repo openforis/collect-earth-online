@@ -56,7 +56,7 @@ class Geodash extends React.Component {
             imageryList:[],
             initCenter:null,
             initZoom:null,
-            feature: "",
+            vectorSource: "",
         };
         const theSplit = decodeURI(this.state.projAOI)
             .replace("[", "")
@@ -77,7 +77,7 @@ class Geodash extends React.Component {
 
     componentDidMount() {
         Promise.all([this.getInstitutionImagery(), this.getWindgetsByProjectId(), this.getFeature()])
-            .then(data => this.setState({widgets: data[2], callbackComplete: true, feature: data[1]}))
+            .then(data => this.setState({widgets: data[2], callbackComplete: true, vectorSource: data[1]}))
             .catch(response => {
                 console.log(response);
                 alert("Error initializing Geo-Dash. See console for details.");
@@ -98,7 +98,7 @@ class Geodash extends React.Component {
             return widget;
         }));
 
-    getFeature = () => {
+    getVectorSource = () => {
         const plotshape = this.getParameterByName("plotShape");
         if (!["square", "circle"].includes(plotshape)) {
             return fetch(`/get-plot-sample-geom?plotId=${this.props.plotId}`)
@@ -209,7 +209,7 @@ class Geodash extends React.Component {
             <div className="container-fluid">
                 <Widgets
                     widgets={this.state.widgets}
-                    feature={this.state.feature}
+                    vectorSource={this.state.vectorSource}
                     projAOI={this.state.projAOI}
                     projPairAOI={this.state.projPairAOI}
                     onFullScreen={this.handleFullScreen}
@@ -239,7 +239,7 @@ class Widgets extends React.Component {
                             key={widget.id}
                             id={widget.id}
                             widget={widget}
-                            feature={this.props.feature}
+                            vectorSource={this.props.vectorSource}
                             projAOI={this.props.projAOI}
                             projPairAOI={this.props.projPairAOI}
                             onFullScreen ={this.props.onFullScreen}
@@ -387,7 +387,7 @@ class Widget extends React.Component {
             return <div className="front">
                 <MapWidget
                     widget={widget}
-                    feature={this.props.feature}
+                    vectorSource={this.props.vectorSource}
                     mapCenter={this.props.mapCenter}
                     mapZoom={this.props.mapZoom}
                     projAOI={this.props.projAOI}
@@ -421,7 +421,7 @@ class Widget extends React.Component {
             return <div className="front">
                 <DegradationWidget
                     widget={widget}
-                    feature={this.state.feature}
+                    vectorSource={this.state.vectorSource}
                     projPairAOI={this.props.projPairAOI}
                     getParameterByName={this.props.getParameterByName}
                     initCenter={this.props.initCenter}
@@ -493,7 +493,7 @@ class DegradationWidget extends React.Component {
                             <div className="front">
                                 <MapWidget
                                     widget={this.props.widget}
-                                    feature={this.props.feature}
+                                    vectorSource={this.props.vectorSource}
                                     mapCenter={this.props.mapCenter}
                                     mapZoom={this.props.mapZoom}
                                     projAOI={this.props.projAOI}
@@ -1169,9 +1169,9 @@ class MapWidget extends React.Component {
         try {
             const plotshape = this.props.getParameterByName("plotShape");
             if (plotshape && plotshape === "square") {
-                const vectorSource = new Vector({features: [this.props.feature]});
+                const vector = new Vector({features: [this.props.vectorSource]});
                 const layer = new VectorLayer({
-                    source: vectorSource,
+                    source: vector,
                     style: [
                         new Style({
                             stroke: new Stroke({
@@ -1184,9 +1184,9 @@ class MapWidget extends React.Component {
                 });
                 whichMap.addLayer(layer);
             } else if (plotshape && plotshape === "circle") {
-                const vectorSource = new Vector({features: [this.props.feature]});
+                const vector = new Vector({features: [this.props.vectorSource]});
                 const layer = new VectorLayer({
-                    source: vectorSource,
+                    source: vector,
                     style: [
                         new Style({
                             stroke: new Stroke({
@@ -1200,7 +1200,7 @@ class MapWidget extends React.Component {
                 whichMap.addLayer(layer);
             } else {
                 if (this.props.feature) {
-                    const vectorSource = mercator.geometryToVectorSource(mercator.parseGeoJson(this.props.feature.geom, true));
+                    const vectorSource = mercator.geometryToVectorSource(mercator.parseGeoJson(this.props.vectorSource.geom, true));
                     const mapConfig = {};
                     const style = [
                         new Style({
