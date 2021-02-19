@@ -256,8 +256,8 @@ export class SurveyCollection extends React.Component {
                 const commonSampleIds = intersection(ques1Ids, ques2Ids);
                 if (commonSampleIds.length > 0) {
                     return "Incompatible answers validation failed.\r\n\n" +
-                        `Answer "${surveyRule.answerText1}" for question "${surveyRule.questionText1}" is incompatible with\r\n` +
-                        `answer "${surveyRule.answerText2}" for question "${surveyRule.questionText2}".\r\n\n`;
+                        `Answer "${surveyRule.answerText1}" from question "${surveyRule.questionText1}" is incompatible with\r\n` +
+                        `answer "${surveyRule.answerText2}" from question "${surveyRule.questionText2}".\r\n\n`;
                 } else {
                     return null;
                 }
@@ -272,8 +272,8 @@ export class SurveyCollection extends React.Component {
                 const commonSampleIds = intersection(ques1Ids, ques2Ids);
                 if (commonSampleIds.length > 0) {
                     return "Incompatible answers validation failed.\r\n\n" +
-                        `Answer "${surveyRule.answerText2}" for question "${surveyRule.questionText2}" is incompatible with\r\n` +
-                        `answer "${surveyRule.answerText1}" for question "${surveyRule.questionText1}".\r\n\n`;
+                        `Answer "${surveyRule.answerText2}" from question "${surveyRule.questionText2}" is incompatible with\r\n` +
+                        `answer "${surveyRule.answerText1}" from question "${surveyRule.questionText1}".\r\n\n`;
                 } else {
                     return null;
                 }
