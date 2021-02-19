@@ -111,7 +111,7 @@ class Geodash extends React.Component {
                     const features = [plotJsonObject.geom].concat(sampleGeom)
                         .filter(e => e)
                         .map(geom => new Feature({geometry: mercator.parseGeoJson(geom, true)}));
-                    return new Vector({features: features});
+                    return Promise.resolve(new Vector({features: features}));
                 });
         } else if (plotShape === "square") {
             const pointFeature = new Feature(
@@ -126,8 +126,7 @@ class Geodash extends React.Component {
                       [bufferedExtent[2], bufferedExtent[3]],
                       [bufferedExtent[2], bufferedExtent[1]],
                       [bufferedExtent[0], bufferedExtent[1]]]]
-                )
-                )],
+                ))],
             }));
         } else if (plotShape === "circle") {
             return Promise.resolve(new Vector({
@@ -135,6 +134,8 @@ class Geodash extends React.Component {
                     projTransform(JSON.parse(center).coordinates, "EPSG:4326", "EPSG:3857"), radius * 1)
                 )],
             }));
+        } else {
+            return Promise.resolve(new Vector({features: []}));
         }
     };
 
