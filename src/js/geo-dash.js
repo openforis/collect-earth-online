@@ -76,8 +76,8 @@ class Geodash extends React.Component {
     }
 
     componentDidMount() {
-        Promise.all([this.getInstitutionImagery(), this.getWindgetsByProjectId(), this.getFeature()])
-            .then(data => this.setState({widgets: data[2], callbackComplete: true, vectorSource: data[1]}))
+        Promise.all([this.getInstitutionImagery(), this.getWindgetsByProjectId(), this.getVectorSource()])
+            .then(data => this.setState({widgets: data[1], callbackComplete: true, vectorSource: data[2]}))
             .catch(response => {
                 console.log(response);
                 alert("Error initializing Geo-Dash. See console for details.");
