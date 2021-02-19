@@ -255,7 +255,9 @@ export class SurveyCollection extends React.Component {
                 const ques2Ids = ques2.answered.filter(ans => ans.answerId === surveyRule.answer2).map(a => a.sampleId);
                 const commonSampleIds = intersection(ques1Ids, ques2Ids);
                 if (commonSampleIds.length > 0) {
-                    return "Incompatible answer.";
+                    return "Incompatible answers validation failed.\r\n\n" +
+                        `Answer "${surveyRule.answerText1}" for question "${surveyRule.questionText1}" is incompatible with\r\n` +
+                        `answer "${surveyRule.answerText2}" for question "${surveyRule.questionText2}".\r\n\n`;
                 } else {
                     return null;
                 }
@@ -269,7 +271,9 @@ export class SurveyCollection extends React.Component {
                 const ques1Ids = ques1.answered.filter(ans => ans.answerId === surveyRule.answer1).map(a => a.sampleId);
                 const commonSampleIds = intersection(ques1Ids, ques2Ids);
                 if (commonSampleIds.length > 0) {
-                    return "Incompatible answer.";
+                    return "Incompatible answers validation failed.\r\n\n" +
+                        `Answer "${surveyRule.answerText2}" for question "${surveyRule.questionText2}" is incompatible with\r\n` +
+                        `answer "${surveyRule.answerText1}" for question "${surveyRule.questionText1}".\r\n\n`;
                 } else {
                     return null;
                 }
