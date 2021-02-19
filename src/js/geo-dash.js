@@ -1199,7 +1199,7 @@ class MapWidget extends React.Component {
                 whichMap.addLayer(layer);
             } else {
                 if (this.props.feature) {
-                    const vectorSource = mercator.geometryToVectorSource(mercator.parseGeoJson(this.props.vectorSource.geom, true));
+                    const vectorSource = mercator.geometryToVectorSource(mercator.parseGeoJson(this.props.feature.geom, true));
                     const mapConfig = {};
                     const style = [
                         new Style({
