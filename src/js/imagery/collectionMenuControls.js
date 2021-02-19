@@ -416,13 +416,13 @@ export class SecureWatchMenu extends React.Component {
     render() {
         return (
             <div className="SecureWatchMenu my-2 mb-3" style={{display: this.props.visible ? "block" : "none"}}>
-                <div className="form-control form-control-sm">
+                <div className="slide-container">
                     <label>Available Layers</label>
                     {this.state.availableDates
                         && this.state.availableDates.length > 0
                         ?
                             <select
-                                className="form-control form-control-sm"
+                                className="form-control"
                                 onChange={e => this.onChangeSingleLayer(e.target)}
                                 id="securewatch-option-select"
                             >
@@ -439,8 +439,8 @@ export class SecureWatchMenu extends React.Component {
                             </select>
                         :
                             <select
-                                className="form-control form-control-sm"
                                 id="securewatch-option-select"
+                                className="form-control"
                                 disabled
                             >
                                 <option>
@@ -615,17 +615,16 @@ export class GEEImageMenu extends React.Component {
     render() {
         return (
             <div className="GEEImageMenu my-2" style={{display: this.props.visible ? "block" : "none"}}>
-                <div className="form-control form-control-sm">
+                <div className="slide-container">
                     <label>Visualization Parameters</label>
                     <textarea
                         className="form-control"
                         id="geeImageVisParams"
                         value={this.state.visParams}
                         onChange={e => this.setState({visParams: e.target.value})}
-                    >
-                        {this.state.visParams}
-                    </textarea>
-                    <br />
+                    />
+                </div>
+                <div className="slide-container">
                     <button
                         type="button"
                         className="btn btn-lightgreen btn-sm btn-block"
