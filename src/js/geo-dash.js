@@ -1218,7 +1218,7 @@ class MapWidget extends React.Component {
                     if (this.props.feature.samples) {
                         this.props.feature.samples.forEach(element => {
                             if (element.geom) {
-                                const vectorSource = mercator.geometryToVectorSource(mercator.parseGeoJson(this.props.feature.geom, true));
+                                const vectorSource = mercator.geometryToVectorSource(mercator.parseGeoJson(element.geom, true));
                                 mercator.addVectorLayer(mapConfig, "geeLayer", vectorSource, style);
                             }
                         });
