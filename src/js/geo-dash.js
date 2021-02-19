@@ -76,8 +76,8 @@ class Geodash extends React.Component {
     }
 
     componentDidMount() {
-        Promise.all([this.getInstitutionImagery(), this.getFeature()])
-            .then(() => this.getWindgetsByProjectId())
+        Promise.all([this.getInstitutionImagery(), this.getWindgetsByProjectId(), this.getFeature()])
+            .then(data => this.setState({widgets: data[2], callbackComplete: true, feature: data[1]}))
             .catch(response => {
                 console.log(response);
                 alert("Error initializing Geo-Dash. See console for details.");
@@ -96,16 +96,16 @@ class Geodash extends React.Component {
             widget.sliderType = widget.swipeAsDefault ? "swipe" : "opacity";
             widget.swipeValue = 1.0;
             return widget;
-        }))
-        .then(data => this.setState({widgets: data, callbackComplete: true}));
+        }));
 
     getFeature = () => {
         const plotshape = this.getParameterByName("plotShape");
         if (!["square", "circle"].includes(plotshape)) {
             return fetch(`/get-plot-sample-geom?plotId=${this.props.plotId}`)
                 .then(res => res.json())
-                .then(data => this.setState({feature: typeof(data) === "string" ? JSON.parse(data) : data}));
+                .then(data => typeof(data) === "string" ? JSON.parse(data) : data);
         } else {
+            let feature = "";
             const bradius = this.getParameterByName("bradius");
             const bcenter = this.getParameterByName("bcenter");
             if (plotshape === "square") {
@@ -114,7 +114,7 @@ class Geodash extends React.Component {
                 );
                 const pointExtent = pointFeature.getGeometry().getExtent();
                 const bufferedExtent = new ExtentBuffer(pointExtent, parseInt(bradius));
-                const feature = new Feature(new Polygon(
+                feature = new Feature(new Polygon(
                     [
                         [[bufferedExtent[0], bufferedExtent[1]],
                          [bufferedExtent[0], bufferedExtent[3]],
@@ -125,10 +125,9 @@ class Geodash extends React.Component {
                 );
                 this.setState({feature: feature});
             } else if (plotshape === "circle") {
-                const feature = new Feature(new Circle(projTransform(JSON.parse(bcenter).coordinates, "EPSG:4326", "EPSG:3857"), bradius * 1));
-                this.setState({feature: feature});
+                feature = new Feature(new Circle(projTransform(JSON.parse(bcenter).coordinates, "EPSG:4326", "EPSG:3857"), bradius * 1));
             }
-            return Promise.resolve("buffer created");
+            return Promise.resolve(feature);
         }
     };
 
@@ -1170,8 +1169,7 @@ class MapWidget extends React.Component {
         try {
             const plotshape = this.props.getParameterByName("plotShape");
             if (plotshape && plotshape === "square") {
-                const vectorSource = new Vector({});
-                vectorSource.addFeatures([this.props.feature]);
+                const vectorSource = new Vector({features: [this.props.feature]});
                 const layer = new VectorLayer({
                     source: vectorSource,
                     style: [
@@ -1186,8 +1184,7 @@ class MapWidget extends React.Component {
                 });
                 whichMap.addLayer(layer);
             } else if (plotshape && plotshape === "circle") {
-                const vectorSource = new Vector({});
-                vectorSource.addFeatures([this.props.feature]);
+                const vectorSource = new Vector({features: [this.props.feature]});
                 const layer = new VectorLayer({
                     source: vectorSource,
                     style: [
