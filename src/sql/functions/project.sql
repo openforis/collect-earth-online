@@ -1207,7 +1207,7 @@ CREATE OR REPLACE FUNCTION select_limited_project_plots(_project_id integer, _ma
 
 $$ LANGUAGE SQL;
 
--- Returns next plot by id
+-- Returns plot geom for the geodash
 CREATE OR REPLACE FUNCTION select_plot_geom(_plot_id integer)
  RETURNS text AS $$
 
@@ -1224,6 +1224,26 @@ CREATE OR REPLACE FUNCTION select_plot_geom(_plot_id integer)
     LEFT JOIN plots_file_data pfd
         ON p.ext_id = pfd.ext_id
     WHERE p.plot_uid = _plot_id
+
+$$ LANGUAGE SQL;
+
+-- Returns next plot by id
+CREATE OR REPLACE FUNCTION plot_exists(_project_id integer, _plot_id integer)
+ RETURNS boolean AS $$
+
+    WITH tablenames AS (
+        SELECT plots_ext_table
+        FROM projects
+        WHERE project_uid = _project_id
+    ), plots_file_data AS (
+        SELECT * FROM select_json_table_by_name((SELECT plots_ext_table FROM tablenames))
+    )
+
+    SELECT count(plot_id) > 0
+    FROM select_all_project_plots(_project_id) as spp
+    LEFT JOIN plots_file_data pfd
+        ON spp.ext_id = pfd.ext_id
+    WHERE spp.plotId = _plot_id
 
 $$ LANGUAGE SQL;
 
