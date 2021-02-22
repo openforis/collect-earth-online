@@ -574,7 +574,7 @@ function Project(props) {
                         className="edit-project btn btn-sm btn-outline-yellow btn-block"
                         href={`/review-project?projectId=${props.id}`}
                     >
-                        <UnicodeIcon icon="edit"/>
+                        EDIT
                     </a>
                 </div>
             }
