@@ -1359,7 +1359,7 @@ mercator.transformPoint = function (x, y, fromEPSG, toEPSG) {
 mercator.projectsToVectorSource = function (projects) {
     const features = projects.map(
         function (project) {
-            const bounds = mercator.parseGeoJson(project.boundary, false).getExtent();
+            const bounds = mercator.parseGeoJson(project.centroid, false).getExtent();
             const minX = bounds[0];
             const minY = bounds[1];
             const maxX = bounds[2];
