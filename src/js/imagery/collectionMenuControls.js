@@ -419,7 +419,7 @@ export class SecureWatchMenu extends React.Component {
 
     render() {
         return (
-            <div className="my-2" style={{display: this.props.visible ? "block" : "none"}}>
+            <div className="my-2 mb-3" style={{display: this.props.visible ? "block" : "none"}}>
                 <div className="slide-container">
                     <label>Available Layers</label>
                     {this.state.availableDates
