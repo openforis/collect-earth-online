@@ -8,7 +8,7 @@
 ;; TODO: Delete /resources/public/img/institution-logos after migration
 ;; Call with clojure -m org.openforis.ceo.convert-logos
 (defn -main []
-  (doseq [logo (->> (io/resource "/resources/public/img/institution-logos")
+  (doseq [logo (->> (io/resource "public/img/institution-logos")
                     (io/file)
                     (file-seq)
                     (filter #(.isFile %)))]
