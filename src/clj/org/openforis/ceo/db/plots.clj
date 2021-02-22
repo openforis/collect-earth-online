@@ -90,7 +90,7 @@
 (defn get-plot-by-id [{:keys [params]}]
   (let  [project-id (tc/val->int (:projectId params))
          plot-id    (tc/val->int (:plotId params))]
-    (if (first (call-sql "select_plot_by_id" project-id plot-id))
+    (if (sql-primitive (call-sql "plot_exists" project-id plot-id))
       (get-collection-plot params "by_id_")
       (data-response "not-found"))))
 
