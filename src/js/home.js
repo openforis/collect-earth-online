@@ -4,6 +4,7 @@ import {LoadingModal, NavigationBar} from "./components/PageComponents";
 import {mercator} from "./utils/mercator.js";
 import {sortAlphabetically, UnicodeIcon} from "./utils/generalUtils";
 import SvgIcon from "./components/SvgIcon";
+import ProjectRow from "./components/ProjectRow";
 
 class Home extends React.Component {
     constructor(props) {
@@ -542,7 +543,7 @@ class Institution extends React.Component {
 function ProjectList(props) {
     return props.projects
         .map((project, uid) =>
-            <Project
+            <ProjectRow
                 key={uid}
                 id={project.id}
                 institutionId={props.id}
@@ -550,36 +551,6 @@ function ProjectList(props) {
                 name={project.name}
             />
         );
-}
-
-function Project(props) {
-    return (
-        <div className="bg-lightgrey text-center p-1 row px-auto">
-            <div className={props.editable ? "col-lg-10 pr-lg-1" : "col mb-1 mx-0"}>
-                <a
-                    className="btn btn-sm btn-outline-lightgreen btn-block"
-                    style={{
-                        whiteSpace: "nowrap",
-                        overflow: "hidden",
-                        textOverflow: "ellipsis",
-                    }}
-                    href={`/collection?projectId=${props.id}`}
-                >
-                    {props.name || "*un-named*"}
-                </a>
-            </div>
-            {props.editable &&
-                <div className="col-lg-2 pl-lg-0">
-                    <a
-                        className="edit-project btn btn-sm btn-outline-yellow btn-block"
-                        href={`/review-project?projectId=${props.id}`}
-                    >
-                        EDIT
-                    </a>
-                </div>
-            }
-        </div>
-    );
 }
 
 class ProjectPopup extends React.Component {
