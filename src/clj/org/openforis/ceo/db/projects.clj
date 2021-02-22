@@ -463,7 +463,7 @@
       (do
         (let [plot-table       (load-external-data plot-distribution project-id plots-file "plots" #{"PLOTID"})
               sample-table     (load-external-data sample-distribution project-id samples-file "samples" #{"PLOTID" "SAMPLEID"})
-              counts           (try-catch-throw #(first (call-sql "ext_table_count" project-id))
+              counts           (try-catch-throw #(first (call-sql "ext_table_count" project-id plot-table sample-table))
                                                 "SQL Error: cannot count data.")
               ext-plot-count   (:plot_count counts)
               ext-sample-count (:sample_count counts)]
