@@ -1,6 +1,8 @@
 (ns org.openforis.ceo.convert-logos
-  (:require [clojure.java.io    :as io]
-            [clojure.java.shell :as sh]))
+  (:require [clojure.java.io :as io]
+            [org.openforis.ceo.database :refer [call-sql]]
+            [org.openforis.ceo.utils.part-utils :refer [read-file-base64]]
+            [org.openforis.ceo.utils.type-conversion :as tc]))
 
 ;; TODO: Delete this file after migration
 ;; TODO: Delete /resources/public/img/institution-logos after migration
@@ -12,9 +14,7 @@
                     (filter #(.isFile %)))]
     (when-let [id (re-find #"(?<=institution-)\d*" (.getName logo))]
       (println id)
-      (sh/sh "sh"
-             "-c"
-             (format "psql -h localhost -U postgres -d ceo -c \"select add_institution_logo_by_file(%s, '%s'::text)\""
-                     id
-                     (.getPath logo)))))
+      (call-sql "update_institution_logo"
+                (tc/val->int id)
+                (read-file-base64 logo))))
   (shutdown-agents))
