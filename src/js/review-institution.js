@@ -1066,14 +1066,14 @@ class UserList extends React.Component {
                       institutionId: this.props.institutionId,
                   }),
               })
-            .then(response => {
-                if (response.ok) {
-                    alert("Membership requested for user " + this.props.userId + ".");
-                    this.getInstitutionUserList();
-                } else {
-                    console.log(response);
-                    alert("Error requesting institution membership. See console for details.");
-                }
+            .then(response => response.ok ? response.json() : Promise.reject(response))
+            .then(message => {
+                alert(message);
+                this.getInstitutionUserList();
+            })
+            .catch(response => {
+                console.log(response);
+                alert("Error requesting institution membership. See console for details.");
             });
     };
 

@@ -223,16 +223,20 @@
         institution-id (tc/val->int (:institutionId params))]
     (call-sql "add_institution_user" institution-id user-id 3)
     (let [institution-name (:name (first (call-sql "select_institution_by_id" institution-id -1)))
+          timestamp        (-> (DateTimeFormatter/ofPattern "yyyy/MM/dd HH:mm:ss")
+                                 (.format (LocalDateTime/now)))
           email            (:email (first (call-sql "get_user_by_id" user-id)))
           emails           (mapv :email
                                  (filter
                                   (fn [{:keys [institution_role]}] (= institution_role "admin"))
                                   (call-sql "get_all_users_by_institution_id" institution-id)))
-          email-msg (format (str "User %s has requested the acces to institution %s.")
-                            email institution-name)]
+          email-msg (format (str "User %s has requested the access to institution \"%s\" on %s.\n\n"
+                                 "To access the institution page, simply click the following link:\n\n"
+                                 "%sreview-institution?institutionId=%s")
+                            email institution-name timestamp (get-base-url) institution-id)]
       (try
         (send-mail emails nil nil "Membership Request" email-msg "text/plain")
-        (data-response "")
+        (data-response (str "Membership requested for user " user-id "."))
         (catch Exception _ (data-response (str email
                                                " has requested the membership to "
                                                institution-name
