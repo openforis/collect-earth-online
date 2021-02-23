@@ -222,8 +222,7 @@
   (let [user-id        (:userId params -1)
         institution-id (tc/val->int (:institutionId params))]
     (call-sql "add_institution_user" institution-id user-id 3)
-    (let [institution-id   (tc/val->int (:institutionId params))
-          institution-name (:name (first (call-sql "select_institution_by_id" institution-id -1)))
+    (let [institution-name (:name (first (call-sql "select_institution_by_id" institution-id -1)))
           email            (:email (first (call-sql "get_user_by_id" user-id)))
           emails           (mapv :email
                                  (filter
@@ -231,15 +230,13 @@
                                   (call-sql "get_all_users_by_institution_id" institution-id)))
           email-msg (format (str "User %s has requested the acces to institution %s.")
                             email institution-name)]
-      (if (not-empty emails)
-        (try
-          (send-mail emails nil nil "Membership Request" email-msg "text/plain")
-          (data-response "")
-          (catch Exception _ (data-response (str email
-                                                 " has requested the membership to "
-                                                 institution-name
-                                                 ", but the email notification has failed."))))
-        (data-response "There are no administrator users.")))))
+      (try
+        (send-mail emails nil nil "Membership Request" email-msg "text/plain")
+        (data-response "")
+        (catch Exception _ (data-response (str email
+                                               " has requested the membership to "
+                                               institution-name
+                                               ", but the email notification has failed.")))))))
 
 (defn- get-mailing-list-errors [subject body remaining-time]
   (cond (or (str/blank? subject) (str/blank? body))
