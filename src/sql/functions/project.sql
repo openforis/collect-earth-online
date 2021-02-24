@@ -1807,86 +1807,64 @@ $$ LANGUAGE SQL;
 -- Returns project aggregate data
 CREATE OR REPLACE FUNCTION dump_project_plot_data(_project_id integer)
  RETURNS table (
-        plot_id                     integer,
-        lon                         double precision,
-        lat                         double precision,
-        plot_shape                  text,
-        plot_size                   real,
-        email                       text,
-        confidence                  integer,
-        flagged                     integer,
-        assigned                    integer,
-        collection_time             timestamp,
-        analysis_duration           numeric,
-        samples                     text,
-        common_securewatch_date     text,
-        total_securewatch_dates     integer,
-        ext_plot_data               jsonb
+    plot_id                     integer,
+    center_lon                  double precision,
+    center_lat                  double precision,
+    size_m                      text,
+    shape                       real,
+    email                       text,
+    flagged                     boolean,
+    confidence                  integer,
+    analysis_duration           numeric,
+    samples                     text,
+    common_securewatch_date     text,
+    total_securewatch_dates     integer,
+    ext_plot_data               jsonb
  ) AS $$
 
-    WITH all_rows AS (
-        SELECT pl.ext_id as pl_ext_id,
-        (CASE WHEN imagery_attributes->>'imagerySecureWatchDate' = ''
-                OR imagery_attributes->'imagerySecureWatchDate' IS NULL THEN NULL
-              ELSE imagery_attributes->>'imagerySecureWatchDate'
-         END) as imagerySecureWatchDate,
-        *
-        FROM select_all_project_plots(_project_id) pl
-        INNER JOIN samples s
-            ON s.plot_rid = pl.plot_id
-        LEFT JOIN sample_values sv
-            ON sample_uid = sv.sample_rid
-    ), tablenames AS (
-        SELECT plots_ext_table, samples_ext_table
-        FROM projects
-        WHERE project_uid = _project_id
-    ), plots_file_data AS (
-        SELECT * FROM select_json_table_by_name((SELECT plots_ext_table FROM tablenames))
-    ), plots_agg AS (
-        SELECT plot_id,
-            center,
-            MAX(username) AS email,
-            MAX(confidence) as confidence,
-            MAX(flagged) as flagged,
-            MAX(assigned) as assigned,
-            MAX(collection_time) as collection_time,
-            MAX(analysis_duration) as analysis_duration,
-            format('[%s]', string_agg(
-                (CASE WHEN saved_answers IS NULL THEN
-                    format('{"%s":"%s"}', 'id', sample_uid)
-                ELSE
-                    format('{"%s":"%s", "%s":%s}', 'id', sample_uid, 'saved_answers', saved_answers)
-                END),', '
-            )) as samples,
-            pl_ext_id,
-            project_id,
-            MODE() WITHIN GROUP (ORDER BY imagerySecureWatchDate) as common_securewatch_date,
-            COUNT(DISTINCT(imagerySecureWatchDate)) as total_securewatch_dates
-        FROM all_rows
-        GROUP BY plot_id, center, pl_ext_id, project_id
+    WITH plots_file_data AS (
+        SELECT * FROM select_json_table_by_name((
+            SELECT plots_ext_table
+            FROM projects
+            WHERE project_uid = _project_id
+        ))
     )
 
-    SELECT plot_id,
-        ST_X(ST_SetSRID(ST_GeomFromGeoJSON(center), 4326)) AS lon, -- TODO, why is this already in geojson when its stored as a geometry
-        ST_Y(ST_SetSRID(ST_GeomFromGeoJSON(center), 4326)) AS lat,
+    SELECT plot_uid,
+        ST_X(center) AS lon,
+        ST_Y(center) AS lat,
         plot_shape,
         plot_size,
         email,
-        confidence,
         flagged,
-        assigned,
-        collection_time::timestamp,
-        analysis_duration,
-        samples,
-        common_securewatch_date,
-        total_securewatch_dates::integer,
-        pfd.rem_data
+        confidence,
+        ROUND(EXTRACT(EPOCH FROM (collection_time - collection_start))::numeric, 1) AS analysis_duration,
+        FORMAT('[%s]', STRING_AGG(
+            (CASE WHEN saved_answers IS NULL THEN
+                FORMAT('{"%s":"%s"}', 'id', sample_uid)
+            ELSE
+                FORMAT('{"%s":"%s", "%s":%s}', 'id', sample_uid, 'saved_answers', saved_answers)
+            END),', '
+        )) AS samples,
+        MODE() WITHIN GROUP (ORDER BY imagery_attributes->>'imagerySecureWatchDate') AS common_securewatch_date,
+        COUNT(DISTINCT(imagery_attributes->>'imagerySecureWatchDate'))::int AS total_securewatch_dates,
+        rem_data
     FROM projects p
-    INNER JOIN plots_agg pa
-        ON project_uid = pa.project_id
+    INNER JOIN plots pl
+        ON project_uid = pl.project_rid
+    INNER JOIN samples s
+        ON s.plot_rid = pl.plot_uid
+    LEFT JOIN user_plots up
+        ON up.plot_rid = pl.plot_uid
+    LEFT JOIN sample_values sv
+        ON sv.sample_rid = s.sample_uid
+    LEFT JOIN users u
+        ON u.user_uid = up.user_rid
     LEFT JOIN plots_file_data pfd
-        ON pl_ext_id = pfd.ext_id
-    ORDER BY plot_id
+        ON pl.ext_id = pfd.ext_id
+    WHERE project_rid = _project_id
+    GROUP BY project_uid, plot_uid, user_plot_uid, email, rem_data
+    ORDER BY plot_uid
 
 $$ LANGUAGE SQL;
 
@@ -1898,10 +1876,7 @@ CREATE OR REPLACE FUNCTION dump_project_sample_data(_project_id integer)
         lon                   double precision,
         lat                   double precision,
         email                 text,
-        confidence            integer,
-        flagged               integer,
-        assigned              integer,
-        collection_time       timestamp,
+        flagged               boolean,
         analysis_duration     numeric,
         imagery_title         text,
         imagery_attributes    text,
@@ -1921,33 +1896,35 @@ CREATE OR REPLACE FUNCTION dump_project_sample_data(_project_id integer)
         SELECT * FROM select_json_table_by_name((SELECT samples_ext_table FROM tablenames))
     )
 
-    SELECT p.plot_id,
+    SELECT plot_uid,
         sample_uid,
         CASE WHEN ST_GeometryType(sample_geom) = 'ST_Point' THEN ST_X(sample_geom) ELSE -1 END AS lon,
         CASE WHEN ST_GeometryType(sample_geom) = 'ST_Point' THEN ST_Y(sample_geom) ELSE -1 END AS lat,
-        p.username,
-        p.confidence,
-        p.flagged,
-        p.assigned,
-        p.collection_time::timestamp,
-        p.analysis_duration,
+        email,
+        flagged,
+        ROUND(EXTRACT(EPOCH FROM (collection_time - collection_start))::numeric, 1) AS analysis_duration,
         title AS imagery_title,
         imagery_attributes::text,
         ST_AsText(sample_geom),
         saved_answers,
         pfd.rem_data,
         sfd.rem_data
-    FROM select_all_project_plots(_project_id) p
+    FROM plots pl
     INNER JOIN samples s
-        ON s.plot_rid = plot_id
+        ON s.plot_rid = pl.plot_uid
+    LEFT JOIN user_plots up
+        ON up.plot_rid = pl.plot_uid
     LEFT JOIN sample_values sv
         ON sample_uid = sv.sample_rid
     LEFT JOIN imagery
         ON imagery_uid = sv.imagery_rid
+    LEFT JOIN users u
+        ON u.user_uid = up.user_rid
     LEFT JOIN plots_file_data pfd
-        ON p.ext_id = pfd.ext_id
+        ON pl.ext_id = pfd.ext_id
     LEFT JOIN samples_file_data sfd
         ON s.ext_id = sfd.ext_id
-    ORDER BY plot_id, sample_uid
+    WHERE pl.project_rid = _project_id
+    ORDER BY plot_uid, sample_uid
 
 $$ LANGUAGE SQL;
