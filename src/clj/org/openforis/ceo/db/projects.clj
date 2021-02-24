@@ -930,16 +930,28 @@
                         :sample_points
                         :email
                         :flagged
+                        :flagged_reason
+                        :confidence
                         :collection_time
                         :analysis_duration
                         :common_securewatch_date
                         :total_securewatch_dates])
 
+(defn- remove-vector-items [vector & items]
+  (->> vector
+       (remove (set items))
+       (vec)))
+
 (defn dump-project-aggregate-data [{:keys [params]}]
   (let [project-id (tc/val->int (:projectId params))]
     (if-let [project-info (first (call-sql "select_project_by_id" project-id))]
       (let [survey-questions (tc/jsonb->clj (:survey_questions project-info))
-            text-headers     (concat plot-base-headers
+            confidence?      (-> project-info
+                                 (:options)
+                                 (tc/jsonb->clj)
+                                 (:collectConfidence))
+            text-headers     (concat (remove-vector-items plot-base-headers
+                                                          (when-not confidence? :confidence))
                                      (get-ext-plot-headers project-id))
             number-headers   (get-value-distribution-headers survey-questions)
             headers-out      (->> (concat text-headers number-headers)
