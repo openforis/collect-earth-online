@@ -221,8 +221,33 @@
 (defn request-institution-membership [{:keys [params]}]
   (let [user-id        (:userId params -1)
         institution-id (tc/val->int (:institutionId params))]
-    (call-sql "add_institution_user" institution-id user-id 3)
-    (data-response "")))
+    (if (pos? user-id)
+      (do
+        (call-sql "add_institution_user" institution-id user-id 3)
+        (let [institution-name (:name (first (call-sql "select_institution_by_id" institution-id -1)))
+              timestamp        (-> (DateTimeFormatter/ofPattern "yyyy/MM/dd HH:mm:ss")
+                                   (.format (LocalDateTime/now)))
+              user-email       (:email (first (call-sql "get_user_by_id" user-id)))
+              admin-emails     (->> (call-sql "get_all_users_by_institution_id" institution-id)
+                                    (filter (fn [{:keys [institution_role]}] (= institution_role "admin")))
+                                    (map :email))
+              email-msg       (format (str "User %s has requested the access to institution \"%s\" on %s.\n\n"
+                                           "To access the institution page, simply click the following link:\n\n"
+                                           "%sreview-institution?institutionId=%s")
+                                      user-email
+                                      institution-name
+                                      timestamp
+                                      (get-base-url)
+                                      institution-id)]
+          (try
+            (send-mail admin-emails nil nil "CEO Membership Request" email-msg "text/plain")
+            (data-response (str "Membership has been requested for user " user-email "."))
+            (catch Exception _
+              (data-response (str user-email
+                                  " has requested the membership to "
+                                  institution-name
+                                  ", but the email notification has failed."))))))
+      (data-response "You must be logged into request membership."))))
 
 (defn- get-mailing-list-errors [subject body remaining-time]
   (cond (or (str/blank? subject) (str/blank? body))
