@@ -12,16 +12,15 @@ class PasswordRequest extends React.Component {
     }
 
     requestPassword = () => {
-        fetch("/password-request",
-              {
-                  method: "POST",
-                  headers: {
-                      "Content-Type": "application/x-www-form-urlencoded",
-                  },
-                  body: getQueryString(this.state),
-              })
-            .then(response => Promise.all([response.ok, response.json()]))
-            .then(data => {
+        fetch("/password-request", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/x-www-form-urlencoded",
+            },
+            body: getQueryString(this.state),
+        })
+            .then((response) => Promise.all([response.ok, response.json()]))
+            .then((data) => {
                 if (data[0] && data[1] === "") {
                     alert("The reset key has been sent to your email.");
                     window.location = "/home";
@@ -29,7 +28,7 @@ class PasswordRequest extends React.Component {
                     alert(data[1]);
                 }
             })
-            .catch(err => console.log(err));
+            .catch((err) => console.log(err));
     };
 
     render() {
@@ -39,7 +38,7 @@ class PasswordRequest extends React.Component {
                     <div className="card-header card-header-lightgreen">Enter your login email</div>
                     <div className="card-body">
                         <form
-                            onSubmit={e => {
+                            onSubmit={(e) => {
                                 e.preventDefault();
                                 this.requestPassword();
                             }}
@@ -53,7 +52,7 @@ class PasswordRequest extends React.Component {
                                     placeholder="Email"
                                     value={this.state.email}
                                     type="email"
-                                    onChange={e => this.setState({email: e.target.value})}
+                                    onChange={(e) => this.setState({email: e.target.value})}
                                 />
                             </div>
                             <button className="btn btn-lightgreen float-right mb-2" type="submit">
@@ -63,7 +62,6 @@ class PasswordRequest extends React.Component {
                     </div>
                 </div>
             </div>
-
         );
     }
 }

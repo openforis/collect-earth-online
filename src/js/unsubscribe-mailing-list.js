@@ -19,17 +19,17 @@ class UnsubscribeMailingList extends React.Component {
             fetch("/unsubscribe-mailing-list", {
                 method: "POST",
                 headers: {
-                    "Accept": "application/json",
+                    Accept: "application/json",
                     "Content-Type": "application/json",
                 },
                 body: JSON.stringify(this.state),
             })
-                .then(response => Promise.all([response.ok, response.json()]))
-                .then(data => {
+                .then((response) => Promise.all([response.ok, response.json()]))
+                .then((data) => {
                     alert(data[1]);
                     window.location = "/home";
                 })
-                .catch(err => console.log(err));
+                .catch((err) => console.log(err));
         }
     };
 
@@ -37,10 +37,12 @@ class UnsubscribeMailingList extends React.Component {
         return (
             <div className="d-flex justify-content-center">
                 <div className="card card-lightgreen">
-                    <div className="card-header card-header-lightgreen">Unsubscribe from Mailing List</div>
+                    <div className="card-header card-header-lightgreen">
+                        Unsubscribe from Mailing List
+                    </div>
                     <div className="card-body">
                         <form
-                            onSubmit={e => {
+                            onSubmit={(e) => {
                                 e.preventDefault();
                                 this.submitUnsubscribe();
                             }}
@@ -53,10 +55,12 @@ class UnsubscribeMailingList extends React.Component {
                                     type="email"
                                     value={this.state.email}
                                     className="form-control"
-                                    onChange={e => this.setState({email: e.target.value})}
+                                    onChange={(e) => this.setState({email: e.target.value})}
                                 />
                             </div>
-                            <button className="btn btn-lightgreen float-right mb-2" type="submit">Unsubscribe</button>
+                            <button className="btn btn-lightgreen float-right mb-2" type="submit">
+                                Unsubscribe
+                            </button>
                         </form>
                     </div>
                 </div>

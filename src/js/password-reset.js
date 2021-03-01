@@ -19,16 +19,15 @@ class PasswordReset extends React.Component {
     }
 
     resetPassword = () => {
-        fetch("/password-reset",
-              {
-                  method: "POST",
-                  headers: {
-                      "Content-Type": "application/x-www-form-urlencoded",
-                  },
-                  body: getQueryString(this.state),
-              })
-            .then(response => Promise.all([response.ok, response.json()]))
-            .then(data => {
+        fetch("/password-reset", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/x-www-form-urlencoded",
+            },
+            body: getQueryString(this.state),
+        })
+            .then((response) => Promise.all([response.ok, response.json()]))
+            .then((data) => {
                 if (data[0] && data[1] === "") {
                     alert("You have successfully reset your password.");
                     window.location = "/login";
@@ -36,7 +35,7 @@ class PasswordReset extends React.Component {
                     alert(data[1]);
                 }
             })
-            .catch(err => console.log(err));
+            .catch((err) => console.log(err));
     };
 
     render() {
@@ -46,7 +45,7 @@ class PasswordReset extends React.Component {
                     <div className="card-header card-header-lightgreen">Enter your reset info</div>
                     <div className="card-body">
                         <form
-                            onSubmit={e => {
+                            onSubmit={(e) => {
                                 e.preventDefault();
                                 this.resetPassword();
                             }}
@@ -60,7 +59,7 @@ class PasswordReset extends React.Component {
                                     placeholder="Enter email"
                                     type="email"
                                     value={this.state.email}
-                                    onChange={e => this.setState({email: e.target.value})}
+                                    onChange={(e) => this.setState({email: e.target.value})}
                                 />
                             </div>
                             <div className="form-group">
@@ -72,7 +71,9 @@ class PasswordReset extends React.Component {
                                     placeholder="Enter password reset key"
                                     type="text"
                                     value={this.state.passwordResetKey}
-                                    onChange={e => this.setState({passwordResetKey: e.target.value})}
+                                    onChange={(e) =>
+                                        this.setState({passwordResetKey: e.target.value})
+                                    }
                                 />
                             </div>
                             <div className="form-group">
@@ -84,7 +85,7 @@ class PasswordReset extends React.Component {
                                     placeholder="Enter new password"
                                     type="password"
                                     value={this.state.password}
-                                    onChange={e => this.setState({password: e.target.value})}
+                                    onChange={(e) => this.setState({password: e.target.value})}
                                 />
                             </div>
                             <div className="form-group">
@@ -96,7 +97,9 @@ class PasswordReset extends React.Component {
                                     placeholder="Enter new password confirmation"
                                     type="password"
                                     value={this.state.passwordConfirmation}
-                                    onChange={e => this.setState({passwordConfirmation: e.target.value})}
+                                    onChange={(e) =>
+                                        this.setState({passwordConfirmation: e.target.value})
+                                    }
                                 />
                             </div>
                             <button className="btn btn-lightgreen float-right mb-2" type="submit">
@@ -106,7 +109,6 @@ class PasswordReset extends React.Component {
                     </div>
                 </div>
             </div>
-
         );
     }
 }

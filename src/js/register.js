@@ -15,16 +15,15 @@ class Register extends React.Component {
     }
 
     register = () => {
-        fetch("/register",
-              {
-                  method: "POST",
-                  headers: {
-                      "Content-Type": "application/x-www-form-urlencoded",
-                  },
-                  body: getQueryString(this.state),
-              })
-            .then(response => Promise.all([response.ok, response.json()]))
-            .then(data => {
+        fetch("/register", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/x-www-form-urlencoded",
+            },
+            body: getQueryString(this.state),
+        })
+            .then((response) => Promise.all([response.ok, response.json()]))
+            .then((data) => {
                 if (data[0] && data[1] === "") {
                     alert("You have successfully created an account.");
                     window.location = "/home";
@@ -32,7 +31,7 @@ class Register extends React.Component {
                     alert(data[1]);
                 }
             })
-            .catch(err => console.log(err));
+            .catch((err) => console.log(err));
     };
 
     render() {
@@ -42,7 +41,7 @@ class Register extends React.Component {
                     <div className="card-header card-header-lightgreen">Register a new account</div>
                     <div className="card-body">
                         <form
-                            onSubmit={e => {
+                            onSubmit={(e) => {
                                 e.preventDefault();
                                 this.register();
                             }}
@@ -56,7 +55,7 @@ class Register extends React.Component {
                                     placeholder="Email"
                                     value={this.state.email}
                                     type="email"
-                                    onChange={e => this.setState({email: e.target.value})}
+                                    onChange={(e) => this.setState({email: e.target.value})}
                                 />
                             </div>
                             <div className="form-group">
@@ -68,7 +67,7 @@ class Register extends React.Component {
                                     placeholder="Password"
                                     value={this.state.password}
                                     type="password"
-                                    onChange={e => this.setState({password: e.target.value})}
+                                    onChange={(e) => this.setState({password: e.target.value})}
                                 />
                             </div>
                             <div className="form-group">
@@ -80,7 +79,9 @@ class Register extends React.Component {
                                     placeholder="Password confirmation"
                                     value={this.state.passwordConfirmation}
                                     type="password"
-                                    onChange={e => this.setState({passwordConfirmation: e.target.value})}
+                                    onChange={(e) =>
+                                        this.setState({passwordConfirmation: e.target.value})
+                                    }
                                 />
                             </div>
                             <div className="form-check mb-3">
@@ -89,7 +90,9 @@ class Register extends React.Component {
                                     type="checkbox"
                                     className="form-check-input"
                                     checked={this.state.onMailingList}
-                                    onChange={() => this.setState({onMailingList: !this.state.onMailingList})}
+                                    onChange={() =>
+                                        this.setState({onMailingList: !this.state.onMailingList})
+                                    }
                                 />
                                 <label className="form-check-label" htmlFor="on-mailing-list">
                                     Subscribe To Mailinglist
@@ -102,7 +105,6 @@ class Register extends React.Component {
                     </div>
                 </div>
             </div>
-
         );
     }
 }

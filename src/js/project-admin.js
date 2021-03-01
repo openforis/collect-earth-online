@@ -76,12 +76,16 @@ class Project extends React.Component {
         const {plotDistribution, sampleDistribution, institution} = this.state.projectDetails;
 
         if (plotDistribution !== prevState.projectDetails.plotDistribution) {
-            const newSampleDistribution = ["random", "gridded"].includes(plotDistribution) && ["csv", "shp"].includes(sampleDistribution)
-                ? "random"
-                : plotDistribution === "shp" && ["random", "gridded"].includes(sampleDistribution)
-                ? "shp"
-                : sampleDistribution;
-            if (newSampleDistribution !== sampleDistribution) this.setProjectDetails({sampleDistribution: newSampleDistribution});
+            const newSampleDistribution =
+                ["random", "gridded"].includes(plotDistribution) &&
+                ["csv", "shp"].includes(sampleDistribution)
+                    ? "random"
+                    : plotDistribution === "shp" &&
+                      ["random", "gridded"].includes(sampleDistribution)
+                    ? "shp"
+                    : sampleDistribution;
+            if (newSampleDistribution !== sampleDistribution)
+                this.setProjectDetails({sampleDistribution: newSampleDistribution});
         }
 
         if (institution !== prevState.projectDetails.institution) {
@@ -102,14 +106,16 @@ class Project extends React.Component {
 
     getInstitutionImagery = (institutionId) =>
         fetch(`/get-institution-imagery?institutionId=${institutionId}`)
-            .then(response => response.ok ? response.json() : Promise.reject(response))
-            .then(data => {
-                const sorted = [...data.filter(a => a.title.toLocaleLowerCase().includes("mapbox")),
-                                ...data.filter(a => !a.title.toLocaleLowerCase().includes("mapbox"))];
+            .then((response) => (response.ok ? response.json() : Promise.reject(response)))
+            .then((data) => {
+                const sorted = [
+                    ...data.filter((a) => a.title.toLocaleLowerCase().includes("mapbox")),
+                    ...data.filter((a) => !a.title.toLocaleLowerCase().includes("mapbox")),
+                ];
                 this.setState({institutionImagery: sorted});
                 this.setProjectDetails({imageryId: sorted[0].id});
             })
-            .catch(response => {
+            .catch((response) => {
                 console.log(response);
                 alert("Error retrieving the imagery list. See console for details.");
             });
@@ -117,9 +123,9 @@ class Project extends React.Component {
     /// Functions
 
     processModal = (message, callBack) => {
-        this.setState({modalMessage: message},
-                      () => callBack()
-                          .finally(() => this.setState({modalMessage: null})));
+        this.setState({modalMessage: message}, () =>
+            callBack().finally(() => this.setState({modalMessage: null}))
+        );
     };
 
     render() {
@@ -139,9 +145,9 @@ class Project extends React.Component {
                     processModal: this.processModal,
                 }}
             >
-                {this.state.modalMessage && <LoadingModal message={this.state.modalMessage}/>}
+                {this.state.modalMessage && <LoadingModal message={this.state.modalMessage} />}
                 <div>
-                    <CurrentComponent/>
+                    <CurrentComponent />
                 </div>
             </ProjectContext.Provider>
         );

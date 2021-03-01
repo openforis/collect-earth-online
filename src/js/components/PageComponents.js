@@ -8,33 +8,26 @@ function LogOutButton({userName, uri}) {
     const fullUri = uri + window.location.search;
     const loggedOut = !userName || userName === "guest";
 
-    const logout = () => fetch("/logout", {method: "POST"})
-        .then(() => window.location = "/home");
+    const logout = () => fetch("/logout", {method: "POST"}).then(() => (window.location = "/home"));
 
-    return loggedOut
-        ? (
-            <button
-                type="button"
-                className="btn btn-lightgreen btn-sm"
-                onClick={() => window.location = "/login?returnurl=" + encodeURIComponent(fullUri)}
-            >
-                Login/Register
+    return loggedOut ? (
+        <button
+            type="button"
+            className="btn btn-lightgreen btn-sm"
+            onClick={() => (window.location = "/login?returnurl=" + encodeURIComponent(fullUri))}
+        >
+            Login/Register
+        </button>
+    ) : (
+        <>
+            <li id="username" className="nav-item my-auto">
+                <span className="nav-link disabled">{userName}</span>
+            </li>
+            <button type="button" className="btn btn-outline-red btn-sm" onClick={logout}>
+                Logout
             </button>
-
-        ) : (
-            <>
-                <li id="username" className="nav-item my-auto">
-                    <span className="nav-link disabled">{userName}</span>
-                </li>
-                <button
-                    type="button"
-                    className="btn btn-outline-red btn-sm"
-                    onClick={logout}
-                >
-                    Logout
-                </button>
-            </>
-        );
+        </>
+    );
 }
 
 class HelpSlideDialog extends React.Component {
@@ -73,22 +66,26 @@ class HelpSlideDialog extends React.Component {
                             margin: "90px auto",
                             width: "fit-content",
                         }}
-                        onClick={e => e.stopPropagation()}
+                        onClick={(e) => e.stopPropagation()}
                     >
                         <div className="row justify-content-between bg-lightgreen p-2">
                             <h2 className="ml-2">{capitalizeFirst(this.props.page)} Help</h2>
                             <div onClick={this.props.closeHelpMenu}>
-                                <SvgIcon icon="close" size="2rem"/>
+                                <SvgIcon icon="close" size="2rem" />
                             </div>
                         </div>
                         <div className="d-flex" style={{minHeight: "0", minWidth: "0"}}>
                             <div className="d-flex flex-column justify-content-between">
-                                <p className="p-3" style={{width: "22vw"}}>{body}</p>
+                                <p className="p-3" style={{width: "22vw"}}>
+                                    {body}
+                                </p>
                                 <div className="d-flex justify-content-end">
                                     <button
                                         type="button"
                                         className="btn btn-lightgreen btn-sm m-2"
-                                        onClick={() => this.setState({currentSlideIdx: currentSlideIdx - 1})}
+                                        onClick={() =>
+                                            this.setState({currentSlideIdx: currentSlideIdx - 1})
+                                        }
                                         disabled={currentSlideIdx === 0}
                                     >
                                         Previous
@@ -100,7 +97,9 @@ class HelpSlideDialog extends React.Component {
                                             if (isLastSlide) {
                                                 this.props.closeHelpMenu();
                                             } else {
-                                                this.setState({currentSlideIdx: currentSlideIdx + 1});
+                                                this.setState({
+                                                    currentSlideIdx: currentSlideIdx + 1,
+                                                });
                                             }
                                         }}
                                     >
@@ -132,25 +131,27 @@ export class NavigationBar extends React.Component {
         };
     }
 
-    componentDidMount () {
-        fetch("/locale/help.json",
-              {headers: {"Cache-Control": "no-cache", "Pragma": "no-cache", "Accept": "application/json"}})
-            .then(response => response.ok ? response.json() : Promise.reject(response))
-            .then(data => {
+    componentDidMount() {
+        fetch("/locale/help.json", {
+            headers: {"Cache-Control": "no-cache", Pragma: "no-cache", Accept: "application/json"},
+        })
+            .then((response) => (response.ok ? response.json() : Promise.reject(response)))
+            .then((data) => {
                 const location = window.location.pathname.slice(1);
                 const page = location === "" ? "home" : location;
                 const availableLanguages = data[page];
                 if (availableLanguages) this.getHelpSlides(availableLanguages, page);
             })
-            .catch(error => console.log(error));
+            .catch((error) => console.log(error));
     }
 
     getHelpSlides = (availableLanguages, page) => {
-        fetch(`/locale/${page}/${getLanguage(availableLanguages)}.json`,
-              {headers: {"Cache-Control": "no-cache", "Pragma": "no-cache", "Accept": "application/json"}})
-            .then(response => response.ok ? response.json() : Promise.reject(response))
-            .then(data => this.setState({helpSlides: data, page: page}))
-            .catch(error => console.log(page, getLanguage(availableLanguages), error));
+        fetch(`/locale/${page}/${getLanguage(availableLanguages)}.json`, {
+            headers: {"Cache-Control": "no-cache", Pragma: "no-cache", Accept: "application/json"},
+        })
+            .then((response) => (response.ok ? response.json() : Promise.reject(response)))
+            .then((data) => this.setState({helpSlides: data, page: page}))
+            .catch((error) => console.log(page, getLanguage(availableLanguages), error));
     };
 
     closeHelpMenu = () => this.setState({showHelpMenu: false});
@@ -162,13 +163,13 @@ export class NavigationBar extends React.Component {
 
         return (
             <>
-                {this.state.showHelpMenu &&
+                {this.state.showHelpMenu && (
                     <HelpSlideDialog
                         helpSlides={this.state.helpSlides}
                         closeHelpMenu={this.closeHelpMenu}
                         page={this.state.page}
                     />
-                }
+                )}
                 <nav
                     className="navbar navbar-expand-lg navbar-light fixed-top py-0"
                     style={{backgroundColor: "white", borderBottom: "1px solid black"}}
@@ -190,30 +191,47 @@ export class NavigationBar extends React.Component {
                     </button>
                     <div className="collapse navbar-collapse" id="navbarSupportedContent">
                         <ul className="navbar-nav mr-auto">
-                            {["Home", "About", "Support", "Blog"].map(page =>
-                                <li className={"nav-item" + ("/" + page.toLowerCase() === uri && " active")} key={page}>
-                                    <a className="nav-link" href={page === "Blog" ? "https://blog.collect.earth" : "/" + page.toLowerCase()}>{page}</a>
+                            {["Home", "About", "Support", "Blog"].map((page) => (
+                                <li
+                                    className={
+                                        "nav-item" + ("/" + page.toLowerCase() === uri && " active")
+                                    }
+                                    key={page}
+                                >
+                                    <a
+                                        className="nav-link"
+                                        href={
+                                            page === "Blog"
+                                                ? "https://blog.collect.earth"
+                                                : "/" + page.toLowerCase()
+                                        }
+                                    >
+                                        {page}
+                                    </a>
+                                </li>
+                            ))}
+                            {!loggedOut && (
+                                <li className={"nav-item" + ("/account" === uri && " active")}>
+                                    <a className="nav-link" href={"/account?accountId=" + userId}>
+                                        Account
+                                    </a>
                                 </li>
                             )}
-                            {!loggedOut &&
-                                <li className={"nav-item" + ("/account" === uri && " active")}>
-                                    <a className="nav-link" href={"/account?accountId=" + userId}>Account</a>
-                                </li>
-                            }
-                            {userId === 1 &&
+                            {userId === 1 && (
                                 <li className={"nav-item" + ("/mailing-list" === uri && " active")}>
-                                    <a className="nav-link" href={"/mailing-list"}>Mailing List</a>
+                                    <a className="nav-link" href={"/mailing-list"}>
+                                        Mailing List
+                                    </a>
                                 </li>
-                            }
+                            )}
                         </ul>
                         <ul id="login-info" className="navbar-nav mr-0">
                             <LogOutButton userName={userName} uri={uri} />
                         </ul>
-                        <div
-                            className="ml-3"
-                            onClick={() => this.setState({showHelpMenu: true})}
-                        >
-                            {this.state.helpSlides.length > 0 && <SvgIcon icon="help" size="2rem" color="purple"/>}
+                        <div className="ml-3" onClick={() => this.setState({showHelpMenu: true})}>
+                            {this.state.helpSlides.length > 0 && (
+                                <SvgIcon icon="help" size="2rem" color="purple" />
+                            )}
                         </div>
                     </div>
                 </nav>
@@ -232,10 +250,11 @@ export class GeoDashNavigationBar extends React.Component {
         };
     }
 
-    closeDialogs = () => this.setState({
-        addDialog: false,
-        copyDialog: false,
-    });
+    closeDialogs = () =>
+        this.setState({
+            addDialog: false,
+            copyDialog: false,
+        });
 
     render() {
         const {userName, page, visiblePlotId} = this.props;
@@ -249,7 +268,7 @@ export class GeoDashNavigationBar extends React.Component {
                     id="geodash-nav"
                 >
                     <a className="navbar-brand pt-1 pb-1" href="home">
-                        <img className= "img-fluid" id="ceo-site-logo" src="/img/ceo-logo.png" />
+                        <img className="img-fluid" id="ceo-site-logo" src="/img/ceo-logo.png" />
                     </a>
                     <button
                         className="navbar-toggler"
@@ -262,11 +281,13 @@ export class GeoDashNavigationBar extends React.Component {
                     >
                         <span className="navbar-toggler-icon"></span>
                     </button>
-                    <div className="collapse navbar-collapse justify-content-between" id="navbarSupportedContent">
+                    <div
+                        className="collapse navbar-collapse justify-content-between"
+                        id="navbarSupportedContent"
+                    >
                         <h1 className="mb-0">GEO-DASH</h1>
                         <ul className="navbar-nav" style={{flex: 1, justifyContent: "flex-end"}}>
-                            {uri === "/widget-layout-editor"
-                            ?
+                            {uri === "/widget-layout-editor" ? (
                                 <>
                                     <li className="nav-item my-auto ml-1" id="copyWidgetLayout">
                                         <button
@@ -283,17 +304,17 @@ export class GeoDashNavigationBar extends React.Component {
                                         <button
                                             className="btn btn-outline-lightgreen btn-sm"
                                             type="button"
-                                            onClick={() => this.setState({addDialog : true})}
+                                            onClick={() => this.setState({addDialog: true})}
                                         >
                                             Add Widget
                                         </button>
                                     </li>
                                 </>
-                            :
+                            ) : (
                                 <li className="nav-item" style={{flex: 1, textAlign: "center"}}>
                                     Plot ID: {visiblePlotId}
                                 </li>
-                            }
+                            )}
                             <li className="nav-item my-auto ml-1">
                                 <button
                                     className="btn btn-outline-lightgreen btn-sm"
@@ -362,7 +383,11 @@ export function LogoBanner() {
                 </div>
                 <div className="col-sm-4 text-center my-auto">
                     <a href="https://servir.adpc.net">
-                        <img className="img-fluid" id="servir-mekong" src="/img/servir-mekong-logo.png" />
+                        <img
+                            className="img-fluid"
+                            id="servir-mekong"
+                            src="/img/servir-mekong-logo.png"
+                        />
                     </a>
                 </div>
             </div>
@@ -372,7 +397,12 @@ export function LogoBanner() {
                 </div>
 
                 <div className="col-sm-4 text-center my-auto">
-                    <img className="img-fluid" id="usfs" style={{width: "60vh"}} src="/img/usfs.png" />
+                    <img
+                        className="img-fluid"
+                        id="usfs"
+                        style={{width: "60vh"}}
+                        src="/img/usfs.png"
+                    />
                 </div>
 
                 <div className="col-sm-4 text-center my-auto">
@@ -408,7 +438,10 @@ export function LoadingModal({message}) {
                 }}
             >
                 <div className="p-3">
-                    <div id="spinner" style={{height: "2.5rem", position: "static", width: "2.5rem"}}/>
+                    <div
+                        id="spinner"
+                        style={{height: "2.5rem", position: "static", width: "2.5rem"}}
+                    />
                 </div>
                 <label className="m-0 mr-3">{message}</label>
             </div>

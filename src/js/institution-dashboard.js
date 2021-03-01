@@ -16,11 +16,11 @@ class InstitutionDashboard extends React.Component {
 
     getProjectList = () => {
         fetch(`/get-institution-projects?institutionId=${this.props.institutionId}`)
-            .then(response => response.ok ? response.json() : Promise.reject(response))
-            .then(data => {
+            .then((response) => (response.ok ? response.json() : Promise.reject(response)))
+            .then((data) => {
                 this.setDetails(data);
             })
-            .catch(response => {
+            .catch((response) => {
                 console.log(response);
                 alert("Error retrieving the project info. See console for details.");
             });
@@ -28,10 +28,10 @@ class InstitutionDashboard extends React.Component {
 
     setDetails = (projects) => {
         const details = this.state.details;
-        projects.forEach(proj => {
+        projects.forEach((proj) => {
             fetch(`/get-project-stats?projectId=${proj.id}`)
-                .then(response => response.ok ? response.json() : Promise.reject(response))
-                .then(data => {
+                .then((response) => (response.ok ? response.json() : Promise.reject(response)))
+                .then((data) => {
                     details.push({
                         id: proj.id,
                         name: proj.name,
@@ -44,7 +44,7 @@ class InstitutionDashboard extends React.Component {
                     });
                     this.setState({details: details});
                 })
-                .catch(response => {
+                .catch((response) => {
                     console.log(response);
                     alert("Error retrieving the project stats. See console for details.");
                 });
@@ -54,10 +54,16 @@ class InstitutionDashboard extends React.Component {
     render() {
         return (
             <div className="row justify-content-center">
-                <div className="bg-darkgreen mb-3 no-container-margin" style={{width: "100%", margin: "0 10px 0 10px"}}>
+                <div
+                    className="bg-darkgreen mb-3 no-container-margin"
+                    style={{width: "100%", margin: "0 10px 0 10px"}}
+                >
                     <h1>Institution Dashboard</h1>
                 </div>
-                <table id="srd" style={{width: "1000px", margin: "10px", color: "rgb(49, 186, 176)"}}>
+                <table
+                    id="srd"
+                    style={{width: "1000px", margin: "10px", color: "rgb(49, 186, 176)"}}
+                >
                     <thead>
                         <tr>
                             <th>Project Id</th>
@@ -71,7 +77,7 @@ class InstitutionDashboard extends React.Component {
                         </tr>
                     </thead>
                     <tbody>
-                        <ProjectList details={this.state.details}/>
+                        <ProjectList details={this.state.details} />
                     </tbody>
                 </table>
             </div>
@@ -80,7 +86,7 @@ class InstitutionDashboard extends React.Component {
 }
 
 function ProjectList(props) {
-    return props.details.map((project, uid) =>
+    return props.details.map((project, uid) => (
         <tr key={uid}>
             <td>{project.id}</td>
             <td>{project.name}</td>
@@ -91,15 +97,13 @@ function ProjectList(props) {
             <td>{project.analyzedPlots}</td>
             <td>{project.unanalyzedPlots}</td>
         </tr>
-    );
+    ));
 }
 
 export function pageInit(args) {
     ReactDOM.render(
         <NavigationBar userName={args.userName} userId={args.userId}>
-            <InstitutionDashboard
-                institutionId={args.institutionId || "0"}
-            />
+            <InstitutionDashboard institutionId={args.institutionId || "0"} />
         </NavigationBar>,
         document.getElementById("app")
     );

@@ -39,15 +39,17 @@ export class PlotDesign extends React.Component {
         const {latMin, latMax, lonMin, lonMax} = this.state;
         return mercator.hasValidBounds(latMin, latMax, lonMin, lonMax)
             ? {
-                type: "Polygon",
-                coordinates: [[
-                    [lonMin, latMin],
-                    [lonMin, latMax],
-                    [lonMax, latMax],
-                    [lonMax, latMin],
-                    [lonMin, latMin],
-                ]],
-            }
+                  type: "Polygon",
+                  coordinates: [
+                      [
+                          [lonMin, latMin],
+                          [lonMin, latMax],
+                          [lonMax, latMax],
+                          [lonMax, latMin],
+                          [lonMin, latMin],
+                      ],
+                  ],
+              }
             : null;
     };
 
@@ -61,17 +63,13 @@ export class PlotDesign extends React.Component {
                 latMax: "",
             });
         }
-        this.context.setProjectDetails(Object.assign(
-            newDetail,
-            {plots: []},
-            resetBoundary ? {boundary: null} : {}
-        ));
+        this.context.setProjectDetails(
+            Object.assign(newDetail, {plots: []}, resetBoundary ? {boundary: null} : {})
+        );
     };
 
-    updateBoundaryFromCoords = (newCoord) => this.setState(
-        newCoord,
-        () => this.setPlotDetails({boundary: this.generateGeoJSON()})
-    );
+    updateBoundaryFromCoords = (newCoord) =>
+        this.setState(newCoord, () => this.setPlotDetails({boundary: this.generateGeoJSON()}));
 
     /// Render Functions
 
@@ -85,7 +83,7 @@ export class PlotDesign extends React.Component {
                 min="0"
                 step="1"
                 value={this.context[property] || ""}
-                onChange={e => this.setPlotDetails({[property]: Number(e.target.value)})}
+                onChange={(e) => this.setPlotDetails({[property]: Number(e.target.value)})}
             />
         </div>
     );
@@ -104,10 +102,7 @@ export class PlotDesign extends React.Component {
                             checked={plotShape === "circle"}
                             onChange={() => this.setPlotDetails({plotShape: "circle"})}
                         />
-                        <label
-                            className="form-check-label"
-                            htmlFor="plot-shape-circle"
-                        >
+                        <label className="form-check-label" htmlFor="plot-shape-circle">
                             Circle
                         </label>
                     </div>
@@ -119,10 +114,7 @@ export class PlotDesign extends React.Component {
                             checked={plotShape === "square"}
                             onChange={() => this.setPlotDetails({plotShape: "square"})}
                         />
-                        <label
-                            className="form-check-label"
-                            htmlFor="plot-shape-square"
-                        >
+                        <label className="form-check-label" htmlFor="plot-shape-square">
                             Square
                         </label>
                     </div>
@@ -147,7 +139,11 @@ export class PlotDesign extends React.Component {
                                 min="-90.0"
                                 max="90.0"
                                 step="any"
-                                onChange={(e) => this.updateBoundaryFromCoords({latMax: parseFloat(e.target.value)})}
+                                onChange={(e) =>
+                                    this.updateBoundaryFromCoords({
+                                        latMax: parseFloat(e.target.value),
+                                    })
+                                }
                             />
                         </div>
                     </div>
@@ -161,7 +157,11 @@ export class PlotDesign extends React.Component {
                                 min="-180.0"
                                 max="180.0"
                                 step="any"
-                                onChange={(e) => this.updateBoundaryFromCoords({lonMin: parseFloat(e.target.value)})}
+                                onChange={(e) =>
+                                    this.updateBoundaryFromCoords({
+                                        lonMin: parseFloat(e.target.value),
+                                    })
+                                }
                             />
                         </div>
                         <div className="col-md-6">
@@ -173,7 +173,11 @@ export class PlotDesign extends React.Component {
                                 min="-180.0"
                                 max="180.0"
                                 step="any"
-                                onChange={(e) => this.updateBoundaryFromCoords({lonMax: parseFloat(e.target.value)})}
+                                onChange={(e) =>
+                                    this.updateBoundaryFromCoords({
+                                        lonMax: parseFloat(e.target.value),
+                                    })
+                                }
                             />
                         </div>
                     </div>
@@ -187,7 +191,11 @@ export class PlotDesign extends React.Component {
                                 min="-90.0"
                                 max="90.0"
                                 step="any"
-                                onChange={(e) => this.updateBoundaryFromCoords({latMin: parseFloat(e.target.value)})}
+                                onChange={(e) =>
+                                    this.updateBoundaryFromCoords({
+                                        latMin: parseFloat(e.target.value),
+                                    })
+                                }
                             />
                         </div>
                     </div>
@@ -211,22 +219,31 @@ export class PlotDesign extends React.Component {
                         accept={fileType === "csv" ? "text/csv" : "application/zip"}
                         id="plot-distribution-file"
                         defaultValue=""
-                        onChange={e => {
+                        onChange={(e) => {
                             const file = e.target.files[0];
-                            encodeFileAsBase64(file, base64 =>
+                            encodeFileAsBase64(file, (base64) =>
                                 this.setPlotDetails({
                                     plotFileName: file.name,
                                     plotFileBase64: base64,
-                                }));
+                                })
+                            );
                         }}
                         style={{display: "none"}}
                     />
                 </label>
                 <label className="ml-3 text-nowrap">
-                    File: {this.context.plotFileName || (this.context.projectId > 0 ? "Use existing data" : "None")}
+                    File:{" "}
+                    {this.context.plotFileName ||
+                        (this.context.projectId > 0 ? "Use existing data" : "None")}
                 </label>
             </div>
-            <a href={fileType === "csv" ? "test_data/plot-csv-example.csv" : "test_data/plot-shape-example.zip"}>
+            <a
+                href={
+                    fileType === "csv"
+                        ? "test_data/plot-csv-example.csv"
+                        : "test_data/plot-shape-example.zip"
+                }
+            >
                 Download example plot {fileType === "csv" ? "csv" : "shape"} file
             </a>
         </div>
@@ -250,29 +267,37 @@ export class PlotDesign extends React.Component {
         const plotOptions = {
             random: {
                 display: "Random",
-                description: "Plot centers will be randomly distributed within the project boundary.",
-                inputs: [() => this.renderLabeledInput("Number of plots", "numPlots"),
-                         this.renderPlotShape,
-                         () => this.renderLabeledInput(plotUnits, "plotSize")],
+                description:
+                    "Plot centers will be randomly distributed within the project boundary.",
+                inputs: [
+                    () => this.renderLabeledInput("Number of plots", "numPlots"),
+                    this.renderPlotShape,
+                    () => this.renderLabeledInput(plotUnits, "plotSize"),
+                ],
                 showAOI: true,
             },
             gridded: {
                 display: "Gridded",
-                description: "Plot centers will be arranged on a grid within the AOI using the plot spacing selected below.",
-                inputs: [() => this.renderLabeledInput("Plot spacing (m)", "plotSpacing"),
-                         this.renderPlotShape,
-                         () => this.renderLabeledInput(plotUnits, "plotSize")],
+                description:
+                    "Plot centers will be arranged on a grid within the AOI using the plot spacing selected below.",
+                inputs: [
+                    () => this.renderLabeledInput("Plot spacing (m)", "plotSpacing"),
+                    this.renderPlotShape,
+                    () => this.renderLabeledInput(plotUnits, "plotSize"),
+                ],
                 showAOI: true,
             },
             csv: {
                 display: "CSV File",
-                description: "Specify your own plot centers by uploading a CSV with these fields: LON,LAT,PLOTID.",
+                description:
+                    "Specify your own plot centers by uploading a CSV with these fields: LON,LAT,PLOTID.",
                 inputs: [() => this.renderCSV(plotUnits)],
                 showAOI: false,
             },
             shp: {
                 display: "SHP File",
-                description: "Specify your own plot boundaries by uploading a zipped Shapefile (containing SHP, SHX, DBF, and PRJ files) of polygon features. Each feature must have a unique PLOTID field.",
+                description:
+                    "Specify your own plot boundaries by uploading a zipped Shapefile (containing SHP, SHX, DBF, and PRJ files) of polygon features. Each feature must have a unique PLOTID field.",
                 inputs: [() => this.renderFileInput("shp")],
                 showAOI: false,
             },
@@ -290,23 +315,27 @@ export class PlotDesign extends React.Component {
                                     <select
                                         className="form-control form-control-sm ml-3"
                                         style={{width: "initial"}}
-                                        onChange={(e) => this.setPlotDetails({plotDistribution: e.target.value})}
+                                        onChange={(e) =>
+                                            this.setPlotDetails({plotDistribution: e.target.value})
+                                        }
                                         value={plotDistribution}
                                     >
-                                        {Object.entries(plotOptions).map(([key, options]) =>
-                                            <option key={key} value={key}>{options.display}</option>
-                                        )}
+                                        {Object.entries(plotOptions).map(([key, options]) => (
+                                            <option key={key} value={key}>
+                                                {options.display}
+                                            </option>
+                                        ))}
                                     </select>
                                 </div>
                                 <p id="plot-design-text" className="font-italic ml-2 small">
                                     - {plotOptions[plotDistribution].description}
                                 </p>
                                 <div style={{display: "flex"}}>
-                                    {plotOptions[plotDistribution].inputs.map((i, idx) =>
+                                    {plotOptions[plotDistribution].inputs.map((i, idx) => (
                                         <div key={idx} className="mr-3">
                                             {i()}
                                         </div>
-                                    )}
+                                    ))}
                                 </div>
                             </div>
                             {plotOptions[plotDistribution].showAOI && this.renderAOICoords()}
@@ -322,10 +351,15 @@ export class PlotDesign extends React.Component {
                         whiteSpace: "pre-line",
                     }}
                 >
-                    {totalPlots > 0 && `This project will contain around ${formatNumberWithCommas(totalPlots)} plots.`}
-                    {totalPlots > 0 && totalPlots > plotLimit &&
-                        `* The maximum allowed number for the selected plot distribution is ${formatNumberWithCommas(plotLimit)}.`
-                    }
+                    {totalPlots > 0 &&
+                        `This project will contain around ${formatNumberWithCommas(
+                            totalPlots
+                        )} plots.`}
+                    {totalPlots > 0 &&
+                        totalPlots > plotLimit &&
+                        `* The maximum allowed number for the selected plot distribution is ${formatNumberWithCommas(
+                            plotLimit
+                        )}.`}
                 </p>
             </div>
         );
@@ -337,10 +371,10 @@ export function PlotDesignReview() {
     return (
         <div className="d-flex">
             <div className="col-6">
-                <PlotReview/>
+                <PlotReview />
             </div>
             <div className="col-6">
-                <AOIReview/>
+                <AOIReview />
             </div>
         </div>
     );
@@ -349,9 +383,11 @@ export function PlotDesignReview() {
 export function PlotReview() {
     return (
         <ProjectContext.Consumer>
-            {({plotDistribution, numPlots, plotSpacing, plotShape, plotSize, useTemplatePlots}) =>
+            {({plotDistribution, numPlots, plotSpacing, plotShape, plotSize, useTemplatePlots}) => (
                 <div id="plot-review">
-                    {useTemplatePlots && <h3 className="mb-3">Plots will be copied from template project</h3>}
+                    {useTemplatePlots && (
+                        <h3 className="mb-3">Plots will be copied from template project</h3>
+                    )}
                     <div className="d-flex">
                         <div id="plot-review-col1">
                             <table id="plot-review-table" className="table table-sm">
@@ -359,45 +395,55 @@ export function PlotReview() {
                                     <tr>
                                         <td className="w-80 pr-5">Spatial distribution</td>
                                         <td className="w-20 text-center">
-                                            <span className="badge badge-pill bg-lightgreen">{plotDistribution}</span>
+                                            <span className="badge badge-pill bg-lightgreen">
+                                                {plotDistribution}
+                                            </span>
                                         </td>
                                     </tr>
                                     <tr>
                                         <td className="w-80">Number of plots</td>
                                         <td className="w-20 text-center">
-                                            <span className="badge badge-pill bg-lightgreen">{numPlots} plots</span>
+                                            <span className="badge badge-pill bg-lightgreen">
+                                                {numPlots} plots
+                                            </span>
                                         </td>
                                     </tr>
-                                    {plotDistribution === "gridded" &&
+                                    {plotDistribution === "gridded" && (
                                         <tr>
                                             <td className="w-80">Plot spacing</td>
                                             <td className="w-20 text-center">
-                                                <span className="badge badge-pill bg-lightgreen">{plotSpacing} m</span>
+                                                <span className="badge badge-pill bg-lightgreen">
+                                                    {plotSpacing} m
+                                                </span>
                                             </td>
                                         </tr>
-                                    }
-                                    {plotDistribution !== "shp" &&
+                                    )}
+                                    {plotDistribution !== "shp" && (
                                         <>
                                             <tr>
                                                 <td className="w-80">Plot shape</td>
                                                 <td className="w-20 text-center">
-                                                    <span className="badge badge-pill bg-lightgreen">{plotShape}</span>
+                                                    <span className="badge badge-pill bg-lightgreen">
+                                                        {plotShape}
+                                                    </span>
                                                 </td>
                                             </tr>
                                             <tr>
                                                 <td className="w-80">Plot size</td>
                                                 <td className="w-20 text-center">
-                                                    <span className="badge badge-pill bg-lightgreen">{plotSize} m</span>
+                                                    <span className="badge badge-pill bg-lightgreen">
+                                                        {plotSize} m
+                                                    </span>
                                                 </td>
                                             </tr>
                                         </>
-                                    }
+                                    )}
                                 </tbody>
                             </table>
                         </div>
                     </div>
                 </div>
-            }
+            )}
         </ProjectContext.Consumer>
     );
 }
@@ -413,20 +459,32 @@ export function AOIReview() {
                         <div className="form-group mx-4">
                             <div className="row">
                                 <div className="col-md-6 offset-md-3">
-                                    <label><b>North: </b>{boundaryExtent[3]}</label>
+                                    <label>
+                                        <b>North: </b>
+                                        {boundaryExtent[3]}
+                                    </label>
                                 </div>
                             </div>
                             <div className="row">
                                 <div className="col-md-6">
-                                    <label><b>West: </b>{boundaryExtent[0]}</label>
+                                    <label>
+                                        <b>West: </b>
+                                        {boundaryExtent[0]}
+                                    </label>
                                 </div>
                                 <div className="col-md-6">
-                                    <label><b>East: </b>{boundaryExtent[2]}</label>
+                                    <label>
+                                        <b>East: </b>
+                                        {boundaryExtent[2]}
+                                    </label>
                                 </div>
                             </div>
                             <div className="row">
                                 <div className="col-md-6 offset-md-3">
-                                    <label><b>South: </b>{boundaryExtent[1]}</label>
+                                    <label>
+                                        <b>South: </b>
+                                        {boundaryExtent[1]}
+                                    </label>
                                 </div>
                             </div>
                         </div>

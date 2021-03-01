@@ -16,23 +16,22 @@ export default class ReviewChanges extends React.Component {
     createProject = () => {
         if (confirm("Do you really want to create this project?")) {
             this.context.processModal("Creating Project", () =>
-                fetch("/create-project",
-                      {
-                          method: "POST",
-                          headers: {
-                              "Accept": "application/json",
-                              "Content-Type": "application/json; charset=utf-8",
-                          },
-                          body: JSON.stringify({
-                              institutionId: this.context.institutionId,
-                              projectTemplate: this.context.templateProjectId,
-                              useTemplatePlots: this.context.useTemplatePlots,
-                              useTemplateWidgets: this.context.useTemplateWidgets,
-                              ...this.buildProjectObject(),
-                          }),
-                      })
-                    .then(response => Promise.all([response.ok, response.json()]))
-                    .then(data => {
+                fetch("/create-project", {
+                    method: "POST",
+                    headers: {
+                        Accept: "application/json",
+                        "Content-Type": "application/json; charset=utf-8",
+                    },
+                    body: JSON.stringify({
+                        institutionId: this.context.institutionId,
+                        projectTemplate: this.context.templateProjectId,
+                        useTemplatePlots: this.context.useTemplatePlots,
+                        useTemplateWidgets: this.context.useTemplateWidgets,
+                        ...this.buildProjectObject(),
+                    }),
+                })
+                    .then((response) => Promise.all([response.ok, response.json()]))
+                    .then((data) => {
                         if (data[0] && Number.isInteger(data[1].projectId)) {
                             window.location = `/review-project?projectId=${data[1].projectId}`;
                             return Promise.resolve();
@@ -40,7 +39,7 @@ export default class ReviewChanges extends React.Component {
                             return Promise.reject(data[1]);
                         }
                     })
-                    .catch(message => {
+                    .catch((message) => {
                         alert("Error creating project:\n" + message);
                     })
             );
@@ -51,38 +50,36 @@ export default class ReviewChanges extends React.Component {
         // TODO: Match project details in context as in state (i.e. do not spread into context).
         const updateSurvey = this.surveyQuestionUpdated(this.context, this.context.originalProject);
         const extraMessage = this.plotsUpdated(this.context, this.context.originalProject)
-                ? "  Plots and samples will be recreated, losing all collection data."
+            ? "  Plots and samples will be recreated, losing all collection data."
             : this.samplesUpdated(this.context, this.context.originalProject)
-                ? "  Samples will be recreated, losing all collection data."
+            ? "  Samples will be recreated, losing all collection data."
             : updateSurvey
-                ? "  Updating survey questions or rules will reset all collected data."
+            ? "  Updating survey questions or rules will reset all collected data."
             : this.allowDrawnSamplesDisallowed(this.context, this.context.originalProject)
-                ? "  Disallowing users to draw samples will reset all collected data."
+            ? "  Disallowing users to draw samples will reset all collected data."
             : "";
         if (confirm("Do you really want to update this project?" + extraMessage)) {
             this.context.processModal("Updating Project", () =>
-                fetch("/update-project",
-                      {
-                          method: "POST",
-                          headers: {
-                              "Accept": "application/json",
-                              "Content-Type": "application/json; charset=utf-8",
-                          },
-                          body: JSON.stringify({
-                              projectId: this.context.projectId,
-                              ...this.buildProjectObject(),
-                              updateSurvey: updateSurvey, // FIXME this is a shim for when stored questions are in an old format.
-                          }),
-                      })
-                    .then(response => {
-                        if (!response.ok) {
-                            console.log(response);
-                            alert("Error updating project. See console for details.");
-                        } else {
-                            this.context.setContextState({designMode: "manage"});
-                            alert("Project successfully updated!");
-                        }
-                    })
+                fetch("/update-project", {
+                    method: "POST",
+                    headers: {
+                        Accept: "application/json",
+                        "Content-Type": "application/json; charset=utf-8",
+                    },
+                    body: JSON.stringify({
+                        projectId: this.context.projectId,
+                        ...this.buildProjectObject(),
+                        updateSurvey: updateSurvey, // FIXME this is a shim for when stored questions are in an old format.
+                    }),
+                }).then((response) => {
+                    if (!response.ok) {
+                        console.log(response);
+                        alert("Error updating project. See console for details.");
+                    } else {
+                        this.context.setContextState({designMode: "manage"});
+                        alert("Project successfully updated!");
+                    }
+                })
             );
         }
     };
@@ -125,32 +122,31 @@ export default class ReviewChanges extends React.Component {
         originalProject.allowDrawnSamples && !projectDetails.allowDrawnSamples;
 
     surveyQuestionUpdated = (projectDetails, originalProject) =>
-        !_.isEqual(projectDetails.surveyQuestions, originalProject.surveyQuestions)
-            || !_.isEqual(projectDetails.surveyRules, originalProject.surveyRules);
+        !_.isEqual(projectDetails.surveyQuestions, originalProject.surveyQuestions) ||
+        !_.isEqual(projectDetails.surveyRules, originalProject.surveyRules);
 
     plotsUpdated = (projectDetails, originalProject) =>
-        projectDetails.plotDistribution !== originalProject.plotDistribution
-            || (["csv", "shp"].includes(this.context.plotDistribution)
-                ? projectDetails.plotFileBase64
-                : projectDetails.boundary !== originalProject.boundary
-                    || projectDetails.numPlots !== originalProject.numPlots
-                    || projectDetails.plotShape !== originalProject.plotShape
-                    || projectDetails.plotSize !== originalProject.plotSize
-                    || projectDetails.plotSpacing !== originalProject.plotSpacing);
+        projectDetails.plotDistribution !== originalProject.plotDistribution ||
+        (["csv", "shp"].includes(this.context.plotDistribution)
+            ? projectDetails.plotFileBase64
+            : projectDetails.boundary !== originalProject.boundary ||
+              projectDetails.numPlots !== originalProject.numPlots ||
+              projectDetails.plotShape !== originalProject.plotShape ||
+              projectDetails.plotSize !== originalProject.plotSize ||
+              projectDetails.plotSpacing !== originalProject.plotSpacing);
 
     samplesUpdated = (projectDetails, originalProject) =>
-        projectDetails.sampleDistribution !== originalProject.sampleDistribution
-            || (["csv", "shp"].includes(this.context.sampleDistribution)
-                ? projectDetails.sampleFileBase64
-                : projectDetails.samplesPerPlot !== originalProject.samplesPerPlot
-                    || projectDetails.sampleResolution !== originalProject.sampleResolution);
+        projectDetails.sampleDistribution !== originalProject.sampleDistribution ||
+        (["csv", "shp"].includes(this.context.sampleDistribution)
+            ? projectDetails.sampleFileBase64
+            : projectDetails.samplesPerPlot !== originalProject.samplesPerPlot ||
+              projectDetails.sampleResolution !== originalProject.sampleResolution);
 
     /// Render Functions
 
     renderButtons = () => (
         <div className="d-flex flex-column">
-            {this.context.projectId > 0
-            ? (
+            {this.context.projectId > 0 ? (
                 <>
                     <input
                         type="button"
@@ -184,10 +180,7 @@ export default class ReviewChanges extends React.Component {
 
     render() {
         return (
-            <div
-                id="changes"
-                className="d-flex flex-column full-height align-items-center p-3"
-            >
+            <div id="changes" className="d-flex flex-column full-height align-items-center p-3">
                 <div
                     style={{
                         display: "flex",
@@ -203,7 +196,7 @@ export default class ReviewChanges extends React.Component {
                     >
                         <h2 className="bg-lightgreen w-100 py-1">Project Details</h2>
                         <div className="px-3 pb-3">
-                            <ReviewForm/>
+                            <ReviewForm />
                         </div>
                     </div>
                     <div
@@ -211,9 +204,7 @@ export default class ReviewChanges extends React.Component {
                         style={{border: "1px solid black", borderRadius: "6px"}}
                     >
                         <h2 className="bg-lightgreen w-100 py-1">Project Management</h2>
-                        <div className="p-3">
-                            {this.renderButtons()}
-                        </div>
+                        <div className="p-3">{this.renderButtons()}</div>
                     </div>
                 </div>
             </div>

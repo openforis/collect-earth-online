@@ -1,20 +1,20 @@
 /*****************************************************************************
-***
-*** Mercator-OpenLayers.js
-***
-*** Author: Gary W. Johnson
-*** Copyright: 2017-2020 Spatial Informatics Group, LLC
-*** License: LGPLv3
-***
-*** Description: This library provides a set of functions for
-*** interacting with embedded web maps in an API agnostic manner. This
-*** file contains the OpenLayers 6 implementation.
-***
-******************************************************************************
-***
-*** OpenLayers imports
-***
-*****************************************************************************/
+ ***
+ *** Mercator-OpenLayers.js
+ ***
+ *** Author: Gary W. Johnson
+ *** Copyright: 2017-2020 Spatial Informatics Group, LLC
+ *** License: LGPLv3
+ ***
+ *** Description: This library provides a set of functions for
+ *** interacting with embedded web maps in an API agnostic manner. This
+ *** file contains the OpenLayers 6 implementation.
+ ***
+ ******************************************************************************
+ ***
+ *** OpenLayers imports
+ ***
+ *****************************************************************************/
 
 import "ol/ol.css";
 import {Feature, Map, Overlay, View} from "ol";
@@ -32,37 +32,33 @@ import {formatDateISO, isNumber} from "./generalUtils";
 import {mapboxAttributionText} from "../imagery/mapbox-attribution";
 
 /******************************************************************************
-***
-*** Toplevel namespace object
-***
-*****************************************************************************/
+ ***
+ *** Toplevel namespace object
+ ***
+ *****************************************************************************/
 
 const mercator = {};
 
 /*****************************************************************************
-***
-*** Lon/Lat Reprojection
-***
-*** The default map projection for most web maps (e.g., OpenLayers,
-*** OpenStreetMap, Google Maps, MapQuest, and Bing Maps) is "Web
-*** Mercator" (EPSG:3857).
-***
-*****************************************************************************/
+ ***
+ *** Lon/Lat Reprojection
+ ***
+ *** The default map projection for most web maps (e.g., OpenLayers,
+ *** OpenStreetMap, Google Maps, MapQuest, and Bing Maps) is "Web
+ *** Mercator" (EPSG:3857).
+ ***
+ *****************************************************************************/
 
 // [Pure] Returns the passed in [longitude, latitude] values
 // reprojected to Web Mercator as [x, y].
 mercator.reprojectToMap = function (longitude, latitude) {
-    return transform([Number(longitude), Number(latitude)],
-                     "EPSG:4326",
-                     "EPSG:3857");
+    return transform([Number(longitude), Number(latitude)], "EPSG:4326", "EPSG:3857");
 };
 
 // [Pure] Returns the passed in [x, y] values reprojected to WGS84 as
 // [longitude, latitude].
 mercator.reprojectFromMap = function (x, y) {
-    return transform([Number(x), Number(y)],
-                     "EPSG:3857",
-                     "EPSG:4326");
+    return transform([Number(x), Number(y)], "EPSG:3857", "EPSG:4326");
 };
 
 // [Pure] Returns a bounding box for the globe in Web Mercator as
@@ -97,16 +93,14 @@ mercator.getViewRadius = function (mapConfig) {
 };
 
 /*****************************************************************************
-***
-*** Create map controls
-***
-*****************************************************************************/
+ ***
+ *** Create map controls
+ ***
+ *****************************************************************************/
 
 // Layer switcher for planet daily maps
 class PlanetLayerSwitcher extends Control {
-
     constructor(options) {
-
         const {layers, target} = options;
         const element = document.createElement("div");
         super({
@@ -126,7 +120,10 @@ class PlanetLayerSwitcher extends Control {
         ul.className = "planet-layer-switcher-ul";
         panel.appendChild(ul);
 
-        layers.map(layer => this.createLayerList(layer)).reverse().map(li => ul.appendChild(li));
+        layers
+            .map((layer) => this.createLayerList(layer))
+            .reverse()
+            .map((li) => ul.appendChild(li));
     }
 
     setMap = (map) => super.setMap(map);
@@ -157,7 +154,7 @@ mercator.getTopVisiblePlanetLayerDate = (mapConfig, layerId) => {
     const layer = mercator.getLayerById(mapConfig, layerId);
     if (layer && layer instanceof LayerGroup) {
         const planetLayers = [...layer.getLayers().getArray()];
-        const visibleLayer = planetLayers.reverse().find(planetLayer => planetLayer.getVisible());
+        const visibleLayer = planetLayers.reverse().find((planetLayer) => planetLayer.getVisible());
         // returns the string formatted date
         return visibleLayer ? visibleLayer.get("title") : "NA";
     } else {
@@ -166,14 +163,15 @@ mercator.getTopVisiblePlanetLayerDate = (mapConfig, layerId) => {
 };
 
 /*****************************************************************************
-***
-*** Create map source and layer objects
-***
-*****************************************************************************/
+ ***
+ *** Create map source and layer objects
+ ***
+ *****************************************************************************/
 // Helper function
 mercator.__sendGEERequest = function (theJson, sourceConfig, imageryId, attribution) {
     const geeLayer = new XYZ({
-        url: "https://earthengine.googleapis.com/v1alpha/projects/earthengine-legacy/maps/temp/tiles/{z}/{x}/{y}",
+        url:
+            "https://earthengine.googleapis.com/v1alpha/projects/earthengine-legacy/maps/temp/tiles/{z}/{x}/{y}",
         id: imageryId,
         attributions: attribution,
     });
@@ -181,19 +179,19 @@ mercator.__sendGEERequest = function (theJson, sourceConfig, imageryId, attribut
     fetch("/geo-dash/gateway-request", {
         method: "POST",
         headers: {
-            "Accept": "application/json",
+            Accept: "application/json",
             "Content-Type": "application/json",
         },
         body: JSON.stringify(theJson),
     })
-        .then(res => {
+        .then((res) => {
             if (res.ok) {
                 return res.json();
             } else {
                 Promise.reject();
             }
         })
-        .then(data => {
+        .then((data) => {
             if (data && data.hasOwnProperty("url")) {
                 const geeLayer = new XYZ({
                     url: data.url,
@@ -207,7 +205,8 @@ mercator.__sendGEERequest = function (theJson, sourceConfig, imageryId, attribut
             } else {
                 console.warn("Wrong Data Returned");
             }
-        }).catch(response => {
+        })
+        .catch((response) => {
             console.log("Error loading " + sourceConfig.type + " imagery: ");
             console.log(response);
         });
@@ -215,23 +214,35 @@ mercator.__sendGEERequest = function (theJson, sourceConfig, imageryId, attribut
 };
 
 // [Pure] Returns a new ol.source.* object or null if the sourceConfig is invalid.
-mercator.createSource = function (sourceConfig, imageryId, attribution,
-                                  extent = [[-180, -90], [180, -90], [180, 90], [-180, 90], [-180, -90]],
-                                  show = false) {
+mercator.createSource = function (
+    sourceConfig,
+    imageryId,
+    attribution,
+    extent = [
+        [-180, -90],
+        [180, -90],
+        [180, 90],
+        [-180, 90],
+        [-180, -90],
+    ],
+    show = false
+) {
     if (sourceConfig.type === "Planet") {
         return new XYZ({
-            url: `/get-tile?imageryId=${imageryId}` +
-                 `&z={z}&x={x}&y={y}&tile={0-3}&month=${sourceConfig.month}` +
-                 `&year=${sourceConfig.year}`,
+            url:
+                `/get-tile?imageryId=${imageryId}` +
+                `&z={z}&x={x}&y={y}&tile={0-3}&month=${sourceConfig.month}` +
+                `&year=${sourceConfig.year}`,
             attributions: attribution,
         });
     } else if (sourceConfig.type === "PlanetNICFI") {
         return new XYZ({
-            url: "https://tiles2.planet.com/basemaps/v1/planet-tiles/planet_medres_normalized_analytic_"
-                + sourceConfig.time
-                + "_mosaic/gmap/{z}/{x}/{y}"
-                + `?api_key=${sourceConfig.accessToken}`
-                + `&proc=${sourceConfig.band}`,
+            url:
+                "https://tiles2.planet.com/basemaps/v1/planet-tiles/planet_medres_normalized_analytic_" +
+                sourceConfig.time +
+                "_mosaic/gmap/{z}/{x}/{y}" +
+                `?api_key=${sourceConfig.accessToken}` +
+                `&proc=${sourceConfig.band}`,
             attributions: attribution,
         });
     } else if (sourceConfig.type === "PlanetDaily") {
@@ -246,31 +257,39 @@ mercator.createSource = function (sourceConfig, imageryId, attribution,
         };
         const planetLayer = new XYZ({
             // some random tiles to be replaced later
-            url: "https://tiles0.planet.com/data/v1/layers/DkTnYnMW_G7i-E6Nj6lb9s7PaG8PG-Hy23Iyug/{z}/{x}/{y}.png",
+            url:
+                "https://tiles0.planet.com/data/v1/layers/DkTnYnMW_G7i-E6Nj6lb9s7PaG8PG-Hy23Iyug/{z}/{x}/{y}.png",
             attributions: attribution,
         });
         planetLayer.setProperties({id: imageryId});
-        console.log("Calling out to /geo-dash/gateway-request with this JSON:\n\n" + JSON.stringify(theJson));
+        console.log(
+            "Calling out to /geo-dash/gateway-request with this JSON:\n\n" + JSON.stringify(theJson)
+        );
         fetch("/geo-dash/gateway-request", {
             method: "POST",
             headers: {
-                "Accept": "application/json",
+                Accept: "application/json",
                 "Content-Type": "application/json",
             },
             body: JSON.stringify(theJson),
         })
-            .then(res => {
+            .then((res) => {
                 if (res.ok) {
                     return res.json();
                 } else {
                     return Promise.reject();
                 }
             })
-            .then(data => {
+            .then((data) => {
                 console.log("Here's the response data:\n\n" + JSON.stringify(data));
                 // arrange in ascending order of dates
                 const sortedData = data
-                    .filter(d => d.hasOwnProperty("layerID") && d["layerID"] !== "null" && d.hasOwnProperty("date"))
+                    .filter(
+                        (d) =>
+                            d.hasOwnProperty("layerID") &&
+                            d["layerID"] !== "null" &&
+                            d.hasOwnProperty("date")
+                    )
                     .sort((a, b) => {
                         const dateA = new Date(a.date),
                             dateB = new Date(b.date);
@@ -278,16 +297,27 @@ mercator.createSource = function (sourceConfig, imageryId, attribution,
                         if (dateA > dateB) return 1;
                         return 0;
                     });
-                if (sortedData.length === 0) alert("No usable results found for Planet Daily imagery. Check your access token and/or change the date.");
-                const planetLayers = sortedData.map(d => new TileLayer({
-                    source: new XYZ({
-                        url: "https://tiles0.planet.com/data/v1/layers/" + d["layerID"] + "/{z}/{x}/{y}.png",
-                        attributions: attribution,
-                    }),
-                    title: d["date"],
-                }));
-                const dummyPlanetLayer = mercator.currentMap.getLayers().getArray()
-                    .find(lyr => imageryId === lyr.getSource().get("id"));
+                if (sortedData.length === 0)
+                    alert(
+                        "No usable results found for Planet Daily imagery. Check your access token and/or change the date."
+                    );
+                const planetLayers = sortedData.map(
+                    (d) =>
+                        new TileLayer({
+                            source: new XYZ({
+                                url:
+                                    "https://tiles0.planet.com/data/v1/layers/" +
+                                    d["layerID"] +
+                                    "/{z}/{x}/{y}.png",
+                                attributions: attribution,
+                            }),
+                            title: d["date"],
+                        })
+                );
+                const dummyPlanetLayer = mercator.currentMap
+                    .getLayers()
+                    .getArray()
+                    .find((lyr) => imageryId === lyr.getSource().get("id"));
                 mercator.currentMap.removeLayer(dummyPlanetLayer);
                 const layerGroup = new LayerGroup({
                     id: imageryId,
@@ -302,7 +332,8 @@ mercator.createSource = function (sourceConfig, imageryId, attribution,
                         new PlanetLayerSwitcher({layers: layerGroupArrays})
                     );
                 }
-            }).catch(response => {
+            })
+            .catch((response) => {
                 console.log("Error loading Planet Daily imagery: ");
                 console.log(response);
                 alert("Error loading Planet Daily imagery. Check console for details.");
@@ -332,13 +363,20 @@ mercator.createSource = function (sourceConfig, imageryId, attribution,
         });
     } else if (sourceConfig.type === "Sentinel2" || sourceConfig.type === "Sentinel1") {
         const bandCombination = sourceConfig.bandCombination;
-        const bands = sourceConfig.type === "Sentinel1" ? bandCombination
-            : bandCombination === "FalseColorInfrared" ? "B8,B4,B3"
-                : bandCombination === "FalseColorUrban" ? "B12,B11,B4"
-                    : bandCombination === "Agriculture" ? "B11,B8,B2"
-                        : bandCombination === "HealthyVegetation" ? "B8,B11,B2"
-                            : bandCombination === "ShortWaveInfrared" ? "B12,B8A,B4"
-                                : "B4,B3,B2";
+        const bands =
+            sourceConfig.type === "Sentinel1"
+                ? bandCombination
+                : bandCombination === "FalseColorInfrared"
+                ? "B8,B4,B3"
+                : bandCombination === "FalseColorUrban"
+                ? "B12,B11,B4"
+                : bandCombination === "Agriculture"
+                ? "B11,B8,B2"
+                : bandCombination === "HealthyVegetation"
+                ? "B8,B11,B2"
+                : bandCombination === "ShortWaveInfrared"
+                ? "B12,B8A,B4"
+                : "B4,B3,B2";
 
         const endDate = new Date(sourceConfig.year, sourceConfig.month, 0);
         const theJson = {
@@ -346,9 +384,15 @@ mercator.createSource = function (sourceConfig, imageryId, attribution,
             bands: bands,
             min: sourceConfig.min,
             max: sourceConfig.max,
-            cloudLessThan: sourceConfig.type === "Sentinel2" ? parseInt(sourceConfig.cloudScore) : null,
-            dateFrom: sourceConfig.year + "-" + (sourceConfig.month.length === 1 ? "0" : "") + sourceConfig.month + "-01",
-            dateTo : formatDateISO(endDate),
+            cloudLessThan:
+                sourceConfig.type === "Sentinel2" ? parseInt(sourceConfig.cloudScore) : null,
+            dateFrom:
+                sourceConfig.year +
+                "-" +
+                (sourceConfig.month.length === 1 ? "0" : "") +
+                sourceConfig.month +
+                "-01",
+            dateTo: formatDateISO(endDate),
         };
         return mercator.__sendGEERequest(theJson, sourceConfig, imageryId, attribution);
     } else if (sourceConfig.type === "GEEImage") {
@@ -373,8 +417,10 @@ mercator.createSource = function (sourceConfig, imageryId, attribution,
         // const fts = {'LANDSAT5': 'Landsat5Filtered', 'LANDSAT7': 'Landsat7Filtered', 'LANDSAT8':'Landsat8Filtered',
         //              'Sentinel2': 'FilteredSentinel'};
         // const url = "http://collect.earth:8888/" + fts[sourceConfig.geeParams.filterType];
-        const url = (sourceConfig.path) ? "thegateway" : sourceConfig.geeUrl;
-        const cloudVar = sourceConfig.geeParams.visParams.cloudLessThan ? parseInt(sourceConfig.geeParams.visParams.cloudLessThan) : "";
+        const url = sourceConfig.path ? "thegateway" : sourceConfig.geeUrl;
+        const cloudVar = sourceConfig.geeParams.visParams.cloudLessThan
+            ? parseInt(sourceConfig.geeParams.visParams.cloudLessThan)
+            : "";
         let visParams;
         try {
             visParams = JSON.parse(sourceConfig.geeParams.visParams);
@@ -396,7 +442,10 @@ mercator.createSource = function (sourceConfig, imageryId, attribution,
         } else if (sourceConfig.geeParams.ImageCollectionAsset) {
             theJson.imageName = sourceConfig.geeParams.ImageCollectionAsset;
         }
-        const theID = Math.random().toString(36).substr(2, 16) + "_" + Math.random().toString(36).substr(2, 9);
+        const theID =
+            Math.random().toString(36).substr(2, 16) +
+            "_" +
+            Math.random().toString(36).substr(2, 9);
         const geeLayer = new XYZ({
             url: "https://earthengine.googleapis.com/map/temp/{z}/{x}/{y}?token=",
             id: theID,
@@ -407,24 +456,28 @@ mercator.createSource = function (sourceConfig, imageryId, attribution,
             fetch(url, {
                 method: "POST",
                 headers: {
-                    "Accept": "application/json",
+                    Accept: "application/json",
                     "Content-Type": "application/json",
                     mapConfig: sourceConfig,
                     LayerId: theID,
                 },
                 body: JSON.stringify(theJson),
             })
-                .then(res => {
+                .then((res) => {
                     if (res.ok) {
                         return res.json();
                     } else {
                         Promise.reject();
                     }
                 })
-                .then(data => {
+                .then((data) => {
                     if (data.hasOwnProperty("mapid")) {
                         const geeLayer = new XYZ({
-                            url: "https://earthengine.googleapis.com/map/" + data.mapid + "/{z}/{x}/{y}?token=" + data.token,
+                            url:
+                                "https://earthengine.googleapis.com/map/" +
+                                data.mapid +
+                                "/{z}/{x}/{y}?token=" +
+                                data.token,
                             attributions: attribution,
                         });
                         mercator.currentMap.getLayers().forEach(function (lyr) {
@@ -435,7 +488,8 @@ mercator.createSource = function (sourceConfig, imageryId, attribution,
                     } else {
                         console.warn("Wrong Data Returned");
                     }
-                }).catch(response => {
+                })
+                .catch((response) => {
                     console.log("Error loading EE imagery: ");
                     console.log(response);
                 });
@@ -443,21 +497,26 @@ mercator.createSource = function (sourceConfig, imageryId, attribution,
         return geeLayer;
     } else if (sourceConfig.type === "MapBoxRaster") {
         return new XYZ({
-            url: "https://api.mapbox.com/v4/"
-                 + sourceConfig.layerName
-                 + "/{z}/{x}/{y}.jpg90"
-                 + "?access_token=" + sourceConfig.accessToken,
+            url:
+                "https://api.mapbox.com/v4/" +
+                sourceConfig.layerName +
+                "/{z}/{x}/{y}.jpg90" +
+                "?access_token=" +
+                sourceConfig.accessToken,
             attributions: mapboxAttributionText,
             attributionsCollapsible: false,
         });
     } else if (sourceConfig.type === "MapBoxStatic") {
         return new XYZ({
-            url: "https://api.mapbox.com/styles/v1/"
-                 + sourceConfig.userName + "/"
-                 + sourceConfig.mapStyleId
-                 + "/tiles/256/{z}/{x}/{y}"
-                 + "?access_token=" + sourceConfig.accessToken,
-            attributions:  mapboxAttributionText,
+            url:
+                "https://api.mapbox.com/styles/v1/" +
+                sourceConfig.userName +
+                "/" +
+                sourceConfig.mapStyleId +
+                "/tiles/256/{z}/{x}/{y}" +
+                "?access_token=" +
+                sourceConfig.accessToken,
+            attributions: mapboxAttributionText,
             attributionsCollapsible: false,
         });
     } else if (sourceConfig.type === "OSM") {
@@ -510,10 +569,10 @@ mercator.addVectorLayer = function (mapConfig, layerId, vectorSource, style) {
 };
 
 /*****************************************************************************
-***
-*** Functions to verify map input arguments
-***
-*****************************************************************************/
+ ***
+ *** Functions to verify map input arguments
+ ***
+ *****************************************************************************/
 
 // [Pure] Predicate
 mercator.verifyDivName = function (divName) {
@@ -542,10 +601,12 @@ mercator.verifySourceConfig = function (sourceConfig) {
 mercator.verifyLayerConfig = function (layerConfig) {
     if (layerConfig) {
         const layerKeys = Object.keys(layerConfig);
-        return layerKeys.includes("title")
-            && layerKeys.includes("extent")
-            && layerKeys.includes("sourceConfig")
-            && mercator.verifySourceConfig(layerConfig.sourceConfig);
+        return (
+            layerKeys.includes("title") &&
+            layerKeys.includes("extent") &&
+            layerKeys.includes("sourceConfig") &&
+            mercator.verifySourceConfig(layerConfig.sourceConfig)
+        );
     } else {
         return false;
     }
@@ -553,7 +614,7 @@ mercator.verifyLayerConfig = function (layerConfig) {
 
 // [Pure] Predicate
 mercator.verifyLayerConfigs = function (layerConfigs) {
-    return layerConfigs.every(layerConfig => mercator.verifyLayerConfig(layerConfig));
+    return layerConfigs.every((layerConfig) => mercator.verifyLayerConfig(layerConfig));
 };
 
 mercator.currentMap = null;
@@ -575,23 +636,25 @@ mercator.verifyMapInputs = function (divName, centerCoords, zoomLevel, layerConf
 };
 
 mercator.hasValidBounds = function (latMin, latMax, lonMin, lonMax) {
-    return isNumber(latMin)
-        && isNumber(latMax)
-        && isNumber(lonMin)
-        && isNumber(lonMax)
-        && lonMax <= 180
-        && lonMin >= -180
-        && latMax <= 90
-        && latMin >= -90
-        && lonMax > lonMin
-        && latMax > latMin;
+    return (
+        isNumber(latMin) &&
+        isNumber(latMax) &&
+        isNumber(lonMin) &&
+        isNumber(lonMax) &&
+        lonMax <= 180 &&
+        lonMin >= -180 &&
+        latMax <= 90 &&
+        latMin >= -90 &&
+        lonMax > lonMin &&
+        latMax > latMin
+    );
 };
 
 /*****************************************************************************
-***
-*** Create a new map instance
-***
-*****************************************************************************/
+ ***
+ *** Create a new map instance
+ ***
+ *****************************************************************************/
 
 // [Side Effects] Logs an error message to the console and returns
 // null if the inputs are invalid. Otherwise, displays a map in the
@@ -616,7 +679,13 @@ mercator.hasValidBounds = function (latMin, latMax, lonMin, lonMax) {
 //                                                     geoserverParams: {VERSION: "1.1.1",
 //                                                                       LAYERS: "DigitalGlobe:Imagery",
 //                                                                       CONNECTID: "your-digital-globe-connect-id-here"}}}]);
-mercator.createMap = function (divName, centerCoords, zoomLevel, layerConfigs, projectBoundary = null) {
+mercator.createMap = function (
+    divName,
+    centerCoords,
+    zoomLevel,
+    layerConfigs,
+    projectBoundary = null
+) {
     // This just verifies map inputs
     // if everything goes right, the layer are added later
     const projectAOI = projectBoundary ? JSON.parse(projectBoundary).coordinates[0] : null;
@@ -626,10 +695,17 @@ mercator.createMap = function (divName, centerCoords, zoomLevel, layerConfigs, p
         return null;
     } else {
         // Create each of the layers that will be shown in the map from layerConfigs
-        const layers = layerConfigs.map(layerConfig => mercator.createLayer(layerConfig, projectAOI));
+        const layers = layerConfigs.map((layerConfig) =>
+            mercator.createLayer(layerConfig, projectAOI)
+        );
 
         // Add a scale line to the default map controls
-        const controls = [new ScaleLine(), new Attribution({collapsed: false}), new Zoom(), new Rotate()];
+        const controls = [
+            new ScaleLine(),
+            new Attribution({collapsed: false}),
+            new Zoom(),
+            new Rotate(),
+        ];
 
         // Create the map view using the passed in centerCoords and zoomLevel
         const view = new View({
@@ -648,14 +724,16 @@ mercator.createMap = function (divName, centerCoords, zoomLevel, layerConfigs, p
         });
 
         // Add goToPlot layer
-        map.addLayer(new TileLayer({
-            id: "goToPlot",
-            visible: false,
-            source: new XYZ({
-                url: "/img/go-to-plot.png",
-            }),
-            zIndex: 100,
-        }));
+        map.addLayer(
+            new TileLayer({
+                id: "goToPlot",
+                visible: false,
+                source: new XYZ({
+                    url: "/img/go-to-plot.png",
+                }),
+                zIndex: 100,
+            })
+        );
 
         mercator.currentMap = map;
         // Return the map configuration object
@@ -675,10 +753,10 @@ mercator.createMap = function (divName, centerCoords, zoomLevel, layerConfigs, p
 };
 
 /*****************************************************************************
-***
-*** Destroy a map instance
-***
-*****************************************************************************/
+ ***
+ *** Destroy a map instance
+ ***
+ *****************************************************************************/
 
 // [Side Effects] Removes the mapConfig's map from its container div.
 // Returns null.
@@ -688,10 +766,10 @@ mercator.destroyMap = function (mapConfig) {
 };
 
 /*****************************************************************************
-***
-*** Reset a map instance to its initial state
-***
-*****************************************************************************/
+ ***
+ *** Reset a map instance to its initial state
+ ***
+ *****************************************************************************/
 
 // [Side Effects] Returns a new mapConfig object created with the
 // initialization-time values of the passed-in mapConfig. Removes the
@@ -702,49 +780,48 @@ mercator.destroyMap = function (mapConfig) {
 // const newMapConfig = mercator.resetMap(mapConfig);
 mercator.resetMap = function (mapConfig) {
     mercator.destroyMap(mapConfig);
-    return mercator.createMap(mapConfig.init.divName,
-                              mapConfig.init.centerCoords,
-                              mapConfig.init.zoomLevel,
-                              mapConfig.init.layerConfigs);
+    return mercator.createMap(
+        mapConfig.init.divName,
+        mapConfig.init.centerCoords,
+        mapConfig.init.zoomLevel,
+        mapConfig.init.layerConfigs
+    );
 };
 
 /*****************************************************************************
-***
-*** Functions to switch the visible basemap imagery and zoom to a layer
-***
-*****************************************************************************/
+ ***
+ *** Functions to switch the visible basemap imagery and zoom to a layer
+ ***
+ *****************************************************************************/
 
 // [Side Effects] Hides all layers in mapConfig except those with id === layerId.
 mercator.setVisibleLayer = function (mapConfig, layerId) {
-    mapConfig.layers.forEach(
-        function (layer) {
-            if (layer.getVisible() === true && (layer instanceof TileLayer || layer instanceof LayerGroup)) {
-                layer.setVisible(false);
-            }
-            if (layer.get("id") === layerId) {
-                layer.setVisible(true);
-            }
+    mapConfig.layers.forEach(function (layer) {
+        if (
+            layer.getVisible() === true &&
+            (layer instanceof TileLayer || layer instanceof LayerGroup)
+        ) {
+            layer.setVisible(false);
         }
-    );
+        if (layer.get("id") === layerId) {
+            layer.setVisible(true);
+        }
+    });
     return mapConfig;
 };
 
 // [Pure] Returns the map layer with id === layerId or null if no such layer exists.
 mercator.getLayerById = function (mapConfig, layerId) {
-    return mapConfig.layers.getArray().find(
-        function (layer) {
-            return layer.get("id") === layerId;
-        }
-    );
+    return mapConfig.layers.getArray().find(function (layer) {
+        return layer.get("id") === layerId;
+    });
 };
 
 // [Pure] Returns the initial layerConfig for the map layer with id === layerId or null if no such layer exists.
 mercator.getLayerConfigById = function (mapConfig, layerConfigId) {
-    return mapConfig.init.layerConfigs.find(
-        function (layerConfig) {
-            return layerConfig.id === layerConfigId;
-        }
-    );
+    return mapConfig.init.layerConfigs.find(function (layerConfig) {
+        return layerConfig.id === layerConfigId;
+    });
 };
 
 // FIXME: This function exposes several leaky abstractions. I need to rethink the createLayer->createSource workflow.
@@ -762,16 +839,24 @@ mercator.updateLayerSource = function (mapConfig, imageryId, projectBoundary, tr
             // This is a LayerGroup
             console.log("LayerGroup detected.");
             mapConfig.map.removeLayer(layer);
-            mapConfig.map.addLayer(mercator.createLayer({...layerConfig, sourceConfig: newSourceConfig},
-                                                        projectAOI,
-                                                        true));
+            mapConfig.map.addLayer(
+                mercator.createLayer(
+                    {...layerConfig, sourceConfig: newSourceConfig},
+                    projectAOI,
+                    true
+                )
+            );
         } else {
             // This is a Layer
             console.log("Layer detected.");
-            layer.setSource(mercator.createSource(newSourceConfig,
-                                                  layerConfig.id,
-                                                  layerConfig.attribution,
-                                                  projectAOI));
+            layer.setSource(
+                mercator.createSource(
+                    newSourceConfig,
+                    layerConfig.id,
+                    layerConfig.attribution,
+                    projectAOI
+                )
+            );
         }
     }
 };
@@ -798,18 +883,24 @@ mercator.updateLayerWmsParams = function (mapConfig, layerId, newParams, url = n
 // [Side Effects] Zooms the map view to contain the passed in extent.
 mercator.zoomMapToExtent = function (mapConfig, extent, padding) {
     if (extent) {
-        if (extent[0] <= -13630599.62775418
-                && extent[1] <= -291567.89923496445
-                && extent[2] >= 20060974.510472793
-                && extent[3] >= 10122013.145404479) {
-            extent = [-13630599.62775418, -291567.89923496445, 20060974.510472793, 10122013.145404479];
+        if (
+            extent[0] <= -13630599.62775418 &&
+            extent[1] <= -291567.89923496445 &&
+            extent[2] >= 20060974.510472793 &&
+            extent[3] >= 10122013.145404479
+        ) {
+            extent = [
+                -13630599.62775418,
+                -291567.89923496445,
+                20060974.510472793,
+                10122013.145404479,
+            ];
         }
     }
-    mapConfig.view.fit(extent,
-                       {
-                           size: mapConfig.map.getSize(),
-                           padding: padding ? [padding, padding, padding, padding] : [16, 16, 16, 16],
-                       });
+    mapConfig.view.fit(extent, {
+        size: mapConfig.map.getSize(),
+        padding: padding ? [padding, padding, padding, padding] : [16, 16, 16, 16],
+    });
     return mapConfig;
 };
 
@@ -829,10 +920,10 @@ mercator.resize = function (mapConfig) {
 };
 
 /*****************************************************************************
-***
-*** Functions to create map styles
-***
-*****************************************************************************/
+ ***
+ *** Functions to create map styles
+ ***
+ *****************************************************************************/
 
 // [Pure] Returns a style object that displays a circle with the
 // specified radius, fillColor, borderColor, and borderWidth. text
@@ -871,7 +962,14 @@ mercator.getCircleStyle = function (radius, fillColor) {
 
 // [Pure] Returns a style object that displays all geometry types to which it
 // is applied wth the specified lineColor, lineWidth, pointColor, pointRadius, pointFillColor, fillColor.
-mercator.getGeomStyle = function (lineColor, lineWidth, pointColor, pointRadius, pointFillColor = null, fillColor = null) {
+mercator.getGeomStyle = function (
+    lineColor,
+    lineWidth,
+    pointColor,
+    pointRadius,
+    pointFillColor = null,
+    fillColor = null
+) {
     return new Style({
         fill: new Fill({
             color: fillColor || "rgba(255, 255, 255, 0)",
@@ -902,26 +1000,24 @@ const ceoMapPresets = {
 };
 
 const ceoMapStyleFunctions = {
-    geom: color => mercator.getGeomStyle(color, 4, color, 6),
-    answered: color => mercator.getGeomStyle(color, 6, color, 6, color),
-    draw: color => mercator.getGeomStyle(color, 4, color, 6, null, "rgba(255, 255, 255, 0.2)"),
-    overview: color => mercator.getCircleStyle(5, color),
-    cluster: numPlots => mercator.getClusterStyle(10, "#3399cc", "#ffffff", 1, numPlots),
+    geom: (color) => mercator.getGeomStyle(color, 4, color, 6),
+    answered: (color) => mercator.getGeomStyle(color, 6, color, 6, color),
+    draw: (color) => mercator.getGeomStyle(color, 4, color, 6, null, "rgba(255, 255, 255, 0.2)"),
+    overview: (color) => mercator.getCircleStyle(5, color),
+    cluster: (numPlots) => mercator.getClusterStyle(10, "#3399cc", "#ffffff", 1, numPlots),
 };
 
 mercator.ceoMapStyles = function (type, option) {
     const styleFunction = ceoMapStyleFunctions[type.toLowerCase()];
     if (!styleFunction) console.log(type);
-    return styleFunction
-        ? styleFunction.call(null, ceoMapPresets[option] || option)
-        : new Style();
+    return styleFunction ? styleFunction.call(null, ceoMapPresets[option] || option) : new Style();
 };
 
 /*****************************************************************************
-***
-*** Functions to show project boundaries and plot buffers
-***
-*****************************************************************************/
+ ***
+ *** Functions to show project boundaries and plot buffers
+ ***
+ *****************************************************************************/
 
 // [Side Effects] Removes the layer with id === layerId from mapConfig's map object.
 mercator.removeLayerById = function (mapConfig, layerId) {
@@ -965,21 +1061,22 @@ mercator.parseGeoJson = function (geoJson, reprojectToMap) {
 // [Pure] Returns a new vector source containing the passed in geometry.
 mercator.geometryToVectorSource = function (geometry) {
     return new VectorSource({
-        features: [
-            new Feature({geometry: geometry}),
-        ],
+        features: [new Feature({geometry: geometry})],
     });
 };
 
-mercator.geometryToGeoJSON = function (geometry, toProjection, fromProjection = null, decimals = 10) {
-    const format = new GeoJSON;
-    return format.writeGeometry(
-        geometry,
-        {
-            dataProjection: toProjection,
-            featureProjection: fromProjection || toProjection,
-            decimals: decimals,
-        });
+mercator.geometryToGeoJSON = function (
+    geometry,
+    toProjection,
+    fromProjection = null,
+    decimals = 10
+) {
+    const format = new GeoJSON();
+    return format.writeGeometry(geometry, {
+        dataProjection: toProjection,
+        featureProjection: fromProjection || toProjection,
+        decimals: decimals,
+    });
 };
 
 // [Pure] Returns a polygon geometry matching the passed in parameters.
@@ -996,53 +1093,64 @@ mercator.getPlotPolygon = function (center, size, shape) {
 // [Pure] Returns a new vector source containing the passed in plots.
 // Features are constructed from each plot using its id and center fields.
 mercator.plotsToVectorSource = function (plots) {
-    const features = plots.map(
-        function (plot) {
-            const geometry = mercator.parseGeoJson(plot.center, true);
-            return new Feature({plotId: plot.id, geometry: geometry});
-        }
-    );
+    const features = plots.map(function (plot) {
+        const geometry = mercator.parseGeoJson(plot.center, true);
+        return new Feature({plotId: plot.id, geometry: geometry});
+    });
     return new VectorSource({features: features});
 };
 
 // [Side Effects] Adds three vector layers to the mapConfig's map object:
 // "flaggedPlots" in red, "analyzedPlots" in green, and "unanalyzedPlots" in yellow.
 mercator.addPlotOverviewLayers = function (mapConfig, plots) {
-    mercator.addVectorLayer(mapConfig,
-                            "flaggedPlots",
-                            mercator.plotsToVectorSource(plots.filter(function (plot) {
-                                return plot.flagged === true;
-                            })),
-                            mercator.ceoMapStyles("overview", "red"));
-    mercator.addVectorLayer(mapConfig,
-                            "analyzedPlots",
-                            mercator.plotsToVectorSource(plots.filter(function (plot) {
-                                return plot.analyses > 0 && plot.flagged === false;
-                            })),
-                            mercator.ceoMapStyles("overview", "green"));
-    mercator.addVectorLayer(mapConfig,
-                            "unanalyzedPlots",
-                            mercator.plotsToVectorSource(plots.filter(function (plot) {
-                                return plot.analyses === 0 && plot.flagged === false;
-                            })),
-                            mercator.ceoMapStyles("overview", "yellow"));
+    mercator.addVectorLayer(
+        mapConfig,
+        "flaggedPlots",
+        mercator.plotsToVectorSource(
+            plots.filter(function (plot) {
+                return plot.flagged === true;
+            })
+        ),
+        mercator.ceoMapStyles("overview", "red")
+    );
+    mercator.addVectorLayer(
+        mapConfig,
+        "analyzedPlots",
+        mercator.plotsToVectorSource(
+            plots.filter(function (plot) {
+                return plot.analyses > 0 && plot.flagged === false;
+            })
+        ),
+        mercator.ceoMapStyles("overview", "green")
+    );
+    mercator.addVectorLayer(
+        mapConfig,
+        "unanalyzedPlots",
+        mercator.plotsToVectorSource(
+            plots.filter(function (plot) {
+                return plot.analyses === 0 && plot.flagged === false;
+            })
+        ),
+        mercator.ceoMapStyles("overview", "yellow")
+    );
     return mapConfig;
 };
 
 /*****************************************************************************
-***
-*** Functions for interactions
-***
-*****************************************************************************/
+ ***
+ *** Functions for interactions
+ ***
+ *****************************************************************************/
 
 // [Pure] Returns the map interaction with title === interactionTitle
 // or null if no such interaction exists.
 mercator.getInteractionByTitle = function (mapConfig, interactionTitle) {
-    return mapConfig.map.getInteractions().getArray().find(
-        function (interaction) {
+    return mapConfig.map
+        .getInteractions()
+        .getArray()
+        .find(function (interaction) {
             return interaction.get("title") === interactionTitle;
-        }
-    );
+        });
 };
 
 // [Side Effects] Removes the interaction with title === interactionTitle from
@@ -1056,10 +1164,10 @@ mercator.removeInteractionByTitle = function (mapConfig, interactionTitle) {
 };
 
 /*****************************************************************************
-***
-*** Functions to setup select interactions for click and click-and-drag events
-***
-*****************************************************************************/
+ ***
+ *** Functions to setup select interactions for click and click-and-drag events
+ ***
+ *****************************************************************************/
 
 // [Pure] Returns a new click select interaction with title =
 // interactionTitle that is associated with the passed in layer.
@@ -1093,7 +1201,9 @@ mercator.makeDragBoxSelect = function (interactionTitle, layer, selectedFeatures
 
 mercator.addAfterSelectionChange = function (selectedFeatures, setSampleId) {
     const afterSelectionChange = function () {
-        setSampleId(selectedFeatures.getLength() === 1 ? selectedFeatures.getArray()[0].get("sampleId") : -1);
+        setSampleId(
+            selectedFeatures.getLength() === 1 ? selectedFeatures.getArray()[0].get("sampleId") : -1
+        );
     };
     selectedFeatures.on(["add", "remove"], afterSelectionChange);
 };
@@ -1120,20 +1230,19 @@ mercator.disableSelection = function (mapConfig) {
 };
 
 /*****************************************************************************
-***
-*** Functions to setup select interactions for drawing samples
-***
-*****************************************************************************/
+ ***
+ *** Functions to setup select interactions for drawing samples
+ ***
+ *****************************************************************************/
 
 // [Pure] Returns a new Draw interaction with a type of drawTool
 // for the source. A function to remove features on right click is
 // added for layer.
 mercator.makeDraw = function (layer, source, drawTool) {
     const removeFeature = function (e) {
-        layer.getFeatures(e.pixel)
-            .then((features) => {
-                if (features.length) layer.getSource().removeFeature(features[0]);
-            });
+        layer.getFeatures(e.pixel).then((features) => {
+            if (features.length) layer.getSource().removeFeature(features[0]);
+        });
     };
     const draw = new Draw({
         source: source,
@@ -1193,23 +1302,21 @@ mercator.changeDrawTool = function (mapConfig, layerId, drawTool) {
 };
 
 /*****************************************************************************
-***
-*** Functions to show sample points inside a plot
-***
-*****************************************************************************/
+ ***
+ *** Functions to show sample points inside a plot
+ ***
+ *****************************************************************************/
 
 // [Pure] Returns a new vector source containing the passed in
 // samples. Features are constructed from each sample using its id,
 // point, and geom fields.
 mercator.samplesToVectorSource = function (samples) {
-    const features = samples.map(
-        function (sample) {
-            return new Feature({
-                sampleId: sample.id,
-                geometry: mercator.parseGeoJson(sample.geom || sample.sampleGeom, true),
-            });
-        }
-    );
+    const features = samples.map(function (sample) {
+        return new Feature({
+            sampleId: sample.id,
+            geometry: mercator.parseGeoJson(sample.geom || sample.sampleGeom, true),
+        });
+    });
     return new VectorSource({features: features});
 };
 
@@ -1242,10 +1349,10 @@ mercator.highlightSampleGeometry = function (sample, color) {
 };
 
 /*****************************************************************************
-***
-*** Bounding Box Selector for create-project.js
-***
-*****************************************************************************/
+ ***
+ *** Bounding Box Selector for create-project.js
+ ***
+ *****************************************************************************/
 
 // [Pure] Returns a new dragBox interaction with title =
 // interactionTitle that is associated with the passed in layer. When
@@ -1301,10 +1408,10 @@ mercator.getDragBoxExtent = function (dragBox) {
 };
 
 /*****************************************************************************
-***
-*** Functions to show cluster markers on an overview map
-***
-*****************************************************************************/
+ ***
+ *** Functions to show cluster markers on an overview map
+ ***
+ *****************************************************************************/
 
 // [Side Effects] Adds a new empty overlay to mapConfig's map object
 // with id set to overlayTitle.
@@ -1340,12 +1447,10 @@ mercator.isCluster = function (feature) {
 // [Pure] Returns the minimum extent that bounds all of the
 // subfeatures in the passed in clusterFeature.
 mercator.getClusterExtent = function (clusterFeature) {
-    const clusterPoints = clusterFeature.get("features").map(
-        function (subFeature) {
-            return subFeature.getGeometry().getCoordinates();
-        }
-    );
-    return (new LineString(clusterPoints)).getExtent();
+    const clusterPoints = clusterFeature.get("features").map(function (subFeature) {
+        return subFeature.getGeometry().getCoordinates();
+    });
+    return new LineString(clusterPoints).getExtent();
 };
 
 // [Pure] Construct a point from x and y and perform transformation
@@ -1357,25 +1462,23 @@ mercator.transformPoint = function (x, y, fromEPSG, toEPSG) {
 // the centers of the passed in projects. Features are constructed
 // from each project using its id, name, description, and numPlots fields.
 mercator.projectsToVectorSource = function (projects) {
-    const features = projects.map(
-        function (project) {
-            const bounds = mercator.parseGeoJson(project.centroid, false).getExtent();
-            const minX = bounds[0];
-            const minY = bounds[1];
-            const maxX = bounds[2];
-            const maxY = bounds[3];
-            const centerX = (minX + maxX) / 2;
-            const centerY = (minY + maxY) / 2;
-            const geometry = mercator.transformPoint(centerX, centerY, "EPSG:4326", "EPSG:3857");
-            return new Feature({
-                geometry:    geometry,
-                projectId:   project.id,
-                name:        project.name,
-                description: project.description,
-                numPlots:    project.numPlots,
-            });
-        }
-    );
+    const features = projects.map(function (project) {
+        const bounds = mercator.parseGeoJson(project.centroid, false).getExtent();
+        const minX = bounds[0];
+        const minY = bounds[1];
+        const maxX = bounds[2];
+        const maxY = bounds[3];
+        const centerX = (minX + maxX) / 2;
+        const centerY = (minY + maxY) / 2;
+        const geometry = mercator.transformPoint(centerX, centerY, "EPSG:4326", "EPSG:3857");
+        return new Feature({
+            geometry: geometry,
+            projectId: project.id,
+            name: project.name,
+            description: project.description,
+            numPlots: project.numPlots,
+        });
+    });
     return new VectorSource({features: features});
 };
 
@@ -1387,31 +1490,30 @@ mercator.projectsToVectorSource = function (projects) {
 mercator.addPlotLayer = function (mapConfig, plots, callBack) {
     const plotSource = mercator.plotsToVectorSource(plots);
     const clusterSource = new Cluster({
-        source:   plotSource,
+        source: plotSource,
         distance: 40,
     });
 
-    mercator.addVectorLayer(mapConfig,
-                            "currentPlots",
-                            clusterSource,
-                            function (feature) {
-                                return mercator.ceoMapStyles("cluster", feature.get("features").length);
-                            });
+    mercator.addVectorLayer(mapConfig, "currentPlots", clusterSource, function (feature) {
+        return mercator.ceoMapStyles("cluster", feature.get("features").length);
+    });
 
     const clickHandler = function (event) {
-        mapConfig.map.forEachFeatureAtPixel(event.pixel,
-                                            function (feature) {
-                                                if (mercator.isCluster(feature)) {
-                                                    if (feature.get("features").length > 1) {
-                                                        mercator.zoomMapToExtent(mapConfig,
-                                                                                 mercator.getClusterExtent(feature));
-                                                    } else {
-                                                        mercator.removeLayerById(mapConfig, "currentPlots");
-                                                        mapConfig.map.un("click", clickHandler);
-                                                        callBack.call(null, feature);
-                                                    }
-                                                }
-                                            }, {hitTolerance:10});
+        mapConfig.map.forEachFeatureAtPixel(
+            event.pixel,
+            function (feature) {
+                if (mercator.isCluster(feature)) {
+                    if (feature.get("features").length > 1) {
+                        mercator.zoomMapToExtent(mapConfig, mercator.getClusterExtent(feature));
+                    } else {
+                        mercator.removeLayerById(mapConfig, "currentPlots");
+                        mapConfig.map.un("click", clickHandler);
+                        callBack.call(null, feature);
+                    }
+                }
+            },
+            {hitTolerance: 10}
+        );
     };
     // TODO: It looks like the clickHandler is only removed when the user clicks
     //       a cluster of size 1. It is not removed if the user clicks "Go to first plot"
@@ -1421,10 +1523,10 @@ mercator.addPlotLayer = function (mapConfig, plots, callBack) {
 };
 
 /*****************************************************************************
-***
-*** Functions to export plot and sample features as KML
-***
-*****************************************************************************/
+ ***
+ *** Functions to export plot and sample features as KML
+ ***
+ *****************************************************************************/
 
 mercator.asPolygonFeature = function (feature) {
     return feature.getGeometry().getType() === "Circle"
@@ -1433,9 +1535,7 @@ mercator.asPolygonFeature = function (feature) {
 };
 
 mercator.getKMLFromFeatures = function (features) {
-    return (new KML()).writeFeatures(features, {featureProjection: "EPSG:3857"});
+    return new KML().writeFeatures(features, {featureProjection: "EPSG:3857"});
 };
 
-export {
-    mercator,
-};
+export {mercator};

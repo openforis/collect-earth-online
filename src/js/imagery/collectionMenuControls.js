@@ -13,10 +13,13 @@ export class PlanetMenu extends React.Component {
     }
 
     componentDidMount() {
-        this.setState({
-            year: this.props.sourceConfig.year,
-            month: this.props.sourceConfig.month,
-        }, () => this.updatePlanetLayer());
+        this.setState(
+            {
+                year: this.props.sourceConfig.year,
+                month: this.props.sourceConfig.month,
+            },
+            () => this.updatePlanetLayer()
+        );
     }
 
     componentDidUpdate(prevProps) {
@@ -27,8 +30,9 @@ export class PlanetMenu extends React.Component {
 
     updateImageryInformation = () => {
         if (this.props.visible) {
-            this.props.setImageryAttribution(" | Monthly Mosaic of " +
-            `${this.state.year}, ${monthlyMapping[this.state.month]}`);
+            this.props.setImageryAttribution(
+                " | Monthly Mosaic of " + `${this.state.year}, ${monthlyMapping[this.state.month]}`
+            );
             this.props.setImageryAttributes({
                 imageryYearPlanet: this.state.year,
                 imageryMonthPlanet: this.state.month,
@@ -38,14 +42,16 @@ export class PlanetMenu extends React.Component {
 
     updatePlanetLayer = () => {
         this.updateImageryInformation();
-        mercator.updateLayerSource(this.props.mapConfig,
-                                   this.props.thisImageryId,
-                                   this.props.currentProjectBoundary,
-                                   sourceConfig => ({
-                                       ...sourceConfig,
-                                       month: (this.state.month.length === 1 ? "0" : "") + this.state.month,
-                                       year: this.state.year,
-                                   }));
+        mercator.updateLayerSource(
+            this.props.mapConfig,
+            this.props.thisImageryId,
+            this.props.currentProjectBoundary,
+            (sourceConfig) => ({
+                ...sourceConfig,
+                month: (this.state.month.length === 1 ? "0" : "") + this.state.month,
+                year: this.state.year,
+            })
+        );
     };
 
     render() {
@@ -59,7 +65,7 @@ export class PlanetMenu extends React.Component {
                         value={this.state.year || ""}
                         className="slider"
                         id="myRange"
-                        onChange={e => this.setState({year: e.target.value})}
+                        onChange={(e) => this.setState({year: e.target.value})}
                     />
                     <label>Year: {this.state.year}</label>
                 </div>
@@ -71,7 +77,7 @@ export class PlanetMenu extends React.Component {
                         value={this.state.month || ""}
                         className="slider"
                         id="myRangemonth"
-                        onChange={e => this.setState({month: e.target.value})}
+                        onChange={(e) => this.setState({month: e.target.value})}
                     />
                     <label>Month: {monthlyMapping[this.state.month]}</label>
                 </div>
@@ -99,20 +105,25 @@ export class PlanetDailyMenu extends React.Component {
     }
 
     componentDidMount() {
-        this.setState({
-            startDate: this.props.sourceConfig.startDate,
-            endDate: this.props.sourceConfig.endDate,
-        }, () => {
-            if (this.props.visible) {
-                this.updatePlanetDailyLayer();
+        this.setState(
+            {
+                startDate: this.props.sourceConfig.startDate,
+                endDate: this.props.sourceConfig.endDate,
+            },
+            () => {
+                if (this.props.visible) {
+                    this.updatePlanetDailyLayer();
+                }
             }
-        });
+        );
     }
 
     componentDidUpdate(prevProps) {
-        if (this.props.visible &&
-            (this.props.currentPlot && this.props.currentPlot !== prevProps.currentPlot
-                || prevProps.visible !== this.props.visible)) {
+        if (
+            this.props.visible &&
+            ((this.props.currentPlot && this.props.currentPlot !== prevProps.currentPlot) ||
+                prevProps.visible !== this.props.visible)
+        ) {
             this.updateImageryInformation();
         }
     }
@@ -132,20 +143,26 @@ export class PlanetDailyMenu extends React.Component {
                 alert("Start date must be smaller than the end date.");
             } else {
                 this.updateImageryInformation();
-                mercator.currentMap.getControls().getArray()
-                    .filter(control => control.element.classList.contains("planet-layer-switcher"))
-                    .map(control => mercator.currentMap.removeControl(control));
-                mercator.updateLayerSource(this.props.mapConfig,
-                                           this.props.thisImageryId,
-                                           mercator.geometryToGeoJSON(
-                                               mercator.getViewPolygon(this.props.mapConfig),
-                                               "EPSG:4326"
-                                           ),
-                                           sourceConfig => ({
-                                               ...sourceConfig,
-                                               startDate: startDate,
-                                               endDate: endDate,
-                                           }));
+                mercator.currentMap
+                    .getControls()
+                    .getArray()
+                    .filter((control) =>
+                        control.element.classList.contains("planet-layer-switcher")
+                    )
+                    .map((control) => mercator.currentMap.removeControl(control));
+                mercator.updateLayerSource(
+                    this.props.mapConfig,
+                    this.props.thisImageryId,
+                    mercator.geometryToGeoJSON(
+                        mercator.getViewPolygon(this.props.mapConfig),
+                        "EPSG:4326"
+                    ),
+                    (sourceConfig) => ({
+                        ...sourceConfig,
+                        startDate: startDate,
+                        endDate: endDate,
+                    })
+                );
             }
         }
     };
@@ -161,7 +178,7 @@ export class PlanetDailyMenu extends React.Component {
                         className="form-control"
                         value={this.state.startDate || ""}
                         max={new Date().toJSON().split("T")[0]}
-                        onChange={e => this.setState({startDate: e.target.value})}
+                        onChange={(e) => this.setState({startDate: e.target.value})}
                     />
                 </div>
                 <div className="slide-container">
@@ -172,7 +189,7 @@ export class PlanetDailyMenu extends React.Component {
                         className="form-control"
                         value={this.state.endDate || ""}
                         max={new Date().toJSON().split("T")[0]}
-                        onChange={e => this.setState({endDate: e.target.value})}
+                        onChange={(e) => this.setState({endDate: e.target.value})}
                     />
                 </div>
                 <div className="slide-container">
@@ -199,12 +216,16 @@ export class PlanetNICFIMenu extends React.Component {
     }
 
     componentDidMount() {
-        this.setState({
-            selectedTime: this.props.sourceConfig.time === "newest"
-                ? last(nicfiLayers)
-                : this.props.sourceConfig.time,
-            selectedBand: this.props.sourceConfig.band,
-        }, () => this.updatePlanetLayer());
+        this.setState(
+            {
+                selectedTime:
+                    this.props.sourceConfig.time === "newest"
+                        ? last(nicfiLayers)
+                        : this.props.sourceConfig.time,
+                selectedBand: this.props.sourceConfig.band,
+            },
+            () => this.updatePlanetLayer()
+        );
     }
 
     componentDidUpdate(prevProps) {
@@ -224,27 +245,35 @@ export class PlanetNICFIMenu extends React.Component {
 
     updatePlanetLayer = () => {
         this.updateImageryInformation();
-        mercator.updateLayerSource(this.props.mapConfig,
-                                   this.props.thisImageryId,
-                                   this.props.currentProjectBoundary,
-                                   sourceConfig => ({
-                                       ...sourceConfig,
-                                       time: this.state.selectedTime,
-                                       band: this.state.selectedBand,
-                                   }));
+        mercator.updateLayerSource(
+            this.props.mapConfig,
+            this.props.thisImageryId,
+            this.props.currentProjectBoundary,
+            (sourceConfig) => ({
+                ...sourceConfig,
+                time: this.state.selectedTime,
+                band: this.state.selectedBand,
+            })
+        );
     };
 
     render() {
         return (
             <div className="my-2" style={{display: this.props.visible ? "block" : "none"}}>
                 <div className="slide-container">
-                    <label htmlFor="time-selection" className="mb-0 mr-3">Select Time</label>
+                    <label htmlFor="time-selection" className="mb-0 mr-3">
+                        Select Time
+                    </label>
                     <select
                         id="time-selection"
-                        onChange={e => this.setState({selectedTime: e.target.value})}
+                        onChange={(e) => this.setState({selectedTime: e.target.value})}
                         value={this.state.selectedTime}
                     >
-                        {nicfiLayers.map(time => <option key={time} value={time}>{time}</option>)}
+                        {nicfiLayers.map((time) => (
+                            <option key={time} value={time}>
+                                {time}
+                            </option>
+                        ))}
                     </select>
                 </div>
                 <div className="slide-container">
@@ -257,10 +286,7 @@ export class PlanetNICFIMenu extends React.Component {
                                 checked={this.state.selectedBand === "rgb"}
                                 onChange={() => this.setState({selectedBand: "rgb"})}
                             />
-                            <label
-                                className="form-check-label"
-                                htmlFor="visible"
-                            >
+                            <label className="form-check-label" htmlFor="visible">
                                 Visible
                             </label>
                         </div>
@@ -272,10 +298,7 @@ export class PlanetNICFIMenu extends React.Component {
                                 checked={this.state.selectedBand === "cir"}
                                 onChange={() => this.setState({selectedBand: "cir"})}
                             />
-                            <label
-                                className="form-check-label"
-                                htmlFor="infrared"
-                            >
+                            <label className="form-check-label" htmlFor="infrared">
                                 Infrared
                             </label>
                         </div>
@@ -308,8 +331,7 @@ export class SecureWatchMenu extends React.Component {
 
     componentDidUpdate(prevProps) {
         const {extent, visible} = this.props;
-        if (extent.length > 0
-             && JSON.stringify(extent) !== JSON.stringify(prevProps.extent)) {
+        if (extent.length > 0 && JSON.stringify(extent) !== JSON.stringify(prevProps.extent)) {
             this.getAvailableDates();
         }
         if (prevProps.visible !== visible) {
@@ -320,10 +342,11 @@ export class SecureWatchMenu extends React.Component {
     updateImageryInformation = () => {
         if (this.props.visible) {
             const {featureId, imageryDate, imageryCloudCover} = this.state;
-            this.props.setImageryAttribution((featureId
-                ? ` | ${imageryDate}`
-                + ` (${(imageryCloudCover * 100).toFixed(2)}% cloudy)`
-                : " | No available layers"));
+            this.props.setImageryAttribution(
+                featureId
+                    ? ` | ${imageryDate}` + ` (${(imageryCloudCover * 100).toFixed(2)}% cloudy)`
+                    : " | No available layers"
+            );
             if (featureId) {
                 this.props.setImageryAttributes({
                     imagerySecureWatchDate: imageryDate,
@@ -334,14 +357,22 @@ export class SecureWatchMenu extends React.Component {
     };
 
     updateSingleLayer = (featureId, imageryDate, imageryCloudCover) => {
-        mercator.updateLayerWmsParams(this.props.mapConfig, this.props.thisImageryId, {
-            COVERAGE_CQL_FILTER: "featureId='" + featureId + "'",
-        }, "/get-tile");
-        this.setState({
-            featureId: featureId,
-            imageryDate: imageryDate,
-            imageryCloudCover: imageryCloudCover,
-        }, () => this.updateImageryInformation());
+        mercator.updateLayerWmsParams(
+            this.props.mapConfig,
+            this.props.thisImageryId,
+            {
+                COVERAGE_CQL_FILTER: "featureId='" + featureId + "'",
+            },
+            "/get-tile"
+        );
+        this.setState(
+            {
+                featureId: featureId,
+                imageryDate: imageryDate,
+                imageryCloudCover: imageryCloudCover,
+            },
+            () => this.updateImageryInformation()
+        );
     };
 
     onChangeSingleLayer = (eventTarget) =>
@@ -354,67 +385,75 @@ export class SecureWatchMenu extends React.Component {
     getAvailableDates = () => {
         const {thisImageryId, sourceConfig, visible, extent, setImageryAttribution} = this.props;
         if (visible) setImageryAttribution(" | Loading...");
-        const secureWatchFeatureInfoUrl = "SERVICE=WMS"
-            + "&VERSION=1.1.1"
-            + "&REQUEST=GetFeatureInfo"
-            + "&CRS=EPSG%3A3857"
-            + "&BBOX=" + extent.join(",")
-            + "&WIDTH=256"
-            + "&HEIGHT=256"
-            + "&LAYERS=DigitalGlobe:ImageryFootprint"
-            + "&QUERY_LAYERS=DigitalGlobe:ImageryFootprint"
-            + "&FEATURE_COUNT=1000"
-            + "&X=0"
-            + "&Y=0"
-            + "&INFO_FORMAT=application/json"
-            + "&imageryId=" + thisImageryId;
-        this.setState(
-            {availableDates: []},
-            () => {
-                fetch(`/get-securewatch-dates?${secureWatchFeatureInfoUrl}`)
-                    .then(response => {
-                        if (response.ok) {
-                            return response.json(); // if no layers are found, the response is XML. This will fail.
-                        } else {
-                            alert("Error retrieving SecureWatch dates. See console for details.");
-                            return {features: []};
-                        }
-                    })
-                    .catch(response => {
-                        console.log(response);
-                        alert("It is likely that your Connect ID for Securewatch imagery is expired. See console for more details.");
+        const secureWatchFeatureInfoUrl =
+            "SERVICE=WMS" +
+            "&VERSION=1.1.1" +
+            "&REQUEST=GetFeatureInfo" +
+            "&CRS=EPSG%3A3857" +
+            "&BBOX=" +
+            extent.join(",") +
+            "&WIDTH=256" +
+            "&HEIGHT=256" +
+            "&LAYERS=DigitalGlobe:ImageryFootprint" +
+            "&QUERY_LAYERS=DigitalGlobe:ImageryFootprint" +
+            "&FEATURE_COUNT=1000" +
+            "&X=0" +
+            "&Y=0" +
+            "&INFO_FORMAT=application/json" +
+            "&imageryId=" +
+            thisImageryId;
+        this.setState({availableDates: []}, () => {
+            fetch(`/get-securewatch-dates?${secureWatchFeatureInfoUrl}`)
+                .then((response) => {
+                    if (response.ok) {
+                        return response.json(); // if no layers are found, the response is XML. This will fail.
+                    } else {
+                        alert("Error retrieving SecureWatch dates. See console for details.");
                         return {features: []};
-                    })
-                    .then(data => {
-                        this.setState({
+                    }
+                })
+                .catch((response) => {
+                    console.log(response);
+                    alert(
+                        "It is likely that your Connect ID for Securewatch imagery is expired. See console for more details."
+                    );
+                    return {features: []};
+                })
+                .then((data) => {
+                    this.setState(
+                        {
                             availableDates: data.features
-                                .filter(feature =>
-                                    Date.parse(feature.properties.acquisitionDate) <= Date.parse(sourceConfig.endDate)
-                                    && Date.parse(feature.properties.acquisitionDate) >= Date.parse(sourceConfig.startDate)
+                                .filter(
+                                    (feature) =>
+                                        Date.parse(feature.properties.acquisitionDate) <=
+                                            Date.parse(sourceConfig.endDate) &&
+                                        Date.parse(feature.properties.acquisitionDate) >=
+                                            Date.parse(sourceConfig.startDate)
                                 )
-                                .map(feature => ({
+                                .map((feature) => ({
                                     acquisitionDate: feature.properties.acquisitionDate,
                                     cloudCover: feature.properties.cloudCover,
                                     featureId: feature.properties.featureId,
                                 })),
-                        }, () => {
+                        },
+                        () => {
                             if (this.state.availableDates.length === 0) {
                                 this.updateSingleLayer(null, "", "");
                             } else {
                                 this.updateSingleLayer(
                                     this.state.availableDates[0].featureId,
                                     this.state.availableDates[0].acquisitionDate,
-                                    this.state.availableDates[0].cloudCover,
+                                    this.state.availableDates[0].cloudCover
                                 );
                             }
-                        });
-                    })
-                    .catch(response => {
-                        console.log(response);
-                        alert("Error processing SecureWatch dates. See console for details.");
-                    });
-            }
-        );
+                        }
+                    );
+                })
+                .catch((response) => {
+                    console.log(response);
+                    alert("Error processing SecureWatch dates. See console for details.");
+                });
+        });
     };
 
     render() {
@@ -422,39 +461,35 @@ export class SecureWatchMenu extends React.Component {
             <div className="my-2 mb-3" style={{display: this.props.visible ? "block" : "none"}}>
                 <div className="slide-container">
                     <label>Available Layers</label>
-                    {this.state.availableDates
-                        && this.state.availableDates.length > 0
-                        ?
-                            <select
-                                className="form-control"
-                                onChange={e => this.onChangeSingleLayer(e.target)}
-                                id="securewatch-option-select"
-                            >
-                                {this.state.availableDates.map((obj, uid) =>
-                                    <option
-                                        key={uid}
-                                        value={obj.featureId}
-                                        date={obj.acquisitionDate}
-                                        cloud={obj.cloudCover}
-                                    >
-                                        {obj.acquisitionDate + " (" + (obj.cloudCover * 100).toFixed(2) + "% cloudy)"}
-                                    </option>
-                                )}
-                            </select>
-                        :
-                            <select
-                                id="securewatch-option-select"
-                                className="form-control"
-                                disabled
-                            >
-                                <option>
-                                    {this.state.availableDates
-                                        ? "No available layers"
-                                        : "Loading dates..."
-                                    }
+                    {this.state.availableDates && this.state.availableDates.length > 0 ? (
+                        <select
+                            className="form-control"
+                            onChange={(e) => this.onChangeSingleLayer(e.target)}
+                            id="securewatch-option-select"
+                        >
+                            {this.state.availableDates.map((obj, uid) => (
+                                <option
+                                    key={uid}
+                                    value={obj.featureId}
+                                    date={obj.acquisitionDate}
+                                    cloud={obj.cloudCover}
+                                >
+                                    {obj.acquisitionDate +
+                                        " (" +
+                                        (obj.cloudCover * 100).toFixed(2) +
+                                        "% cloudy)"}
                                 </option>
-                            </select>
-                    }
+                            ))}
+                        </select>
+                    ) : (
+                        <select id="securewatch-option-select" className="form-control" disabled>
+                            <option>
+                                {this.state.availableDates
+                                    ? "No available layers"
+                                    : "Loading dates..."}
+                            </option>
+                        </select>
+                    )}
                 </div>
             </div>
         );
@@ -472,11 +507,14 @@ export class SentinelMenu extends React.Component {
     }
 
     componentDidMount() {
-        this.setState({
-            year: this.props.sourceConfig.year,
-            month: this.props.sourceConfig.month,
-            bandCombination: this.props.sourceConfig.bandCombination,
-        }, () => this.updateSentinelLayer());
+        this.setState(
+            {
+                year: this.props.sourceConfig.year,
+                month: this.props.sourceConfig.month,
+                bandCombination: this.props.sourceConfig.bandCombination,
+            },
+            () => this.updateSentinelLayer()
+        );
     }
 
     componentDidUpdate(prevProps) {
@@ -487,47 +525,50 @@ export class SentinelMenu extends React.Component {
 
     updateImageryInformation = () => {
         if (this.props.visible) {
-            this.props.setImageryAttribution(" | Monthly Mosaic of " +
-                `${this.state.year}, ${monthlyMapping[this.state.month]}`);
+            this.props.setImageryAttribution(
+                " | Monthly Mosaic of " + `${this.state.year}, ${monthlyMapping[this.state.month]}`
+            );
             this.props.setImageryAttributes({
                 [this.props.sourceConfig.type === "Sentinel1"
                     ? "sentinel1MosaicYearMonth"
-                    : "sentinel2MosaicYearMonth"]: this.state.year + " - " + monthlyMapping[this.state.month],
+                    : "sentinel2MosaicYearMonth"]:
+                    this.state.year + " - " + monthlyMapping[this.state.month],
             });
         }
     };
 
     updateSentinelLayer = () => {
         this.updateImageryInformation();
-        mercator.updateLayerSource(this.props.mapConfig,
-                                   this.props.thisImageryId,
-                                   this.props.currentProjectBoundary,
-                                   sourceConfig => ({
-                                       ...sourceConfig,
-                                       month: (this.state.month.length === 1 ? "0" : "") + this.state.month,
-                                       year: this.state.year,
-                                       bandCombination: this.state.bandCombination,
-                                   }));
+        mercator.updateLayerSource(
+            this.props.mapConfig,
+            this.props.thisImageryId,
+            this.props.currentProjectBoundary,
+            (sourceConfig) => ({
+                ...sourceConfig,
+                month: (this.state.month.length === 1 ? "0" : "") + this.state.month,
+                year: this.state.year,
+                bandCombination: this.state.bandCombination,
+            })
+        );
     };
 
     render() {
-        const bandCombinationOptions = this.props.sourceConfig.type === "Sentinel1"
-            ?
-            [
-                {label: "VH,VV,VH/VV", value: "VH,VV,VH/VV"},
-                {label: "VH,VV,VV/VH", value: "VH,VV,VV/VH"},
-                {label: "VV,VH,VV/VH", value: "VV,VH,VV/VH"},
-                {label: "VV,VH,VH/VV", value: "VV,VH,VH/VV"},
-            ]
-            :
-            [
-                {label: "True Color", value: "TrueColor"},
-                {label: "False Color Infrared", value: "FalseColorInfrared"},
-                {label: "False Color Urban", value: "FalseColorUrban"},
-                {label: "Agriculture", value: "Agriculture"},
-                {label: "Healthy Vegetation", value: "HealthyVegetation"},
-                {label: "Short Wave Infrared", value: "ShortWaveInfrared"},
-            ];
+        const bandCombinationOptions =
+            this.props.sourceConfig.type === "Sentinel1"
+                ? [
+                      {label: "VH,VV,VH/VV", value: "VH,VV,VH/VV"},
+                      {label: "VH,VV,VV/VH", value: "VH,VV,VV/VH"},
+                      {label: "VV,VH,VV/VH", value: "VV,VH,VV/VH"},
+                      {label: "VV,VH,VH/VV", value: "VV,VH,VH/VV"},
+                  ]
+                : [
+                      {label: "True Color", value: "TrueColor"},
+                      {label: "False Color Infrared", value: "FalseColorInfrared"},
+                      {label: "False Color Urban", value: "FalseColorUrban"},
+                      {label: "Agriculture", value: "Agriculture"},
+                      {label: "Healthy Vegetation", value: "HealthyVegetation"},
+                      {label: "Short Wave Infrared", value: "ShortWaveInfrared"},
+                  ];
 
         return (
             <div className="my-2" style={{display: this.props.visible ? "block" : "none"}}>
@@ -539,7 +580,7 @@ export class SentinelMenu extends React.Component {
                         value={this.state.year}
                         className="slider"
                         id="sentinel-year"
-                        onChange={e => this.setState({year: e.target.value})}
+                        onChange={(e) => this.setState({year: e.target.value})}
                     />
                     <label>Year: {this.state.year}</label>
                 </div>
@@ -551,7 +592,7 @@ export class SentinelMenu extends React.Component {
                         value={this.state.month}
                         className="slider"
                         id="sentinel-month"
-                        onChange={e => this.setState({month: e.target.value})}
+                        onChange={(e) => this.setState({month: e.target.value})}
                     />
                     <label>Month: {monthlyMapping[this.state.month]}</label>
                 </div>
@@ -561,9 +602,13 @@ export class SentinelMenu extends React.Component {
                         className="form-control"
                         id="sentinel-bandCombination"
                         value={this.state.bandCombination}
-                        onChange={e => this.setState({bandCombination: e.target.value})}
+                        onChange={(e) => this.setState({bandCombination: e.target.value})}
                     >
-                        {bandCombinationOptions.map(el => <option value={el.value} key={el.value}>{el.label}</option>)}
+                        {bandCombinationOptions.map((el) => (
+                            <option value={el.value} key={el.value}>
+                                {el.label}
+                            </option>
+                        ))}
                     </select>
                 </div>
                 <div className="slide-container">
@@ -589,9 +634,12 @@ export class GEEImageMenu extends React.Component {
     }
 
     componentDidMount() {
-        this.setState({
-            visParams: this.props.sourceConfig.imageVisParams,
-        }, () => this.updateGEEImagery());
+        this.setState(
+            {
+                visParams: this.props.sourceConfig.imageVisParams,
+            },
+            () => this.updateGEEImagery()
+        );
     }
 
     componentDidUpdate(prevProps) {
@@ -615,7 +663,7 @@ export class GEEImageMenu extends React.Component {
             this.props.mapConfig,
             this.props.thisImageryId,
             this.props.currentProjectBoundary,
-            sourceConfig => ({
+            (sourceConfig) => ({
                 ...sourceConfig,
                 imageVisParams: this.state.visParams,
             })
@@ -631,7 +679,7 @@ export class GEEImageMenu extends React.Component {
                         className="form-control"
                         id="geeImageVisParams"
                         value={this.state.visParams}
-                        onChange={e => this.setState({visParams: e.target.value})}
+                        onChange={(e) => this.setState({visParams: e.target.value})}
                     />
                 </div>
                 <div className="slide-container">
@@ -660,11 +708,14 @@ export class GEEImageCollectionMenu extends React.Component {
     }
 
     componentDidMount() {
-        this.setState({
-            startDate: this.props.sourceConfig.startDate,
-            endDate: this.props.sourceConfig.endDate,
-            visParams: this.props.sourceConfig.collectionVisParams,
-        }, () => this.updateGEEImageCollection());
+        this.setState(
+            {
+                startDate: this.props.sourceConfig.startDate,
+                endDate: this.props.sourceConfig.endDate,
+                visParams: this.props.sourceConfig.collectionVisParams,
+            },
+            () => this.updateGEEImageCollection()
+        );
     }
 
     componentDidUpdate(prevProps) {
@@ -675,8 +726,9 @@ export class GEEImageCollectionMenu extends React.Component {
 
     updateImageryInformation = () => {
         if (this.props.visible) {
-            this.props.setImageryAttribution(` | ${this.state.startDate} to ` +
-                `${this.state.endDate} | ${this.state.visParams}`);
+            this.props.setImageryAttribution(
+                ` | ${this.state.startDate} to ` + `${this.state.endDate} | ${this.state.visParams}`
+            );
             this.props.setImageryAttributes({
                 geeImageCollectionAssetId: this.props.sourceConfig.collectionId,
                 geeImageCollectionStartDate: this.state.startDate,
@@ -695,7 +747,7 @@ export class GEEImageCollectionMenu extends React.Component {
                 this.props.mapConfig,
                 this.props.thisImageryId,
                 this.props.currentProjectBoundary,
-                sourceConfig => ({
+                (sourceConfig) => ({
                     ...sourceConfig,
                     collectionVisParams: visParams,
                     startDate: startDate,
@@ -716,7 +768,7 @@ export class GEEImageCollectionMenu extends React.Component {
                         className="form-control"
                         value={this.state.startDate}
                         max={new Date().toJSON().split("T")[0]}
-                        onChange={e => this.setState({startDate: e.target.value})}
+                        onChange={(e) => this.setState({startDate: e.target.value})}
                     />
                 </div>
                 <div className="slide-container">
@@ -727,7 +779,7 @@ export class GEEImageCollectionMenu extends React.Component {
                         className="form-control"
                         value={this.state.endDate}
                         max={new Date().toJSON().split("T")[0]}
-                        onChange={e => this.setState({endDate: e.target.value})}
+                        onChange={(e) => this.setState({endDate: e.target.value})}
                     />
                 </div>
                 <div className="slide-container">
@@ -735,7 +787,7 @@ export class GEEImageCollectionMenu extends React.Component {
                     <textarea
                         className="form-control"
                         value={this.state.visParams}
-                        onChange={e => this.setState({visParams: e.target.value})}
+                        onChange={(e) => this.setState({visParams: e.target.value})}
                     />
                 </div>
                 <div className="slide-container">

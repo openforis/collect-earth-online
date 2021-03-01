@@ -21,23 +21,21 @@ class CreateInstitution extends React.Component {
         if (this.state.newInstitutionDetails.base64Image.length > KBtoBase64Length(500)) {
             alert("Institution logos must be smaller than 500kb");
         } else {
-            fetch("/create-institution",
-                  {
-                      method: "POST",
-                      headers: {
-                          "Accept": "application/json",
-                          "Content-Type": "application/json",
-                      },
-                      body: JSON.stringify({
-                          name: this.state.newInstitutionDetails.name,
-                          base64Image: this.state.newInstitutionDetails.base64Image,
-                          url: this.state.newInstitutionDetails.url,
-                          description: this.state.newInstitutionDetails.description,
-                      }),
-                  }
-            )
-                .then(response => Promise.all([response.ok, response.json()]))
-                .then(data => {
+            fetch("/create-institution", {
+                method: "POST",
+                headers: {
+                    Accept: "application/json",
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    name: this.state.newInstitutionDetails.name,
+                    base64Image: this.state.newInstitutionDetails.base64Image,
+                    url: this.state.newInstitutionDetails.url,
+                    description: this.state.newInstitutionDetails.description,
+                }),
+            })
+                .then((response) => Promise.all([response.ok, response.json()]))
+                .then((data) => {
                     if (data[0] && Number.isInteger(data[1])) {
                         window.location = `/review-institution?institutionId=${data[1]}`;
                         return Promise.resolve();
@@ -45,27 +43,32 @@ class CreateInstitution extends React.Component {
                         return Promise.reject(data[1]);
                     }
                 })
-                .catch(message => alert("Error creating institution.\n\n" + message));
+                .catch((message) => alert("Error creating institution.\n\n" + message));
         }
     };
 
     setInstitutionDetails = (key, newValue) => {
         this.setState({
             newInstitutionDetails: {
-                ...this.state.newInstitutionDetails, [key]: newValue,
+                ...this.state.newInstitutionDetails,
+                [key]: newValue,
             },
         });
     };
 
-    renderButtonGroup = () =>
+    renderButtonGroup = () => (
         <input
             id="create-institution"
             className="btn btn-outline-lightgreen btn-sm btn-block"
             type="button"
             value="Create Institution"
             onClick={this.createInstitution}
-            disabled={this.state.newInstitutionDetails.name === "" || this.state.newInstitutionDetails.description === ""}
-        />;
+            disabled={
+                this.state.newInstitutionDetails.name === "" ||
+                this.state.newInstitutionDetails.description === ""
+            }
+        />
+    );
 
     render() {
         return (

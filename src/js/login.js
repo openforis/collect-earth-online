@@ -13,21 +13,20 @@ class Login extends React.Component {
     }
 
     requestLogin = () => {
-        fetch("/login",
-              {
-                  method: "POST",
-                  headers: {"Content-Type": "application/x-www-form-urlencoded"},
-                  body: getQueryString(this.state),
-              })
-            .then(response => Promise.all([response.ok, response.json()]))
-            .then(data => {
+        fetch("/login", {
+            method: "POST",
+            headers: {"Content-Type": "application/x-www-form-urlencoded"},
+            body: getQueryString(this.state),
+        })
+            .then((response) => Promise.all([response.ok, response.json()]))
+            .then((data) => {
                 if (data[0] && data[1] === "") {
                     window.location = this.props.returnurl === "" ? "/home" : this.props.returnurl;
                 } else {
                     alert(data[1]);
                 }
             })
-            .catch(err => console.log(err));
+            .catch((err) => console.log(err));
     };
 
     render() {
@@ -37,7 +36,7 @@ class Login extends React.Component {
                     <div className="card-header card-header-lightgreen">Sign into your account</div>
                     <div className="card-body">
                         <form
-                            onSubmit={e => {
+                            onSubmit={(e) => {
                                 e.preventDefault();
                                 this.requestLogin();
                             }}
@@ -50,7 +49,7 @@ class Login extends React.Component {
                                     placeholder="Enter email"
                                     type="email"
                                     value={this.state.email}
-                                    onChange={e => this.setState({email: e.target.value})}
+                                    onChange={(e) => this.setState({email: e.target.value})}
                                 />
                             </div>
                             <div className="form-group">
@@ -61,12 +60,14 @@ class Login extends React.Component {
                                     type="password"
                                     className="form-control"
                                     value={this.state.password}
-                                    onChange={e => this.setState({password: e.target.value})}
+                                    onChange={(e) => this.setState({password: e.target.value})}
                                 />
                             </div>
                             <div className="d-flex justify-content-between align-items-center">
                                 <a href={"/password-request"}>Forgot your password?</a>
-                                <button className="btn btn-lightgreen" type="submit">Login</button>
+                                <button className="btn btn-lightgreen" type="submit">
+                                    Login
+                                </button>
                             </div>
                         </form>
                     </div>
@@ -78,7 +79,7 @@ class Login extends React.Component {
                                 type="button"
                                 value="Register"
                                 name="register"
-                                onClick={() => window.location = "/register"}
+                                onClick={() => (window.location = "/register")}
                             />
                         </div>
                     </div>
@@ -91,9 +92,7 @@ class Login extends React.Component {
 export function pageInit(args) {
     ReactDOM.render(
         <NavigationBar userName={args.userName} userId={args.userId}>
-            <Login
-                returnurl={args.returnurl || ""}
-            />
+            <Login returnurl={args.returnurl || ""} />
         </NavigationBar>,
         document.getElementById("app")
     );

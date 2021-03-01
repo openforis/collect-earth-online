@@ -18,7 +18,9 @@ export function SectionBlock({title, children}) {
     return (
         <div className={title === "Survey Rules Design" ? "row m-1" : "row mb-3"}>
             <div className="col">
-                <h2 className="header px-0" style={{fontSize: "1.25rem", padding: ".75rem"}}>{title}</h2>
+                <h2 className="header px-0" style={{fontSize: "1.25rem", padding: ".75rem"}}>
+                    {title}
+                </h2>
                 {children}
             </div>
         </div>
@@ -43,10 +45,14 @@ export class CollapsibleSectionBlock extends React.Component {
 
     setInnerRef = (ref) => this.setState({myRef: ref});
 
-    toggleOpenClose = () => this.setState({
-        showContent: !this.state.showContent,
-        height: this.state.height !== "auto" && this.state.showContent ? "0px" : this.state.myRef.scrollHeight,
-    });
+    toggleOpenClose = () =>
+        this.setState({
+            showContent: !this.state.showContent,
+            height:
+                this.state.height !== "auto" && this.state.showContent
+                    ? "0px"
+                    : this.state.myRef.scrollHeight,
+        });
 
     updateAfterTransition = () => {
         if (this.state.showContent) {
@@ -72,7 +78,7 @@ export class CollapsibleSectionBlock extends React.Component {
                             marginRight: "2rem",
                         }}
                     >
-                        <UnicodeIcon icon={"downCaret"}/>
+                        <UnicodeIcon icon={"downCaret"} />
                     </span>
                 </h2>
                 <div
@@ -94,9 +100,7 @@ export class CollapsibleSectionBlock extends React.Component {
 export function StatsCell({title, children}) {
     return (
         <div className="row mb-2">
-            <div className="col-7">
-                {title}
-            </div>
+            <div className="col-7">{title}</div>
             <div className="col-2">
                 <span className="badge badge-pill bg-lightgreen">{children}</span>
             </div>
@@ -108,26 +112,27 @@ export function StatsRow({title, plots, analysisTime, titleHref}) {
     return (
         <div className="StatsRow row mx-1 py-1 border-bottom">
             <div className="col-7">
-                {titleHref
-                    ? <a href={titleHref} target="_blank" rel="noreferrer noopener">{title}</a>
-                    : title
-                }
+                {titleHref ? (
+                    <a href={titleHref} target="_blank" rel="noreferrer noopener">
+                        {title}
+                    </a>
+                ) : (
+                    title
+                )}
             </div>
             <div className="col-2">
                 <span className="badge badge-pill bg-lightgreen">{plots} plots</span>
             </div>
             <div className="col-3">
-                {analysisTime ?
-                    (
-                        <span className="badge badge-pill bg-lightgreen">
-                            {analysisTime >= 60
-                                ? `${(analysisTime / 60).toFixed(2)} mins/plot`
-                                : `${analysisTime} secs/plot`
-                            }
-                        </span>
-                    )
-                    : ("--")
-                }
+                {analysisTime ? (
+                    <span className="badge badge-pill bg-lightgreen">
+                        {analysisTime >= 60
+                            ? `${(analysisTime / 60).toFixed(2)} mins/plot`
+                            : `${analysisTime} secs/plot`}
+                    </span>
+                ) : (
+                    "--"
+                )}
             </div>
         </div>
     );
@@ -142,38 +147,42 @@ export class ExpandableImage extends React.Component {
     }
 
     getImageStyle = () =>
-        this.state.fullSize ? {
-            border: "1px solid #808080",
-            float: "none",
-            position: "fixed",
-            top: "60px",
-            bottom: "0",
-            left: "0",
-            right: "0",
-            margin: "auto",
-            overflow: "auto",
-            maxWidth: "99%",
-            maxHeight: "calc(98% - 60px)",
-            width: "auto",
-            height: "auto",
-        } : {
-            border: "1px solid #808080",
-            ...this.props.previewStyles,
-        };
+        this.state.fullSize
+            ? {
+                  border: "1px solid #808080",
+                  float: "none",
+                  position: "fixed",
+                  top: "60px",
+                  bottom: "0",
+                  left: "0",
+                  right: "0",
+                  margin: "auto",
+                  overflow: "auto",
+                  maxWidth: "99%",
+                  maxHeight: "calc(98% - 60px)",
+                  width: "auto",
+                  height: "auto",
+              }
+            : {
+                  border: "1px solid #808080",
+                  ...this.props.previewStyles,
+              };
 
     getMainDivStyle = () =>
-        this.state.fullSize ? {
-            cursor: "pointer",
-            position: "fixed",
-            zIndex: "100",
-            left: "0",
-            top: "0",
-            width: "100%",
-            height: "100%",
-            backgroundColor: "rgba(0,0,0,0.1)",
-        } : {
-            cursor: "pointer",
-        };
+        this.state.fullSize
+            ? {
+                  cursor: "pointer",
+                  position: "fixed",
+                  zIndex: "100",
+                  left: "0",
+                  top: "0",
+                  width: "100%",
+                  height: "100%",
+                  backgroundColor: "rgba(0,0,0,0.1)",
+              }
+            : {
+                  cursor: "pointer",
+              };
 
     render() {
         const {src} = this.props;
@@ -185,7 +194,11 @@ export class ExpandableImage extends React.Component {
             >
                 <img
                     src={src}
-                    className={this.state.fullSize ? "ExpandableImage__previewImg fullSize" : "ExpandableImage__previewImg"}
+                    className={
+                        this.state.fullSize
+                            ? "ExpandableImage__previewImg fullSize"
+                            : "ExpandableImage__previewImg"
+                    }
                     style={this.getImageStyle()}
                 />
             </div>
@@ -196,7 +209,12 @@ export class ExpandableImage extends React.Component {
 export function CollapsibleTitle({title, showGroup, toggleShow}) {
     const commonStyle = {width: "1.5rem", height: "1.5rem", marginBottom: "0"};
     const buttonDownStyle = {...commonStyle, paddingTop: "1px", paddingLeft: "3px"};
-    const buttonRightStyle = {...commonStyle, paddingTop: "0px", paddingLeft: "6px", fontSize: ".8rem"};
+    const buttonRightStyle = {
+        ...commonStyle,
+        paddingTop: "0px",
+        paddingLeft: "6px",
+        fontSize: ".8rem",
+    };
     return (
         <div
             className="CollapsibleTitle__Title row p-1"
@@ -207,9 +225,11 @@ export function CollapsibleTitle({title, showGroup, toggleShow}) {
                 style={showGroup ? buttonDownStyle : buttonRightStyle}
                 onClick={toggleShow}
             >
-                {showGroup ? <UnicodeIcon icon="downCaret"/> : <UnicodeIcon icon="rightCaret"/>}
+                {showGroup ? <UnicodeIcon icon="downCaret" /> : <UnicodeIcon icon="rightCaret" />}
             </h3>
-            <h3 className="ml-2" style={{marginBottom: "0"}}>{title}</h3>
+            <h3 className="ml-2" style={{marginBottom: "0"}}>
+                {title}
+            </h3>
         </div>
     );
 }

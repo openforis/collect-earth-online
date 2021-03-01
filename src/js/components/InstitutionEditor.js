@@ -9,13 +9,10 @@ export default function InstitutionEditor({
     buttonGroup,
     setInstitutionDetails,
 }) {
-
     return (
         <div id="institution-details" className="row justify-content-center">
             <div id="institution-edit" className="col-xl-6 col-lg-6 border pb-3 mb-2">
-                <h2 className="header">
-                    {title}
-                </h2>
+                <h2 className="header">{title}</h2>
                 <div className="mb-3">
                     <label htmlFor="institution-name">Name</label>
                     <input
@@ -23,7 +20,7 @@ export default function InstitutionEditor({
                         className="form-control mb-1 mr-sm-2"
                         type="text"
                         value={name}
-                        onChange={e => setInstitutionDetails("name", e.target.value)}
+                        onChange={(e) => setInstitutionDetails("name", e.target.value)}
                     />
                 </div>
                 <div className="mb-3">
@@ -33,7 +30,7 @@ export default function InstitutionEditor({
                         type="text"
                         className="form-control mb-1 mr-sm-2"
                         value={url}
-                        onChange={e => setInstitutionDetails("url", e.target.value)}
+                        onChange={(e) => setInstitutionDetails("url", e.target.value)}
                     />
                 </div>
                 <div className="mb-3">
@@ -43,9 +40,11 @@ export default function InstitutionEditor({
                         className="form-control mb-1 mr-sm-2"
                         type="file"
                         accept="image/*"
-                        onChange={e => {
+                        onChange={(e) => {
                             setInstitutionDetails("logo", e.target.files[0].name);
-                            encodeFileAsBase64(e.target.files[0], r => setInstitutionDetails("base64Image", r));
+                            encodeFileAsBase64(e.target.files[0], (r) =>
+                                setInstitutionDetails("base64Image", r)
+                            );
                         }}
                     />
                 </div>
@@ -56,12 +55,11 @@ export default function InstitutionEditor({
                         className="form-control"
                         rows="4"
                         value={description}
-                        onChange={e => setInstitutionDetails("description", e.target.value)}
+                        onChange={(e) => setInstitutionDetails("description", e.target.value)}
                     />
                 </div>
                 {buttonGroup()}
             </div>
         </div>
     );
-
 }

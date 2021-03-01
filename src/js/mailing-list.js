@@ -18,13 +18,13 @@ class MailingList extends React.Component {
             fetch("/send-to-mailing-list", {
                 method: "POST",
                 headers: {
-                    "Accept": "application/json",
+                    Accept: "application/json",
                     "Content-Type": "application/json",
                 },
                 body: JSON.stringify(this.state),
             })
-                .then(response => Promise.all([response.ok, response.json()]))
-                .then(data => {
+                .then((response) => Promise.all([response.ok, response.json()]))
+                .then((data) => {
                     if (data[0] && data[1] === "") {
                         this.setState({subject: "", body: ""});
                         alert("Your message has been sent to the mailing list.");
@@ -32,7 +32,7 @@ class MailingList extends React.Component {
                         alert(data[1]);
                     }
                 })
-                .catch(err => console.log(err));
+                .catch((err) => console.log(err));
         }
     };
 
@@ -54,7 +54,7 @@ class MailingList extends React.Component {
                                     placeholder="Subject"
                                     type="text"
                                     value={this.state.subject}
-                                    onChange={e => this.setState({subject: e.target.value})}
+                                    onChange={(e) => this.setState({subject: e.target.value})}
                                 />
                             </div>
                             <div className="form-group">
@@ -62,7 +62,9 @@ class MailingList extends React.Component {
                                 <CKEditor
                                     editor={ClassicEditor}
                                     data={this.state.body}
-                                    onChange={(e, editor) => this.setState({body: editor.getData()})}
+                                    onChange={(e, editor) =>
+                                        this.setState({body: editor.getData()})
+                                    }
                                 />
                             </div>
                             <button
