@@ -56,7 +56,7 @@
     },
     "private": true,
     "dependencies": {
-        "@babel/eslint-plugin": "^7.12.1",
+        "@babel/eslint-plugin": "^7.13.0",
         "@ckeditor/ckeditor5-build-classic": "^19.0.0",
         "@ckeditor/ckeditor5-react": "^2.1.0",
         "highcharts": "^8.1.2",
@@ -64,6 +64,7 @@
         "lodash": "^4.17.20",
         "ogr2ogr": "^1.5.0",
         "ol": "^6.4.3",
+        "prettier": "^2.2.1",
         "react": "^16.13.1",
         "react-dom": "^16.13.1",
         "react-grid-layout": "^0.16.6"
@@ -77,8 +78,14 @@
         "babel-loader": "^8.1.0",
         "babel-plugin-lodash": "^3.3.4",
         "css-loader": "^4.3.0",
-        "eslint": "^7.9.0",
-        "eslint-plugin-react": "^7.21.0",
+        "eslint": "^7.21.0",
+        "eslint-config-airbnb": "^18.2.1",
+        "eslint-config-prettier": "^8.1.0",
+        "eslint-plugin-import": "^2.22.1",
+        "eslint-plugin-jsx-a11y": "^6.4.1",
+        "eslint-plugin-prettier": "^3.3.1",
+        "eslint-plugin-react": "^7.22.0",
+        "eslint-plugin-react-hooks": "^4.2.0",
         "style-loader": "^1.2.1",
         "tern": "^0.23.0",
         "webpack": "^4.44.2",
@@ -90,6 +97,8 @@
         "webpack-dev": "webpack --config webpack.config.js --env.dev",
         "webpack-prod": "webpack --config webpack.config.js --env.prod",
         "server-dev": "clojure -M:run-server -p 8080 -m dev",
-        "server-prod": "clojure -M:production:run-server -P 8443 -m prod"
+        "server-prod": "clojure -M:production:run-server -P 8443 -m prod",
+        "lint": "./node_modules/.bin/eslint src/js/**/*",
+        "prettier" :"./node_modules/.bin/prettier --write src/js/**.*"
     }
 }
