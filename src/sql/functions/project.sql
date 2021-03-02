@@ -1807,19 +1807,20 @@ $$ LANGUAGE SQL;
 -- Returns project aggregate data
 CREATE OR REPLACE FUNCTION dump_project_plot_data(_project_id integer)
  RETURNS table (
-    plot_id                     integer,
-    center_lon                  double precision,
-    center_lat                  double precision,
-    size_m                      text,
-    shape                       real,
-    email                       text,
-    flagged                     boolean,
-    confidence                  integer,
-    analysis_duration           numeric,
-    samples                     text,
-    common_securewatch_date     text,
-    total_securewatch_dates     integer,
-    ext_plot_data               jsonb
+    plot_id                    integer,
+    center_lon                 double precision,
+    center_lat                 double precision,
+    size_m                     text,
+    shape                      real,
+    email                      text,
+    flagged                    boolean,
+    confidence                 integer,
+    collection_time            timestamp,
+    analysis_duration          numeric,
+    samples                    text,
+    common_securewatch_date    text,
+    total_securewatch_dates    integer,
+    ext_plot_data              jsonb
  ) AS $$
 
     WITH plots_file_data AS (
@@ -1838,6 +1839,7 @@ CREATE OR REPLACE FUNCTION dump_project_plot_data(_project_id integer)
         email,
         flagged,
         confidence,
+        collection_time,
         ROUND(EXTRACT(EPOCH FROM (collection_time - collection_start))::numeric, 1) AS analysis_duration,
         FORMAT('[%s]', STRING_AGG(
             (CASE WHEN saved_answers IS NULL THEN
@@ -1877,6 +1879,7 @@ CREATE OR REPLACE FUNCTION dump_project_sample_data(_project_id integer)
         lat                   double precision,
         email                 text,
         flagged               boolean,
+        collection_time       timestamp,
         analysis_duration     numeric,
         imagery_title         text,
         imagery_attributes    text,
@@ -1902,6 +1905,7 @@ CREATE OR REPLACE FUNCTION dump_project_sample_data(_project_id integer)
         CASE WHEN ST_GeometryType(sample_geom) = 'ST_Point' THEN ST_Y(sample_geom) ELSE -1 END AS lat,
         email,
         flagged,
+        collection_time,
         ROUND(EXTRACT(EPOCH FROM (collection_time - collection_start))::numeric, 1) AS analysis_duration,
         title AS imagery_title,
         imagery_attributes::text,
