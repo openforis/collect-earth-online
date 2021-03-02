@@ -19,28 +19,6 @@
                             :analyses assigned})
                          (call-sql "select_limited_project_plots" project-id max-plots)))))
 
-(defn- prepare-samples-array [plot-id project-id]
-  (mapv (fn [{:keys [sample_id sample_geom sampleid geom saved_answers]}]
-          {:id           sample_id
-           :sampleGeom   sample_geom
-           :sampleId     sampleid ;TODO I don't think we distinguish between sample_id and sampleId so this could go away
-           :geom         geom
-           :savedAnswers (tc/jsonb->clj saved_answers)})
-        (call-sql "select_plot_samples" plot-id project-id)))
-
-(defn- prepare-plot-object [plot-info project-id]
-  (let [{:keys [plot_id center flagged confidence assigned flagged_reason plotid geom extra_plot_info]} plot-info]
-    {:id            plot_id
-     :center        center
-     :flagged       (< 0 (or flagged -1))
-     :confidence    confidence
-     :analyses      assigned
-     :flaggedReason flagged_reason
-     :plotId        plotid
-     :geom          geom
-     :extraPlotInfo (dissoc (tc/jsonb->clj extra_plot_info {}) :gid :lat :lon :plotid)
-     :samples       (prepare-samples-array plot_id project-id)}))
-
 (defn get-plot-sample-geom [{:keys [params]}]
   (let [plot-id (tc/val->int (:plotId params))]
     (data-response (if-let [geom (sql-primitive (call-sql "select_plot_geom" plot-id))]
@@ -61,12 +39,20 @@
   (unlock-plots (:userId params -1))
   (data-response ""))
 
+(defn- prepare-samples-array [plot-id project-id]
+  (mapv (fn [{:keys [sample_id sample_geom sampleid geom saved_answers]}]
+          {:id           sample_id
+           :sampleGeom   sample_geom
+           :sampleId     sampleid ;TODO I don't think we distinguish between sample_id and sampleId so this could go away
+           :geom         geom
+           :savedAnswers (tc/jsonb->clj saved_answers)})
+        (call-sql "select_plot_samples" plot-id project-id)))
+
 (defn- get-collection-plot [params method]
   (let [navigation-mode (:navigationMode params "unanalyzed")
         project-id      (tc/val->int (:projectId params))
         plot-id         (tc/val->int (:plotId params))
         user-id         (:userId params -1)
-        user-name       (:userName params)
         review-all?     (and (= "all" navigation-mode)
                              (is-proj-admin? user-id project-id nil))]
     (data-response (if-let [plot-info (first (if (= "unanalyzed" navigation-mode)
@@ -76,15 +62,24 @@
                                                (call-sql (str "select_" method "user_plot")
                                                          project-id
                                                          plot-id
-                                                         user-name
+                                                         user-id
                                                          review-all?)))]
-                     (do
+                     (let [{:keys [plot_id center flagged confidence flagged_reason plotid geom extra_plot_info]} plot-info]
                        (unlock-plots user-id)
                        (call-sql "lock_plot"
                                  (:plot_id plot-info)
                                  user-id
                                  (time-plus-five-min))
-                       (prepare-plot-object plot-info project-id))
+                       {:id            plot_id
+                        :center        center
+                        :flagged       flagged
+                        :flaggedReason flagged_reason
+                        :confidence    confidence
+                        :plotId        plotid
+                        :geom          geom
+                        :extraPlotInfo (-> (tc/jsonb->clj extra_plot_info {})
+                                           (dissoc :gid :lat :lon :plotid))
+                        :samples       (prepare-samples-array plot_id project-id)})
                      "done"))))
 
 (defn get-plot-by-id [{:keys [params]}]

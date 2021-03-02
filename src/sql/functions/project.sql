@@ -1118,69 +1118,6 @@ CREATE OR REPLACE FUNCTION flag_plot(_plot_id integer, _user_id integer, _collec
 
 $$ LANGUAGE SQL;
 
--- Select plots
--- TODO when multiple users can be assigned to plots, returning a single username does not make sense
-CREATE OR REPLACE FUNCTION select_all_project_plots(_project_id integer)
- RETURNS table (
-    plot_id              integer,
-    project_id           integer,
-    center               text,
-    flagged              integer,
-    assigned             integer,
-    username             text,
-    confidence           integer,
-    collection_time      timestamp,
-    ext_id               integer,
-    plotId               integer,
-    geom                 text,
-    analysis_duration    numeric,
-    flagged_reason       text
-) AS $$
-
-    WITH plotsum AS (
-        SELECT MAX(email) as email,
-            cast(SUM(CASE WHEN flagged THEN 1 ELSE 0 END) as int) as flagged,
-            cast(COUNT(1) - SUM(CASE WHEN flagged THEN 1 ELSE 0 END) as int) as assigned,
-            MAX(confidence) as confidence,
-            MAX(collection_time) as collection_time,
-            ROUND(AVG(EXTRACT(EPOCH FROM (collection_time - collection_start)))::numeric, 1) as analysis_duration,
-            MAX(flagged_reason) as flagged_reason,
-            plot_rid
-        FROM users, user_plots, plots
-        WHERE user_uid = user_rid
-            AND plot_uid = plot_rid
-            AND project_rid = _project_id
-        GROUP BY plot_rid
-    ), file_data AS (
-        SELECT * FROM select_partial_table_by_name((
-            SELECT plots_ext_table
-            FROM projects
-            WHERE project_uid = _project_id
-        ))
-    )
-
-    SELECT plot_uid,
-        project_rid,
-        ST_AsGeoJSON(plots.center) as center,
-        (CASE WHEN plotsum.flagged IS NULL THEN 0 ELSE plotsum.flagged END) as flagged,
-        (CASE WHEN plotsum.assigned IS NULL THEN 0 ELSE plotsum.assigned END) as assigned,
-        (CASE WHEN plotsum.email IS NULL THEN '' ELSE plotsum.email END) as username,
-        plotsum.confidence,
-        plotsum.collection_time,
-        fd.ext_id,
-        (CASE WHEN fd.plotId IS NULL THEN plot_uid ELSE fd.plotId END) as plotId,
-        ST_AsGeoJSON(fd.geom) as geom,
-        plotsum.analysis_duration,
-        plotsum.flagged_reason
-    FROM plots
-    LEFT JOIN plotsum
-        ON plot_uid = plotsum.plot_rid
-    LEFT JOIN file_data fd
-        ON plots.ext_id = fd.ext_id
-    WHERE project_rid = _project_id
-
-$$ LANGUAGE SQL;
-
 -- Select plots but only return a maximum number
 CREATE OR REPLACE FUNCTION select_limited_project_plots(_project_id integer, _maximum integer)
  RETURNS table (
@@ -1222,66 +1159,96 @@ CREATE OR REPLACE FUNCTION select_plot_geom(_plot_id integer)
 
 $$ LANGUAGE SQL;
 
+-- Select plots
+CREATE OR REPLACE FUNCTION select_project_collection_plots(_project_id integer)
+ RETURNS table (
+    plot_id            integer,
+    center             text,
+    user_id            integer,
+    flagged            boolean,
+    flagged_reason     text,
+    confidence         integer,
+    plotId             integer,
+    geom               text,
+    extra_plot_info    jsonb
+ ) AS $$
+
+    WITH file_data AS (
+        SELECT *, a.ext_id as this_ext_id
+        FROM select_partial_table_by_name((
+            SELECT plots_ext_table
+            FROM projects
+            WHERE project_uid = _project_id
+        )) a
+        INNER JOIN select_json_table_by_name((
+            SELECT plots_ext_table
+            FROM projects
+            WHERE project_uid = _project_id
+        )) b
+        ON a.ext_id = b.ext_id
+    )
+
+    SELECT plot_uid,
+        ST_AsGeoJSON(pl.center) as center,
+        user_rid,
+        flagged,
+        flagged_reason,
+        confidence,
+        (CASE WHEN fd.plotId IS NULL THEN plot_uid ELSE fd.plotId END) as plotId,
+        ST_AsGeoJSON(fd.geom) as geom,
+        fd.rem_data
+    FROM plots pl
+    LEFT JOIN user_plots
+        ON plot_uid = plot_rid
+    LEFT JOIN file_data fd
+        ON pl.ext_id = fd.this_ext_id
+    WHERE project_rid = _project_id
+
+$$ LANGUAGE SQL;
+
 -- Returns next plot by id
 CREATE OR REPLACE FUNCTION plot_exists(_project_id integer, _plot_id integer)
  RETURNS boolean AS $$
 
-    WITH tablenames AS (
-        SELECT plots_ext_table
-        FROM projects
-        WHERE project_uid = _project_id
-    ), plots_file_data AS (
-        SELECT * FROM select_json_table_by_name((SELECT plots_ext_table FROM tablenames))
-    )
-
-    SELECT count(plot_id) > 0
-    FROM select_all_project_plots(_project_id) as spp
-    LEFT JOIN plots_file_data pfd
-        ON spp.ext_id = pfd.ext_id
-    WHERE spp.plotId = _plot_id
+    SELECT count(plotId) > 0
+    FROM select_project_collection_plots(_project_id) as spp
+    WHERE plotId = _plot_id
 
 $$ LANGUAGE SQL;
 
--- FIXME, I dont think we need 6 functions for navigating plots
--- Returns next unanalyzed plot
-CREATE OR REPLACE FUNCTION select_next_unassigned_plot(_project_id integer, _plot_id integer)
- RETURNS table (
+-- FIXME, I dont think we need 6 functions for navigating plots.
+-- This return type is so the 6 functions match return types.
+DROP TYPE IF EXISTS collection_return;
+CREATE TYPE collection_return AS (
     plot_id            integer,
     center             text,
-    flagged            integer,
-    assigned           integer,
+    flagged            boolean,
+    flagged_reason     text,
+    confidence         integer,
     plotId             integer,
     geom               text,
-    extra_plot_info    jsonb,
-    flagged_reason     text
-) AS $$
+    extra_plot_info    jsonb
+);
 
-    WITH tablenames AS (
-        SELECT plots_ext_table
-        FROM projects
-        WHERE project_uid = _project_id
-    ), plots_file_data AS (
-        SELECT * FROM select_json_table_by_name((SELECT plots_ext_table FROM tablenames))
-    )
+-- Returns next unanalyzed plot
+CREATE OR REPLACE FUNCTION select_next_unassigned_plot(_project_id integer, _plot_id integer)
+ RETURNS setOf collection_return AS $$
 
     SELECT plot_id,
         center,
         flagged,
-        assigned,
+        flagged_reason,
+        confidence,
         plotId,
         geom,
-        pfd.rem_data,
-        flagged_reason
-    FROM select_all_project_plots(_project_id) as spp
-    LEFT JOIN plots_file_data pfd
-        ON spp.ext_id = pfd.ext_id
+        extra_plot_info
+    FROM select_project_collection_plots(_project_id)
     LEFT JOIN plot_locks pl
         ON plot_id = pl.plot_rid
-    WHERE spp.plotId > _plot_id
-        AND flagged = 0
-        AND assigned = 0
-        AND (pl.lock_end IS NULL
-            OR localtimestamp > pl.lock_end)
+        AND localtimestamp > pl.lock_end
+    WHERE plotId > _plot_id
+        AND user_id IS NULL
+        AND pl.lock_end IS NULL
     ORDER BY plotId ASC
     LIMIT 1
 
@@ -1291,41 +1258,22 @@ $$ LANGUAGE SQL;
 CREATE OR REPLACE FUNCTION select_next_user_plot(
     _project_id    integer,
     _plot_id       integer,
-    _username      text,
+    _user_id       integer,
     _review_all    boolean
- ) RETURNS table (
-    plot_id            integer,
-    center             text,
-    flagged            integer,
-    assigned           integer,
-    plotId             integer,
-    geom               text,
-    extra_plot_info    jsonb,
-    flagged_reason     text
-) AS $$
-
-    WITH tablenames AS (
-        SELECT plots_ext_table
-        FROM projects
-        WHERE project_uid = _project_id
-    ), plots_file_data AS (
-        SELECT * FROM select_json_table_by_name((SELECT plots_ext_table FROM tablenames))
-    )
+ ) RETURNS setOf collection_return AS $$
 
     SELECT plot_id,
         center,
         flagged,
-        assigned,
+        flagged_reason,
+        confidence,
         plotId,
         geom,
-        pfd.rem_data,
-        flagged_reason
-    FROM select_all_project_plots(_project_id) as spp
-    LEFT JOIN plots_file_data pfd
-        ON spp.ext_id = pfd.ext_id
-    WHERE spp.plotId > _plot_id
-        AND ((_review_all AND spp.username != '')
-             OR spp.username = _username)
+        extra_plot_info
+    FROM select_project_collection_plots(_project_id)
+    WHERE plotId > _plot_id
+        AND ((_review_all AND user_id IS NOT NULL)
+             OR user_id = _user_id)
     ORDER BY plotId ASC
     LIMIT 1
 
@@ -1333,43 +1281,23 @@ $$ LANGUAGE SQL;
 
 -- Returns prev unanalyzed plot
 CREATE OR REPLACE FUNCTION select_prev_unassigned_plot(_project_id integer, _plot_id integer)
- RETURNS table (
-    plot_id            integer,
-    center             text,
-    flagged            integer,
-    assigned           integer,
-    plotId             integer,
-    geom               text,
-    extra_plot_info    jsonb,
-    flagged_reason     text
-) AS $$
-
-    WITH tablenames AS (
-        SELECT plots_ext_table
-        FROM projects
-        WHERE project_uid = _project_id
-    ), plots_file_data AS (
-        SELECT * FROM select_json_table_by_name((SELECT plots_ext_table FROM tablenames))
-    )
+ RETURNS setOf collection_return AS $$
 
     SELECT plot_id,
         center,
         flagged,
-        assigned,
+        flagged_reason,
+        confidence,
         plotId,
         geom,
-        pfd.rem_data,
-        flagged_reason
-    FROM select_all_project_plots(_project_id) as spp
-    LEFT JOIN plots_file_data pfd
-        ON spp.ext_id = pfd.ext_id
+        extra_plot_info
+    FROM select_project_collection_plots(_project_id)
     LEFT JOIN plot_locks pl
         ON plot_id = pl.plot_rid
-    WHERE spp.plotId < _plot_id
-        AND flagged = 0
-        AND assigned = 0
-        AND (pl.lock_end IS NULL
-            OR localtimestamp > pl.lock_end)
+        AND localtimestamp > pl.lock_end
+    WHERE plotId < _plot_id
+        AND user_id IS NULL
+        AND pl.lock_end IS NULL
     ORDER BY plotId DESC
     LIMIT 1
 
@@ -1379,41 +1307,22 @@ $$ LANGUAGE SQL;
 CREATE OR REPLACE FUNCTION select_prev_user_plot(
     _project_id    integer,
     _plot_id       integer,
-    _username      text,
+    _user_id       integer,
     _review_all    boolean
- ) RETURNS table (
-    plot_id            integer,
-    center             text,
-    flagged            integer,
-    assigned           integer,
-    plotId             integer,
-    geom               text,
-    extra_plot_info    jsonb,
-    flagged_reason     text
-) AS $$
-
-    WITH tablenames AS (
-        SELECT plots_ext_table
-        FROM projects
-        WHERE project_uid = _project_id
-    ), plots_file_data AS (
-        SELECT * FROM select_json_table_by_name((SELECT plots_ext_table FROM tablenames))
-    )
+ ) RETURNS setOf collection_return AS $$
 
     SELECT plot_id,
         center,
         flagged,
-        assigned,
+        flagged_reason,
+        confidence,
         plotId,
         geom,
-        pfd.rem_data,
-        flagged_reason
-    FROM select_all_project_plots(_project_id) as spp
-    LEFT JOIN plots_file_data pfd
-        ON spp.ext_id = pfd.ext_id
-    WHERE spp.plotId < _plot_id
-        AND ((_review_all AND spp.username != '')
-             OR spp.username = _username)
+        extra_plot_info
+    FROM select_project_collection_plots(_project_id) as spp
+    WHERE plotId < _plot_id
+        AND ((_review_all AND user_id IS NOT NULL)
+             OR user_id = _user_id)
     ORDER BY plotId DESC
     LIMIT 1
 
@@ -1421,43 +1330,23 @@ $$ LANGUAGE SQL;
 
 -- Returns unanalyzed plots by plot id
 CREATE OR REPLACE FUNCTION select_by_id_unassigned_plot(_project_id integer, _plot_id integer)
- RETURNS table (
-    plot_id            integer,
-    center             text,
-    flagged            integer,
-    assigned           integer,
-    plotId             integer,
-    geom               text,
-    extra_plot_info    jsonb,
-    flagged_reason     text
-) AS $$
-
-    WITH tablenames AS (
-        SELECT plots_ext_table
-        FROM projects
-        WHERE project_uid = _project_id
-    ), plots_file_data AS (
-        SELECT * FROM select_json_table_by_name((SELECT plots_ext_table FROM tablenames))
-    )
+ RETURNS setOf collection_return AS $$
 
     SELECT plot_id,
         center,
         flagged,
-        assigned,
+        flagged_reason,
+        confidence,
         plotId,
         geom,
-        pfd.rem_data,
-        flagged_reason
-    FROM select_all_project_plots(_project_id) as spp
-    LEFT JOIN plots_file_data pfd
-        ON spp.ext_id = pfd.ext_id
+        extra_plot_info
+    FROM select_project_collection_plots(_project_id) as spp
     LEFT JOIN plot_locks pl
         ON plot_id = pl.plot_rid
-    WHERE spp.plotId = _plot_id
-        AND flagged = 0
-        AND assigned = 0
-        AND (pl.lock_end IS NULL
-            OR localtimestamp > pl.lock_end)
+        AND localtimestamp > pl.lock_end
+    WHERE plotId = _plot_id
+        AND user_id IS NULL
+        AND pl.lock_end IS NULL
 
 $$ LANGUAGE SQL;
 
@@ -1465,44 +1354,24 @@ $$ LANGUAGE SQL;
 CREATE OR REPLACE FUNCTION select_by_id_user_plot(
     _project_id    integer,
     _plot_id       integer,
-    _username      text,
+    _user_id       integer,
     _review_all    boolean
- ) RETURNS table (
-    plot_id            integer,
-    center             text,
-    flagged            integer,
-    assigned           integer,
-    plotId             integer,
-    geom               text,
-    extra_plot_info    jsonb,
-    flagged_reason     text
-) AS $$
-
-    WITH tablenames AS (
-        SELECT plots_ext_table
-        FROM projects
-        WHERE project_uid = _project_id
-    ), plots_file_data AS (
-        SELECT * FROM select_json_table_by_name((SELECT plots_ext_table FROM tablenames))
-    )
+ ) RETURNS setOf collection_return AS $$
 
     SELECT plot_id,
         center,
         flagged,
-        assigned,
+        flagged_reason,
+        confidence,
         plotId,
         geom,
-        pfd.rem_data,
-        flagged_reason
-    FROM select_all_project_plots(_project_id) as spp
-    LEFT JOIN plots_file_data pfd
-        ON spp.ext_id = pfd.ext_id
-    WHERE spp.plotId = _plot_id
-        AND ((_review_all AND spp.username != '')
-             OR spp.username = _username)
+        extra_plot_info
+    FROM select_project_collection_plots(_project_id)
+    WHERE plotId = _plot_id
+        AND ((_review_all AND user_id IS NOT NULL)
+             OR user_id = _user_id)
 
 $$ LANGUAGE SQL;
-
 
 -- Lock plot to user
 CREATE OR REPLACE FUNCTION lock_plot(_plot_id integer, _user_id integer, _lock_end timestamp)
