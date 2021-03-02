@@ -917,30 +917,41 @@
        (remove #(#{"GID" "GEOM" "PLOT_GEOM" "LAT" "LON"} (str/upper-case %)))
        (mapv #(str "pl_" %))))
 
-(def plot-key-names {:lon        :center_lon
-                     :lat        :center_lat
-                     :plot_size  :size_m
-                     :plot_shape :shape
-                     :assigned   :analyses})
+(defn- format-time [pg-time]
+  (when pg-time
+    (.format (SimpleDateFormat. "YYYY-MM-dd HH:mm")
+             pg-time)))
 
 (def plot-base-headers [:plot_id
                         :center_lon
                         :center_lat
                         :size_m
                         :shape
-                        :flagged
-                        :analyses
                         :sample_points
                         :email
+                        :flagged
+                        :flagged_reason
+                        :confidence
+                        :collection_time
+                        :analysis_duration
                         :common_securewatch_date
                         :total_securewatch_dates])
 
-; TODO why did we move collection_time and analysis duration to the sample level when they are plot details?
+(defn- remove-vector-items [vector & items]
+  (->> vector
+       (remove (set items))
+       (vec)))
+
 (defn dump-project-aggregate-data [{:keys [params]}]
   (let [project-id (tc/val->int (:projectId params))]
     (if-let [project-info (first (call-sql "select_project_by_id" project-id))]
       (let [survey-questions (tc/jsonb->clj (:survey_questions project-info))
-            text-headers     (concat plot-base-headers
+            confidence?      (-> project-info
+                                 (:options)
+                                 (tc/jsonb->clj)
+                                 (:collectConfidence))
+            text-headers     (concat (remove-vector-items plot-base-headers
+                                                          (when-not confidence? :confidence))
                                      (get-ext-plot-headers project-id))
             number-headers   (get-value-distribution-headers survey-questions)
             headers-out      (->> (concat text-headers number-headers)
@@ -952,14 +963,10 @@
                                           ext-plot-data (tc/jsonb->clj (:ext_plot_data row))]
                                       (str/join ","
                                                 (concat (map->csv (merge (-> row
-                                                                             (dissoc :samples
-                                                                                     :analysis_duration
-                                                                                     :collection_time)
                                                                              (assoc  :sample_points
                                                                                      (count samples))
-                                                                             (update :collection_time str)
-                                                                             (update :flagged pos?)
-                                                                             (set/rename-keys plot-key-names))
+                                                                             (update :collection_time format-time)
+                                                                             (update :analysis_duration #(when % (str % " secs"))))
                                                                          (prefix-keys "pl_" ext-plot-data))
                                                                   text-headers
                                                                   "")
@@ -987,24 +994,18 @@
     (reduce (fn [acc [k v]] (merge acc {(name k) (:answer v)})) {} value)
     ""))
 
-(def sample-key-names {:assigned :analyses})
-
-;; TODO why did we move collection_time and analysis duration to the sample level when they are plot details?
 (def sample-base-headers [:plot_id
                           :sample_id
                           :lon
                           :lat
-                          :flagged
-                          :analyses
                           :email
+                          :flagged
                           :collection_time
                           :analysis_duration
                           :imagery_title
                           :imagery_attributions
                           :sample_geom])
 
-;; TODO collection_time analysis_duration imagery_title imagery_attributes are not really "optional" anymore
-;;      They are a part of every project for a year now, I think we should just leave them in.
 (defn dump-project-raw-data [{:keys [params]}]
   (let [project-id (tc/val->int (:projectId params))]
     (if-let [project-info (first (call-sql "select_project_by_id" project-id))]
@@ -1020,17 +1021,11 @@
             data-rows        (map (fn [row]
                                     (let [saved-answers   (tc/jsonb->clj (:saved_answers row))
                                           ext-plot-data   (tc/jsonb->clj (:ext_plot_data row))
-                                          ext-sample-data (tc/jsonb->clj (:ext_sample_data row))
-                                          format-time     #(when %
-                                                             (.format (SimpleDateFormat. "YYYY-MM-dd HH:mm")
-                                                                      %))]
+                                          ext-sample-data (tc/jsonb->clj (:ext_sample_data row))]
                                       (str/join ","
                                                 (map->csv (merge (-> row
-                                                                     (dissoc :saved_answers :confidence)
                                                                      (update :collection_time format-time)
-                                                                     (update :flagged pos?)
-                                                                     (update :analysis_duration #(when % (str % " secs")))
-                                                                     (set/rename-keys sample-key-names))
+                                                                     (update :analysis_duration #(when % (str % " secs"))))
                                                                  (prefix-keys "pl_" ext-plot-data)
                                                                  (prefix-keys "smpl_" ext-sample-data)
                                                                  (extract-answers saved-answers))
