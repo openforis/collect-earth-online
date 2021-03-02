@@ -1168,7 +1168,6 @@ CREATE OR REPLACE FUNCTION select_project_collection_plots(_project_id integer)
     flagged            boolean,
     flagged_reason     text,
     confidence         integer,
-    ext_id             integer,
     plotId             integer,
     geom               text,
     extra_plot_info    jsonb
@@ -1195,7 +1194,6 @@ CREATE OR REPLACE FUNCTION select_project_collection_plots(_project_id integer)
         flagged,
         flagged_reason,
         confidence,
-        fd.this_ext_id,
         (CASE WHEN fd.plotId IS NULL THEN plot_uid ELSE fd.plotId END) as plotId,
         ST_AsGeoJSON(fd.geom) as geom,
         fd.rem_data
