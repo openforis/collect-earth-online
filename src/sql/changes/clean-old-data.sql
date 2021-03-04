@@ -25,6 +25,13 @@ DO $$
  END
 $$ LANGUAGE plpgsql;
 
+-- Archive malformed projects
+SELECT (SELECT archive_project(project_uid))
+FROM projects
+WHERE survey_questions->0 IS NULL
+    OR survey_questions IS NULL
+    OR survey_questions = 'null'
+
 -- Archive old projects
 SELECT archive_project(project_uid)
 FROM (
@@ -47,7 +54,6 @@ WHERE (p_age > 180
     OR (p_age > 270 AND complete < 0.05);
 
 -- Delete archived projects
-
 SELECT delete_project(project_uid)
 FROM (
     SELECT project_uid,
