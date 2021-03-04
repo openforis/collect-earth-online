@@ -114,8 +114,8 @@ WHERE survey_questions->0 IS NULL
     OR survey_questions->0->'id' IS NULL
     OR survey_questions->0->'question' IS NULL
     OR survey_questions->0->'answers' IS NULL
-	OR survey_questions->0->'answers'->0 IS NULL
-	OR survey_questions->0->'answers' = 'null'
+    OR survey_questions->0->'answers'->0 IS NULL
+    OR survey_questions->0->'answers' = 'null'
     OR survey_questions->0->'dataType' IS NULL
     OR survey_questions->0->'componentType' IS NULL
     OR survey_questions->0->'parentQuestion' IS NULL
@@ -123,7 +123,7 @@ WHERE survey_questions->0 IS NULL
     OR jsonb_typeof(survey_questions->0->'id') <> 'number'
     OR jsonb_typeof(survey_questions->0->'parentQuestion') <> 'number'
     OR jsonb_typeof(survey_questions->0->'parentAnswer') <> 'number'
-	OR jsonb_typeof(survey_questions->0->'answers'->0->'id') <> 'number';
+    OR jsonb_typeof(survey_questions->0->'answers'->0->'id') <> 'number';
 
 -- sample_values.value
 
