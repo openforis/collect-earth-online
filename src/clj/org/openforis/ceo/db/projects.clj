@@ -64,34 +64,37 @@
                             :name name})
                          (call-sql "select_template_projects" user-id)))))
 
+(defn- build-project-by-id [user-id project-id]
+  (let [project (first (call-sql "select_project_by_id" project-id))]
+    {:id                 (:project_id project)     ; TODO dont return known values
+     :institution        (:institution_id project) ; TODO legacy variable name, update to institutionId
+     :imageryId          (:imagery_id project)
+     :availability       (:availability project)
+     :name               (:name project)
+     :description        (:description project)
+     :privacyLevel       (:privacy_level project)
+     :boundary           (:boundary project)
+     :plotDistribution   (:plot_distribution project)
+     :numPlots           (:num_plots project)
+     :plotSpacing        (:plot_spacing project)
+     :plotShape          (:plot_shape project)
+     :plotSize           (:plot_size project)
+     :sampleDistribution (:sample_distribution project)
+     :samplesPerPlot     (:samples_per_plot project)
+     :sampleResolution   (:sample_resolution project)
+     :allowDrawnSamples  (:allow_drawn_samples project)
+     :surveyQuestions    (tc/jsonb->clj (:survey_questions project) [])
+     :surveyRules        (tc/jsonb->clj (:survey_rules project) [])
+     :projectOptions     (merge default-options (tc/jsonb->clj (:options project)))
+     :createdDate        (str (:created_date project))
+     :publishedDate      (str (:published_date project))
+     :closedDate         (str (:closed_date project))
+     :isProjectAdmin     (is-proj-admin? user-id project-id nil)}))
+
 (defn get-project-by-id [{:keys [params]}]
   (let [user-id    (:userId params -1)
-        project-id (tc/val->int (:projectId params))
-        project    (first (call-sql "select_project_by_id" project-id))]
-    (data-response {:id                 (:project_id project) ; TODO dont return known values
-                    :institution        (:institution_id project) ; TODO legacy variable name, update to institutionId
-                    :imageryId          (:imagery_id project)
-                    :availability       (:availability project)
-                    :name               (:name project)
-                    :description        (:description project)
-                    :privacyLevel       (:privacy_level project)
-                    :boundary           (:boundary project)
-                    :plotDistribution   (:plot_distribution project)
-                    :numPlots           (:num_plots project)
-                    :plotSpacing        (:plot_spacing project)
-                    :plotShape          (:plot_shape project)
-                    :plotSize           (:plot_size project)
-                    :sampleDistribution (:sample_distribution project)
-                    :samplesPerPlot     (:samples_per_plot project)
-                    :sampleResolution   (:sample_resolution project)
-                    :allowDrawnSamples  (:allow_drawn_samples project)
-                    :surveyQuestions    (tc/jsonb->clj (:survey_questions project) [])
-                    :surveyRules        (tc/jsonb->clj (:survey_rules project) [])
-                    :projectOptions     (merge default-options (tc/jsonb->clj (:options project)))
-                    :createdDate        (str (:created_date project))
-                    :publishedDate      (str (:published_date project))
-                    :closedDate         (str (:closed_date project))
-                    :isProjectAdmin     (is-proj-admin? user-id project-id nil)})))
+        project-id (tc/val->int (:projectId params))]
+    (data-response (build-project-by-id user-id project-id))))
 
 (defn get-template-by-id [{:keys [params]}]
   (let [project-id (tc/val->int (:projectId params))
@@ -839,16 +842,18 @@
       (data-response (str "Project " project-id " not found.")))))
 
 (defn publish-project [{:keys [params]}]
-  (let [project-id   (tc/val->int (:projectId params))
+  (let [user-id      (:userId params -1)
+        project-id   (tc/val->int (:projectId params))
         clear-saved? (tc/val->bool (:clearSaved params))]
     (when clear-saved? (reset-collected-samples project-id))
     (call-sql "publish_project" project-id)
-    (data-response "")))
+    (data-response (build-project-by-id user-id project-id))))
 
 (defn close-project [{:keys [params]}]
-  (let [project-id (tc/val->int (:projectId params))]
+  (let [user-id    (:userId params -1)
+        project-id (tc/val->int (:projectId params))]
     (call-sql "close_project" project-id)
-    (data-response "")))
+    (data-response (build-project-by-id user-id project-id))))
 
 (defn archive-project [{:keys [params]}]
   (let [project-id (tc/val->int (:projectId params))]

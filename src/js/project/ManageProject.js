@@ -128,37 +128,41 @@ class ProjectManagement extends React.Component {
     /// API Calls
 
     publishProject = () => {
-        const unpublished = this.context.availability === "unpublished";
+        const {availability, setProjectDetails, setContextState, processModal, projectId} = this.context;
+        const unpublished = availability === "unpublished";
         const message = unpublished
             ? "Do you want to publish this project?  This action will clear plots collected by admins to allow collecting by users."
             : "Do you want to re-open this project?  Members will be allowed to collect plots again.";
         if (confirm(message)) {
-            this.context.processModal("Publishing project", () =>
-                fetch(`/publish-project?projectId=${this.context.id}&clearSaved=${unpublished}`,
+            processModal("Publishing project", () =>
+                fetch(`/publish-project?projectId=${projectId}&clearSaved=${unpublished}`,
                       {method: "POST"})
-                    .then(response => {
-                        if (response.ok) {
-                            this.context.setProjectDetails({availability: "published"});
-                        } else {
-                            console.log(response);
-                            alert("Error publishing project. See console for details.");
-                        }
+                    .then(response => response.ok ? response.json() : Promise.reject(response))
+                    .then(data => {
+                        setProjectDetails(data);
+                        setContextState({originalProject: data});
+                    })
+                    .catch(error => {
+                        console.log(error);
+                        alert("Error publishing project. See console for details.");
                     })
             );
         }
     };
 
     closeProject = () => {
+        const {setProjectDetails, setContextState, processModal, projectId} = this.context;
         if (confirm("Do you want to close this project?")) {
-            this.context.processModal("Closing project", () =>
-                fetch(`/close-project?projectId=${this.context.id}`, {method: "POST"})
-                    .then(response => {
-                        if (response.ok) {
-                            this.context.setProjectDetails({availability: "closed"});
-                        } else {
-                            console.log(response);
-                            alert("Error closing project. See console for details.");
-                        }
+            processModal("Closing project", () =>
+                fetch(`/close-project?projectId=${projectId}`, {method: "POST"})
+                    .then(response => response.ok ? response.json() : Promise.reject(response))
+                    .then(data => {
+                        setProjectDetails(data);
+                        setContextState({originalProject: data});
+                    })
+                    .catch(error => {
+                        console.log(error);
+                        alert("Error closing project. See console for details.");
                     })
             );
         }
