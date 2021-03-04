@@ -100,6 +100,8 @@ FROM (
     WHERE survey_questions->0 IS NULL
         OR survey_questions IS NULL
         OR survey_questions = 'null'
+        OR survey_questions->0->'answers'->0 IS NULL
+        OR survey_questions->0->'answers' = 'null'
 ) a;
 
 -- Sanity check
@@ -112,10 +114,16 @@ WHERE survey_questions->0 IS NULL
     OR survey_questions->0->'id' IS NULL
     OR survey_questions->0->'question' IS NULL
     OR survey_questions->0->'answers' IS NULL
+	OR survey_questions->0->'answers'->0 IS NULL
+	OR survey_questions->0->'answers' = 'null'
     OR survey_questions->0->'dataType' IS NULL
     OR survey_questions->0->'componentType' IS NULL
     OR survey_questions->0->'parentQuestion' IS NULL
-    OR survey_questions->0->'parentAnswer' IS NULL;
+    OR survey_questions->0->'parentAnswer' IS NULL
+    OR jsonb_typeof(survey_questions->0->'id') <> 'number'
+    OR jsonb_typeof(survey_questions->0->'parentQuestion') <> 'number'
+    OR jsonb_typeof(survey_questions->0->'parentAnswer') <> 'number'
+	OR jsonb_typeof(survey_questions->0->'answers'->0->'id') <> 'number';
 
 -- sample_values.value
 
@@ -172,7 +180,7 @@ UPDATE sample_values sv1 SET value = (
         survey_questions->0->>'question',
         jsonb_build_object(
             'answer', (SELECT find_json_by_id(survey_questions->0->'answers', value::text, 'answer')),
-            'answerId', value::text,
+            'answerId', value::int,
             'questionId', 1
         )
     )
@@ -205,9 +213,9 @@ WHERE sample_value_uid IN (
         SELECT sample_value_uid,
             value,
             sample_rid,
-            value->jsonb_object_keys(value) as val
+            value->jsonb_object_keys(value) AS val
         FROM sample_values
-    ) a, samples, plots, projects as p
+    ) a, samples, plots, projects AS p
     WHERE sample_uid = sample_rid
         AND plot_rid = plot_uid
         AND project_rid = project_uid
@@ -229,41 +237,43 @@ WHERE sample_value_uid IN (
         SELECT sample_value_uid,
             value,
             sample_rid,
-            value->jsonb_object_keys(value) as val
+            value->jsonb_object_keys(value) AS val
         FROM sample_values
-    ) a, samples, plots, projects as p
+    ) a, samples, plots, projects AS p
     WHERE sample_uid = sample_rid
         AND plot_rid = plot_uid
         AND project_rid = project_uid
         AND jsonb_typeof(value) = 'object'
         AND jsonb_typeof(val) = 'object'
-        AND (val->'questionId' is null
-            OR val->'answerId' is null)
+        AND (val->'questionId' IS NULL
+            OR val->'answerId' IS NULL)
 );
 
 ALTER TABLE sample_values RENAME COLUMN value TO saved_answers;
 
 -- Sanity Checks
 
-SELECT count(1) as answers_not_objects
+SELECT count(1) AS answers_not_objects
 FROM sample_values
 WHERE jsonb_typeof(saved_answers) <> 'object';
 
-SELECT count(1) as malformed_answer_objects
+SELECT count(1) AS malformed_answer_objects
     FROM (
         SELECT sample_value_uid,
             saved_answers,
             sample_rid,
-            saved_answers->jsonb_object_keys(saved_answers) as val
+            saved_answers->jsonb_object_keys(saved_answers) AS val
         FROM sample_values
-    ) a, samples, plots, projects as p
+    ) a, samples, plots, projects AS p
     WHERE sample_uid = sample_rid
         AND plot_rid = plot_uid
         AND project_rid = project_uid
         AND jsonb_typeof(saved_answers) = 'object'
         AND (jsonb_typeof(val) <> 'object'
-            OR val->'questionId' is null
-            OR val->'answerId' is null);
+            OR val->'questionId' IS NULL
+            OR val->'answerId' IS NULL
+            OR jsonb_typeof(val->'questionId') <> 'number'
+            OR jsonb_typeof(val->'answerId') <> 'number');
 
 DROP FUNCTION IF EXISTS find_json_id;
 DROP FUNCTION IF EXISTS find_json_index;
