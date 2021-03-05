@@ -256,6 +256,7 @@ class Collection extends React.Component {
 
     updateMapImagery = () => {
         const {currentPlot, mapConfig, currentImagery} = this.state;
+        mercator.setVisibleLayer(this.state.mapConfig, this.state.currentImagery.id);
         if (currentPlot && !currentPlot.id && ["PlanetDaily", "SecureWatch"].includes(currentImagery.sourceConfig.type)) {
             mercator.setLayerVisibilityByLayerId(mapConfig, "goToPlot", true);
         } else {
