@@ -11,7 +11,9 @@ export const nicfiLayers = ["2015-12_2016-05",
                             "2020-09",
                             "2020-10",
                             "2020-11",
-                            "2020-12"];
+                            "2020-12",
+                            "2021-01",
+                            "2021-02"];
 
 export const imageryOptions = [
     // Default type is text, default parent is none, a referenced parent must be entered as a json string
