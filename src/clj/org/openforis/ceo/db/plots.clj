@@ -73,8 +73,8 @@
                        {:id            plot_id
                         :center        center
                         :flagged       flagged
-                        :flaggedReason flagged_reason
-                        :confidence    confidence
+                        :flaggedReason (or flagged_reason "")
+                        :confidence    (or confidence 100)
                         :plotId        plotid
                         :geom          geom
                         :extraPlotInfo (-> (tc/jsonb->clj extra_plot_info {})
