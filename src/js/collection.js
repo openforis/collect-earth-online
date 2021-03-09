@@ -598,7 +598,9 @@ class Collection extends React.Component {
                           body: JSON.stringify({
                               projectId: this.props.projectId,
                               plotId: this.state.currentPlot.id,
-                              confidence: this.state.currentPlot.confidence || -1,
+                              confidence: this.state.currentProject.projectOptions.collectConfidence
+                                ? this.state.currentPlot.confidence
+                                : -1,
                               collectionStart: this.state.collectionStart,
                               userSamples: this.state.userSamples,
                               userImages: this.state.userImages,
@@ -933,12 +935,12 @@ class Collection extends React.Component {
                                     answerMode={this.state.answerMode}
                                     setAnswerMode={this.setAnswerMode}
                                     collectConfidence={this.state.currentProject.projectOptions.collectConfidence}
-                                    confidence={this.state.currentPlot.confidence || 100}
+                                    confidence={this.state.currentPlot.confidence}
                                     setConfidence={this.setConfidence}
                                     resetPlotValues={this.resetPlotValues}
                                     toggleFlagged={this.toggleFlagged}
                                     setFlaggedReason={this.setFlaggedReason}
-                                    flaggedReason={this.state.currentPlot.flaggedReason || ""}
+                                    flaggedReason={this.state.currentPlot.flaggedReason}
                                 />
                             </>
                         :
