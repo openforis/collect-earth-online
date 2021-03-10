@@ -1514,7 +1514,7 @@ function QuitMenu({projectId, toggleQuitModal}) {
             >
                 <div className="modal-content" id="quitModalContent">
                     <div className="modal-header">
-                        <h5 className="modal-title" id="quitModalTitle">Confirmation</h5>
+                        <h5 className="modal-title" id="quitModalTitle">Unsaved Changes</h5>
                         <button
                             type="button"
                             className="close"
@@ -1525,7 +1525,7 @@ function QuitMenu({projectId, toggleQuitModal}) {
                         </button>
                     </div>
                     <div className="modal-body">
-                        Are you sure you want to stop collecting data?
+                        <p>Are you sure you want to stop collecting data? Any answered questions will be lost.</p>
                     </div>
                     <div className="modal-footer">
                         <button
@@ -1537,7 +1537,7 @@ function QuitMenu({projectId, toggleQuitModal}) {
                         </button>
                         <button
                             type="button"
-                            className="btn btn-lightgreen btn-sm"
+                            className="btn btn-danger btn-sm"
                             id="quit-button"
                             onClick={() =>
                                 fetch(`/release-plot-locks?projectId=${projectId}`,
@@ -1546,7 +1546,7 @@ function QuitMenu({projectId, toggleQuitModal}) {
                                     .then(() => window.location = "/home")
                             }
                         >
-                            OK
+                            Yes, I&apos;m sure
                         </button>
                     </div>
                 </div>
