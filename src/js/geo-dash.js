@@ -1577,7 +1577,7 @@ class StatsWidget extends React.Component {
                 } else {
                     this.setState({
                         totalPop: this.numberWithCommas(data.pop),
-                        area: this.calculateArea(JSON.parse(projPairAOI)) + " ha",
+                        area: this.numberWithCommas(this.calculateArea(JSON.parse(projPairAOI))) + " ha",
                         elevation: this.numberWithCommas(data.minElev) + " - " + this.numberWithCommas(data.maxElev) + " m",
                     });
                 }
@@ -1601,7 +1601,7 @@ class StatsWidget extends React.Component {
 
     calculateArea = poly => {
         try {
-            return this.numberWithCommas(Math.round(Math.abs(sphereGetArea(poly))) / 10000);
+            return Math.round(sphereGetArea(new Polygon([poly]), {projection: "EPSG:4326"}) / 10000);
         } catch (e) {
             return "N/A";
         }
