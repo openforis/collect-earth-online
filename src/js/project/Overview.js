@@ -25,6 +25,7 @@ export function Overview(props) {
                             type="text"
                             value={name}
                             onChange={e => setProjectDetails({name: e.target.value})}
+                            maxLength="200"
                         />
                     </div>
                     <div className="form-group">
@@ -34,6 +35,7 @@ export function Overview(props) {
                             className="form-control form-control-sm"
                             value={description}
                             onChange={e => setProjectDetails({description: e.target.value})}
+                            maxLength="2000"
                         />
                     </div>
                     <h3>Visibility</h3>

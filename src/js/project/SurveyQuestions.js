@@ -228,6 +228,7 @@ class NewQuestionDesigner extends React.Component {
                                     autoComplete="off"
                                     value={this.state.newQuestionText}
                                     onChange={e => this.setState({newQuestionText: e.target.value})}
+                                    maxLength="210"
                                 />
                             </div>
                         </td>
@@ -303,6 +304,7 @@ class NewAnswerDesigner extends React.Component {
                             if (e.key === "e" && this.props.surveyQuestion.dataType === "number") e.preventDefault();
                         }}
                         onChange={e => this.setState({newAnswerText: e.target.value})}
+                        maxLength="120"
                     />
                 </div>
             </div>
