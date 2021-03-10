@@ -429,7 +429,7 @@ class Widget extends React.Component {
             return <div className="front">
                 <DegradationWidget
                     widget={widget}
-                    feature={this.state.feature}
+                    vectorSource={this.props.vectorSource}
                     projPairAOI={this.props.projPairAOI}
                     getParameterByName={this.props.getParameterByName}
                     initCenter={this.props.initCenter}
