@@ -24,6 +24,7 @@ export default function InstitutionEditor({
                         type="text"
                         value={name}
                         onChange={e => setInstitutionDetails("name", e.target.value)}
+                        maxLength="400"
                     />
                 </div>
                 <div className="mb-3">
@@ -34,6 +35,7 @@ export default function InstitutionEditor({
                         className="form-control mb-1 mr-sm-2"
                         value={url}
                         onChange={e => setInstitutionDetails("url", e.target.value)}
+                        maxLength="400"
                     />
                 </div>
                 <div className="mb-3">
@@ -57,6 +59,7 @@ export default function InstitutionEditor({
                         rows="4"
                         value={description}
                         onChange={e => setInstitutionDetails("description", e.target.value)}
+                        maxLength="2000"
                     />
                 </div>
                 {buttonGroup()}
