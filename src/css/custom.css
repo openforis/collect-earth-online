@@ -493,6 +493,10 @@ a:hover {
     color: black;
     background-color: #f1c00f;
 }
+.edit-project.btn {
+    padding-left: 0px;
+    padding-right: 0px;
+}
 
 /***************/
 /* Map Overlay */
