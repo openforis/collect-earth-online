@@ -572,6 +572,7 @@ function Project(props) {
                 <div className="col-lg-2 pl-lg-0">
                     <a
                         className="edit-project btn btn-sm btn-outline-yellow btn-block"
+                        style={{paddingLeft: "0px", paddingRight: "0px"}}
                         href={`/review-project?projectId=${props.id}`}
                     >
                         EDIT
