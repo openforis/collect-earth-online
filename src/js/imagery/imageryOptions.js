@@ -20,9 +20,7 @@ const outOfRange = (num, low, high) => isNaN(num) || parseInt(num) < low || pars
 const dateRangeValidator = ({startDate, endDate}) => startDate && endDate
     && new Date(startDate) > new Date(endDate) ? "Start date must be smaller than the end date." : "";
 
-const urlValidator = url => !/^(?:http|https):\/\/[\w.-]+(?:\.[\w\-]+)+[\w\-.,@?^=%&:;/~\\+#]+$/.test(url) ?
-    "The server address (URL) is not valid"
-: "";
+const urlValidator = url => /^(?:http|https):\/\/[\w.-]+(?:\.[\w\-]+)+[\w\-.,@?^=%&:;/~\\+#]+$/.test(url);
 
 const isValidJSON = str => {
     try {
@@ -44,7 +42,9 @@ export const imageryOptions = [
                 key: "geoserverUrl",
                 display: "WMS URL",
                 sanitizer: value => value.endsWith("?") ? value.slice(0, -1) : value,
-                validator: value => urlValidator(value) && /\?.+/.test(value) ? "The field \"WMS Url\" should not contain the query string. Please put those values in the field \"Additional WMS Params (as JSON object)\"." : "",
+                validator: value => !urlValidator(value) ?
+                    "The server address (URL) is not valid"
+                : /\?.+/.test(value) ? "The field \"WMS Url\" should not contain the query string. Please put those values in the field \"Additional WMS Params (as JSON object)\"." : "",
             },
             {key: "LAYERS", display: "WMS Layer Name", parent: "geoserverParams"},
             {
