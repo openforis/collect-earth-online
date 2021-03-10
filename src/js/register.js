@@ -92,7 +92,7 @@ class Register extends React.Component {
                                     onChange={() => this.setState({onMailingList: !this.state.onMailingList})}
                                 />
                                 <label className="form-check-label" htmlFor="on-mailing-list">
-                                    Subscribe To Mailinglist
+                                    Subscribe to our mailing list
                                 </label>
                             </div>
                             <button className="btn btn-lightgreen float-right mb-2" type="submit">
