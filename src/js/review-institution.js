@@ -1020,10 +1020,11 @@ class UserList extends React.Component {
             });
     };
 
-    updateUserInstitutionRole = (accountId, newUserEmail, institutionRole) => {
-        if (institutionRole === "admin"
-            && this.state.institutionUserList.filter(user => user.institutionRole === "admin").length === 1) {
-            alert("You cannot delete the last admin of an institution.");
+    updateUserInstitutionRole = (accountId, newUserEmail, newInstitutionRole) => {
+        const existingRole = (this.state.institutionUserList.find(u => u.id === accountId) || {}).institutionRole;
+        const adminCount = this.state.institutionUserList.filter(user => user.institutionRole === "admin").length;
+        if (existingRole === "admin" && adminCount === 1) {
+            alert("You cannot modify the last admin of an institution.");
         } else {
             this.props.processModal("Updating user", () =>
                 fetch("/update-user-institution-role",
@@ -1037,7 +1038,7 @@ class UserList extends React.Component {
                               accountId: accountId,
                               newUserEmail: newUserEmail,
                               institutionId: this.props.institutionId,
-                              institutionRole: institutionRole,
+                              institutionRole: newInstitutionRole,
                           }),
                       }
                 )
