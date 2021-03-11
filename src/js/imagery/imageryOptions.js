@@ -20,7 +20,7 @@ const outOfRange = (num, low, high) => isNaN(num) || parseInt(num) < low || pars
 const dateRangeValidator = ({startDate, endDate}) => startDate && endDate
     && new Date(startDate) > new Date(endDate) ? "Start date must be smaller than the end date." : "";
 
-const urlValidator = url => /^(?:http|https):\/\/[\w.-]+(?:\.[\w\-]+)+[\w\-.,@?^=%&:;/~\\+#]+$/.test(url);
+const urlValidator = url => /^(?:http|https):\/\/[\w.-]+(?:\.[\w-]+)+[\w\-.,@?^=%&:;/~\\+#]+$/.test(url);
 
 const isValidJSON = str => {
     try {
@@ -43,7 +43,7 @@ export const imageryOptions = [
                 display: "WMS URL",
                 sanitizer: value => value.endsWith("?") ? value.slice(0, -1) : value,
                 validator: value => !urlValidator(value) ?
-                    "The server address (URL) is not valid"
+                    "The server address (URL) is not valid."
                 : /\?.+/.test(value) ? "The field \"WMS Url\" should not contain the query string. Please put those values in the field \"Additional WMS Params (as JSON object)\"." : "",
             },
             {key: "LAYERS", display: "WMS Layer Name", parent: "geoserverParams"},
@@ -72,7 +72,9 @@ export const imageryOptions = [
         params: [{
             key: "url",
             display: "XYZ URL",
-            validator: value => !(/https?:\/\/.*(?=.*{-?x})(?=.*{-?z})(?=.*{-?y}).*/gi.test(value)) ? "The URL for an XYZ imagery type must include https://, {x}, {y}, and {z}." : "",
+            validator: value => !urlValidator(value) ?
+                "The server address (URL) is not valid."
+            : !(/https?:\/\/.*(?=.*{-?x})(?=.*{-?z})(?=.*{-?y}).*/gi.test(value)) ? "The URL for an XYZ imagery type must include https://, {x}, {y}, and {z}." : "",
         }],
     },
     {
@@ -160,6 +162,7 @@ export const imageryOptions = [
                     {label: "https://securewatch.digitalglobe.com", value: "https://securewatch.digitalglobe.com"},
                     {label: "https://services.digitalglobe.com", value: "https://services.digitalglobe.com"},
                 ],
+                validator: value => !urlValidator(value) ? "The server address (URL) is not valid." : "",
             },
             {key: "connectid", display: "Connect ID"},
             {
