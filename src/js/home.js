@@ -554,8 +554,8 @@ function ProjectList(props) {
 
 function Project(props) {
     return (
-        <div className="bg-lightgrey text-center p-1 row px-auto">
-            <div className={props.editable ? "col-lg-10 pr-lg-1" : "col mb-1 mx-0"}>
+        <div className="bg-lightgrey text-center p-1 px-auto d-flex">
+            <div style={{flexGrow: 1, marginRight: ".25rem"}}>
                 <a
                     className="btn btn-sm btn-outline-lightgreen btn-block"
                     style={{
@@ -569,10 +569,9 @@ function Project(props) {
                 </a>
             </div>
             {props.editable &&
-                <div className="col-lg-2 pl-lg-0">
+                <div>
                     <a
                         className="edit-project btn btn-sm btn-outline-yellow btn-block"
-                        style={{paddingLeft: "0px", paddingRight: "0px"}}
                         href={`/review-project?projectId=${props.id}`}
                     >
                         EDIT
