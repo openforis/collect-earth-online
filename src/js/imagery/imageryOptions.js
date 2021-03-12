@@ -42,9 +42,11 @@ export const imageryOptions = [
                 key: "geoserverUrl",
                 display: "WMS URL",
                 sanitizer: value => value.endsWith("?") ? value.slice(0, -1) : value,
-                validator: value => !urlValidator(value) ?
-                    "The server address (URL) is not valid."
-                : /\?.+/.test(value) ? "The field \"WMS Url\" should not contain the query string. Please put those values in the field \"Additional WMS Params (as JSON object)\"." : "",
+                validator: value => !urlValidator(value)
+                    ? "The server address (URL) is not valid."
+                    : /\?.+/.test(value)
+                        ? "The field \"WMS Url\" should not contain the query string. Please put those values in the field \"Additional WMS Params (as JSON object)\"."
+                        : "",
             },
             {key: "LAYERS", display: "WMS Layer Name", parent: "geoserverParams"},
             {
@@ -72,9 +74,11 @@ export const imageryOptions = [
         params: [{
             key: "url",
             display: "XYZ URL",
-            validator: value => !urlValidator(value) ?
-                "The server address (URL) is not valid."
-            : !(/https?:\/\/.*(?=.*{-?x})(?=.*{-?z})(?=.*{-?y}).*/gi.test(value)) ? "The URL for an XYZ imagery type must include https://, {x}, {y}, and {z}." : "",
+            validator: value => !urlValidator(value)
+                ? "The server address (URL) is not valid."
+                : !(/.*(?=.*{-?x})(?=.*{-?z})(?=.*{-?y}).*/gi.test(value))
+                    ? "The URL for an XYZ imagery type must include {x}, {y}, and {z}."
+                    : "",
         }],
     },
     {
