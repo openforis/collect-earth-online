@@ -48,6 +48,7 @@ function Support() {
                         </a>
                     </div>
                     <h1>Code and Bug Support</h1>
+                    <p>Note that Chrome is the only officially supported browser.</p>
                     <div className="btn-group-vertical btn-block mb-4">
                         <a className="btn btn-outline-lightgreen btn-block" href="https://github.com/openforis/collect-earth-online/issues">
                             &#x1F517; Github Issue Tracker
@@ -65,10 +66,6 @@ function Support() {
                     <p className="text-center col-lg-10 offset-lg-1 mb-4">
                         This content is currently under development. Please check
                         back later for updates.
-                    </p>
-                    <h1>OpenForis Support</h1>
-                    <p className="text-center col-lg-10 offset-lg-1 mb-4">
-                        Please access <a href="http://www.openforis.org/support" target="_blank" rel="noreferrer">OpenForis Support</a> for further support.
                     </p>
                     <h1>Geo-Dash Help Center</h1>
                     <p className="text-center col-lg-10 offset-lg-1 mb-4">
