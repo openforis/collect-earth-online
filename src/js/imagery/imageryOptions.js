@@ -1,3 +1,5 @@
+import {partition} from "../utils/generalUtils";
+
 export const nicfiLayers = ["2015-12_2016-05",
                             "2016-06_2016-11",
                             "2016-12_2017-05",
@@ -54,15 +56,18 @@ export const imageryOptions = [
                 display: "Additional WMS Params (JSON format)",
                 required: false,
                 type: "JSON",
-                sanitizer: value => `{${value
-                    .replace(/[{} ]/g, "")
-                    .split(",")
-                    .filter(u => u !== "")
-                    .map(u => {
-                        const [k, v] = u.split(":");
-                        return v && `"${k.replace(/["']/g, "")}": ${v}`;
-                    })
-                    .join(",")}}`,
+                sanitizer: value => {
+                    const params = value
+                        .replace(/\n/g, ",")
+                        .replace(/[{} "']/g, "")
+                        .split(/[,:]/)
+                        .filter(u => u !== "");
+                    return params.length % 2 === 0
+                        ? `{${partition(params, 2)
+                            .map(([k, v]) => `"${k}": "${v}"`)
+                            .join(",")}}`
+                        : value;
+                },
                 validator: value => !isValidJSON(value) ? "Invalid JSON in the \"Additional WMS Params\" field." : "",
             },
         ],

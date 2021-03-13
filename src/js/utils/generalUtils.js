@@ -133,3 +133,7 @@ export function sameContents(array1, array2) {
 export function intersection(array1, array2) {
     return array1.filter(value => array2.includes(value));
 }
+
+export function partition(array, n) {
+    return array.length ? [array.splice(0, n)].concat(partition(array, n)) : [];
+}
