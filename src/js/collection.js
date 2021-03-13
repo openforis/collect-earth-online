@@ -285,7 +285,7 @@ class Collection extends React.Component {
                 .then(response => response.ok ? response.json() : Promise.reject(response))
                 .then(data => {
                     if (data === "done") {
-                        alert(this.state.reviewPlots
+                        alert(this.state.navigationMode !== "unanalyzed"
                               ? "This plot was analyzed by someone else. You are logged in as " + this.props.userName + "."
                               : "This plot has already been analyzed.");
                     } else if (data === "not-found") {
