@@ -367,8 +367,8 @@
                     (mapv #(-> %
                                (str/upper-case)
                                (str/replace #"-| " "_")
-                               (str/replace #"X|LONGITUDE|LONG|CENTER_X" "LON")
-                               (str/replace #"Y|LATITUDE|CENTER_Y" "LAT"))
+                               (str/replace #"^(X|LONGITUDE|LONG|CENTER_X)$" "LON")
+                               (str/replace #"^(Y|LATITUDE|CENTER_Y)$" "LAT"))
                           hr))]
       [headers (type-columns headers) (str/replace body #"," "\t")])))
 
