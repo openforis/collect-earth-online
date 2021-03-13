@@ -1,6 +1,6 @@
 import React, {Fragment} from "react";
 
-import {UnicodeIcon, removeEnumerator, intersection} from "../utils/generalUtils";
+import {UnicodeIcon, removeEnumerator, intersection, isNumber} from "../utils/generalUtils";
 import {CollapsibleTitle} from "./FormComponents";
 import SvgIcon from "../components/SvgIcon";
 import {mercator} from "../utils/mercator";
@@ -161,9 +161,9 @@ export class SurveyCollection extends React.Component {
 
     checkRuleNumericRange = (surveyRule, questionToSet, answerId, answerText) => {
         if (surveyRule.questionId === questionToSet.id &&
-            (isNaN(parseInt(answerText)) ||
-             parseInt(answerText) < surveyRule.min ||
-             parseInt(answerText) > surveyRule.max)) {
+            !isNumber(answerText) ||
+            answerText < surveyRule.min ||
+            answerText > surveyRule.max) {
             return `Numeric range validation failed.\r\n\n Please select a value between ${surveyRule.min} and ${surveyRule.max}`;
         } else {
             return null;
@@ -670,19 +670,25 @@ class AnswerInput extends React.Component {
         if (this.props.surveyNode.id !== prevProps.surveyNode.id) {
             const matchingNode = this.props.surveyNode.answered
                 .find(a => a.answerId === this.props.surveyNode.answers[0].id);
-            this.setState({newInput: matchingNode ? matchingNode.answerText : ""});
+            this.setState({newInput: matchingNode ? matchingNode.answerText : this.defaultVal()});
         }
         if (this.props.selectedSampleId !== prevProps.selectedSampleId) {
             this.resetInputText();
         }
     }
 
+    defaultVal = () => {
+        const {dataType} = this.props.surveyNode;
+        return dataType === "number" ? 0 : "";
+    };
+
     resetInputText = () => {
+        console.log(this.defaultVal());
         const matchingNode = this.props.surveyNode.answered
             .find(a => a.answerId === this.props.surveyNode.answers[0].id
                   && a.sampleId === this.props.selectedSampleId);
         this.setState({
-            newInput: matchingNode ? matchingNode.answerText : "",
+            newInput: matchingNode ? matchingNode.answerText : this.defaultVal(),
         });
     };
 
@@ -709,7 +715,10 @@ class AnswerInput extends React.Component {
                         id={answers[0].answer + "_" + answers[0].id}
                         name={answers[0].answer + "_" + answers[0].id}
                         value={this.state.newInput}
-                        onChange={e => this.updateInputValue(e.target.value)}
+                        onChange={e => this.updateInputValue(dataType === "number"
+                            ? Number(e.target.value)
+                            : e.target.value
+                        )}
                     />
                     <input
                         id="save-input"
