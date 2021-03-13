@@ -1405,11 +1405,13 @@ mercator.addPlotLayer = function (mapConfig, plots, callBack) {
                                                     if (feature.get("features").length > 1) {
                                                         mercator.zoomMapToExtent(mapConfig,
                                                                                  mercator.getClusterExtent(feature));
-                                                    } else {
-                                                        mercator.removeLayerById(mapConfig, "currentPlots");
-                                                        mapConfig.map.un("click", clickHandler);
-                                                        callBack.call(null, feature);
                                                     }
+                                                    /// Disable due to miss coordinated plot_id vs plotId
+                                                    // else {
+                                                    //     mercator.removeLayerById(mapConfig, "currentPlots");
+                                                    //     mapConfig.map.un("click", clickHandler);
+                                                    //     callBack.call(null, feature);
+                                                    // }
                                                 }
                                             }, {hitTolerance:10});
     };
