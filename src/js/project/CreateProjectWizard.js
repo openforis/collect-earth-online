@@ -511,6 +511,8 @@ export default class CreateProjectWizard extends React.Component {
                                 <StepHelpComponent/>
                             </div>
                             <NavigationButtons
+                                isValidStep={isLast ? this.isValidProject : this.isValidStep}
+                                isValidProject={this.isValidProject}
                                 nextStep={isLast ? this.finish : this.nextStep}
                                 prevStep={this.prevStep}
                                 finish={this.finish}

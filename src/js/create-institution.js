@@ -13,6 +13,7 @@ class CreateInstitution extends React.Component {
                 base64Image: "",
                 url: "",
                 description: "",
+                acceptTerms: false,
             },
         };
     }
@@ -57,14 +58,18 @@ class CreateInstitution extends React.Component {
         });
     };
 
+    isValid = () => this.state.newInstitutionDetails.name !== "" &&
+                    this.state.newInstitutionDetails.description !== "" &&
+                    this.state.newInstitutionDetails.acceptTerms;
+
     renderButtonGroup = () =>
         <input
             id="create-institution"
-            className="btn btn-outline-lightgreen btn-sm btn-block"
+            className="btn btn-lightgreen btn-sm btn-block"
             type="button"
             value="Create Institution"
             onClick={this.createInstitution}
-            disabled={this.state.newInstitutionDetails.name === "" || this.state.newInstitutionDetails.description === ""}
+            disabled={!this.isValid()}
         />;
 
     render() {
@@ -74,6 +79,7 @@ class CreateInstitution extends React.Component {
                 name={this.state.newInstitutionDetails.name}
                 url={this.state.newInstitutionDetails.url}
                 description={this.state.newInstitutionDetails.description}
+                acceptTerms={this.state.newInstitutionDetails.acceptTerms}
                 buttonGroup={this.renderButtonGroup}
                 setInstitutionDetails={this.setInstitutionDetails}
             />

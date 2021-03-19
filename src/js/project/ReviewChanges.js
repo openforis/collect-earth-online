@@ -2,6 +2,7 @@ import React from "react";
 import _ from "lodash";
 
 import ReviewForm from "./ReviewForm";
+import Checkbox from "../components/form/checkbox";
 
 import {ProjectContext} from "./constants";
 import {mercator} from "../utils/mercator.js";
@@ -9,6 +10,10 @@ import {mercator} from "../utils/mercator.js";
 export default class ReviewChanges extends React.Component {
     constructor(props) {
         super(props);
+
+        this.state = {
+            acceptTerms: false,
+        };
     }
 
     /// API Functions
@@ -154,24 +159,37 @@ export default class ReviewChanges extends React.Component {
                 <>
                     <input
                         type="button"
-                        className="btn btn-outline-red btn-sm col-6"
+                        className="btn btn-lightgreen btn-sm col-6 mb-3"
                         value="Update Project"
                         onClick={this.updateProject}
                     />
                     <input
                         type="button"
-                        className="btn btn-outline-red btn-sm col-6"
+                        className="btn btn-outline-red btn-sm col-6 mb-3"
                         value="Discard Changes"
                         onClick={() => this.context.setContextState({designMode: "manage"})}
                     />
                 </>
             ) : (
-                <input
-                    type="button"
-                    className="btn btn-outline-red btn-sm col-6"
-                    value="Create Project"
-                    onClick={this.createProject}
-                />
+                <>
+                    <Checkbox
+                        className="mb-3"
+                        name="accept-terms"
+                        isSelected={this.state.acceptTerms}
+                        onCheckboxChange={() => this.setState({acceptTerms: !this.state.acceptTerms})}
+                        isRequired
+                        helpText="You must agree to the Terms of Service before creating your project."
+                    >
+                        I agree to the <a target="_blank" href="/terms">Terms of Service</a>.
+                    </Checkbox>
+                    <input
+                        type="button"
+                        className="btn btn-lightgreen btn-sm col-6 mb-3"
+                        value="Create Project"
+                        onClick={this.createProject}
+                        disabled={!this.state.acceptTerms}
+                    />
+                </>
             )}
             <input
                 type="button"
