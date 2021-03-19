@@ -73,7 +73,7 @@ function Support() {
                     </p>
                     <h1>Terms of Service</h1>
                     <p className="text-center col-lg-10 offset-lg-1 mb-4">
-                        Please view our <a href="/terms">Terms of Service here</a>
+                        Please view our <a href="/terms-of-service">Terms of Service here</a>
                     </p>
                 </div>
             </div>

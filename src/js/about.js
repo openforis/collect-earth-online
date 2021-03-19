@@ -24,7 +24,7 @@ function About() {
                     shared through the Open Foris Initiative of the Food And
                     Agriculture Organization of the United Nations.
                 </p>
-                <p>Please view our <a href="/terms">Terms of Service here.</a></p>
+                <p>Please view our <a href="/terms-of-service">Terms of Service here.</a></p>
                 <p>
                     Please access&nbsp;
                     <a

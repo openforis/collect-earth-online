@@ -28,7 +28,7 @@ module.exports = env => ({
         support                : path.resolve(__dirname, "src/js/support.js"),
         unsubscribeMailingList : path.resolve(__dirname, "src/js/unsubscribe-mailing-list.js"),
         widgetLayoutEditor     : path.resolve(__dirname, "src/js/widget-layout-editor.js"),
-        terms                  : path.resolve(__dirname, "src/js/terms-of-service.js"),
+        termsOfService         : path.resolve(__dirname, "src/js/terms-of-service.js"),
     },
     output: {
         path: path.resolve(__dirname, outdir),
