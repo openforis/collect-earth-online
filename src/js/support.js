@@ -74,6 +74,10 @@ function Support() {
                     <p className="text-center col-lg-10 offset-lg-1 mb-4">
                         Please access the <a href="/geo-dash/geo-dash-help" target="_blank" rel="noreferrer">Geo-Dash Help Center</a> for details on configuring the Geo-Dash for your project.
                     </p>
+                    <h1>Terms of Service</h1>
+                    <p className="text-center col-lg-10 offset-lg-1 mb-4">
+                        Please view our <a href="/terms">Terms of Service here</a>
+                    </p>
                 </div>
             </div>
         </section>
