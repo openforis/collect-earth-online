@@ -236,11 +236,25 @@ class InstitutionDescription extends React.Component {
         window.open(`/institution-dashboard?institutionId=${this.props.institutionId}`);
     };
 
+    isValid = () => this.state.newInstitutionDetails.name !== "" &&
+                    this.state.newInstitutionDetails.description !== "";
+
+    resetForm = () => this.setState({
+        editMode: false,
+        newInstitutionDetails: {
+            name: this.state.institutionDetails.name,
+            url: this.state.institutionDetails.url,
+            description: this.state.institutionDetails.description,
+            base64Image: this.state.institutionDetails.base64Image,
+        }
+    });
+
     renderEditButtonGroup = () => <div className="row">
         <div className="col-6">
             <button
                 type="button"
                 className="btn btn-sm btn-outline-lightgreen btn-block mt-0"
+                disabled={!this.isValid()}
                 onClick={this.updateInstitution}
             >
                 <UnicodeIcon icon="save"/> Save Changes
@@ -250,7 +264,7 @@ class InstitutionDescription extends React.Component {
             <button
                 type="button"
                 className="btn btn-sm btn-outline-red btn-block mt-0"
-                onClick={this.toggleEditMode}
+                onClick={this.resetForm}
             >
                 <UnicodeIcon icon="noAction"/> Cancel Changes
             </button>
@@ -265,6 +279,7 @@ class InstitutionDescription extends React.Component {
                 name={this.state.newInstitutionDetails.name}
                 url={this.state.newInstitutionDetails.url}
                 description={this.state.newInstitutionDetails.description}
+                base64Image={this.state.newInstitutionDetails.base64Image}
                 buttonGroup={this.renderEditButtonGroup}
                 setInstitutionDetails={this.updateNewInstitutionDetails}
             />
