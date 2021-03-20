@@ -11,28 +11,33 @@ class Register extends React.Component {
             password: "",
             passwordConfirmation: "",
             onMailingList: true,
+            acceptTOS: false,
         };
     }
 
     register = () => {
-        fetch("/register",
-              {
-                  method: "POST",
-                  headers: {
-                      "Content-Type": "application/x-www-form-urlencoded",
-                  },
-                  body: getQueryString(this.state),
-              })
-            .then(response => Promise.all([response.ok, response.json()]))
-            .then(data => {
-                if (data[0] && data[1] === "") {
-                    alert("You have successfully created an account.");
-                    window.location = "/home";
-                } else {
-                    alert(data[1]);
-                }
-            })
-            .catch(err => console.log(err));
+        if (!this.state.acceptTOS) {
+            alert("You must accept the terms of service to continue.");
+        } else {
+            fetch("/register",
+                  {
+                      method: "POST",
+                      headers: {
+                          "Content-Type": "application/x-www-form-urlencoded",
+                      },
+                      body: getQueryString(this.state),
+                  })
+                .then(response => Promise.all([response.ok, response.json()]))
+                .then(data => {
+                    if (data[0] && data[1] === "") {
+                        alert("You have successfully created an account.");
+                        window.location = "/home";
+                    } else {
+                        alert(data[1]);
+                    }
+                })
+                .catch(err => console.log(err));
+        }
     };
 
     render() {
@@ -93,6 +98,18 @@ class Register extends React.Component {
                                 />
                                 <label className="form-check-label" htmlFor="on-mailing-list">
                                     Subscribe To Mailinglist
+                                </label>
+                            </div>
+                            <div className="form-check mb-3">
+                                <input
+                                    id="tos-check"
+                                    type="checkbox"
+                                    className="form-check-input"
+                                    checked={this.state.acceptTOS}
+                                    onChange={() => this.setState({acceptTOS: !this.state.acceptTOS})}
+                                />
+                                <label className="form-check-label" htmlFor="tos-check">
+                                    I agree to the <a target="_blank" href="/terms">Terms of Service</a>.
                                 </label>
                             </div>
                             <button className="btn btn-lightgreen float-right mb-2" type="submit">
