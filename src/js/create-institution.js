@@ -14,6 +14,7 @@ class CreateInstitution extends React.Component {
                 base64Image: "",
                 url: "",
                 description: "",
+                acceptTOS: false,
             },
         };
     }
@@ -81,7 +82,9 @@ class CreateInstitution extends React.Component {
             type="button"
             value="Create Institution"
             onClick={this.createInstitution}
-            disabled={this.state.newInstitutionDetails.name === "" || this.state.newInstitutionDetails.description === ""}
+            disabled={this.state.newInstitutionDetails.name === ""
+                || this.state.newInstitutionDetails.description === ""
+                || this.state.newInstitutionDetails.acceptTOS === false}
         />;
 
     render() {
@@ -92,6 +95,7 @@ class CreateInstitution extends React.Component {
                 logo={this.state.newInstitutionDetails.logo}
                 url={this.state.newInstitutionDetails.url}
                 description={this.state.newInstitutionDetails.description}
+                acceptTOS={this.state.newInstitutionDetails.acceptTOS}
                 buttonGroup={this.renderButtonGroup}
                 setInstitutionDetails={this.setInstitutionDetails}
             />

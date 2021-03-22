@@ -6,6 +6,7 @@ export default function InstitutionEditor({
     name,
     description,
     url,
+    acceptTOS,
     buttonGroup,
     setInstitutionDetails,
 }) {
@@ -59,6 +60,20 @@ export default function InstitutionEditor({
                         onChange={e => setInstitutionDetails("description", e.target.value)}
                     />
                 </div>
+                {acceptTOS !== undefined &&
+                    <div className="form-check mb-3">
+                        <input
+                            id="tos-check"
+                            type="checkbox"
+                            className="form-check-input"
+                            checked={acceptTOS}
+                            onChange={() => setInstitutionDetails("acceptTOS", !acceptTOS)}
+                        />
+                        <label className="form-check-label" htmlFor="tos-check">
+                            I agree to the <a target="_blank" href="/terms">Terms of Service</a>.
+                        </label>
+                    </div>
+                }
                 {buttonGroup()}
             </div>
         </div>
