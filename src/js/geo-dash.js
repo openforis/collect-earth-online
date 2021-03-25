@@ -996,7 +996,7 @@ class MapWidget extends React.Component {
 
     getInstitutionBaseMap = basemap => !basemap
         ? this.props.imageryList[0]
-        : this.props.imageryList.find(imagery => imagery.id === basemap.id);
+        : this.props.imageryList.find(imagery => imagery.id === parseInt(basemap));
 
     createTileServerFromCache = (storageItem, widgetId, isSecond) => {
         const currentDate = new Date();
