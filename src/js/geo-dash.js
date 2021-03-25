@@ -556,7 +556,7 @@ class MapWidget extends React.Component {
         const {projPairAOI, widget} = this.props;
         let projAOI = this.props.projAOI;
 
-        const baseMapLayer = this.getRasterByBasemapConfig(this.getInstitutionBaseMap(widget.baseMap));
+        const baseMapLayer = this.getRasterByBasemapConfig(this.getInstitutionBaseMapId(widget.baseMap));
         const plotSampleLayer = new VectorLayer({
             source: this.props.vectorSource,
             style: new Style({
@@ -994,9 +994,9 @@ class MapWidget extends React.Component {
         map.getView().setZoom(zoom);
     };
 
-    getInstitutionBaseMap = basemap => !basemap
+    getInstitutionBaseMapId = basemapId => !basemapId
         ? this.props.imageryList[0]
-        : this.props.imageryList.find(imagery => imagery.id === parseInt(basemap));
+        : this.props.imageryList.find(imagery => imagery.id === parseInt(basemapId));
 
     createTileServerFromCache = (storageItem, widgetId, isSecond) => {
         const currentDate = new Date();
