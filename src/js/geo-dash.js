@@ -3,7 +3,7 @@ import "../css/geo-dash.css";
 import React from "react";
 import ReactDOM from "react-dom";
 import {mercator} from "./utils/mercator.js";
-import {UnicodeIcon, formatDateISO} from "./utils/generalUtils";
+import {UnicodeIcon, formatDateISO, isNumber} from "./utils/generalUtils";
 import {GeoDashNavigationBar} from "./components/PageComponents";
 import {Feature, Map, View} from "ol";
 import {buffer as ExtentBuffer} from "ol/extent";
@@ -556,7 +556,7 @@ class MapWidget extends React.Component {
         const {projPairAOI, widget} = this.props;
         let projAOI = this.props.projAOI;
 
-        const baseMapLayer = this.getRasterByBasemapConfig(this.getInstitutionBaseMapId(widget.baseMap));
+        const baseMapLayer = this.getRasterByBaseMapConfig(this.getInstitutionBaseMap(widget.baseMap));
         const plotSampleLayer = new VectorLayer({
             source: this.props.vectorSource,
             style: new Style({
@@ -922,11 +922,11 @@ class MapWidget extends React.Component {
             });
     };
 
-    getRasterByBasemapConfig = basemap =>
+    getRasterByBaseMapConfig = baseMap =>
         new TileLayer({
-            source: (!basemap || basemap.id === "osm")
+            source: (!baseMap || baseMap.id === "osm")
                 ? new OSM()
-                : mercator.createSource(basemap.sourceConfig, basemap.id),
+                : mercator.createSource(baseMap.sourceConfig, baseMap.id),
         });
 
     getImageParams = widget => {
@@ -994,9 +994,12 @@ class MapWidget extends React.Component {
         map.getView().setZoom(zoom);
     };
 
-    getInstitutionBaseMapId = basemapId => !basemapId
-        ? this.props.imageryList[0]
-        : this.props.imageryList.find(imagery => imagery.id === parseInt(basemapId));
+    getInstitutionBaseMap = baseMap => {
+        const baseMapId = isNumber(baseMap) ? baseMap : parseInt(baseMap.id || -1);
+        return baseMapId > 0
+            ? this.props.imageryList.find(imagery => imagery.id === baseMapId)
+            : this.props.imageryList[0];
+    };
 
     createTileServerFromCache = (storageItem, widgetId, isSecond) => {
         const currentDate = new Date();
