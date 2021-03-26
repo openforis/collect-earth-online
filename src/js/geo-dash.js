@@ -556,7 +556,7 @@ class MapWidget extends React.Component {
         const {projPairAOI, widget} = this.props;
         let projAOI = this.props.projAOI;
 
-        const baseMapLayer = this.getRasterByBaseMapConfig(this.getInstitutionBaseMap(widget.baseMap));
+        const baseMapLayer = this.getRasterByBasemapConfig(this.getInstitutionBasemap(widget.basemap));
         const plotSampleLayer = new VectorLayer({
             source: this.props.vectorSource,
             style: new Style({
@@ -922,7 +922,7 @@ class MapWidget extends React.Component {
             });
     };
 
-    getRasterByBaseMapConfig = baseMap =>
+    getRasterByBasemapConfig = baseMap =>
         new TileLayer({
             source: (!baseMap || baseMap.id === "osm")
                 ? new OSM()
@@ -994,10 +994,10 @@ class MapWidget extends React.Component {
         map.getView().setZoom(zoom);
     };
 
-    getInstitutionBaseMap = baseMap => {
-        const baseMapId = isNumber(baseMap) ? baseMap : parseInt(baseMap.id || -1);
-        return baseMapId > 0
-            ? this.props.imageryList.find(imagery => imagery.id === baseMapId)
+    getInstitutionBasemap = basemap => {
+        const basemapId = isNumber(basemap) ? parseInt(basemap) : parseInt(basemap && basemap.id || -1);
+        return basemapId > 0
+            ? this.props.imageryList.find(imagery => imagery.id === basemapId)
             : this.props.imageryList[0];
     };
 
