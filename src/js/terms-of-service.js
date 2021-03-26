@@ -6,7 +6,26 @@ function TermsOfService() {
     return (
         <section id="about" className="container pt-3">
             <div className="col-xl-8 offset-xl-2 col-lg-10 justify-content-center">
-                <h1>Collect Earth Online Terms of Service</h1>
+                <h1 className="py-4">Collect Earth Online Terms of Service</h1>
+
+                <h2>Email policy</h2>
+                <p>
+                    By creating an institution you become an &quot;admin&quot;
+                    user for that institution. Doing so will automatically
+                    subscribe you for the mailing list. This mailing list is run
+                    through a service called <a href="https://www.hubspot.com/">HubSpot</a>.
+                    You will be able to unsubscribe by clicking &quot;unsubscribe&quot;
+                    from within any email from CEO. In addition, any user that you
+                    make an admin of your institution will be added to the mailing list.
+                </p>
+                <p>
+                    The content of the emails from the mailing list will be limited
+                    to updates about features and release dates, with the very occasional
+                    feedback survey.
+                </p>
+                <p>
+                    Your email will not be shared with any third party organization.
+                </p>
 
                 <h2>Disclaimers</h2>
                 <p>
