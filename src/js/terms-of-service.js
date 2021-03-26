@@ -52,7 +52,9 @@ function TermsOfService() {
 
                 <h2>Data Retention Policy</h2>
                 <p>
-                    Collect Earth Online makes no guarentee of retention of data.  Please ensure that you keep local copies of any information used to create a project and any results downloaded.
+                    Collect Earth Online makes no guarantee of retention of data.
+                    Please ensure that you keep local copies of any information
+                    used to create a project and any results downloaded.
                 </p>
                 <p>
                     Specific clean up activities are described below:
