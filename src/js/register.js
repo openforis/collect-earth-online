@@ -88,7 +88,7 @@ class Register extends React.Component {
                                     onChange={e => this.setState({passwordConfirmation: e.target.value})}
                                 />
                             </div>
-                            <div className="form-check mb-3">
+                            {/* <div className="form-check mb-3">
                                 <input
                                     id="on-mailing-list"
                                     type="checkbox"
@@ -99,7 +99,7 @@ class Register extends React.Component {
                                 <label className="form-check-label" htmlFor="on-mailing-list">
                                     Subscribe To Mailinglist
                                 </label>
-                            </div>
+                            </div> */}
                             <div className="form-check mb-3">
                                 <input
                                     id="tos-check"
