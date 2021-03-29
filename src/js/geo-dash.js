@@ -3,7 +3,7 @@ import "../css/geo-dash.css";
 import React from "react";
 import ReactDOM from "react-dom";
 import {mercator} from "./utils/mercator.js";
-import {UnicodeIcon, formatDateISO, isNumber} from "./utils/generalUtils";
+import {UnicodeIcon, formatDateISO} from "./utils/generalUtils";
 import {GeoDashNavigationBar} from "./components/PageComponents";
 import {Feature, Map, View} from "ol";
 import {buffer as ExtentBuffer} from "ol/extent";
@@ -556,7 +556,7 @@ class MapWidget extends React.Component {
         const {projPairAOI, widget} = this.props;
         let projAOI = this.props.projAOI;
 
-        const baseMapLayer = this.getRasterByBasemapConfig(this.getInstitutionBasemap(widget.basemap));
+        const baseMapLayer = this.getRasterByBasemapConfig(widget.baseMap);
         const plotSampleLayer = new VectorLayer({
             source: this.props.vectorSource,
             style: new Style({
@@ -922,12 +922,19 @@ class MapWidget extends React.Component {
             });
     };
 
-    getRasterByBasemapConfig = baseMap =>
-        new TileLayer({
-            source: (!baseMap || baseMap.id === "osm")
-                ? new OSM()
-                : mercator.createSource(baseMap.sourceConfig, baseMap.id),
-        });
+    getRasterByBasemapConfig = basemapConfig => {
+        const basemapId = (basemapConfig || {}).id || basemapConfig;
+        if (!basemapId || basemapId === "osm") {
+            return new TileLayer({source: new OSM()});
+        } else {
+            const basemapIdInt = parseInt(basemapId);
+            const basemapImagery = this.props.imageryList.find(imagery => imagery.id === basemapIdInt)
+                || this.props.imageryList[0];
+            return new TileLayer({
+                source: mercator.createSource(basemapImagery.sourceConfig, basemapImagery.id),
+            });
+        }
+    };
 
     getImageParams = widget => {
         if (widget.visParams) {
@@ -992,13 +999,6 @@ class MapWidget extends React.Component {
         const map = this.state.mapRef;
         map.getView().setCenter(center);
         map.getView().setZoom(zoom);
-    };
-
-    getInstitutionBasemap = basemap => {
-        const basemapId = isNumber(basemap) ? parseInt(basemap) : parseInt(basemap && basemap.id || -1);
-        return basemapId > 0
-            ? this.props.imageryList.find(imagery => imagery.id === basemapId)
-            : this.props.imageryList[0];
     };
 
     createTileServerFromCache = (storageItem, widgetId, isSecond) => {
