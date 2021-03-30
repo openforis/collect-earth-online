@@ -556,7 +556,7 @@ class MapWidget extends React.Component {
         const {projPairAOI, widget} = this.props;
         let projAOI = this.props.projAOI;
 
-        const baseMapLayer = this.getRasterByBasemapConfig(this.getInstitutionBaseMap(widget.baseMap));
+        const baseMapLayer = this.getRasterByBasemapConfig(widget.baseMap);
         const plotSampleLayer = new VectorLayer({
             source: this.props.vectorSource,
             style: new Style({
@@ -922,12 +922,19 @@ class MapWidget extends React.Component {
             });
     };
 
-    getRasterByBasemapConfig = basemap =>
-        new TileLayer({
-            source: (!basemap || basemap.id === "osm")
-                ? new OSM()
-                : mercator.createSource(basemap.sourceConfig, basemap.id),
-        });
+    getRasterByBasemapConfig = basemapConfig => {
+        const basemapId = (basemapConfig || {}).id || basemapConfig;
+        if (!basemapId || basemapId === "osm") {
+            return new TileLayer({source: new OSM()});
+        } else {
+            const basemapIdInt = parseInt(basemapId);
+            const basemapImagery = this.props.imageryList.find(imagery => imagery.id === basemapIdInt)
+                || this.props.imageryList[0];
+            return new TileLayer({
+                source: mercator.createSource(basemapImagery.sourceConfig, basemapImagery.id),
+            });
+        }
+    };
 
     getImageParams = widget => {
         if (widget.visParams) {
@@ -993,10 +1000,6 @@ class MapWidget extends React.Component {
         map.getView().setCenter(center);
         map.getView().setZoom(zoom);
     };
-
-    getInstitutionBaseMap = basemap => !basemap
-        ? this.props.imageryList[0]
-        : this.props.imageryList.find(imagery => imagery.id === basemap.id);
 
     createTileServerFromCache = (storageItem, widgetId, isSecond) => {
         const currentDate = new Date();
