@@ -9,12 +9,17 @@ import {mercator} from "../utils/mercator.js";
 export default class ReviewChanges extends React.Component {
     constructor(props) {
         super(props);
+        this.state = {
+            acceptTOS: false,
+        };
     }
 
     /// API Functions
 
     createProject = () => {
-        if (confirm("Do you really want to create this project?")) {
+        if (!this.state.acceptTOS) {
+            alert("You must accept the terms of service to continue.");
+        } else if (confirm("Do you really want to create this project?")) {
             this.context.processModal("Creating Project", () =>
                 fetch("/create-project",
                       {
@@ -154,24 +159,38 @@ export default class ReviewChanges extends React.Component {
                 <>
                     <input
                         type="button"
-                        className="btn btn-outline-red btn-sm col-6"
+                        className="btn btn-outline-lightgreen btn-sm col-6 mb-3"
                         value="Update Project"
                         onClick={this.updateProject}
                     />
                     <input
                         type="button"
-                        className="btn btn-outline-red btn-sm col-6"
+                        className="btn btn-outline-red btn-sm col-6 mb-3"
                         value="Discard Changes"
                         onClick={() => this.context.setContextState({designMode: "manage"})}
                     />
                 </>
             ) : (
-                <input
-                    type="button"
-                    className="btn btn-outline-red btn-sm col-6"
-                    value="Create Project"
-                    onClick={this.createProject}
-                />
+                <>
+                    <div className="form-check mb-3">
+                        <input
+                            id="tos-check"
+                            type="checkbox"
+                            className="form-check-input"
+                            checked={this.state.acceptTOS}
+                            onChange={() => this.setState({acceptTOS: !this.state.acceptTOS})}
+                        />
+                        <label className="form-check-label" htmlFor="tos-check">
+                            I agree to the <a target="_blank" href="/terms">Terms of Service</a>.
+                        </label>
+                    </div>
+                    <input
+                        type="button"
+                        className="btn btn-outline-lightgreen btn-sm col-6"
+                        value="Create Project"
+                        onClick={this.createProject}
+                    />
+                </>
             )}
             <input
                 type="button"
