@@ -65,13 +65,13 @@ $$ LANGUAGE SQL;
 --
 
 -- Adds a new user to the database
-CREATE OR REPLACE FUNCTION add_user(_email text, _password text, _on_mailing_list boolean)
+CREATE OR REPLACE FUNCTION add_user(_email text, _password text)
  RETURNS integer AS $$
 
     INSERT INTO users
-        (email, password, on_mailing_list)
+        (email, password)
     VALUES
-        (_email, crypt(_password, gen_salt('bf')), _on_mailing_list)
+        (_email, crypt(_password, gen_salt('bf')))
     RETURNING user_uid
 
 $$ LANGUAGE SQL;
@@ -197,34 +197,6 @@ CREATE OR REPLACE FUNCTION get_user_stats(_user_id integer)
     SELECT * FROM user_totals, average_totals, proj_agg
 
 $$ LANGUAGE SQL;
-
-CREATE OR REPLACE FUNCTION set_mailing_list(_user_id integer, _on_mailing_list boolean)
- RETURNS void AS $$
-
-    UPDATE users
-    SET on_mailing_list = _on_mailing_list
-    WHERE user_uid = _user_id
-
-$$ LANGUAGE SQL;
-
-CREATE OR REPLACE FUNCTION get_user_details(_user_id integer)
- RETURNS table (
-    on_mailing_list    boolean
- ) AS $$
-
-    SELECT on_mailing_list FROM users WHERE user_uid = _user_id
-
-$$ LANGUAGE SQL;
-
-CREATE OR REPLACE FUNCTION get_all_mailing_list_users()
- RETURNS table (
-    email    text
- ) AS $$
-
-    SELECT email FROM users WHERE on_mailing_list = TRUE
-
-$$ LANGUAGE SQL;
-
 
 -- Adds a new role to the database
 CREATE OR REPLACE FUNCTION insert_role(_title text)

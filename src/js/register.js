@@ -10,7 +10,6 @@ class Register extends React.Component {
             email: "",
             password: "",
             passwordConfirmation: "",
-            onMailingList: true,
             acceptTOS: false,
         };
     }
@@ -88,18 +87,6 @@ class Register extends React.Component {
                                     onChange={e => this.setState({passwordConfirmation: e.target.value})}
                                 />
                             </div>
-                            {/* <div className="form-check mb-3">
-                                <input
-                                    id="on-mailing-list"
-                                    type="checkbox"
-                                    className="form-check-input"
-                                    checked={this.state.onMailingList}
-                                    onChange={() => this.setState({onMailingList: !this.state.onMailingList})}
-                                />
-                                <label className="form-check-label" htmlFor="on-mailing-list">
-                                    Subscribe to our mailing list
-                                </label>
-                            </div> */}
                             <div className="form-check mb-3">
                                 <input
                                     id="tos-check"

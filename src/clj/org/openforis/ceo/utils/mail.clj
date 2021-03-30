@@ -12,8 +12,7 @@
 ;;  :tls                   true
 ;;  :port                  587
 ;;  :base-url              "https://collect.earth/"
-;;  :recipient-limit       100
-;;  :mailing-list-interval 600}
+;;  :recipient-limit       100}
 (defonce mail-config (atom (edn/read-string (slurp "mail-config.edn"))))
 
 (defn get-base-url []
@@ -61,14 +60,3 @@
                            (assoc :status 400)
                            (update :messages #(conj % (:message response)))))))
                  {}))))
-
-;; TODO it's probably cleaner to handle the interval in mail.clj with send-to-mailing-list instead of in user.js
-(defn get-mailing-list-interval []
-  (:mailing-list-interval @mail-config))
-
-(defn get-mailing-list-last-sent []
-  (or (:mailing-list-last-sent @mail-config)
-      (.minusSeconds (LocalDateTime/now) (get-mailing-list-interval))))
-
-(defn set-mailing-list-last-sent! [time]
-  (swap! mail-config assoc :mailing-list-last-sent time))

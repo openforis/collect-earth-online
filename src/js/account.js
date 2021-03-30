@@ -103,21 +103,9 @@ class AccountForm extends React.Component {
             email: "",
             password: "",
             passwordConfirmation: "",
-            onMailingList: false,
             currentPassword: "",
         };
     }
-
-    componentDidMount() {
-        this.getUserDetails();
-    }
-
-    getUserDetails = () => {
-        fetch("/get-user-details")
-            .then(response => response.ok ? response.json() : Promise.reject(response))
-            .then(details => this.setState({onMailingList: details.onMailingList}))
-            .catch(response => console.log(response));
-    };
 
     updateAccount = () => {
         fetch("/account",
@@ -189,18 +177,6 @@ class AccountForm extends React.Component {
                                 </div>
                             </div>
                         </div>
-                        {/* <div className="form-check mb-3">
-                            <input
-                                id="on-mailing-list"
-                                type="checkbox"
-                                className="form-check-input"
-                                checked={this.state.onMailingList}
-                                onChange={() => this.setState({onMailingList: !this.state.onMailingList})}
-                            />
-                            <label className="form-check-label" htmlFor="on-mailing-list">
-                                Subscribe to Mailing List
-                            </label>
-                        </div> */}
                         <div className="form-group">
                             <label htmlFor="current-password">Verify your identity</label>
                             <input
