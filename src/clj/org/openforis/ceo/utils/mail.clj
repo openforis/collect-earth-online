@@ -1,7 +1,5 @@
 (ns org.openforis.ceo.utils.mail
-  (:import java.time.LocalDateTime)
   (:require [clojure.edn :as edn]
-            [clojure.string :as str]
             [postal.core :refer [send-message]]
             [org.openforis.ceo.logging :refer [log-str]]))
 
@@ -12,8 +10,7 @@
 ;;  :tls                   true
 ;;  :port                  587
 ;;  :base-url              "https://collect.earth/"
-;;  :recipient-limit       100
-;;  :mailing-list-interval 600}
+;;  :recipient-limit       100}
 (defonce mail-config (atom (edn/read-string (slurp "mail-config.edn"))))
 
 (defn get-base-url []
@@ -43,32 +40,15 @@
                                              content-type)]
     (when-not (= :SUCCESS error) (log-str message))))
 
-(defn send-to-mailing-list [bcc-addresses subject body]
-  (let [base-url (get-base-url)
-        new-body (str body
-                      "<br><hr><p><a href=\""
-                      base-url
-                      (when-not (str/ends-with? base-url "/") "/")
-                      "unsubscribe-mailing-list\">Unsubscribe</a></p>")]
-    (->> bcc-addresses
-         (filter email?)
-         (partition-all (:recipient-limit @mail-config))
-         (reduce (fn [acc cur]
-                   (let [response (send-postal nil nil cur subject new-body "text/html")]
-                     (if (= :SUCCESS (:error response))
-                       acc
-                       (-> acc
-                           (assoc :status 400)
-                           (update :messages #(conj % (:message response)))))))
-                 {}))))
-
-;; TODO it's probably cleaner to handle the interval in mail.clj with send-to-mailing-list instead of in user.js
-(defn get-mailing-list-interval []
-  (:mailing-list-interval @mail-config))
-
-(defn get-mailing-list-last-sent []
-  (or (:mailing-list-last-sent @mail-config)
-      (.minusSeconds (LocalDateTime/now) (get-mailing-list-interval))))
-
-(defn set-mailing-list-last-sent! [time]
-  (swap! mail-config assoc :mailing-list-last-sent time))
+(defn mass-send [bcc-addresses subject body]
+  (->> bcc-addresses
+       (filter email?)
+       (partition-all (:recipient-limit @mail-config))
+       (reduce (fn [acc cur]
+                 (let [response (send-postal nil nil cur subject body "text/html")]
+                   (if (= :SUCCESS (:error response))
+                     acc
+                     (-> acc
+                         (assoc :status 400)
+                         (update :messages #(conj % (:message response)))))))
+               {})))

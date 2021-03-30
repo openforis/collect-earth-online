@@ -50,15 +50,8 @@
    [:get  "/widget-layout-editor"]           {:handler     (render-page "/widget-layout-editor")
                                               :auth-type   :admin
                                               :auth-action :redirect}
-   [:get  "/mailing-list"]                   {:handler     (render-page "/mailing-list")
-                                              :auth-type   :super
-                                              :auth-action :redirect}
-   [:get  "/unsubscribe-mailing-list"]       {:handler     (render-page "/unsubscribe-mailing-list")}
    ;; Users API
    [:get  "/get-institution-users"]          {:handler     users/get-institution-users
-                                              :auth-type   :user
-                                              :auth-action :block}
-   [:get  "/get-user-details"]               {:handler     users/get-user-details
                                               :auth-type   :user
                                               :auth-action :block}
    [:get  "/get-user-stats"]                 {:handler     users/get-user-stats
@@ -75,13 +68,9 @@
    [:post "/request-institution-membership"] {:handler     users/request-institution-membership
                                               :auth-type   :user
                                               :auth-action :block}
-   [:post "/send-to-mailing-list"]           {:handler     users/submit-email-for-mailing-list
-                                              :auth-type   :super
-                                              :auth-action :block}
    [:post "/password-request"]               {:handler     users/password-request}
    [:post "/password-reset"]                 {:handler     users/password-reset}
    [:post "/register"]                       {:handler     users/register}
-   [:post "/unsubscribe-mailing-list"]       {:handler     users/unsubscribe-from-mailing-list}
    ;; Projects API
    [:get  "/dump-project-aggregate-data"]    {:handler     projects/dump-project-aggregate-data
                                               :auth-type   :admin

@@ -1,18 +1,11 @@
 (ns org.openforis.ceo.db.users
-  (:import java.time.Duration
-           java.time.format.DateTimeFormatter
+  (:import java.time.format.DateTimeFormatter
            java.time.LocalDateTime
            java.util.UUID)
   (:require [clojure.string :as str]
             [org.openforis.ceo.utils.type-conversion :as tc]
             [org.openforis.ceo.database   :refer [call-sql sql-primitive]]
-            [org.openforis.ceo.utils.mail :refer [email?
-                                                  send-mail
-                                                  send-to-mailing-list
-                                                  get-base-url
-                                                  get-mailing-list-interval
-                                                  get-mailing-list-last-sent
-                                                  set-mailing-list-last-sent!]]
+            [org.openforis.ceo.utils.mail :refer [email? send-mail get-base-url]]
             [org.openforis.ceo.views      :refer [data-response]]))
 
 (defn login [{:keys [params]}]
@@ -42,11 +35,10 @@
 (defn register [{:keys [params]}]
   (let [email                 (:email params)
         password              (:password params)
-        password-confirmation (:passwordConfirmation params)
-        on-mailing-list?      (tc/val->bool (:onMailingList params))]
+        password-confirmation (:passwordConfirmation params)]
     (if-let [error-msg (get-register-errors email password password-confirmation)]
       (data-response error-msg)
-      (let [user-id   (sql-primitive (call-sql "add_user" email password on-mailing-list?))
+      (let [user-id   (sql-primitive (call-sql "add_user" email password))
             timestamp (-> (DateTimeFormatter/ofPattern "yyyy/MM/dd HH:mm:ss")
                           (.format (LocalDateTime/now)))
             email-msg (format (str "Dear %s,\n\n"
@@ -96,8 +88,7 @@
         current-password      (:currentPassword params)
         new-email             (:email params)
         password              (:password params)
-        password-confirmation (:passwordConfirmation params)
-        on-mailing-list?      (tc/val->bool (:onMailingList params))]
+        password-confirmation (:passwordConfirmation params)]
     (if-let [error-msg (get-update-account-errors user-id current-email current-password
                                                   new-email password password-confirmation)]
       (data-response error-msg)
@@ -107,7 +98,6 @@
                             (sql-primitive (call-sql "set_user_email" current-email new-email)))]
         (when-not (str/blank? password)
           (call-sql "update_password" updated-email password))
-        (call-sql "set_mailing_list" user-id on-mailing-list?)
         (data-response "" {:session {:userName updated-email}})))))
 
 (defn password-request [{:keys [params]}]
@@ -162,12 +152,6 @@
                                 :institutionRole institution_role})
                              (call-sql "get_all_users_by_institution_id" institution-id))]
     (data-response all-users)))
-
-(defn get-user-details [{:keys [params]}]
-  (let [user-id (:userId params -1)]
-    (if-let [details (first (call-sql "get_user_details" user-id))]
-      (data-response {:onMailingList (:on_mailing_list details)})
-      (data-response ""))))
 
 (defn get-user-stats [{:keys [params]}]
   (let [account-id (tc/val->int (:accountId params))]
@@ -248,45 +232,3 @@
                                   institution-name
                                   ", but the email notification has failed."))))))
       (data-response "You must be logged into request membership."))))
-
-(defn- get-mailing-list-errors [subject body remaining-time]
-  (cond (or (str/blank? subject) (str/blank? body))
-        "Subject and Body are mandatory fields."
-
-        (pos? remaining-time)
-        (str "You must wait " remaining-time " more seconds before sending another message.")
-
-        :else nil))
-
-(defn submit-email-for-mailing-list [{:keys [params]}]
-  (let [{:keys [subject body]} params
-        remaining-time (->> (LocalDateTime/now)
-                            (Duration/between (get-mailing-list-last-sent))
-                            (.toSeconds)
-                            (- (get-mailing-list-interval)))]
-    (if-let [error-msg (get-mailing-list-errors subject body remaining-time)]
-      (data-response error-msg)
-      (do
-        (set-mailing-list-last-sent! (LocalDateTime/now))
-        (let [emails   (mapv :email (call-sql "get_all_mailing_list_users"))
-              response (send-to-mailing-list emails subject body)]
-          (data-response (str/join "\n" (:messages response []))
-                         {:status (:status response)}))))))
-
-(defn unsubscribe-from-mailing-list [{:keys [params]}]
-  (let [email (:email params)]
-    (if-let [user (first (call-sql "get_user" email))]
-      (let [email-msg (format (str "Dear %s,\n\n"
-                                   "We've just received your request to unsubscribe from our mailing list.\n\n"
-                                   "You have been unsubscribed from our mailing list and will no longer"
-                                   " receive a newsletter.\n\n"
-                                   "You can resubscribe to our newsletter by going to your account page.\n\n"
-                                   "Kind Regards,\n"
-                                   "  The CEO Team")
-                              email)]
-        (call-sql "set_mailing_list" (:user_id user) false)
-        (try
-          (send-mail email nil nil "Successfully unsubscribed from CEO mailing list" email-msg "text/plain")
-          (catch Exception _))
-        (data-response "You have been unsubscribed from the mailing list."))
-      (data-response "There is no user with that email address."))))
