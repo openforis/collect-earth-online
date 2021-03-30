@@ -1,7 +1,5 @@
 (ns org.openforis.ceo.utils.mail
-  (:import java.time.LocalDateTime)
   (:require [clojure.edn :as edn]
-            [clojure.string :as str]
             [postal.core :refer [send-message]]
             [org.openforis.ceo.logging :refer [log-str]]))
 
@@ -42,21 +40,15 @@
                                              content-type)]
     (when-not (= :SUCCESS error) (log-str message))))
 
-(defn send-to-mailing-list [bcc-addresses subject body]
-  (let [base-url (get-base-url)
-        new-body (str body
-                      "<br><hr><p><a href=\""
-                      base-url
-                      (when-not (str/ends-with? base-url "/") "/")
-                      "unsubscribe-mailing-list\">Unsubscribe</a></p>")]
-    (->> bcc-addresses
-         (filter email?)
-         (partition-all (:recipient-limit @mail-config))
-         (reduce (fn [acc cur]
-                   (let [response (send-postal nil nil cur subject new-body "text/html")]
-                     (if (= :SUCCESS (:error response))
-                       acc
-                       (-> acc
-                           (assoc :status 400)
-                           (update :messages #(conj % (:message response)))))))
-                 {}))))
+(defn mass-send [bcc-addresses subject body]
+  (->> bcc-addresses
+       (filter email?)
+       (partition-all (:recipient-limit @mail-config))
+       (reduce (fn [acc cur]
+                 (let [response (send-postal nil nil cur subject body "text/html")]
+                   (if (= :SUCCESS (:error response))
+                     acc
+                     (-> acc
+                         (assoc :status 400)
+                         (update :messages #(conj % (:message response)))))))
+               {})))
