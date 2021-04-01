@@ -378,7 +378,9 @@ class WidgetLayoutEditor extends React.PureComponent {
         const name = this.state.widgetTitle;
         widget.id = id;
         widget.name = name;
-        const yval = ((Math.max.apply(Math, this.state.widgets.map(o => (o.layout.y !== null ? o.layout.y : 0)))) + 1) > -1 ? (Math.max.apply(Math, this.state.widgets.map(o => (o.layout.y !== null ? o.layout.y : 0)))) + 1 : 0;
+        const yval = ((Math.max.apply(Math, this.state.widgets.map(o => (o.layout.y !== null ? o.layout.y : 0)))) + 1) > -1
+            ? (Math.max.apply(Math, this.state.widgets.map(o => (o.layout.y !== null ? o.layout.y : 0)))) + 1
+            : 0;
 
         widget.layout = {
             i: id.toString(),
@@ -948,11 +950,15 @@ class WidgetLayoutEditor extends React.PureComponent {
                                                 {this.state.projectList
                                                     .filter(({id, name}) => (id + name.toLocaleLowerCase())
                                                         .includes(this.state.projectFilter.toLocaleLowerCase()))
-                                                    .map(({id, name}, uid) => <option key={uid} value={id}>{id} - {name}</option>)}
+                                                    .map(({id, name}, uid) =>
+                                                        <option key={uid} value={id}>{id} - {name}</option>)}
                                             </select>
                                         </div>
                                         <div className="form-group">
-                                            <span>Warning, selecting a template project will overwrite existing widgets immediately.</span>
+                                            <span>
+                                                Warning, selecting a template project will overwrite
+                                                existing widgets immediately.
+                                            </span>
                                         </div>
                                     </form>
                                 </div>

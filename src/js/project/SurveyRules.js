@@ -210,7 +210,8 @@ export class TextMatch extends React.Component {
                                             value={this.state.questionId}
                                         >
                                             <option value={-1}>- Select Question -</option>
-                                            {availableQuestions.map((question, uid) => <option key={uid} value={question.id}>{question.question}</option>)}
+                                            {availableQuestions.map((question, uid) =>
+                                                <option key={uid} value={question.id}>{question.question}</option>)}
                                         </select>
                                     </td>
                                 </tr>
@@ -301,7 +302,8 @@ export class NumericRange extends React.Component {
                                             value={this.state.questionId}
                                         >
                                             <option value={-1}>- Select Question -</option>
-                                            {availableQuestions.map((question, uid) => <option key={uid} value={question.id}>{question.question}</option>)}
+                                            {availableQuestions.map((question, uid) =>
+                                                <option key={uid} value={question.id}>{question.question}</option>)}
                                         </select>
                                     </td>
                                 </tr>
@@ -410,7 +412,8 @@ export class SumOfAnswers extends React.Component {
                                             })}
                                             value={this.state.questionIds}
                                         >
-                                            {availableQuestions.map((question, uid) => <option key={uid} value={question.id}>{question.question}</option>)}
+                                            {availableQuestions.map((question, uid) =>
+                                                <option key={uid} value={question.id}>{question.question}</option>)}
                                         </select>
                                     </td>
                                 </tr>
@@ -515,7 +518,8 @@ export class MatchingSums extends React.Component {
                                             })}
                                             value={this.state.questionSetIds1}
                                         >
-                                            {availableQuestions.map((question, uid) => <option key={uid} value={question.id}>{question.question}</option>)}
+                                            {availableQuestions.map((question, uid) =>
+                                                <option key={uid} value={question.id}>{question.question}</option>)}
                                         </select>
                                     </td>
                                 </tr>
@@ -535,7 +539,8 @@ export class MatchingSums extends React.Component {
                                             })}
                                             value={this.state.questionSetIds2}
                                         >
-                                            {availableQuestions.map((question, uid) => <option key={uid} value={question.id}>{question.question}</option>)}
+                                            {availableQuestions.map((question, uid) =>
+                                                <option key={uid} value={question.id}>{question.question}</option>)}
                                         </select>
                                     </td>
                                 </tr>
@@ -573,8 +578,9 @@ export class IncompatibleAnswers extends React.Component {
 
     checkPair = (q1, a1, q2, a2) => q1 === q2 && a1 === a2;
 
-    checkEquivalent = (q1, a1, q2, a2, q3, a3, q4, a4) => (this.checkPair(q1, a1, q3, a3) && this.checkPair(q2, a2, q4, a4))
-        || (this.checkPair(q1, a1, q4, a4) && this.checkPair(q2, a2, q3, a3));
+    checkEquivalent = (q1, a1, q2, a2, q3, a3, q4, a4) =>
+        (this.checkPair(q1, a1, q3, a3) && this.checkPair(q2, a2, q4, a4))
+            || (this.checkPair(q1, a1, q4, a4) && this.checkPair(q2, a2, q3, a3));
 
     addSurveyRule = () => {
         const {surveyRules, surveyQuestions, setProjectDetails} = this.context;
@@ -651,7 +657,8 @@ export class IncompatibleAnswers extends React.Component {
                                             value={this.state.questionId1}
                                         >
                                             <option value="-1">- Select Question 1 -</option>
-                                            {availableQuestions.map((question, uid) => <option key={uid} value={question.id}>{question.question}</option>)}
+                                            {availableQuestions.map((question, uid) =>
+                                                <option key={uid} value={question.id}>{question.question}</option>)}
                                         </select>
                                     </td>
                                 </tr>
@@ -664,7 +671,8 @@ export class IncompatibleAnswers extends React.Component {
                                             value={this.state.answerId1}
                                         >
                                             <option value="-1">- Select Answer 1 -</option>
-                                            {this.safeFindAnswers(this.state.questionId1).map((answer, uid) => <option key={uid} value={answer.id}>{answer.answer}</option>)}
+                                            {this.safeFindAnswers(this.state.questionId1).map((answer, uid) =>
+                                                <option key={uid} value={answer.id}>{answer.answer}</option>)}
                                         </select>
                                     </td>
                                 </tr>
@@ -680,7 +688,8 @@ export class IncompatibleAnswers extends React.Component {
                                             value={this.state.questionId2}
                                         >
                                             <option value="-1">- Select Question 2 -</option>
-                                            {availableQuestions.map((question, uid) => <option key={uid} value={question.id}>{question.question}</option>)}
+                                            {availableQuestions.map((question, uid) =>
+                                                <option key={uid} value={question.id}>{question.question}</option>)}
                                         </select>
                                     </td>
                                 </tr>
@@ -693,7 +702,8 @@ export class IncompatibleAnswers extends React.Component {
                                             value={this.state.answerId2}
                                         >
                                             <option value="-1">- Select Answer 2 -</option>
-                                            {this.safeFindAnswers(this.state.questionId2).map((answer, uid) => <option key={uid} value={answer.id}>{answer.answer}</option>)}
+                                            {this.safeFindAnswers(this.state.questionId2).map((answer, uid) =>
+                                                <option key={uid} value={answer.id}>{answer.answer}</option>)}
                                         </select>
                                     </td>
                                 </tr>

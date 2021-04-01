@@ -15,7 +15,7 @@ import {
 import {CollapsibleTitle} from "./components/FormComponents";
 
 import {UnicodeIcon, getQueryString, safeLength, isNumber} from "./utils/generalUtils";
-import {mercator} from "./utils/mercator.js";
+import {mercator} from "./utils/mercator";
 
 class Collection extends React.Component {
     constructor(props) {
@@ -132,7 +132,9 @@ class Collection extends React.Component {
         }
     }
 
-    setImageryAttribution = attributionSuffix => this.setState({imageryAttribution: this.state.currentImagery.attribution + attributionSuffix});
+    setImageryAttribution = attributionSuffix => this.setState({
+        imageryAttribution: this.state.currentImagery.attribution + attributionSuffix
+    });
 
     setImageryAttributes = newImageryAttributes => this.setState({imageryAttributes: newImageryAttributes});
 

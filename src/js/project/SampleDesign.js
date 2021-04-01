@@ -139,7 +139,8 @@ export class SampleDesign extends React.Component {
                             </label>
                         </div>
                         <p className="font-italic ml-2 small">
-                            - Enable this to allow users to draw and label points, linestrings, and polygons during data collection.
+                            - Enable this to allow users to draw and label points, linestrings,
+                            and polygons during data collection.
                         </p>
                     </div>
                 )}
@@ -234,7 +235,8 @@ export function SamplePreview() {
                                 : (
                                     <div>
                                         <h3>
-                                            The following is a mock up of a {plotShape} plot with {sampleDistribution} samples.
+                                            The following is a mock up of a {plotShape}
+                                            plot with {sampleDistribution} samples.
                                         </h3>
                                         <img
                                             className="w-100 h-100"

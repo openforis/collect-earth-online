@@ -311,7 +311,10 @@ export function OverviewIntro() {
     return (
         <div className="p-3">
             <h3 className="mb-3">Welcome to the project creation widget!</h3>
-            <label>You can use the Back and Next buttons below or the circles above each of the six project creation steps at the top of this page to navigate between stages of the wizard.</label>
+            <label>
+                You can use the Back and Next buttons below or the circles above each of the six
+                 project creation steps at the top of this page to navigate between stages of the wizard.
+            </label>
         </div>
     );
 }

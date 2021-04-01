@@ -27,7 +27,9 @@ class ProjectDashboard extends React.Component {
 
     componentDidUpdate(prevProps, prevState) {
         // Load imagery after getting project details to find institution.
-        if (Object.entries(prevState.projectDetails).length === 0 && prevState.projectDetails.constructor === Object && this.state.projectDetails.institution) {
+        if (Object.entries(prevState.projectDetails).length === 0
+                && prevState.projectDetails.constructor === Object
+                && this.state.projectDetails.institution) {
             this.getImageryList(this.state.projectDetails.institution);
         }
         // Show the project map
@@ -122,7 +124,9 @@ class ProjectDashboard extends React.Component {
         // Display a bounding box with the project's AOI on the map and zoom to it
         mercator.addVectorLayer(mapConfig,
                                 "currentAOI",
-                                mercator.geometryToVectorSource(mercator.parseGeoJson(this.state.projectDetails.boundary, true)),
+                                mercator.geometryToVectorSource(
+                                    mercator.parseGeoJson(this.state.projectDetails.boundary, true)
+                                ),
                                 mercator.ceoMapStyles("geom", "yellow"));
         mercator.zoomMapToLayer(mapConfig, "currentAOI");
         // Show the plot centers on the map (but constrain to <= 100 points)

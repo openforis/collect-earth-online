@@ -1,5 +1,5 @@
 import React from "react";
-import {encodeFileAsBase64} from "../utils/generalUtils.js";
+import {encodeFileAsBase64} from "../utils/generalUtils";
 
 export default function InstitutionEditor({
     title,

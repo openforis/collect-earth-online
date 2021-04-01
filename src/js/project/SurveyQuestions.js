@@ -113,7 +113,8 @@ class NewQuestionDesigner extends React.Component {
         if (this.state.newQuestionText !== "") {
             const {surveyQuestions, setProjectDetails} = this.props;
             const {dataType, componentType} = this.componentTypes[this.state.selectedType];
-            const repeatedQuestions = surveyQuestions.filter(sq => removeEnumerator(sq.question) === this.state.newQuestionText).length;
+            const repeatedQuestions = surveyQuestions.filter(sq =>
+                removeEnumerator(sq.question) === this.state.newQuestionText).length;
 
             if (repeatedQuestions === 0
                 || confirm("Warning: This is a duplicate name.  It will be added as "
@@ -397,7 +398,7 @@ export class SurveyQuestionHelp extends React.Component {
             const childQuestionArray = this.getChildQuestions(questionToSet.id);
             const clearedSubQuestions = Object.entries(this.state.userSamples[sampleId])
                 .filter(entry => !childQuestionArray.includes(entry[0]))
-                .reduce((acc, cur) => ({...acc, [cur[0]]: cur[1]}), {});
+                .reduce((acc2, cur) => ({...acc2, [cur[0]]: cur[1]}), {});
 
             return {
                 ...acc,

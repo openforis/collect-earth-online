@@ -39,7 +39,8 @@ export function ImagerySelection() {
                                 size="1"
                                 value={imageryId || -1}
                             >
-                                {institutionImagery.map((imagery, uid) => <option key={uid} value={imagery.id}>{imagery.title}</option>)}
+                                {institutionImagery.map((imagery, uid) =>
+                                    <option key={uid} value={imagery.id}>{imagery.title}</option>)}
                             </select>
                         </div>
                         <div className="form-group">

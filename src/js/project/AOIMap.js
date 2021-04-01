@@ -1,6 +1,6 @@
 import React from "react";
 
-import {mercator} from "../utils/mercator.js";
+import {mercator} from "../utils/mercator";
 
 export default class AOIMap extends React.Component {
     constructor(props) {

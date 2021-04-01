@@ -4,7 +4,7 @@ import _ from "lodash";
 import ReviewForm from "./ReviewForm";
 
 import {ProjectContext} from "./constants";
-import {mercator} from "../utils/mercator.js";
+import {mercator} from "../utils/mercator";
 
 export default class ReviewChanges extends React.Component {
     constructor(props) {
@@ -132,12 +132,15 @@ export default class ReviewChanges extends React.Component {
         };
     };
 
-    allowDrawnSamplesDisallowed = (projectDetails, originalProject) => originalProject.allowDrawnSamples && !projectDetails.allowDrawnSamples;
+    allowDrawnSamplesDisallowed = (projectDetails, originalProject) =>
+        originalProject.allowDrawnSamples && !projectDetails.allowDrawnSamples;
 
-    surveyQuestionUpdated = (projectDetails, originalProject) => !_.isEqual(projectDetails.surveyQuestions, originalProject.surveyQuestions)
+    surveyQuestionUpdated = (projectDetails, originalProject) =>
+        !_.isEqual(projectDetails.surveyQuestions, originalProject.surveyQuestions)
             || !_.isEqual(projectDetails.surveyRules, originalProject.surveyRules);
 
-    plotsUpdated = (projectDetails, originalProject) => projectDetails.plotDistribution !== originalProject.plotDistribution
+    plotsUpdated = (projectDetails, originalProject) =>
+        projectDetails.plotDistribution !== originalProject.plotDistribution
             || (["csv", "shp"].includes(this.context.plotDistribution)
                 ? projectDetails.plotFileBase64
                 : projectDetails.boundary !== originalProject.boundary
@@ -146,7 +149,8 @@ export default class ReviewChanges extends React.Component {
                     || projectDetails.plotSize !== originalProject.plotSize
                     || projectDetails.plotSpacing !== originalProject.plotSpacing);
 
-    samplesUpdated = (projectDetails, originalProject) => projectDetails.sampleDistribution !== originalProject.sampleDistribution
+    samplesUpdated = (projectDetails, originalProject) =>
+        projectDetails.sampleDistribution !== originalProject.sampleDistribution
             || (["csv", "shp"].includes(this.context.sampleDistribution)
                 ? projectDetails.sampleFileBase64
                 : projectDetails.samplesPerPlot !== originalProject.samplesPerPlot

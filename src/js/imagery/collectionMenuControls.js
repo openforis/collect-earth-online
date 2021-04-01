@@ -111,7 +111,7 @@ export class PlanetDailyMenu extends React.Component {
 
     componentDidUpdate(prevProps) {
         if (this.props.visible
-            && (this.props.currentPlot && this.props.currentPlot !== prevProps.currentPlot
+            && ((this.props.currentPlot && this.props.currentPlot !== prevProps.currentPlot)
                 || prevProps.visible !== this.props.visible)) {
             this.updateImageryInformation();
         }
@@ -387,7 +387,8 @@ export class SecureWatchMenu extends React.Component {
                     .then(data => {
                         this.setState({
                             availableDates: data.features
-                                .filter(feature => Date.parse(feature.properties.acquisitionDate) <= Date.parse(sourceConfig.endDate)
+                                .filter(feature =>
+                                    Date.parse(feature.properties.acquisitionDate) <= Date.parse(sourceConfig.endDate)
                                     && Date.parse(feature.properties.acquisitionDate) >= Date.parse(sourceConfig.startDate))
                                 .map(feature => ({
                                     acquisitionDate: feature.properties.acquisitionDate,

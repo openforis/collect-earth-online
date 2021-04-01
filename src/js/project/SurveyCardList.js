@@ -177,11 +177,12 @@ function SurveyQuestionTree({
                                 <li>
                                     <span className="font-weight-bold">Rules:  </span>
                                     <ul>
-                                        {surveyRules.map((rule, uid) => [rule.questionId, rule.question1, rule.question2]
-                                            .concat(rule.questions)
-                                            .concat(rule.questionSetIds1)
-                                            .concat(rule.questionSetIds2)
-                                            .includes(surveyQuestion.id)
+                                        {surveyRules.map((rule, uid) =>
+                                            [rule.questionId, rule.question1, rule.question2]
+                                                .concat(rule.questions)
+                                                .concat(rule.questionSetIds1)
+                                                .concat(rule.questionSetIds2)
+                                                .includes(surveyQuestion.id)
                                                 && (
                                                     <li key={uid}>
                                                         <div className="tooltip_wrapper">

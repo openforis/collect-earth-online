@@ -1,4 +1,4 @@
-import React from "react";
+import React, {Fragment} from "react";
 
 import {UnicodeIcon, removeEnumerator, intersection, isNumber} from "../utils/generalUtils";
 import {CollapsibleTitle} from "./FormComponents";
@@ -160,9 +160,9 @@ export class SurveyCollection extends React.Component {
 
     checkRuleNumericRange = (surveyRule, questionToSet, answerId, answerText) => {
         if (surveyRule.questionId === questionToSet.id
-            && !isNumber(answerText)
-            || answerText < surveyRule.min
-            || answerText > surveyRule.max) {
+            && (!isNumber(answerText)
+                || answerText < surveyRule.min
+                || answerText > surveyRule.max)) {
             return `Numeric range validation failed.\r\n\n Please select a value between ${surveyRule.min} and ${surveyRule.max}`;
         } else {
             return null;
@@ -202,12 +202,16 @@ export class SurveyCollection extends React.Component {
     };
 
     checkRuleMatchingSums = (surveyRule, questionToSet, answerId, answerText) => {
-        if (surveyRule.questionSetIds1.includes(questionToSet.id) || surveyRule.questionSetIds2.includes(questionToSet.id)) {
+        if (surveyRule.questionSetIds1.includes(questionToSet.id)
+                || surveyRule.questionSetIds2.includes(questionToSet.id)) {
             const answeredQuestions1 = this.props.surveyQuestions
-                .filter(q => surveyRule.questionSetIds1.includes(q.id) && q.answered.length > 0 && q.id !== questionToSet.id);
+                .filter(q => surveyRule.questionSetIds1.includes(q.id)
+                    && q.answered.length > 0 && q.id !== questionToSet.id);
             const answeredQuestions2 = this.props.surveyQuestions
-                .filter(q => surveyRule.questionSetIds2.includes(q.id) && q.answered.length > 0 && q.id !== questionToSet.id);
-            if (surveyRule.questionSetIds1.length + surveyRule.questionSetIds2.length === answeredQuestions1.length + answeredQuestions2.length + 1) {
+                .filter(q => surveyRule.questionSetIds2.includes(q.id)
+                    && q.answered.length > 0 && q.id !== questionToSet.id);
+            if (surveyRule.questionSetIds1.length + surveyRule.questionSetIds2.length
+                    === answeredQuestions1.length + answeredQuestions2.length + 1) {
                 const sampleIds = this.props.getSelectedSampleIds(questionToSet);
                 const answeredSampleIds1 = answeredQuestions1.map(q => q.answered.map(a => a.sampleId));
                 const commonSampleIds1 = answeredSampleIds1.reduce(intersection, sampleIds);
@@ -638,7 +642,8 @@ function AnswerRadioButton({surveyNode, surveyNode: {answers, answered}, selecte
                                 float: "left",
                                 marginTop: "4px",
                                 boxShadow: "0px 0px 0px 3px " + ans.color,
-                                backgroundColor: answered.some(a => a.answerId === ans.id && a.sampleId === selectedSampleId)
+                                backgroundColor: answered.some(a =>
+                                    a.answerId === ans.id && a.sampleId === selectedSampleId)
                                     ? "black"
                                     : answered.some(a => a.answerId === ans.id)
                                         ? "#e8e8e8"
@@ -778,25 +783,27 @@ class AnswerDropDown extends React.Component {
             <div className="mb-1 d-flex flex-column align-items-start">
                 <div className="dropdown-selector ml-3 d-flex pl-0 col-12">
                     <div className="SelectedItem d-inline-flex border col-8">
-                        {answers.map(ans => answered.some(a => a.answerId === ans.id && a.sampleId === selectedSampleId) && (
-                            <Fragment key={ans.id}>
-                                <div className="col-1 mt-2">
-                                    <span
-                                        className="dot"
-                                        style={{
-                                            height: "15px",
-                                            width: "15px",
-                                            backgroundColor: ans.color,
-                                            borderRadius: "50%",
-                                            display: "inline-block"
-                                        }}
-                                    />
-                                </div>
-                                <div className="col-11 text-left mt-1">
-                                    {ans.answer}
-                                </div>
-                            </Fragment>
-                        ))}
+                        {answers.map(ans =>
+                            answered.some(a =>
+                                a.answerId === ans.id && a.sampleId === selectedSampleId) && (
+                                <Fragment key={ans.id}>
+                                    <div className="col-1 mt-2">
+                                        <span
+                                            className="dot"
+                                            style={{
+                                                height: "15px",
+                                                width: "15px",
+                                                backgroundColor: ans.color,
+                                                borderRadius: "50%",
+                                                display: "inline-block"
+                                            }}
+                                        />
+                                    </div>
+                                    <div className="col-11 text-left mt-1">
+                                        {ans.answer}
+                                    </div>
+                                </Fragment>
+                            ))}
                     </div>
                     <button
                         className="dropbtn"

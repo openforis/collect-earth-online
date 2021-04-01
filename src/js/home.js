@@ -1,7 +1,7 @@
 import React from "react";
 import ReactDOM from "react-dom";
 import {LoadingModal, NavigationBar} from "./components/PageComponents";
-import {mercator} from "./utils/mercator.js";
+import {mercator} from "./utils/mercator";
 import {sortAlphabetically, UnicodeIcon} from "./utils/generalUtils";
 import SvgIcon from "./components/SvgIcon";
 

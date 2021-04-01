@@ -107,7 +107,7 @@ export function encodeFileAsBase64(file, callback) {
 }
 
 export function KBtoBase64Length(kb) {
-    return kb * 1024 * 4 / 3;
+    return (kb * 1024 * 4) / 3;
 }
 
 export function last(array) {

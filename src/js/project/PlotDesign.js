@@ -2,7 +2,7 @@ import React from "react";
 
 import {formatNumberWithCommas, encodeFileAsBase64} from "../utils/generalUtils";
 import {ProjectContext, plotLimit} from "./constants";
-import {mercator} from "../utils/mercator.js";
+import {mercator} from "../utils/mercator";
 
 export class PlotDesign extends React.Component {
     constructor(props) {
@@ -292,7 +292,8 @@ export class PlotDesign extends React.Component {
                                         style={{width: "initial"}}
                                         value={plotDistribution}
                                     >
-                                        {Object.entries(plotOptions).map(([key, options]) => <option key={key} value={key}>{options.display}</option>)}
+                                        {Object.entries(plotOptions).map(([key, options]) =>
+                                            <option key={key} value={key}>{options.display}</option>)}
                                     </select>
                                 </div>
                                 <p className="font-italic ml-2 small" id="plot-design-text">
