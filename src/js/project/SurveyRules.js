@@ -3,14 +3,14 @@ import React from "react";
 import {isNumber, sameContents} from "../utils/generalUtils";
 import {ProjectContext} from "./constants";
 
-const getNextId = (array) => array.reduce((maxId, obj) => Math.max(maxId, obj.id), 0) + 1;
+const getNextId = array => array.reduce((maxId, obj) => Math.max(maxId, obj.id), 0) + 1;
 
 export class SurveyRuleDesign extends React.Component {
     constructor(props) {
         super(props);
 
         this.state = {
-            selectedRuleType: "text-match",
+            selectedRuleType: "text-match"
         };
     }
 
@@ -18,9 +18,9 @@ export class SurveyRuleDesign extends React.Component {
         return (
             <div id="survey-rule-design">
                 <SurveyRulesList
-                    surveyRules={this.context.surveyRules}
-                    setProjectDetails={this.context.setProjectDetails}
                     inDesignMode
+                    setProjectDetails={this.context.setProjectDetails}
+                    surveyRules={this.context.surveyRules}
                 />
                 <table id="ruleDesigner">
                     <caption style={{color: "black", captionSide: "top", fontWeight: "bold"}}>
@@ -33,8 +33,8 @@ export class SurveyRuleDesign extends React.Component {
                                     <label className="text-nowrap m-2">Rule Type:</label>
                                     <select
                                         className="form-control form-control-sm"
-                                        value={this.state.selectedRuleType}
                                         onChange={e => this.setState({selectedRuleType: e.target.value})}
+                                        value={this.state.selectedRuleType}
                                     >
                                         <option value="text-match">Text Regex Match</option>
                                         <option value="numeric-range">Numeric Range</option>
@@ -45,15 +45,13 @@ export class SurveyRuleDesign extends React.Component {
                                 </div>
                             </td>
                         </tr>
-                        {
-                            {
-                                "text-match": <TextMatch/>,
-                                "numeric-range": <NumericRange/>,
-                                "sum-of-answers": <SumOfAnswers/>,
-                                "matching-sums": <MatchingSums/>,
-                                "incompatible-answers": <IncompatibleAnswers/>,
-                            }[this.state.selectedRuleType]
-                        }
+                        {{
+                            "text-match": <TextMatch/>,
+                            "numeric-range": <NumericRange/>,
+                            "sum-of-answers": <SumOfAnswers/>,
+                            "matching-sums": <MatchingSums/>,
+                            "incompatible-answers": <IncompatibleAnswers/>
+                        }[this.state.selectedRuleType]}
                     </tbody>
                 </table>
             </div>
@@ -63,17 +61,17 @@ export class SurveyRuleDesign extends React.Component {
 SurveyRuleDesign.contextType = ProjectContext;
 
 export class SurveyRulesList extends React.Component {
-    deleteSurveyRule = (ruleId) => {
+    deleteSurveyRule = ruleId => {
         const newSurveyRules = this.props.surveyRules.filter(rule => rule.id !== ruleId);
         this.props.setProjectDetails({surveyRules: newSurveyRules});
     };
 
     // TODO update the remove buttons with SVG
-    removeButton = (ruleId) => (
+    removeButton = ruleId => (
         <button
-            type="button"
             className="btn btn-outline-red py-0 px-2 mr-1 font-weight-bold"
             onClick={() => this.deleteSurveyRule(ruleId)}
+            type="button"
         >
             X
         </button>
@@ -84,7 +82,7 @@ export class SurveyRulesList extends React.Component {
         "numeric-range": "Numeric Range",
         "sum-of-answers": "Sum of Answers",
         "matching-sums": "Matching Sums",
-        "incompatible-answers": "Incompatible Answers",
+        "incompatible-answers": "Incompatible Answers"
     };
 
     ruleSpecificColumns = {
@@ -121,16 +119,15 @@ export class SurveyRulesList extends React.Component {
                 <td>Question 1: {questionText1}, Answer 1: {answerText1}</td>
                 <td>Question 2: {questionText2}, Answer 2: {answerText2}</td>
             </>
-        ),
+        )
     };
 
     renderRuleRow = (rule, uid) => {
         const {id, ruleType} = rule;
         return (
-            <tr id={"rule" + id} key={uid}>
-                {this.props.inDesignMode &&
-                    <td>{this.removeButton(id)}</td>
-                }
+            <tr key={uid} id={"rule" + id}>
+                {this.props.inDesignMode
+                    && <td>{this.removeButton(id)}</td>}
                 <td>{"Rule " + id}</td>
                 <td>Type: {this.ruleTypeLabel[ruleType]}</td>
                 {this.ruleSpecificColumns[ruleType].call(null, rule)}
@@ -144,19 +141,17 @@ export class SurveyRulesList extends React.Component {
             <>
                 <label className="font-weight-bold">Rules:</label>
                 {(surveyRules || []).length > 0
-                ?
+                ? (
                     <table
-                        id="rules"
                         className="srd"
+                        id="rules"
                         style={{width: "100%"}}
                     >
                         <tbody>
                             {surveyRules.map(this.renderRuleRow)}
                         </tbody>
                     </table>
-                :
-                    <label className="ml-3">No rules have been created for this survey.</label>
-                }
+                ) : <label className="ml-3">No rules have been created for this survey.</label>}
             </>
         );
     }
@@ -168,7 +163,7 @@ export class TextMatch extends React.Component {
 
         this.state = {
             regex: "",
-            questionId: -1,
+            questionId: -1
         };
     }
 
@@ -180,7 +175,7 @@ export class TextMatch extends React.Component {
         const errorMessages = [
             conflictingRule && "A text regex match rule already exists for this question. (Rule " + conflictingRule.id + ")",
             questionId < 1 && "You must select a question.",
-            regex.length === 0 && "The regex string is missing.",
+            regex.length === 0 && "The regex string is missing."
         ].filter(m => m);
         if (errorMessages.length > 0) {
             alert(errorMessages.map(s => "- " + s).join("\n"));
@@ -189,10 +184,10 @@ export class TextMatch extends React.Component {
                 surveyRules: [...surveyRules, {
                     id: getNextId(surveyRules),
                     ruleType: "text-match",
-                    questionId: questionId,
+                    questionId,
                     questionsText: [surveyQuestions.find(q => q.id === questionId).question],
-                    regex: regex,
-                }],
+                    regex
+                }]
             });
         }
     };
@@ -201,7 +196,7 @@ export class TextMatch extends React.Component {
         const availableQuestions = this.context.surveyQuestions
             .filter(q => q.componentType === "input" && q.dataType === "text");
         return availableQuestions.length > 0
-        ?
+        ? (
             <tr>
                 <td>
                     <table>
@@ -211,13 +206,11 @@ export class TextMatch extends React.Component {
                                 <td>
                                     <select
                                         className="form-control form-control-sm"
-                                        value={this.state.questionId}
                                         onChange={e => this.setState({questionId: Number(e.target.value)})}
+                                        value={this.state.questionId}
                                     >
                                         <option value={-1}>- Select Question -</option>
-                                        {availableQuestions.map((question, uid) =>
-                                            <option key={uid} value={question.id}>{question.question}</option>)
-                                        }
+                                        {availableQuestions.map((question, uid) => <option key={uid} value={question.id}>{question.question}</option>)}
                                     </select>
                                 </td>
                             </tr>
@@ -226,21 +219,21 @@ export class TextMatch extends React.Component {
                                 <td>
                                     <input
                                         className="form-control form-control-sm"
-                                        type="text"
-                                        placeholder="Regular expression"
-                                        value={this.state.regex}
                                         onChange={e => this.setState({regex: e.target.value})}
+                                        placeholder="Regular expression"
+                                        type="text"
+                                        value={this.state.regex}
                                     />
                                 </td>
                             </tr>
                             <tr>
-                                <td style={{border: "none"}}></td>
+                                <td style={{border: "none"}}/>
                                 <td style={{border: "none"}}>
                                     <input
-                                        type="button"
                                         className="button mt-2"
-                                        value="Add Survey Rule"
                                         onClick={this.addSurveyRule}
+                                        type="button"
+                                        value="Add Survey Rule"
                                     />
                                 </td>
                             </tr>
@@ -248,8 +241,7 @@ export class TextMatch extends React.Component {
                     </table>
                 </td>
             </tr>
-        :
-            <tr><td><label>This rule requires a question of type input-text.</label></td></tr>;
+        ) : <tr><td><label>This rule requires a question of type input-text.</label></td></tr>;
     }
 }
 TextMatch.contextType = ProjectContext;
@@ -261,7 +253,7 @@ export class NumericRange extends React.Component {
         this.state = {
             questionId: -1,
             min: 0,
-            max: 0,
+            max: 0
         };
     }
 
@@ -273,7 +265,7 @@ export class NumericRange extends React.Component {
         const errorMessages = [
             conflictingRule && "A numeric range rule already exists for this question. (Rule " + conflictingRule.id + ")",
             questionId < 1 && "You must select a question.",
-            (max <= min) && "Max must be larger than min.",
+            (max <= min) && "Max must be larger than min."
         ].filter(m => m);
         if (errorMessages.length > 0) {
             alert(errorMessages.map(s => "- " + s).join("\n"));
@@ -282,11 +274,11 @@ export class NumericRange extends React.Component {
                 surveyRules: [...surveyRules, {
                     id: getNextId(surveyRules),
                     ruleType: "numeric-range",
-                    questionId: questionId,
+                    questionId,
                     questionsText: [surveyQuestions.find(q => q.id === questionId).question],
-                    min: min,
-                    max: max,
-                }],
+                    min,
+                    max
+                }]
             });
         }
     };
@@ -295,7 +287,7 @@ export class NumericRange extends React.Component {
         const availableQuestions = this.context.surveyQuestions
             .filter(q => q.componentType === "input" && q.dataType === "number");
         return availableQuestions.length > 0
-        ?
+        ? (
             <tr>
                 <td>
                     <table>
@@ -305,13 +297,11 @@ export class NumericRange extends React.Component {
                                 <td>
                                     <select
                                         className="form-control form-control-sm"
-                                        value={this.state.questionId}
                                         onChange={e => this.setState({questionId: Number(e.target.value)})}
+                                        value={this.state.questionId}
                                     >
                                         <option value={-1}>- Select Question -</option>
-                                        {availableQuestions.map((question, uid) =>
-                                            <option key={uid} value={question.id}>{question.question}</option>)
-                                        }
+                                        {availableQuestions.map((question, uid) => <option key={uid} value={question.id}>{question.question}</option>)}
                                     </select>
                                 </td>
                             </tr>
@@ -320,10 +310,10 @@ export class NumericRange extends React.Component {
                                 <td>
                                     <input
                                         className="form-control form-control-sm"
-                                        type="number"
-                                        placeholder="Minimum value"
-                                        value={this.state.min}
                                         onChange={e => this.setState({min: Number(e.target.value)})}
+                                        placeholder="Minimum value"
+                                        type="number"
+                                        value={this.state.min}
                                     />
                                 </td>
                             </tr>
@@ -332,21 +322,21 @@ export class NumericRange extends React.Component {
                                 <td>
                                     <input
                                         className="form-control form-control-sm"
-                                        type="number"
-                                        placeholder="Maximum value"
-                                        value={this.state.max}
                                         onChange={e => this.setState({max: Number(e.target.value)})}
+                                        placeholder="Maximum value"
+                                        type="number"
+                                        value={this.state.max}
                                     />
                                 </td>
                             </tr>
                             <tr>
-                                <td style={{border: "none"}}></td>
+                                <td style={{border: "none"}}/>
                                 <td style={{border: "none"}}>
                                     <input
-                                        type="button"
                                         className="button mt-2"
-                                        value="Add Survey Rule"
                                         onClick={this.addSurveyRule}
+                                        type="button"
+                                        value="Add Survey Rule"
                                     />
                                 </td>
                             </tr>
@@ -354,8 +344,7 @@ export class NumericRange extends React.Component {
                     </table>
                 </td>
             </tr>
-        :
-            <tr><td><label>This rule requires a question of type input-number.</label></td></tr>;
+        ) : <tr><td><label>This rule requires a question of type input-number.</label></td></tr>;
     }
 }
 NumericRange.contextType = ProjectContext;
@@ -366,7 +355,7 @@ export class SumOfAnswers extends React.Component {
 
         this.state = {
             validSum: 0,
-            questionIds: [],
+            questionIds: []
         };
     }
 
@@ -378,7 +367,7 @@ export class SumOfAnswers extends React.Component {
         const errorMessages = [
             conflictingRule && "A sum of answers rule already exists for these questions. (Rule " + conflictingRule.id + ")",
             (questionIds.length < 2) && "Sum of answers rule requires the selection of two or more questions.",
-            !isNumber(validSum) && "You must ender a valid sum number.",
+            !isNumber(validSum) && "You must ender a valid sum number."
         ].filter(m => m);
         if (errorMessages.length > 0) {
             alert(errorMessages.map(s => "- " + s).join("\n"));
@@ -391,8 +380,8 @@ export class SumOfAnswers extends React.Component {
                     questionsText: surveyQuestions
                         .filter(q => questionIds.includes(q.id))
                         .map(q => q.question),
-                    validSum: validSum,
-                }],
+                    validSum
+                }]
             });
         }
     };
@@ -400,7 +389,7 @@ export class SumOfAnswers extends React.Component {
     render() {
         const availableQuestions = this.context.surveyQuestions.filter(q => q.dataType === "number");
         return availableQuestions.length > 1
-        ?
+        ? (
             <tr>
                 <td>
                     <table>
@@ -416,14 +405,12 @@ export class SumOfAnswers extends React.Component {
                                     <select
                                         className="form-control form-control-sm overflow-auto"
                                         multiple="multiple"
-                                        value={this.state.questionIds}
                                         onChange={e => this.setState({
-                                            questionIds: Array.from(e.target.selectedOptions, i => Number(i.value)),
+                                            questionIds: Array.from(e.target.selectedOptions, i => Number(i.value))
                                         })}
+                                        value={this.state.questionIds}
                                     >
-                                        {availableQuestions.map((question, uid) =>
-                                            <option key={uid} value={question.id}>{question.question}</option>)
-                                        }
+                                        {availableQuestions.map((question, uid) => <option key={uid} value={question.id}>{question.question}</option>)}
                                     </select>
                                 </td>
                             </tr>
@@ -432,21 +419,21 @@ export class SumOfAnswers extends React.Component {
                                 <td>
                                     <input
                                         className="form-control form-control-sm"
-                                        type="number"
-                                        placeholder="Valid sum"
-                                        value={this.state.validSum}
                                         onChange={e => this.setState({validSum: Number(e.target.value)})}
+                                        placeholder="Valid sum"
+                                        type="number"
+                                        value={this.state.validSum}
                                     />
                                 </td>
                             </tr>
                             <tr>
-                                <td style={{border: "none"}}></td>
+                                <td style={{border: "none"}}/>
                                 <td style={{border: "none"}}>
                                     <input
-                                        type="button"
                                         className="button mt-2"
-                                        value="Add Survey Rule"
                                         onClick={this.addSurveyRule}
+                                        type="button"
+                                        value="Add Survey Rule"
                                     />
                                 </td>
                             </tr>
@@ -454,8 +441,7 @@ export class SumOfAnswers extends React.Component {
                     </table>
                 </td>
             </tr>
-        :
-            <tr><td><label>There must be at least 2 number questions for this rule type.</label></td></tr>;
+        ) : <tr><td><label>There must be at least 2 number questions for this rule type.</label></td></tr>;
     }
 }
 SumOfAnswers.contextType = ProjectContext;
@@ -466,7 +452,7 @@ export class MatchingSums extends React.Component {
 
         this.state = {
             questionSetIds1: [],
-            questionSetIds2: [],
+            questionSetIds2: []
         };
     }
 
@@ -483,7 +469,7 @@ export class MatchingSums extends React.Component {
             questionSetIds1.length === 0 && "You must select at least one question from the first set.",
             questionSetIds2.length === 0 && "You must select at least one question from the second set.",
             questionSetIds1.some(id => questionSetIds2.includes(id))
-                && "Question set 1 and 2 cannot contain the same question.",
+                && "Question set 1 and 2 cannot contain the same question."
         ].filter(m => m);
         if (errorMessages.length > 0) {
             alert(errorMessages.map(s => "- " + s).join("\n"));
@@ -492,15 +478,15 @@ export class MatchingSums extends React.Component {
                 surveyRules: [...surveyRules, {
                     id: getNextId(surveyRules),
                     ruleType: "matching-sums",
-                    questionSetIds1: questionSetIds1,
-                    questionSetIds2: questionSetIds2,
+                    questionSetIds1,
+                    questionSetIds2,
                     questionSetText1: surveyQuestions
                         .filter(q => questionSetIds1.includes(q.id))
                         .map(q => q.question),
                     questionSetText2: surveyQuestions
                         .filter(q => questionSetIds2.includes(q.id))
-                        .map(q => q.question),
-                }],
+                        .map(q => q.question)
+                }]
             });
         }
     };
@@ -508,7 +494,7 @@ export class MatchingSums extends React.Component {
     render() {
         const availableQuestions = this.context.surveyQuestions.filter(q => q.dataType === "number");
         return availableQuestions.length > 1
-        ?
+        ? (
             <tr>
                 <td>
                     <table>
@@ -524,14 +510,12 @@ export class MatchingSums extends React.Component {
                                     <select
                                         className="form-control form-control-sm overflow-auto"
                                         multiple="multiple"
-                                        value={this.state.questionSetIds1}
                                         onChange={e => this.setState({
-                                            questionSetIds1: Array.from(e.target.selectedOptions, i => Number(i.value)),
+                                            questionSetIds1: Array.from(e.target.selectedOptions, i => Number(i.value))
                                         })}
+                                        value={this.state.questionSetIds1}
                                     >
-                                        {availableQuestions.map((question, uid) =>
-                                            <option key={uid} value={question.id}>{question.question}</option>)
-                                        }
+                                        {availableQuestions.map((question, uid) => <option key={uid} value={question.id}>{question.question}</option>)}
                                     </select>
                                 </td>
                             </tr>
@@ -546,25 +530,23 @@ export class MatchingSums extends React.Component {
                                     <select
                                         className="form-control form-control-sm overflow-auto"
                                         multiple="multiple"
-                                        value={this.state.questionSetIds2}
                                         onChange={e => this.setState({
-                                            questionSetIds2: Array.from(e.target.selectedOptions, i => Number(i.value)),
+                                            questionSetIds2: Array.from(e.target.selectedOptions, i => Number(i.value))
                                         })}
+                                        value={this.state.questionSetIds2}
                                     >
-                                        {availableQuestions.map((question, uid) =>
-                                            <option key={uid} value={question.id}>{question.question}</option>)
-                                        }
+                                        {availableQuestions.map((question, uid) => <option key={uid} value={question.id}>{question.question}</option>)}
                                     </select>
                                 </td>
                             </tr>
                             <tr>
-                                <td style={{border: "none"}}></td>
+                                <td style={{border: "none"}}/>
                                 <td style={{border: "none"}}>
                                     <input
-                                        type="button"
                                         className="button mt-2"
-                                        value="Add Survey Rule"
                                         onClick={this.addSurveyRule}
+                                        type="button"
+                                        value="Add Survey Rule"
                                     />
                                 </td>
                             </tr>
@@ -572,8 +554,7 @@ export class MatchingSums extends React.Component {
                     </table>
                 </td>
             </tr>
-        :
-            <tr><td><label>There must be at least 2 number questions for this rule type.</label></td></tr>;
+        ) : <tr><td><label>There must be at least 2 number questions for this rule type.</label></td></tr>;
     }
 }
 MatchingSums.contextType = ProjectContext;
@@ -586,21 +567,19 @@ export class IncompatibleAnswers extends React.Component {
             questionId1: -1,
             questionId2: -1,
             answerId1: -1,
-            answerId2: -1,
+            answerId2: -1
         };
     }
 
     checkPair = (q1, a1, q2, a2) => q1 === q2 && a1 === a2;
 
-    checkEquivalent = (q1, a1, q2, a2, q3, a3, q4, a4) =>
-        (this.checkPair(q1, a1, q3, a3) && this.checkPair(q2, a2, q4, a4))
+    checkEquivalent = (q1, a1, q2, a2, q3, a3, q4, a4) => (this.checkPair(q1, a1, q3, a3) && this.checkPair(q2, a2, q4, a4))
         || (this.checkPair(q1, a1, q4, a4) && this.checkPair(q2, a2, q3, a3));
 
     addSurveyRule = () => {
         const {surveyRules, surveyQuestions, setProjectDetails} = this.context;
         const {questionId1, answerId1, questionId2, answerId2} = this.state;
-        const conflictingRule = surveyRules.find(({question1, answer1, question2, answer2, ruleType}) =>
-            ruleType === "incompatible-answers"
+        const conflictingRule = surveyRules.find(({question1, answer1, question2, answer2, ruleType}) => ruleType === "incompatible-answers"
             && this.checkEquivalent(
                 question1,
                 answer1,
@@ -619,7 +598,7 @@ export class IncompatibleAnswers extends React.Component {
             (questionId1 === questionId2) && "You must select two different questions.",
             questionId1 < 1 && "You must select a valid first question.",
             questionId2 < 1 && "You must select a valid second question.",
-            (answerId1 < 1 || answerId2 < 1) && "You must select an answer for each question.",
+            (answerId1 < 1 || answerId2 < 1) && "You must select an answer for each question."
         ].filter(m => m);
         if (errorMessages.length > 0) {
             alert(errorMessages.map(s => "- " + s).join("\n"));
@@ -637,13 +616,13 @@ export class IncompatibleAnswers extends React.Component {
                     questionText1: q1.question,
                     questionText2: q2.question,
                     answerText1: q1.answers.find(a => a.id === answerId1).answer,
-                    answerText2: q2.answers.find(a => a.id === answerId2).answer,
-                }],
+                    answerText2: q2.answers.find(a => a.id === answerId2).answer
+                }]
             });
         }
     };
 
-    safeFindAnswers = (questionId) => {
+    safeFindAnswers = questionId => {
         const question = this.context.surveyQuestions.find(q => q.id === questionId);
         const answers = question && question.answers;
         return answers || [];
@@ -652,7 +631,7 @@ export class IncompatibleAnswers extends React.Component {
     render() {
         const availableQuestions = this.context.surveyQuestions.filter(q => q.componentType !== "input");
         return availableQuestions.length > 1
-        ?
+        ? (
             <tr>
                 <td>
                     <table>
@@ -665,16 +644,14 @@ export class IncompatibleAnswers extends React.Component {
                                 <td>
                                     <select
                                         className="form-control form-control-sm"
-                                        value={this.state.questionId1}
                                         onChange={e => this.setState({
                                             questionId1: Number(e.target.value),
-                                            answerId1: -1,
+                                            answerId1: -1
                                         })}
+                                        value={this.state.questionId1}
                                     >
                                         <option value="-1">- Select Question 1 -</option>
-                                        {availableQuestions.map((question, uid) =>
-                                            <option key={uid} value={question.id}>{question.question}</option>)
-                                        }
+                                        {availableQuestions.map((question, uid) => <option key={uid} value={question.id}>{question.question}</option>)}
                                     </select>
                                 </td>
                             </tr>
@@ -683,13 +660,11 @@ export class IncompatibleAnswers extends React.Component {
                                 <td>
                                     <select
                                         className="form-control form-control-sm"
-                                        value={this.state.answerId1}
                                         onChange={e => this.setState({answerId1: Number(e.target.value)})}
+                                        value={this.state.answerId1}
                                     >
                                         <option value="-1">- Select Answer 1 -</option>
-                                        {this.safeFindAnswers(this.state.questionId1).map((answer, uid) =>
-                                            <option key={uid} value={answer.id}>{answer.answer}</option>)
-                                        }
+                                        {this.safeFindAnswers(this.state.questionId1).map((answer, uid) => <option key={uid} value={answer.id}>{answer.answer}</option>)}
                                     </select>
                                 </td>
                             </tr>
@@ -698,16 +673,14 @@ export class IncompatibleAnswers extends React.Component {
                                 <td>
                                     <select
                                         className="form-control form-control-sm"
-                                        value={this.state.questionId2}
                                         onChange={e => this.setState({
                                             questionId2: Number(e.target.value),
-                                            answerId2: -1,
+                                            answerId2: -1
                                         })}
+                                        value={this.state.questionId2}
                                     >
                                         <option value="-1">- Select Question 2 -</option>
-                                        {availableQuestions.map((question, uid) =>
-                                            <option key={uid} value={question.id}>{question.question}</option>)
-                                        }
+                                        {availableQuestions.map((question, uid) => <option key={uid} value={question.id}>{question.question}</option>)}
                                     </select>
                                 </td>
                             </tr>
@@ -716,24 +689,22 @@ export class IncompatibleAnswers extends React.Component {
                                 <td>
                                     <select
                                         className="form-control form-control-sm"
-                                        value={this.state.answerId2}
                                         onChange={e => this.setState({answerId2: Number(e.target.value)})}
+                                        value={this.state.answerId2}
                                     >
                                         <option value="-1">- Select Answer 2 -</option>
-                                        {this.safeFindAnswers(this.state.questionId2).map((answer, uid) =>
-                                            <option key={uid} value={answer.id}>{answer.answer}</option>)
-                                        }
+                                        {this.safeFindAnswers(this.state.questionId2).map((answer, uid) => <option key={uid} value={answer.id}>{answer.answer}</option>)}
                                     </select>
                                 </td>
                             </tr>
                             <tr>
-                                <td style={{border: "none"}}></td>
+                                <td style={{border: "none"}}/>
                                 <td style={{border: "none"}}>
                                     <input
-                                        type="button"
                                         className="button mt-2"
-                                        value="Add Survey Rule"
                                         onClick={this.addSurveyRule}
+                                        type="button"
+                                        value="Add Survey Rule"
                                     />
                                 </td>
                             </tr>
@@ -741,14 +712,15 @@ export class IncompatibleAnswers extends React.Component {
                     </table>
                 </td>
             </tr>
-        :
+        ) : (
             <tr>
                 <td>
                     <label>
                         There must be at least 2 questions where type is not input for this rule.
                     </label>
                 </td>
-            </tr>;
+            </tr>
+        );
     }
 }
 IncompatibleAnswers.contextType = ProjectContext;

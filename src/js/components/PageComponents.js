@@ -1,7 +1,7 @@
 import "../../css/custom.css";
 
 import React from "react";
-import SvgIcon from "../components/SvgIcon";
+import SvgIcon from "./SvgIcon";
 import {getLanguage, capitalizeFirst} from "../utils/generalUtils";
 
 function LogOutButton({userName, uri}) {
@@ -14,22 +14,22 @@ function LogOutButton({userName, uri}) {
     return loggedOut
         ? (
             <button
-                type="button"
                 className="btn btn-lightgreen btn-sm"
                 onClick={() => window.location = "/login?returnurl=" + encodeURIComponent(fullUri)}
+                type="button"
             >
                 Login/Register
             </button>
 
         ) : (
             <>
-                <li id="username" className="nav-item my-auto">
+                <li className="nav-item my-auto" id="username">
                     <span className="nav-link disabled">{userName}</span>
                 </li>
                 <button
-                    type="button"
                     className="btn btn-outline-red btn-sm"
                     onClick={logout}
+                    type="button"
                 >
                     Logout
                 </button>
@@ -41,7 +41,7 @@ class HelpSlideDialog extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
-            currentSlideIdx: 0,
+            currentSlideIdx: 0
         };
     }
 
@@ -51,6 +51,7 @@ class HelpSlideDialog extends React.Component {
         const isLastSlide = currentSlideIdx === this.props.helpSlides.length - 1;
         return (
             <div
+                onClick={this.props.closeHelpMenu}
                 style={{
                     position: "fixed",
                     zIndex: "100",
@@ -58,22 +59,21 @@ class HelpSlideDialog extends React.Component {
                     top: "0",
                     width: "100%",
                     height: "100%",
-                    backgroundColor: "rgba(0,0,0,0.4)",
+                    backgroundColor: "rgba(0,0,0,0.4)"
                 }}
-                onClick={this.props.closeHelpMenu}
             >
                 <div className="col-8 col-sm-12">
                     <div
                         className="overflow-hidden container-fluid d-flex flex-column"
+                        onClick={e => e.stopPropagation()}
                         style={{
                             backgroundColor: "white",
                             border: "1.5px solid",
                             borderRadius: "5px",
                             maxHeight: "calc(100vh - 150px)",
                             margin: "90px auto",
-                            width: "fit-content",
+                            width: "fit-content"
                         }}
-                        onClick={e => e.stopPropagation()}
                     >
                         <div className="row justify-content-between bg-lightgreen p-2">
                             <h2 className="ml-2">{capitalizeFirst(this.props.page)} Help</h2>
@@ -86,15 +86,14 @@ class HelpSlideDialog extends React.Component {
                                 <p className="p-3" style={{width: "22vw"}}>{body}</p>
                                 <div className="d-flex justify-content-end">
                                     <button
-                                        type="button"
                                         className="btn btn-lightgreen btn-sm m-2"
-                                        onClick={() => this.setState({currentSlideIdx: currentSlideIdx - 1})}
                                         disabled={currentSlideIdx === 0}
+                                        onClick={() => this.setState({currentSlideIdx: currentSlideIdx - 1})}
+                                        type="button"
                                     >
                                         Previous
                                     </button>
                                     <button
-                                        type="button"
                                         className="btn btn-lightgreen btn-sm m-2"
                                         onClick={() => {
                                             if (isLastSlide) {
@@ -103,6 +102,7 @@ class HelpSlideDialog extends React.Component {
                                                 this.setState({currentSlideIdx: currentSlideIdx + 1});
                                             }
                                         }}
+                                        type="button"
                                     >
                                         {isLastSlide ? "Finish" : "Next"}
                                     </button>
@@ -110,8 +110,8 @@ class HelpSlideDialog extends React.Component {
                             </div>
                             <div style={{height: "100%", width: "33vw"}}>
                                 <img
-                                    style={{maxHeight: "100%", maxWidth: "100%"}}
                                     src={"locale/" + this.props.page + img}
+                                    style={{maxHeight: "100%", maxWidth: "100%"}}
                                 />
                             </div>
                         </div>
@@ -128,14 +128,14 @@ export class NavigationBar extends React.Component {
         this.state = {
             helpSlides: [],
             showHelpMenu: false,
-            page: "",
+            page: ""
         };
     }
 
-    componentDidMount () {
+    componentDidMount() {
         fetch("/locale/help.json",
               {headers: {"Cache-Control": "no-cache", "Pragma": "no-cache", "Accept": "application/json"}})
-            .then(response => response.ok ? response.json() : Promise.reject(response))
+            .then(response => (response.ok ? response.json() : Promise.reject(response)))
             .then(data => {
                 const location = window.location.pathname.slice(1);
                 const page = location === "" ? "home" : location;
@@ -148,8 +148,8 @@ export class NavigationBar extends React.Component {
     getHelpSlides = (availableLanguages, page) => {
         fetch(`/locale/${page}/${getLanguage(availableLanguages)}.json`,
               {headers: {"Cache-Control": "no-cache", "Pragma": "no-cache", "Accept": "application/json"}})
-            .then(response => response.ok ? response.json() : Promise.reject(response))
-            .then(data => this.setState({helpSlides: data, page: page}))
+            .then(response => (response.ok ? response.json() : Promise.reject(response)))
+            .then(data => this.setState({helpSlides: data, page}))
             .catch(error => console.log(page, getLanguage(availableLanguages), error));
     };
 
@@ -162,53 +162,57 @@ export class NavigationBar extends React.Component {
 
         return (
             <>
-                {this.state.showHelpMenu &&
+                {this.state.showHelpMenu && (
                     <HelpSlideDialog
-                        helpSlides={this.state.helpSlides}
                         closeHelpMenu={this.closeHelpMenu}
+                        helpSlides={this.state.helpSlides}
                         page={this.state.page}
                     />
-                }
+                )}
                 <nav
                     className="navbar navbar-expand-lg navbar-light fixed-top py-0"
-                    style={{backgroundColor: "white", borderBottom: "1px solid black"}}
                     id="main-nav"
+                    style={{backgroundColor: "white", borderBottom: "1px solid black"}}
                 >
                     <a className="navbar-brand pt-1 pb-1" href="/home">
-                        <img className="img-fluid" id="ceo-site-logo" src="/img/ceo-logo.png" />
+                        <img
+                            className="img-fluid"
+                            id="ceo-site-logo"
+                            src="/img/ceo-logo.png"
+                        />
                     </a>
                     <button
-                        className="navbar-toggler"
-                        type="button"
-                        data-toggle="collapse"
-                        data-target="#navbarSupportedContent"
                         aria-controls="navbarSupportedContent"
                         aria-expanded="false"
                         aria-label="Toggle navigation"
+                        className="navbar-toggler"
+                        data-target="#navbarSupportedContent"
+                        data-toggle="collapse"
+                        type="button"
                     >
-                        <span className="navbar-toggler-icon"></span>
+                        <span className="navbar-toggler-icon"/>
                     </button>
                     <div className="collapse navbar-collapse" id="navbarSupportedContent">
                         <ul className="navbar-nav mr-auto">
-                            {["Home", "About", "Support", "Blog"].map(page =>
-                                <li className={"nav-item" + ("/" + page.toLowerCase() === uri && " active")} key={page}>
+                            {["Home", "About", "Support", "Blog"].map(page => (
+                                <li key={page} className={"nav-item" + ("/" + page.toLowerCase() === uri && " active")}>
                                     <a className="nav-link" href={page === "Blog" ? "https://blog.collect.earth" : "/" + page.toLowerCase()}>{page}</a>
                                 </li>
-                            )}
-                            {!loggedOut &&
-                                <li className={"nav-item" + ("/account" === uri && " active")}>
+                            ))}
+                            {!loggedOut && (
+                                <li className={"nav-item" + (uri === "/account" && " active")}>
                                     <a className="nav-link" href={"/account?accountId=" + userId}>Account</a>
                                 </li>
-                            }
+                            )}
                         </ul>
-                        <ul id="login-info" className="navbar-nav mr-0">
-                            <LogOutButton userName={userName} uri={uri} />
+                        <ul className="navbar-nav mr-0" id="login-info">
+                            <LogOutButton uri={uri} userName={userName}/>
                         </ul>
                         <div
                             className="ml-3"
                             onClick={() => this.setState({showHelpMenu: true})}
                         >
-                            {this.state.helpSlides.length > 0 && <SvgIcon icon="help" size="2rem" color="purple"/>}
+                            {this.state.helpSlides.length > 0 && <SvgIcon color="purple" icon="help" size="2rem"/>}
                         </div>
                     </div>
                 </nav>
@@ -223,13 +227,13 @@ export class GeoDashNavigationBar extends React.Component {
         super(props);
         this.state = {
             addDialog: false,
-            copyDialog: false,
+            copyDialog: false
         };
     }
 
     closeDialogs = () => this.setState({
         addDialog: false,
-        copyDialog: false,
+        copyDialog: false
     });
 
     render() {
@@ -240,36 +244,43 @@ export class GeoDashNavigationBar extends React.Component {
             <>
                 <nav
                     className="navbar navbar-expand-lg navbar-light fixed-top py-0"
-                    style={{backgroundColor: "white"}}
                     id="geodash-nav"
+                    style={{backgroundColor: "white"}}
                 >
                     <a className="navbar-brand pt-1 pb-1" href="home">
-                        <img className= "img-fluid" id="ceo-site-logo" src="/img/ceo-logo.png" />
+                        <img
+                            className="img-fluid"
+                            id="ceo-site-logo"
+                            src="/img/ceo-logo.png"
+                        />
                     </a>
                     <button
-                        className="navbar-toggler"
-                        type="button"
-                        data-toggle="collapse"
-                        data-target="#navbarSupportedContent"
                         aria-controls="navbarSupportedContent"
                         aria-expanded="false"
                         aria-label="Toggle navigation"
+                        className="navbar-toggler"
+                        data-target="#navbarSupportedContent"
+                        data-toggle="collapse"
+                        type="button"
                     >
-                        <span className="navbar-toggler-icon"></span>
+                        <span className="navbar-toggler-icon"/>
                     </button>
-                    <div className="collapse navbar-collapse justify-content-between" id="navbarSupportedContent">
+                    <div
+                        className="collapse navbar-collapse justify-content-between"
+                        id="navbarSupportedContent"
+                    >
                         <h1 className="mb-0">GEO-DASH</h1>
                         <ul className="navbar-nav" style={{flex: 1, justifyContent: "flex-end"}}>
                             {uri === "/widget-layout-editor"
-                            ?
+                            ? (
                                 <>
                                     <li className="nav-item my-auto ml-1" id="copyWidgetLayout">
                                         <button
-                                            className="btn btn-outline-lightgreen btn-sm"
-                                            type="button"
-                                            onClick={() => this.setState({copyDialog: true})}
                                             alt="This will remove any existing widgets currently configured."
+                                            className="btn btn-outline-lightgreen btn-sm"
+                                            onClick={() => this.setState({copyDialog: true})}
                                             title="This will remove any existing widgets currently configured."
+                                            type="button"
                                         >
                                             Copy Layout
                                         </button>
@@ -277,28 +288,28 @@ export class GeoDashNavigationBar extends React.Component {
                                     <li className="nav-item my-auto ml-1">
                                         <button
                                             className="btn btn-outline-lightgreen btn-sm"
-                                            type="button"
                                             onClick={() => this.setState({addDialog : true})}
+                                            type="button"
                                         >
                                             Add Widget
                                         </button>
                                     </li>
                                 </>
-                            :
+                            ) : (
                                 <li className="nav-item" style={{flex: 1, textAlign: "center"}}>
                                     Plot ID: {visiblePlotId}
                                 </li>
-                            }
+                            )}
                             <li className="nav-item my-auto ml-1">
                                 <button
                                     className="btn btn-outline-lightgreen btn-sm"
-                                    type="button"
                                     onClick={() => window.open("geo-dash/geo-dash-help", "_blank")}
+                                    type="button"
                                 >
                                     Geo-Dash Help
                                 </button>
                             </li>
-                            <LogOutButton userName={userName} uri={uri} />
+                            <LogOutButton uri={uri} userName={userName}/>
                         </ul>
                     </div>
                 </nav>
@@ -313,7 +324,7 @@ export function LogoBanner() {
         <div id="logo-banner">
             <div className="row mb-4 justify-content-center">
                 <div className="col-sm-4 text-center">
-                    <img className="img-fluid" id="servir" src="/img/servir-logo.png" />
+                    <img className="img-fluid" id="servir" src="/img/servir-logo.png"/>
                 </div>
             </div>
             <div className="row justify-content-center mb-2">
@@ -323,20 +334,20 @@ export function LogoBanner() {
             </div>
             <div className="row mb-4">
                 <div className="col-sm-3 text-center my-auto">
-                    <a href="http://openforis.org" target="_blank" rel="noreferrer noopener">
-                        <img className="img-fluid" id="openforis" src="/img/openforis-logo.png" />
+                    <a href="http://openforis.org" rel="noreferrer noopener" target="_blank">
+                        <img className="img-fluid" id="openforis" src="/img/openforis-logo.png"/>
                     </a>
                 </div>
                 <div className="col-sm-3 text-center my-auto">
-                    <a href="http://fao.org" target="_blank" rel="noreferrer noopener">
-                        <img className="img-fluid" id="fao" src="/img/fao.png" />
+                    <a href="http://fao.org" rel="noreferrer noopener" target="_blank">
+                        <img className="img-fluid" id="fao" src="/img/fao.png"/>
                     </a>
                 </div>
                 <div className="col-sm-3 text-center my-auto">
-                    <img className="img-fluid" id="usaid" src="/img/usaid.png" />
+                    <img className="img-fluid" id="usaid" src="/img/usaid.png"/>
                 </div>
                 <div className="col-sm-3 text-center my-auto">
-                    <img className="img-fluid" id="nasa" src="/img/nasa.png" />
+                    <img className="img-fluid" id="nasa" src="/img/nasa.png"/>
                 </div>
             </div>
             <div className="row mb-2 justify-content-center">
@@ -347,31 +358,31 @@ export function LogoBanner() {
             <div className="row mb-4 justify-content-center">
                 <div className="col-sm-4 text-center my-auto">
                     <a href="http://www.silvacarbon.org">
-                        <img className="img-fluid" id="silvacarbon" src="/img/SilvaCarbon.png" />
+                        <img className="img-fluid" id="silvacarbon" src="/img/SilvaCarbon.png"/>
                     </a>
                 </div>
                 <div className="col-sm-4 text-center my-auto">
                     <a href="http://www.sig-gis.com">
-                        <img className="img-fluid" id="sig" src="/img/sig-logo.png" />
+                        <img className="img-fluid" id="sig" src="/img/sig-logo.png"/>
                     </a>
                 </div>
                 <div className="col-sm-4 text-center my-auto">
                     <a href="https://servir.adpc.net">
-                        <img className="img-fluid" id="servir-mekong" src="/img/servir-mekong-logo.png" />
+                        <img className="img-fluid" id="servir-mekong" src="/img/servir-mekong-logo.png"/>
                     </a>
                 </div>
             </div>
             <div className="row mb-4 justify-content-center">
                 <div className="col-sm-4 text-center my-auto">
-                    <img className="img-fluid" id="google" src="/img/google-logo.png" />
+                    <img className="img-fluid" id="google" src="/img/google-logo.png"/>
                 </div>
 
                 <div className="col-sm-4 text-center my-auto">
-                    <img className="img-fluid" id="usfs" style={{width: "60vh"}} src="/img/usfs.png" />
+                    <img className="img-fluid" id="usfs" src="/img/usfs.png" style={{width: "60vh"}}/>
                 </div>
 
                 <div className="col-sm-4 text-center my-auto">
-                    <img className="img-fluid" id="gtac" src="/img/gtac-logo.png" />
+                    <img className="img-fluid" id="gtac" src="/img/gtac-logo.png"/>
                 </div>
             </div>
         </div>
@@ -388,7 +399,7 @@ export function LoadingModal({message}) {
                 top: "0",
                 width: "100%",
                 height: "100%",
-                backgroundColor: "rgba(0,0,0,0.4)",
+                backgroundColor: "rgba(0,0,0,0.4)"
             }}
         >
             <div
@@ -399,7 +410,7 @@ export function LoadingModal({message}) {
                     borderRadius: "5px",
                     display: "flex",
                     margin: "20% auto",
-                    width: "fit-content",
+                    width: "fit-content"
                 }}
             >
                 <div className="p-3">

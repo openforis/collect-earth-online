@@ -29,19 +29,20 @@ export function UnicodeIcon({icon, backgroundColor}) {
         : icon === "save" ? "\uD83D\uDCBE"
         : icon === "expand" ? "\u21F1"
         : icon === "collapse" ? "\u21F2"
-        : icon === "add" ?
+        : icon === "add" ? (
             <span
                 className="mr-1 px-1"
                 style={{
-                    backgroundColor: backgroundColor,
+                    backgroundColor,
                     borderRadius: "2px",
                     color: "white",
                     fontSize: ".7rem",
-                    marginTop: "2px",
+                    marginTop: "2px"
                 }}
             >
                 {"\u2795"}
             </span>
+        )
         : ""
     );
 }
@@ -85,7 +86,7 @@ export const monthlyMapping = {
     "09":  "September",
     "10": "October",
     "11": "November",
-    "12": "December",
+    "12": "December"
 };
 
 export function formatDateISO(date) {
@@ -95,7 +96,7 @@ export function formatDateISO(date) {
     return [
         date.getFullYear(),
         (month > 9 ? "" : "0") + month,
-        (day > 9 ? "" : "0") + day,
+        (day > 9 ? "" : "0") + day
     ].join("-");
 }
 

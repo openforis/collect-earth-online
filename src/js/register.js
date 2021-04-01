@@ -10,7 +10,7 @@ class Register extends React.Component {
             email: "",
             password: "",
             passwordConfirmation: "",
-            acceptTOS: false,
+            acceptTOS: false
         };
     }
 
@@ -22,9 +22,9 @@ class Register extends React.Component {
                   {
                       method: "POST",
                       headers: {
-                          "Content-Type": "application/x-www-form-urlencoded",
+                          "Content-Type": "application/x-www-form-urlencoded"
                       },
-                      body: getQueryString(this.state),
+                      body: getQueryString(this.state)
                   })
                 .then(response => Promise.all([response.ok, response.json()]))
                 .then(data => {
@@ -54,49 +54,49 @@ class Register extends React.Component {
                             <div className="form-group">
                                 <label htmlFor="email">Email address</label>
                                 <input
-                                    id="email"
-                                    className="form-control"
                                     autoComplete="off"
-                                    placeholder="Email"
-                                    value={this.state.email}
-                                    type="email"
+                                    className="form-control"
+                                    id="email"
                                     onChange={e => this.setState({email: e.target.value})}
+                                    placeholder="Email"
+                                    type="email"
+                                    value={this.state.email}
                                 />
                             </div>
                             <div className="form-group">
                                 <label htmlFor="password">Enter your password</label>
                                 <input
-                                    id="password"
-                                    className="form-control"
                                     autoComplete="off"
-                                    placeholder="Password"
-                                    value={this.state.password}
-                                    type="password"
+                                    className="form-control"
+                                    id="password"
                                     onChange={e => this.setState({password: e.target.value})}
+                                    placeholder="Password"
+                                    type="password"
+                                    value={this.state.password}
                                 />
                             </div>
                             <div className="form-group">
                                 <label htmlFor="password-confirmation">Confirm your password</label>
                                 <input
-                                    id="password-confirmation"
-                                    className="form-control"
                                     autoComplete="off"
-                                    placeholder="Password confirmation"
-                                    value={this.state.passwordConfirmation}
-                                    type="password"
+                                    className="form-control"
+                                    id="password-confirmation"
                                     onChange={e => this.setState({passwordConfirmation: e.target.value})}
+                                    placeholder="Password confirmation"
+                                    type="password"
+                                    value={this.state.passwordConfirmation}
                                 />
                             </div>
                             <div className="form-check mb-3">
                                 <input
-                                    id="tos-check"
-                                    type="checkbox"
-                                    className="form-check-input"
                                     checked={this.state.acceptTOS}
+                                    className="form-check-input"
+                                    id="tos-check"
                                     onChange={() => this.setState({acceptTOS: !this.state.acceptTOS})}
+                                    type="checkbox"
                                 />
                                 <label className="form-check-label" htmlFor="tos-check">
-                                    I agree to the <a target="_blank" href="/terms">Terms of Service</a>.
+                                    I agree to the <a href="/terms" target="_blank">Terms of Service</a>.
                                 </label>
                             </div>
                             <button className="btn btn-lightgreen float-right mb-2" type="submit">
@@ -113,8 +113,8 @@ class Register extends React.Component {
 
 export function pageInit(args) {
     ReactDOM.render(
-        <NavigationBar userName={""} userId={-1}>
-            <Register />
+        <NavigationBar userId={-1} userName="">
+            <Register/>
         </NavigationBar>,
         document.getElementById("app")
     );

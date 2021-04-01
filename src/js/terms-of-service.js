@@ -4,7 +4,7 @@ import {NavigationBar} from "./components/PageComponents";
 
 function TermsOfService() {
     return (
-        <section id="about" className="container pt-3">
+        <section className="container pt-3" id="about">
             <div className="col-xl-8 offset-xl-2 col-lg-10 justify-content-center">
                 <h1 className="py-4">Collect Earth Online Terms of Service</h1>
 
@@ -83,7 +83,7 @@ function TermsOfService() {
 
 export function pageInit(args) {
     ReactDOM.render(
-        <NavigationBar userName={args.userName} userId={args.userId}>
+        <NavigationBar userId={args.userId} userName={args.userName}>
             <TermsOfService/>
         </NavigationBar>,
         document.getElementById("app")

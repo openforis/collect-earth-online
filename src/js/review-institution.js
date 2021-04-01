@@ -1,9 +1,15 @@
-import React, {Fragment} from "react";
+import React from "react";
 import ReactDOM from "react-dom";
 
 import InstitutionEditor from "./components/InstitutionEditor";
 import {LoadingModal, NavigationBar} from "./components/PageComponents";
-import {sortAlphabetically, capitalizeFirst, UnicodeIcon, KBtoBase64Length, safeLength} from "./utils/generalUtils";
+import {
+    sortAlphabetically,
+    capitalizeFirst,
+    UnicodeIcon,
+    KBtoBase64Length,
+    safeLength
+} from "./utils/generalUtils";
 import {imageryOptions} from "./imagery/imageryOptions";
 
 class ReviewInstitution extends React.Component {
@@ -15,7 +21,7 @@ class ReviewInstitution extends React.Component {
             projectList: null,
             isAdmin: false,
             selectedTab: 0,
-            modalMessage: null,
+            modalMessage: null
         };
     }
 
@@ -31,10 +37,11 @@ class ReviewInstitution extends React.Component {
     };
 
     getProjectList = () => {
-        //get projects
-        this.processModal("Loading institution data", () =>
-            fetch(`/get-institution-projects?institutionId=${this.props.institutionId}`)
-                .then(response => response.ok ? response.json() : Promise.reject(response))
+        // get projects
+        this.processModal(
+            "Loading institution data",
+            () => fetch(`/get-institution-projects?institutionId=${this.props.institutionId}`)
+                .then(response => (response.ok ? response.json() : Promise.reject(response)))
                 .then(data => this.setState({projectList: data}))
                 .catch(response => {
                     console.log(response);
@@ -43,7 +50,7 @@ class ReviewInstitution extends React.Component {
         );
     };
 
-    archiveProject = (projectId) => {
+    archiveProject = projectId => {
         if (confirm("Do you REALLY want to delete this project? This operation cannot be undone.")) {
             fetch(`/archive-project?projectId=${projectId}`, {method: "POST"})
                 .then(response => {
@@ -58,19 +65,22 @@ class ReviewInstitution extends React.Component {
         }
     };
 
-    setImageryCount = (newCount) => this.setState({imageryCount: newCount});
+    setImageryCount = newCount => this.setState({imageryCount: newCount});
 
-    setUsersCount = (newCount) => this.setState({usersCount: newCount});
+    setUsersCount = newCount => this.setState({usersCount: newCount});
 
-    setIsAdmin = (isAdmin) => this.setState({isAdmin: isAdmin});
+    setIsAdmin = isAdmin => this.setState({isAdmin});
 
-    headerTab = (name, count, index, disabled = false) =>
+    headerTab = (name, count, index, disabled = false) => (
         <div className="col-lg-4 col-xs-12">
             <div
                 className={disabled ? "disabled-group" : ""}
                 onClick={() => this.setState({selectedTab: index})}
             >
-                <h2 className="header" style={{borderRadius: "5px", cursor: disabled ? "not-allowed" : "pointer"}}>
+                <h2
+                    className="header"
+                    style={{borderRadius: "5px", cursor: disabled ? "not-allowed" : "pointer"}}
+                >
                     {name}
                     <span className="badge badge-pill badge-light ml-2">
                         {count}
@@ -80,7 +90,8 @@ class ReviewInstitution extends React.Component {
                     </span>
                 </h2>
             </div>
-        </div>;
+        </div>
+    );
 
     render() {
         return (
@@ -94,34 +105,36 @@ class ReviewInstitution extends React.Component {
                 <div className="row justify-content-center">
                     <div className="col-lg-7 col-xs-12 align-items-center mb-5">
                         <div className="row">
-                            {this.headerTab("Projects", this.state.projectList ? this.state.projectList.length : 0, 0)}
+                            {this.headerTab("Projects", this.state.projectList
+                                ? this.state.projectList.length
+                                : 0, 0)}
                             {this.headerTab("Imagery", this.state.imageryCount, 1)}
                             {this.headerTab("Users", this.state.usersCount, 2, this.props.userId < 0)}
                         </div>
                         <ProjectList
-                            isAdmin={this.state.isAdmin}
-                            institutionId={this.props.institutionId}
-                            projectList={this.state.projectList}
-                            isVisible={this.state.selectedTab === 0}
                             deleteProject={this.archiveProject}
+                            institutionId={this.props.institutionId}
+                            isAdmin={this.state.isAdmin}
+                            isVisible={this.state.selectedTab === 0}
+                            projectList={this.state.projectList}
                         />
                         <ImageryList
-                            isAdmin={this.state.isAdmin}
-                            userId={this.props.userId}
                             institutionId={this.props.institutionId}
-                            setImageryCount={this.setImageryCount}
+                            isAdmin={this.state.isAdmin}
                             isVisible={this.state.selectedTab === 1}
+                            setImageryCount={this.setImageryCount}
+                            userId={this.props.userId}
                         />
-                        {this.props.userId > 0 &&
+                        {this.props.userId > 0 && (
                             <UserList
                                 institutionId={this.props.institutionId}
                                 isAdmin={this.state.isAdmin}
-                                setUsersCount={this.setUsersCount}
-                                userId={this.props.userId}
                                 isVisible={this.state.selectedTab === 2}
                                 processModal={this.processModal}
+                                setUsersCount={this.setUsersCount}
+                                userId={this.props.userId}
                             />
-                        }
+                        )}
                     </div>
                 </div>
                 {this.state.modalMessage && <LoadingModal message={this.state.modalMessage}/>}
@@ -139,15 +152,15 @@ class InstitutionDescription extends React.Component {
                 base64Image: "",
                 url: "",
                 description: "",
-                institutionAdmin: false,
+                institutionAdmin: false
             },
             newInstitutionDetails: {
                 name: "",
                 base64Image: "",
                 url: "",
-                description: "",
+                description: ""
             },
-            editMode: false,
+            editMode: false
         };
     }
 
@@ -157,7 +170,7 @@ class InstitutionDescription extends React.Component {
 
     getInstitutionDetails = () => {
         fetch(`/get-institution-by-id?institutionId=${this.props.institutionId}`)
-            .then(response => response.ok ? response.json() : Promise.reject(response))
+            .then(response => (response.ok ? response.json() : Promise.reject(response)))
             .then(data => {
                 this.setState({
                     institutionDetails: data,
@@ -165,8 +178,8 @@ class InstitutionDescription extends React.Component {
                         name: data.name,
                         url: data.url,
                         description: data.description,
-                        base64Image: "",
-                    },
+                        base64Image: ""
+                    }
                 });
                 this.props.setIsAdmin(data.institutionAdmin);
             })
@@ -180,21 +193,22 @@ class InstitutionDescription extends React.Component {
         if (this.state.newInstitutionDetails.base64Image.length > KBtoBase64Length(500)) {
             alert("Institution logos must be smaller than 500kb");
         } else {
-            fetch(`/update-institution?institutionId=${this.props.institutionId}`,
-                  {
-                      method: "POST",
-                      headers: {
-                          "Accept": "application/json",
-                          "Content-Type": "application/json",
-                      },
-                      body: JSON.stringify({
-                          institutionId: this.props.institutionId,
-                          name: this.state.newInstitutionDetails.name,
-                          base64Image: this.state.newInstitutionDetails.base64Image,
-                          url: this.state.newInstitutionDetails.url,
-                          description: this.state.newInstitutionDetails.description,
-                      }),
-                  }
+            fetch(
+                `/update-institution?institutionId=${this.props.institutionId}`,
+                {
+                    method: "POST",
+                    headers: {
+                        "Accept": "application/json",
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        institutionId: this.props.institutionId,
+                        name: this.state.newInstitutionDetails.name,
+                        base64Image: this.state.newInstitutionDetails.base64Image,
+                        url: this.state.newInstitutionDetails.url,
+                        description: this.state.newInstitutionDetails.description
+                    })
+                }
             )
                 .then(response => Promise.all([response.ok, response.json()]))
                 .then(data => {
@@ -214,8 +228,8 @@ class InstitutionDescription extends React.Component {
     updateNewInstitutionDetails = (key, newValue) => this.setState({
         newInstitutionDetails: {
             ...this.state.newInstitutionDetails,
-            [key]: newValue,
-        },
+            [key]: newValue
+        }
     });
 
     deleteInstitution = () => {
@@ -239,52 +253,53 @@ class InstitutionDescription extends React.Component {
         window.open(`/institution-dashboard?institutionId=${this.props.institutionId}`);
     };
 
-    renderEditButtonGroup = () => <div className="row">
-        <div className="col-6">
-            <button
-                type="button"
-                className="btn btn-sm btn-outline-lightgreen btn-block mt-0"
-                onClick={this.updateInstitution}
-            >
-                <UnicodeIcon icon="save"/> Save Changes
-            </button>
+    renderEditButtonGroup = () => (
+        <div className="row">
+            <div className="col-6">
+                <button
+                    className="btn btn-sm btn-outline-lightgreen btn-block mt-0"
+                    onClick={this.updateInstitution}
+                    type="button"
+                >
+                    <UnicodeIcon icon="save"/> Save Changes
+                </button>
+            </div>
+            <div className="col-6">
+                <button
+                    className="btn btn-sm btn-outline-red btn-block mt-0"
+                    onClick={this.toggleEditMode}
+                    type="button"
+                >
+                    <UnicodeIcon icon="noAction"/> Cancel Changes
+                </button>
+            </div>
         </div>
-        <div className="col-6">
-            <button
-                type="button"
-                className="btn btn-sm btn-outline-red btn-block mt-0"
-                onClick={this.toggleEditMode}
-            >
-                <UnicodeIcon icon="noAction"/> Cancel Changes
-            </button>
-        </div>
-    </div>;
+    );
 
-    httpAddress = (url) => url.includes("://") ? url : "https://" + url;
+    httpAddress = url => (url.includes("://") ? url : "https://" + url);
 
     render() {
         return this.state.editMode
-        ?
+        ? (
             <InstitutionEditor
-                title="Create New Institution"
-                name={this.state.newInstitutionDetails.name}
-                url={this.state.newInstitutionDetails.url}
-                description={this.state.newInstitutionDetails.description}
                 buttonGroup={this.renderEditButtonGroup}
+                description={this.state.newInstitutionDetails.description}
+                name={this.state.newInstitutionDetails.name}
                 setInstitutionDetails={this.updateNewInstitutionDetails}
+                title="Create New Institution"
+                url={this.state.newInstitutionDetails.url}
             />
-        :
-            <div id="institution-details" className="row justify-content-center">
-                <div id="institution-view" className="col-8">
+        ) : (
+            <div className="row justify-content-center" id="institution-details">
+                <div className="col-8" id="institution-view">
                     <div className="row mb-4">
                         <div className="col-md-3" id="institution-logo-container">
                             <img
-                                style={{maxWidth: "100%"}}
+                                onClick={() => window.open(this.httpAddress(this.state.institutionDetails.url))}
                                 src={safeLength(this.state.institutionDetails.base64Image) > 1
                                         ? `data:*/*;base64,${this.state.institutionDetails.base64Image}`
-                                        : "/img/ceo-logo.png"
-                                }
-                                onClick={() => window.open(this.httpAddress(this.state.institutionDetails.url))}
+                                        : "/img/ceo-logo.png"}
+                                style={{maxWidth: "100%"}}
                             />
                         </div>
                         <div className="col-md-8">
@@ -293,48 +308,49 @@ class InstitutionDescription extends React.Component {
                                     {this.state.institutionDetails.name}
                                 </a>
                             </h1>
-                            <hr />
+                            <hr/>
                             <p className="pt-2" style={{textIndent: "25px"}}>
                                 {this.state.institutionDetails.description}
                             </p>
                         </div>
                     </div>
-                    {this.props.isAdmin &&
-                    <div className="row justify-content-center mb-2" id="institution-controls">
-                        <div className="col-3">
-                            <button
-                                id="edit-institution"
-                                type="button"
-                                className="btn btn-sm btn-outline-lightgreen btn-block mt-0"
-                                onClick={this.toggleEditMode}
-                            >
-                                <UnicodeIcon icon="edit"/> Edit
-                            </button>
-                        </div>
-                        <div className="col-3">
-                            <button
-                                id="delete-institution"
-                                type="button"
-                                className="btn btn-sm btn-outline-red btn-block mt-0"
-                                onClick={this.deleteInstitution}
-                            >
-                                <UnicodeIcon icon="trash"/> Delete
-                            </button>
-                        </div>
-                        <div className="col-3">
-                            <button
-                                id="institution-dashboard"
-                                type="button"
-                                className="btn btn-sm btn-outline-lightgreen btn-block mt-0"
-                                onClick={this.gotoInstitutionDashboard}
-                            >
+                    {this.props.isAdmin && (
+                        <div className="row justify-content-center mb-2" id="institution-controls">
+                            <div className="col-3">
+                                <button
+                                    className="btn btn-sm btn-outline-lightgreen btn-block mt-0"
+                                    id="edit-institution"
+                                    onClick={this.toggleEditMode}
+                                    type="button"
+                                >
+                                    <UnicodeIcon icon="edit"/> Edit
+                                </button>
+                            </div>
+                            <div className="col-3">
+                                <button
+                                    className="btn btn-sm btn-outline-red btn-block mt-0"
+                                    id="delete-institution"
+                                    onClick={this.deleteInstitution}
+                                    type="button"
+                                >
+                                    <UnicodeIcon icon="trash"/> Delete
+                                </button>
+                            </div>
+                            <div className="col-3">
+                                <button
+                                    className="btn btn-sm btn-outline-lightgreen btn-block mt-0"
+                                    id="institution-dashboard"
+                                    onClick={this.gotoInstitutionDashboard}
+                                    type="button"
+                                >
                                 Go to Dashboard
-                            </button>
+                                </button>
+                            </div>
                         </div>
-                    </div>
-                    }
+                    )}
                 </div>
-            </div>;
+            </div>
+        );
     }
 }
 
@@ -343,7 +359,7 @@ class ImageryList extends React.Component {
         super(props);
         this.state = {
             imageryToEdit: null,
-            imageryList: [],
+            imageryList: []
         };
     }
 
@@ -363,7 +379,7 @@ class ImageryList extends React.Component {
 
     getImageryList = () => {
         fetch(`/get-institution-imagery?institutionId=${this.props.institutionId}`)
-            .then(response => response.ok ? response.json() : Promise.reject(response))
+            .then(response => (response.ok ? response.json() : Promise.reject(response)))
             .then(data => this.setState({imageryList: data}))
             .catch(response => {
                 this.setState({imageryList: []});
@@ -374,7 +390,7 @@ class ImageryList extends React.Component {
 
     selectAddImagery = () => this.setState({imageryToEdit: {id: -1}});
 
-    selectEditImagery = (imageryId) => {
+    selectEditImagery = imageryId => {
         const imagery = this.state.imageryList.find(i => i.id === imageryId);
         if (imageryOptions.find(io => io.type === imagery.sourceConfig.type)) {
             this.setState({imageryToEdit: imagery});
@@ -383,20 +399,21 @@ class ImageryList extends React.Component {
         }
     };
 
-    deleteImagery = (imageryId) => {
+    deleteImagery = imageryId => {
         if (confirm("Do you REALLY want to delete this imagery?")) {
-            fetch("/archive-institution-imagery",
-                  {
-                      method: "POST",
-                      headers: {
-                          "Accept": "application/json",
-                          "Content-Type": "application/json",
-                      },
-                      body: JSON.stringify({
-                          institutionId: this.props.institutionId,
-                          imageryId: imageryId,
-                      }),
-                  }
+            fetch(
+                "/archive-institution-imagery",
+                {
+                    method: "POST",
+                    headers: {
+                        "Accept": "application/json",
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        institutionId: this.props.institutionId,
+                        imageryId
+                    })
+                }
             )
                 .then(response => {
                     if (response.ok) {
@@ -414,23 +431,22 @@ class ImageryList extends React.Component {
         const toVisibility = currentVisibility === "private" ? "public" : "private";
         if (this.props.userId === 1
                 && confirm(`Do you want to change the visibility from ${currentVisibility} to ${toVisibility}?`
-                            + toVisibility === "private"
-                                ? "  This will remove the imagery from other institutions' projects."
-                                : "")) {
+                    + toVisibility === "private"
+                        ? "  This will remove the imagery from other institutions' projects."
+                        : "")) {
             fetch("/update-imagery-visibility",
                   {
                       method: "POST",
                       headers: {
                           "Accept": "application/json",
-                          "Content-Type": "application/json",
+                          "Content-Type": "application/json"
                       },
                       body: JSON.stringify({
                           institutionId: this.props.institutionId,
                           visibility: toVisibility,
-                          imageryId: imageryId,
-                      }),
-                  }
-            )
+                          imageryId
+                      })
+                  })
                 .then(response => {
                     if (response.ok) {
                         this.getImageryList();
@@ -454,50 +470,50 @@ class ImageryList extends React.Component {
     render() {
         return this.props.isVisible && (
             this.state.imageryToEdit
-                ?
+                ? (
                     <NewImagery
                         getImageryList={this.getImageryList}
-                        institutionId={this.props.institutionId}
                         hideEditMode={this.hideEditMode}
                         imageryToEdit={this.state.imageryToEdit}
+                        institutionId={this.props.institutionId}
                         titleIsTaken={this.titleIsTaken}
                     />
-                :
-                    <Fragment>
+                ) : (
+                    <>
                         <div className="mb-3">
                             This is a list of available imagery for this institution.
                             For each project you can select to use some or all of these imagery.
                         </div>
-                        {this.props.isAdmin &&
+                        {this.props.isAdmin && (
                             <div className="row">
                                 <div className="col-lg-12 mb-1">
                                     <button
-                                        type="button"
-                                        id="add-imagery-button"
                                         className="btn btn-sm btn-block btn-outline-yellow py-2 font-weight-bold"
+                                        id="add-imagery-button"
                                         onClick={this.selectAddImagery}
+                                        type="button"
                                     >
-                                        <UnicodeIcon icon="add" backgroundColor="#f1c00f"/>Add New Imagery
+                                        <UnicodeIcon backgroundColor="#f1c00f" icon="add"/>Add New Imagery
                                     </button>
 
                                 </div>
                             </div>
-                        }
+                        )}
                         {this.state.imageryList.length === 0
                             ? <h3>Loading imagery...</h3>
-                            : this.state.imageryList.map(({id, title, institution, visibility}) =>
+                            : this.state.imageryList.map(({id, title, institution, visibility}) => (
                                 <Imagery
                                     key={id}
-                                    title={title}
                                     canEdit={this.props.isAdmin && this.props.institutionId === institution}
-                                    visibility={visibility}
-                                    toggleVisibility={() => this.toggleVisibility(id, visibility)}
-                                    selectEditImagery={() => this.selectEditImagery(id)}
                                     deleteImagery={() => this.deleteImagery(id)}
+                                    selectEditImagery={() => this.selectEditImagery(id)}
+                                    title={title}
+                                    toggleVisibility={() => this.toggleVisibility(id, visibility)}
+                                    visibility={visibility}
                                 />
-                            )
-                        }
-                    </Fragment>
+                            ))}
+                    </>
+)
         );
     }
 }
@@ -510,7 +526,7 @@ class NewImagery extends React.Component {
             newImageryAttribution: "",
             selectedType: 0,
             newImageryParams: {},
-            addToAllProjects: false,
+            addToAllProjects: false
         };
     }
 
@@ -522,8 +538,8 @@ class NewImagery extends React.Component {
             this.setState({
                 newImageryTitle: imageryToEdit.title,
                 newImageryAttribution: imageryToEdit.attribution,
-                selectedType: selectedType,
-                newImageryParams: this.getImageryParams(type, imageryParams),
+                selectedType,
+                newImageryParams: this.getImageryParams(type, imageryParams)
             });
         } else {
             this.imageryTypeChangeHandler(0);
@@ -538,7 +554,7 @@ class NewImagery extends React.Component {
             return {
                 geoserverUrl,
                 LAYERS,
-                geoserverParams: JSON.stringify(cleanGeoserverParams),
+                geoserverParams: JSON.stringify(cleanGeoserverParams)
             };
         } else if (type === "SecureWatch") {
             const {geoserverParams: {CONNECTID}, startDate, endDate, baseUrl} = imageryParams;
@@ -546,7 +562,7 @@ class NewImagery extends React.Component {
                 connectid: CONNECTID,
                 startDate,
                 endDate,
-                baseUrl,
+                baseUrl
             };
         } else {
             return imageryParams;
@@ -566,15 +582,15 @@ class NewImagery extends React.Component {
     };
 
     validateParams = (type, imageryParams) => {
-        const parameterErrors = imageryOptions[type].params.map(param =>
-            (param.validator && param.validator(imageryParams[param.key]))
-            || (param.required !== false && (!imageryParams[param.key] || imageryParams[param.key].length === 0)) && `${param.display} is required.`
-        );
+        const parameterErrors = imageryOptions[type].params
+            .map(param => (param.validator && param.validator(imageryParams[param.key]))
+                || (param.required && (!imageryParams[param.key] || imageryParams[param.key].length === 0))
+                && `${param.display} is required.`);
         const imageryError = imageryOptions[type].validator && imageryOptions[type].validator(imageryParams);
         return [...parameterErrors, imageryError].filter(error => error);
     };
 
-    uploadCustomImagery = (isNew) => {
+    uploadCustomImagery = isNew => {
         const sanitizedParams = this.sanitizeParams(this.state.selectedType, this.state.newImageryParams);
         const messages = this.validateParams(this.state.selectedType, sanitizedParams);
         if (messages.length > 0) {
@@ -591,7 +607,7 @@ class NewImagery extends React.Component {
                           method: "POST",
                           headers: {
                               "Accept": "application/json",
-                              "Content-Type": "application/json",
+                              "Content-Type": "application/json"
                           },
                           body: JSON.stringify({
                               institutionId: this.props.institutionId,
@@ -599,10 +615,9 @@ class NewImagery extends React.Component {
                               imageryTitle: this.state.newImageryTitle,
                               imageryAttribution: this.state.newImageryAttribution,
                               addToAllProjects: this.state.addToAllProjects,
-                              sourceConfig: sourceConfig,
-                          }),
-                      }
-                ).then(response => {
+                              sourceConfig
+                          })
+                      }).then(response => {
                     if (response.ok) {
                         this.props.getImageryList();
                         this.props.hideEditMode();
@@ -621,7 +636,7 @@ class NewImagery extends React.Component {
         try {
             const imageryParams = imageryOptions[this.state.selectedType].params;
             return Object.keys(params)
-                .sort(a => imageryParams.find(p => p.key === a).parent ? 1 : -1) // Sort params that require a parent to the bottom
+                .sort(a => (imageryParams.find(p => p.key === a).parent ? 1 : -1)) // Sort params that require a parent to the bottom
                 .reduce((a, c) => {
                     const parentStr = imageryParams.find(p => p.key === c).parent;
                     if (parentStr) {
@@ -637,16 +652,16 @@ class NewImagery extends React.Component {
     };
 
     // TODO this shouldn't be needed if SecureWatch is defined correctly in imageryOptions
-    buildSecureWatch = (sourceConfig) => {
+    buildSecureWatch = sourceConfig => {
         if (sourceConfig.type === "SecureWatch") {
-            sourceConfig["geoserverUrl"] = `${sourceConfig.baseUrl}/mapservice/wmsaccess`;
+            sourceConfig.geoserverUrl = `${sourceConfig.baseUrl}/mapservice/wmsaccess`;
             const geoserverParams = {
                 "VERSION": "1.1.1",
                 "STYLES": "",
                 "LAYERS": "DigitalGlobe:Imagery",
-                "CONNECTID": sourceConfig.connectid,
+                "CONNECTID": sourceConfig.connectid
             };
-            sourceConfig["geoserverParams"] = geoserverParams;
+            sourceConfig.geoserverParams = geoserverParams;
             delete sourceConfig.connectid;
             return sourceConfig;
         } else {
@@ -657,13 +672,13 @@ class NewImagery extends React.Component {
     //    Render Functions    //
 
     formInput = (title, type, value, callback, link = null, options = {}) => (
-        <div className="mb-3" key={title}>
+        <div key={title} className="mb-3">
             <label>{title}</label> {link}
             <input
-                className="form-control"
-                type={type}
                 autoComplete="off"
+                className="form-control"
                 onChange={e => callback(e)}
+                type={type}
                 value={value || ""}
                 {...options}
             />
@@ -671,7 +686,7 @@ class NewImagery extends React.Component {
     );
 
     formSelect = (title, value, callback, options, link = null) => (
-        <div className="mb-3" key={title}>
+        <div key={title} className="mb-3">
             <label>{title}</label> {link}
             <select
                 className="form-control"
@@ -684,26 +699,25 @@ class NewImagery extends React.Component {
     );
 
     formTextArea = (title, value, callback, link = null, options = {}) => (
-        <div className="mb-3" key={title}>
+        <div key={title} className="mb-3">
             <label>{title}</label> {link}
             <textarea
                 className="form-control"
                 onChange={e => callback(e)}
                 value={value || ""}
                 {...options}
-            >
-            </textarea>
+            />
         </div>
     );
 
-    accessTokenLink = (url, key) => url && key === "accessToken"
+    accessTokenLink = (url, key) => (url && key === "accessToken"
         ? (
-            <a href={imageryOptions[this.state.selectedType].url} target="_blank" rel="noreferrer noopener">
+            <a href={imageryOptions[this.state.selectedType].url} rel="noreferrer noopener" target="_blank">
                 Click here for help.
             </a>
-        ) : null;
+        ) : null);
 
-    formTemplate = (o) => (
+    formTemplate = o => (
         o.type === "select"
             ? this.formSelect(
                 o.display,
@@ -711,13 +725,13 @@ class NewImagery extends React.Component {
                 e => this.setState({
                     newImageryParams: {
                         ...this.state.newImageryParams,
-                        [o.key]: e.target.value,
+                        [o.key]: e.target.value
                     },
                     newImageryAttribution: imageryOptions[this.state.selectedType].type === "BingMaps"
                         ? "Bing Maps API: " + e.target.value + " | © Microsoft Corporation"
-                        : this.state.newImageryAttribution,
+                        : this.state.newImageryAttribution
                 }),
-                o.options.map(el => <option value={el.value} key={el.value}>{el.label}</option>),
+                o.options.map(el => <option key={el.value} value={el.value}>{el.label}</option>),
                 this.accessTokenLink(imageryOptions[this.state.selectedType].url, o.key)
             )
         : ["textarea", "JSON"].includes(o.type)
@@ -725,7 +739,7 @@ class NewImagery extends React.Component {
                 o.display,
                 this.state.newImageryParams[o.key],
                 e => this.setState({
-                    newImageryParams: {...this.state.newImageryParams, [o.key]: e.target.value},
+                    newImageryParams: {...this.state.newImageryParams, [o.key]: e.target.value}
                 }),
                 this.accessTokenLink(imageryOptions[this.state.selectedType].url, o.key),
                 o.options ? o.options : {}
@@ -735,7 +749,7 @@ class NewImagery extends React.Component {
             o.type || "text",
             this.state.newImageryParams[o.key],
             e => this.setState({
-                newImageryParams: {...this.state.newImageryParams, [o.key]: e.target.value},
+                newImageryParams: {...this.state.newImageryParams, [o.key]: e.target.value}
             }),
             this.accessTokenLink(imageryOptions[this.state.selectedType].url, o.key),
             o.options ? o.options : {}
@@ -745,8 +759,7 @@ class NewImagery extends React.Component {
     // Imagery Type Change Handler //
 
     // TODO, this can be generalized back into imageryOptions
-    getImageryAttribution = (type) =>
-        type === "BingMaps"
+    getImageryAttribution = type => (type === "BingMaps"
             ? "Bing Maps API: Aerial | © Microsoft Corporation"
         : type.includes("Planet")
             ? "Planet Labs Global Mosaic | © Planet Labs, Inc"
@@ -758,17 +771,17 @@ class NewImagery extends React.Component {
             ? "© Mapbox"
         : type === "OSM"
             ? "Open Street Map"
-        : "";
+        : "");
 
-    imageryTypeChangeHandler = (val) => {
+    imageryTypeChangeHandler = val => {
         const defaultState = imageryOptions[val].params.reduce((acc, cur) => ({
             ...acc,
-            [cur.key]: cur.type === "select" ? cur.options[0].value : "",
+            [cur.key]: cur.type === "select" ? cur.options[0].value : ""
         }), {});
         this.setState({
             selectedType: val,
             newImageryParams: defaultState,
-            newImageryAttribution: this.getImageryAttribution(imageryOptions[val].type),
+            newImageryAttribution: this.getImageryAttribution(imageryOptions[val].type)
         });
     };
 
@@ -781,39 +794,36 @@ class NewImagery extends React.Component {
                     <label>Select Type</label>
                     <select
                         className="form-control"
+                        disabled={!isNewImagery}
                         onChange={e => this.imageryTypeChangeHandler(e.target.value)}
                         value={this.state.selectedType}
-                        disabled={!isNewImagery}
                     >
-                        {imageryOptions.map((o, i) =>
-                            <option value={i} key={i}>{o.label || o.type}</option>
-                        )}
+                        {imageryOptions.map((o, i) => <option key={i} value={i}>{o.label || o.type}</option>)}
                     </select>
                 </div>
                 {/* Add fields. Include same for all and unique to selected type. */}
                 {this.formInput("Title",
                                 "text",
                                 this.state.newImageryTitle,
-                                e => this.setState({newImageryTitle: e.target.value})
-                )}
+                                e => this.setState({newImageryTitle: e.target.value}))}
                 {/* This should be generalized into the imageryOptions */}
                 {["GeoServer", "xyz"].includes(imageryOptions[this.state.selectedType].type)
                     && this.formInput(
                         "Attribution",
                         "text",
                         this.state.newImageryAttribution,
-                        e => this.setState({newImageryAttribution: e.target.value}))
-                }
+                        e => this.setState({newImageryAttribution: e.target.value})
+                    )}
                 {imageryOptions[this.state.selectedType].params.map(o => this.formTemplate(o))}
                 {/* Action buttons for save and quit */}
                 <div className="btn-group-vertical btn-block">
                     <div>
                         <input
-                            id="add-to-all"
-                            className="mr-3"
-                            type="checkbox"
                             checked={this.state.addToAllProjects}
+                            className="mr-3"
+                            id="add-to-all"
                             onChange={() => this.setState({addToAllProjects: !this.state.addToAllProjects})}
+                            type="checkbox"
                         />
                         <label
                             htmlFor="add-to-all"
@@ -822,20 +832,19 @@ class NewImagery extends React.Component {
                         </label>
                     </div>
                     <button
-                        type="button"
-                        id="add-imagery-button"
                         className="btn btn-sm btn-block btn-outline-yellow btn-group py-2 font-weight-bold"
+                        id="add-imagery-button"
                         onClick={() => this.uploadCustomImagery(isNewImagery)}
+                        type="button"
                     >
                         {isNewImagery
-                            ? <><UnicodeIcon icon="add" backgroundColor="#f1c00f"/>Add New Imagery</>
-                            : <><UnicodeIcon icon="edit" backgroundColor="#f1c00f"/>Save Imagery Changes</>
-                        }
+                            ? <><UnicodeIcon backgroundColor="#f1c00f" icon="add"/>Add New Imagery</>
+                            : <><UnicodeIcon backgroundColor="#f1c00f" icon="edit"/>Save Imagery Changes</>}
                     </button>
                     <button
-                        type="button"
                         className="btn btn-sm btn-block btn-outline-red btn-group py-2 font-weight-bold"
                         onClick={this.props.hideEditMode}
+                        type="button"
                     >
                         <UnicodeIcon icon="noAction"/>Discard
                     </button>
@@ -858,37 +867,37 @@ function Imagery({title, canEdit, visibility, toggleVisibility, selectEditImager
             </div>
             <div className="col overflow-hidden">
                 <button
-                    type="button"
-                    title={title}
                     className="btn btn-outline-lightgreen btn-sm btn-block text-truncate"
+                    title={title}
+                    type="button"
                 >
                     {title}
                 </button>
             </div>
-            {canEdit &&
-            <>
-                <div className="pr-3">
-                    <button
-                        className="btn btn-outline-yellow btn-sm btn-block px-3"
-                        id="edit-imagery"
-                        type="button"
-                        onClick={selectEditImagery}
-                    >
-                        <UnicodeIcon icon="edit"/>
-                    </button>
-                </div>
-                <div className="pr-3">
-                    <button
-                        className="btn btn-outline-red btn-sm btn-block px-3"
-                        id="delete-imagery"
-                        type="button"
-                        onClick={deleteImagery}
-                    >
-                        <UnicodeIcon icon="trash"/>
-                    </button>
-                </div>
-            </>
-            }
+            {canEdit && (
+                <>
+                    <div className="pr-3">
+                        <button
+                            className="btn btn-outline-yellow btn-sm btn-block px-3"
+                            id="edit-imagery"
+                            onClick={selectEditImagery}
+                            type="button"
+                        >
+                            <UnicodeIcon icon="edit"/>
+                        </button>
+                    </div>
+                    <div className="pr-3">
+                        <button
+                            className="btn btn-outline-red btn-sm btn-block px-3"
+                            id="delete-imagery"
+                            onClick={deleteImagery}
+                            type="button"
+                        >
+                            <UnicodeIcon icon="trash"/>
+                        </button>
+                    </div>
+                </>
+            )}
         </div>
     );
 }
@@ -901,32 +910,32 @@ function ProjectList({isAdmin, institutionId, projectList, isVisible, deleteProj
                 Red indicates that it has no plots collected, yellow indicates that some plots have been
                 collected, and green indicates that all plots have been selected.
             </div>
-            {isAdmin &&
-            <div className="row mb-3">
-                <div className="col">
-                    <button
-                        id="create-project"
-                        type="button"
-                        className="btn btn-sm btn-block btn-outline-yellow py-2 font-weight-bold"
-                        onClick={() => window.location = `/create-project?institutionId=${institutionId}`}
-                    >
-                        <UnicodeIcon icon="add" backgroundColor="#f1c00f"/>Create New Project
-                    </button>
+            {isAdmin && (
+                <div className="row mb-3">
+                    <div className="col">
+                        <button
+                            className="btn btn-sm btn-block btn-outline-yellow py-2 font-weight-bold"
+                            id="create-project"
+                            onClick={() => window.location = `/create-project?institutionId=${institutionId}`}
+                            type="button"
+                        >
+                            <UnicodeIcon backgroundColor="#f1c00f" icon="add"/>Create New Project
+                        </button>
+                    </div>
                 </div>
-            </div>
-            }
+            )}
             {projectList === null
                 ? <h3>Loading projects...</h3>
                 : projectList.length === 0
                     ? <h3>There are no projects</h3>
-                    : projectList.map((project, uid) =>
+                    : projectList.map((project, uid) => (
                         <Project
                             key={uid}
+                            deleteProject={deleteProject}
                             isAdmin={isAdmin}
                             project={project}
-                            deleteProject={deleteProject}
                         />
-                    )}
+                    ))}
         </div>
     );
 }
@@ -941,53 +950,54 @@ function Project({project, isAdmin, deleteProject}) {
             </div>
             <div className="col overflow-hidden">
                 <button
-                    type="button"
                     className="btn btn-sm btn-outline-lightgreen btn-block text-truncate"
-                    title={project.name}
                     onClick={() => window.location = `/collection?projectId=${project.id}`}
                     style={{
                         boxShadow: project.percentComplete === 0.0
                             ? "0px 0px 6px 1px red inset"
                             : project.percentComplete >= 100.0
                                 ? "0px 0px 6px 2px #3bb9d6 inset"
-                                : "0px 0px 6px 1px yellow inset",
+                                : "0px 0px 6px 1px yellow inset"
                     }}
+                    title={project.name}
+                    type="button"
                 >
                     {project.name}
                 </button>
             </div>
-            {isAdmin &&
-                <div className="d-flex">
-                    <span
-                        className="btn btn-sm btn-outline-yellow btn-block px-3 mr-1"
-                        title="Edit Project"
-                        onClick={() => window.location = `/review-project?projectId=${project.id}`}
-                    >
-                        <UnicodeIcon icon="edit"/>
-                    </span>
-                    <span
-                        className="btn btn-sm btn-outline-red btn-block px-3 mt-0 mr-1"
-                        title="Delete Project"
-                        onClick={() => deleteProject(project.id)}
-                    >
-                        <UnicodeIcon icon="trash"/>
-                    </span>
-                    <span
-                        className="btn btn-sm btn-outline-lightgreen btn-block px-3 mt-0 mr-1"
-                        title="Download Plot Data"
-                        onClick={() => window.open(`/dump-project-aggregate-data?projectId=${project.id}`, "_blank")}
-                    >
+            {isAdmin
+                && (
+                    <div className="d-flex">
+                        <span
+                            className="btn btn-sm btn-outline-yellow btn-block px-3 mr-1"
+                            onClick={() => window.location = `/review-project?projectId=${project.id}`}
+                            title="Edit Project"
+                        >
+                            <UnicodeIcon icon="edit"/>
+                        </span>
+                        <span
+                            className="btn btn-sm btn-outline-red btn-block px-3 mt-0 mr-1"
+                            onClick={() => deleteProject(project.id)}
+                            title="Delete Project"
+                        >
+                            <UnicodeIcon icon="trash"/>
+                        </span>
+                        <span
+                            className="btn btn-sm btn-outline-lightgreen btn-block px-3 mt-0 mr-1"
+                            onClick={() => window.open(`/dump-project-aggregate-data?projectId=${project.id}`, "_blank")}
+                            title="Download Plot Data"
+                        >
                         P
-                    </span>
-                    <span
-                        className="btn btn-sm btn-outline-lightgreen btn-block px-3 mt-0"
-                        title="Download Sample Data"
-                        onClick={() => window.open(`/dump-project-raw-data?projectId=${project.id}`, "_blank")}
-                    >
+                        </span>
+                        <span
+                            className="btn btn-sm btn-outline-lightgreen btn-block px-3 mt-0"
+                            onClick={() => window.open(`/dump-project-raw-data?projectId=${project.id}`, "_blank")}
+                            title="Download Sample Data"
+                        >
                         S
-                    </span>
-                </div>
-            }
+                        </span>
+                    </div>
+                )}
         </div>
     );
 }
@@ -996,7 +1006,7 @@ class UserList extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
-            institutionUserList: [],
+            institutionUserList: []
         };
     }
 
@@ -1006,7 +1016,7 @@ class UserList extends React.Component {
 
     getInstitutionUserList = () => {
         fetch(`/get-institution-users?institutionId=${this.props.institutionId}`)
-            .then(response => response.ok ? response.json() : Promise.reject(response))
+            .then(response => (response.ok ? response.json() : Promise.reject(response)))
             .then(data => {
                 this.props.setUsersCount(
                     data.filter(user => user.institutionRole !== "pending").length
@@ -1026,23 +1036,25 @@ class UserList extends React.Component {
         if (existingRole === "admin" && adminCount === 1) {
             alert("You cannot modify the last admin of an institution.");
         } else {
-            this.props.processModal("Updating user", () =>
-                fetch("/update-user-institution-role",
-                      {
-                          method: "POST",
-                          headers: {
-                              "Accept": "application/json",
-                              "Content-Type": "application/json",
-                          },
-                          body: JSON.stringify({
-                              accountId: accountId,
-                              newUserEmail: newUserEmail,
-                              institutionId: this.props.institutionId,
-                              institutionRole: newInstitutionRole,
-                          }),
-                      }
+            this.props.processModal(
+                "Updating user",
+                () => fetch(
+                    "/update-user-institution-role",
+                    {
+                        method: "POST",
+                        headers: {
+                            "Accept": "application/json",
+                            "Content-Type": "application/json"
+                        },
+                        body: JSON.stringify({
+                            accountId,
+                            newUserEmail,
+                            institutionId: this.props.institutionId,
+                            institutionRole: newInstitutionRole
+                        })
+                    }
                 )
-                    .then(response => response.ok ? response.json() : Promise.reject(response))
+                    .then(response => (response.ok ? response.json() : Promise.reject(response)))
                     .then(message => {
                         alert(message);
                         this.getInstitutionUserList();
@@ -1061,13 +1073,13 @@ class UserList extends React.Component {
                   method: "POST",
                   headers: {
                       "Accept": "application/json",
-                      "Content-Type": "application/json",
+                      "Content-Type": "application/json"
                   },
                   body: JSON.stringify({
-                      institutionId: this.props.institutionId,
-                  }),
+                      institutionId: this.props.institutionId
+                  })
               })
-            .then(response => response.ok ? response.json() : Promise.reject(response))
+            .then(response => (response.ok ? response.json() : Promise.reject(response)))
             .then(message => {
                 alert(message);
                 this.getInstitutionUserList();
@@ -1078,14 +1090,14 @@ class UserList extends React.Component {
             });
     };
 
-    currentIsInstitutionMember = () =>
-        this.props.userId === 1 || this.state.institutionUserList.some(iu => iu.id === this.props.userId);
+    currentIsInstitutionMember = () => this.props.userId === 1
+        || this.state.institutionUserList.some(iu => iu.id === this.props.userId);
 
-    isInstitutionMember = (userEmail) => this.state.institutionUserList.some(iu => iu.email === userEmail);
+    isInstitutionMember = userEmail => this.state.institutionUserList.some(iu => iu.email === userEmail);
 
     render() {
-        return this.props.isVisible &&
-            <Fragment>
+        return this.props.isVisible && (
+            <>
                 <div className="mb-3">
                     This is a list of all institution users.
                     An institution admin can create and update projects and imagery for the institution.
@@ -1093,9 +1105,9 @@ class UserList extends React.Component {
                 </div>
                 <NewUserButtons
                     currentIsInstitutionMember={this.currentIsInstitutionMember()}
-                    requestMembership={this.requestMembership}
                     isAdmin={this.props.isAdmin}
                     isInstitutionMember={this.isInstitutionMember}
+                    requestMembership={this.requestMembership}
                     updateUserInstitutionRole={this.updateUserInstitutionRole}
                     userId={this.props.userId}
                 />
@@ -1105,46 +1117,46 @@ class UserList extends React.Component {
                         || iu.institutionRole === "admin")
                     .sort((a, b) => sortAlphabetically(a.email, b.email))
                     .sort((a, b) => sortAlphabetically(a.institutionRole, b.institutionRole))
-                    .map((iu, uid) =>
+                    .map((iu, uid) => (
                         <User
                             key={uid}
-                            user={iu}
                             isAdmin={this.props.isAdmin}
                             updateUserInstitutionRole={this.updateUserInstitutionRole}
+                            user={iu}
                         />
-                    )
-                }
-            </Fragment>;
+                    ))}
+            </>
+        );
     }
 }
 
 function User({user, isAdmin, updateUserInstitutionRole}) {
     return (
         <div className="row">
-            {!isAdmin &&
+            {!isAdmin && (
                 <div className="col-2 mb-1 pr-0">
                     <div className="btn btn-sm btn-outline-lightgreen btn-block">
                         {capitalizeFirst(user.institutionRole)}
                     </div>
                 </div>
-            }
+            )}
             <div className="col mb-1 overflow-hidden">
                 <button
-                    type="button"
                     className="btn btn-sm btn-outline-lightgreen btn-block text-truncate"
-                    title={user.email}
                     onClick={() => window.location = `/account?accountId=${user.id}`}
+                    title={user.email}
+                    type="button"
                 >
                     {user.email}
                 </button>
             </div>
-            {isAdmin &&
+            {isAdmin && (
                 <div className="col-lg-3 mb-1 pl-0">
                     <select
-                        value={user.institutionRole}
                         className="custom-select custom-select-sm"
-                        size="1"
                         onChange={e => updateUserInstitutionRole(user.id, null, e.target.value)}
+                        size="1"
+                        value={user.institutionRole}
                     >
                         {user.institutionRole === "pending" && <option value="pending">Pending</option>}
                         <option value="member">Member</option>
@@ -1152,7 +1164,7 @@ function User({user, isAdmin, updateUserInstitutionRole}) {
                         <option value="not-member">Remove</option>
                     </select>
                 </div>
-            }
+            )}
         </div>
     );
 }
@@ -1161,7 +1173,7 @@ class NewUserButtons extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
-            newUserEmail: "",
+            newUserEmail: ""
         };
     }
 
@@ -1180,52 +1192,54 @@ class NewUserButtons extends React.Component {
     addUser = () => this.props.updateUserInstitutionRole(null, this.state.newUserEmail, "member");
 
     render() {
-        return <Fragment>
-            {this.props.isAdmin &&
-                <div className="row mb-1">
-                    <div className="col-9 pr-3">
-                        <input
-                            className="form-control form-control-sm py-2"
-                            type="email"
-                            autoComplete="off"
-                            placeholder="Email"
-                            onChange={e => this.setState({newUserEmail: e.target.value})}
-                            value={this.state.newUserEmail}
-                        />
+        return (
+            <>
+                {this.props.isAdmin && (
+                    <div className="row mb-1">
+                        <div className="col-9 pr-3">
+                            <input
+                                autoComplete="off"
+                                className="form-control form-control-sm py-2"
+                                onChange={e => this.setState({newUserEmail: e.target.value})}
+                                placeholder="Email"
+                                type="email"
+                                value={this.state.newUserEmail}
+                            />
+                        </div>
+                        <div className="col-3 pl-0">
+                            <button
+                                className="btn btn-sm btn-outline-yellow btn-block py-2 font-weight-bold"
+                                onClick={() => this.checkUserEmail() && this.addUser()}
+                                type="button"
+                            >
+                                <UnicodeIcon backgroundColor="#f1c00f" icon="add"/>Add User
+                            </button>
+                        </div>
                     </div>
-                    <div className="col-3 pl-0">
+                )}
+                {(this.props.userId > 0 && !this.props.currentIsInstitutionMember) && (
+                    <div>
                         <button
+                            className="btn btn-sm btn-outline-yellow btn-block mb-2"
+                            id="request-membership-button"
+                            onClick={this.props.requestMembership}
                             type="button"
-                            className="btn btn-sm btn-outline-yellow btn-block py-2 font-weight-bold"
-                            onClick={() => this.checkUserEmail() && this.addUser()}
                         >
-                            <UnicodeIcon icon="add" backgroundColor="#f1c00f"/>Add User
+                            <UnicodeIcon backgroundColor="#f1c00f" icon="add"/>Request membership
                         </button>
                     </div>
-                </div>
-            }
-            {(this.props.userId > 0 && !this.props.currentIsInstitutionMember) &&
-            <div>
-                <button
-                    type="button"
-                    className="btn btn-sm btn-outline-yellow btn-block mb-2"
-                    id="request-membership-button"
-                    onClick={this.props.requestMembership}
-                >
-                    <UnicodeIcon icon="add" backgroundColor="#f1c00f"/>Request membership
-                </button>
-            </div>
-            }
-        </Fragment>;
+                )}
+            </>
+        );
     }
 }
 
 export function pageInit(args) {
     ReactDOM.render(
-        <NavigationBar userName={args.userName} userId={args.userId}>
+        <NavigationBar userId={args.userId} userName={args.userName}>
             <ReviewInstitution
-                userId={args.userId || -1}
                 institutionId={parseInt(args.institutionId || "-1")}
+                userId={args.userId || -1}
             />
         </NavigationBar>,
         document.getElementById("app")

@@ -7,7 +7,7 @@ class PasswordRequest extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
-            email: "",
+            email: ""
         };
     }
 
@@ -16,9 +16,9 @@ class PasswordRequest extends React.Component {
               {
                   method: "POST",
                   headers: {
-                      "Content-Type": "application/x-www-form-urlencoded",
+                      "Content-Type": "application/x-www-form-urlencoded"
                   },
-                  body: getQueryString(this.state),
+                  body: getQueryString(this.state)
               })
             .then(response => Promise.all([response.ok, response.json()]))
             .then(data => {
@@ -47,13 +47,13 @@ class PasswordRequest extends React.Component {
                             <div className="form-group">
                                 <label htmlFor="email">Email address</label>
                                 <input
-                                    id="email"
-                                    className="form-control"
                                     autoComplete="off"
-                                    placeholder="Email"
-                                    value={this.state.email}
-                                    type="email"
+                                    className="form-control"
+                                    id="email"
                                     onChange={e => this.setState({email: e.target.value})}
+                                    placeholder="Email"
+                                    type="email"
+                                    value={this.state.email}
                                 />
                             </div>
                             <button className="btn btn-lightgreen float-right mb-2" type="submit">
@@ -70,8 +70,8 @@ class PasswordRequest extends React.Component {
 
 export function pageInit(args) {
     ReactDOM.render(
-        <NavigationBar userName={""} userId={-1}>
-            <PasswordRequest />
+        <NavigationBar userId={-1} userName="">
+            <PasswordRequest/>
         </NavigationBar>,
         document.getElementById("app")
     );

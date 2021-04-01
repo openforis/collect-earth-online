@@ -11,7 +11,7 @@ import {SurveyRulesList} from "./SurveyRules";
 import {ProjectContext} from "./constants";
 
 export default function ReviewForm() {
-    const renderSectionHeader = (title) => (
+    const renderSectionHeader = title => (
         <h2
             className="header overflow-hidden text-truncate my-2 p-2"
             style={{fontSize: "1.25rem"}}
@@ -22,13 +22,13 @@ export default function ReviewForm() {
 
     return (
         <ProjectContext.Consumer>
-            {context =>
-                <div id="project-design-form" className="px-2 pb-2">
+            {context => (
+                <div className="px-2 pb-2" id="project-design-form">
                     {renderSectionHeader("Overview")}
                     <OverviewReview/>
                     <div id="collection-review">
                         {renderSectionHeader("Collection Design")}
-                        <AOIMap context={context} canDrag={false}/>
+                        <AOIMap canDrag={false} context={context}/>
                         <div className="row" style={{borderBottom: "1px solid lightgray"}}>
                             <div className="col-6 pt-3" style={{borderRight: "1px solid lightgray"}}>
                                 <h2>Imagery Selection</h2>
@@ -56,7 +56,7 @@ export default function ReviewForm() {
                         <SurveyRulesList {...context} inDesignMode={false}/>
                     </div>
                 </div>
-            }
+            )}
         </ProjectContext.Consumer>
     );
 }

@@ -10,7 +10,7 @@ export default class ReviewChanges extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
-            acceptTOS: false,
+            acceptTOS: false
         };
     }
 
@@ -20,22 +20,25 @@ export default class ReviewChanges extends React.Component {
         if (!this.state.acceptTOS) {
             alert("You must accept the terms of service to continue.");
         } else if (confirm("Do you really want to create this project?")) {
-            this.context.processModal("Creating Project", () =>
-                fetch("/create-project",
-                      {
-                          method: "POST",
-                          headers: {
-                              "Accept": "application/json",
-                              "Content-Type": "application/json; charset=utf-8",
-                          },
-                          body: JSON.stringify({
-                              institutionId: this.context.institutionId,
-                              projectTemplate: this.context.templateProjectId,
-                              useTemplatePlots: this.context.useTemplatePlots,
-                              useTemplateWidgets: this.context.useTemplateWidgets,
-                              ...this.buildProjectObject(),
-                          }),
-                      })
+            this.context.processModal(
+                "Creating Project",
+                () => fetch(
+                    "/create-project",
+                    {
+                        method: "POST",
+                        headers: {
+                            "Accept": "application/json",
+                            "Content-Type": "application/json; charset=utf-8"
+                        },
+                        body: JSON.stringify({
+                            institutionId: this.context.institutionId,
+                            projectTemplate: this.context.templateProjectId,
+                            useTemplatePlots: this.context.useTemplatePlots,
+                            useTemplateWidgets: this.context.useTemplateWidgets,
+                            ...this.buildProjectObject()
+                        })
+                    }
+                )
                     .then(response => Promise.all([response.ok, response.json()]))
                     .then(data => {
                         if (data[0] && Number.isInteger(data[1].projectId)) {
@@ -65,20 +68,23 @@ export default class ReviewChanges extends React.Component {
                 ? "  Disallowing users to draw samples will reset all collected data."
             : "";
         if (confirm("Do you really want to update this project?" + extraMessage)) {
-            this.context.processModal("Updating Project", () =>
-                fetch("/update-project",
-                      {
-                          method: "POST",
-                          headers: {
-                              "Accept": "application/json",
-                              "Content-Type": "application/json; charset=utf-8",
-                          },
-                          body: JSON.stringify({
-                              projectId: this.context.projectId,
-                              ...this.buildProjectObject(),
-                              updateSurvey: updateSurvey, // FIXME this is a shim for when stored questions are in an old format.
-                          }),
-                      })
+            this.context.processModal(
+                "Updating Project",
+                () => fetch(
+                    "/update-project",
+                    {
+                        method: "POST",
+                        headers: {
+                            "Accept": "application/json",
+                            "Content-Type": "application/json; charset=utf-8"
+                        },
+                        body: JSON.stringify({
+                            projectId: this.context.projectId,
+                            ...this.buildProjectObject(),
+                            updateSurvey // FIXME this is a shim for when stored questions are in an old format.
+                        })
+                    }
+                )
                     .then(response => {
                         if (!response.ok) {
                             console.log(response);
@@ -122,19 +128,16 @@ export default class ReviewChanges extends React.Component {
             plotFileName: this.context.plotFileName,
             plotFileBase64: this.context.plotFileBase64,
             sampleFileName: this.context.sampleFileName,
-            sampleFileBase64: this.context.sampleFileBase64,
+            sampleFileBase64: this.context.sampleFileBase64
         };
     };
 
-    allowDrawnSamplesDisallowed = (projectDetails, originalProject) =>
-        originalProject.allowDrawnSamples && !projectDetails.allowDrawnSamples;
+    allowDrawnSamplesDisallowed = (projectDetails, originalProject) => originalProject.allowDrawnSamples && !projectDetails.allowDrawnSamples;
 
-    surveyQuestionUpdated = (projectDetails, originalProject) =>
-        !_.isEqual(projectDetails.surveyQuestions, originalProject.surveyQuestions)
+    surveyQuestionUpdated = (projectDetails, originalProject) => !_.isEqual(projectDetails.surveyQuestions, originalProject.surveyQuestions)
             || !_.isEqual(projectDetails.surveyRules, originalProject.surveyRules);
 
-    plotsUpdated = (projectDetails, originalProject) =>
-        projectDetails.plotDistribution !== originalProject.plotDistribution
+    plotsUpdated = (projectDetails, originalProject) => projectDetails.plotDistribution !== originalProject.plotDistribution
             || (["csv", "shp"].includes(this.context.plotDistribution)
                 ? projectDetails.plotFileBase64
                 : projectDetails.boundary !== originalProject.boundary
@@ -143,8 +146,7 @@ export default class ReviewChanges extends React.Component {
                     || projectDetails.plotSize !== originalProject.plotSize
                     || projectDetails.plotSpacing !== originalProject.plotSpacing);
 
-    samplesUpdated = (projectDetails, originalProject) =>
-        projectDetails.sampleDistribution !== originalProject.sampleDistribution
+    samplesUpdated = (projectDetails, originalProject) => projectDetails.sampleDistribution !== originalProject.sampleDistribution
             || (["csv", "shp"].includes(this.context.sampleDistribution)
                 ? projectDetails.sampleFileBase64
                 : projectDetails.samplesPerPlot !== originalProject.samplesPerPlot
@@ -158,45 +160,45 @@ export default class ReviewChanges extends React.Component {
             ? (
                 <>
                     <input
-                        type="button"
                         className="btn btn-outline-lightgreen btn-sm col-6 mb-3"
-                        value="Update Project"
                         onClick={this.updateProject}
+                        type="button"
+                        value="Update Project"
                     />
                     <input
-                        type="button"
                         className="btn btn-outline-red btn-sm col-6 mb-3"
-                        value="Discard Changes"
                         onClick={() => this.context.setContextState({designMode: "manage"})}
+                        type="button"
+                        value="Discard Changes"
                     />
                 </>
             ) : (
                 <>
                     <div className="form-check mb-3">
                         <input
-                            id="tos-check"
-                            type="checkbox"
-                            className="form-check-input"
                             checked={this.state.acceptTOS}
+                            className="form-check-input"
+                            id="tos-check"
                             onChange={() => this.setState({acceptTOS: !this.state.acceptTOS})}
+                            type="checkbox"
                         />
                         <label className="form-check-label" htmlFor="tos-check">
-                            I agree to the <a target="_blank" href="/terms">Terms of Service</a>.
+                            I agree to the <a href="/terms" target="_blank">Terms of Service</a>.
                         </label>
                     </div>
                     <input
-                        type="button"
                         className="btn btn-outline-lightgreen btn-sm col-6"
-                        value="Create Project"
                         onClick={this.createProject}
+                        type="button"
+                        value="Create Project"
                     />
                 </>
             )}
             <input
-                type="button"
                 className="btn btn-outline-lightgreen btn-sm col-6"
-                value="Continue Editing"
                 onClick={() => this.context.setContextState({designMode: "wizard"})}
+                type="button"
+                value="Continue Editing"
             />
         </div>
     );
@@ -204,8 +206,8 @@ export default class ReviewChanges extends React.Component {
     render() {
         return (
             <div
-                id="changes"
                 className="d-flex flex-column full-height align-items-center p-3"
+                id="changes"
             >
                 <div
                     style={{
@@ -213,7 +215,7 @@ export default class ReviewChanges extends React.Component {
                         height: "100%",
                         justifyContent: "center",
                         width: "100%",
-                        overflow: "auto",
+                        overflow: "auto"
                     }}
                 >
                     <div

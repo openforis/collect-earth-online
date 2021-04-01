@@ -13,8 +13,8 @@ class CreateInstitution extends React.Component {
                 base64Image: "",
                 url: "",
                 description: "",
-                acceptTOS: false,
-            },
+                acceptTOS: false
+            }
         };
     }
 
@@ -27,16 +27,15 @@ class CreateInstitution extends React.Component {
                       method: "POST",
                       headers: {
                           "Accept": "application/json",
-                          "Content-Type": "application/json",
+                          "Content-Type": "application/json"
                       },
                       body: JSON.stringify({
                           name: this.state.newInstitutionDetails.name,
                           base64Image: this.state.newInstitutionDetails.base64Image,
                           url: this.state.newInstitutionDetails.url,
-                          description: this.state.newInstitutionDetails.description,
-                      }),
-                  }
-            )
+                          description: this.state.newInstitutionDetails.description
+                      })
+                  })
                 .then(response => Promise.all([response.ok, response.json()]))
                 .then(data => {
                     if (data[0] && Number.isInteger(data[1])) {
@@ -53,33 +52,34 @@ class CreateInstitution extends React.Component {
     setInstitutionDetails = (key, newValue) => {
         this.setState({
             newInstitutionDetails: {
-                ...this.state.newInstitutionDetails, [key]: newValue,
-            },
+                ...this.state.newInstitutionDetails, [key]: newValue
+            }
         });
     };
 
-    renderButtonGroup = () =>
+    renderButtonGroup = () => (
         <input
-            id="create-institution"
             className="btn btn-outline-lightgreen btn-sm btn-block"
-            type="button"
-            value="Create Institution"
-            onClick={this.createInstitution}
             disabled={this.state.newInstitutionDetails.name === ""
                 || this.state.newInstitutionDetails.description === ""
                 || this.state.newInstitutionDetails.acceptTOS === false}
-        />;
+            id="create-institution"
+            onClick={this.createInstitution}
+            type="button"
+            value="Create Institution"
+        />
+    );
 
     render() {
         return (
             <InstitutionEditor
-                title="Create New Institution"
-                name={this.state.newInstitutionDetails.name}
-                url={this.state.newInstitutionDetails.url}
-                description={this.state.newInstitutionDetails.description}
                 acceptTOS={this.state.newInstitutionDetails.acceptTOS}
                 buttonGroup={this.renderButtonGroup}
+                description={this.state.newInstitutionDetails.description}
+                name={this.state.newInstitutionDetails.name}
                 setInstitutionDetails={this.setInstitutionDetails}
+                title="Create New Institution"
+                url={this.state.newInstitutionDetails.url}
             />
         );
     }
@@ -87,8 +87,8 @@ class CreateInstitution extends React.Component {
 
 export function pageInit(args) {
     ReactDOM.render(
-        <NavigationBar userName={args.userName} userId={args.userId}>
-            <CreateInstitution />
+        <NavigationBar userId={args.userId} userName={args.userName}>
+            <CreateInstitution/>
         </NavigationBar>,
         document.getElementById("app")
     );

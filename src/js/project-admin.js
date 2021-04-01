@@ -20,7 +20,7 @@ class Project extends React.Component {
                 showGEEScript: false,
                 showPlotInformation: false,
                 collectConfidence: false,
-                autoLaunchGeoDash: true,
+                autoLaunchGeoDash: true
             },
             plotDistribution: "random",
             imageryId: -1,
@@ -39,14 +39,14 @@ class Project extends React.Component {
             useTemplateWidgets: false,
             useTemplatePlots: false,
             projectImageryList: [],
-            plots: [],
+            plots: []
         };
 
         this.modes = {
             wizard: CreateProjectWizard,
             review: ReviewChanges,
             manage: ManageProject,
-            loading: () => null,
+            loading: () => null
         };
 
         this.state = {
@@ -54,7 +54,7 @@ class Project extends React.Component {
             originalProject: {},
             institutionImagery: [],
             designMode: "loading",
-            modalMessage: null,
+            modalMessage: null
         };
     }
 
@@ -76,12 +76,15 @@ class Project extends React.Component {
         const {plotDistribution, sampleDistribution, institution} = this.state.projectDetails;
 
         if (plotDistribution !== prevState.projectDetails.plotDistribution) {
-            const newSampleDistribution = ["random", "gridded"].includes(plotDistribution) && ["csv", "shp"].includes(sampleDistribution)
+            const newSampleDistribution = ["random", "gridded"].includes(plotDistribution)
+                && ["csv", "shp"].includes(sampleDistribution)
                 ? "random"
                 : plotDistribution === "shp" && ["random", "gridded"].includes(sampleDistribution)
-                ? "shp"
-                : sampleDistribution;
-            if (newSampleDistribution !== sampleDistribution) this.setProjectDetails({sampleDistribution: newSampleDistribution});
+                    ? "shp"
+                    : sampleDistribution;
+            if (newSampleDistribution !== sampleDistribution) {
+                this.setProjectDetails({sampleDistribution: newSampleDistribution});
+            }
         }
 
         if (institution !== prevState.projectDetails.institution) {
@@ -91,28 +94,29 @@ class Project extends React.Component {
 
     /// Updating State
 
-    setProjectDetails = (newValue, callBack = () => null) =>
-        this.setState({projectDetails: {...this.state.projectDetails, ...newValue}}, callBack);
+    setProjectDetails = (newValue, callBack = () => null) => this.setState(
+        {projectDetails: {...this.state.projectDetails, ...newValue}},
+        callBack
+    );
 
-    resetProject = (defaults) => this.setState({projectDetails: this.blankProject, ...defaults});
+    resetProject = defaults => this.setState({projectDetails: this.blankProject, ...defaults});
 
-    setContextState = (newState) => this.setState(newState);
+    setContextState = newState => this.setState(newState);
 
     /// API Calls
 
-    getInstitutionImagery = (institutionId) =>
-        fetch(`/get-institution-imagery?institutionId=${institutionId}`)
-            .then(response => response.ok ? response.json() : Promise.reject(response))
-            .then(data => {
-                const sorted = [...data.filter(a => a.title.toLocaleLowerCase().includes("mapbox")),
-                                ...data.filter(a => !a.title.toLocaleLowerCase().includes("mapbox"))];
-                this.setState({institutionImagery: sorted});
-                this.setProjectDetails({imageryId: sorted[0].id});
-            })
-            .catch(response => {
-                console.log(response);
-                alert("Error retrieving the imagery list. See console for details.");
-            });
+    getInstitutionImagery = institutionId => fetch(`/get-institution-imagery?institutionId=${institutionId}`)
+        .then(response => (response.ok ? response.json() : Promise.reject(response)))
+        .then(data => {
+            const sorted = [...data.filter(a => a.title.toLocaleLowerCase().includes("mapbox")),
+                            ...data.filter(a => !a.title.toLocaleLowerCase().includes("mapbox"))];
+            this.setState({institutionImagery: sorted});
+            this.setProjectDetails({imageryId: sorted[0].id});
+        })
+        .catch(response => {
+            console.log(response);
+            alert("Error retrieving the imagery list. See console for details.");
+        });
 
     /// Functions
 
@@ -136,7 +140,7 @@ class Project extends React.Component {
                     setProjectDetails: this.setProjectDetails,
                     setContextState: this.setContextState,
                     resetProject: this.resetProject,
-                    processModal: this.processModal,
+                    processModal: this.processModal
                 }}
             >
                 {this.state.modalMessage && <LoadingModal message={this.state.modalMessage}/>}
@@ -150,7 +154,7 @@ class Project extends React.Component {
 
 export function pageInit(args) {
     ReactDOM.render(
-        <NavigationBar userName={args.userName} userId={args.userId}>
+        <NavigationBar userId={args.userId} userName={args.userName}>
             <Project
                 institutionId={parseInt(args.institutionId) || -1}
                 projectId={parseInt(args.projectId) || -1}

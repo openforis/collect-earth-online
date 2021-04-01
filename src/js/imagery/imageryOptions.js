@@ -19,8 +19,8 @@ export const nicfiLayers = ["2015-12_2016-05",
 
 const outOfRange = (num, low, high) => isNaN(num) || parseInt(num) < low || parseInt(num) > high;
 
-const dateRangeValidator = ({startDate, endDate}) => startDate && endDate
-    && new Date(startDate) > new Date(endDate) ? "Start date must be smaller than the end date." : "";
+const dateRangeValidator = ({startDate, endDate}) => (startDate && endDate
+    && new Date(startDate) > new Date(endDate) ? "Start date must be smaller than the end date." : "");
 
 const urlValidator = url => /^(?:http|https):\/\/[\w.-]+(?:\.[\w-]+)+[\w\-.,@?^=%&:;/~\\+#]+$/.test(url);
 
@@ -43,12 +43,12 @@ export const imageryOptions = [
             {
                 key: "geoserverUrl",
                 display: "WMS URL",
-                sanitizer: value => value.endsWith("?") ? value.slice(0, -1) : value,
-                validator: value => !urlValidator(value)
+                sanitizer: value => (value.endsWith("?") ? value.slice(0, -1) : value),
+                validator: value => (!urlValidator(value)
                     ? "The server address (URL) is not valid."
                     : /\?.+/.test(value)
                         ? "The field \"WMS Url\" should not contain the query string. Please put those values in the field \"Additional WMS Params (as JSON object)\"."
-                        : "",
+                        : "")
             },
             {key: "LAYERS", display: "WMS Layer Name", parent: "geoserverParams"},
             {
@@ -68,9 +68,9 @@ export const imageryOptions = [
                             .join(",")}}`
                         : value;
                 },
-                validator: value => !isValidJSON(value) ? "Invalid JSON in the \"Additional WMS Params\" field." : "",
-            },
-        ],
+                validator: value => (!isValidJSON(value) ? "Invalid JSON in the \"Additional WMS Params\" field." : "")
+            }
+        ]
         // FIXME, add url if help document is created.
     },
     {
@@ -79,12 +79,12 @@ export const imageryOptions = [
         params: [{
             key: "url",
             display: "XYZ URL",
-            validator: value => !urlValidator(value)
+            validator: value => (!urlValidator(value)
                 ? "The server address (URL) is not valid."
                 : !(/.*(?=.*{-?x})(?=.*{-?z})(?=.*{-?y}).*/gi.test(value))
                     ? "The URL for an XYZ imagery type must include {x}, {y}, and {z}."
-                    : "",
-        }],
+                    : "")
+        }]
     },
     {
         type: "BingMaps",
@@ -96,12 +96,12 @@ export const imageryOptions = [
                 type: "select",
                 options: [
                     {label: "Aerial", value: "Aerial"},
-                    {label: "Aerial with Labels", value: "AerialWithLabels"},
-                ],
+                    {label: "Aerial with Labels", value: "AerialWithLabels"}
+                ]
             },
-            {key: "accessToken", display: "Access Token"},
+            {key: "accessToken", display: "Access Token"}
         ],
-        url: "https://docs.microsoft.com/en-us/bingmaps/getting-started/bing-maps-dev-center-help/getting-a-bing-maps-key",
+        url: "https://docs.microsoft.com/en-us/bingmaps/getting-started/bing-maps-dev-center-help/getting-a-bing-maps-key"
     },
     {
         type: "Planet",
@@ -111,17 +111,17 @@ export const imageryOptions = [
                 key: "year",
                 display: "Default Year",
                 type: "number",
-                validator: value => isNaN(value) || (value.toString().length !== 4) ? "Year should be 4 digit number" : "",
+                validator: value => (isNaN(value) || (value.toString().length !== 4) ? "Year should be 4 digit number" : "")
             },
             {
                 key: "month",
                 display: "Default Month",
                 type: "number",
-                validator: value => outOfRange(value, 1, 12) ? "Month should be between 1 and 12!" : "",
+                validator: value => (outOfRange(value, 1, 12) ? "Month should be between 1 and 12!" : "")
             },
-            {key: "accessToken", display: "Access Token"},
+            {key: "accessToken", display: "Access Token"}
         ],
-        url: "https://developers.planet.com/docs/quickstart/getting-started/",
+        url: "https://developers.planet.com/docs/quickstart/getting-started/"
     },
     {
         type: "PlanetDaily",
@@ -129,10 +129,10 @@ export const imageryOptions = [
         params: [
             {key: "accessToken", display: "Access Token"},
             {key: "startDate", display: "Start Date", type: "date"},
-            {key: "endDate", display: "End Date", type: "date"},
+            {key: "endDate", display: "End Date", type: "date"}
         ],
         validator: dateRangeValidator,
-        url: "https://developers.planet.com/docs/quickstart/getting-started/",
+        url: "https://developers.planet.com/docs/quickstart/getting-started/"
     },
     {
         type: "PlanetNICFI",
@@ -145,8 +145,8 @@ export const imageryOptions = [
                 type: "select",
                 options: [
                     {label: "Newest Available", value: "newest"},
-                    ...nicfiLayers.map(layer => ({label: layer, value: layer})),
-                ],
+                    ...nicfiLayers.map(layer => ({label: layer, value: layer}))
+                ]
             },
             {
                 key: "band",
@@ -154,11 +154,11 @@ export const imageryOptions = [
                 type: "select",
                 options: [
                     {label: "Visible", value: "rgb"},
-                    {label: "Infrared", value: "cir"},
-                ],
-            },
+                    {label: "Infrared", value: "cir"}
+                ]
+            }
         ],
-        url: "https://assets.planet.com/docs/NICFI_UserGuidesFAQ.pdf",
+        url: "https://assets.planet.com/docs/NICFI_UserGuidesFAQ.pdf"
     },
     {
         type: "SecureWatch",
@@ -169,24 +169,24 @@ export const imageryOptions = [
                 type: "select",
                 options: [
                     {label: "https://securewatch.digitalglobe.com", value: "https://securewatch.digitalglobe.com"},
-                    {label: "https://services.digitalglobe.com", value: "https://services.digitalglobe.com"},
+                    {label: "https://services.digitalglobe.com", value: "https://services.digitalglobe.com"}
                 ],
-                validator: value => !urlValidator(value) ? "The server address (URL) is not valid." : "",
+                validator: value => (!urlValidator(value) ? "The server address (URL) is not valid." : "")
             },
             {key: "connectid", display: "Connect ID"},
             {
                 key: "startDate",
                 display: "Start Date",
                 type: "date",
-                options: {max: new Date().toJSON().split("T")[0]},
+                options: {max: new Date().toJSON().split("T")[0]}
             },
             {
                 key: "endDate",
                 display: "End Date",
-                type: "date",
-            },
+                type: "date"
+            }
         ],
-        validator: dateRangeValidator,
+        validator: dateRangeValidator
     },
     {
         type: "Sentinel1",
@@ -197,16 +197,16 @@ export const imageryOptions = [
                 display: "Default Year",
                 type: "number",
                 options: {min: "2014", max: new Date().getFullYear().toString(), step: "1"},
-                validator: value => outOfRange(value, 2014, new Date().getFullYear()) || value.toString().length !== 4 ?
-                    "Year should be 4 digit number and between 2014 and " + new Date().getFullYear()
-                : "",
+                validator: value => (outOfRange(value, 2014, new Date().getFullYear()) || value.toString().length !== 4
+                    ? "Year should be 4 digit number and between 2014 and " + new Date().getFullYear()
+                : "")
             },
             {
                 key: "month",
                 display: "Default Month",
                 type: "number",
                 options: {min: "1", max: "12", step: "1"},
-                validator: value => outOfRange(value, 1, 12) ? "Month should be between 1 and 12!" : "",
+                validator: value => (outOfRange(value, 1, 12) ? "Month should be between 1 and 12!" : "")
             },
             {
                 key: "bandCombination",
@@ -216,8 +216,8 @@ export const imageryOptions = [
                     {label: "VH,VV,VH/VV", value: "VH,VV,VH/VV"},
                     {label: "VH,VV,VV/VH", value: "VH,VV,VV/VH"},
                     {label: "VV,VH,VV/VH", value: "VV,VH,VV/VH"},
-                    {label: "VV,VH,VH/VV", value: "VV,VH,VH/VV"},
-                ],
+                    {label: "VV,VH,VH/VV", value: "VV,VH,VH/VV"}
+                ]
             },
             {
                 key: "min",
@@ -225,8 +225,8 @@ export const imageryOptions = [
                 type: "number",
                 options: {
                     placeholder: "1-100",
-                    step: "0.01",
-                },
+                    step: "0.01"
+                }
             },
             {
                 key: "max",
@@ -234,10 +234,10 @@ export const imageryOptions = [
                 type: "number",
                 options: {
                     placeholder: "2800-3200",
-                    step: "0.01",
-                },
-            },
-        ],
+                    step: "0.01"
+                }
+            }
+        ]
     },
     {
         type: "Sentinel2",
@@ -248,16 +248,16 @@ export const imageryOptions = [
                 display: "Default Year",
                 type: "number",
                 options: {min: "2015", max: new Date().getFullYear().toString(), step: "1"},
-                validator: value => outOfRange(value, 2015, new Date().getFullYear()) || value.toString().length !== 4 ?
-                    "Year should be 4 digit number and between 2015 and " + new Date().getFullYear()
-                : "",
+                validator: value => (outOfRange(value, 2015, new Date().getFullYear()) || value.toString().length !== 4
+                    ? "Year should be 4 digit number and between 2015 and " + new Date().getFullYear()
+                : "")
             },
             {
                 key: "month",
                 display: "Default Month",
                 type: "number",
                 options: {min: "1", max: "12", step: "1"},
-                validator: value => outOfRange(value, 1, 12) ? "Month should be between 1 and 12!" : "",
+                validator: value => (outOfRange(value, 1, 12) ? "Month should be between 1 and 12!" : "")
             },
             {
                 key: "bandCombination",
@@ -269,8 +269,8 @@ export const imageryOptions = [
                     {label: "False Color Urban", value: "FalseColorUrban"},
                     {label: "Agriculture", value: "Agriculture"},
                     {label: "Healthy Vegetation", value: "HealthyVegetation"},
-                    {label: "Short Wave Infrared", value: "ShortWaveInfrared"},
-                ],
+                    {label: "Short Wave Infrared", value: "ShortWaveInfrared"}
+                ]
             },
             {
                 key: "min",
@@ -278,8 +278,8 @@ export const imageryOptions = [
                 type: "number",
                 options: {
                     placeholder: "1-100",
-                    step: "0.01",
-                },
+                    step: "0.01"
+                }
             },
             {
                 key: "max",
@@ -287,8 +287,8 @@ export const imageryOptions = [
                 type: "number",
                 options: {
                     placeholder: "2800-3200",
-                    step: "0.01",
-                },
+                    step: "0.01"
+                }
             },
             {
                 key: "cloudScore",
@@ -298,11 +298,11 @@ export const imageryOptions = [
                     placeholder: "10-30",
                     min: "0",
                     max: "100",
-                    step: "1",
+                    step: "1"
                 },
-                validator: value => value && outOfRange(value, 0, 100) ? "Cloud Score should be between 0 and 100!" : "",
-            },
-        ],
+                validator: value => (value && outOfRange(value, 0, 100) ? "Cloud Score should be between 0 and 100!" : "")
+            }
+        ]
     },
     {
         type: "GEEImage",
@@ -311,16 +311,16 @@ export const imageryOptions = [
             {
                 key: "imageId",
                 display: "Asset ID",
-                options: {placeholder: "USDA/NAIP/DOQQ/n_4207309_se_18_1_20090525"},
+                options: {placeholder: "USDA/NAIP/DOQQ/n_4207309_se_18_1_20090525"}
             },
             {
                 key: "imageVisParams",
                 display: "Visualization Parameters (JSON format)",
                 type: "JSON",
                 options: {placeholder: "{\"bands\": [\"R\", \"G\", \"B\"], \"min\": 0-100, \"max\": 2800-3200}"},
-                validator: value => !isValidJSON(value) ? "Invalid JSON in the \"Visualization Parameters\" field." : "",
-            },
-        ],
+                validator: value => (!isValidJSON(value) ? "Invalid JSON in the \"Visualization Parameters\" field." : "")
+            }
+        ]
     },
     {
         type: "GEEImageCollection",
@@ -329,38 +329,38 @@ export const imageryOptions = [
             {
                 key: "collectionId",
                 display: "Asset ID",
-                options: {placeholder: "LANDSAT/LC08/C01/T1_SR"},
+                options: {placeholder: "LANDSAT/LC08/C01/T1_SR"}
             },
             {
                 key: "startDate",
                 display: "Start Date",
                 type: "date",
-                options: {max: new Date().toJSON().split("T")[0]},
+                options: {max: new Date().toJSON().split("T")[0]}
             },
             {
                 key: "endDate",
                 display: "End Date",
                 type: "date",
-                options: {max: new Date().toJSON().split("T")[0]},
+                options: {max: new Date().toJSON().split("T")[0]}
             },
             {
                 key: "collectionVisParams",
                 display: "Visualization Parameters (JSON format)",
                 type: "JSON",
                 options: {placeholder: "{\"bands\": [\"B4\", \"B3\", \"B2\"], \"min\": 0-100, \"max\": 2800-3200}"},
-                validator: value => !isValidJSON(value) ? "Invalid JSON in the \"Visualization Parameters\" field." : "",
-            },
+                validator: value => (!isValidJSON(value) ? "Invalid JSON in the \"Visualization Parameters\" field." : "")
+            }
         ],
-        validator: dateRangeValidator,
+        validator: dateRangeValidator
     },
     {
         type: "MapBoxRaster",
         label: "Mapbox Raster",
         params: [
             {key: "layerName", display: "Layer Name"},
-            {key: "accessToken", display: "Access Token"},
+            {key: "accessToken", display: "Access Token"}
         ],
-        url: "https://docs.mapbox.com/help/glossary/raster-tiles-api/",
+        url: "https://docs.mapbox.com/help/glossary/raster-tiles-api/"
     },
     {
         type: "MapBoxStatic",
@@ -368,13 +368,13 @@ export const imageryOptions = [
         params: [
             {key: "userName", display: "User Name"},
             {key: "mapStyleId", display: "Map Style Id"},
-            {key: "accessToken", display: "Access Token"},
+            {key: "accessToken", display: "Access Token"}
         ],
-        url: "https://docs.mapbox.com/help/glossary/static-tiles-api/",
+        url: "https://docs.mapbox.com/help/glossary/static-tiles-api/"
     },
     {
         type: "OSM",
         label: "Open Street Map",
-        params: [],
-    },
+        params: []
+    }
 ];

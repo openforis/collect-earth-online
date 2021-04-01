@@ -109,7 +109,7 @@ module.exports = {
         "quotes": ["error", "double"],
         "space-infix-ops": 2,
         "space-before-blocks": 2,
-        "spaced-comment": ["error", "always", {"exceptions": ["***"]}],
+        "spaced-comment": ["error", "always", {"markers": ["/"], "exceptions": ["***"]}],
 
         // React
         "react/forbid-prop-types": 2,

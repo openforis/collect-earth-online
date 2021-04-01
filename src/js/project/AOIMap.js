@@ -6,7 +6,7 @@ export default class AOIMap extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
-            mapConfig: null,
+            mapConfig: null
         };
     }
 
@@ -77,10 +77,10 @@ export default class AOIMap extends React.Component {
     };
 
     showDragBoxDraw = () => {
-        const displayDragBoxBounds = (dragBox) => {
+        const displayDragBoxBounds = dragBox => {
             mercator.removeLayerById(this.state.mapConfig, "currentAOI");
             const boundary = mercator.geometryToGeoJSON(dragBox.getGeometry().clone(), "EPSG:4326", "EPSG:3857");
-            this.props.context.setProjectDetails({boundary: boundary, plots: []});
+            this.props.context.setProjectDetails({boundary, plots: []});
         };
         mercator.enableDragBoxDraw(this.state.mapConfig, displayDragBoxBounds);
     };
@@ -113,11 +113,11 @@ export default class AOIMap extends React.Component {
     render() {
         return (
             <div id="project-map" style={{height: "25rem", width: "100%"}}>
-                {this.props.canDrag &&
+                {this.props.canDrag && (
                     <div className="col small text-center mb-2">
                         Hold CTRL and click-and-drag a bounding box on the map
                     </div>
-                }
+                )}
             </div>
         );
     }

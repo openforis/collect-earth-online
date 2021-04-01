@@ -2,9 +2,9 @@ import "../css/geo-dash.css";
 
 import React from "react";
 import ReactDOM from "react-dom";
-import {mercator} from "./utils/mercator.js";
-import {UnicodeIcon, formatDateISO} from "./utils/generalUtils";
-import {GeoDashNavigationBar} from "./components/PageComponents";
+import _ from "lodash";
+import Highcharts from "highcharts";
+import HighchartsReact from "highcharts-react-official";
 import {Feature, Map, View} from "ol";
 import {buffer as ExtentBuffer} from "ol/extent";
 import {Circle, Polygon, Point} from "ol/geom";
@@ -13,16 +13,17 @@ import {transform as projTransform} from "ol/proj";
 import {OSM, Vector, XYZ} from "ol/source";
 import {Style, Stroke} from "ol/style";
 import {getArea as sphereGetArea} from "ol/sphere";
-import Highcharts from "highcharts";
-import HighchartsReact from "highcharts-react-official";
-import _ from "lodash";
+
+import {mercator} from "./utils/mercator.js";
+import {UnicodeIcon, formatDateISO} from "./utils/generalUtils";
+import {GeoDashNavigationBar} from "./components/PageComponents";
 
 function getGatewayPath(widget, collectionName) {
     const fts = {
         "LANDSAT5": "Landsat5Filtered",
         "LANDSAT7": "Landsat7Filtered",
         "LANDSAT8": "Landsat8Filtered",
-        "Sentinel2": "FilteredSentinel",
+        "Sentinel2": "FilteredSentinel"
     };
     return (widget.filterType && widget.filterType.length > 0)
         ? fts[widget.filterType]
@@ -32,7 +33,7 @@ function getGatewayPath(widget, collectionName) {
                 ? "ImageCollectionAsset"
                 : (widget.featureCollection && widget.featureCollection.length > 0)
                     ? "getTileUrlFromFeatureCollection"
-                    : (widget.properties && "ImageCollectionCustom" === widget.properties[0])
+                    : (widget.properties && widget.properties[0] === "ImageCollectionCustom")
                         ? "meanImageByMosaicCollections"
                         : (collectionName.trim().length > 0)
                             ? "cloudMaskImageByMosaicCollection"
@@ -56,7 +57,7 @@ class Geodash extends React.Component {
             imageryList:[],
             initCenter:null,
             initZoom:null,
-            vectorSource: null,
+            vectorSource: null
         };
         const theSplit = decodeURI(this.state.projAOI)
             .replace("[", "")
@@ -85,11 +86,11 @@ class Geodash extends React.Component {
     }
 
     getInstitutionImagery = () => fetch(`/get-institution-imagery?institutionId=${this.state.institutionId}`)
-        .then(response => response.ok ? response.json() : Promise.reject(response))
+        .then(response => (response.ok ? response.json() : Promise.reject(response)))
         .then(data => this.setState({imageryList: data}));
 
     getWidgetsByProjectId = () => fetch(`/geo-dash/get-by-projid?projectId=${this.state.projectId}`)
-        .then(response => response.ok ? response.json() : Promise.reject(response))
+        .then(response => (response.ok ? response.json() : Promise.reject(response)))
         .then(data => data.widgets.map(widget => {
             widget.isFull = false;
             widget.opacity = 0.9;
@@ -105,13 +106,13 @@ class Geodash extends React.Component {
         const plotId = this.getParameterByName("plotId");
         if (plotShape === "polygon") {
             return fetch(`/get-plot-sample-geom?plotId=${plotId}`)
-                .then(response => response.ok ? response.json() : Promise.reject(response))
+                .then(response => (response.ok ? response.json() : Promise.reject(response)))
                 .then(plotJsonObject => {
                     const sampleGeom = (plotJsonObject.samples || []).map(e => e.geom);
                     const features = [plotJsonObject.geom].concat(sampleGeom)
                         .filter(e => e)
                         .map(geom => new Feature({geometry: mercator.parseGeoJson(geom, true)}));
-                    return Promise.resolve(new Vector({features: features}));
+                    return Promise.resolve(new Vector({features}));
                 });
         } else if (plotShape === "square") {
             const pointFeature = new Feature(
@@ -126,13 +127,13 @@ class Geodash extends React.Component {
                       [bufferedExtent[2], bufferedExtent[3]],
                       [bufferedExtent[2], bufferedExtent[1]],
                       [bufferedExtent[0], bufferedExtent[1]]]]
-                ))],
+                ))]
             }));
         } else if (plotShape === "circle") {
             return Promise.resolve(new Vector({
                 features: [new Feature(new Circle(
-                    projTransform(JSON.parse(center).coordinates, "EPSG:4326", "EPSG:3857"), radius * 1)
-                )],
+                    projTransform(JSON.parse(center).coordinates, "EPSG:4326", "EPSG:3857"), radius * 1
+                ))]
             }));
         } else {
             return Promise.resolve(new Vector({features: []}));
@@ -149,15 +150,14 @@ class Geodash extends React.Component {
             : null;
     };
 
-    handleFullScreen = (widget) => {
+    handleFullScreen = widget => {
         const widgets = [...this.state.widgets];
         const index = widgets.indexOf(widget);
         widgets[index] = {...widget};
         widgets[index].isFull = !widgets[index].isFull;
-        this.setState({widgets},
-                      () => {
-                          this.updateSize(widget);
-                      }
+        this.setState(
+            {widgets},
+            () => this.updateSize(widget)
         );
     };
 
@@ -180,14 +180,14 @@ class Geodash extends React.Component {
         if (this.state.initCenter) {
             this.setState({
                 mapCenter:center,
-                mapZoom:zoom,
+                mapZoom:zoom
             });
         } else {
             this.setState({
                 initCenter:center,
                 initZoom:zoom,
                 mapCenter:center,
-                mapZoom:zoom,
+                mapZoom:zoom
             });
         }
     };
@@ -216,21 +216,21 @@ class Geodash extends React.Component {
         return (
             <div className="container-fluid">
                 <Widgets
-                    widgets={this.state.widgets}
-                    vectorSource={this.state.vectorSource}
-                    projAOI={this.state.projAOI}
-                    projPairAOI={this.state.projPairAOI}
+                    callbackComplete={this.state.callbackComplete}
+                    getParameterByName={this.getParameterByName}
+                    imageryList={this.state.imageryList}
+                    initCenter={this.mapCenter}
+                    mapCenter={this.state.mapCenter}
+                    mapZoom={this.state.mapZoom}
                     onFullScreen={this.handleFullScreen}
                     onSliderChange={this.handleSliderChange}
                     onSwipeChange={this.handleSwipeChange}
-                    callbackComplete={this.state.callbackComplete}
-                    getParameterByName={this.getParameterByName}
-                    mapCenter={this.state.mapCenter}
-                    mapZoom={this.state.mapZoom}
-                    setCenterAndZoom={this.setCenterAndZoom}
-                    imageryList={this.state.imageryList}
+                    projAOI={this.state.projAOI}
+                    projPairAOI={this.state.projPairAOI}
                     resetCenterAndZoom={this.resetCenterAndZoom}
-                    initCenter={this.mapCenter}
+                    setCenterAndZoom={this.setCenterAndZoom}
+                    vectorSource={this.state.vectorSource}
+                    widgets={this.state.widgets}
                 />
             </div>
         );
@@ -245,21 +245,21 @@ class Widgets extends React.Component {
                     {this.props.widgets.map(widget => (
                         <Widget
                             key={widget.id}
-                            id={widget.id}
-                            widget={widget}
-                            vectorSource={this.props.vectorSource}
-                            projAOI={this.props.projAOI}
-                            projPairAOI={this.props.projPairAOI}
-                            onFullScreen ={this.props.onFullScreen}
-                            onSliderChange = {this.props.onSliderChange}
-                            onSwipeChange = {this.props.onSwipeChange}
                             getParameterByName={this.props.getParameterByName}
+                            id={widget.id}
+                            imageryList={this.props.imageryList}
+                            initCenter={this.props.initCenter}
                             mapCenter={this.props.mapCenter}
                             mapZoom={this.props.mapZoom}
-                            setCenterAndZoom={this.props.setCenterAndZoom}
-                            imageryList={this.props.imageryList}
+                            onFullScreen={this.props.onFullScreen}
+                            onSliderChange={this.props.onSliderChange}
+                            onSwipeChange={this.props.onSwipeChange}
+                            projAOI={this.props.projAOI}
+                            projPairAOI={this.props.projPairAOI}
                             resetCenterAndZoom={this.props.resetCenterAndZoom}
-                            initCenter={this.props.initCenter}
+                            setCenterAndZoom={this.props.setCenterAndZoom}
+                            vectorSource={this.props.vectorSource}
+                            widget={widget}
                         />
                     ))}
                 </div>
@@ -310,29 +310,40 @@ class Widget extends React.Component {
 
     generateGridRow = (y, h) => (y + 1) + " / span " + h;
 
-    getColumnClass = c => c.includes("span 12") ? " fullcolumnspan" : c.includes("span 9") ? " columnSpan9" : c.includes("span 6") ? " columnSpan6" : " columnSpan3";
+    getColumnClass = c => (c.includes("span 12")
+        ? " fullcolumnspan"
+        : c.includes("span 9")
+            ? " columnSpan9"
+            : c.includes("span 6")
+                ? " columnSpan6"
+                : " columnSpan3");
 
-    getRowClass = r => r.includes("span 2") ? " rowSpan2" : r.includes("span 3") ? " rowSpan3" : " rowSpan1";
+    getRowClass = r => (r.includes("span 2")
+        ? " rowSpan2"
+        : r.includes("span 3")
+            ? " rowSpan3"
+            : " rowSpan1");
 
-    getClassNames = (fullState, c, r) => fullState ? "placeholder fullwidget" : "placeholder" + this.getColumnClass(c) + this.getRowClass(r);
+    getClassNames = (fullState, c, r) => (fullState
+        ? "placeholder fullwidget"
+        : "placeholder" + this.getColumnClass(c) + this.getRowClass(r));
 
     getWidgetHtml = (widget, onSliderChange, onSwipeChange) => {
         if (widget.gridcolumn || widget.layout) {
             return (
                 <div
-                    className={
-                        this.getClassNames(widget.isFull,
-                                           widget.gridcolumn || "",
-                                           widget.gridrow || (widget.layout && "span " + widget.layout.h) || ""
-                        )
-                    }
+                    className={this.getClassNames(
+                        widget.isFull,
+                        widget.gridcolumn || "",
+                        widget.gridrow || (widget.layout && "span " + widget.layout.h) || ""
+                    )}
                     style={{
                         gridColumn:widget.gridcolumn != null
                             ? widget.gridcolumn
                             : this.generateGridColumn(widget.layout.x, widget.layout.w),
                         gridRow:widget.gridrow != null
                             ? widget.gridrow
-                            : this.generateGridRow(widget.layout.y, widget.layout.h),
+                            : this.generateGridRow(widget.layout.y, widget.layout.h)
                     }}
                 >
                     {this.getCommonWidgetLayout(widget, onSliderChange, onSwipeChange)}
@@ -346,112 +357,124 @@ class Widget extends React.Component {
                         : "columnSpan3 rowSpan1 placeholder"}
                 >
                     {this.getCommonWidgetLayout(widget, onSliderChange, onSwipeChange)}
-                </div>);
+                </div>
+            );
         }
     };
 
-    getCommonWidgetLayout = (widget, onSliderChange, onSwipeChange) =>
+    getCommonWidgetLayout = (widget, onSliderChange, onSwipeChange) => (
         <div className="panel panel-default" id={"widget_" + widget.id}>
             <div className="panel-heading">
                 <ul className="list-inline panel-actions pull-right">
                     <li style={{display: "inline"}}>{widget.name}</li>
                     <li style={{display: "inline"}}>
-                        <a
+                        <button
                             className="list-inline panel-actions panel-fullscreen"
                             onClick={() => this.props.onFullScreen(this.props.widget)}
                             style={{color: "#31BAB0"}}
-                            role="button"
                             title="Toggle Fullscreen"
+                            type="button"
                         >
                             {widget.isFull ? <UnicodeIcon icon="collapse"/> : <UnicodeIcon icon="expand"/>}
-                        </a>
+                        </button>
                     </li>
                     {this.getResetMapButton(widget)}
                 </ul>
             </div>
-            <div id={"widget-container_" + widget.id} className="widget-container">
+            <div className="widget-container" id={"widget-container_" + widget.id}>
                 {this.getWidgetInnerHtml(widget, onSliderChange, onSwipeChange)}
             </div>
-        </div>;
+        </div>
+    );
 
     getResetMapButton = widget => {
         if (this.isMapWidget(widget)) {
-            return <li style={{display: "inline"}}>
-                <a
-                    className="list-inline panel-actions panel-fullscreen"
-                    onClick={() => this.props.resetCenterAndZoom()}
-                    role="button"
-                    title="Recenter"
-                    style={{marginRight: "10px"}}
-                >
-                    <img src={"img/geodash/ceoicon.png"} alt="Collect Earth Online"/>
-                </a>
-            </li>;
+            return (
+                <li style={{display: "inline"}}>
+                    <button
+                        className="list-inline panel-actions panel-fullscreen"
+                        onClick={() => this.props.resetCenterAndZoom()}
+                        style={{marginRight: "10px"}}
+                        title="Recenter"
+                        type="button"
+                    >
+                        <img alt="Collect Earth Online" src="img/geodash/ceoicon.png"/>
+                    </button>
+                </li>
+            );
         }
     };
 
     getWidgetInnerHtml = (widget, onSliderChange, onSwipeChange) => {
         if (this.isMapWidget(widget)) {
-            return <div className="front">
-                <MapWidget
-                    widget={widget}
-                    vectorSource={this.props.vectorSource}
-                    mapCenter={this.props.mapCenter}
-                    mapZoom={this.props.mapZoom}
-                    projAOI={this.props.projAOI}
-                    projPairAOI={this.props.projPairAOI}
-                    onSliderChange={onSliderChange}
-                    onSwipeChange={onSwipeChange}
-                    syncMapWidgets={this.syncMapWidgets}
-                    getParameterByName={this.props.getParameterByName}
-                    setCenterAndZoom={this.props.setCenterAndZoom}
-                    imageryList={this.props.imageryList}
-                    resetCenterAndZoom={this.props.resetCenterAndZoom}
-                />
-            </div>;
+            return (
+                <div className="front">
+                    <MapWidget
+                        getParameterByName={this.props.getParameterByName}
+                        imageryList={this.props.imageryList}
+                        mapCenter={this.props.mapCenter}
+                        mapZoom={this.props.mapZoom}
+                        onSliderChange={onSliderChange}
+                        onSwipeChange={onSwipeChange}
+                        projAOI={this.props.projAOI}
+                        projPairAOI={this.props.projPairAOI}
+                        resetCenterAndZoom={this.props.resetCenterAndZoom}
+                        setCenterAndZoom={this.props.setCenterAndZoom}
+                        syncMapWidgets={this.syncMapWidgets}
+                        vectorSource={this.props.vectorSource}
+                        widget={widget}
+                    />
+                </div>
+            );
         } else if (this.graphControlList.includes(widget.properties[0])) {
-            return <div className="front">
-                <GraphWidget
-                    widget={widget}
-                    projPairAOI={this.props.projPairAOI}
-                    getParameterByName={this.props.getParameterByName}
-                    initCenter={this.props.initCenter}
-                />
-            </div>;
+            return (
+                <div className="front">
+                    <GraphWidget
+                        getParameterByName={this.props.getParameterByName}
+                        initCenter={this.props.initCenter}
+                        projPairAOI={this.props.projPairAOI}
+                        widget={widget}
+                    />
+                </div>
+            );
         } else if (widget.properties[0] === "getStats") {
-            return <div className="front">
-                <StatsWidget
-                    widget={widget}
-                    projPairAOI={this.props.projPairAOI}
-                />
-            </div>;
+            return (
+                <div className="front">
+                    <StatsWidget
+                        projPairAOI={this.props.projPairAOI}
+                        widget={widget}
+                    />
+                </div>
+            );
         } else if (widget.properties[0] === "DegradationTool") {
-            return <div className="front">
-                <DegradationWidget
-                    widget={widget}
-                    vectorSource={this.props.vectorSource}
-                    projPairAOI={this.props.projPairAOI}
-                    getParameterByName={this.props.getParameterByName}
-                    initCenter={this.props.initCenter}
-                    mapCenter={this.props.mapCenter}
-                    mapZoom={this.props.mapZoom}
-                    projAOI={this.props.projAOI}
-                    onSliderChange={onSliderChange}
-                    onSwipeChange={onSwipeChange}
-                    syncMapWidgets={this.syncMapWidgets}
-                    setCenterAndZoom={this.props.setCenterAndZoom}
-                    imageryList={this.props.imageryList}
-                    resetCenterAndZoom={this.props.resetCenterAndZoom}
-                />
-            </div>;
+            return (
+                <div className="front">
+                    <DegradationWidget
+                        getParameterByName={this.props.getParameterByName}
+                        imageryList={this.props.imageryList}
+                        initCenter={this.props.initCenter}
+                        mapCenter={this.props.mapCenter}
+                        mapZoom={this.props.mapZoom}
+                        onSliderChange={onSliderChange}
+                        onSwipeChange={onSwipeChange}
+                        projAOI={this.props.projAOI}
+                        projPairAOI={this.props.projPairAOI}
+                        resetCenterAndZoom={this.props.resetCenterAndZoom}
+                        setCenterAndZoom={this.props.setCenterAndZoom}
+                        syncMapWidgets={this.syncMapWidgets}
+                        vectorSource={this.props.vectorSource}
+                        widget={widget}
+                    />
+                </div>
+            );
         } else {
             return (
                 <img
+                    alt="Blank Widget"
+                    className="img-responsive"
+                    height="200"
                     src="data:image/gif;base64,R0lGODlhAQABAIAAAHd3dwAAACH5BAAAAAAALAAAAAABAAEAAAICRAEAOw=="
                     width="200"
-                    height="200"
-                    className="img-responsive"
-                    alt="Blank Widget"
                 />
             );
         }
@@ -465,10 +488,11 @@ class Widget extends React.Component {
 
     render() {
         const {widget} = this.props;
+        // TODO this probably can be return this.getWidgetHtml()
         return (
-            <React.Fragment>
+            <>
                 {this.getWidgetHtml(widget, this.props.onSliderChange, this.props.onSwipeChange)}
-            </React.Fragment>
+            </>
         );
     }
 }
@@ -478,45 +502,52 @@ class DegradationWidget extends React.Component {
         super(props);
         this.state = {
             selectedDate: "",
-            degDataType: "landsat",
+            degDataType: "landsat"
         };
     }
 
-    handleDegDataType = (dataType) => {
+    handleDegDataType = dataType => {
         this.setState({
-            degDataType: dataType,
+            degDataType: dataType
         });
     };
 
-    handleSelectDate = (date) => {
+    handleSelectDate = date => {
         this.setState({selectedDate: date});
     };
 
     render() {
-        return <React.Fragment>
+        return (
             <div id={"degradation_" + this.props.widget.id} style={{width: "100%", minHeight: "200px"}}>
-                <div style={{display: "table", position: "absolute", width: "100%", height: "calc(100% - 45px)"}}>
+                <div
+                    style={{
+                        display: "table",
+                        position: "absolute",
+                        width: "100%",
+                        height: "calc(100% - 45px)"
+                    }}
+                >
                     <div style={{display: "table-row", height: "65%"}}>
                         <div style={{display: "table-cell", position: "relative"}}>
                             <div className="front">
                                 <MapWidget
-                                    widget={this.props.widget}
-                                    vectorSource={this.props.vectorSource}
+                                    degDataType={this.state.degDataType}
+                                    getParameterByName={this.props.getParameterByName}
+                                    handleDegDataType={this.handleDegDataType}
+                                    imageryList={this.props.imageryList}
+                                    isDegradation
                                     mapCenter={this.props.mapCenter}
                                     mapZoom={this.props.mapZoom}
-                                    projAOI={this.props.projAOI}
-                                    projPairAOI={this.props.projPairAOI}
                                     onSliderChange={this.props.onSliderChange}
                                     onSwipeChange={this.props.onSwipeChange}
-                                    syncMapWidgets={this.syncMapWidgets}
-                                    getParameterByName={this.props.getParameterByName}
-                                    setCenterAndZoom={this.props.setCenterAndZoom}
-                                    imageryList={this.props.imageryList}
+                                    projAOI={this.props.projAOI}
+                                    projPairAOI={this.props.projPairAOI}
                                     resetCenterAndZoom={this.props.resetCenterAndZoom}
                                     selectedDate={this.state.selectedDate}
-                                    degDataType={this.state.degDataType}
-                                    handleDegDataType={this.handleDegDataType}
-                                    isDegradation
+                                    setCenterAndZoom={this.props.setCenterAndZoom}
+                                    syncMapWidgets={this.syncMapWidgets}
+                                    vectorSource={this.props.vectorSource}
+                                    widget={this.props.widget}
                                 />
                             </div>
                         </div>
@@ -525,19 +556,19 @@ class DegradationWidget extends React.Component {
                         <div style={{display: "table-cell", position: "relative"}}>
                             <div className="front">
                                 <GraphWidget
-                                    widget={this.props.widget}
-                                    projPairAOI={this.props.projPairAOI}
-                                    getParameterByName={this.props.getParameterByName}
-                                    initCenter={this.props.initCenter}
-                                    handleSelectDate={this.handleSelectDate}
                                     degDataType={this.state.degDataType}
+                                    getParameterByName={this.props.getParameterByName}
+                                    handleSelectDate={this.handleSelectDate}
+                                    initCenter={this.props.initCenter}
+                                    projPairAOI={this.props.projPairAOI}
+                                    widget={this.props.widget}
                                 />
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
-        </React.Fragment>;
+        );
     }
 }
 
@@ -546,15 +577,15 @@ class MapWidget extends React.Component {
         super(props);
         this.state = {
             mapRef: null,
-            opacity: .9, // FIXME, opacity is being kept separately here even though it is also part of widget
+            opacity: 0.9, // FIXME, opacity is being kept separately here even though it is also part of widget
             geeTimeOut: null,
-            stretch: 321,
+            stretch: 321
         };
     }
 
     componentDidMount() {
         const {projPairAOI, widget} = this.props;
-        let projAOI = this.props.projAOI;
+        let {projAOI} = this.props;
 
         const baseMapLayer = this.getRasterByBasemapConfig(widget.baseMap);
         const plotSampleLayer = new VectorLayer({
@@ -562,11 +593,11 @@ class MapWidget extends React.Component {
             style: new Style({
                 stroke: new Stroke({
                     color: "yellow",
-                    width: 3,
+                    width: 3
                 }),
-                fill: null,
+                fill: null
             }),
-            zIndex: 100,
+            zIndex: 100
         });
 
         const mapdiv = "widgetmap_" + widget.id;
@@ -576,9 +607,9 @@ class MapWidget extends React.Component {
             view: new View({
                 center: [0, 0],
                 projection: "EPSG:3857",
-                zoom: 4,
+                zoom: 4
             }),
-            id: "widgetmapobject_" + widget.id,
+            id: "widgetmapobject_" + widget.id
         });
         map.getView().on("propertychange", onpropertychange);
 
@@ -599,13 +630,15 @@ class MapWidget extends React.Component {
 
         if (projAOI === "") {
             projAOI = [-108.30322265625, 21.33544921875, -105.347900390625, 23.53271484375];
-        } else {
-            if (typeof projAOI === "string") {
-                projAOI = JSON.parse(projAOI);
-            }
+        } else if (typeof projAOI === "string") {
+            projAOI = JSON.parse(projAOI);
         }
         map.getView().fit(
-            projTransform([projAOI[0], projAOI[1]], "EPSG:4326", "EPSG:3857").concat(projTransform([projAOI[2], projAOI[3]], "EPSG:4326", "EPSG:3857")),
+            projTransform(
+                [projAOI[0], projAOI[1]], "EPSG:4326", "EPSG:3857"
+            ).concat(projTransform(
+                [projAOI[2], projAOI[3]], "EPSG:4326", "EPSG:3857"
+            )),
             map.getSize()
         );
 
@@ -614,7 +647,7 @@ class MapWidget extends React.Component {
         }
 
         this.setState({
-            mapRef: map,
+            mapRef: map
         });
 
         const postObject = {};
@@ -633,10 +666,11 @@ class MapWidget extends React.Component {
 
         if (widget.properties[0] === "DegradationTool") {
             postObject.imageDate = this.props.selectedDate;
-            postObject.stretch = this.props.degDataType && this.props.degDataType === "landsat" ? this.state.stretch : "SAR";
+            postObject.stretch = this.props.degDataType && this.props.degDataType === "landsat"
+                ? this.state.stretch
+                : "SAR";
             path = "getDegraditionTileUrl";
         } else if (widget.dualImageCollection) {
-
             const firstImage = widget.dualImageCollection[0];
             const secondImage = widget.dualImageCollection[1];
             collectionName = firstImage.collectionType;
@@ -665,7 +699,7 @@ class MapWidget extends React.Component {
                 postObject.max = postObject.visParams.max;
                 postObject.cloudLessThan = parseInt(postObject.visParams.cloudLessThan);
             }
-            //Create the fetch object for the second call here
+            // Create the fetch object for the second call here
             dualImageObject = {};
             dualImageObject.collectionName = secondImage.collectionType;
             dualImageObject.index = this.getRequestedIndex(dualImageObject.collectionName);
@@ -754,12 +788,12 @@ class MapWidget extends React.Component {
         // see if we need to fetch or just add the tile server
         const currentDate = new Date();
         currentDate.setDate(currentDate.getDate() - 1);
-        if (typeof(Storage) !== "undefined"
+        if (typeof (Storage) !== "undefined"
             && (this.checkForCache(postObject, widget, false)
                 || (widget.dualImageCollection && dualImageObject && this.checkForCache(dualImageObject, widget, true)))) {
             this.fetchMapInfo(postObject, url, widget, dualImageObject);
         }
-        window.addEventListener("resize", () => this.handleResize());
+        window.addEventListener("resize", this.handleResize);
     }
 
     componentDidUpdate(prevProps, prevState) {
@@ -777,19 +811,22 @@ class MapWidget extends React.Component {
             if (this.props.widget.properties[0] === "DegradationTool" && this.props.selectedDate !== "") {
                 const postObject = {};
                 postObject.imageDate = this.props.selectedDate;
-                postObject.stretch = this.props.degDataType && this.props.degDataType === "landsat" ? this.state.stretch : "SAR";
+                postObject.stretch = this.props.degDataType && this.props.degDataType === "landsat"
+                    ? this.state.stretch
+                    : "SAR";
                 postObject.dataType = this.props.degDataType;
                 postObject.path = "getDegraditionTileUrl";
                 postObject.geometry = JSON.parse(this.props.projPairAOI);
                 const map = this.state.mapRef;
                 try {
-                    map.getLayers().getArray().filter(layer =>
-                        layer.get("id") !== undefined && layer.get("id") === "widgetmap_" + this.props.widget.id
-                    ).forEach(layer => map.removeLayer(layer));
+                    map.getLayers().getArray()
+                        .filter(layer => layer.get("id") !== undefined
+                            && layer.get("id") === "widgetmap_" + this.props.widget.id)
+                        .forEach(layer => map.removeLayer(layer));
                 } catch (e) {
                     console.log("removal error");
                 }
-                if (typeof(Storage) !== "undefined"
+                if (typeof (Storage) !== "undefined"
                     && this.checkForCache(postObject, this.props.widget, false)) {
                     this.fetchMapInfo(postObject, "/geo-dash/gateway-request", this.props.widget, null);
                 }
@@ -797,7 +834,7 @@ class MapWidget extends React.Component {
         }
     }
 
-    checkForCache = (postObject, widget, isSecond) => localStorage.getItem(postObject.ImageAsset + JSON.stringify(postObject.visParams))
+    checkForCache = (postObject, widget, isSecond) => (localStorage.getItem(postObject.ImageAsset + JSON.stringify(postObject.visParams))
             ? this.createTileServerFromCache(postObject.ImageAsset + JSON.stringify(postObject.visParams), widget.id, isSecond)
         : localStorage.getItem(postObject.ImageCollectionAsset + JSON.stringify(postObject.visParams))
             ? this.createTileServerFromCache(postObject.ImageCollectionAsset + JSON.stringify(postObject.visParams), widget.id, isSecond)
@@ -807,7 +844,7 @@ class MapWidget extends React.Component {
             ? this.createTileServerFromCache(postObject.path + postObject.dateFrom + postObject.dateTo, widget.id, isSecond)
         : localStorage.getItem(JSON.stringify(postObject))
             ? this.createTileServerFromCache(JSON.stringify(postObject), widget.id, isSecond)
-        : true;
+        : true);
 
     fetchMapInfo = (postObject, url, widget, dualImageObject) => {
         if (postObject.path === "getDegraditionTileUrl" && url.trim() === "") {
@@ -817,9 +854,9 @@ class MapWidget extends React.Component {
             method: "POST",
             headers: {
                 "Accept": "application/json",
-                "Content-Type": "application/json",
+                "Content-Type": "application/json"
             },
-            body: JSON.stringify(postObject),
+            body: JSON.stringify(postObject)
         })
             .then(res => {
                 if (res.ok) {
@@ -859,9 +896,9 @@ class MapWidget extends React.Component {
                             method: "POST",
                             headers: {
                                 "Accept": "application/json",
-                                "Content-Type": "application/json",
+                                "Content-Type": "application/json"
                             },
-                            body: JSON.stringify(postObject),
+                            body: JSON.stringify(postObject)
                         })
                             .then(res => res.json())
                             .then(data => {
@@ -891,9 +928,9 @@ class MapWidget extends React.Component {
                                 method: "POST",
                                 headers: {
                                     "Accept": "application/json",
-                                    "Content-Type": "application/json",
+                                    "Content-Type": "application/json"
                                 },
-                                body: JSON.stringify(workingObject),
+                                body: JSON.stringify(workingObject)
                             })
                                 .then(res => res.json())
                                 .then(data => {
@@ -931,7 +968,7 @@ class MapWidget extends React.Component {
             const basemapImagery = this.props.imageryList.find(imagery => imagery.id === basemapIdInt)
                 || this.props.imageryList[0];
             return new TileLayer({
-                source: mercator.createSource(basemapImagery.sourceConfig, basemapImagery.id),
+                source: mercator.createSource(basemapImagery.sourceConfig, basemapImagery.id)
             });
         }
     };
@@ -953,7 +990,7 @@ class MapWidget extends React.Component {
             return {
                 min: (widget.min && widget.min > 0) ? widget.min : null,
                 max: (widget.max && widget.max > 0) ? widget.max : null,
-                bands: widget.bands,
+                bands: widget.bands
             };
         }
     };
@@ -967,23 +1004,25 @@ class MapWidget extends React.Component {
         });
     };
 
-    getRequestedIndex = collectionName =>
+    getRequestedIndex = collectionName => (
         ["ImageCollectionNDVI",
          "ImageCollectionEVI",
          "ImageCollectionEVI2",
          "ImageCollectionNDMI",
-         "ImageCollectionNDWI"].includes(collectionName)
-            ? collectionName.replace("ImageCollection", "")
-            : "";
+         "ImageCollectionNDWI"]
+            .includes(collectionName)
+                ? collectionName.replace("ImageCollection", "")
+                : "");
 
-    convertCollectionName = collectionName =>
+    convertCollectionName = collectionName => (
         ["ImageCollectionNDVI",
          "ImageCollectionEVI",
          "ImageCollectionEVI2",
          "ImageCollectionNDMI",
-         "ImageCollectionNDWI"].includes(collectionName)
-            ? ""
-            : collectionName;
+         "ImageCollectionNDWI"]
+            .includes(collectionName)
+                ? ""
+                : collectionName);
 
     addSecondMapLayer = (url, token, widgetid) => {
         if (this.state.mapRef) {
@@ -1017,75 +1056,73 @@ class MapWidget extends React.Component {
     };
 
     getSliderControl = () => {
-        const widget = this.props.widget;
-        const onSliderChange = this.props.onSliderChange;
-        const onSwipeChange = this.props.onSwipeChange;
+        const {widget, onSliderChange, onSwipeChange} = this.props;
 
         if (widget.dualLayer || widget.dualImageCollection) {
             return (
                 <div>
                     <div className="toggleSwitchContainer">
                         <img
-                            src={"img/geodash/opacity.png"}
+                            alt="Opacity"
+                            height="20px"
+                            onClick={() => onSliderChange(widget)}
+                            src="img/geodash/opacity.png"
                             style={{
                                 opacity: widget.sliderType === "opacity" ? "1.0" : "0.25",
-                                cursor: "pointer",
+                                cursor: "pointer"
                             }}
-                            height="20px"
-                            width="40px"
                             title="Opacity"
-                            alt="Opacity"
-                            onClick={() => onSliderChange(widget)}
+                            width="40px"
                         />
                         <br/>
                         <img
-                            src={"img/geodash/swipe.png"}
+                            alt="Swipe"
+                            height="20px"
+                            onClick={() => onSliderChange(widget)}
+                            src="img/geodash/swipe.png"
                             style={{
                                 opacity: widget.sliderType === "swipe" ? "1.0" : "0.25",
-                                cursor: "pointer",
+                                cursor: "pointer"
                             }}
-                            height="20px"
-                            width="40px"
                             title="Swipe"
-                            alt="Swipe"
-                            onClick={() => onSliderChange(widget)}
+                            width="40px"
                         />
                     </div>
                     <input
-                        type="range"
                         className="mapRange dual"
                         id={"rangeWidget_" + widget.id}
-                        value={this.state.opacity}
-                        min="0"
                         max="1"
-                        step=".01"
+                        min="0"
                         onChange={evt => this.onOpacityChange(evt)}
+                        step=".01"
                         style={{display: widget.sliderType === "opacity" ? "block" : "none"}}
+                        type="range"
+                        value={this.state.opacity}
                     />
                     <input
-                        type="range"
                         className="mapRange dual"
                         id={"swipeWidget_" + widget.id}
-                        min="0"
                         max="1"
-                        step=".01"
-                        value={this.props.widget.swipeValue}
+                        min="0"
                         onChange={evt => onSwipeChange(widget, evt)}
+                        step=".01"
                         style={{display: widget.sliderType === "swipe" ? "block" : "none"}}
+                        type="range"
+                        value={this.props.widget.swipeValue}
                     />
                 </div>
             );
         } else {
             return (
                 <input
-                    type="range"
                     className="mapRange"
                     id={"rangeWidget_" + widget.id}
-                    value={this.state.opacity}
-                    min="0"
                     max="1"
-                    step=".01"
+                    min="0"
                     onChange={evt => this.onOpacityChange(evt)}
+                    step=".01"
+                    type="range"
+                    value={this.state.opacity}
                 />
             );
         }
@@ -1094,7 +1131,7 @@ class MapWidget extends React.Component {
     onOpacityChange = evt => {
         try {
             const opacity = Number(evt.target.value);
-            this.setState({opacity: opacity});
+            this.setState({opacity});
             this.state.mapRef.getLayers().forEach(lyr => {
                 if (lyr.get("id") && lyr.get("id").includes(this.props.widget.id)) {
                     lyr.setOpacity(opacity);
@@ -1127,21 +1164,21 @@ class MapWidget extends React.Component {
                             lyr.setVisible(true);
                         }
                     });
-                }, Math.floor(Math.random() * (1250 - 950 + 1) + 950)),
+                }, Math.floor(Math.random() * (1250 - 950 + 1) + 950))
             });
-        } catch (e) {
-            console.log(e.message);
+        } catch (err) {
+            console.log(err.message);
         }
     };
 
     addTileServer = (url, mapdiv) => {
         window.setTimeout(() => {
             const source = new XYZ({
-                url: url,
+                url
             });
-            source.on("tileloaderror", function(error) {
+            source.on("tileloaderror", error => {
                 try {
-                    window.setTimeout(function() {
+                    window.setTimeout(() => {
                         error.tile.attempt = error.tile.attempt ? error.tile.attempt + 1 : 1;
                         if (error.tile.attempt < 5) error.tile.load();
                     }, Math.floor(Math.random() * (1250 - 950 + 1) + 950));
@@ -1150,8 +1187,8 @@ class MapWidget extends React.Component {
                 }
             });
             this.state.mapRef.addLayer(new TileLayer({
-                source: source,
-                id: mapdiv,
+                source,
+                id: mapdiv
             }));
         }, Math.floor(Math.random() * (300 - 200 + 1) + 200));
     };
@@ -1159,9 +1196,9 @@ class MapWidget extends React.Component {
     addDualLayer = (url, token, mapdiv) => {
         const googleLayer = new TileLayer({
             source: new XYZ({
-                url: url,
+                url
             }),
-            id: mapdiv + "_dual",
+            id: mapdiv + "_dual"
         });
         this.state.mapRef.addLayer(googleLayer);
         const swipe = document.getElementById("swipeWidget_" + mapdiv.replace("widgetmap_", ""));
@@ -1187,53 +1224,62 @@ class MapWidget extends React.Component {
 
     toggleDegDataType = checked => this.props.handleDegDataType(checked ? "sar" : "landsat");
 
-    getStretchToggle = () => this.props.degDataType === "landsat"
-        ?
-            <div className="col-6">
-                <span className="ctrlText font-weight-bold">Bands: </span>
-                <select
-                    className={"form-control"}
-                    style={{
-                        maxWidth: "65%",
-                        display: "inline-block",
-                        fontSize: ".8rem",
-                        height: "30px",
-                    }}
-                    onChange={evt => this.setStretch(evt)}
-                >
-                    <option value={321}>R,G,B</option>
-                    <option value={543}>SWIR,NIR,R</option>
-                    <option value={453}>NIR,SWIR,R</option>
-                </select>
-            </div>
+    getStretchToggle = () => (this.props.degDataType === "landsat"
+        ? (
+<div className="col-6">
+    <span className="ctrlText font-weight-bold">Bands: </span>
+    <select
+        className="form-control"
+        onChange={evt => this.setStretch(evt)}
+        style={{
+            maxWidth: "65%",
+            display: "inline-block",
+            fontSize: ".8rem",
+            height: "30px"
+        }}
+    >
+        <option value={321}>R,G,B</option>
+        <option value={543}>SWIR,NIR,R</option>
+        <option value={453}>NIR,SWIR,R</option>
+    </select>
+</div>
+)
         : this.props.isDegradation
-            ?
-                <div className="col-6">
-                    <span className="ctrlText font-weight-bold">Band Combination: </span>
-                    <span className="ctrlText">VV, VH, VV/VH </span>
-                </div>
-        : "";
+            ? (
+<div className="col-6">
+    <span className="ctrlText font-weight-bold">Band Combination: </span>
+    <span className="ctrlText">VV, VH, VV/VH </span>
+</div>
+)
+        : "");
 
-    getDegDataTypeToggle = () =>
+    getDegDataTypeToggle = () => (
         <div className="col-6" style={{display: this.props.isDegradation ? "block" : "none"}}>
             <span className="ctrlText font-weight-bold">Data: </span>
             <span className="ctrlText">LANDSAT </span>
             <label className="switch">
-                <input type="checkbox" onChange={evt => this.toggleDegDataType(evt.target.checked)} />
+                <input onChange={evt => this.toggleDegDataType(evt.target.checked)} type="checkbox"/>
                 <span className="switchslider round"/>
             </label>
             <span className="ctrlText"> SAR</span>
-        </div>;
+        </div>
+    );
 
     render() {
-        return <React.Fragment>
-            <div id={"widgetmap_" + this.props.widget.id} className="minmapwidget" style={{width:"100%", minHeight:"200px"}}/>
-            {this.getSliderControl()}
-            <div className="row">
-                {this.getStretchToggle()}
-                {this.getDegDataTypeToggle()}
-            </div>
-        </React.Fragment>;
+        return (
+            <>
+                <div
+                    className="minmapwidget"
+                    id={"widgetmap_" + this.props.widget.id}
+                    style={{width:"100%", minHeight:"200px"}}
+                />
+                {this.getSliderControl()}
+                <div className="row">
+                    {this.getStretchToggle()}
+                    {this.getDegDataTypeToggle()}
+                </div>
+            </>
+        );
     }
 }
 
@@ -1245,7 +1291,7 @@ class GraphWidget extends React.Component {
             selectSarGraphBand: "VV",
             chartDataSeriesLandsat: [],
             chartDataSeriesSar: [],
-            nonDegChartData: [],
+            nonDegChartData: []
         };
     }
 
@@ -1285,7 +1331,7 @@ class GraphWidget extends React.Component {
                 method: "POST",
                 headers: {
                     "Accept": "application/json",
-                    "Content-Type": "application/json",
+                    "Content-Type": "application/json"
                 },
                 body: JSON.stringify({
                     collectionNameTimeSeries: collectionName,
@@ -1299,101 +1345,102 @@ class GraphWidget extends React.Component {
                         : formatDateISO(new Date()),
                     reducer: widget.graphReducer != null ? widget.graphReducer.toLowerCase() : "",
                     scale: 30,
-                    path: path,
+                    path,
                     point: centerPoint,
                     start: widget.startDate || "",
                     end: widget.endDate || "",
                     band: widget.graphBand || "",
-                    dataType: degDataType || "",
-                }),
+                    dataType: degDataType || ""
+                })
             })
                 .then(res => res.json())
                 .then(res => {
                     if (res.errMsg) {
                         console.warn(res.errMsg);
-                    } else {
-                        if (res.hasOwnProperty("timeseries")) {
-                            if (res.timeseries.length === 0) {
-                                console.log("no data");
-                            } else if (Object.keys(res.timeseries[0][1]).length === 0) {
-                                const thisDataSeries = {
-                                    type: "area",
-                                    name: widget.graphBand || indexName,
-                                    data: res.timeseries.filter(v => v[0]).map(v => [v[0], v[1]]).sort((a, b) => a[0] - b[0]),
-                                    color: "#31bab0",
-                                };
-                                this.setState({nonDegChartData : [thisDataSeries]});
-                            } else {
-                                // this is where degData ends up
-                                const theKeys = Object.keys(res.timeseries[0][1]);
-                                const compiledData = [];
-                                res.timeseries.forEach(d => {
-                                    for (let i = 0; i < theKeys.length; i++) {
-                                        const tempData = [];
-                                        const anObject = {};
-                                        anObject[theKeys[i]] = d[1][theKeys[i]];
-                                        tempData.push(d[0]);
-                                        tempData.push(anObject);
-                                        if (compiledData.length - 1 < i) {
-                                            compiledData[i] = [];
-                                        }
-                                        compiledData[i].push(tempData);
-                                    }
-                                });
-                                compiledData.forEach((d, index) => {
-                                    const cdata = this.convertData(d);
-                                    const mSortData = this.sortMultiData(cdata);
-                                    const thisDataSeries = {
-                                        type: "scatter",
-                                        name: theKeys[index],
-                                        data: mSortData,
-                                        valueDecimals: 20,
-                                        connectNulls: true,
-                                        color: "#31bab0",
-                                        allowPointSelect: true,
-                                        point: {
-                                            cursor: "pointer",
-                                            events: {
-                                                select: e => {
-                                                    handleSelectDate(formatDateISO(new Date(e.target.x)));
-                                                },
-                                            },
-                                        },
-                                        tooltip: {
-                                            pointFormat: "<span style=\"color:{series.color}\">{point.x:%Y-%m-%d}</span>: <b>{point.y:.6f}</b><br/>",
-                                            valueDecimals: 20,
-                                            split: false,
-                                            xDateFormat: "%Y-%m-%d",
-                                        },
-                                    };
-                                    if (degDataType === "landsat") {
-                                        this.setState({
-                                            chartDataSeriesLandsat: [...this.state.chartDataSeriesLandsat, thisDataSeries],
-                                        });
-                                    } else {
-                                        this.setState({
-                                            chartDataSeriesSar: {
-                                                ...this.state.chartDataSeriesSar,
-                                                [theKeys[index]]: [thisDataSeries],
-                                            },
-                                        });
-                                    }
-                                });
-                            }
+                    } else if (res.hasOwnProperty("timeseries")) {
+                        if (res.timeseries.length === 0) {
+                            console.log("no data");
+                        } else if (Object.keys(res.timeseries[0][1]).length === 0) {
+                            const thisDataSeries = {
+                                type: "area",
+                                name: widget.graphBand || indexName,
+                                data: res.timeseries
+                                    .filter(v => v[0]).map(v => [v[0], v[1]]).sort((a, b) => a[0] - b[0]),
+                                color: "#31bab0"
+                            };
+                            this.setState({nonDegChartData : [thisDataSeries]});
                         } else {
-                            console.warn("Wrong Data Returned");
+                            // this is where degData ends up
+                            const theKeys = Object.keys(res.timeseries[0][1]);
+                            const compiledData = [];
+                            res.timeseries.forEach(d => {
+                                for (let i = 0; i < theKeys.length; i++) {
+                                    const tempData = [];
+                                    const anObject = {};
+                                    anObject[theKeys[i]] = d[1][theKeys[i]];
+                                    tempData.push(d[0]);
+                                    tempData.push(anObject);
+                                    if (compiledData.length - 1 < i) {
+                                        compiledData[i] = [];
+                                    }
+                                    compiledData[i].push(tempData);
+                                }
+                            });
+                            compiledData.forEach((d, index) => {
+                                const cdata = this.convertData(d);
+                                const mSortData = this.sortMultiData(cdata);
+                                const thisDataSeries = {
+                                    type: "scatter",
+                                    name: theKeys[index],
+                                    data: mSortData,
+                                    valueDecimals: 20,
+                                    connectNulls: true,
+                                    color: "#31bab0",
+                                    allowPointSelect: true,
+                                    point: {
+                                        cursor: "pointer",
+                                        events: {
+                                            select: e => {
+                                                handleSelectDate(formatDateISO(new Date(e.target.x)));
+                                            }
+                                        }
+                                    },
+                                    tooltip: {
+                                        pointFormat: "<span style=\"color:{series.color}\">{point.x:%Y-%m-%d}</span>: <b>{point.y:.6f}</b><br/>",
+                                        valueDecimals: 20,
+                                        split: false,
+                                        xDateFormat: "%Y-%m-%d"
+                                    }
+                                };
+                                if (degDataType === "landsat") {
+                                    this.setState({
+                                        chartDataSeriesLandsat: [
+                                            ...this.state.chartDataSeriesLandsat,
+                                            thisDataSeries
+                                        ]
+                                    });
+                                } else {
+                                    this.setState({
+                                        chartDataSeriesSar: {
+                                            ...this.state.chartDataSeriesSar,
+                                            [theKeys[index]]: [thisDataSeries]
+                                        }
+                                    });
+                                }
+                            });
                         }
+                    } else {
+                        console.warn("Wrong Data Returned");
                     }
                 })
                 .catch(error => console.log(error));
-            window.addEventListener("resize", () => this.handleResize());
+            window.addEventListener("resize", this.handleResize);
         }
     };
 
-    multiComparator = (a, b) =>
-        (a[0] < b[0]) ? -1 :
-            (a[0] > b[0]) ? 1 :
-                0;
+    multiComparator = (a, b) => ((a[0] < b[0]) ? -1
+            : (a[0] > b[0]) ? 1
+                : 0);
 
     sortMultiData = data => data.sort(this.multiComparator);
 
@@ -1417,21 +1464,21 @@ class GraphWidget extends React.Component {
         const selectOptions = [
             {label: "VV", value: "VV"},
             {label: "VH", value: "VH"},
-            {label: "VV/VH", value: "VV/VH"},
+            {label: "VV/VH", value: "VV/VH"}
         ];
         return (
             <select
-                className={"form-control"}
+                className="form-control"
+                onChange={evt => this.onSelectSarGraphBand(evt.target.value)}
                 style={{
                     maxWidth: "85%",
                     display: this.props.widget.type === "DegradationTool" && this.props.degDataType === "sar"
                         ? "inline-block" : "none",
                     fontSize: ".9rem",
-                    height: "30px",
+                    height: "30px"
                 }}
-                onChange={evt => this.onSelectSarGraphBand(evt.target.value)}
             >
-                {selectOptions.map(el => <option value={el.value} key={el.value}>{el.label}</option>)}
+                {selectOptions.map(el => <option key={el.value} value={el.value}>{el.label}</option>)}
             </select>
         );
     };
@@ -1440,31 +1487,19 @@ class GraphWidget extends React.Component {
         const {widget, degDataType} = this.props;
         const {chartDataSeriesLandsat, chartDataSeriesSar, selectSarGraphBand, nonDegChartData} = this.state;
         return {
-            chart: {
-                zoomType: "x",
-            },
-            title: {
-                text: "",
-            },
+            chart: {zoomType: "x"},
+            title: {text: ""},
             subtitle: {
                 text: document.ontouchstart === undefined
                     ? "Click and drag in the plot area to zoom in"
-                    : "Pinch the chart to zoom in",
+                    : "Pinch the chart to zoom in"
             },
-            xAxis: {
-                type: "datetime",
-            },
+            xAxis: {type: "datetime"},
             yAxis: {
-                title: {
-                    text: widget.properties[4],
-                },
+                title: {text: widget.properties[4]}
             },
-            legend: {
-                enabled: true,
-            },
-            credits: {
-                enabled: false,
-            },
+            legend: {enabled: true},
+            credits: {enabled: false},
             plotOptions: {
                 area: {
                     connectNulls: widget.properties[4].toLowerCase() === "custom",
@@ -1473,35 +1508,29 @@ class GraphWidget extends React.Component {
                             x1: 0,
                             y1: 0,
                             x2: 0,
-                            y2: 1,
+                            y2: 1
                         },
                         stops: [
                             [0, Highcharts.Color(Highcharts.getOptions().colors[0]).setOpacity(0).get("rgba")],
-                            [1, Highcharts.Color(Highcharts.getOptions().colors[0]).setOpacity(0).get("rgba")],
-                        ],
+                            [1, Highcharts.Color(Highcharts.getOptions().colors[0]).setOpacity(0).get("rgba")]
+                        ]
                     },
-                    marker: {
-                        radius: 2,
-                    },
+                    marker: {radius: 2},
                     lineWidth: 1,
                     states: {
-                        hover: {
-                            lineWidth: 1,
-                        },
+                        hover: {lineWidth: 1}
                     },
-                    threshold: null,
+                    threshold: null
                 },
                 scatter: {
-                    marker: {
-                        radius: 2,
-                    },
-                },
+                    marker: {radius: 2}
+                }
             },
             tooltip: {
                 pointFormat: "<span style=\"color:{series.color}\">{series.name}</span>: <b>{point.y:.6f}</b><br/>",
                 valueDecimals: 20,
                 split: false,
-                xDateFormat: "%Y-%m-%d",
+                xDateFormat: "%Y-%m-%d"
             },
             series:
                 widget.type === "DegradationTool"
@@ -1511,7 +1540,7 @@ class GraphWidget extends React.Component {
                             && chartDataSeriesSar[selectSarGraphBand].length > 0
                             ? _.cloneDeep(chartDataSeriesSar[selectSarGraphBand])
                             : []
-                    : _.cloneDeep(nonDegChartData),
+                    : _.cloneDeep(nonDegChartData)
         };
     };
 
@@ -1519,8 +1548,8 @@ class GraphWidget extends React.Component {
         const {widget, degDataType} = this.props;
         const {chartDataSeriesSar, chartDataSeriesLandsat, selectSarGraphBand, nonDegChartData} = this.state;
         return (
-            <div id={"widgetgraph_" + widget.id} className="minmapwidget">
-                <div id={"graphcontainer_" + widget.id} className="minmapwidget graphwidget normal">
+            <div className="minmapwidget" id={"widgetgraph_" + widget.id}>
+                <div className="minmapwidget graphwidget normal" id={"graphcontainer_" + widget.id}>
                     {(widget.type === "DegradationTool"
                         && degDataType === "sar"
                         && chartDataSeriesSar.hasOwnProperty(selectSarGraphBand)
@@ -1529,23 +1558,23 @@ class GraphWidget extends React.Component {
                         && degDataType === "landsat"
                         && chartDataSeriesLandsat.length > 0)
                     || nonDegChartData.length > 0
-                        ?
+                        ? (
                             <HighchartsReact
+                                callback={thisChart => this.setState({graphRef: thisChart})}
                                 highcharts={Highcharts}
                                 options={this.getChartOptions()}
-                                callback={thisChart => this.setState({graphRef: thisChart})}
                             />
-                        :
+                        ) : (
                             <img
-                                src={"img/geodash/ceo-loading.gif"}
-                                alt={"Loading"}
+                                alt="Loading"
+                                src="img/geodash/ceo-loading.gif"
                                 style={{
                                     position: "absolute",
                                     bottom: "50%",
-                                    left: "50%",
+                                    left: "50%"
                                 }}
                             />
-                    }
+                        )}
                 </div>
                 <h3 id={"widgettitle_" + widget.id}>{widget.properties[4]}</h3>
                 {this.getSarBandOption()}
@@ -1561,17 +1590,17 @@ class StatsWidget extends React.Component {
     }
 
     componentDidMount() {
-        const projPairAOI = this.props.projPairAOI;
+        const {projPairAOI} = this.props;
         fetch("/geo-dash/gateway-request", {
             method: "POST",
             headers: {
                 "Accept": "application/json",
-                "Content-Type": "application/json",
+                "Content-Type": "application/json"
             },
             body: JSON.stringify({
                 paramValue: JSON.parse(projPairAOI),
-                path: "getStats",
-            }),
+                path: "getStats"
+            })
         })
             .then(res => res.json())
             .then(data => {
@@ -1581,7 +1610,10 @@ class StatsWidget extends React.Component {
                     this.setState({
                         totalPop: this.numberWithCommas(data.pop),
                         area: this.numberWithCommas(this.calculateArea(JSON.parse(projPairAOI)), 2) + " ha",
-                        elevation: this.numberWithCommas(data.minElev) + " - " + this.numberWithCommas(data.maxElev) + " m",
+                        elevation: this.numberWithCommas(data.minElev)
+                            + " - "
+                            + this.numberWithCommas(data.maxElev)
+                            + " m"
                     });
                 }
             })
@@ -1593,7 +1625,9 @@ class StatsWidget extends React.Component {
             try {
                 const [quot, rem] = x.toString().split(".");
                 const withCommas = quot.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-                return (rem && decimalPlaces > 0) ? [withCommas, rem.slice(0, decimalPlaces)].join(".") : withCommas;
+                return (rem && decimalPlaces > 0)
+                    ? [withCommas, rem.slice(0, decimalPlaces)].join(".")
+                    : withCommas;
             } catch (e) {
                 console.warn(e.message);
                 return "N/A";
@@ -1612,93 +1646,123 @@ class StatsWidget extends React.Component {
     };
 
     render() {
-        const widget = this.props.widget;
+        const {widget} = this.props;
         const stats = this.state.totalPop;
-        const area = this.state.area;
-        const elevation = this.state.elevation;
-        return <div id={"widgetstats_" + widget.id} className="minmapwidget" style={{padding: "20px"}}>
-            <div>
-                <div className="form-group">
-                    <div className="input-group">
-                        <div className="input-group-addon">
-                            <img
-                                src={"img/geodash/icon-population.png"}
+        const {area} = this.state;
+        const {elevation} = this.state;
+        return (
+            <div className="minmapwidget" id={"widgetstats_" + widget.id} style={{padding: "20px"}}>
+                <div>
+                    <div className="form-group">
+                        <div className="input-group">
+                            <div className="input-group-addon">
+                                <img
+                                    alt="Population"
+                                    src="img/geodash/icon-population.png"
+                                    style={{
+                                        width: "50px",
+                                        height: "50px",
+                                        borderRadius: "25px",
+                                        backgroundColor: "#31bab0"
+                                    }}
+                                />
+                            </div>
+                            <label
+                                htmlFor={"totalPop_" + widget.id}
+                                style={{color: "#787878", padding: "10px 20px"}}
+                            >
+                                Total population
+                            </label>
+                            <h3
+                                id={"totalPop_" + widget.id}
                                 style={{
-                                    width: "50px",
-                                    height: "50px",
-                                    borderRadius: "25px",
-                                    backgroundColor: "#31bab0",
+                                    color: "#606060",
+                                    fontSize: "16px",
+                                    fontWeight: "bold",
+                                    paddingTop: "12px"
                                 }}
-                                alt="Population"
-                            />
+                            >
+                                {stats}
+                            </h3>
                         </div>
-                        <label htmlFor={"totalPop_" + widget.id} style={{color: "#787878", padding: "10px 20px"}}>Total population</label>
-                        <h3
-                            id={"totalPop_" + widget.id}
-                            style={{
-                                color: "#606060",
-                                fontSize: "16px",
-                                fontWeight: "bold",
-                                paddingTop: "12px",
-                            }}
-                        >{stats}</h3>
                     </div>
-                </div>
-                <div className="form-group">
-                    <div className="input-group">
-                        <div className="input-group-addon">
-                            <img
-                                src={"img/geodash/icon-area.png"}
+                    <div className="form-group">
+                        <div className="input-group">
+                            <div className="input-group-addon">
+                                <img
+                                    alt="Area"
+                                    src="img/geodash/icon-area.png"
+                                    style={{
+                                        width: "50px",
+                                        height: "50px",
+                                        borderRadius: "25px",
+                                        backgroundColor: "#31bab0"
+                                    }}
+                                />
+                            </div>
+                            <label
+                                htmlFor={"totalArea_" + widget.id}
+                                style={{color: "#787878", padding: "10px 20px"}}
+                            >
+                                Area
+                            </label>
+                            <h3
+                                id={"totalArea_" + widget.id}
                                 style={{
-                                    width: "50px",
-                                    height: "50px",
-                                    borderRadius: "25px",
-                                    backgroundColor: "#31bab0",
+                                    color: "#606060",
+                                    fontSize: "16px",
+                                    fontWeight: "bold",
+                                    paddingTop: "12px"
                                 }}
-                                alt="Area"
-                            />
+                            >{area}
+                            </h3>
                         </div>
-                        <label htmlFor={"totalArea_" + widget.id} style={{color: "#787878", padding: "10px 20px"}}>Area</label>
-                        <h3
-                            id={"totalArea_" + widget.id}
-                            style={{
-                                color: "#606060",
-                                fontSize: "16px",
-                                fontWeight: "bold",
-                                paddingTop: "12px",
-                            }}
-                        >{area}</h3>
                     </div>
-                </div>
-                <div className="form-group">
-                    <div className="input-group">
-                        <div className="input-group-addon">
-                            <img
-                                src={"img/geodash/icon-elevation.png"}
+                    <div className="form-group">
+                        <div className="input-group">
+                            <div className="input-group-addon">
+                                <img
+                                    alt="Elevation"
+                                    src="img/geodash/icon-elevation.png"
+                                    style={{
+                                        width: "50px",
+                                        height: "50px",
+                                        borderRadius: "25px",
+                                        backgroundColor: "#31bab0"
+                                    }}
+                                />
+                            </div>
+                            <label
+                                htmlFor={"elevationRange_" + widget.id}
+                                style={{color: "#787878", padding: "10px 20px"}}
+                            >
+                                Elevation
+                            </label>
+                            <h3
+                                id={"elevationRange_" + widget.id}
                                 style={{
-                                    width: "50px",
-                                    height: "50px",
-                                    borderRadius: "25px",
-                                    backgroundColor: "#31bab0",
+                                    color: "#606060",
+                                    fontSize: "16px",
+                                    fontWeight: "bold",
+                                    paddingTop: "12px"
                                 }}
-                                alt="Elevation"
-                            />
+                            >
+                                {elevation}
+                            </h3>
                         </div>
-                        <label htmlFor={"elevationRange_" + widget.id} style={{color: "#787878", padding: "10px 20px"}}>Elevation</label>
-                        <h3 id={"elevationRange_" + widget.id} style={{color: "#606060", fontSize: "16px", fontWeight: "bold", paddingTop: "12px"}}>{elevation}</h3>
                     </div>
                 </div>
             </div>
-        </div>;
+        );
     }
 }
 
 export function pageInit(args) {
     ReactDOM.render(
         <GeoDashNavigationBar
+            page={() => <Geodash/>}
             userName={args.userName || "guest"}
             visiblePlotId={parseInt(args.visiblePlotId) || -1}
-            page={() => <Geodash/>}
         />,
         document.getElementById("app")
     );

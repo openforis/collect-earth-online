@@ -1,8 +1,8 @@
-import React, {Fragment} from "react";
+import React from "react";
 
 import {UnicodeIcon, removeEnumerator, intersection, isNumber} from "../utils/generalUtils";
 import {CollapsibleTitle} from "./FormComponents";
-import SvgIcon from "../components/SvgIcon";
+import SvgIcon from "./SvgIcon";
 import {mercator} from "../utils/mercator";
 
 export class SurveyCollection extends React.Component {
@@ -12,7 +12,7 @@ export class SurveyCollection extends React.Component {
             currentNodeIndex: 0,
             topLevelNodeIds: [],
             showSurveyQuestions: true,
-            drawTool: "Point",
+            drawTool: "Point"
         };
     }
 
@@ -40,7 +40,7 @@ export class SurveyCollection extends React.Component {
             topLevelNodeIds: this.props.surveyQuestions
                 .filter(sq => sq.parentQuestion === -1)
                 .sort((a, b) => a.id - b.id)
-                .map(sq => sq.id),
+                .map(sq => sq.id)
         });
     };
 
@@ -60,33 +60,31 @@ export class SurveyCollection extends React.Component {
         }
     };
 
-    setSurveyQuestionTree = (index) => this.setState({currentNodeIndex: index});
+    setSurveyQuestionTree = index => this.setState({currentNodeIndex: index});
 
-    getNodeById = (id) => this.props.surveyQuestions.find(sq => sq.id === id)
+    getNodeById = id => this.props.surveyQuestions.find(sq => sq.id === id)
         || {question: "", answers: [], answered: [], visible: []};
 
-    checkAllSubAnswers = (currentQuestionId) => {
+    checkAllSubAnswers = currentQuestionId => {
         const {surveyQuestions} = this.props;
         const {visible, answered} = this.getNodeById(currentQuestionId);
         const childQuestions = surveyQuestions.filter(sq => sq.parentQuestion === currentQuestionId);
-        return visible.length === answered.length && childQuestions.every(cq => this.checkAllSubAnswers(cq.id));
+        return visible.length === answered.length
+            && childQuestions.every(cq => this.checkAllSubAnswers(cq.id));
     };
 
-    getTopColor = (node) => this.checkAllSubAnswers(node.id)
+    getTopColor = node => (this.checkAllSubAnswers(node.id)
                                 ? "0px 0px 6px 4px #3bb9d6 inset"
                                 : node.answered.length > 0
                                     ? "0px 0px 6px 4px yellow inset"
-                                    : "0px 0px 6px 4px red inset";
+                                    : "0px 0px 6px 4px red inset");
 
-    getRulesById = (id) =>
-        (this.props.surveyRules || [])
-            .filter(rule =>
-                (rule.questionId && rule.questionId === id)
+    getRulesById = id => (this.props.surveyRules || [])
+        .filter(rule => (rule.questionId && rule.questionId === id)
                     || (rule.questions && rule.questions.includes(id))
                     || (rule.questionSetIds1 && (rule.questionSetIds1.includes(id) || rule.questionSetIds2.includes(id)))
                     || (rule.question1 && (rule.question1 === id || rule.question2 === id)))
-            .map((r, uid) =>
-                r.questionId
+        .map((r, uid) => (r.questionId
                     ? r.regex
                         ? <li key={uid}>{"Rule: " + r.ruleType + " | Question '" + r.questionsText + "' should match the pattern: " + r.regex + "."}</li>
                         : <li key={uid}>{"Rule: " + r.ruleType + " | Question '" + r.questionsText + "' should be between " + r.min + " and " + r.max + "."}</li>
@@ -94,14 +92,14 @@ export class SurveyCollection extends React.Component {
                         ? <li key={uid}>{"Rule: " + r.ruleType + " | Questions '" + r.questionsText + "' should sum up to " + r.validSum + "."}</li>
                         : r.questionSetIds1
                             ? <li key={uid}>{"Rule: " + r.ruleType + " | Sum of '" + r.questionSetText1 + "' should be equal to sum of  '" + r.questionSetText2 + "'."}</li>
-                            : <li key={uid}>{"Rule: " + r.ruleType + " | 'Question1: " + r.questionText1 + ", Answer1: " + r.answerText1 + "' is not compatible with 'Question2: " + r.questionText2 + ", Answer2: " + r.answerText2 + "'."}</li>);
+                            : <li key={uid}>{"Rule: " + r.ruleType + " | 'Question1: " + r.questionText1 + ", Answer1: " + r.answerText1 + "' is not compatible with 'Question2: " + r.questionText2 + ", Answer2: " + r.answerText2 + "'."}</li>));
 
-    setDrawTool = (newTool) => {
+    setDrawTool = newTool => {
         this.setState({drawTool: newTool});
         if (this.props.mapConfig) mercator.changeDrawTool(this.props.mapConfig, "drawLayer", newTool);
     };
 
-    clearAll = (drawTool) => {
+    clearAll = drawTool => {
         if (this.props.answerMode === "draw" && confirm("Do you want to clear all samples from the draw area?")) {
             const {mapConfig} = this.props;
             mercator.disableDrawing(mapConfig);
@@ -117,42 +115,43 @@ export class SurveyCollection extends React.Component {
         }
     };
 
-    buttonStyle = (selected) => Object.assign(
-        {padding: "4px", margin: ".25rem"},
-        selected ? {border: "2px solid black", borderRadius: "4px"} : {}
-    );
+    buttonStyle = selected => ({
+        padding: "4px",
+        margin: ".25rem",
+        ...(selected ? {border: "2px solid black", borderRadius: "4px"} : {})
+    });
 
     unansweredColor = () => (
         <div className="PlotNavigation__change-color d-flex justify-content-center mb-2">
             Unanswered Color
             <div className="form-check form-check-inline">
                 <input
-                    className="form-check-input ml-2"
                     checked={this.props.unansweredColor === "black"}
+                    className="form-check-input ml-2"
                     id="radio1"
+                    name="color-radios"
                     onChange={() => this.props.setUnansweredColor("black")}
                     type="radio"
-                    name="color-radios"
                 />
-                <label htmlFor="radio1" className="form-check-label">Black</label>
+                <label className="form-check-label" htmlFor="radio1">Black</label>
             </div>
             <div className="form-check form-check-inline">
                 <input
-                    className="form-check-input"
                     checked={this.props.unansweredColor === "white"}
+                    className="form-check-input"
                     id="radio2"
+                    name="color-radios"
                     onChange={() => this.props.setUnansweredColor("white")}
                     type="radio"
-                    name="color-radios"
                 />
-                <label htmlFor="radio2" className="form-check-label">White</label>
+                <label className="form-check-label" htmlFor="radio2">White</label>
             </div>
         </div>
     );
 
     checkRuleTextMatch = (surveyRule, questionToSet, answerId, answerText) => {
-        if (surveyRule.questionId === questionToSet.id &&
-            !RegExp(surveyRule.regex).test(answerText)) {
+        if (surveyRule.questionId === questionToSet.id
+            && !RegExp(surveyRule.regex).test(answerText)) {
             return `Text match validation failed.\r\n\nPlease enter a regular expression that matches ${surveyRule.regex}`;
         } else {
             return null;
@@ -160,10 +159,10 @@ export class SurveyCollection extends React.Component {
     };
 
     checkRuleNumericRange = (surveyRule, questionToSet, answerId, answerText) => {
-        if (surveyRule.questionId === questionToSet.id &&
-            !isNumber(answerText) ||
-            answerText < surveyRule.min ||
-            answerText > surveyRule.max) {
+        if (surveyRule.questionId === questionToSet.id
+            && !isNumber(answerText)
+            || answerText < surveyRule.min
+            || answerText > surveyRule.max) {
             return `Numeric range validation failed.\r\n\n Please select a value between ${surveyRule.min} and ${surveyRule.max}`;
         } else {
             return null;
@@ -184,9 +183,9 @@ export class SurveyCollection extends React.Component {
                             .map(q => q.answered.find(ques => ques.sampleId === sampleId).answerText)
                             .reduce((sum, num) => sum + parseInt(num), 0);
                         if (answeredSum + parseInt(answerText) !== surveyRule.validSum) {
-                            return "Sum of answers validation failed.\r\n\n" +
-                                `Sum for questions [${surveyRule.questionsText.toString()}] must be ${(surveyRule.validSum).toString()}.\r\n\n` +
-                                `An acceptable answer for "${questionToSet.question}" is ${(surveyRule.validSum - answeredSum).toString()}.`;
+                            return "Sum of answers validation failed.\r\n\n"
+                                + `Sum for questions [${surveyRule.questionsText.toString()}] must be ${(surveyRule.validSum).toString()}.\r\n\n`
+                                + `An acceptable answer for "${questionToSet.question}" is ${(surveyRule.validSum - answeredSum).toString()}.`;
                         } else {
                             return null;
                         }
@@ -225,14 +224,12 @@ export class SurveyCollection extends React.Component {
                             .reduce((sum, num) => sum + parseInt(num), 0);
                         return [sum1, sum2];
                     });
-                    const invalidSum = sampleSums.find(sums =>
-                        sums[0] + (surveyRule.questionSetIds1.includes(questionToSet.id) ? parseInt(answerText) : 0)
-                        !== sums[1] + (surveyRule.questionSetIds2.includes(questionToSet.id) ? parseInt(answerText) : 0)
-                    );
+                    const invalidSum = sampleSums.find(sums => sums[0] + (surveyRule.questionSetIds1.includes(questionToSet.id) ? parseInt(answerText) : 0)
+                        !== sums[1] + (surveyRule.questionSetIds2.includes(questionToSet.id) ? parseInt(answerText) : 0));
                     if (invalidSum) {
-                        return "Matching sums validation failed.\r\n\n" +
-                            `Totals of the question sets [${surveyRule.questionSetText1.toString()}] and [${surveyRule.questionSetText2.toString()}] do not match.\r\n\n` +
-                            `An acceptable answer for "${questionToSet.question}" is ${Math.abs(invalidSum[0] - invalidSum[1])}.`;
+                        return "Matching sums validation failed.\r\n\n"
+                            + `Totals of the question sets [${surveyRule.questionSetText1.toString()}] and [${surveyRule.questionSetText2.toString()}] do not match.\r\n\n`
+                            + `An acceptable answer for "${questionToSet.question}" is ${Math.abs(invalidSum[0] - invalidSum[1])}.`;
                     } else {
                         return null;
                     }
@@ -255,9 +252,9 @@ export class SurveyCollection extends React.Component {
                 const ques2Ids = ques2.answered.filter(ans => ans.answerId === surveyRule.answer2).map(a => a.sampleId);
                 const commonSampleIds = intersection(ques1Ids, ques2Ids);
                 if (commonSampleIds.length > 0) {
-                    return "Incompatible answers validation failed.\r\n\n" +
-                        `Answer "${surveyRule.answerText1}" from question "${surveyRule.questionText1}" is incompatible with\r\n` +
-                        `answer "${surveyRule.answerText2}" from question "${surveyRule.questionText2}".\r\n\n`;
+                    return "Incompatible answers validation failed.\r\n\n"
+                        + `Answer "${surveyRule.answerText1}" from question "${surveyRule.questionText1}" is incompatible with\r\n`
+                        + `answer "${surveyRule.answerText2}" from question "${surveyRule.questionText2}".\r\n\n`;
                 } else {
                     return null;
                 }
@@ -271,9 +268,9 @@ export class SurveyCollection extends React.Component {
                 const ques1Ids = ques1.answered.filter(ans => ans.answerId === surveyRule.answer1).map(a => a.sampleId);
                 const commonSampleIds = intersection(ques1Ids, ques2Ids);
                 if (commonSampleIds.length > 0) {
-                    return "Incompatible answers validation failed.\r\n\n" +
-                        `Answer "${surveyRule.answerText2}" from question "${surveyRule.questionText2}" is incompatible with\r\n` +
-                        `answer "${surveyRule.answerText1}" from question "${surveyRule.questionText1}".\r\n\n`;
+                    return "Incompatible answers validation failed.\r\n\n"
+                        + `Answer "${surveyRule.answerText2}" from question "${surveyRule.questionText2}" is incompatible with\r\n`
+                        + `answer "${surveyRule.answerText1}" from question "${surveyRule.questionText1}".\r\n\n`;
                 } else {
                     return null;
                 }
@@ -290,11 +287,10 @@ export class SurveyCollection extends React.Component {
         "numeric-range":        this.checkRuleNumericRange,
         "sum-of-answers":       this.checkRuleSumOfAnswers,
         "matching-sums":        this.checkRuleMatchingSums,
-        "incompatible-answers": this.checkRuleIncompatibleAnswers,
+        "incompatible-answers": this.checkRuleIncompatibleAnswers
     };
 
-    rulesViolated = (questionToSet, answerId, answerText) =>
-        this.props.surveyRules
+    rulesViolated = (questionToSet, answerId, answerText) => this.props.surveyRules
         && this.props.surveyRules
             .map(surveyRule => this.ruleFunctions[surveyRule.ruleType](surveyRule, questionToSet, answerId, answerText))
             .find(msg => msg);
@@ -312,83 +308,83 @@ export class SurveyCollection extends React.Component {
         <div className="SurveyQuestions__questions mx-1">
             {this.unansweredColor()}
             {this.props.flagged
-            ?
+            ? (
                 <>
                     <div style={{color: "red", fontSize: "1.5rem"}}>This plot has been flagged.</div>
                     <div className="my-2">
                         <div className="slide-container">
                             <label>Flagged Reason</label>
-                            <textarea className="form-control" value={this.props.flaggedReason} onChange={e => this.props.setFlaggedReason(e.target.value)}></textarea>
+                            <textarea className="form-control" onChange={e => this.props.setFlaggedReason(e.target.value)} value={this.props.flaggedReason}/>
                         </div>
                     </div>
                 </>
-            :
+            ) : (
                 <>
                     <div className="SurveyQuestions__top-questions">
                         <button
-                            type="button"
-                            id="prev-survey-question"
                             className="btn btn-outline-lightgreen m-2"
-                            onClick={this.prevSurveyQuestionTree}
                             disabled={this.state.currentNodeIndex === 0}
+                            id="prev-survey-question"
+                            onClick={this.prevSurveyQuestionTree}
                             style={{opacity: this.state.currentNodeIndex === 0 ? "0.25" : "1.0"}}
+                            type="button"
                         >
                             {"<"}
                         </button>
-                        {this.state.topLevelNodeIds.map((node, i) =>
+                        {this.state.topLevelNodeIds.map((node, i) => (
                             <button
-                                type="button"
-                                id="top-select"
                                 key={i}
                                 className="btn btn-outline-lightgreen m-2"
-                                title={removeEnumerator(this.getNodeById(node).question)}
+                                id="top-select"
                                 onClick={() => this.setSurveyQuestionTree(i)}
                                 style={{
                                     boxShadow:
                                     `${(i === this.state.currentNodeIndex)
                                         ? "0px 0px 2px 2px black inset,"
                                         : ""}
-                                    ${this.getTopColor(this.getNodeById(node))}`,
+                                    ${this.getTopColor(this.getNodeById(node))}`
                                 }}
+                                title={removeEnumerator(this.getNodeById(node).question)}
+                                type="button"
                             >
                                 {i + 1}
                             </button>
-                        )}
+                        ))}
                         <button
-                            type="button"
-                            id="next-survey-question"
                             className="btn btn-outline-lightgreen"
-                            onClick={this.nextSurveyQuestionTree}
                             disabled={this.state.currentNodeIndex === this.state.topLevelNodeIds.length - 1}
+                            id="next-survey-question"
+                            onClick={this.nextSurveyQuestionTree}
                             style={{opacity: this.state.currentNodeIndex === this.state.topLevelNodeIds.length - 1 ? "0.25" : "1.0"}}
+                            type="button"
                         >
                             {">"}
                         </button>
                     </div>
-                    {this.state.topLevelNodeIds.length > 0 &&
+                    {this.state.topLevelNodeIds.length > 0 && (
                         <SurveyQuestionTree
+                            getRulesById={this.getRulesById}
                             hierarchyLabel=""
+                            selectedQuestion={this.props.selectedQuestion}
+                            selectedSampleId={this.props.selectedSampleId}
+                            setSelectedQuestion={this.props.setSelectedQuestion}
                             surveyNode={this.getNodeById(this.state.topLevelNodeIds[this.state.currentNodeIndex])}
                             surveyQuestions={this.props.surveyQuestions}
                             surveyRules={this.props.surveyRules}
                             validateAndSetCurrentValue={this.validateAndSetCurrentValue}
-                            selectedQuestion={this.props.selectedQuestion}
-                            selectedSampleId={this.props.selectedSampleId}
-                            setSelectedQuestion={this.props.setSelectedQuestion}
-                            getRulesById={this.getRulesById}
                         />
-                    }
+                    )}
                 </>
-            }
+            )}
         </div>
     );
 
     renderDrawTools = () => (
         <div style={{display: "flex", flexDirection: "column"}}>
             <div
+                onClick={() => this.setDrawTool("Point")}
                 style={{alignItems: "center", cursor: "pointer", display: "flex"}}
                 title="Click anywhere to add a new point."
-                onClick={() => this.setDrawTool("Point")}
             >
                 <span style={this.buttonStyle(this.state.drawTool === "Point")}>
                     <SvgIcon icon="point" size="2rem"/>
@@ -396,9 +392,9 @@ export class SurveyCollection extends React.Component {
                 Point tool
             </div>
             <div
+                onClick={() => this.setDrawTool("LineString")}
                 style={{alignItems: "center", cursor: "pointer", display: "flex"}}
                 title="Click anywhere to start drawing. A new point along the line string can be added with a single click. Right click or double click to finish drawing."
-                onClick={() => this.setDrawTool("LineString")}
             >
                 <span style={this.buttonStyle(this.state.drawTool === "LineString")}>
                     <SvgIcon icon="lineString" size="2rem"/>
@@ -406,9 +402,9 @@ export class SurveyCollection extends React.Component {
                 LineString tool
             </div>
             <div
+                onClick={() => this.setDrawTool("Polygon")}
                 style={{alignItems: "center", cursor: "pointer", display: "flex"}}
                 title="Click anywhere to start drawing. A new vertex can be added with a singe click. Right click, double click, or complete the polygon to finish drawing."
-                onClick={() => this.setDrawTool("Polygon")}
             >
                 <span style={this.buttonStyle(this.state.drawTool === "Polygon")}>
                     <SvgIcon icon="polygon" size="2rem"/>
@@ -428,15 +424,15 @@ export class SurveyCollection extends React.Component {
         <div className="mb-2 d-flex justify-content-between">
             <input
                 className="btn btn-outline-red btn-sm col mr-1"
+                onClick={this.props.toggleFlagged}
                 type="button"
                 value={this.props.flagged ? "Unflag Plot" : "Flag Plot"}
-                onClick={this.props.toggleFlagged}
             />
             <input
                 className="btn btn-outline-red btn-sm col"
+                onClick={this.clearAll}
                 type="button"
                 value="Clear All"
-                onClick={this.clearAll}
             />
         </div>
     );
@@ -445,59 +441,56 @@ export class SurveyCollection extends React.Component {
         return (
             <fieldset className="justify-content-center text-center">
                 <CollapsibleTitle
-                    title="Survey Questions"
                     showGroup={this.state.showSurveyQuestions}
+                    title="Survey Questions"
                     toggleShow={() => this.setState({showSurveyQuestions: !this.state.showSurveyQuestions})}
                 />
-                {this.props.allowDrawnSamples &&
+                {this.props.allowDrawnSamples && (
                     <div style={{display: "flex", justifyContent: "center"}}>
                         <span
+                            onClick={() => this.props.setAnswerMode("question", this.state.drawTool)}
                             style={this.buttonStyle(this.props.answerMode === "question")}
                             title="Answer questions"
-                            onClick={() => this.props.setAnswerMode("question", this.state.drawTool)}
                         >
                             <SvgIcon icon="question" size="2rem"/>
                         </span>
                         <span
+                            onClick={() => this.props.setAnswerMode("draw", this.state.drawTool)}
                             style={this.buttonStyle(this.props.answerMode === "draw")}
                             title="Draw sample points"
-                            onClick={() => this.props.setAnswerMode("draw", this.state.drawTool)}
                         >
                             <SvgIcon icon="draw" size="2rem"/>
                         </span>
                     </div>
-                }
+                )}
                 {this.state.showSurveyQuestions
                 ? this.props.surveyQuestions.length > 0
-                    ?
+                    ? (
                         <>
                             {this.props.answerMode === "question"
                                 ? this.renderQuestions()
-                                : this.renderDrawTools()
-                            }
-                            {this.props.collectConfidence && !this.props.flagged &&
+                                : this.renderDrawTools()}
+                            {this.props.collectConfidence && !this.props.flagged && (
                                 <div className="row mb-3">
                                     <div className="col-12">
                                         <div className="slide-container">
                                             <input
-                                                type="range"
-                                                min="0"
-                                                max="100"
-                                                value={this.props.confidence}
                                                 className="slider"
+                                                max="100"
+                                                min="0"
                                                 onChange={e => this.props.setConfidence(parseInt(e.target.value))}
+                                                type="range"
+                                                value={this.props.confidence}
                                             />
                                             <label>Plot Confidence: {this.props.confidence}</label>
                                         </div>
                                     </div>
                                 </div>
-                            }
+                            )}
                             {this.renderFlagClearButtons()}
                         </>
-                    :
-                        <h3>This project is missing survey questions!</h3>
-                : null
-                }
+                    ) : <h3>This project is missing survey questions!</h3>
+                : null}
             </fieldset>
         );
     }
@@ -507,14 +500,15 @@ class SurveyQuestionTree extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
-            showAnswers: true,
+            showAnswers: true
         };
     }
 
     toggleShowAnswers = () => this.setState({showAnswers: !this.state.showAnswers});
 
     render() {
-        const childNodes = this.props.surveyQuestions.filter(surveyNode => surveyNode.parentQuestion === this.props.surveyNode.id);
+        const childNodes = this.props.surveyQuestions
+            .filter(surveyNode => surveyNode.parentQuestion === this.props.surveyNode.id);
 
         const shadowColor = this.props.surveyNode.answered.length === 0
                             ? "0px 0px 6px 4px red inset"
@@ -523,142 +517,147 @@ class SurveyQuestionTree extends React.Component {
                                 : "0px 0px 6px 4px yellow inset";
         const rules = this.props.getRulesById(this.props.surveyNode.id);
         return (
-            <fieldset className={"mb-1 justify-content-center text-center"}>
+            <fieldset className="mb-1 justify-content-center text-center">
                 <div className="SurveyQuestionTree__question-buttons btn-block my-2 d-flex">
                     <button
-                        type="button"
-                        id={this.props.surveyNode.question + "_" + this.props.surveyNode.id}
                         className="text-center btn btn-outline-lightgreen btn-sm text-bold px-3 py-2 mr-1"
+                        id={this.props.surveyNode.question + "_" + this.props.surveyNode.id}
                         onClick={this.toggleShowAnswers}
+                        type="button"
                     >
                         {this.state.showAnswers ? <span>-</span> : <span>+</span>}
                     </button>
-                    {rules.length > 0 &&
+                    {rules.length > 0 && (
                         <div className="text-center btn btn-outline-lightgreen mr-1 tooltip_wrapper">
                             <SvgIcon icon="rule" size="1.5rem"/>
                             <ul className="tooltip_content survey_tree">{rules}</ul>
                         </div>
-                    }
+                    )}
                     <button
-                        type="button"
-                        id={this.props.surveyNode.question + "_" + this.props.surveyNode.id}
                         className="text-center btn btn-outline-lightgreen btn-sm col overflow-hidden text-truncate"
+                        id={this.props.surveyNode.question + "_" + this.props.surveyNode.id}
+                        onClick={() => this.props.setSelectedQuestion(this.props.surveyNode)}
                         style={{
                             boxShadow: `${(this.props.surveyNode.id === this.props.selectedQuestion.id)
                                     ? "0px 0px 2px 2px black inset,"
                                     : ""}
-                                    ${shadowColor}`,
+                                    ${shadowColor}`
                         }}
-                        onClick={() => this.props.setSelectedQuestion(this.props.surveyNode)}
+                        type="button"
                     >
                         {this.props.hierarchyLabel + removeEnumerator(this.props.surveyNode.question)}
                     </button>
                 </div>
 
-                {this.state.showAnswers &&
+                {this.state.showAnswers && (
                     <SurveyAnswers
-                        surveyNode={this.props.surveyNode}
                         selectedSampleId={this.props.selectedSampleId}
-                        validateAndSetCurrentValue={this.props.validateAndSetCurrentValue}
-                        surveyRules={this.props.surveyRules}
+                        surveyNode={this.props.surveyNode}
                         surveyQuestions={this.props.surveyQuestions}
+                        surveyRules={this.props.surveyRules}
+                        validateAndSetCurrentValue={this.props.validateAndSetCurrentValue}
                     />
-                }
-                {childNodes.map((childNode, uid) =>
-                    <Fragment key={uid}>
-                        {this.props.surveyQuestions.find(sq => sq.id === childNode.id).visible.length > 0 &&
-                        <SurveyQuestionTree
-                            key={uid}
-                            surveyNode={childNode}
-                            surveyQuestions={this.props.surveyQuestions}
-                            validateAndSetCurrentValue={this.props.validateAndSetCurrentValue}
-                            selectedQuestion={this.props.selectedQuestion}
-                            selectedSampleId={this.props.selectedSampleId}
-                            setSelectedQuestion={this.props.setSelectedQuestion}
-                            hierarchyLabel={this.props.hierarchyLabel + "- "}
-                            getRulesById={this.props.getRulesById}
-                        />
-                        }
-                    </Fragment>
                 )}
+                {childNodes.map((childNode, uid) => (
+                    <Fragment key={uid}>
+                        {this.props.surveyQuestions.find(sq => sq.id === childNode.id).visible.length > 0
+                        && (
+                            <SurveyQuestionTree
+                                key={uid}
+                                getRulesById={this.props.getRulesById}
+                                hierarchyLabel={this.props.hierarchyLabel + "- "}
+                                selectedQuestion={this.props.selectedQuestion}
+                                selectedSampleId={this.props.selectedSampleId}
+                                setSelectedQuestion={this.props.setSelectedQuestion}
+                                surveyNode={childNode}
+                                surveyQuestions={this.props.surveyQuestions}
+                                validateAndSetCurrentValue={this.props.validateAndSetCurrentValue}
+                            />
+                        )}
+                    </Fragment>
+                ))}
             </fieldset>
         );
     }
 }
 
 function AnswerButton({surveyNode, surveyNode: {answers, answered}, selectedSampleId, validateAndSetCurrentValue}) {
-    return <ul className={"samplevalue justify-content-center"}>
-        {answers.map((ans, uid) =>
-            <li key={uid} className="mb-1">
-                <button
-                    type="button"
-                    className="btn btn-outline-darkgray btn-sm btn-block pl-1 overflow-hidden text-truncate"
-                    title={ans.answer}
-                    id={ans.answer + "_" + ans.id}
-                    name={ans.answer + "_" + ans.id}
-                    style={{
-                        boxShadow: answered.some(a => a.answerId === ans.id && a.sampleId === selectedSampleId)
+    return (
+        <ul className="samplevalue justify-content-center">
+            {answers.map((ans, uid) => (
+                <li key={uid} className="mb-1">
+                    <button
+                        className="btn btn-outline-darkgray btn-sm btn-block pl-1 overflow-hidden text-truncate"
+                        id={ans.answer + "_" + ans.id}
+                        name={ans.answer + "_" + ans.id}
+                        onClick={() => validateAndSetCurrentValue(surveyNode, ans.id, ans.answer)}
+                        style={{
+                            boxShadow: answered.some(a => a.answerId === ans.id && a.sampleId === selectedSampleId)
                             ? "0px 0px 8px 3px black inset"
                             : answered.some(a => a.answerId === ans.id)
                                 ? "0px 0px 8px 3px grey inset"
-                                : "initial",
-                    }}
-                    onClick={() => validateAndSetCurrentValue(surveyNode, ans.id, ans.answer)}
-                >
-                    <div
-                        className="circle mr-2"
-                        style={{
-                            backgroundColor: ans.color,
-                            border: "1px solid",
-                            float: "left",
-                            marginTop: "4px",
+                                : "initial"
                         }}
-                    />
-                    <span className="small">{ans.answer}</span>
-                </button>
-            </li>
-        )}
-    </ul>;
+                        title={ans.answer}
+                        type="button"
+                    >
+                        <div
+                            className="circle mr-2"
+                            style={{
+                                backgroundColor: ans.color,
+                                border: "1px solid",
+                                float: "left",
+                                marginTop: "4px"
+                            }}
+                        />
+                        <span className="small">{ans.answer}</span>
+                    </button>
+                </li>
+            ))}
+        </ul>
+    );
 }
 
 function AnswerRadioButton({surveyNode, surveyNode: {answers, answered}, selectedSampleId, validateAndSetCurrentValue}) {
-    return <ul className={"samplevalue justify-content-center"}>
-        {answers.map((ans, uid) =>
-            <li key={uid} className="mb-1">
-                <button
-                    type="button"
-                    className="btn btn-outline-darkgray btn-sm btn-block pl-1 overflow-hidden text-truncate"
-                    title={ans.answer}
-                    id={ans.answer + "_" + ans.id}
-                    name={ans.answer + "_" + ans.id}
-                    onClick={() => validateAndSetCurrentValue(surveyNode, ans.id, ans.answer)}
-                >
-                    <div
-                        className="circle ml-1"
-                        style={{
-                            border: "1px solid black",
-                            float: "left",
-                            marginTop: "4px",
-                            boxShadow: "0px 0px 0px 3px " + ans.color,
-                            backgroundColor: answered.some(a => a.answerId === ans.id && a.sampleId === selectedSampleId)
+    return (
+        <ul className="samplevalue justify-content-center">
+            {answers.map((ans, uid) => (
+                <li key={uid} className="mb-1">
+                    <button
+                        className="btn btn-outline-darkgray btn-sm btn-block pl-1 overflow-hidden text-truncate"
+                        id={ans.answer + "_" + ans.id}
+                        name={ans.answer + "_" + ans.id}
+                        onClick={() => validateAndSetCurrentValue(surveyNode, ans.id, ans.answer)}
+                        title={ans.answer}
+                        type="button"
+                    >
+                        <div
+                            className="circle ml-1"
+                            style={{
+                                border: "1px solid black",
+                                float: "left",
+                                marginTop: "4px",
+                                boxShadow: "0px 0px 0px 3px " + ans.color,
+                                backgroundColor: answered.some(a => a.answerId === ans.id && a.sampleId === selectedSampleId)
                                                 ? "black"
                                                 : answered.some(a => a.answerId === ans.id)
                                                     ? "#e8e8e8"
-                                                    : "white",
-                        }}
-                    />
-                    <span className="small">{ans.answer}</span>
-                </button>
-            </li>
-        )}
-    </ul>;
+                                                    : "white"
+                            }}
+                        />
+                        <span className="small">{ans.answer}</span>
+                    </button>
+                </li>
+            ))}
+        </ul>
+    );
 }
 
 class AnswerInput extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
-            newInput: "",
+            newInput: ""
         };
     }
 
@@ -688,48 +687,47 @@ class AnswerInput extends React.Component {
             .find(a => a.answerId === this.props.surveyNode.answers[0].id
                   && a.sampleId === this.props.selectedSampleId);
         this.setState({
-            newInput: matchingNode ? matchingNode.answerText : this.defaultVal(),
+            newInput: matchingNode ? matchingNode.answerText : this.defaultVal()
         });
     };
 
-    updateInputValue = (value) => this.setState({newInput: value});
+    updateInputValue = value => this.setState({newInput: value});
 
     render() {
         const {surveyNode, surveyNode: {answers, dataType}, validateAndSetCurrentValue} = this.props;
         return answers[0]
-            ?
+            ? (
                 <div className="d-inline-flex">
                     <div className="pr-2 pt-2">
                         <div
                             className="circle"
                             style={{
                                 backgroundColor: answers[0].color,
-                                border: "1px solid",
+                                border: "1px solid"
                             }}
                         />
                     </div>
                     <input
-                        type={dataType}
                         className="form-control mr-2"
-                        placeholder={answers[0].answer}
                         id={answers[0].answer + "_" + answers[0].id}
                         name={answers[0].answer + "_" + answers[0].id}
-                        value={this.state.newInput}
                         onChange={e => this.updateInputValue(dataType === "number"
                             ? Number(e.target.value)
-                            : e.target.value
-                        )}
+                            : e.target.value)}
+                        placeholder={answers[0].answer}
+                        type={dataType}
+                        value={this.state.newInput}
                     />
                     <input
-                        id="save-input"
                         className="text-center btn btn-outline-lightgreen btn-sm"
-                        type="button"
+                        id="save-input"
                         name="save-input"
-                        value="Save"
                         onClick={() => validateAndSetCurrentValue(surveyNode, answers[0].id, this.state.newInput)}
+                        type="button"
+                        value="Save"
                     />
                 </div>
-            : null;
+            ) : null;
     }
 }
 
@@ -737,11 +735,11 @@ class AnswerDropDown extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
-            showDropdown: false,
+            showDropdown: false
         };
     }
 
-    componentDidUpdate (prevProps) {
+    componentDidUpdate(prevProps) {
         if (this.props.surveyNode !== prevProps.surveyNode) {
             this.setState({showDropdown: false});
         }
@@ -749,13 +747,13 @@ class AnswerDropDown extends React.Component {
 
     toggleDropDown = () => this.setState({showDropdown: !this.state.showDropdown});
 
-    render () {
+    render() {
         const {surveyNode, surveyNode: {answers, answered}, selectedSampleId, validateAndSetCurrentValue} = this.props;
-        const options = answers.map((ans, uid) =>
+        const options = answers.map((ans, uid) => (
             <div
                 key={uid}
-                onMouseDown={() => validateAndSetCurrentValue(surveyNode, ans.id, ans.answer)}
                 className="d-inline-flex py-2 border-bottom"
+                onMouseDown={() => validateAndSetCurrentValue(surveyNode, ans.id, ans.answer)}
                 style={{backgroundColor: answered.some(a => a.answerId === ans.id) ? "#e8e8e8" : "#f1f1f1"}}
             >
                 <div className="col-1">
@@ -766,7 +764,7 @@ class AnswerDropDown extends React.Component {
                             width: "15px",
                             backgroundColor: ans.color,
                             borderRadius: "50%",
-                            display: "inline-block",
+                            display: "inline-block"
                         }}
                     />
                 </div>
@@ -774,14 +772,13 @@ class AnswerDropDown extends React.Component {
                     {ans.answer}
                 </div>
             </div>
-        );
+        ));
 
         return (
             <div className="mb-1 d-flex flex-column align-items-start">
                 <div className="dropdown-selector ml-3 d-flex pl-0 col-12">
                     <div className="SelectedItem d-inline-flex border col-8">
-                        {answers.map(ans =>
-                            answered.some(a => a.answerId === ans.id && a.sampleId === selectedSampleId) &&
+                        {answers.map(ans => answered.some(a => a.answerId === ans.id && a.sampleId === selectedSampleId) && (
                             <Fragment key={ans.id}>
                                 <div className="col-1 mt-2">
                                     <span
@@ -791,7 +788,7 @@ class AnswerDropDown extends React.Component {
                                             width: "15px",
                                             backgroundColor: ans.color,
                                             borderRadius: "50%",
-                                            display: "inline-block",
+                                            display: "inline-block"
                                         }}
                                     />
                                 </div>
@@ -799,31 +796,31 @@ class AnswerDropDown extends React.Component {
                                     {ans.answer}
                                 </div>
                             </Fragment>
-                        )}
+                        ))}
                     </div>
                     <button
-                        type="button"
-                        onClick={this.toggleDropDown}
-                        onBlur={() => this.setState({showDropdown: false})}
                         className="dropbtn"
+                        onBlur={() => this.setState({showDropdown: false})}
+                        onClick={this.toggleDropDown}
                         style={{
                             backgroundColor: "#31BAB0",
                             color: "white",
                             padding: "8px 16px",
                             border: "none",
-                            cursor: "pointer",
+                            cursor: "pointer"
                         }}
+                        type="button"
                     >
                         <UnicodeIcon icon="downCaret"/>
                     </button>
                 </div>
                 <div
+                    className="dropdown-content col-8"
                     id="dropdown-placeholder"
-                    className={"dropdown-content col-8"}
                 >
                     <div
-                        id="myDropdown"
                         className="dropdown-content flex-column container"
+                        id="myDropdown"
                         style={{
                             display: this.state.showDropdown ? "flex" : "none",
                             position: "absolute",
@@ -831,7 +828,7 @@ class AnswerDropDown extends React.Component {
                             overflow: "auto",
                             boxShadow: "0px 8px 16px 0px rgba(0,0,0,0.2)",
                             zIndex: "10",
-                            cursor: "pointer",
+                            cursor: "pointer"
                         }}
                     >
                         {options}
@@ -845,9 +842,9 @@ class AnswerDropDown extends React.Component {
 function SurveyAnswers(props) {
     const type = (props.surveyNode.componentType || "button").toLowerCase();
     return {
-        radiobutton: <AnswerRadioButton {...props} />,
-        input: <AnswerInput {...props} />,
-        dropdown: <AnswerDropDown {...props} />,
-        button: <AnswerButton {...props} />,
+        radiobutton: <AnswerRadioButton {...props}/>,
+        input: <AnswerInput {...props}/>,
+        dropdown: <AnswerDropDown {...props}/>,
+        button: <AnswerButton {...props}/>
     }[type];
 }

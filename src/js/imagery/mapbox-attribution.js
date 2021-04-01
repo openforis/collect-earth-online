@@ -1,5 +1,4 @@
-export const mapboxAttributionText =
-"<div class=\"mapbox-attribution-container\"> \
+export const mapboxAttributionText = "<div class=\"mapbox-attribution-container\"> \
     <a href=\"http://www.mapbox.com/about/maps\" \
         class=\"mapbox-wordmark\" \
         target=\"_blank\" \
