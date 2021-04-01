@@ -199,7 +199,7 @@ export const imageryOptions = [
                 options: {min: "2014", max: new Date().getFullYear().toString(), step: "1"},
                 validator: value => (outOfRange(value, 2014, new Date().getFullYear()) || value.toString().length !== 4
                     ? "Year should be 4 digit number and between 2014 and " + new Date().getFullYear()
-                : "")
+                    : "")
             },
             {
                 key: "month",
@@ -250,7 +250,7 @@ export const imageryOptions = [
                 options: {min: "2015", max: new Date().getFullYear().toString(), step: "1"},
                 validator: value => (outOfRange(value, 2015, new Date().getFullYear()) || value.toString().length !== 4
                     ? "Year should be 4 digit number and between 2015 and " + new Date().getFullYear()
-                : "")
+                    : "")
             },
             {
                 key: "month",

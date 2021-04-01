@@ -280,77 +280,77 @@ class InstitutionDescription extends React.Component {
 
     render() {
         return this.state.editMode
-        ? (
-            <InstitutionEditor
-                buttonGroup={this.renderEditButtonGroup}
-                description={this.state.newInstitutionDetails.description}
-                name={this.state.newInstitutionDetails.name}
-                setInstitutionDetails={this.updateNewInstitutionDetails}
-                title="Create New Institution"
-                url={this.state.newInstitutionDetails.url}
-            />
-        ) : (
-            <div className="row justify-content-center" id="institution-details">
-                <div className="col-8" id="institution-view">
-                    <div className="row mb-4">
-                        <div className="col-md-3" id="institution-logo-container">
-                            <img
-                                onClick={() => window.open(this.httpAddress(this.state.institutionDetails.url))}
-                                src={safeLength(this.state.institutionDetails.base64Image) > 1
+            ? (
+                <InstitutionEditor
+                    buttonGroup={this.renderEditButtonGroup}
+                    description={this.state.newInstitutionDetails.description}
+                    name={this.state.newInstitutionDetails.name}
+                    setInstitutionDetails={this.updateNewInstitutionDetails}
+                    title="Create New Institution"
+                    url={this.state.newInstitutionDetails.url}
+                />
+            ) : (
+                <div className="row justify-content-center" id="institution-details">
+                    <div className="col-8" id="institution-view">
+                        <div className="row mb-4">
+                            <div className="col-md-3" id="institution-logo-container">
+                                <img
+                                    onClick={() => window.open(this.httpAddress(this.state.institutionDetails.url))}
+                                    src={safeLength(this.state.institutionDetails.base64Image) > 1
                                         ? `data:*/*;base64,${this.state.institutionDetails.base64Image}`
                                         : "/img/ceo-logo.png"}
-                                style={{maxWidth: "100%"}}
-                            />
-                        </div>
-                        <div className="col-md-8">
-                            <h1>
-                                <a href={this.state.institutionDetails.url}>
-                                    {this.state.institutionDetails.name}
-                                </a>
-                            </h1>
-                            <hr/>
-                            <p className="pt-2" style={{textIndent: "25px"}}>
-                                {this.state.institutionDetails.description}
-                            </p>
-                        </div>
-                    </div>
-                    {this.props.isAdmin && (
-                        <div className="row justify-content-center mb-2" id="institution-controls">
-                            <div className="col-3">
-                                <button
-                                    className="btn btn-sm btn-outline-lightgreen btn-block mt-0"
-                                    id="edit-institution"
-                                    onClick={this.toggleEditMode}
-                                    type="button"
-                                >
-                                    <UnicodeIcon icon="edit"/> Edit
-                                </button>
+                                    style={{maxWidth: "100%"}}
+                                />
                             </div>
-                            <div className="col-3">
-                                <button
-                                    className="btn btn-sm btn-outline-red btn-block mt-0"
-                                    id="delete-institution"
-                                    onClick={this.deleteInstitution}
-                                    type="button"
-                                >
-                                    <UnicodeIcon icon="trash"/> Delete
-                                </button>
+                            <div className="col-md-8">
+                                <h1>
+                                    <a href={this.state.institutionDetails.url}>
+                                        {this.state.institutionDetails.name}
+                                    </a>
+                                </h1>
+                                <hr/>
+                                <p className="pt-2" style={{textIndent: "25px"}}>
+                                    {this.state.institutionDetails.description}
+                                </p>
                             </div>
-                            <div className="col-3">
-                                <button
-                                    className="btn btn-sm btn-outline-lightgreen btn-block mt-0"
-                                    id="institution-dashboard"
-                                    onClick={this.gotoInstitutionDashboard}
-                                    type="button"
-                                >
+                        </div>
+                        {this.props.isAdmin && (
+                            <div className="row justify-content-center mb-2" id="institution-controls">
+                                <div className="col-3">
+                                    <button
+                                        className="btn btn-sm btn-outline-lightgreen btn-block mt-0"
+                                        id="edit-institution"
+                                        onClick={this.toggleEditMode}
+                                        type="button"
+                                    >
+                                        <UnicodeIcon icon="edit"/> Edit
+                                    </button>
+                                </div>
+                                <div className="col-3">
+                                    <button
+                                        className="btn btn-sm btn-outline-red btn-block mt-0"
+                                        id="delete-institution"
+                                        onClick={this.deleteInstitution}
+                                        type="button"
+                                    >
+                                        <UnicodeIcon icon="trash"/> Delete
+                                    </button>
+                                </div>
+                                <div className="col-3">
+                                    <button
+                                        className="btn btn-sm btn-outline-lightgreen btn-block mt-0"
+                                        id="institution-dashboard"
+                                        onClick={this.gotoInstitutionDashboard}
+                                        type="button"
+                                    >
                                 Go to Dashboard
-                                </button>
+                                    </button>
+                                </div>
                             </div>
-                        </div>
-                    )}
+                        )}
+                    </div>
                 </div>
-            </div>
-        );
+            );
     }
 }
 
@@ -432,8 +432,8 @@ class ImageryList extends React.Component {
         if (this.props.userId === 1
                 && confirm(`Do you want to change the visibility from ${currentVisibility} to ${toVisibility}?`
                     + toVisibility === "private"
-                        ? "  This will remove the imagery from other institutions' projects."
-                        : "")) {
+                    ? "  This will remove the imagery from other institutions' projects."
+                    : "")) {
             fetch("/update-imagery-visibility",
                   {
                       method: "POST",
@@ -513,7 +513,7 @@ class ImageryList extends React.Component {
                                 />
                             ))}
                     </>
-)
+                )
         );
     }
 }
@@ -734,44 +734,44 @@ class NewImagery extends React.Component {
                 o.options.map(el => <option key={el.value} value={el.value}>{el.label}</option>),
                 this.accessTokenLink(imageryOptions[this.state.selectedType].url, o.key)
             )
-        : ["textarea", "JSON"].includes(o.type)
-            ? this.formTextArea(
-                o.display,
-                this.state.newImageryParams[o.key],
-                e => this.setState({
-                    newImageryParams: {...this.state.newImageryParams, [o.key]: e.target.value}
-                }),
-                this.accessTokenLink(imageryOptions[this.state.selectedType].url, o.key),
-                o.options ? o.options : {}
-            )
-        : this.formInput(
-            o.display,
-            o.type || "text",
-            this.state.newImageryParams[o.key],
-            e => this.setState({
-                newImageryParams: {...this.state.newImageryParams, [o.key]: e.target.value}
-            }),
-            this.accessTokenLink(imageryOptions[this.state.selectedType].url, o.key),
-            o.options ? o.options : {}
-        )
+            : ["textarea", "JSON"].includes(o.type)
+                ? this.formTextArea(
+                    o.display,
+                    this.state.newImageryParams[o.key],
+                    e => this.setState({
+                        newImageryParams: {...this.state.newImageryParams, [o.key]: e.target.value}
+                    }),
+                    this.accessTokenLink(imageryOptions[this.state.selectedType].url, o.key),
+                    o.options ? o.options : {}
+                )
+                : this.formInput(
+                    o.display,
+                    o.type || "text",
+                    this.state.newImageryParams[o.key],
+                    e => this.setState({
+                        newImageryParams: {...this.state.newImageryParams, [o.key]: e.target.value}
+                    }),
+                    this.accessTokenLink(imageryOptions[this.state.selectedType].url, o.key),
+                    o.options ? o.options : {}
+                )
     );
 
     // Imagery Type Change Handler //
 
     // TODO, this can be generalized back into imageryOptions
     getImageryAttribution = type => (type === "BingMaps"
-            ? "Bing Maps API: Aerial | © Microsoft Corporation"
+        ? "Bing Maps API: Aerial | © Microsoft Corporation"
         : type.includes("Planet")
             ? "Planet Labs Global Mosaic | © Planet Labs, Inc"
-        : type === "SecureWatch"
-            ? "SecureWatch Imagery | © Maxar Technologies Inc."
-        : ["Sentinel1", "Sentinel2"].includes(type) || type.includes("GEE")
-            ? "Google Earth Engine | © Google LLC"
-        : type.includes("MapBox")
-            ? "© Mapbox"
-        : type === "OSM"
-            ? "Open Street Map"
-        : "");
+            : type === "SecureWatch"
+                ? "SecureWatch Imagery | © Maxar Technologies Inc."
+                : ["Sentinel1", "Sentinel2"].includes(type) || type.includes("GEE")
+                    ? "Google Earth Engine | © Google LLC"
+                    : type.includes("MapBox")
+                        ? "© Mapbox"
+                        : type === "OSM"
+                            ? "Open Street Map"
+                            : "");
 
     imageryTypeChangeHandler = val => {
         const defaultState = imageryOptions[val].params.reduce((acc, cur) => ({

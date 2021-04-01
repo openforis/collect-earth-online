@@ -272,34 +272,34 @@ export class GeoDashNavigationBar extends React.Component {
                         <h1 className="mb-0">GEO-DASH</h1>
                         <ul className="navbar-nav" style={{flex: 1, justifyContent: "flex-end"}}>
                             {uri === "/widget-layout-editor"
-                            ? (
-                                <>
-                                    <li className="nav-item my-auto ml-1" id="copyWidgetLayout">
-                                        <button
-                                            alt="This will remove any existing widgets currently configured."
-                                            className="btn btn-outline-lightgreen btn-sm"
-                                            onClick={() => this.setState({copyDialog: true})}
-                                            title="This will remove any existing widgets currently configured."
-                                            type="button"
-                                        >
+                                ? (
+                                    <>
+                                        <li className="nav-item my-auto ml-1" id="copyWidgetLayout">
+                                            <button
+                                                alt="This will remove any existing widgets currently configured."
+                                                className="btn btn-outline-lightgreen btn-sm"
+                                                onClick={() => this.setState({copyDialog: true})}
+                                                title="This will remove any existing widgets currently configured."
+                                                type="button"
+                                            >
                                             Copy Layout
-                                        </button>
-                                    </li>
-                                    <li className="nav-item my-auto ml-1">
-                                        <button
-                                            className="btn btn-outline-lightgreen btn-sm"
-                                            onClick={() => this.setState({addDialog : true})}
-                                            type="button"
-                                        >
+                                            </button>
+                                        </li>
+                                        <li className="nav-item my-auto ml-1">
+                                            <button
+                                                className="btn btn-outline-lightgreen btn-sm"
+                                                onClick={() => this.setState({addDialog : true})}
+                                                type="button"
+                                            >
                                             Add Widget
-                                        </button>
-                                    </li>
-                                </>
-                            ) : (
-                                <li className="nav-item" style={{flex: 1, textAlign: "center"}}>
+                                            </button>
+                                        </li>
+                                    </>
+                                ) : (
+                                    <li className="nav-item" style={{flex: 1, textAlign: "center"}}>
                                     Plot ID: {visiblePlotId}
-                                </li>
-                            )}
+                                    </li>
+                                )}
                             <li className="nav-item my-auto ml-1">
                                 <button
                                     className="btn btn-outline-lightgreen btn-sm"

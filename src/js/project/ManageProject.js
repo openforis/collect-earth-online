@@ -197,16 +197,16 @@ class ProjectManagement extends React.Component {
                                     Date Published
                                     <span className="badge badge-pill bg-lightgreen ml-3">
                                         {this.context.publishedDate || (this.context.availability === "unpublished"
-                                        ? "Unpublished"
-                                        : "Unknown")}
+                                            ? "Unpublished"
+                                            : "Unknown")}
                                     </span>
                                 </div>
                                 <div>
                                     Date Closed
                                     <span className="badge badge-pill bg-lightgreen ml-3">
                                         {this.context.closedDate || (["archived", "closed"].includes(this.context.availability)
-                                        ? "Unknown"
-                                        : "Open")}
+                                            ? "Unknown"
+                                            : "Open")}
                                     </span>
                                 </div>
                             </div>

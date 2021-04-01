@@ -74,10 +74,10 @@ export class SurveyCollection extends React.Component {
     };
 
     getTopColor = node => (this.checkAllSubAnswers(node.id)
-                                ? "0px 0px 6px 4px #3bb9d6 inset"
-                                : node.answered.length > 0
-                                    ? "0px 0px 6px 4px yellow inset"
-                                    : "0px 0px 6px 4px red inset");
+        ? "0px 0px 6px 4px #3bb9d6 inset"
+        : node.answered.length > 0
+            ? "0px 0px 6px 4px yellow inset"
+            : "0px 0px 6px 4px red inset");
 
     getRulesById = id => (this.props.surveyRules || [])
         .filter(rule => (rule.questionId && rule.questionId === id)
@@ -85,14 +85,14 @@ export class SurveyCollection extends React.Component {
                     || (rule.questionSetIds1 && (rule.questionSetIds1.includes(id) || rule.questionSetIds2.includes(id)))
                     || (rule.question1 && (rule.question1 === id || rule.question2 === id)))
         .map((r, uid) => (r.questionId
-                    ? r.regex
-                        ? <li key={uid}>{"Rule: " + r.ruleType + " | Question '" + r.questionsText + "' should match the pattern: " + r.regex + "."}</li>
-                        : <li key={uid}>{"Rule: " + r.ruleType + " | Question '" + r.questionsText + "' should be between " + r.min + " and " + r.max + "."}</li>
-                    : r.questions
-                        ? <li key={uid}>{"Rule: " + r.ruleType + " | Questions '" + r.questionsText + "' should sum up to " + r.validSum + "."}</li>
-                        : r.questionSetIds1
-                            ? <li key={uid}>{"Rule: " + r.ruleType + " | Sum of '" + r.questionSetText1 + "' should be equal to sum of  '" + r.questionSetText2 + "'."}</li>
-                            : <li key={uid}>{"Rule: " + r.ruleType + " | 'Question1: " + r.questionText1 + ", Answer1: " + r.answerText1 + "' is not compatible with 'Question2: " + r.questionText2 + ", Answer2: " + r.answerText2 + "'."}</li>));
+            ? r.regex
+                ? <li key={uid}>{"Rule: " + r.ruleType + " | Question '" + r.questionsText + "' should match the pattern: " + r.regex + "."}</li>
+                : <li key={uid}>{"Rule: " + r.ruleType + " | Question '" + r.questionsText + "' should be between " + r.min + " and " + r.max + "."}</li>
+            : r.questions
+                ? <li key={uid}>{"Rule: " + r.ruleType + " | Questions '" + r.questionsText + "' should sum up to " + r.validSum + "."}</li>
+                : r.questionSetIds1
+                    ? <li key={uid}>{"Rule: " + r.ruleType + " | Sum of '" + r.questionSetText1 + "' should be equal to sum of  '" + r.questionSetText2 + "'."}</li>
+                    : <li key={uid}>{"Rule: " + r.ruleType + " | 'Question1: " + r.questionText1 + ", Answer1: " + r.answerText1 + "' is not compatible with 'Question2: " + r.questionText2 + ", Answer2: " + r.answerText2 + "'."}</li>));
 
     setDrawTool = newTool => {
         this.setState({drawTool: newTool});
@@ -308,74 +308,74 @@ export class SurveyCollection extends React.Component {
         <div className="SurveyQuestions__questions mx-1">
             {this.unansweredColor()}
             {this.props.flagged
-            ? (
-                <>
-                    <div style={{color: "red", fontSize: "1.5rem"}}>This plot has been flagged.</div>
-                    <div className="my-2">
-                        <div className="slide-container">
-                            <label>Flagged Reason</label>
-                            <textarea className="form-control" onChange={e => this.props.setFlaggedReason(e.target.value)} value={this.props.flaggedReason}/>
+                ? (
+                    <>
+                        <div style={{color: "red", fontSize: "1.5rem"}}>This plot has been flagged.</div>
+                        <div className="my-2">
+                            <div className="slide-container">
+                                <label>Flagged Reason</label>
+                                <textarea className="form-control" onChange={e => this.props.setFlaggedReason(e.target.value)} value={this.props.flaggedReason}/>
+                            </div>
                         </div>
-                    </div>
-                </>
-            ) : (
-                <>
-                    <div className="SurveyQuestions__top-questions">
-                        <button
-                            className="btn btn-outline-lightgreen m-2"
-                            disabled={this.state.currentNodeIndex === 0}
-                            id="prev-survey-question"
-                            onClick={this.prevSurveyQuestionTree}
-                            style={{opacity: this.state.currentNodeIndex === 0 ? "0.25" : "1.0"}}
-                            type="button"
-                        >
-                            {"<"}
-                        </button>
-                        {this.state.topLevelNodeIds.map((node, i) => (
+                    </>
+                ) : (
+                    <>
+                        <div className="SurveyQuestions__top-questions">
                             <button
-                                key={i}
                                 className="btn btn-outline-lightgreen m-2"
-                                id="top-select"
-                                onClick={() => this.setSurveyQuestionTree(i)}
-                                style={{
-                                    boxShadow:
+                                disabled={this.state.currentNodeIndex === 0}
+                                id="prev-survey-question"
+                                onClick={this.prevSurveyQuestionTree}
+                                style={{opacity: this.state.currentNodeIndex === 0 ? "0.25" : "1.0"}}
+                                type="button"
+                            >
+                                {"<"}
+                            </button>
+                            {this.state.topLevelNodeIds.map((node, i) => (
+                                <button
+                                    key={i}
+                                    className="btn btn-outline-lightgreen m-2"
+                                    id="top-select"
+                                    onClick={() => this.setSurveyQuestionTree(i)}
+                                    style={{
+                                        boxShadow:
                                     `${(i === this.state.currentNodeIndex)
                                         ? "0px 0px 2px 2px black inset,"
                                         : ""}
                                     ${this.getTopColor(this.getNodeById(node))}`
-                                }}
-                                title={removeEnumerator(this.getNodeById(node).question)}
+                                    }}
+                                    title={removeEnumerator(this.getNodeById(node).question)}
+                                    type="button"
+                                >
+                                    {i + 1}
+                                </button>
+                            ))}
+                            <button
+                                className="btn btn-outline-lightgreen"
+                                disabled={this.state.currentNodeIndex === this.state.topLevelNodeIds.length - 1}
+                                id="next-survey-question"
+                                onClick={this.nextSurveyQuestionTree}
+                                style={{opacity: this.state.currentNodeIndex === this.state.topLevelNodeIds.length - 1 ? "0.25" : "1.0"}}
                                 type="button"
                             >
-                                {i + 1}
+                                {">"}
                             </button>
-                        ))}
-                        <button
-                            className="btn btn-outline-lightgreen"
-                            disabled={this.state.currentNodeIndex === this.state.topLevelNodeIds.length - 1}
-                            id="next-survey-question"
-                            onClick={this.nextSurveyQuestionTree}
-                            style={{opacity: this.state.currentNodeIndex === this.state.topLevelNodeIds.length - 1 ? "0.25" : "1.0"}}
-                            type="button"
-                        >
-                            {">"}
-                        </button>
-                    </div>
-                    {this.state.topLevelNodeIds.length > 0 && (
-                        <SurveyQuestionTree
-                            getRulesById={this.getRulesById}
-                            hierarchyLabel=""
-                            selectedQuestion={this.props.selectedQuestion}
-                            selectedSampleId={this.props.selectedSampleId}
-                            setSelectedQuestion={this.props.setSelectedQuestion}
-                            surveyNode={this.getNodeById(this.state.topLevelNodeIds[this.state.currentNodeIndex])}
-                            surveyQuestions={this.props.surveyQuestions}
-                            surveyRules={this.props.surveyRules}
-                            validateAndSetCurrentValue={this.validateAndSetCurrentValue}
-                        />
-                    )}
-                </>
-            )}
+                        </div>
+                        {this.state.topLevelNodeIds.length > 0 && (
+                            <SurveyQuestionTree
+                                getRulesById={this.getRulesById}
+                                hierarchyLabel=""
+                                selectedQuestion={this.props.selectedQuestion}
+                                selectedSampleId={this.props.selectedSampleId}
+                                setSelectedQuestion={this.props.setSelectedQuestion}
+                                surveyNode={this.getNodeById(this.state.topLevelNodeIds[this.state.currentNodeIndex])}
+                                surveyQuestions={this.props.surveyQuestions}
+                                surveyRules={this.props.surveyRules}
+                                validateAndSetCurrentValue={this.validateAndSetCurrentValue}
+                            />
+                        )}
+                    </>
+                )}
         </div>
     );
 
@@ -464,33 +464,33 @@ export class SurveyCollection extends React.Component {
                     </div>
                 )}
                 {this.state.showSurveyQuestions
-                ? this.props.surveyQuestions.length > 0
-                    ? (
-                        <>
-                            {this.props.answerMode === "question"
-                                ? this.renderQuestions()
-                                : this.renderDrawTools()}
-                            {this.props.collectConfidence && !this.props.flagged && (
-                                <div className="row mb-3">
-                                    <div className="col-12">
-                                        <div className="slide-container">
-                                            <input
-                                                className="slider"
-                                                max="100"
-                                                min="0"
-                                                onChange={e => this.props.setConfidence(parseInt(e.target.value))}
-                                                type="range"
-                                                value={this.props.confidence}
-                                            />
-                                            <label>Plot Confidence: {this.props.confidence}</label>
+                    ? this.props.surveyQuestions.length > 0
+                        ? (
+                            <>
+                                {this.props.answerMode === "question"
+                                    ? this.renderQuestions()
+                                    : this.renderDrawTools()}
+                                {this.props.collectConfidence && !this.props.flagged && (
+                                    <div className="row mb-3">
+                                        <div className="col-12">
+                                            <div className="slide-container">
+                                                <input
+                                                    className="slider"
+                                                    max="100"
+                                                    min="0"
+                                                    onChange={e => this.props.setConfidence(parseInt(e.target.value))}
+                                                    type="range"
+                                                    value={this.props.confidence}
+                                                />
+                                                <label>Plot Confidence: {this.props.confidence}</label>
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
-                            )}
-                            {this.renderFlagClearButtons()}
-                        </>
-                    ) : <h3>This project is missing survey questions!</h3>
-                : null}
+                                )}
+                                {this.renderFlagClearButtons()}
+                            </>
+                        ) : <h3>This project is missing survey questions!</h3>
+                    : null}
             </fieldset>
         );
     }
@@ -511,10 +511,10 @@ class SurveyQuestionTree extends React.Component {
             .filter(surveyNode => surveyNode.parentQuestion === this.props.surveyNode.id);
 
         const shadowColor = this.props.surveyNode.answered.length === 0
-                            ? "0px 0px 6px 4px red inset"
-                            : this.props.surveyNode.answered.length === this.props.surveyNode.visible.length
-                                ? "0px 0px 6px 5px #3bb9d6 inset"
-                                : "0px 0px 6px 4px yellow inset";
+            ? "0px 0px 6px 4px red inset"
+            : this.props.surveyNode.answered.length === this.props.surveyNode.visible.length
+                ? "0px 0px 6px 5px #3bb9d6 inset"
+                : "0px 0px 6px 4px yellow inset";
         const rules = this.props.getRulesById(this.props.surveyNode.id);
         return (
             <fieldset className="mb-1 justify-content-center text-center">
@@ -539,8 +539,8 @@ class SurveyQuestionTree extends React.Component {
                         onClick={() => this.props.setSelectedQuestion(this.props.surveyNode)}
                         style={{
                             boxShadow: `${(this.props.surveyNode.id === this.props.selectedQuestion.id)
-                                    ? "0px 0px 2px 2px black inset,"
-                                    : ""}
+                                ? "0px 0px 2px 2px black inset,"
+                                : ""}
                                     ${shadowColor}`
                         }}
                         type="button"
@@ -593,10 +593,10 @@ function AnswerButton({surveyNode, surveyNode: {answers, answered}, selectedSamp
                         onClick={() => validateAndSetCurrentValue(surveyNode, ans.id, ans.answer)}
                         style={{
                             boxShadow: answered.some(a => a.answerId === ans.id && a.sampleId === selectedSampleId)
-                            ? "0px 0px 8px 3px black inset"
-                            : answered.some(a => a.answerId === ans.id)
-                                ? "0px 0px 8px 3px grey inset"
-                                : "initial"
+                                ? "0px 0px 8px 3px black inset"
+                                : answered.some(a => a.answerId === ans.id)
+                                    ? "0px 0px 8px 3px grey inset"
+                                    : "initial"
                         }}
                         title={ans.answer}
                         type="button"
@@ -639,10 +639,10 @@ function AnswerRadioButton({surveyNode, surveyNode: {answers, answered}, selecte
                                 marginTop: "4px",
                                 boxShadow: "0px 0px 0px 3px " + ans.color,
                                 backgroundColor: answered.some(a => a.answerId === ans.id && a.sampleId === selectedSampleId)
-                                                ? "black"
-                                                : answered.some(a => a.answerId === ans.id)
-                                                    ? "#e8e8e8"
-                                                    : "white"
+                                    ? "black"
+                                    : answered.some(a => a.answerId === ans.id)
+                                        ? "#e8e8e8"
+                                        : "white"
                             }}
                         />
                         <span className="small">{ans.answer}</span>

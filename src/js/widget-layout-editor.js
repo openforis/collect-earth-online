@@ -98,9 +98,9 @@ class WidgetLayoutEditor extends React.PureComponent {
     };
 
     getImageByType = imageType => (imageType === "getStats" ? "/img/geodash/statssample.gif"
-            : (!imageType || imageType.toLowerCase().includes("image")) ? "/img/geodash/mapsample.gif"
+        : (!imageType || imageType.toLowerCase().includes("image")) ? "/img/geodash/mapsample.gif"
             : (imageType.toLowerCase().includes("degradationtool")) ? "/img/geodash/degsample.gif"
-            : "/img/geodash/graphsample.gif");
+                : "/img/geodash/graphsample.gif");
 
     checkWidgetStructure = updatedWidgets => {
         let changed = false;
@@ -471,9 +471,9 @@ class WidgetLayoutEditor extends React.PureComponent {
         } else {
             const wType = this.state.selectedWidgetType === "TimeSeries" ? this.state.selectedDataType.toLowerCase() + this.state.selectedWidgetType
                 : this.state.selectedWidgetType === "ImageCollection" ? this.state.selectedWidgetType + this.state.selectedDataType
-                : this.state.selectedWidgetType === "statistics" ? "getStats"
-                : this.state.selectedWidgetType === "ImageElevation" ? "ImageElevation"
-                : "custom";
+                    : this.state.selectedWidgetType === "statistics" ? "getStats"
+                        : this.state.selectedWidgetType === "ImageElevation" ? "ImageElevation"
+                            : "custom";
             let prop1 = "";
             const properties = [];
             const prop4 = this.state.selectedDataType !== null ? this.state.selectedDataType : "";
@@ -700,10 +700,10 @@ class WidgetLayoutEditor extends React.PureComponent {
             isFormReady = ed > sd
                 && ed2 > sd2
                 && this.state.formReady !== true
-                    ? true
-                    : (ed < sd || ed2 < sd2)
+                ? true
+                : (ed < sd || ed2 < sd2)
                         && this.state.formReady === true
-                            ? false : null;
+                    ? false : null;
         }
         if (isFormReady !== null) {
             this.setState({formReady: isFormReady});
@@ -744,19 +744,19 @@ class WidgetLayoutEditor extends React.PureComponent {
         .then(response => (response.ok ? response.json() : Promise.reject(response)))
         .then(data => {
             const widgets = Array.isArray(data.widgets)
-                    ? data.widgets
-                    : Array.isArray(eval(data.widgets))
-                        ? eval(data.widgets)
-                        : [];
+                ? data.widgets
+                : Array.isArray(eval(data.widgets))
+                    ? eval(data.widgets)
+                    : [];
             const updatedWidgets = widgets.map(widget => (widget.layout
-                    ? {
-                        ...widget,
-                        layout: {
-                            ...widget.layout,
-                            y: widget.layout.y ? widget.layout.y : 0
-                        }
+                ? {
+                    ...widget,
+                    layout: {
+                        ...widget.layout,
+                        y: widget.layout.y ? widget.layout.y : 0
                     }
-                    : widget));
+                }
+                : widget));
             this.checkWidgetStructure(updatedWidgets);
             this.setState({
                 dashboardID: setDashboardID ? data.dashboardID : this.state.dashboardID,
@@ -798,13 +798,117 @@ class WidgetLayoutEditor extends React.PureComponent {
     };
 
     getNewWidgetForm = () => (this.props.addDialog
+        ? (
+            <>
+                <div className="modal fade show" style={{display: "block"}}>
+                    <div className="modal-dialog" role="document">
+                        <div className="modal-content">
+                            <div className="modal-header">
+                                <h5 className="modal-title" id="exampleModalLabel">Create Widget</h5>
+                                <button
+                                    aria-label="Close"
+                                    className="close"
+                                    data-dismiss="modal"
+                                    onClick={this.onCancelNewWidget}
+                                    type="button"
+                                >
+                                    <span aria-hidden="true">×</span>
+                                </button>
+                            </div>
+                            <div className="modal-body">
+                                <form>
+                                    <div className="form-group">
+                                        <label htmlFor="widgetTypeSelect">Type</label>
+                                        <select
+                                            className="form-control"
+                                            id="widgetTypeSelect"
+                                            name="widgetTypeSelect"
+                                            onChange={e => this.onWidgetTypeSelectChanged(e, "i am anything")}
+                                            value={this.state.selectedWidgetType}
+                                        >
+                                            <option value="-1">Please select type</option>
+                                            <option
+                                                label="Image Collection"
+                                                value="ImageCollection"
+                                            >
+                                                    Image Collection
+                                            </option>
+                                            <option
+                                                label="Time Series Graph"
+                                                value="TimeSeries"
+                                            >
+                                                    Time Series Graph
+                                            </option>
+                                            <option
+                                                label="Statistics"
+                                                value="statistics"
+                                            >
+                                                    Statistics
+                                            </option>
+                                            <option
+                                                label="Dual Image Collection"
+                                                value="DualImageCollection"
+                                            >
+                                                    Dual Image Collection
+                                            </option>
+                                            <option
+                                                label="Image Asset"
+                                                value="imageAsset"
+                                            >
+                                                    Image Asset
+                                            </option>
+                                            <option
+                                                label="Image Collection Asset"
+                                                value="imageCollectionAsset"
+                                            >
+                                                    Image Collection Asset
+                                            </option>
+                                            <option
+                                                label="SRTM Digital Elevation Data 30m"
+                                                value="ImageElevation"
+                                            >
+                                                    SRTM Digital Elevation Data 30m
+                                            </option>
+                                            <option
+                                                label="Degradation Tool"
+                                                value="DegradationTool"
+                                            >
+                                                    Degradation Tool
+                                            </option>
+                                            <option
+                                                label="Polygon Compare"
+                                                value="polygonCompare"
+                                            >
+                                                    Polygon Compare
+                                            </option>
+                                        </select>
+                                    </div>
+                                    {this.getBaseMapSelector()}
+                                    {this.getDataTypeSelectionControl()}
+                                    {this.getSwipeOpacityDefault()}
+                                    {this.getDataForm()}
+                                </form>
+                            </div>
+                            <div className="modal-footer">
+                                {this.getFormButtons()}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div className="modal-backdrop fade show"> </div>
+            </>
+        ) : this.props.copyDialog
             ? (
                 <>
                     <div className="modal fade show" style={{display: "block"}}>
                         <div className="modal-dialog" role="document">
                             <div className="modal-content">
                                 <div className="modal-header">
-                                    <h5 className="modal-title" id="exampleModalLabel">Create Widget</h5>
+                                    <h5
+                                        className="modal-title"
+                                        id="exampleModalLabel"
+                                    >Copy Widget Layout
+                                    </h5>
                                     <button
                                         aria-label="Close"
                                         className="close"
@@ -818,159 +922,55 @@ class WidgetLayoutEditor extends React.PureComponent {
                                 <div className="modal-body">
                                     <form>
                                         <div className="form-group">
-                                            <label htmlFor="widgetTypeSelect">Type</label>
+                                            <label
+                                                htmlFor="project-filter"
+                                            >Template Filter (Name or ID)
+                                            </label>
+                                            <input
+                                                className="form-control form-control-sm"
+                                                id="project-filter"
+                                                onChange={e => this.setState({projectFilter: e.target.value})}
+                                                type="text"
+                                                value={this.state.projectFilter}
+                                            />
+                                        </div>
+                                        <div className="form-group">
+                                            <label htmlFor="project-template">From Project</label>
                                             <select
-                                                className="form-control"
-                                                id="widgetTypeSelect"
-                                                name="widgetTypeSelect"
-                                                onChange={e => this.onWidgetTypeSelectChanged(e, "i am anything")}
-                                                value={this.state.selectedWidgetType}
+                                                className="form-control form-control-sm"
+                                                id="project-template"
+                                                name="project-template"
+                                                onChange={e => this.setWidgetLayoutTemplate(parseInt(e.target.value))}
+                                                size="1"
+                                                value={this.state.selectedProjectId}
                                             >
-                                                <option value="-1">Please select type</option>
-                                                <option
-                                                    label="Image Collection"
-                                                    value="ImageCollection"
-                                                >
-                                                    Image Collection
-                                                </option>
-                                                <option
-                                                    label="Time Series Graph"
-                                                    value="TimeSeries"
-                                                >
-                                                    Time Series Graph
-                                                </option>
-                                                <option
-                                                    label="Statistics"
-                                                    value="statistics"
-                                                >
-                                                    Statistics
-                                                </option>
-                                                <option
-                                                    label="Dual Image Collection"
-                                                    value="DualImageCollection"
-                                                >
-                                                    Dual Image Collection
-                                                </option>
-                                                <option
-                                                    label="Image Asset"
-                                                    value="imageAsset"
-                                                >
-                                                    Image Asset
-                                                </option>
-                                                <option
-                                                    label="Image Collection Asset"
-                                                    value="imageCollectionAsset"
-                                                >
-                                                    Image Collection Asset
-                                                </option>
-                                                <option
-                                                    label="SRTM Digital Elevation Data 30m"
-                                                    value="ImageElevation"
-                                                >
-                                                    SRTM Digital Elevation Data 30m
-                                                </option>
-                                                <option
-                                                    label="Degradation Tool"
-                                                    value="DegradationTool"
-                                                >
-                                                    Degradation Tool
-                                                </option>
-                                                <option
-                                                    label="Polygon Compare"
-                                                    value="polygonCompare"
-                                                >
-                                                    Polygon Compare
-                                                </option>
+                                                <option key={0} value={0}>None</option>
+                                                {this.state.projectList
+                                                    .filter(({id, name}) => (id + name.toLocaleLowerCase())
+                                                        .includes(this.state.projectFilter.toLocaleLowerCase()))
+                                                    .map(({id, name}, uid) => <option key={uid} value={id}>{id} - {name}</option>)}
                                             </select>
                                         </div>
-                                        {this.getBaseMapSelector()}
-                                        {this.getDataTypeSelectionControl()}
-                                        {this.getSwipeOpacityDefault()}
-                                        {this.getDataForm()}
+                                        <div className="form-group">
+                                            <span>Warning, selecting a template project will overwrite existing widgets immediately.</span>
+                                        </div>
                                     </form>
                                 </div>
                                 <div className="modal-footer">
-                                    {this.getFormButtons()}
+                                    <button
+                                        className="btn btn-secondary"
+                                        data-dismiss="modal"
+                                        onClick={this.onCancelNewWidget}
+                                        type="button"
+                                    >Close
+                                    </button>
                                 </div>
                             </div>
                         </div>
                     </div>
                     <div className="modal-backdrop fade show"> </div>
                 </>
-            ) : this.props.copyDialog
-                ? (
-                    <>
-                        <div className="modal fade show" style={{display: "block"}}>
-                            <div className="modal-dialog" role="document">
-                                <div className="modal-content">
-                                    <div className="modal-header">
-                                        <h5
-                                            className="modal-title"
-                                            id="exampleModalLabel"
-                                        >Copy Widget Layout
-                                        </h5>
-                                        <button
-                                            aria-label="Close"
-                                            className="close"
-                                            data-dismiss="modal"
-                                            onClick={this.onCancelNewWidget}
-                                            type="button"
-                                        >
-                                            <span aria-hidden="true">×</span>
-                                        </button>
-                                    </div>
-                                    <div className="modal-body">
-                                        <form>
-                                            <div className="form-group">
-                                                <label
-                                                    htmlFor="project-filter"
-                                                >Template Filter (Name or ID)
-                                                </label>
-                                                <input
-                                                    className="form-control form-control-sm"
-                                                    id="project-filter"
-                                                    onChange={e => this.setState({projectFilter: e.target.value})}
-                                                    type="text"
-                                                    value={this.state.projectFilter}
-                                                />
-                                            </div>
-                                            <div className="form-group">
-                                                <label htmlFor="project-template">From Project</label>
-                                                <select
-                                                    className="form-control form-control-sm"
-                                                    id="project-template"
-                                                    name="project-template"
-                                                    onChange={e => this.setWidgetLayoutTemplate(parseInt(e.target.value))}
-                                                    size="1"
-                                                    value={this.state.selectedProjectId}
-                                                >
-                                                    <option key={0} value={0}>None</option>
-                                                    {this.state.projectList
-                                                        .filter(({id, name}) => (id + name.toLocaleLowerCase())
-                                                            .includes(this.state.projectFilter.toLocaleLowerCase()))
-                                                        .map(({id, name}, uid) => <option key={uid} value={id}>{id} - {name}</option>)}
-                                                </select>
-                                            </div>
-                                            <div className="form-group">
-                                                <span>Warning, selecting a template project will overwrite existing widgets immediately.</span>
-                                            </div>
-                                        </form>
-                                    </div>
-                                    <div className="modal-footer">
-                                        <button
-                                            className="btn btn-secondary"
-                                            data-dismiss="modal"
-                                            onClick={this.onCancelNewWidget}
-                                            type="button"
-                                        >Close
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <div className="modal-backdrop fade show"> </div>
-                    </>
-                ) : "");
+            ) : "");
 
     getFormButtons = () => (
         <>
@@ -1172,17 +1172,17 @@ class WidgetLayoutEditor extends React.PureComponent {
 
     getSwipeOpacityDefault = () => (this.state.selectedWidgetType === "DualImageCollection"
         ? (
-<div className="form-group">
-    <label htmlFor="SwipeOpacityDefault">Swipe as default</label>
-    <input
-        checked={this.state.swipeAsDefault}
-        className="form-control widgetWizardCheckbox"
-        id="SwipeOpacityDefault"
-        onChange={this.onswipeAsDefaultChange}
-        type="checkbox"
-    />
-</div>
-)
+            <div className="form-group">
+                <label htmlFor="SwipeOpacityDefault">Swipe as default</label>
+                <input
+                    checked={this.state.swipeAsDefault}
+                    className="form-control widgetWizardCheckbox"
+                    id="SwipeOpacityDefault"
+                    onChange={this.onswipeAsDefaultChange}
+                    type="checkbox"
+                />
+            </div>
+        )
         : "");
 
     getImageParamsBlock = () => (

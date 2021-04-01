@@ -835,16 +835,16 @@ class MapWidget extends React.Component {
     }
 
     checkForCache = (postObject, widget, isSecond) => (localStorage.getItem(postObject.ImageAsset + JSON.stringify(postObject.visParams))
-            ? this.createTileServerFromCache(postObject.ImageAsset + JSON.stringify(postObject.visParams), widget.id, isSecond)
+        ? this.createTileServerFromCache(postObject.ImageAsset + JSON.stringify(postObject.visParams), widget.id, isSecond)
         : localStorage.getItem(postObject.ImageCollectionAsset + JSON.stringify(postObject.visParams))
             ? this.createTileServerFromCache(postObject.ImageCollectionAsset + JSON.stringify(postObject.visParams), widget.id, isSecond)
-        : postObject.index && localStorage.getItem(postObject.index + postObject.dateFrom + postObject.dateTo)
-            ? this.createTileServerFromCache(postObject.index + postObject.dateFrom + postObject.dateTo, widget.id, isSecond)
-        : postObject.path && localStorage.getItem(postObject.path + postObject.dateFrom + postObject.dateTo)
-            ? this.createTileServerFromCache(postObject.path + postObject.dateFrom + postObject.dateTo, widget.id, isSecond)
-        : localStorage.getItem(JSON.stringify(postObject))
-            ? this.createTileServerFromCache(JSON.stringify(postObject), widget.id, isSecond)
-        : true);
+            : postObject.index && localStorage.getItem(postObject.index + postObject.dateFrom + postObject.dateTo)
+                ? this.createTileServerFromCache(postObject.index + postObject.dateFrom + postObject.dateTo, widget.id, isSecond)
+                : postObject.path && localStorage.getItem(postObject.path + postObject.dateFrom + postObject.dateTo)
+                    ? this.createTileServerFromCache(postObject.path + postObject.dateFrom + postObject.dateTo, widget.id, isSecond)
+                    : localStorage.getItem(JSON.stringify(postObject))
+                        ? this.createTileServerFromCache(JSON.stringify(postObject), widget.id, isSecond)
+                        : true);
 
     fetchMapInfo = (postObject, url, widget, dualImageObject) => {
         if (postObject.path === "getDegraditionTileUrl" && url.trim() === "") {
@@ -1009,20 +1009,18 @@ class MapWidget extends React.Component {
          "ImageCollectionEVI",
          "ImageCollectionEVI2",
          "ImageCollectionNDMI",
-         "ImageCollectionNDWI"]
-            .includes(collectionName)
-                ? collectionName.replace("ImageCollection", "")
-                : "");
+         "ImageCollectionNDWI"].includes(collectionName)
+            ? collectionName.replace("ImageCollection", "")
+            : "");
 
     convertCollectionName = collectionName => (
         ["ImageCollectionNDVI",
          "ImageCollectionEVI",
          "ImageCollectionEVI2",
          "ImageCollectionNDMI",
-         "ImageCollectionNDWI"]
-            .includes(collectionName)
-                ? ""
-                : collectionName);
+         "ImageCollectionNDWI"].includes(collectionName)
+            ? ""
+            : collectionName);
 
     addSecondMapLayer = (url, token, widgetid) => {
         if (this.state.mapRef) {
@@ -1226,32 +1224,32 @@ class MapWidget extends React.Component {
 
     getStretchToggle = () => (this.props.degDataType === "landsat"
         ? (
-<div className="col-6">
-    <span className="ctrlText font-weight-bold">Bands: </span>
-    <select
-        className="form-control"
-        onChange={evt => this.setStretch(evt)}
-        style={{
-            maxWidth: "65%",
-            display: "inline-block",
-            fontSize: ".8rem",
-            height: "30px"
-        }}
-    >
-        <option value={321}>R,G,B</option>
-        <option value={543}>SWIR,NIR,R</option>
-        <option value={453}>NIR,SWIR,R</option>
-    </select>
-</div>
-)
+            <div className="col-6">
+                <span className="ctrlText font-weight-bold">Bands: </span>
+                <select
+                    className="form-control"
+                    onChange={evt => this.setStretch(evt)}
+                    style={{
+                        maxWidth: "65%",
+                        display: "inline-block",
+                        fontSize: ".8rem",
+                        height: "30px"
+                    }}
+                >
+                    <option value={321}>R,G,B</option>
+                    <option value={543}>SWIR,NIR,R</option>
+                    <option value={453}>NIR,SWIR,R</option>
+                </select>
+            </div>
+        )
         : this.props.isDegradation
             ? (
-<div className="col-6">
-    <span className="ctrlText font-weight-bold">Band Combination: </span>
-    <span className="ctrlText">VV, VH, VV/VH </span>
-</div>
-)
-        : "");
+                <div className="col-6">
+                    <span className="ctrlText font-weight-bold">Band Combination: </span>
+                    <span className="ctrlText">VV, VH, VV/VH </span>
+                </div>
+            )
+            : "");
 
     getDegDataTypeToggle = () => (
         <div className="col-6" style={{display: this.props.isDegradation ? "block" : "none"}}>
@@ -1439,8 +1437,9 @@ class GraphWidget extends React.Component {
     };
 
     multiComparator = (a, b) => ((a[0] < b[0]) ? -1
-            : (a[0] > b[0]) ? 1
-                : 0);
+        : (a[0] > b[0])
+            ? 1
+            : 0);
 
     sortMultiData = data => data.sort(this.multiComparator);
 

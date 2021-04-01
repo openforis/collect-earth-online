@@ -36,7 +36,7 @@ module.exports = {
                 ArrayExpression: "first",
                 ObjectExpression: "first",
                 ImportDeclaration: "first",
-                ignoredNodes: ["JSXAttribute", "JSXSpreadAttribute", "ConditionalExpression", "TemplateLiteral"]
+                ignoredNodes: ["TemplateLiteral"]
             }
         ],
         // Override recommends

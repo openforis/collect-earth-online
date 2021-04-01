@@ -162,8 +162,8 @@ export class SampleDesign extends React.Component {
                     {totalPlots > 0 && samplesPerPlot > 0
                         ? `  There will be around ${formatNumberWithCommas(totalPlots * samplesPerPlot)} total samples in the project.`
                         : sampleDistribution === "none"
-                        ? "  No samples will be added to the plot."
-                        : ""}
+                            ? "  No samples will be added to the plot."
+                            : ""}
                     {totalPlots > 0 && samplesPerPlot > 0 && samplesPerPlot > perPlotLimit
                         && `* The maximum allowed for the selected sample distribution is ${formatNumberWithCommas(perPlotLimit)}`
                             + ` samples per plot. * The maximum allowed samples per project is ${formatNumberWithCommas(sampleLimit)}.`}
@@ -181,37 +181,37 @@ export function SampleReview() {
                 <div id="sample-review">
                     {useTemplatePlots && <h3 className="mb-3">Samples will be copied from template project</h3>}
                     {sampleDistribution === "none"
-                    ? <h3>No samples are predefined.</h3>
-                    : (
-                        <div className="d-flex">
-                            <div id="sample-review-col1">
-                                <table className="table table-sm" id="sample-review-table">
-                                    <tbody>
-                                        <tr>
-                                            <td className="w-80 pr-5">Spatial Distribution</td>
-                                            <td className="w-20 text-center">
-                                                <span className="badge badge-pill bg-lightgreen">{sampleDistribution}</span>
-                                            </td>
-                                        </tr>
-                                        <tr>
-                                            <td className="w-80">Samples Per Plot</td>
-                                            <td className="w-20 text-center">
-                                                <span className="badge badge-pill bg-lightgreen">{samplesPerPlot} / plot</span>
-                                            </td>
-                                        </tr>
-                                        {sampleDistribution === "gridded" && (
+                        ? <h3>No samples are predefined.</h3>
+                        : (
+                            <div className="d-flex">
+                                <div id="sample-review-col1">
+                                    <table className="table table-sm" id="sample-review-table">
+                                        <tbody>
                                             <tr>
-                                                <td className="w-80">Sample Spacing</td>
+                                                <td className="w-80 pr-5">Spatial Distribution</td>
                                                 <td className="w-20 text-center">
-                                                    <span className="badge badge-pill bg-lightgreen">{sampleResolution} m</span>
+                                                    <span className="badge badge-pill bg-lightgreen">{sampleDistribution}</span>
                                                 </td>
                                             </tr>
-                                        )}
-                                    </tbody>
-                                </table>
+                                            <tr>
+                                                <td className="w-80">Samples Per Plot</td>
+                                                <td className="w-20 text-center">
+                                                    <span className="badge badge-pill bg-lightgreen">{samplesPerPlot} / plot</span>
+                                                </td>
+                                            </tr>
+                                            {sampleDistribution === "gridded" && (
+                                                <tr>
+                                                    <td className="w-80">Sample Spacing</td>
+                                                    <td className="w-20 text-center">
+                                                        <span className="badge badge-pill bg-lightgreen">{sampleResolution} m</span>
+                                                    </td>
+                                                </tr>
+                                            )}
+                                        </tbody>
+                                    </table>
+                                </div>
                             </div>
-                        </div>
-                    )}
+                        )}
                     {allowDrawnSamples && <h3>Users can draw additional samples at collection time.</h3>}
                 </div>
             )}
@@ -226,20 +226,22 @@ export function SamplePreview() {
             {({plotDistribution, sampleDistribution, plotShape}) => (
                 <div className="p-3">
                     {(plotDistribution === "shp")
-                     ? <h3>The system cannot currently generate a preview of plot shp files.</h3>
-                     : (sampleDistribution === "csv")
-                     ? <h3>The system cannot currently generate a preview of sample csv files.</h3>
-                     : (sampleDistribution === "shp")
-                     ? <h3>The system cannot currently generate a preview of sample shp files.</h3>
-                     : (
-                         <div>
-                             <h3>The following is a mock up of a {plotShape} plot with {sampleDistribution} samples.</h3>
-                             <img
-                                 className="w-100 h-100"
-                                 src={"/img/examples/" + plotShape + "-" + sampleDistribution + ".webp"}
-                             />
-                         </div>
-                     )}
+                        ? <h3>The system cannot currently generate a preview of plot shp files.</h3>
+                        : (sampleDistribution === "csv")
+                            ? <h3>The system cannot currently generate a preview of sample csv files.</h3>
+                            : (sampleDistribution === "shp")
+                                ? <h3>The system cannot currently generate a preview of sample shp files.</h3>
+                                : (
+                                    <div>
+                                        <h3>
+                                            The following is a mock up of a {plotShape} plot with {sampleDistribution} samples.
+                                        </h3>
+                                        <img
+                                            className="w-100 h-100"
+                                            src={"/img/examples/" + plotShape + "-" + sampleDistribution + ".webp"}
+                                        />
+                                    </div>
+                                )}
                 </div>
             )}
         </ProjectContext.Consumer>

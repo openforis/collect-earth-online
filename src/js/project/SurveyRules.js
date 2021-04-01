@@ -141,17 +141,17 @@ export class SurveyRulesList extends React.Component {
             <>
                 <label className="font-weight-bold">Rules:</label>
                 {(surveyRules || []).length > 0
-                ? (
-                    <table
-                        className="srd"
-                        id="rules"
-                        style={{width: "100%"}}
-                    >
-                        <tbody>
-                            {surveyRules.map(this.renderRuleRow)}
-                        </tbody>
-                    </table>
-                ) : <label className="ml-3">No rules have been created for this survey.</label>}
+                    ? (
+                        <table
+                            className="srd"
+                            id="rules"
+                            style={{width: "100%"}}
+                        >
+                            <tbody>
+                                {surveyRules.map(this.renderRuleRow)}
+                            </tbody>
+                        </table>
+                    ) : <label className="ml-3">No rules have been created for this survey.</label>}
             </>
         );
     }
@@ -196,52 +196,52 @@ export class TextMatch extends React.Component {
         const availableQuestions = this.context.surveyQuestions
             .filter(q => q.componentType === "input" && q.dataType === "text");
         return availableQuestions.length > 0
-        ? (
-            <tr>
-                <td>
-                    <table>
-                        <tbody>
-                            <tr>
-                                <td><label>Survey Question: </label></td>
-                                <td>
-                                    <select
-                                        className="form-control form-control-sm"
-                                        onChange={e => this.setState({questionId: Number(e.target.value)})}
-                                        value={this.state.questionId}
-                                    >
-                                        <option value={-1}>- Select Question -</option>
-                                        {availableQuestions.map((question, uid) => <option key={uid} value={question.id}>{question.question}</option>)}
-                                    </select>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td><label>Enter regular expression: </label></td>
-                                <td>
-                                    <input
-                                        className="form-control form-control-sm"
-                                        onChange={e => this.setState({regex: e.target.value})}
-                                        placeholder="Regular expression"
-                                        type="text"
-                                        value={this.state.regex}
-                                    />
-                                </td>
-                            </tr>
-                            <tr>
-                                <td style={{border: "none"}}/>
-                                <td style={{border: "none"}}>
-                                    <input
-                                        className="button mt-2"
-                                        onClick={this.addSurveyRule}
-                                        type="button"
-                                        value="Add Survey Rule"
-                                    />
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </td>
-            </tr>
-        ) : <tr><td><label>This rule requires a question of type input-text.</label></td></tr>;
+            ? (
+                <tr>
+                    <td>
+                        <table>
+                            <tbody>
+                                <tr>
+                                    <td><label>Survey Question: </label></td>
+                                    <td>
+                                        <select
+                                            className="form-control form-control-sm"
+                                            onChange={e => this.setState({questionId: Number(e.target.value)})}
+                                            value={this.state.questionId}
+                                        >
+                                            <option value={-1}>- Select Question -</option>
+                                            {availableQuestions.map((question, uid) => <option key={uid} value={question.id}>{question.question}</option>)}
+                                        </select>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><label>Enter regular expression: </label></td>
+                                    <td>
+                                        <input
+                                            className="form-control form-control-sm"
+                                            onChange={e => this.setState({regex: e.target.value})}
+                                            placeholder="Regular expression"
+                                            type="text"
+                                            value={this.state.regex}
+                                        />
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td style={{border: "none"}}/>
+                                    <td style={{border: "none"}}>
+                                        <input
+                                            className="button mt-2"
+                                            onClick={this.addSurveyRule}
+                                            type="button"
+                                            value="Add Survey Rule"
+                                        />
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </td>
+                </tr>
+            ) : <tr><td><label>This rule requires a question of type input-text.</label></td></tr>;
     }
 }
 TextMatch.contextType = ProjectContext;
@@ -287,64 +287,64 @@ export class NumericRange extends React.Component {
         const availableQuestions = this.context.surveyQuestions
             .filter(q => q.componentType === "input" && q.dataType === "number");
         return availableQuestions.length > 0
-        ? (
-            <tr>
-                <td>
-                    <table>
-                        <tbody>
-                            <tr>
-                                <td><label>Survey Question: </label></td>
-                                <td>
-                                    <select
-                                        className="form-control form-control-sm"
-                                        onChange={e => this.setState({questionId: Number(e.target.value)})}
-                                        value={this.state.questionId}
-                                    >
-                                        <option value={-1}>- Select Question -</option>
-                                        {availableQuestions.map((question, uid) => <option key={uid} value={question.id}>{question.question}</option>)}
-                                    </select>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td><label>Enter minimum: </label></td>
-                                <td>
-                                    <input
-                                        className="form-control form-control-sm"
-                                        onChange={e => this.setState({min: Number(e.target.value)})}
-                                        placeholder="Minimum value"
-                                        type="number"
-                                        value={this.state.min}
-                                    />
-                                </td>
-                            </tr>
-                            <tr>
-                                <td><label>Enter maximum: </label></td>
-                                <td>
-                                    <input
-                                        className="form-control form-control-sm"
-                                        onChange={e => this.setState({max: Number(e.target.value)})}
-                                        placeholder="Maximum value"
-                                        type="number"
-                                        value={this.state.max}
-                                    />
-                                </td>
-                            </tr>
-                            <tr>
-                                <td style={{border: "none"}}/>
-                                <td style={{border: "none"}}>
-                                    <input
-                                        className="button mt-2"
-                                        onClick={this.addSurveyRule}
-                                        type="button"
-                                        value="Add Survey Rule"
-                                    />
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </td>
-            </tr>
-        ) : <tr><td><label>This rule requires a question of type input-number.</label></td></tr>;
+            ? (
+                <tr>
+                    <td>
+                        <table>
+                            <tbody>
+                                <tr>
+                                    <td><label>Survey Question: </label></td>
+                                    <td>
+                                        <select
+                                            className="form-control form-control-sm"
+                                            onChange={e => this.setState({questionId: Number(e.target.value)})}
+                                            value={this.state.questionId}
+                                        >
+                                            <option value={-1}>- Select Question -</option>
+                                            {availableQuestions.map((question, uid) => <option key={uid} value={question.id}>{question.question}</option>)}
+                                        </select>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><label>Enter minimum: </label></td>
+                                    <td>
+                                        <input
+                                            className="form-control form-control-sm"
+                                            onChange={e => this.setState({min: Number(e.target.value)})}
+                                            placeholder="Minimum value"
+                                            type="number"
+                                            value={this.state.min}
+                                        />
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><label>Enter maximum: </label></td>
+                                    <td>
+                                        <input
+                                            className="form-control form-control-sm"
+                                            onChange={e => this.setState({max: Number(e.target.value)})}
+                                            placeholder="Maximum value"
+                                            type="number"
+                                            value={this.state.max}
+                                        />
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td style={{border: "none"}}/>
+                                    <td style={{border: "none"}}>
+                                        <input
+                                            className="button mt-2"
+                                            onClick={this.addSurveyRule}
+                                            type="button"
+                                            value="Add Survey Rule"
+                                        />
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </td>
+                </tr>
+            ) : <tr><td><label>This rule requires a question of type input-number.</label></td></tr>;
     }
 }
 NumericRange.contextType = ProjectContext;
@@ -389,59 +389,59 @@ export class SumOfAnswers extends React.Component {
     render() {
         const availableQuestions = this.context.surveyQuestions.filter(q => q.dataType === "number");
         return availableQuestions.length > 1
-        ? (
-            <tr>
-                <td>
-                    <table>
-                        <tbody>
-                            <tr>
-                                <td>
-                                    <label>
-                                        <p>Select survey question:</p>
-                                        <p>(Hold ctrl/cmd and select multiple questions)</p>
-                                    </label>
-                                </td>
-                                <td>
-                                    <select
-                                        className="form-control form-control-sm overflow-auto"
-                                        multiple="multiple"
-                                        onChange={e => this.setState({
-                                            questionIds: Array.from(e.target.selectedOptions, i => Number(i.value))
-                                        })}
-                                        value={this.state.questionIds}
-                                    >
-                                        {availableQuestions.map((question, uid) => <option key={uid} value={question.id}>{question.question}</option>)}
-                                    </select>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td><label>Enter valid sum: </label></td>
-                                <td>
-                                    <input
-                                        className="form-control form-control-sm"
-                                        onChange={e => this.setState({validSum: Number(e.target.value)})}
-                                        placeholder="Valid sum"
-                                        type="number"
-                                        value={this.state.validSum}
-                                    />
-                                </td>
-                            </tr>
-                            <tr>
-                                <td style={{border: "none"}}/>
-                                <td style={{border: "none"}}>
-                                    <input
-                                        className="button mt-2"
-                                        onClick={this.addSurveyRule}
-                                        type="button"
-                                        value="Add Survey Rule"
-                                    />
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </td>
-            </tr>
-        ) : <tr><td><label>There must be at least 2 number questions for this rule type.</label></td></tr>;
+            ? (
+                <tr>
+                    <td>
+                        <table>
+                            <tbody>
+                                <tr>
+                                    <td>
+                                        <label>
+                                            <p>Select survey question:</p>
+                                            <p>(Hold ctrl/cmd and select multiple questions)</p>
+                                        </label>
+                                    </td>
+                                    <td>
+                                        <select
+                                            className="form-control form-control-sm overflow-auto"
+                                            multiple="multiple"
+                                            onChange={e => this.setState({
+                                                questionIds: Array.from(e.target.selectedOptions, i => Number(i.value))
+                                            })}
+                                            value={this.state.questionIds}
+                                        >
+                                            {availableQuestions.map((question, uid) => <option key={uid} value={question.id}>{question.question}</option>)}
+                                        </select>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><label>Enter valid sum: </label></td>
+                                    <td>
+                                        <input
+                                            className="form-control form-control-sm"
+                                            onChange={e => this.setState({validSum: Number(e.target.value)})}
+                                            placeholder="Valid sum"
+                                            type="number"
+                                            value={this.state.validSum}
+                                        />
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td style={{border: "none"}}/>
+                                    <td style={{border: "none"}}>
+                                        <input
+                                            className="button mt-2"
+                                            onClick={this.addSurveyRule}
+                                            type="button"
+                                            value="Add Survey Rule"
+                                        />
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </td>
+                </tr>
+            ) : <tr><td><label>There must be at least 2 number questions for this rule type.</label></td></tr>;
     }
 }
 SumOfAnswers.contextType = ProjectContext;
@@ -494,67 +494,67 @@ export class MatchingSums extends React.Component {
     render() {
         const availableQuestions = this.context.surveyQuestions.filter(q => q.dataType === "number");
         return availableQuestions.length > 1
-        ? (
-            <tr>
-                <td>
-                    <table>
-                        <tbody>
-                            <tr>
-                                <td>
-                                    <label>
-                                        <p>Select first question set:</p>
-                                        <p>(Hold ctrl/cmd and select multiple questions)</p>
-                                    </label>
-                                </td>
-                                <td>
-                                    <select
-                                        className="form-control form-control-sm overflow-auto"
-                                        multiple="multiple"
-                                        onChange={e => this.setState({
-                                            questionSetIds1: Array.from(e.target.selectedOptions, i => Number(i.value))
-                                        })}
-                                        value={this.state.questionSetIds1}
-                                    >
-                                        {availableQuestions.map((question, uid) => <option key={uid} value={question.id}>{question.question}</option>)}
-                                    </select>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td>
-                                    <label>
-                                        <p>Select second question set:</p>
-                                        <p>(Hold ctrl/cmd and select multiple questions)</p>
-                                    </label>
-                                </td>
-                                <td>
-                                    <select
-                                        className="form-control form-control-sm overflow-auto"
-                                        multiple="multiple"
-                                        onChange={e => this.setState({
-                                            questionSetIds2: Array.from(e.target.selectedOptions, i => Number(i.value))
-                                        })}
-                                        value={this.state.questionSetIds2}
-                                    >
-                                        {availableQuestions.map((question, uid) => <option key={uid} value={question.id}>{question.question}</option>)}
-                                    </select>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td style={{border: "none"}}/>
-                                <td style={{border: "none"}}>
-                                    <input
-                                        className="button mt-2"
-                                        onClick={this.addSurveyRule}
-                                        type="button"
-                                        value="Add Survey Rule"
-                                    />
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </td>
-            </tr>
-        ) : <tr><td><label>There must be at least 2 number questions for this rule type.</label></td></tr>;
+            ? (
+                <tr>
+                    <td>
+                        <table>
+                            <tbody>
+                                <tr>
+                                    <td>
+                                        <label>
+                                            <p>Select first question set:</p>
+                                            <p>(Hold ctrl/cmd and select multiple questions)</p>
+                                        </label>
+                                    </td>
+                                    <td>
+                                        <select
+                                            className="form-control form-control-sm overflow-auto"
+                                            multiple="multiple"
+                                            onChange={e => this.setState({
+                                                questionSetIds1: Array.from(e.target.selectedOptions, i => Number(i.value))
+                                            })}
+                                            value={this.state.questionSetIds1}
+                                        >
+                                            {availableQuestions.map((question, uid) => <option key={uid} value={question.id}>{question.question}</option>)}
+                                        </select>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <label>
+                                            <p>Select second question set:</p>
+                                            <p>(Hold ctrl/cmd and select multiple questions)</p>
+                                        </label>
+                                    </td>
+                                    <td>
+                                        <select
+                                            className="form-control form-control-sm overflow-auto"
+                                            multiple="multiple"
+                                            onChange={e => this.setState({
+                                                questionSetIds2: Array.from(e.target.selectedOptions, i => Number(i.value))
+                                            })}
+                                            value={this.state.questionSetIds2}
+                                        >
+                                            {availableQuestions.map((question, uid) => <option key={uid} value={question.id}>{question.question}</option>)}
+                                        </select>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td style={{border: "none"}}/>
+                                    <td style={{border: "none"}}>
+                                        <input
+                                            className="button mt-2"
+                                            onClick={this.addSurveyRule}
+                                            type="button"
+                                            value="Add Survey Rule"
+                                        />
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </td>
+                </tr>
+            ) : <tr><td><label>There must be at least 2 number questions for this rule type.</label></td></tr>;
     }
 }
 MatchingSums.contextType = ProjectContext;
@@ -631,96 +631,96 @@ export class IncompatibleAnswers extends React.Component {
     render() {
         const availableQuestions = this.context.surveyQuestions.filter(q => q.componentType !== "input");
         return availableQuestions.length > 1
-        ? (
-            <tr>
-                <td>
-                    <table>
-                        <tbody>
-                            <tr>
-                                <td><label>Select the incompatible questions and answers: </label></td>
-                            </tr>
-                            <tr>
-                                <td>Question 1:</td>
-                                <td>
-                                    <select
-                                        className="form-control form-control-sm"
-                                        onChange={e => this.setState({
-                                            questionId1: Number(e.target.value),
-                                            answerId1: -1
-                                        })}
-                                        value={this.state.questionId1}
-                                    >
-                                        <option value="-1">- Select Question 1 -</option>
-                                        {availableQuestions.map((question, uid) => <option key={uid} value={question.id}>{question.question}</option>)}
-                                    </select>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td>Answer 1:</td>
-                                <td>
-                                    <select
-                                        className="form-control form-control-sm"
-                                        onChange={e => this.setState({answerId1: Number(e.target.value)})}
-                                        value={this.state.answerId1}
-                                    >
-                                        <option value="-1">- Select Answer 1 -</option>
-                                        {this.safeFindAnswers(this.state.questionId1).map((answer, uid) => <option key={uid} value={answer.id}>{answer.answer}</option>)}
-                                    </select>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td>Question 2:</td>
-                                <td>
-                                    <select
-                                        className="form-control form-control-sm"
-                                        onChange={e => this.setState({
-                                            questionId2: Number(e.target.value),
-                                            answerId2: -1
-                                        })}
-                                        value={this.state.questionId2}
-                                    >
-                                        <option value="-1">- Select Question 2 -</option>
-                                        {availableQuestions.map((question, uid) => <option key={uid} value={question.id}>{question.question}</option>)}
-                                    </select>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td>Answer 2:</td>
-                                <td>
-                                    <select
-                                        className="form-control form-control-sm"
-                                        onChange={e => this.setState({answerId2: Number(e.target.value)})}
-                                        value={this.state.answerId2}
-                                    >
-                                        <option value="-1">- Select Answer 2 -</option>
-                                        {this.safeFindAnswers(this.state.questionId2).map((answer, uid) => <option key={uid} value={answer.id}>{answer.answer}</option>)}
-                                    </select>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td style={{border: "none"}}/>
-                                <td style={{border: "none"}}>
-                                    <input
-                                        className="button mt-2"
-                                        onClick={this.addSurveyRule}
-                                        type="button"
-                                        value="Add Survey Rule"
-                                    />
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </td>
-            </tr>
-        ) : (
-            <tr>
-                <td>
-                    <label>
+            ? (
+                <tr>
+                    <td>
+                        <table>
+                            <tbody>
+                                <tr>
+                                    <td><label>Select the incompatible questions and answers: </label></td>
+                                </tr>
+                                <tr>
+                                    <td>Question 1:</td>
+                                    <td>
+                                        <select
+                                            className="form-control form-control-sm"
+                                            onChange={e => this.setState({
+                                                questionId1: Number(e.target.value),
+                                                answerId1: -1
+                                            })}
+                                            value={this.state.questionId1}
+                                        >
+                                            <option value="-1">- Select Question 1 -</option>
+                                            {availableQuestions.map((question, uid) => <option key={uid} value={question.id}>{question.question}</option>)}
+                                        </select>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>Answer 1:</td>
+                                    <td>
+                                        <select
+                                            className="form-control form-control-sm"
+                                            onChange={e => this.setState({answerId1: Number(e.target.value)})}
+                                            value={this.state.answerId1}
+                                        >
+                                            <option value="-1">- Select Answer 1 -</option>
+                                            {this.safeFindAnswers(this.state.questionId1).map((answer, uid) => <option key={uid} value={answer.id}>{answer.answer}</option>)}
+                                        </select>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>Question 2:</td>
+                                    <td>
+                                        <select
+                                            className="form-control form-control-sm"
+                                            onChange={e => this.setState({
+                                                questionId2: Number(e.target.value),
+                                                answerId2: -1
+                                            })}
+                                            value={this.state.questionId2}
+                                        >
+                                            <option value="-1">- Select Question 2 -</option>
+                                            {availableQuestions.map((question, uid) => <option key={uid} value={question.id}>{question.question}</option>)}
+                                        </select>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>Answer 2:</td>
+                                    <td>
+                                        <select
+                                            className="form-control form-control-sm"
+                                            onChange={e => this.setState({answerId2: Number(e.target.value)})}
+                                            value={this.state.answerId2}
+                                        >
+                                            <option value="-1">- Select Answer 2 -</option>
+                                            {this.safeFindAnswers(this.state.questionId2).map((answer, uid) => <option key={uid} value={answer.id}>{answer.answer}</option>)}
+                                        </select>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td style={{border: "none"}}/>
+                                    <td style={{border: "none"}}>
+                                        <input
+                                            className="button mt-2"
+                                            onClick={this.addSurveyRule}
+                                            type="button"
+                                            value="Add Survey Rule"
+                                        />
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </td>
+                </tr>
+            ) : (
+                <tr>
+                    <td>
+                        <label>
                         There must be at least 2 questions where type is not input for this rule.
-                    </label>
-                </td>
-            </tr>
-        );
+                        </label>
+                    </td>
+                </tr>
+            );
     }
 }
 IncompatibleAnswers.contextType = ProjectContext;

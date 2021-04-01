@@ -152,8 +152,8 @@ export default class CreateProjectWizard extends React.Component {
                 ...data,
                 templateProjectId: projectId,
                 imageryId: institutionImageryIds.includes(data.imageryId)
-                        ? data.imageryId
-                        : institutionImageryIds[0],
+                    ? data.imageryId
+                    : institutionImageryIds[0],
                 useTemplatePlots: true,
                 useTemplateWidgets: true
             }, this.checkAllSteps);
@@ -442,19 +442,19 @@ export default class CreateProjectWizard extends React.Component {
                 title={steps[stepName].description}
             >
                 {isLast
-                ? <div style={{border: "2px solid transparent"}}/>
-                : (
-                    <div
-                        style={{
-                            backgroundColor: stepColor,
-                            border: "2px solid " + stepColor,
-                            left: "5rem",
-                            top: "calc(1rem + 2px)",
-                            position: "relative",
-                            width: "5rem"
-                        }}
-                    />
-                )}
+                    ? <div style={{border: "2px solid transparent"}}/>
+                    : (
+                        <div
+                            style={{
+                                backgroundColor: stepColor,
+                                border: "2px solid " + stepColor,
+                                left: "5rem",
+                                top: "calc(1rem + 2px)",
+                                position: "relative",
+                                width: "5rem"
+                            }}
+                        />
+                    )}
                 <div
                     style={{
                         borderRadius: "50%",

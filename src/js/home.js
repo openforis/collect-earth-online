@@ -186,8 +186,8 @@ class MapPanel extends React.Component {
         return (
             <div
                 className={this.props.showSidePanel
-                                ? "col-lg-9 col-md-12 pl-0 full-height"
-                                : "col-lg-9 col-md-12 pl-0 col-xl-12 col-xl-9 full-height"}
+                    ? "col-lg-9 col-md-12 pl-0 full-height"
+                    : "col-lg-9 col-md-12 pl-0 col-xl-12 col-xl-9 full-height"}
                 id="mapPanel"
             >
                 <div
@@ -285,23 +285,23 @@ class SideBar extends React.Component {
                     </>
                 )}
                 {this.props.institutions.length > 0 && this.props.projects.length > 0
-                ? (
-                    <InstitutionList
-                        filterInstitution={this.state.filterInstitution}
-                        filterText={this.state.filterText}
-                        institutionListType="institutions"
-                        institutions={this.props.institutions}
-                        projects={this.props.projects}
-                        showEmptyInstitutions={this.state.showEmptyInstitutions}
-                        sortByNumber={this.state.sortByNumber}
-                        useFirstLetter={this.state.useFirstLetter}
-                        userId={this.props.userId}
-                    />
-                ) : (
-                    this.props.userInstitutions.length > 0
-                        ? <h3 className="p-3">No unaffiliated institutions found.</h3>
-                        : <h3 className="p-3">Loading data...</h3>
-                )}
+                    ? (
+                        <InstitutionList
+                            filterInstitution={this.state.filterInstitution}
+                            filterText={this.state.filterText}
+                            institutionListType="institutions"
+                            institutions={this.props.institutions}
+                            projects={this.props.projects}
+                            showEmptyInstitutions={this.state.showEmptyInstitutions}
+                            sortByNumber={this.state.sortByNumber}
+                            useFirstLetter={this.state.useFirstLetter}
+                            userId={this.props.userId}
+                        />
+                    ) : (
+                        this.props.userInstitutions.length > 0
+                            ? <h3 className="p-3">No unaffiliated institutions found.</h3>
+                            : <h3 className="p-3">Loading data...</h3>
+                    )}
             </div>
         );
     }
@@ -326,8 +326,8 @@ function InstitutionList({
                             : proj.name.toLocaleLowerCase().includes(filterTextLower)));
 
     const filterString = inst => (useFirstLetter
-                                    ? inst.name.toLocaleLowerCase().startsWith(filterTextLower)
-                                    : inst.name.toLocaleLowerCase().includes(filterTextLower));
+        ? inst.name.toLocaleLowerCase().startsWith(filterTextLower)
+        : inst.name.toLocaleLowerCase().includes(filterTextLower));
 
     const filterHasProj = inst => filteredProjects.some(proj => inst.id === proj.institutionId)
                                     || showEmptyInstitutions
@@ -340,9 +340,9 @@ function InstitutionList({
         // Filtering by projects, and has projects to show
         .filter(inst => filterInstitution || filteredProjects.some(proj => inst.id === proj.institutionId))
         .sort((a, b) => (sortByNumber
-                            ? projects.filter(proj => b.id === proj.institutionId).length
+            ? projects.filter(proj => b.id === proj.institutionId).length
                                 - projects.filter(proj => a.id === proj.institutionId).length
-                            : sortAlphabetically(a.name, b.name)));
+            : sortAlphabetically(a.name, b.name)));
 
     const userInstStyle = institutionListType === "user" ? {maxHeight: "fit-content"} : {};
 

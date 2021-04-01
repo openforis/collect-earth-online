@@ -420,38 +420,38 @@ export class SecureWatchMenu extends React.Component {
                 <div className="slide-container">
                     <label>Available Layers</label>
                     {this.state.availableDates && this.state.availableDates.length > 0
-                    ? (
-                        <select
-                            className="form-control"
-                            id="securewatch-option-select"
-                            onChange={e => this.onChangeSingleLayer(e.target)}
-                        >
-                            {this.state.availableDates.map((obj, uid) => (
-                                <option
-                                    key={uid}
-                                    cloud={obj.cloudCover}
-                                    date={obj.acquisitionDate}
-                                    value={obj.featureId}
-                                >
-                                    {obj.acquisitionDate
+                        ? (
+                            <select
+                                className="form-control"
+                                id="securewatch-option-select"
+                                onChange={e => this.onChangeSingleLayer(e.target)}
+                            >
+                                {this.state.availableDates.map((obj, uid) => (
+                                    <option
+                                        key={uid}
+                                        cloud={obj.cloudCover}
+                                        date={obj.acquisitionDate}
+                                        value={obj.featureId}
+                                    >
+                                        {obj.acquisitionDate
                                         + " (" + (obj.cloudCover * 100).toFixed(2)
                                         + "% cloudy)"}
-                                </option>
-                            ))}
-                        </select>
-                    ) : (
-                        <select
-                            className="form-control"
-                            disabled
-                            id="securewatch-option-select"
-                        >
-                            <option>
-                                {this.state.availableDates
+                                    </option>
+                                ))}
+                            </select>
+                        ) : (
+                            <select
+                                className="form-control"
+                                disabled
+                                id="securewatch-option-select"
+                            >
+                                <option>
+                                    {this.state.availableDates
                                         ? "No available layers"
                                         : "Loading dates..."}
-                            </option>
-                        </select>
-                    )}
+                                </option>
+                            </select>
+                        )}
                 </div>
             </div>
         );

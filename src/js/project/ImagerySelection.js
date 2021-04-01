@@ -5,23 +5,23 @@ import {ProjectContext} from "./constants";
 const renderImageryRow = (filteredImageryList, defaultImageryId, projectImageryList, setProjectDetails, type) => (
     <div className="row mt-3 px-5">
         {filteredImageryList.length > 0
-        ? filteredImageryList.map((imagery, idx) => (
-            <div key={idx} className="col-md-6 form-check">
-                <input
-                    checked={projectImageryList.includes(imagery.id) || imagery.id === defaultImageryId}
-                    className="form-check-input"
-                    disabled={imagery.id === defaultImageryId}
-                    id={imagery.id}
-                    onChange={e => setProjectDetails({
-                        projectImageryList: e.target.checked
+            ? filteredImageryList.map((imagery, idx) => (
+                <div key={idx} className="col-md-6 form-check">
+                    <input
+                        checked={projectImageryList.includes(imagery.id) || imagery.id === defaultImageryId}
+                        className="form-check-input"
+                        disabled={imagery.id === defaultImageryId}
+                        id={imagery.id}
+                        onChange={e => setProjectDetails({
+                            projectImageryList: e.target.checked
                                 ? [...projectImageryList, imagery.id]
                                 : projectImageryList.filter(img => img !== imagery.id)
-                    })}
-                    type="checkbox"
-                />
-                <label className="form-check-label" htmlFor={imagery.id}>{imagery.title}</label>
-            </div>
-        )) : <label>{`No ${type} imagery found.`}</label>}
+                        })}
+                        type="checkbox"
+                    />
+                    <label className="form-check-label" htmlFor={imagery.id}>{imagery.title}</label>
+                </div>
+            )) : <label>{`No ${type} imagery found.`}</label>}
     </div>
 );
 
@@ -29,49 +29,49 @@ export function ImagerySelection() {
     return (
         <ProjectContext.Consumer>
             {({imageryId, institutionImagery, projectImageryList, setProjectDetails}) => (institutionImagery
-            ? (
-                <div id="project-imagery">
-                    <div className="form-group" id="project-default-imagery">
-                        <h3>Default Imagery</h3>
-                        <select
-                            className="form-control form-control-sm"
-                            onChange={e => setProjectDetails({imageryId: parseInt(e.target.value)})}
-                            size="1"
-                            value={imageryId || -1}
-                        >
-                            {institutionImagery.map((imagery, uid) => <option key={uid} value={imagery.id}>{imagery.title}</option>)}
-                        </select>
-                    </div>
-                    <div className="form-group">
-                        <h3>Public Imagery</h3>
-                        {renderImageryRow(
-                            institutionImagery.filter(imagery => imagery.visibility === "public"),
-                            imageryId,
-                            projectImageryList,
-                            setProjectDetails,
-                            "public"
-                        )}
-                        <h3>Private Institution Imagery*</h3>
-                        {renderImageryRow(
-                            institutionImagery.filter(imagery => imagery.visibility === "private"),
-                            imageryId,
-                            projectImageryList,
-                            setProjectDetails,
-                            "institution"
-                        )}
-                    </div>
-                    <p className="font-italic ml-2 small" id="project-imagery-text">
+                ? (
+                    <div id="project-imagery">
+                        <div className="form-group" id="project-default-imagery">
+                            <h3>Default Imagery</h3>
+                            <select
+                                className="form-control form-control-sm"
+                                onChange={e => setProjectDetails({imageryId: parseInt(e.target.value)})}
+                                size="1"
+                                value={imageryId || -1}
+                            >
+                                {institutionImagery.map((imagery, uid) => <option key={uid} value={imagery.id}>{imagery.title}</option>)}
+                            </select>
+                        </div>
+                        <div className="form-group">
+                            <h3>Public Imagery</h3>
+                            {renderImageryRow(
+                                institutionImagery.filter(imagery => imagery.visibility === "public"),
+                                imageryId,
+                                projectImageryList,
+                                setProjectDetails,
+                                "public"
+                            )}
+                            <h3>Private Institution Imagery*</h3>
+                            {renderImageryRow(
+                                institutionImagery.filter(imagery => imagery.visibility === "private"),
+                                imageryId,
+                                projectImageryList,
+                                setProjectDetails,
+                                "institution"
+                            )}
+                        </div>
+                        <p className="font-italic ml-2 small" id="project-imagery-text">
                             * Institution imagery will only be visible to institution members, no matter the project visibility.
-                    </p>
-                </div>
-            ) : (
-                <div id="project-loading-imagery">
-                    <div className="form-group">
-                        <h3>Default Imagery</h3>
-                        <p>Loading Imagery...</p>
+                        </p>
                     </div>
-                </div>
-            ))}
+                ) : (
+                    <div id="project-loading-imagery">
+                        <div className="form-group">
+                            <h3>Default Imagery</h3>
+                            <p>Loading Imagery...</p>
+                        </div>
+                    </div>
+                ))}
         </ProjectContext.Consumer>
     );
 }

@@ -40,7 +40,7 @@ export class SurveyQuestionDesign extends React.Component {
 
     maxAnswers = (componentType, dataType) => ((componentType || "").toLowerCase() === "input" ? 1
         : (dataType || "").toLowerCase() === "boolean" ? 2
-        : 1000);
+            : 1000);
 
     render() {
         return (
@@ -176,14 +176,14 @@ class NewQuestionDesigner extends React.Component {
                             >
                                 <option key={-1} value={-1}>None</option>
                                 {this.props.surveyQuestions.length > 0
-                                ? this.props.surveyQuestions
-                                    .filter(question => question.componentType !== "input")
-                                    .map(question => (
-                                        <option key={question.id} value={question.id}>
-                                            {question.question}
-                                        </option>
-                                    ))
-                                : ""}
+                                    ? this.props.surveyQuestions
+                                        .filter(question => question.componentType !== "input")
+                                        .map(question => (
+                                            <option key={question.id} value={question.id}>
+                                                {question.question}
+                                            </option>
+                                        ))
+                                    : ""}
                             </select>
                         </td>
                     </tr>
@@ -201,14 +201,14 @@ class NewQuestionDesigner extends React.Component {
                             >
                                 <option key={-1} value={-1}>Any</option>
                                 {this.state.selectedParent > 0 && selectedParent
-                                ? selectedParent
-                                    .answers
-                                    .map(answer => (
-                                        <option key={answer.id} value={answer.id}>
-                                            {answer.answer}
-                                        </option>
-                                    ))
-                                : ""}
+                                    ? selectedParent
+                                        .answers
+                                        .map(answer => (
+                                            <option key={answer.id} value={answer.id}>
+                                                {answer.answer}
+                                            </option>
+                                        ))
+                                    : ""}
                             </select>
                         </td>
                     </tr>
@@ -341,8 +341,8 @@ export class SurveyQuestionHelp extends React.Component {
         const {userSamples} = this.state;
         const {parentQuestion, parentAnswer} = surveyQuestions.find(sq => sq.id === currentQuestionId);
         const parentQuestionText = parentQuestion === -1
-              ? ""
-              : surveyQuestions.find(sq => sq.id === parentQuestion).question;
+            ? ""
+            : surveyQuestions.find(sq => sq.id === parentQuestion).question;
 
         if (parentQuestion === -1) {
             return [{id: 1}];

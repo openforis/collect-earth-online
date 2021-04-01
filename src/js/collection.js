@@ -172,9 +172,9 @@ class Collection extends React.Component {
                 return Promise.resolve("resolved");
             } else {
                 return Promise.reject(
-                        project.availability === "archived"
-                            ? "This project is archived"
-                            : "No project found with ID " + this.props.projectId + "."
+                    project.availability === "archived"
+                        ? "This project is archived"
+                        : "No project found with ID " + this.props.projectId + "."
                 );
             }
         });
@@ -184,10 +184,10 @@ class Collection extends React.Component {
         .then(response => (response.ok ? response.json() : Promise.reject(response)))
         .then(data => {
             const widgets = Array.isArray(data.widgets)
-                    ? data.widgets
-                    : Array.isArray(eval(data.widgets))
-                        ? eval(data.widgets)
-                        : [];
+                ? data.widgets
+                : Array.isArray(eval(data.widgets))
+                    ? eval(data.widgets)
+                    : [];
             this.setState({hasGeoDash: widgets.length > 0});
             return Promise.resolve("resolved");
         });
@@ -291,8 +291,8 @@ class Collection extends React.Component {
             .then(data => {
                 if (data === "done") {
                     alert(this.state.navigationMode !== "unanalyzed"
-                              ? "This plot was analyzed by someone else. You are logged in as " + this.props.userName + "."
-                              : "This plot has already been analyzed.");
+                        ? "This plot was analyzed by someone else. You are logged in as " + this.props.userName + "."
+                        : "This plot has already been analyzed.");
                 } else if (data === "not-found") {
                     alert("Plot " + plotId + " not found.");
                 } else {
@@ -324,8 +324,8 @@ class Collection extends React.Component {
                 if (data === "done") {
                     if (plotId === -1) {
                         alert(this.state.navigationMode !== "unanalyzed"
-                                  ? "You have not reviewed any plots. You are logged in as " + this.props.userName + "."
-                                  : "All plots have been analyzed for this project.");
+                            ? "You have not reviewed any plots. You are logged in as " + this.props.userName + "."
+                            : "All plots have been analyzed for this project.");
                     } else {
                         this.setState({nextPlotButtonDisabled: true});
                         alert("You have reached the end of the plot list.");
@@ -358,8 +358,8 @@ class Collection extends React.Component {
                 if (data === "done") {
                     this.setState({prevPlotButtonDisabled: true});
                     alert(this.state.navigationMode !== "unanalyzed"
-                              ? "No previous plots were analyzed by you. You are logged in as " + this.props.userName + "."
-                              : "All previous plots have been analyzed.");
+                        ? "No previous plots were analyzed by you. You are logged in as " + this.props.userName + "."
+                        : "All previous plots have been analyzed.");
                 } else {
                     this.setState({
                         currentPlot: data,
@@ -520,8 +520,8 @@ class Collection extends React.Component {
     showGeoDash = () => {
         const {currentPlot, mapConfig, currentProject} = this.state;
         const plotRadius = currentProject.plotSize
-              ? currentProject.plotSize / 2.0
-              : mercator.getViewRadius(mapConfig);
+            ? currentProject.plotSize / 2.0
+            : mercator.getViewRadius(mapConfig);
         window.open("/geo-dash?"
                     + `institutionId=${this.state.currentProject.institution}`
                     + `&projectId=${this.props.projectId}`
@@ -656,8 +656,8 @@ class Collection extends React.Component {
         return (
             (selectedFeatures.length === 0 && question.answered.length === 0)
             || Object.keys(this.state.userSamples).length === 1
-                    ? allFeatures
-                    : selectedFeatures
+                ? allFeatures
+                : selectedFeatures
         ).map(sf => sf.get("sampleId"));
     };
 
@@ -733,8 +733,8 @@ class Collection extends React.Component {
     invertColor(hex) {
         const deHashed = hex.indexOf("#") === 0 ? hex.slice(1) : hex;
         const hexFormatted = deHashed.length === 3
-              ? deHashed[0] + deHashed[0] + deHashed[1] + deHashed[1] + deHashed[2] + deHashed[2]
-              : deHashed;
+            ? deHashed[0] + deHashed[0] + deHashed[1] + deHashed[1] + deHashed[2] + deHashed[2]
+            : deHashed;
 
         // invert color components
         const r = (255 - parseInt(hexFormatted.slice(0, 2), 16)).toString(16);
@@ -762,12 +762,12 @@ class Collection extends React.Component {
                     .find(ans => ans.answer === userAnswer);
 
                 const color = this.state.selectedQuestion.componentType === "input"
-                      ? userAnswer.length > 0
-                          ? this.state.selectedQuestion.answers[0].color
-                          : this.invertColor(this.state.selectedQuestion.answers[0].color)
-                      : matchingAnswer
-                          ? matchingAnswer.color
-                          : "";
+                    ? userAnswer.length > 0
+                        ? this.state.selectedQuestion.answers[0].color
+                        : this.invertColor(this.state.selectedQuestion.answers[0].color)
+                    : matchingAnswer
+                        ? matchingAnswer.color
+                        : "";
 
                 mercator.highlightSampleGeometry(feature, color);
             });
@@ -779,8 +779,8 @@ class Collection extends React.Component {
         const {parentQuestion, parentAnswer} = surveyQuestions
             .find(sq => sq.id === currentQuestionId);
         const parentQuestionText = parentQuestion === -1
-              ? ""
-              : surveyQuestions.find(sq => sq.id === parentQuestion).question;
+            ? ""
+            : surveyQuestions.find(sq => sq.id === parentQuestion).question;
 
         if (parentQuestion === -1) {
             return this.state.currentPlot.samples;
@@ -937,38 +937,38 @@ class Collection extends React.Component {
                         setImageryAttribution={this.setImageryAttribution}
                     />
                     {this.state.currentPlot.id
-                    ? (
-                        <SurveyCollection
-                            allowDrawnSamples={this.state.currentProject.allowDrawnSamples}
-                            answerMode={this.state.answerMode}
-                            collectConfidence={this.state.currentProject.projectOptions.collectConfidence}
-                            confidence={this.state.currentPlot.confidence}
-                            flagged={this.state.currentPlot.flagged}
-                            flaggedReason={this.state.currentPlot.flaggedReason}
-                            getSelectedSampleIds={this.getSelectedSampleIds}
-                            mapConfig={this.state.mapConfig}
-                            resetPlotValues={this.resetPlotValues}
-                            selectedQuestion={this.state.selectedQuestion}
-                            selectedSampleId={Object.keys(this.state.userSamples).length === 1
-                                        ? parseInt(Object.keys(this.state.userSamples)[0])
-                                        : this.state.selectedSampleId}
-                            setAnswerMode={this.setAnswerMode}
-                            setConfidence={this.setConfidence}
-                            setCurrentValue={this.setCurrentValue}
-                            setFlaggedReason={this.setFlaggedReason}
-                            setSelectedQuestion={this.setSelectedQuestion}
-                            setUnansweredColor={this.setUnansweredColor}
-                            surveyQuestions={this.state.currentProject.surveyQuestions}
-                            surveyRules={this.state.currentProject.surveyRules}
-                            toggleFlagged={this.toggleFlagged}
-                            unansweredColor={this.state.unansweredColor}
-                        />
-                    ) : (
+                        ? (
+                            <SurveyCollection
+                                allowDrawnSamples={this.state.currentProject.allowDrawnSamples}
+                                answerMode={this.state.answerMode}
+                                collectConfidence={this.state.currentProject.projectOptions.collectConfidence}
+                                confidence={this.state.currentPlot.confidence}
+                                flagged={this.state.currentPlot.flagged}
+                                flaggedReason={this.state.currentPlot.flaggedReason}
+                                getSelectedSampleIds={this.getSelectedSampleIds}
+                                mapConfig={this.state.mapConfig}
+                                resetPlotValues={this.resetPlotValues}
+                                selectedQuestion={this.state.selectedQuestion}
+                                selectedSampleId={Object.keys(this.state.userSamples).length === 1
+                                    ? parseInt(Object.keys(this.state.userSamples)[0])
+                                    : this.state.selectedSampleId}
+                                setAnswerMode={this.setAnswerMode}
+                                setConfidence={this.setConfidence}
+                                setCurrentValue={this.setCurrentValue}
+                                setFlaggedReason={this.setFlaggedReason}
+                                setSelectedQuestion={this.setSelectedQuestion}
+                                setUnansweredColor={this.setUnansweredColor}
+                                surveyQuestions={this.state.currentProject.surveyQuestions}
+                                surveyRules={this.state.currentProject.surveyRules}
+                                toggleFlagged={this.toggleFlagged}
+                                unansweredColor={this.state.unansweredColor}
+                            />
+                        ) : (
                             <fieldset className="mb-3 justify-content-center text-center">
                                 <CollapsibleTitle showGroup title="Survey Questions"/>
                                 <p>Please go to a plot to see survey questions</p>
                             </fieldset>
-                    )}
+                        )}
                 </SideBar>
                 {this.state.showQuitModal && (
                     <QuitMenu

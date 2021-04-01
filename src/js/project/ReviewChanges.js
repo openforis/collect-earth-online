@@ -59,14 +59,14 @@ export default class ReviewChanges extends React.Component {
         // TODO: Match project details in context as in state (i.e. do not spread into context).
         const updateSurvey = this.surveyQuestionUpdated(this.context, this.context.originalProject);
         const extraMessage = this.plotsUpdated(this.context, this.context.originalProject)
-                ? "  Plots and samples will be recreated, losing all collection data."
+            ? "  Plots and samples will be recreated, losing all collection data."
             : this.samplesUpdated(this.context, this.context.originalProject)
                 ? "  Samples will be recreated, losing all collection data."
-            : updateSurvey
-                ? "  Updating survey questions or rules will reset all collected data."
-            : this.allowDrawnSamplesDisallowed(this.context, this.context.originalProject)
-                ? "  Disallowing users to draw samples will reset all collected data."
-            : "";
+                : updateSurvey
+                    ? "  Updating survey questions or rules will reset all collected data."
+                    : this.allowDrawnSamplesDisallowed(this.context, this.context.originalProject)
+                        ? "  Disallowing users to draw samples will reset all collected data."
+                        : "";
         if (confirm("Do you really want to update this project?" + extraMessage)) {
             this.context.processModal(
                 "Updating Project",
@@ -157,43 +157,43 @@ export default class ReviewChanges extends React.Component {
     renderButtons = () => (
         <div className="d-flex flex-column">
             {this.context.projectId > 0
-            ? (
-                <>
-                    <input
-                        className="btn btn-outline-lightgreen btn-sm col-6 mb-3"
-                        onClick={this.updateProject}
-                        type="button"
-                        value="Update Project"
-                    />
-                    <input
-                        className="btn btn-outline-red btn-sm col-6 mb-3"
-                        onClick={() => this.context.setContextState({designMode: "manage"})}
-                        type="button"
-                        value="Discard Changes"
-                    />
-                </>
-            ) : (
-                <>
-                    <div className="form-check mb-3">
+                ? (
+                    <>
                         <input
-                            checked={this.state.acceptTOS}
-                            className="form-check-input"
-                            id="tos-check"
-                            onChange={() => this.setState({acceptTOS: !this.state.acceptTOS})}
-                            type="checkbox"
+                            className="btn btn-outline-lightgreen btn-sm col-6 mb-3"
+                            onClick={this.updateProject}
+                            type="button"
+                            value="Update Project"
                         />
-                        <label className="form-check-label" htmlFor="tos-check">
+                        <input
+                            className="btn btn-outline-red btn-sm col-6 mb-3"
+                            onClick={() => this.context.setContextState({designMode: "manage"})}
+                            type="button"
+                            value="Discard Changes"
+                        />
+                    </>
+                ) : (
+                    <>
+                        <div className="form-check mb-3">
+                            <input
+                                checked={this.state.acceptTOS}
+                                className="form-check-input"
+                                id="tos-check"
+                                onChange={() => this.setState({acceptTOS: !this.state.acceptTOS})}
+                                type="checkbox"
+                            />
+                            <label className="form-check-label" htmlFor="tos-check">
                             I agree to the <a href="/terms" target="_blank">Terms of Service</a>.
-                        </label>
-                    </div>
-                    <input
-                        className="btn btn-outline-lightgreen btn-sm col-6"
-                        onClick={this.createProject}
-                        type="button"
-                        value="Create Project"
-                    />
-                </>
-            )}
+                            </label>
+                        </div>
+                        <input
+                            className="btn btn-outline-lightgreen btn-sm col-6"
+                            onClick={this.createProject}
+                            type="button"
+                            value="Create Project"
+                        />
+                    </>
+                )}
             <input
                 className="btn btn-outline-lightgreen btn-sm col-6"
                 onClick={() => this.context.setContextState({designMode: "wizard"})}
