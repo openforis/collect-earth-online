@@ -402,7 +402,7 @@ class Collection extends React.Component {
     resetPlotValues = () => this.setState(this.newPlotValues(this.state.currentPlot, false));
 
     newPlotValues = (newPlot, copyValues = true) => ({
-        newPlotInput: newPlot.plotId ? newPlot.plotId : newPlot.id,
+        newPlotInput: isNumber(newPlot.plotId) ? newPlot.plotId : newPlot.id,
         userSamples: newPlot.samples
             ? newPlot.samples.reduce((obj, s) => {
                 obj[s.id] = copyValues ? (s.savedAnswers || {}) : {};
@@ -527,7 +527,7 @@ class Collection extends React.Component {
         window.open("/geo-dash?"
                     + `institutionId=${this.state.currentProject.institution}`
                     + `&projectId=${this.props.projectId}`
-                    + `&visiblePlotId=${(currentPlot.plotId ? currentPlot.plotId : currentPlot.id)}`
+                    + `&visiblePlotId=${isNumber(currentPlot.plotId) ? currentPlot.plotId : currentPlot.id}`
                     + `&plotId=${currentPlot.id}`
                     + `&plotShape=${encodeURIComponent((currentPlot.geom ? "polygon" : currentProject.plotShape))}`
                     + `&aoi=${encodeURIComponent(`[${mercator.getViewExtent(mapConfig)}]`)}`
@@ -1060,7 +1060,7 @@ class SideBar extends React.Component {
 
                 <div className="row">
                     <div className="col-sm-12 btn-block">
-                        {this.props.plotId
+                        {isNumber(this.props.plotId)
                             ? this.renderSaveButtonGroup()
                             : this.renderQuitButton()}
                     </div>
