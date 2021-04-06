@@ -6,7 +6,7 @@ class InstitutionDashboard extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
-            details: [],
+            details: []
         };
     }
 
@@ -16,7 +16,7 @@ class InstitutionDashboard extends React.Component {
 
     getProjectList = () => {
         fetch(`/get-institution-projects?institutionId=${this.props.institutionId}`)
-            .then(response => response.ok ? response.json() : Promise.reject(response))
+            .then(response => (response.ok ? response.json() : Promise.reject(response)))
             .then(data => {
                 this.setDetails(data);
             })
@@ -26,11 +26,11 @@ class InstitutionDashboard extends React.Component {
             });
     };
 
-    setDetails = (projects) => {
-        const details = this.state.details;
+    setDetails = projects => {
+        const {details} = this.state;
         projects.forEach(proj => {
             fetch(`/get-project-stats?projectId=${proj.id}`)
-                .then(response => response.ok ? response.json() : Promise.reject(response))
+                .then(response => (response.ok ? response.json() : Promise.reject(response)))
                 .then(data => {
                     details.push({
                         id: proj.id,
@@ -40,9 +40,9 @@ class InstitutionDashboard extends React.Component {
                         analyzedPlots: data.analyzedPlots,
                         flaggedPlots: data.flaggedPlots,
                         contributors: data.contributors,
-                        members: data.members,
+                        members: data.members
                     });
-                    this.setState({details: details});
+                    this.setState({details});
                 })
                 .catch(response => {
                     console.log(response);
@@ -54,7 +54,10 @@ class InstitutionDashboard extends React.Component {
     render() {
         return (
             <div className="row justify-content-center">
-                <div className="bg-darkgreen mb-3 no-container-margin" style={{width: "100%", margin: "0 10px 0 10px"}}>
+                <div
+                    className="bg-darkgreen mb-3 no-container-margin"
+                    style={{width: "100%", margin: "0 10px 0 10px"}}
+                >
                     <h1>Institution Dashboard</h1>
                 </div>
                 <table id="srd" style={{width: "1000px", margin: "10px", color: "rgb(49, 186, 176)"}}>
@@ -80,7 +83,7 @@ class InstitutionDashboard extends React.Component {
 }
 
 function ProjectList(props) {
-    return props.details.map((project, uid) =>
+    return props.details.map((project, uid) => (
         <tr key={uid}>
             <td>{project.id}</td>
             <td>{project.name}</td>
@@ -91,12 +94,12 @@ function ProjectList(props) {
             <td>{project.analyzedPlots}</td>
             <td>{project.unanalyzedPlots}</td>
         </tr>
-    );
+    ));
 }
 
 export function pageInit(args) {
     ReactDOM.render(
-        <NavigationBar userName={args.userName} userId={args.userId}>
+        <NavigationBar userId={args.userId} userName={args.userName}>
             <InstitutionDashboard
                 institutionId={args.institutionId || "0"}
             />

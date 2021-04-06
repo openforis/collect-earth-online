@@ -1,4 +1,4 @@
-import React, {Fragment} from "react";
+import React from "react";
 import ReactDOM from "react-dom";
 
 import {FormLayout, SectionBlock, StatsCell, StatsRow} from "./components/FormComponents";
@@ -8,17 +8,21 @@ import {getQueryString} from "./utils/generalUtils";
 function Account(props) {
     const sameAsUser = props.userId === props.accountId;
     return (
-        <FormLayout title={sameAsUser ? "Your account" : "User " + props.accountId} className="px-2 pb-2">
+        <FormLayout
+            className="px-2 pb-2"
+            title={sameAsUser ? "Your account" : "User " + props.accountId}
+        >
             <UserStats
                 accountId={props.accountId}
                 userName={props.userName}
             />
-            {sameAsUser &&
-                <AccountForm
-                    accountId={props.accountId}
-                    userName={props.userName}
-                />
-            }
+            {sameAsUser
+                && (
+                    <AccountForm
+                        accountId={props.accountId}
+                        userName={props.userName}
+                    />
+                )}
         </FormLayout>
     );
 }
@@ -27,7 +31,7 @@ class UserStats extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
-            stats: {},
+            stats: {}
         };
     }
 
@@ -37,8 +41,8 @@ class UserStats extends React.Component {
 
     getUserStats = () => {
         fetch("/get-user-stats?accountId=" + this.props.accountId)
-            .then(response => response.ok ? response.json() : Promise.reject(response))
-            .then(stats => this.setState({stats: stats}))
+            .then(response => (response.ok ? response.json() : Promise.reject(response)))
+            .then(stats => this.setState({stats}))
             .catch(response => {
                 console.log(response);
                 alert("No user found with ID " + this.props.accountId);
@@ -46,13 +50,12 @@ class UserStats extends React.Component {
             });
     };
 
-    render () {
+    render() {
         const {totalProjects, totalPlots, averageTime, perProject} = this.state.stats;
         return (
             <SectionBlock title="User Stats">
 
-                <div id="user-stats-table" className="table table-sm">
-
+                <div className="table table-sm" id="user-stats-table">
                     <div className="ProjectStats__plots-table mb-2">
                         <strong>Project Total Stats:</strong>
                         <div className="row pl-2">
@@ -66,8 +69,7 @@ class UserStats extends React.Component {
                                         ? averageTime >= 60
                                             ? `${(averageTime / 60).toFixed(2)} mins/plot`
                                             : `${averageTime} secs/plot`
-                                        : "loading..."
-                                    }
+                                        : "loading..."}
                                 </StatsCell>
                                 <StatsCell title="Average Plots per Project">
                                     {Number((totalPlots / totalProjects).toFixed(1)) || 0} plots
@@ -76,20 +78,21 @@ class UserStats extends React.Component {
                         </div>
                     </div>
 
-                    {perProject &&
-                        <div className="ProjectStats__user-table">
-                            <strong>User Stats:</strong>
-                            {perProject.map((project, uid) => (
-                                <StatsRow
-                                    key={uid}
-                                    title={`#${project.id} - ${project.name}`}
-                                    titleHref={`/collection?projectId=${project.id}`}
-                                    plots={project.plotCount}
-                                    analysisTime={project.analysisAverage}
-                                />
-                            ))}
-                        </div>
-                    }
+                    {perProject
+                        && (
+                            <div className="ProjectStats__user-table">
+                                <strong>User Stats:</strong>
+                                {perProject.map((project, uid) => (
+                                    <StatsRow
+                                        key={uid}
+                                        analysisTime={project.analysisAverage}
+                                        plots={project.plotCount}
+                                        title={`#${project.id} - ${project.name}`}
+                                        titleHref={`/collection?projectId=${project.id}`}
+                                    />
+                                ))}
+                            </div>
+                        )}
                 </div>
             </SectionBlock>
         );
@@ -103,7 +106,7 @@ class AccountForm extends React.Component {
             email: "",
             password: "",
             passwordConfirmation: "",
-            currentPassword: "",
+            currentPassword: ""
         };
     }
 
@@ -112,7 +115,7 @@ class AccountForm extends React.Component {
               {
                   method: "POST",
                   headers: {"Content-Type": "application/x-www-form-urlencoded"},
-                  body: getQueryString(this.state),
+                  body: getQueryString(this.state)
               })
             .then(response => Promise.all([response.ok, response.json()]))
             .then(data => {
@@ -130,7 +133,7 @@ class AccountForm extends React.Component {
     render() {
         return (
             <SectionBlock title="Account Settings">
-                <Fragment>
+                <>
                     <h1>{this.props.userName}</h1>
                     <form
                         onSubmit={e => {
@@ -141,13 +144,13 @@ class AccountForm extends React.Component {
                         <div className="form-group">
                             <label htmlFor="email">Reset email</label>
                             <input
-                                id="email"
-                                className="form-control"
                                 autoComplete="off"
+                                className="form-control"
+                                id="email"
+                                onChange={e => this.setState({email: e.target.value})}
                                 placeholder="New email"
                                 type="email"
                                 value={this.state.email}
-                                onChange={e => this.setState({email: e.target.value})}
                             />
                         </div>
                         <div className="form-group">
@@ -155,24 +158,24 @@ class AccountForm extends React.Component {
                             <div className="form-row">
                                 <div className="col">
                                     <input
-                                        id="password"
-                                        className="form-control mb-1"
                                         autoComplete="off"
+                                        className="form-control mb-1"
+                                        id="password"
+                                        onChange={e => this.setState({password: e.target.value})}
                                         placeholder="New password"
                                         type="password"
                                         value={this.state.password}
-                                        onChange={e => this.setState({password: e.target.value})}
                                     />
                                 </div>
                                 <div className="col">
                                     <input
-                                        id="password-confirmation"
-                                        className="form-control"
                                         autoComplete="off"
+                                        className="form-control"
+                                        id="password-confirmation"
+                                        onChange={e => this.setState({passwordConfirmation: e.target.value})}
                                         placeholder="New password confirmation"
                                         type="password"
                                         value={this.state.passwordConfirmation}
-                                        onChange={e => this.setState({passwordConfirmation: e.target.value})}
                                     />
                                 </div>
                             </div>
@@ -180,23 +183,23 @@ class AccountForm extends React.Component {
                         <div className="form-group">
                             <label htmlFor="current-password">Verify your identity</label>
                             <input
-                                id="current-password"
-                                className="form-control"
                                 autoComplete=" off"
+                                className="form-control"
+                                id="current-password"
+                                onChange={e => this.setState({currentPassword: e.target.value})}
                                 placeholder="Current password"
                                 type="password"
                                 value={this.state.currentPassword}
-                                onChange={e => this.setState({currentPassword: e.target.value})}
                             />
                         </div>
                         <input
                             className="btn btn-outline-lightgreen btn-block"
-                            name="update-account"
                             defaultValue="Update account settings"
+                            name="update-account"
                             type="submit"
                         />
                     </form>
-                </Fragment>
+                </>
             </SectionBlock>
         );
     }
@@ -204,10 +207,10 @@ class AccountForm extends React.Component {
 
 export function pageInit(args) {
     ReactDOM.render(
-        <NavigationBar userName={args.userName} userId={args.userId}>
+        <NavigationBar userId={args.userId} userName={args.userName}>
             <Account
-                userId={args.userId}
                 accountId={parseInt(args.accountId || args.userId)}
+                userId={args.userId}
                 userName={args.userName}
             />
         </NavigationBar>,

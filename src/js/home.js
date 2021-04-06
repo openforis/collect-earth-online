@@ -1,7 +1,7 @@
-import React, {Fragment} from "react";
+import React from "react";
 import ReactDOM from "react-dom";
 import {LoadingModal, NavigationBar} from "./components/PageComponents";
-import {mercator} from "./utils/mercator.js";
+import {mercator} from "./utils/mercator";
 import {sortAlphabetically, UnicodeIcon} from "./utils/generalUtils";
 import SvgIcon from "./components/SvgIcon";
 
@@ -14,7 +14,7 @@ class Home extends React.Component {
             institutions: [],
             showSidePanel: true,
             userInstitutions: [],
-            modalMessage: null,
+            modalMessage: null
         };
     }
 
@@ -31,7 +31,7 @@ class Home extends React.Component {
     }
 
     getProjects = () => fetch("/get-home-projects")
-        .then(response => response.ok ? response.json() : Promise.reject(response))
+        .then(response => (response.ok ? response.json() : Promise.reject(response)))
         .then(data => {
             if (data.length > 0) {
                 this.setState({projects: data});
@@ -42,7 +42,7 @@ class Home extends React.Component {
         });
 
     getImagery = () => fetch("/get-public-imagery")
-        .then(response => response.ok ? response.json() : Promise.reject(response))
+        .then(response => (response.ok ? response.json() : Promise.reject(response)))
         .then(data => {
             if (data.length > 0) {
                 this.setState({imagery: data});
@@ -53,7 +53,7 @@ class Home extends React.Component {
         });
 
     getInstitutions = () => fetch("/get-all-institutions")
-        .then(response => response.ok ? response.json() : Promise.reject(response))
+        .then(response => (response.ok ? response.json() : Promise.reject(response)))
         .then(data => {
             if (data.length > 0) {
                 const userInstitutions = (this.props.userRole !== "admin")
@@ -63,8 +63,8 @@ class Home extends React.Component {
                     ? data.filter(institution => !userInstitutions.includes(institution))
                     : data;
                 this.setState({
-                    institutions: institutions,
-                    userInstitutions: userInstitutions,
+                    institutions,
+                    userInstitutions
                 });
                 return Promise.resolve();
             } else {
@@ -72,7 +72,7 @@ class Home extends React.Component {
             }
         });
 
-    toggleSidebar = (mapConfig) => this.setState(
+    toggleSidebar = mapConfig => this.setState(
         {showSidePanel: !this.state.showSidePanel},
         () => mercator.resize(mapConfig)
     );
@@ -80,7 +80,7 @@ class Home extends React.Component {
     render() {
         return (
             <div id="bcontainer">
-                <span id="mobilespan"></span>
+                <span id="mobilespan"/>
                 <div className="Wrapper">
                     <div className="row tog-effect">
                         <SideBar
@@ -111,24 +111,21 @@ class MapPanel extends React.Component {
         this.state = {
             mapConfig: null,
             clusterExtent: [],
-            clickedFeatures: [],
+            clickedFeatures: []
         };
     }
 
     componentDidUpdate(prevProps, prevState) {
         if (this.state.mapConfig == null && this.props.imagery.length > 0 && prevProps.imagery.length === 0) {
             const homePageLayer = this.props.imagery.find(
-                function (imagery) {
-                    return imagery.title === "Mapbox Satellite w/ Labels";
-                }
+                imagery => imagery.title === "Mapbox Satellite w/ Labels"
             ) || this.props.imagery[0];
             const mapConfig = mercator.createMap("home-map-pane", [70, 15], 2.1, [homePageLayer]);
             mercator.setVisibleLayer(mapConfig, homePageLayer.id);
-            this.setState({mapConfig: mapConfig});
+            this.setState({mapConfig});
         }
         if (this.state.mapConfig && this.props.projects.length > 0
             && (!prevState.mapConfig || prevProps.projects.length === 0)) {
-
             this.addProjectMarkers(this.state.mapConfig,
                                    this.props.projects,
                                    40); // clusterDistance = 40, use null to disable clustering
@@ -138,15 +135,19 @@ class MapPanel extends React.Component {
     addProjectMarkers(mapConfig, projects, clusterDistance) {
         const projectSource = mercator.projectsToVectorSource(projects.filter(project => project.centroid));
         if (clusterDistance == null) {
-            mercator.addVectorLayer(mapConfig,
-                                    "projectMarkers",
-                                    projectSource,
-                                    mercator.ceoMapStyles("cluster", 0));
+            mercator.addVectorLayer(
+                mapConfig,
+                "projectMarkers",
+                projectSource,
+                mercator.ceoMapStyles("cluster", 0)
+            );
         } else {
-            mercator.addVectorLayer(mapConfig,
-                                    "projectMarkers",
-                                    mercator.makeClusterSource(projectSource, clusterDistance),
-                                    feature => mercator.ceoMapStyles("cluster", feature.get("features").length));
+            mercator.addVectorLayer(
+                mapConfig,
+                "projectMarkers",
+                mercator.makeClusterSource(projectSource, clusterDistance),
+                feature => mercator.ceoMapStyles("cluster", feature.get("features").length)
+            );
         }
         mercator.addOverlay(mapConfig, "projectPopup", document.getElementById("projectPopUp"));
         const overlay = mercator.getOverlayByTitle(mapConfig, "projectPopup");
@@ -154,7 +155,10 @@ class MapPanel extends React.Component {
                          event => {
                              if (mapConfig.map.hasFeatureAtPixel(event.pixel)) {
                                  const clickedFeatures = [];
-                                 mapConfig.map.forEachFeatureAtPixel(event.pixel, feature => clickedFeatures.push(feature));
+                                 mapConfig.map.forEachFeatureAtPixel(
+                                     event.pixel,
+                                     feature => clickedFeatures.push(feature)
+                                 );
                                  this.showProjectPopup(overlay, clickedFeatures[0]);
                              } else {
                                  overlay.setPosition(undefined);
@@ -167,13 +171,13 @@ class MapPanel extends React.Component {
             overlay.setPosition(feature.get("features")[0].getGeometry().getCoordinates());
             this.setState({
                 clusterExtent: mercator.getClusterExtent(feature),
-                clickedFeatures: feature.get("features"),
+                clickedFeatures: feature.get("features")
             });
         } else {
             overlay.setPosition(feature.getGeometry().getCoordinates());
             this.setState({
                 clusterExtent: [],
-                clickedFeatures: feature.get("features"),
+                clickedFeatures: feature.get("features")
             });
         }
     }
@@ -181,26 +185,25 @@ class MapPanel extends React.Component {
     render() {
         return (
             <div
-                id="mapPanel"
                 className={this.props.showSidePanel
-                                ? "col-lg-9 col-md-12 pl-0 full-height"
-                                : "col-lg-9 col-md-12 pl-0 col-xl-12 col-xl-9 full-height"}
+                    ? "col-lg-9 col-md-12 pl-0 full-height"
+                    : "col-lg-9 col-md-12 pl-0 col-xl-12 col-xl-9 full-height"}
+                id="mapPanel"
             >
                 <div
-                    id="toggle-map-button"
                     className="bg-lightgray"
+                    id="toggle-map-button"
                     onClick={() => this.props.toggleSidebar(this.state.mapConfig)}
                 >
                     {this.props.showSidePanel
                         ? <SvgIcon icon="leftDouble" size="1.25rem"/>
-                        : <SvgIcon icon="rightDouble" size="1.25rem"/>
-                    }
+                        : <SvgIcon icon="rightDouble" size="1.25rem"/>}
                 </div>
-                <div id="home-map-pane" className="full-height" style={{maxWidth: "inherit"}}></div>
+                <div className="full-height" id="home-map-pane" style={{maxWidth: "inherit"}}/>
                 <ProjectPopup
-                    mapConfig={this.state.mapConfig}
                     clusterExtent={this.state.clusterExtent}
                     features={this.state.clickedFeatures}
+                    mapConfig={this.state.mapConfig}
                 />
             </div>
         );
@@ -216,7 +219,7 @@ class SideBar extends React.Component {
             useFirstLetter: false,
             sortByNumber: true,
             showEmptyInstitutions: false,
-            showFilters: false,
+            showFilters: false
         };
     }
 
@@ -224,79 +227,83 @@ class SideBar extends React.Component {
 
     toggleFilterInstitution = () => this.setState({filterInstitution: !this.state.filterInstitution});
 
-    toggleShowEmptyInstitutions = () => this.setState({showEmptyInstitutions: !this.state.showEmptyInstitutions});
+    toggleShowEmptyInstitutions = () => this.setState({
+        showEmptyInstitutions: !this.state.showEmptyInstitutions
+    });
 
     toggleSortByNumber = () => this.setState({sortByNumber: !this.state.sortByNumber});
 
     toggleUseFirst = () => this.setState({useFirstLetter: !this.state.useFirstLetter});
 
-    updateFilterText = (newText) => this.setState({filterText: newText});
+    updateFilterText = newText => this.setState({filterText: newText});
 
     render() {
-        return this.props.showSidePanel &&
-            <div id="lPanel" className="col-lg-3 pr-0 pl-0 overflow-hidden full-height d-flex flex-column">
-                {(this.props.userRole === "admin" || this.props.userId === -1) &&
+        return this.props.showSidePanel && (
+            <div
+                className="col-lg-3 pr-0 pl-0 overflow-hidden full-height d-flex flex-column"
+                id="lPanel"
+            >
+                {(this.props.userRole === "admin" || this.props.userId === -1) && (
                     <div className="bg-darkgreen">
                         <h1 className="tree_label" id="panelTitle">Institutions</h1>
                     </div>
-                }
-                {this.props.userId > 0 &&
-                    <CreateInstitutionButton/>
-                }
+                )}
+                {this.props.userId > 0 && <CreateInstitutionButton/>}
                 <InstitutionFilter
-                    updateFilterText={this.updateFilterText}
-                    filterText={this.state.filterText}
-                    toggleUseFirst={this.toggleUseFirst}
-                    useFirstLetter={this.state.useFirstLetter}
                     filterInstitution={this.state.filterInstitution}
-                    toggleFilterInstitution={this.toggleFilterInstitution}
-                    sortByNumber={this.state.sortByNumber}
-                    toggleSortByNumber={this.toggleSortByNumber}
+                    filterText={this.state.filterText}
                     showEmptyInstitutions={this.state.showEmptyInstitutions}
-                    toggleShowEmptyInstitutions={this.toggleShowEmptyInstitutions}
                     showFilters={this.state.showFilters}
+                    sortByNumber={this.state.sortByNumber}
+                    toggleFilterInstitution={this.toggleFilterInstitution}
+                    toggleShowEmptyInstitutions={this.toggleShowEmptyInstitutions}
                     toggleShowFilters={this.toggleShowFilters}
+                    toggleSortByNumber={this.toggleSortByNumber}
+                    toggleUseFirst={this.toggleUseFirst}
+                    updateFilterText={this.updateFilterText}
+                    useFirstLetter={this.state.useFirstLetter}
                 />
-                {this.props.userId > 0 && this.props.userRole !== "admin" &&
-                    <Fragment>
+                {this.props.userId > 0 && this.props.userRole !== "admin" && (
+                    <>
                         <div className="bg-darkgreen">
                             <h2 className="tree_label" id="panelTitle">Your Affiliations</h2>
                         </div>
                         <InstitutionList
-                            userId={this.props.userId}
+                            filterInstitution={this.state.filterInstitution}
+                            filterText={this.state.filterText}
+                            institutionListType="user"
                             institutions={this.props.userInstitutions}
                             projects={this.props.projects}
-                            filterText={this.state.filterText}
-                            useFirstLetter={this.state.useFirstLetter}
-                            filterInstitution={this.state.filterInstitution}
-                            sortByNumber={this.state.sortByNumber}
                             showEmptyInstitutions={this.state.showEmptyInstitutions}
-                            institutionListType="user"
+                            sortByNumber={this.state.sortByNumber}
+                            useFirstLetter={this.state.useFirstLetter}
+                            userId={this.props.userId}
                         />
                         <div className="bg-darkgreen">
                             <h2 className="tree_label" id="panelTitle">Other Institutions</h2>
                         </div>
-                    </Fragment>
-                }
-                {this.props.institutions.length > 0 && this.props.projects.length > 0
-                ?
-                    <InstitutionList
-                        userId={this.props.userId}
-                        institutions={this.props.institutions}
-                        projects={this.props.projects}
-                        filterText={this.state.filterText}
-                        useFirstLetter={this.state.useFirstLetter}
-                        filterInstitution={this.state.filterInstitution}
-                        sortByNumber={this.state.sortByNumber}
-                        showEmptyInstitutions={this.state.showEmptyInstitutions}
-                        institutionListType="institutions"
-                    />
-                : (
-                    this.props.userInstitutions.length > 0
-                        ? <h3 className="p-3">No unaffiliated institutions found.</h3>
-                        : <h3 className="p-3">Loading data...</h3>
+                    </>
                 )}
-            </div>;
+                {this.props.institutions.length > 0 && this.props.projects.length > 0
+                    ? (
+                        <InstitutionList
+                            filterInstitution={this.state.filterInstitution}
+                            filterText={this.state.filterText}
+                            institutionListType="institutions"
+                            institutions={this.props.institutions}
+                            projects={this.props.projects}
+                            showEmptyInstitutions={this.state.showEmptyInstitutions}
+                            sortByNumber={this.state.sortByNumber}
+                            useFirstLetter={this.state.useFirstLetter}
+                            userId={this.props.userId}
+                        />
+                    ) : (
+                        this.props.userInstitutions.length > 0
+                            ? <h3 className="p-3">No unaffiliated institutions found.</h3>
+                            : <h3 className="p-3">Loading data...</h3>
+                    )}
+            </div>
+        );
     }
 }
 
@@ -308,7 +315,7 @@ function InstitutionList({
     useFirstLetter,
     showEmptyInstitutions,
     sortByNumber,
-    institutionListType,
+    institutionListType
 }) {
     const filterTextLower = filterText.toLocaleLowerCase();
 
@@ -318,11 +325,11 @@ function InstitutionList({
                             ? proj.name.toLocaleLowerCase().startsWith(filterTextLower)
                             : proj.name.toLocaleLowerCase().includes(filterTextLower)));
 
-    const filterString = (inst) => useFirstLetter
-                                    ? inst.name.toLocaleLowerCase().startsWith(filterTextLower)
-                                    : inst.name.toLocaleLowerCase().includes(filterTextLower);
+    const filterString = inst => (useFirstLetter
+        ? inst.name.toLocaleLowerCase().startsWith(filterTextLower)
+        : inst.name.toLocaleLowerCase().includes(filterTextLower));
 
-    const filterHasProj = (inst) => filteredProjects.some(proj => inst.id === proj.institutionId)
+    const filterHasProj = inst => filteredProjects.some(proj => inst.id === proj.institutionId)
                                     || showEmptyInstitutions
                                     || inst.isMember;
 
@@ -332,16 +339,15 @@ function InstitutionList({
         .filter(inst => !filterInstitution || filterTextLower.length > 0 || filterHasProj(inst))
         // Filtering by projects, and has projects to show
         .filter(inst => filterInstitution || filteredProjects.some(proj => inst.id === proj.institutionId))
-        .sort((a, b) => sortByNumber
-                            ? projects.filter(proj => b.id === proj.institutionId).length
+        .sort((a, b) => (sortByNumber
+            ? projects.filter(proj => b.id === proj.institutionId).length
                                 - projects.filter(proj => a.id === proj.institutionId).length
-                            : sortAlphabetically(a.name, b.name));
+            : sortAlphabetically(a.name, b.name)));
 
     const userInstStyle = institutionListType === "user" ? {maxHeight: "fit-content"} : {};
 
-    return (
-        filteredInstitutions.length > 0
-        ?
+    return filteredInstitutions.length > 0
+        ? (
             <ul
                 className="tree"
                 style={{
@@ -349,21 +355,21 @@ function InstitutionList({
                     overflowX: "hidden",
                     minHeight: "3.5rem",
                     flex: "1 1 0%",
-                    ...userInstStyle,
+                    ...userInstStyle
                 }}
             >
-                {filteredInstitutions.map((institution, uid) =>
+                {filteredInstitutions.map((institution, uid) => (
                     <Institution
                         key={uid}
+                        forceInstitutionExpand={!filterInstitution && filterText.length > 0}
                         id={institution.id}
                         name={institution.name}
                         projects={filteredProjects
                             .filter(project => project.institutionId === institution.id)}
-                        forceInstitutionExpand={!filterInstitution && filterText.length > 0}
                     />
-                )}
+                ))}
             </ul>
-        :
+        ) : (
             <h3 className="p-3">
                 {filterInstitution
                     ? institutionListType === "user"
@@ -371,66 +377,66 @@ function InstitutionList({
                         : "No Institutions Found..."
                     : "No Projects Found..."}
             </h3>
-    );
+        );
 }
 
 function InstitutionFilter(props) {
     return (
-        <div id="filter-institution" className="form-control" style={{height: "fit-content"}}>
+        <div className="form-control" id="filter-institution" style={{height: "fit-content"}}>
             <div style={{display: "inline-flex", width: "100%"}}>
                 <input
-                    type="text"
-                    placeholder="Enter text to filter"
                     className="form-control"
-                    value={props.filterText}
                     onChange={e => props.updateFilterText(e.target.value)}
+                    placeholder="Enter text to filter"
+                    type="text"
+                    value={props.filterText}
                 />
-                <a href="#" onClick={props.toggleShowFilters}>
+                <button onClick={props.toggleShowFilters} type="button">
                     <img
-                        src={props.showFilters ? "/img/hidefilter.png" : "/img/showfilter.png"}
-                        width="40"
-                        height="40"
-                        style={{padding: "5px"}}
                         alt="Show/Hide Filters"
+                        height="40"
+                        src={props.showFilters ? "/img/hidefilter.png" : "/img/showfilter.png"}
+                        style={{padding: "5px"}}
                         title="show/hide filters"
+                        width="40"
                     />
-                </a>
+                </button>
             </div>
-            {props.showFilters &&
-                <Fragment>
+            {props.showFilters && (
+                <>
                     <div className="d-inlineflex">
                         <div className="form-check form-check-inline">
                             Filter By:
                         </div>
                         <div className="form-check form-check-inline">
                             <input
+                                checked={props.filterInstitution}
                                 className="form-check-input"
-                                type="radio"
                                 id="filter-by-word"
                                 name="filter-institution"
-                                checked={props.filterInstitution}
                                 onChange={props.toggleFilterInstitution}
+                                type="radio"
                             />
                             Institution
                         </div>
                         <div className="form-check form-check-inline">
                             <input
+                                checked={!props.filterInstitution}
                                 className="form-check-input"
-                                type="radio"
                                 id="filter-by-letter"
                                 name="filter-institution"
-                                checked={!props.filterInstitution}
                                 onChange={props.toggleFilterInstitution}
+                                type="radio"
                             />
                             Project
                         </div>
                         <div className="form-check form-check-inline">
                             <input
+                                checked={props.useFirstLetter}
                                 className="form-check-input"
-                                type="checkbox"
                                 id="filter-by-first-letter"
                                 onChange={props.toggleUseFirst}
-                                checked={props.useFirstLetter}
+                                type="checkbox"
                             />
                             Match from beginning
                         </div>
@@ -441,36 +447,36 @@ function InstitutionFilter(props) {
                         </div>
                         <div className="form-check form-check-inline">
                             <input
-                                className="form-check-input"
-                                type="radio"
-                                name="sort-institution"
                                 checked={props.sortByNumber}
+                                className="form-check-input"
+                                name="sort-institution"
                                 onChange={props.toggleSortByNumber}
+                                type="radio"
                             />
                             # of Projects
                         </div>
                         <div className="form-check form-check-inline">
                             <input
-                                className="form-check-input"
-                                type="radio"
-                                name="sort-institution"
                                 checked={!props.sortByNumber}
+                                className="form-check-input"
+                                name="sort-institution"
                                 onChange={props.toggleSortByNumber}
+                                type="radio"
                             />
                             ABC..
                         </div>
                         <div className="form-check form-check-inline">
                             <input
-                                className="form-check-input"
-                                type="checkbox"
                                 checked={props.showEmptyInstitutions}
+                                className="form-check-input"
                                 onChange={props.toggleShowEmptyInstitutions}
+                                type="checkbox"
                             />
                             Show Empty Institutions
                         </div>
                     </div>
-                </Fragment>
-            }
+                </>
+            )}
         </div>
     );
 }
@@ -480,10 +486,10 @@ function CreateInstitutionButton() {
         <div className="btn-yellow text-center p-2">
             <a
                 className="create-institution"
+                href="/create-institution"
                 style={{display:"block"}}
-                href={"/create-institution"}
             >
-                <UnicodeIcon icon="add" backgroundColor="#31BAB0"/> Create New Institution
+                <UnicodeIcon backgroundColor="#31BAB0" icon="add"/> Create New Institution
             </a>
         </div>
     );
@@ -493,7 +499,7 @@ class Institution extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
-            showProjectList: false,
+            showProjectList: false
         };
     }
 
@@ -505,13 +511,15 @@ class Institution extends React.Component {
             <li>
                 <div
                     className="btn btn-lightgreen btn-block p-2 rounded-0"
-                    style={{marginBottom: "2px"}}
                     onClick={this.toggleShowProjectList}
+                    style={{marginBottom: "2px"}}
                 >
                     <div className="d-flex justify-content-between align-items-center">
                         <div style={{flex: "0 0 1rem"}}>
                             {props.projects && props.projects.length > 0 && (
-                                props.forceInstitutionExpand || this.state.showProjectList ? "\u25BC" : "\u25BA"
+                                props.forceInstitutionExpand || this.state.showProjectList
+                                    ? "\u25BC"
+                                    : "\u25BA"
                             )}
                         </div>
                         <div style={{flex: 1}}>
@@ -528,12 +536,12 @@ class Institution extends React.Component {
                         </div>
                     </div>
                 </div>
-                {(props.forceInstitutionExpand || this.state.showProjectList) &&
+                {(props.forceInstitutionExpand || this.state.showProjectList) && (
                     <ProjectList
                         id={props.id}
                         projects={props.projects}
                     />
-                }
+                )}
             </li>
         );
     }
@@ -541,15 +549,15 @@ class Institution extends React.Component {
 
 function ProjectList(props) {
     return props.projects
-        .map((project, uid) =>
+        .map((project, uid) => (
             <Project
                 key={uid}
+                editable={project.editable}
                 id={project.id}
                 institutionId={props.id}
-                editable={project.editable}
                 name={project.name}
             />
-        );
+        ));
 }
 
 function Project(props) {
@@ -558,17 +566,17 @@ function Project(props) {
             <div style={{flexGrow: 1, marginRight: ".25rem"}}>
                 <a
                     className="btn btn-sm btn-outline-lightgreen btn-block"
+                    href={`/collection?projectId=${props.id}`}
                     style={{
                         whiteSpace: "nowrap",
                         overflow: "hidden",
-                        textOverflow: "ellipsis",
+                        textOverflow: "ellipsis"
                     }}
-                    href={`/collection?projectId=${props.id}`}
                 >
                     {props.name || "*un-named*"}
                 </a>
             </div>
-            {props.editable &&
+            {props.editable && (
                 <div>
                     <a
                         className="edit-project btn btn-sm btn-outline-yellow btn-block"
@@ -577,7 +585,7 @@ function Project(props) {
                         EDIT
                     </a>
                 </div>
-            }
+            )}
         </div>
     );
 }
@@ -593,25 +601,25 @@ class ProjectPopup extends React.Component {
 
     render() {
         return (
-            <div id="projectPopUp" className="d-flex flex-column" style={{maxHeight: "40vh"}}>
+            <div className="d-flex flex-column" id="projectPopUp" style={{maxHeight: "40vh"}}>
                 <div className="cTitle">
                     <h1>{this.props.features.length > 1 ? "Cluster info" : "Project info"}</h1>
                 </div>
                 <div className="cContent" style={{padding: "10px", overflow: "auto"}}>
                     <table className="table table-sm" style={{tableLayout: "fixed"}}>
                         <tbody>
-                            {this.props.features.map((feature, uid) =>
+                            {this.props.features.map((feature, uid) => (
                                 <React.Fragment key={uid}>
                                     <tr className="d-flex" style={{borderTop: "1px solid gray"}}>
                                         <td className="small col-6 px-0 my-auto">Name</td>
                                         <td className="small col-6 pr-0">
                                             <a
-                                                href={`/collection?projectId=${feature.get("projectId")}`}
                                                 className="btn btn-sm btn-block btn-outline-lightgreen"
+                                                href={`/collection?projectId=${feature.get("projectId")}`}
                                                 style={{
                                                     whiteSpace: "nowrap",
                                                     overflow: "hidden",
-                                                    textOverflow: "ellipsis",
+                                                    textOverflow: "ellipsis"
                                                 }}
                                             >
                                                 {feature.get("name")}
@@ -629,19 +637,19 @@ class ProjectPopup extends React.Component {
                                         <td className="small col-6 pr-0">{feature.get("numPlots")}</td>
                                     </tr>
                                 </React.Fragment>
-                            )}
+                            ))}
                         </tbody>
                     </table>
                 </div>
                 <button
-                    type="button"
-                    id="zoomToCluster"
                     className="mt-0 mb-0 btn btn-sm btn-block btn-outline-yellow"
+                    id="zoomToCluster"
                     style={{
                         cursor: "pointer",
                         minWidth: "350px",
-                        display: this.props.features.length > 1 ? "block" : "none",
+                        display: this.props.features.length > 1 ? "block" : "none"
                     }}
+                    type="button"
                 >
                     <UnicodeIcon icon="magnify"/> Zoom to cluster
                 </button>
@@ -652,7 +660,7 @@ class ProjectPopup extends React.Component {
 
 export function pageInit(args) {
     ReactDOM.render(
-        <NavigationBar userName={args.userName} userId={args.userId}>
+        <NavigationBar userId={args.userId} userName={args.userName}>
             <Home
                 userId={args.userId || -1}
                 userRole={args.userRole || ""}

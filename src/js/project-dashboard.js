@@ -15,7 +15,7 @@ class ProjectDashboard extends React.Component {
             imageryList: [],
             mapConfig: null,
             plotList: [],
-            isMapShown: false,
+            isMapShown: false
         };
     }
 
@@ -27,7 +27,9 @@ class ProjectDashboard extends React.Component {
 
     componentDidUpdate(prevProps, prevState) {
         // Load imagery after getting project details to find institution.
-        if (Object.entries(prevState.projectDetails).length === 0 && prevState.projectDetails.constructor === Object && this.state.projectDetails.institution) {
+        if (Object.entries(prevState.projectDetails).length === 0
+                && prevState.projectDetails.constructor === Object
+                && this.state.projectDetails.institution) {
             this.getImageryList(this.state.projectDetails.institution);
         }
         // Show the project map
@@ -36,9 +38,9 @@ class ProjectDashboard extends React.Component {
                 projectDetails: {
                     ...this.state.projectDetails,
                     baseMapSource: this.state.projectDetails.baseMapSource
-                                   || this.state.imageryList[0].title,
+                                   || this.state.imageryList[0].title
                 },
-                isMapShown: true,
+                isMapShown: true
             });
             this.showProjectMap();
         }
@@ -122,11 +124,13 @@ class ProjectDashboard extends React.Component {
         // Display a bounding box with the project's AOI on the map and zoom to it
         mercator.addVectorLayer(mapConfig,
                                 "currentAOI",
-                                mercator.geometryToVectorSource(mercator.parseGeoJson(this.state.projectDetails.boundary, true)),
+                                mercator.geometryToVectorSource(
+                                    mercator.parseGeoJson(this.state.projectDetails.boundary, true)
+                                ),
                                 mercator.ceoMapStyles("geom", "yellow"));
         mercator.zoomMapToLayer(mapConfig, "currentAOI");
         // Show the plot centers on the map (but constrain to <= 100 points)
-        this.setState({mapConfig: mapConfig});
+        this.setState({mapConfig});
     }
 
     render() {
@@ -141,9 +145,9 @@ class ProjectDashboard extends React.Component {
                     </div>
                     <div className="bg-lightgray col-4">
                         <ProjectStats
-                            stats={this.state.stats}
                             availability={this.state.projectDetails.availability}
                             isProjectAdmin={this.state.projectDetails.isProjectAdmin}
+                            stats={this.state.stats}
                         />
                     </div>
                 </div>
@@ -163,17 +167,17 @@ function ProjectStats(props) {
             members,
             publishedDate,
             unanalyzedPlots,
-            userStats,
+            userStats
         },
         availability,
-        isProjectAdmin,
+        isProjectAdmin
     } = props;
     const numPlots = flaggedPlots + analyzedPlots + unanalyzedPlots;
     return numPlots
-        ?
+        ? (
             <div className="d-flex flex-column">
                 <h2 className="header px-0">Project Stats</h2>
-                <div id="project-stats" className="p-1">
+                <div className="p-1" id="project-stats">
                     <div className="mb-4">
                         <h3>Project Dates:</h3>
                         <div className="container row pl-4">
@@ -213,36 +217,33 @@ function ProjectStats(props) {
                             </div>
                         </div>
                     </div>
-                    {userStats &&
-                    <div>
-                        <h3>Plots Completed:</h3>
-                        <StatsRow
-                            title="Total"
-                            plots={userStats.reduce((p, c) => p + c.plots, 0)}
-                            analysisTime={userStats.reduce((p, c) => p + c.timedPlots, 0) > 0
-                                ? (userStats.reduce((p, c) => p + c.seconds, 0)
-                                    / userStats.reduce((p, c) => p + c.timedPlots, 0)
-                                    / 1.0).toFixed(2)
-                                : 0
-                            }
-                        />
-                        {isProjectAdmin && userStats.map((user, uid) => (
+                    {userStats && (
+                        <div>
+                            <h3>Plots Completed:</h3>
                             <StatsRow
-                                key={uid}
-                                title={user.user}
-                                plots={user.plots}
-                                analysisTime={user.timedPlots > 0
-                                    ? (user.seconds / user.timedPlots / 1.0).toFixed(2)
-                                    : 0
-                                }
+                                analysisTime={userStats.reduce((p, c) => p + c.timedPlots, 0) > 0
+                                    ? (userStats.reduce((p, c) => p + c.seconds, 0)
+                                        / userStats.reduce((p, c) => p + c.timedPlots, 0)
+                                        / 1.0).toFixed(2)
+                                    : 0}
+                                plots={userStats.reduce((p, c) => p + c.plots, 0)}
+                                title="Total"
                             />
-                        ))}
-                    </div>
-                    }
+                            {isProjectAdmin && userStats.map((user, uid) => (
+                                <StatsRow
+                                    key={uid}
+                                    analysisTime={user.timedPlots > 0
+                                        ? (user.seconds / user.timedPlots / 1.0).toFixed(2)
+                                        : 0}
+                                    plots={user.plots}
+                                    title={user.user}
+                                />
+                            ))}
+                        </div>
+                    )}
                 </div>
             </div>
-        :
-            <p>Loading...</p>;
+        ) : <p>Loading...</p>;
 }
 
 function ProjectAOI() {
@@ -256,7 +257,7 @@ function ProjectAOI() {
 
 export function pageInit(args) {
     ReactDOM.render(
-        <NavigationBar userName={args.userName} userId={args.userId}>
+        <NavigationBar userId={args.userId} userName={args.userName}>
             <ProjectDashboard
                 projectId={args.projectId || "0"}
             />

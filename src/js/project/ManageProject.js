@@ -5,65 +5,57 @@ import ReviewForm from "./ReviewForm";
 import {ProjectContext} from "./constants";
 
 export default class ManageProject extends React.Component {
-    constructor(props) {
-        super(props);
-    }
-
     componentDidMount() {
         this.context.processModal("Loading Project Details", this.getProjectDetails);
         this.context.setProjectDetails({
             plotFileBase64: null,
-            sampleFileBase64: null,
+            sampleFileBase64: null
         });
     }
 
     /// API Calls
 
-    getProjectDetails = () =>
-        Promise.all([
-            this.getProjectById(this.context.projectId),
-            this.getProjectImagery(this.context.projectId),
-            this.getProjectPlots(this.context.projectId),
-        ])
-            .catch(response => {
-                console.log(response);
-                alert("Error retrieving the project info. See console for details.");
-            });
+    getProjectDetails = () => Promise.all([
+        this.getProjectById(this.context.projectId),
+        this.getProjectImagery(this.context.projectId),
+        this.getProjectPlots(this.context.projectId)
+    ])
+        .catch(response => {
+            console.log(response);
+            alert("Error retrieving the project info. See console for details.");
+        });
 
-    getProjectById = (projectId) =>
-        fetch(`/get-project-by-id?projectId=${projectId}`)
-            .then(response => response.ok ? response.json() : Promise.reject(response))
-            .then(data => {
-                if (data === "") {
-                    alert("No project found with ID " + projectId + ".");
-                    window.location = "/home";
-                } else {
-                    this.context.setProjectDetails(data);
-                    this.context.setContextState({originalProject: data});
-                }
-            })
-            .catch(() => Promise.reject("Error retrieving the project."));
+    getProjectById = projectId => fetch(`/get-project-by-id?projectId=${projectId}`)
+        .then(response => (response.ok ? response.json() : Promise.reject(response)))
+        .then(data => {
+            if (data === "") {
+                alert("No project found with ID " + projectId + ".");
+                window.location = "/home";
+            } else {
+                this.context.setProjectDetails(data);
+                this.context.setContextState({originalProject: data});
+            }
+        })
+        .catch(() => Promise.reject("Error retrieving the project."));
 
     // TODO: just return with the project info
-    getProjectImagery = (projectId) =>
-        fetch(`/get-project-imagery?projectId=${projectId}`)
-            .then(response => response.ok ? response.json() : Promise.reject(response))
-            .then(data => {
-                this.context.setProjectDetails({projectImageryList: data.map(imagery => imagery.id)});
-            })
-            .catch(() => Promise.reject("Error retrieving the project imagery list."));
+    getProjectImagery = projectId => fetch(`/get-project-imagery?projectId=${projectId}`)
+        .then(response => (response.ok ? response.json() : Promise.reject(response)))
+        .then(data => {
+            this.context.setProjectDetails({projectImageryList: data.map(imagery => imagery.id)});
+        })
+        .catch(() => Promise.reject("Error retrieving the project imagery list."));
 
-    getProjectPlots = (projectId) =>
-        fetch(`/get-project-plots?projectId=${projectId}`)
-            .then(response => response.ok ? response.json() : Promise.reject(response))
-            .then(data => this.context.setProjectDetails({plots: data}))
-            .catch(() => Promise.reject("Error retrieving the plot list."));
+    getProjectPlots = projectId => fetch(`/get-project-plots?projectId=${projectId}`)
+        .then(response => (response.ok ? response.json() : Promise.reject(response)))
+        .then(data => this.context.setProjectDetails({plots: data}))
+        .catch(() => Promise.reject("Error retrieving the plot list."));
 
     render() {
         return (
             <div
-                id="review-project"
                 className="d-flex flex-column full-height align-items-center p-3"
+                id="review-project"
             >
                 <div
                     style={{
@@ -71,7 +63,7 @@ export default class ManageProject extends React.Component {
                         height: "100%",
                         justifyContent: "center",
                         width: "100%",
-                        overflow: "auto",
+                        overflow: "auto"
                     }}
                 >
                     <div
@@ -108,20 +100,20 @@ class ProjectManagement extends React.Component {
                 button: "Publish",
                 update: this.publishProject,
                 description: "Admins can review, edit, and test collecting the project.  Publish the project in order for users to begin collection.",
-                canEdit: true,
+                canEdit: true
             },
             published: {
                 button: "Close",
                 update: this.closeProject,
                 description: "Users can begin collecting.  Limited changes to the project details can be made.  Close the project to prevent anymore updates.",
-                canEdit: true,
+                canEdit: true
             },
             closed: {
                 button: "Reopen",
                 update: this.publishProject,
                 description: "The project is closed to all changes.  Reopen the project for additional collection.",
-                canEdit: false,
-            },
+                canEdit: false
+            }
         };
     }
 
@@ -134,61 +126,63 @@ class ProjectManagement extends React.Component {
             ? "Do you want to publish this project?  This action will clear plots collected by admins to allow collecting by users."
             : "Do you want to re-open this project?  Members will be allowed to collect plots again.";
         if (confirm(message)) {
-            processModal("Publishing project", () =>
-                fetch(`/publish-project?projectId=${projectId}&clearSaved=${unpublished}`,
-                      {method: "POST"})
-                    .then(response => response.ok ? response.json() : Promise.reject(response))
-                    .then(data => {
-                        setProjectDetails(data);
-                        setContextState({originalProject: data});
-                    })
-                    .catch(error => {
-                        console.log(error);
-                        alert("Error publishing project. See console for details.");
-                    })
-            );
+            processModal("Publishing project", () => fetch(
+                `/publish-project?projectId=${projectId}&clearSaved=${unpublished}`,
+                {method: "POST"}
+            )
+                .then(response => (response.ok ? response.json() : Promise.reject(response)))
+                .then(data => {
+                    setProjectDetails(data);
+                    setContextState({originalProject: data});
+                })
+                .catch(error => {
+                    console.log(error);
+                    alert("Error publishing project. See console for details.");
+                }));
         }
     };
 
     closeProject = () => {
         const {setProjectDetails, setContextState, processModal, projectId} = this.context;
         if (confirm("Do you want to close this project?")) {
-            processModal("Closing project", () =>
-                fetch(`/close-project?projectId=${projectId}`, {method: "POST"})
-                    .then(response => response.ok ? response.json() : Promise.reject(response))
-                    .then(data => {
-                        setProjectDetails(data);
-                        setContextState({originalProject: data});
-                    })
-                    .catch(error => {
-                        console.log(error);
-                        alert("Error closing project. See console for details.");
-                    })
-            );
+            processModal("Closing project", () => fetch(
+                `/close-project?projectId=${projectId}`,
+                {method: "POST"}
+            )
+                .then(response => (response.ok ? response.json() : Promise.reject(response)))
+                .then(data => {
+                    setProjectDetails(data);
+                    setContextState({originalProject: data});
+                })
+                .catch(error => {
+                    console.log(error);
+                    alert("Error closing project. See console for details.");
+                }));
         }
     };
 
     deleteProject = () => {
         if (confirm("Do you want to delete this project? This operation cannot be undone.")) {
-            this.context.processModal("Deleting project", () =>
-                fetch(`/archive-project?projectId=${this.context.id}`, {method: "POST"})
-                    .then(response => {
-                        if (response.ok) {
-                            alert("Project " + this.context.id + " has been deleted.");
-                            window.location = `/review-institution?institutionId=${this.context.institution}`;
-                        } else {
-                            console.log(response);
-                            alert("Error deleting project. See console for details.");
-                        }
-                    })
-            );
+            this.context.processModal("Deleting project", () => fetch(
+                `/archive-project?projectId=${this.context.id}`,
+                {method: "POST"}
+            )
+                .then(response => {
+                    if (response.ok) {
+                        alert("Project " + this.context.id + " has been deleted.");
+                        window.location = `/review-institution?institutionId=${this.context.institution}`;
+                    } else {
+                        console.log(response);
+                        alert("Error deleting project. See console for details.");
+                    }
+                }));
         }
     };
 
     render() {
         const {button, update, description, canEdit} = this.projectStates[this.context.availability] || {};
         return (
-            <div id="project-management" className="d-flex flex-column">
+            <div className="d-flex flex-column" id="project-management">
                 <div className="d-flex">
                     <div className="col-7">
                         <div className="ProjectStats__dates-table mb-4">
@@ -203,16 +197,16 @@ class ProjectManagement extends React.Component {
                                     Date Published
                                     <span className="badge badge-pill bg-lightgreen ml-3">
                                         {this.context.publishedDate || (this.context.availability === "unpublished"
-                                        ? "Unpublished"
-                                        : "Unknown")}
+                                            ? "Unpublished"
+                                            : "Unknown")}
                                     </span>
                                 </div>
                                 <div>
                                     Date Closed
                                     <span className="badge badge-pill bg-lightgreen ml-3">
                                         {this.context.closedDate || (["archived", "closed"].includes(this.context.availability)
-                                        ? "Unknown"
-                                        : "Open")}
+                                            ? "Unknown"
+                                            : "Open")}
                                     </span>
                                 </div>
                             </div>
@@ -223,14 +217,12 @@ class ProjectManagement extends React.Component {
                         <h3 className="my-2">Modify Project Details</h3>
                         <input
                             className="btn btn-outline-red btn-sm w-100"
+                            onClick={() => update()}
                             type="button"
                             value={(button || "Close") + " Project"}
-                            onClick={() => update()}
                         />
                         <input
                             className="btn btn-outline-red btn-sm w-100"
-                            type="button"
-                            value="Edit Project"
                             onClick={() => {
                                 if (canEdit) {
                                     this.context.setContextState({designMode: "wizard"});
@@ -238,49 +230,51 @@ class ProjectManagement extends React.Component {
                                     alert("You cannot edit a closed project.");
                                 }
                             }}
+                            type="button"
+                            value="Edit Project"
                         />
                         <input
                             className="btn btn-outline-red btn-sm w-100"
+                            onClick={this.deleteProject}
                             type="button"
                             value="Delete Project"
-                            onClick={this.deleteProject}
                         />
                         <h3 className="my-2">External Links</h3>
                         <input
                             className="btn btn-outline-lightgreen btn-sm w-100"
-                            type="button"
-                            value="Configure Geo-Dash"
                             onClick={() => window.open(
                                 "/widget-layout-editor?editable=true&" // TODO, drop unused 'editable'
                                     + `institutionId=${this.context.institution}`
                                     + `&projectId=${this.context.id}`,
                                 "_geo-dash"
                             )}
+                            type="button"
+                            value="Configure Geo-Dash"
                         />
                         <input
                             className="btn btn-outline-lightgreen btn-sm w-100"
+                            onClick={() => window.open(`/collection?projectId=${this.context.id}`)}
                             type="button"
                             value="Collect"
-                            onClick={() => window.open(`/collection?projectId=${this.context.id}`)}
                         />
                         <input
                             className="btn btn-outline-lightgreen btn-sm w-100"
+                            onClick={() => window.open(`/project-dashboard?projectId=${this.context.id}`)}
                             type="button"
                             value="Project Dashboard"
-                            onClick={() => window.open(`/project-dashboard?projectId=${this.context.id}`)}
                         />
                         <h3 className="my-2">Export Data</h3>
                         <input
                             className="btn btn-outline-lightgreen btn-sm w-100"
+                            onClick={() => window.open(`/dump-project-aggregate-data?projectId=${this.context.id}`, "_blank")}
                             type="button"
                             value="Download Plot Data"
-                            onClick={() => window.open(`/dump-project-aggregate-data?projectId=${this.context.id}`, "_blank")}
                         />
                         <input
                             className="btn btn-outline-lightgreen btn-sm w-100"
+                            onClick={() => window.open(`/dump-project-raw-data?projectId=${this.context.id}`, "_blank")}
                             type="button"
                             value="Download Sample Data"
-                            onClick={() => window.open(`/dump-project-raw-data?projectId=${this.context.id}`, "_blank")}
                         />
                     </div>
                 </div>

@@ -2,8 +2,8 @@ import React from "react";
 
 export function sortAlphabetically(a, b) {
     return a < b ? -1
-            : a > b ? 1
-                : 0;
+        : a > b ? 1
+            : 0;
 }
 
 export function capitalizeFirst(str) {
@@ -17,32 +17,33 @@ export function capitalizeFirst(str) {
 export function UnicodeIcon({icon, backgroundColor}) {
     return (
         icon === "leftCaret" ? "\u25C0"
-        : icon === "rightCaret" ? "\u25B6"
-        : icon === "upCaret" ? "\u25B2"
-        : icon === "downCaret" ? "\u25BC"
-        : icon === "rightArrow" ? "\u27A1"
-        : icon === "edit" ? "\u270D"
-        : icon === "trash" ? <span style={{fontWeight: "normal"}}>{"\uD83D\uDDD1"}</span>
-        : icon === "noAction" ? <span className="ml-2 mr-3">{"\u20E0"}</span>
-        : icon === "magnify" ? "\uD83D\uDD0D"
-        : icon === "info" ? "\u24D8"
-        : icon === "save" ? "\uD83D\uDCBE"
-        : icon === "expand" ? "\u21F1"
-        : icon === "collapse" ? "\u21F2"
-        : icon === "add" ?
-            <span
-                className="mr-1 px-1"
-                style={{
-                    backgroundColor: backgroundColor,
-                    borderRadius: "2px",
-                    color: "white",
-                    fontSize: ".7rem",
-                    marginTop: "2px",
-                }}
-            >
-                {"\u2795"}
-            </span>
-        : ""
+            : icon === "rightCaret" ? "\u25B6"
+                : icon === "upCaret" ? "\u25B2"
+                    : icon === "downCaret" ? "\u25BC"
+                        : icon === "rightArrow" ? "\u27A1"
+                            : icon === "edit" ? "\u270D"
+                                : icon === "trash" ? <span style={{fontWeight: "normal"}}>{"\uD83D\uDDD1"}</span>
+                                    : icon === "noAction" ? <span className="ml-2 mr-3">{"\u20E0"}</span>
+                                        : icon === "magnify" ? "\uD83D\uDD0D"
+                                            : icon === "info" ? "\u24D8"
+                                                : icon === "save" ? "\uD83D\uDCBE"
+                                                    : icon === "expand" ? "\u21F1"
+                                                        : icon === "collapse" ? "\u21F2"
+                                                            : icon === "add" ? (
+                                                                <span
+                                                                    className="mr-1 px-1"
+                                                                    style={{
+                                                                        backgroundColor,
+                                                                        borderRadius: "2px",
+                                                                        color: "white",
+                                                                        fontSize: ".7rem",
+                                                                        marginTop: "2px"
+                                                                    }}
+                                                                >
+                                                                    {"\u2795"}
+                                                                </span>
+                                                            )
+                                                                : ""
     );
 }
 
@@ -85,7 +86,7 @@ export const monthlyMapping = {
     "09":  "September",
     "10": "October",
     "11": "November",
-    "12": "December",
+    "12": "December"
 };
 
 export function formatDateISO(date) {
@@ -95,7 +96,7 @@ export function formatDateISO(date) {
     return [
         date.getFullYear(),
         (month > 9 ? "" : "0") + month,
-        (day > 9 ? "" : "0") + day,
+        (day > 9 ? "" : "0") + day
     ].join("-");
 }
 
@@ -106,7 +107,7 @@ export function encodeFileAsBase64(file, callback) {
 }
 
 export function KBtoBase64Length(kb) {
-    return kb * 1024 * 4 / 3;
+    return (kb * 1024 * 4) / 3;
 }
 
 export function last(array) {

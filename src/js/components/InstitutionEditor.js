@@ -1,5 +1,5 @@
 import React from "react";
-import {encodeFileAsBase64} from "../utils/generalUtils.js";
+import {encodeFileAsBase64} from "../utils/generalUtils";
 
 export default function InstitutionEditor({
     title,
@@ -8,78 +8,76 @@ export default function InstitutionEditor({
     url,
     acceptTOS,
     buttonGroup,
-    setInstitutionDetails,
+    setInstitutionDetails
 }) {
-
     return (
-        <div id="institution-details" className="row justify-content-center">
-            <div id="institution-edit" className="col-xl-6 col-lg-6 border pb-3 mb-2">
+        <div className="row justify-content-center" id="institution-details">
+            <div className="col-xl-6 col-lg-6 border pb-3 mb-2" id="institution-edit">
                 <h2 className="header">
                     {title}
                 </h2>
                 <div className="mb-3">
                     <label htmlFor="institution-name">Name</label>
                     <input
-                        id="institution-name"
                         className="form-control mb-1 mr-sm-2"
+                        id="institution-name"
+                        maxLength="400"
+                        onChange={e => setInstitutionDetails("name", e.target.value)}
                         type="text"
                         value={name}
-                        onChange={e => setInstitutionDetails("name", e.target.value)}
-                        maxLength="400"
                     />
                 </div>
                 <div className="mb-3">
                     <label htmlFor="institution-url">URL</label>
                     <input
-                        id="institution-url"
-                        type="text"
                         className="form-control mb-1 mr-sm-2"
-                        value={url}
-                        onChange={e => setInstitutionDetails("url", e.target.value)}
+                        id="institution-url"
                         maxLength="400"
+                        onChange={e => setInstitutionDetails("url", e.target.value)}
+                        type="text"
+                        value={url}
                     />
                 </div>
                 <div className="mb-3">
                     <label htmlFor="institution-logo">Logo</label>
                     <input
-                        id="institution-logo"
-                        className="form-control mb-1 mr-sm-2"
-                        type="file"
                         accept="image/*"
+                        className="form-control mb-1 mr-sm-2"
+                        id="institution-logo"
                         onChange={e => {
                             setInstitutionDetails("logo", e.target.files[0].name);
                             encodeFileAsBase64(e.target.files[0], r => setInstitutionDetails("base64Image", r));
                         }}
+                        type="file"
                     />
                 </div>
                 <div className="mb-3">
                     <label htmlFor="institution-description">Description</label>
                     <textarea
-                        id="institution-description"
                         className="form-control"
+                        id="institution-description"
+                        maxLength="2000"
+                        onChange={e => setInstitutionDetails("description", e.target.value)}
                         rows="4"
                         value={description}
-                        onChange={e => setInstitutionDetails("description", e.target.value)}
-                        maxLength="2000"
                     />
                 </div>
-                {acceptTOS !== undefined &&
+                {acceptTOS !== undefined && (
                     <div className="form-check mb-3">
                         <input
-                            id="tos-check"
-                            type="checkbox"
-                            className="form-check-input"
                             checked={acceptTOS}
+                            className="form-check-input"
+                            id="tos-check"
                             onChange={() => setInstitutionDetails("acceptTOS", !acceptTOS)}
+                            type="checkbox"
                         />
                         <label className="form-check-label" htmlFor="tos-check">
-                            I agree to the <a target="_blank" href="/terms">Terms of Service</a>.
+                            I agree to the <a href="/terms" target="_blank">Terms of Service</a>.
                         </label>
                     </div>
-                }
+                )}
                 {buttonGroup()}
             </div>
         </div>
     );
-
 }

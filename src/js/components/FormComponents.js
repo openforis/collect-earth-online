@@ -31,7 +31,7 @@ export class CollapsibleSectionBlock extends React.Component {
         this.state = {
             showContent: false,
             height: "0px",
-            myRef: null,
+            myRef: null
         };
     }
 
@@ -41,11 +41,11 @@ export class CollapsibleSectionBlock extends React.Component {
         }
     }
 
-    setInnerRef = (ref) => this.setState({myRef: ref});
+    setInnerRef = ref => this.setState({myRef: ref});
 
     toggleOpenClose = () => this.setState({
         showContent: !this.state.showContent,
-        height: this.state.height !== "auto" && this.state.showContent ? "0px" : this.state.myRef.scrollHeight,
+        height: this.state.height !== "auto" && this.state.showContent ? "0px" : this.state.myRef.scrollHeight
     });
 
     updateAfterTransition = () => {
@@ -60,8 +60,8 @@ export class CollapsibleSectionBlock extends React.Component {
             <div>
                 <h2
                     className="header px-0"
-                    style={{fontSize: "1.25rem", padding: ".75rem", cursor: "pointer"}}
                     onClick={() => this.toggleOpenClose()}
+                    style={{fontSize: "1.25rem", padding: ".75rem", cursor: "pointer"}}
                 >
                     {title}
                     <span
@@ -69,10 +69,10 @@ export class CollapsibleSectionBlock extends React.Component {
                             transition: "transform 250ms linear 0s",
                             transform: this.state.showContent ? "rotateZ(180deg)" : "rotateZ(0deg)",
                             float: "right",
-                            marginRight: "2rem",
+                            marginRight: "2rem"
                         }}
                     >
-                        <UnicodeIcon icon={"downCaret"}/>
+                        <UnicodeIcon icon="downCaret"/>
                     </span>
                 </h2>
                 <div
@@ -81,7 +81,7 @@ export class CollapsibleSectionBlock extends React.Component {
                     style={{
                         height: this.state.height,
                         overflow: "hidden",
-                        transition: "height 250ms linear 0s",
+                        transition: "height 250ms linear 0s"
                     }}
                 >
                     {children}
@@ -109,25 +109,21 @@ export function StatsRow({title, plots, analysisTime, titleHref}) {
         <div className="StatsRow row mx-1 py-1 border-bottom">
             <div className="col-7">
                 {titleHref
-                    ? <a href={titleHref} target="_blank" rel="noreferrer noopener">{title}</a>
-                    : title
-                }
+                    ? <a href={titleHref} rel="noreferrer noopener" target="_blank">{title}</a>
+                    : title}
             </div>
             <div className="col-2">
                 <span className="badge badge-pill bg-lightgreen">{plots} plots</span>
             </div>
             <div className="col-3">
-                {analysisTime ?
-                    (
+                {analysisTime
+                    ? (
                         <span className="badge badge-pill bg-lightgreen">
                             {analysisTime >= 60
                                 ? `${(analysisTime / 60).toFixed(2)} mins/plot`
-                                : `${analysisTime} secs/plot`
-                            }
+                                : `${analysisTime} secs/plot`}
                         </span>
-                    )
-                    : ("--")
-                }
+                    ) : ("--")}
             </div>
         </div>
     );
@@ -137,12 +133,12 @@ export class ExpandableImage extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
-            fullSize: false,
+            fullSize: false
         };
     }
 
-    getImageStyle = () =>
-        this.state.fullSize ? {
+    getImageStyle = () => (this.state.fullSize
+        ? {
             border: "1px solid #808080",
             float: "none",
             position: "fixed",
@@ -155,14 +151,14 @@ export class ExpandableImage extends React.Component {
             maxWidth: "99%",
             maxHeight: "calc(98% - 60px)",
             width: "auto",
-            height: "auto",
+            height: "auto"
         } : {
             border: "1px solid #808080",
-            ...this.props.previewStyles,
-        };
+            ...this.props.previewStyles
+        });
 
-    getMainDivStyle = () =>
-        this.state.fullSize ? {
+    getMainDivStyle = () => (this.state.fullSize
+        ? {
             cursor: "pointer",
             position: "fixed",
             zIndex: "100",
@@ -170,10 +166,10 @@ export class ExpandableImage extends React.Component {
             top: "0",
             width: "100%",
             height: "100%",
-            backgroundColor: "rgba(0,0,0,0.1)",
+            backgroundColor: "rgba(0,0,0,0.1)"
         } : {
-            cursor: "pointer",
-        };
+            cursor: "pointer"
+        });
 
     render() {
         const {src} = this.props;
@@ -184,8 +180,8 @@ export class ExpandableImage extends React.Component {
                 style={this.getMainDivStyle()}
             >
                 <img
-                    src={src}
                     className={this.state.fullSize ? "ExpandableImage__previewImg fullSize" : "ExpandableImage__previewImg"}
+                    src={src}
                     style={this.getImageStyle()}
                 />
             </div>
@@ -204,8 +200,8 @@ export function CollapsibleTitle({title, showGroup, toggleShow}) {
         >
             <h3
                 className="btn btn-sm btn-outline-darkgray"
-                style={showGroup ? buttonDownStyle : buttonRightStyle}
                 onClick={toggleShow}
+                style={showGroup ? buttonDownStyle : buttonRightStyle}
             >
                 {showGroup ? <UnicodeIcon icon="downCaret"/> : <UnicodeIcon icon="rightCaret"/>}
             </h3>

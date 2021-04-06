@@ -13,40 +13,40 @@ export function Overview(props) {
                 setProjectDetails,
                 projectOptions,
                 projectOptions: {showGEEScript, showPlotInformation, collectConfidence, autoLaunchGeoDash},
-                projectId,
-            }) =>
+                projectId
+            }) => (
                 <div id="project-info">
                     {projectId < 0 && <ProjectTemplateSelection {...props}/>}
                     <div className="form-group">
                         <h3 htmlFor="project-name">Name</h3>
                         <input
-                            id="project-name"
                             className="form-control form-control-sm"
+                            id="project-name"
+                            maxLength="200"
+                            onChange={e => setProjectDetails({name: e.target.value})}
                             type="text"
                             value={name}
-                            onChange={e => setProjectDetails({name: e.target.value})}
-                            maxLength="200"
                         />
                     </div>
                     <div className="form-group">
                         <h3 htmlFor="project-description">Description</h3>
                         <textarea
-                            id="project-description"
                             className="form-control form-control-sm"
-                            value={description}
-                            onChange={e => setProjectDetails({description: e.target.value})}
+                            id="project-description"
                             maxLength="2000"
+                            onChange={e => setProjectDetails({description: e.target.value})}
+                            value={description}
                         />
                     </div>
                     <h3>Visibility</h3>
-                    <div id="project-visibility" className="mb-3">
+                    <div className="mb-3" id="project-visibility">
                         <div className="form-check form-check-inline">
                             <input
-                                id="privacy-public"
-                                className="form-check-input"
-                                type="radio"
                                 checked={privacyLevel === "public"}
+                                className="form-check-input"
+                                id="privacy-public"
                                 onChange={() => setProjectDetails({privacyLevel: "public"})}
+                                type="radio"
                             />
                             <label
                                 className="form-check-label"
@@ -57,11 +57,11 @@ export function Overview(props) {
                         </div>
                         <div className="form-check form-check-inline">
                             <input
-                                id="privacy-users"
-                                className="form-check-input"
-                                type="radio"
                                 checked={privacyLevel === "users"}
+                                className="form-check-input"
+                                id="privacy-users"
                                 onChange={() => setProjectDetails({privacyLevel: "users"})}
+                                type="radio"
                             />
                             <label className="form-check-label" htmlFor="privacy-users">
                                 Users: <i>Logged In Users</i>
@@ -69,11 +69,11 @@ export function Overview(props) {
                         </div>
                         <div className="form-check form-check-inline">
                             <input
-                                id="privacy-institution"
-                                className="form-check-input"
-                                type="radio"
                                 checked={privacyLevel === "institution"}
+                                className="form-check-input"
+                                id="privacy-institution"
                                 onChange={() => setProjectDetails({privacyLevel: "institution"})}
+                                type="radio"
                             />
                             <label className="form-check-label" htmlFor="privacy-institution">
                                 Institution: <i>Group Members</i>
@@ -81,82 +81,81 @@ export function Overview(props) {
                         </div>
                         <div className="form-check form-check-inline">
                             <input
-                                id="privacy-private"
-                                className="form-check-input"
-                                type="radio"
                                 checked={privacyLevel === "private"}
+                                className="form-check-input"
+                                id="privacy-private"
                                 onChange={() => setProjectDetails({privacyLevel: "private"})}
+                                type="radio"
                             />
                             <label className="form-check-label" htmlFor="privacy-private">
                                 Private: <i>Group Admins</i>
                             </label>
                         </div>
-                        <p id="privacy-level-text" className="font-italic ml-2 small">
-                            {(privacyLevel === "public" || privacyLevel === "users") &&
-                                "**Public imagery will be visible to all users, and institution imagery will only be available"
-                                    + " to the users in this institution."
-                            }
+                        <p className="font-italic ml-2 small" id="privacy-level-text">
+                            {(privacyLevel === "public" || privacyLevel === "users")
+                                && "**Public imagery will be visible to all users, and institution imagery will only be available"
+                                    + " to the users in this institution."}
                         </p>
                     </div>
                     <h3>Project Options</h3>
                     <div className="form-check">
                         <input
-                            id="showGEEScript"
-                            className="form-check-input"
-                            type="checkbox"
                             checked={showGEEScript}
+                            className="form-check-input"
+                            id="showGEEScript"
                             onChange={() => setProjectDetails({
-                                projectOptions: {...projectOptions, showGEEScript: !showGEEScript},
+                                projectOptions: {...projectOptions, showGEEScript: !showGEEScript}
                             })}
+                            type="checkbox"
                         />
-                        <label htmlFor="showGEEScript" className="form-check-label">
+                        <label className="form-check-label" htmlFor="showGEEScript">
                             Show GEE Script Link on Collection Page
                         </label>
                     </div>
                     <div className="form-check">
                         <input
-                            id="showPlotInformation"
-                            className="form-check-input"
-                            type="checkbox"
                             checked={showPlotInformation}
+                            className="form-check-input"
+                            id="showPlotInformation"
                             onChange={() => setProjectDetails({
-                                projectOptions: {...projectOptions, showPlotInformation: !showPlotInformation},
+                                projectOptions: {...projectOptions, showPlotInformation: !showPlotInformation}
                             })}
+                            type="checkbox"
                         />
-                        <label htmlFor="showPlotInformation" className="form-check-label">
+                        <label className="form-check-label" htmlFor="showPlotInformation">
                             Show Extra Plot Columns on Collection Page
                         </label>
                     </div>
                     <div className="form-check">
                         <input
-                            id="collectConfidence"
-                            className="form-check-input"
-                            type="checkbox"
                             checked={collectConfidence}
+                            className="form-check-input"
+                            id="collectConfidence"
                             onChange={() => setProjectDetails({
-                                projectOptions: {...projectOptions, collectConfidence: !collectConfidence},
+                                projectOptions: {...projectOptions, collectConfidence: !collectConfidence}
                             })}
+                            type="checkbox"
                         />
-                        <label htmlFor="collectConfidence" className="form-check-label">
+                        <label className="form-check-label" htmlFor="collectConfidence">
                             Collect Plot Confidence on Collection Page
                         </label>
                     </div>
                     <div className="form-check">
                         <input
-                            id="autoLaunchGeoDash"
-                            className="form-check-input"
-                            type="checkbox"
                             checked={autoLaunchGeoDash}
+                            className="form-check-input"
+                            id="autoLaunchGeoDash"
                             onChange={() => setProjectDetails({
-                                projectOptions: {...projectOptions, autoLaunchGeoDash: !autoLaunchGeoDash},
+                                projectOptions: {...projectOptions, autoLaunchGeoDash: !autoLaunchGeoDash}
                             })}
+                            type="checkbox"
                         />
-                        <label htmlFor="autoLaunchGeoDash" className="form-check-label">
+                        <label className="form-check-label" htmlFor="autoLaunchGeoDash">
                             Auto-launch Geo-Dash
                         </label>
                     </div>
                 </div>
-            }
+            )}
         </ProjectContext.Consumer>
     );
 }
@@ -166,7 +165,7 @@ class ProjectTemplateSelection extends React.Component {
         super(props);
         this.state = {
             projectFilter: "",
-            selectedTemplateProjectId: -1,
+            selectedTemplateProjectId: -1
         };
     }
 
@@ -185,64 +184,64 @@ class ProjectTemplateSelection extends React.Component {
                         <input
                             className="form-control form-control-sm"
                             id="project-filter"
+                            onChange={e => this.setState({projectFilter: e.target.value})}
                             type="text"
                             value={this.state.projectFilter}
-                            onChange={e => this.setState({projectFilter: e.target.value})}
                         />
                     </div>
                     <div className="form-group mx-3" style={{flex: "1 1 1px"}}>
                         <h3 htmlFor="project-template">Select Template</h3>
                         <select
                             className="form-control-sm form-control"
-                            style={{height: "calc(1.5em + .5rem + 2px)"}}
                             id="project-template"
+                            onChange={e => this.setState({
+                                selectedTemplateProjectId: parseInt(e.target.value)
+                            })}
                             size="1"
+                            style={{height: "calc(1.5em + .5rem + 2px)"}}
                             value={this.state.selectedTemplateProjectId}
-                            onChange={e => this.setState({selectedTemplateProjectId: parseInt(e.target.value)})}
                         >
                             {templateProjectList
                                 && templateProjectList[0].id > 0
-                                && <option key={-1} value={-1}>- Select Project -</option>
-                            }
+                                && <option key={-1} value={-1}>- Select Project -</option>}
                             {templateProjectList && templateProjectList
                                 .filter(proj => (proj.id + proj.name.toLocaleLowerCase())
                                     .includes(this.state.projectFilter.toLocaleLowerCase()))
-                                .map((proj, uid) => <option key={uid} value={proj.id}>{proj.id} - {proj.name}</option>)
-                            }
+                                .map((proj, uid) => <option key={uid} value={proj.id}>{proj.id} - {proj.name}</option>)}
                         </select>
                     </div>
                     <span className="form-group">
                         <input
-                            type="button"
                             className="btn btn-lightgreen mr-1"
-                            style={{height: "calc(1.5em + .5rem + 2px)", padding: "0 .5rem"}}
-                            value="Load"
                             disabled={this.state.selectedTemplateProjectId === -1}
                             onClick={() => setProjectTemplate(this.state.selectedTemplateProjectId)}
+                            style={{height: "calc(1.5em + .5rem + 2px)", padding: "0 .5rem"}}
+                            type="button"
+                            value="Load"
                         />
                         <input
-                            type="button"
                             className="btn btn-lightgreen"
-                            style={{height: "calc(1.5em + .5rem + 2px)", padding: "0 .5rem"}}
-                            value="Clear"
                             onClick={() => {
                                 this.setState({selectedTemplateProjectId: -1});
                                 clearTemplateSelection();
                             }}
+                            style={{height: "calc(1.5em + .5rem + 2px)", padding: "0 .5rem"}}
+                            type="button"
+                            value="Clear"
                         />
                     </span>
                 </div>
-                {templateProjectId > 0 &&
+                {templateProjectId > 0 && (
                     <div className="pb-2">
                         <h3 className="mb-1">Copy Options</h3>
                         <div className="d-flex">
                             <div className="form-check form-check-inline">
                                 <input
+                                    checked={useTemplatePlots}
                                     className="form-check-input"
-                                    type="checkbox"
                                     id="use-template-plots"
                                     onChange={this.props.toggleTemplatePlots}
-                                    checked={useTemplatePlots}
+                                    type="checkbox"
                                 />
                                 <label
                                     className="form-check-label"
@@ -253,11 +252,11 @@ class ProjectTemplateSelection extends React.Component {
                             </div>
                             <div className="form-check form-check-inline mt-1">
                                 <input
+                                    checked={useTemplateWidgets}
                                     className="form-check-input"
-                                    type="checkbox"
                                     id="use-template-widgets"
                                     onChange={() => setProjectDetails({useTemplateWidgets: !useTemplateWidgets})}
-                                    checked={useTemplateWidgets}
+                                    type="checkbox"
                                 />
                                 <label
                                     className="form-check-label"
@@ -268,7 +267,7 @@ class ProjectTemplateSelection extends React.Component {
                             </div>
                         </div>
                     </div>
-                }
+                )}
             </div>
         );
     }
@@ -278,7 +277,7 @@ ProjectTemplateSelection.contextType = ProjectContext;
 export function OverviewReview() {
     return (
         <ProjectContext.Consumer>
-            {({name, description, privacyLevel, projectOptions}) =>
+            {({name, description, privacyLevel, projectOptions}) => (
                 <div className="d-flex flex-column">
                     <label><b>Name:</b> {name}</label>
                     <label><b>Description:</b> {description}</label>
@@ -303,7 +302,7 @@ export function OverviewReview() {
                         </li>
                     </ul>
                 </div>
-            }
+            )}
         </ProjectContext.Consumer>
     );
 }
@@ -312,7 +311,10 @@ export function OverviewIntro() {
     return (
         <div className="p-3">
             <h3 className="mb-3">Welcome to the project creation widget!</h3>
-            <label>You can use the Back and Next buttons below or the circles above each of the six project creation steps at the top of this page to navigate between stages of the wizard.</label>
+            <label>
+                You can use the Back and Next buttons below or the circles above each of the six
+                 project creation steps at the top of this page to navigate between stages of the wizard.
+            </label>
         </div>
     );
 }

@@ -8,7 +8,7 @@ class Login extends React.Component {
         super(props);
         this.state = {
             email: "",
-            password: "",
+            password: ""
         };
     }
 
@@ -17,7 +17,7 @@ class Login extends React.Component {
               {
                   method: "POST",
                   headers: {"Content-Type": "application/x-www-form-urlencoded"},
-                  body: getQueryString(this.state),
+                  body: getQueryString(this.state)
               })
             .then(response => Promise.all([response.ok, response.json()]))
             .then(data => {
@@ -45,27 +45,27 @@ class Login extends React.Component {
                             <div className="form-group">
                                 <label htmlFor="email">Email address</label>
                                 <input
-                                    id="email"
                                     className="form-control"
+                                    id="email"
+                                    onChange={e => this.setState({email: e.target.value})}
                                     placeholder="Enter email"
                                     type="email"
                                     value={this.state.email}
-                                    onChange={e => this.setState({email: e.target.value})}
                                 />
                             </div>
                             <div className="form-group">
                                 <label htmlFor="password">Password</label>
                                 <input
+                                    className="form-control"
                                     id="password"
+                                    onChange={e => this.setState({password: e.target.value})}
                                     placeholder="Password"
                                     type="password"
-                                    className="form-control"
                                     value={this.state.password}
-                                    onChange={e => this.setState({password: e.target.value})}
                                 />
                             </div>
                             <div className="d-flex justify-content-between align-items-center">
-                                <a href={"/password-request"}>Forgot your password?</a>
+                                <a href="/password-request">Forgot your password?</a>
                                 <button className="btn btn-lightgreen" type="submit">Login</button>
                             </div>
                         </form>
@@ -75,10 +75,10 @@ class Login extends React.Component {
                         <div className="d-flex justify-content-end">
                             <input
                                 className="btn btn-lightgreen"
-                                type="button"
-                                value="Register"
                                 name="register"
                                 onClick={() => window.location = "/register"}
+                                type="button"
+                                value="Register"
                             />
                         </div>
                     </div>
@@ -90,7 +90,7 @@ class Login extends React.Component {
 
 export function pageInit(args) {
     ReactDOM.render(
-        <NavigationBar userName={args.userName} userId={args.userId}>
+        <NavigationBar userId={args.userId} userName={args.userName}>
             <Login
                 returnurl={args.returnurl || ""}
             />

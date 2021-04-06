@@ -9,7 +9,7 @@ import AOIMap from "./AOIMap";
 import {SampleDesign, SampleReview, SamplePreview} from "./SampleDesign";
 
 import SvgIcon from "../components/SvgIcon";
-import {mercator} from "../utils/mercator.js";
+import {mercator} from "../utils/mercator";
 import {last, removeFromSet} from "../utils/generalUtils";
 import {ProjectContext, plotLimit, perPlotLimit, sampleLimit} from "./constants";
 
@@ -21,63 +21,66 @@ export default class CreateProjectWizard extends React.Component {
             overview: {
                 title: "Project Overview",
                 description: "General information about the project",
-                StepComponent: () =>
+                StepComponent: () => (
                     <Overview
                         clearTemplateSelection={this.clearTemplateSelection}
                         setProjectTemplate={this.setProjectTemplate}
-                        toggleTemplatePlots={this.toggleTemplatePlots}
                         templateProjectList={this.state.templateProjectList}
-                    />,
+                        toggleTemplatePlots={this.toggleTemplatePlots}
+                    />
+                ),
                 helpDescription: "Introduction",
                 StepHelpComponent: OverviewIntro,
-                validate: this.validateOverview,
+                validate: this.validateOverview
             },
             imagery: {
                 title: "Imagery Selection",
                 description: "Imagery available to use during collection",
                 StepComponent: ImagerySelection,
                 helpDescription: "Imagery Preview",
-                StepHelpComponent: () =>
+                StepHelpComponent: () => (
                     <AOIMap
-                        context={this.context}
                         canDrag={false}
-                    />,
-                validate: this.validateImagery,
+                        context={this.context}
+                    />
+                ),
+                validate: this.validateImagery
             },
             plots: {
                 title: "Plot Design",
                 description: "Area of interest and plot generation for collection",
-                StepComponent: () => this.context.useTemplatePlots
+                StepComponent: () => (this.context.useTemplatePlots
                     ? <PlotDesignReview/>
                     : (
                         <PlotDesign
-                            getTotalPlots={this.getTotalPlots}
                             boundary={this.context.boundary}
+                            getTotalPlots={this.getTotalPlots}
                         />
-                    ),
+                    )),
                 helpDescription: "Collection Map Preview",
-                StepHelpComponent: () =>
+                StepHelpComponent: () => (
                     <AOIMap
-                        context={this.context}
                         canDrag={!this.context.useTemplatePlots
                                  && !["csv", "shp"].includes(this.context.plotDistribution)}
-                    />,
-                validate: this.validatePlotData,
+                        context={this.context}
+                    />
+                ),
+                validate: this.validatePlotData
             },
             samples: {
                 title: "Sample Design",
                 description: "Sample generation for collection",
-                StepComponent: () => this.context.useTemplatePlots
+                StepComponent: () => (this.context.useTemplatePlots
                     ? <SampleReview/>
                     : (
                         <SampleDesign
-                            getTotalPlots={this.getTotalPlots}
                             getSamplesPerPlot={this.getSamplesPerPlot}
+                            getTotalPlots={this.getTotalPlots}
                         />
-                    ),
+                    )),
                 helpDescription: "Collection Map Preview",
                 StepHelpComponent: SamplePreview,
-                validate: this.validateSampleData,
+                validate: this.validateSampleData
             },
             questions: {
                 title: "Survey Questions",
@@ -85,7 +88,7 @@ export default class CreateProjectWizard extends React.Component {
                 StepComponent: SurveyQuestionDesign,
                 helpDescription: "Question Preview",
                 StepHelpComponent: SurveyQuestionHelp,
-                validate: this.validateSurveyQuestions,
+                validate: this.validateSurveyQuestions
             },
             rules: {
                 title: "Survey Rules",
@@ -93,8 +96,8 @@ export default class CreateProjectWizard extends React.Component {
                 StepComponent: SurveyRuleDesign,
                 helpDescription: "Question Preview",
                 StepHelpComponent: SurveyQuestionHelp,
-                validate: () => [],
-            },
+                validate: () => []
+            }
         };
 
         this.state = {
@@ -102,7 +105,7 @@ export default class CreateProjectWizard extends React.Component {
             complete: new Set(),
             templateProject: {},
             templatePlots: [],
-            templateProjectList: [{id: -1, name: "Loading..."}],
+            templateProjectList: [{id: -1, name: "Loading..."}]
         };
     }
 
@@ -115,76 +118,75 @@ export default class CreateProjectWizard extends React.Component {
 
     /// API Calls
 
-    getTemplateProjects = () =>
-        fetch("/get-template-projects")
-            .then(response => response.ok ? response.json() : Promise.reject(response))
-            .then(data =>
-                this.setState({templateProjectList: data && data.length > 0 ? data : [{id: -1, name: "No template projects found"}]}
-                ))
-            .catch(response => {
-                console.log(response);
-                this.setState({templateProjectList: [{id: -1, name: "Failed to load"}]});
-            });
+    getTemplateProjects = () => fetch("/get-template-projects")
+        .then(response => (response.ok ? response.json() : Promise.reject(response)))
+        .then(data => this.setState({
+            templateProjectList: data && data.length > 0
+                ? data
+                : [{id: -1, name: "No template projects found"}]
+        }))
+        .catch(response => {
+            console.log(response);
+            this.setState({templateProjectList: [{id: -1, name: "Failed to load"}]});
+        });
 
-    getTemplateProject = (projectId) =>
-        Promise.all([this.getTemplateById(projectId),
-                     this.getProjectPlots(projectId),
-                     this.getProjectImagery(projectId)])
-            .then(() => this.context.setProjectDetails({templateProjectId: projectId}))
-            .catch(response => {
-                console.log(response);
-                this.setState({templatePlots: [], templateProject: {}});
-                this.context.setProjectDetails({templateProjectId: -1});
-                alert("Error getting complete template info. See console for details.");
-            });
+    getTemplateProject = projectId => Promise.all(
+        [this.getTemplateById(projectId),
+         this.getProjectPlots(projectId),
+         this.getProjectImagery(projectId)]
+    )
+        .then(() => this.context.setProjectDetails({templateProjectId: projectId}))
+        .catch(response => {
+            console.log(response);
+            this.setState({templatePlots: [], templateProject: {}});
+            this.context.setProjectDetails({templateProjectId: -1});
+            alert("Error getting complete template info. See console for details.");
+        });
 
-    getTemplateById = (projectId) =>
-        fetch(`/get-template-by-id?projectId=${projectId}`)
-            .then(response => response.ok ? response.json() : Promise.reject(response))
-            .then(data => {
-                this.setState({templateProject: data});
-                const institutionImageryIds = this.context.institutionImagery.map(i => i.id);
-                this.context.setProjectDetails({
-                    ...data,
-                    templateProjectId: projectId,
-                    imageryId: institutionImageryIds.includes(data.imageryId)
-                        ? data.imageryId
-                        : institutionImageryIds[0],
-                    useTemplatePlots: true,
-                    useTemplateWidgets: true,
-                }, this.checkAllSteps);
-            })
-            .catch(error => {
-                console.log(error);
-                Promise.reject("Get project info failed.");
-            });
+    getTemplateById = projectId => fetch(`/get-template-by-id?projectId=${projectId}`)
+        .then(response => (response.ok ? response.json() : Promise.reject(response)))
+        .then(data => {
+            this.setState({templateProject: data});
+            const institutionImageryIds = this.context.institutionImagery.map(i => i.id);
+            this.context.setProjectDetails({
+                ...data,
+                templateProjectId: projectId,
+                imageryId: institutionImageryIds.includes(data.imageryId)
+                    ? data.imageryId
+                    : institutionImageryIds[0],
+                useTemplatePlots: true,
+                useTemplateWidgets: true
+            }, this.checkAllSteps);
+        })
+        .catch(error => {
+            console.log(error);
+            Promise.reject("Get project info failed.");
+        });
 
-    getProjectPlots = (projectId) =>
-        fetch(`/get-project-plots?projectId=${projectId}`)
-            .then(response => response.ok ? response.json() : Promise.reject(response))
-            .then(data => {
-                this.setState({templatePlots: data});
-                this.context.setProjectDetails({plots: data});
-            })
-            .catch(error => {
-                console.log(error);
-                Promise.reject("Error retrieving plot list. See console for details.");
-            });
+    getProjectPlots = projectId => fetch(`/get-project-plots?projectId=${projectId}`)
+        .then(response => (response.ok ? response.json() : Promise.reject(response)))
+        .then(data => {
+            this.setState({templatePlots: data});
+            this.context.setProjectDetails({plots: data});
+        })
+        .catch(error => {
+            console.log(error);
+            Promise.reject("Error retrieving plot list. See console for details.");
+        });
 
     // TODO: just return with the project info because we only need the integer ID
-    getProjectImagery = (projectId) =>
-        fetch("/get-project-imagery?projectId=" + projectId)
-            .then(response => response.ok ? response.json() : Promise.reject(response))
-            .then(data => {
-                const institutionImageryIds = this.context.institutionImagery.map(i => i.id);
-                this.context.setProjectDetails({
-                    projectImageryList: data.map(i => i.id).filter(id => institutionImageryIds.includes(id)),
-                });
-            })
-            .catch(error => {
-                console.log(error);
-                Promise.reject("Error retrieving imagery list. See console for details.");
+    getProjectImagery = projectId => fetch("/get-project-imagery?projectId=" + projectId)
+        .then(response => (response.ok ? response.json() : Promise.reject(response)))
+        .then(data => {
+            const institutionImageryIds = this.context.institutionImagery.map(i => i.id);
+            this.context.setProjectDetails({
+                projectImageryList: data.map(i => i.id).filter(id => institutionImageryIds.includes(id))
             });
+        })
+        .catch(error => {
+            console.log(error);
+            Promise.reject("Error retrieving imagery list. See console for details.");
+        });
 
     /// Validations
 
@@ -226,7 +228,7 @@ export default class CreateProjectWizard extends React.Component {
     validateOverview = () => {
         const {name, description} = this.context;
         const errorList = [
-            (name === "" || description === "") && "A project must contain a name and description.",
+            (name === "" || description === "") && "A project must contain a name and description."
         ];
         return errorList.filter(e => e);
     };
@@ -240,7 +242,7 @@ export default class CreateProjectWizard extends React.Component {
             requiresPublic
                 && `Projects with privacy level of ${privacyLevel} require at least one public imagery.`,
             imageryId <= 0
-                && "Select a valid Basemap.",
+                && "Select a valid Basemap."
         ];
         return errorList.filter(e => e);
     };
@@ -255,7 +257,7 @@ export default class CreateProjectWizard extends React.Component {
             plotSize,
             plotFileName,
             useTemplatePlots,
-            originalProject,
+            originalProject
         } = this.context;
         const totalPlots = this.getTotalPlots();
         const plotFileNeeded = !useTemplatePlots
@@ -274,7 +276,7 @@ export default class CreateProjectWizard extends React.Component {
             (plotDistribution === "shp" && plotFileNeeded && !(plotFileName || "").includes(".zip"))
                 && "A plot SHP (.zip) file is required.",
             (totalPlots > plotLimit)
-                && "The plot size limit has been exceeded. Check the Plot Design section for detailed info.",
+                && "The plot size limit has been exceeded. Check the Plot Design section for detailed info."
         ];
         return errorList.filter(e => e);
     };
@@ -289,7 +291,7 @@ export default class CreateProjectWizard extends React.Component {
             plotFileName,
             sampleFileName,
             useTemplatePlots,
-            originalProject,
+            originalProject
         } = this.context;
         const totalPlots = this.getTotalPlots();
         const samplesPerPlot = this.getSamplesPerPlot();
@@ -313,7 +315,7 @@ export default class CreateProjectWizard extends React.Component {
                 && sampleResolution >= plotSize)
                 && "The sample spacing must be less than the plot width.",
             (samplesPerPlot > perPlotLimit || (totalPlots * samplesPerPlot) > sampleLimit)
-                && "The sample size limit has been exceeded. Check the Sample Design section for detailed info.",
+                && "The sample size limit has been exceeded. Check the Sample Design section for detailed info."
         ];
         return errorList.filter(e => e);
     };
@@ -324,19 +326,19 @@ export default class CreateProjectWizard extends React.Component {
             (surveyQuestions.length === 0)
                 && "A survey must include at least one question.",
             (surveyQuestions.some(sq => sq.answers.length === 0))
-                && "All survey questions must contain at least one answer.",
+                && "All survey questions must contain at least one answer."
         ];
         return errorList.filter(e => e);
     };
 
     /// Changing Step
 
-    getSteps = () => (this.context.projectId === -1 || this.context.originalProject.availability === "unpublished")
+    getSteps = () => ((this.context.projectId === -1 || this.context.originalProject.availability === "unpublished")
         ? this.steps
         : {
             overview: this.steps.overview,
-            imagery: this.steps.imagery,
-        };
+            imagery: this.steps.imagery
+        });
 
     checkAllSteps = () => {
         const validSteps = Object.entries(this.getSteps())
@@ -350,7 +352,7 @@ export default class CreateProjectWizard extends React.Component {
         this.setState({
             complete: errorList.length > 0
                 ? removeFromSet(this.state.complete, this.state.step)
-                : this.state.complete.add(this.state.step),
+                : this.state.complete.add(this.state.step)
         });
         if (alertUser && errorList.length > 0) {
             alert(errorList.join("\n"));
@@ -394,11 +396,11 @@ export default class CreateProjectWizard extends React.Component {
         this.setState({
             templateProject: {},
             templatePlots: [],
-            complete: new Set(),
+            complete: new Set()
         });
     };
 
-    setProjectTemplate = (newTemplateId) => {
+    setProjectTemplate = newTemplateId => {
         this.context.processModal("Loading Template Information",
                                   () => this.getTemplateProject(newTemplateId));
     };
@@ -418,14 +420,14 @@ export default class CreateProjectWizard extends React.Component {
                 plotSpacing: this.state.templateProject.plotSpacing,
                 sampleDistribution: this.state.templateProject.sampleDistribution,
                 sampleResolution: this.state.templateProject.sampleResolution,
-                samplesPerPlot: this.state.templateProject.samplesPerPlot,
+                samplesPerPlot: this.state.templateProject.samplesPerPlot
             });
         }
     };
 
     /// Render Functions
 
-    renderStep = (stepName) => {
+    renderStep = stepName => {
         const steps = this.getSteps();
         const isLast = last(Object.keys(steps)) === stepName;
         const isSelected = stepName === this.state.step;
@@ -433,36 +435,36 @@ export default class CreateProjectWizard extends React.Component {
         const stepColor = isSelected ? "blue" : stepComplete ? "green" : "gray";
         return (
             <div
-                id={stepName + "-button"}
-                style={{width: "10rem", display: "flex", flexDirection: "column", alignItems: "center"}}
                 key={stepName}
-                title={steps[stepName].description}
+                id={stepName + "-button"}
                 onClick={() => this.tryChangeStep(stepName, false)}
+                style={{width: "10rem", display: "flex", flexDirection: "column", alignItems: "center"}}
+                title={steps[stepName].description}
             >
                 {isLast
-                ? <div style={{border: "2px solid transparent"}}/>
-                : (
-                    <div
-                        style={{
-                            backgroundColor: stepColor,
-                            border: "2px solid " + stepColor,
-                            left: "5rem",
-                            top: "calc(1rem + 2px)",
-                            position: "relative",
-                            width: "5rem",
-                        }}
-                    />
-                )}
+                    ? <div style={{border: "2px solid transparent"}}/>
+                    : (
+                        <div
+                            style={{
+                                backgroundColor: stepColor,
+                                border: "2px solid " + stepColor,
+                                left: "5rem",
+                                top: "calc(1rem + 2px)",
+                                position: "relative",
+                                width: "5rem"
+                            }}
+                        />
+                    )}
                 <div
                     style={{
                         borderRadius: "50%",
                         backgroundColor: stepColor,
                         height: "2.5rem",
                         width: "2.5rem",
-                        padding: "calc((2.5rem - 1.25rem) / 2)",
+                        padding: "calc((2.5rem - 1.25rem) / 2)"
                     }}
                 >
-                    {stepComplete && <SvgIcon icon="check" size="1.25rem" color="white"/>}
+                    {stepComplete && <SvgIcon color="white" icon="check" size="1.25rem"/>}
                 </div>
                 <label style={{color: stepColor, fontWeight: "bold"}}>
                     {steps[stepName].title}
@@ -477,8 +479,8 @@ export default class CreateProjectWizard extends React.Component {
         const isLast = last(Object.keys(steps)) === this.state.step;
         return (
             <div
-                id="wizard"
                 className="d-flex pb-5 full-height align-items-center flex-column"
+                id="wizard"
             >
                 <div style={{display: "flex", margin: ".75rem"}}>
                     {Object.keys(steps).map(s => this.renderStep(s))}
@@ -489,7 +491,7 @@ export default class CreateProjectWizard extends React.Component {
                         height: "100%",
                         justifyContent: "center",
                         width: "100%",
-                        overflow: "auto",
+                        overflow: "auto"
                     }}
                 >
                     <div
@@ -511,9 +513,6 @@ export default class CreateProjectWizard extends React.Component {
                                 <StepHelpComponent/>
                             </div>
                             <NavigationButtons
-                                nextStep={isLast ? this.finish : this.nextStep}
-                                prevStep={this.prevStep}
-                                finish={this.finish}
                                 cancel={() => {
                                     if (this.context.projectId > 0) {
                                         this.context.setContextState({designMode: "manage"});
@@ -521,6 +520,9 @@ export default class CreateProjectWizard extends React.Component {
                                         window.location = `/review-institution?institutionId=${this.context.institutionId}`;
                                     }
                                 }}
+                                finish={this.finish}
+                                nextStep={isLast ? this.finish : this.nextStep}
+                                prevStep={this.prevStep}
                             />
                         </div>
                     </div>
@@ -538,27 +540,27 @@ function NavigationButtons({prevStep, nextStep, finish, cancel}) {
                 <div className="d-flex flex-row justify-content-around mt-2">
                     <input
                         className="btn btn-lightgreen"
+                        onClick={prevStep}
                         type="button"
                         value="Back"
-                        onClick={prevStep}
                     />
                     <input
                         className="btn btn-lightgreen"
+                        onClick={nextStep}
                         type="button"
                         value="Next"
-                        onClick={nextStep}
                     />
                     <input
                         className="btn btn-lightgreen"
+                        onClick={finish}
                         type="button"
                         value="Review"
-                        onClick={finish}
                     />
                     <input
                         className="btn btn-red"
+                        onClick={cancel}
                         type="button"
                         value="Cancel"
-                        onClick={cancel}
                     />
                 </div>
             </div>

@@ -4,7 +4,7 @@ import {NavigationBar, LogoBanner} from "./components/PageComponents";
 
 function About() {
     return (
-        <section id="about" className="container pt-3">
+        <section className="container pt-3" id="about">
             <div className="col-xl-8 offset-xl-2 col-lg-10 justify-content-center">
                 <h1>About Collect Earth Online</h1>
                 <p>
@@ -29,8 +29,8 @@ function About() {
                     Please access&nbsp;
                     <a
                         href="http://www.openforis.org/tools/sepal.html"
-                        target="_blank"
                         rel="noreferrer noopener"
+                        target="_blank"
                     >
                         OpenForis-SEPAL
                     </a>
@@ -42,10 +42,9 @@ function About() {
     );
 }
 
-
 export function pageInit(args) {
     ReactDOM.render(
-        <NavigationBar userName={args.userName} userId={args.userId}>
+        <NavigationBar userId={args.userId} userName={args.userName}>
             <About/>
         </NavigationBar>,
         document.getElementById("app")

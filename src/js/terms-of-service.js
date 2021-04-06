@@ -4,7 +4,7 @@ import {NavigationBar} from "./components/PageComponents";
 
 function TermsOfService() {
     return (
-        <section id="about" className="container pt-3">
+        <section className="container pt-3" id="about">
             <div className="col-xl-8 offset-xl-2 col-lg-10 justify-content-center">
                 <h1 className="py-4">Collect Earth Online Terms of Service</h1>
 
@@ -62,9 +62,18 @@ function TermsOfService() {
                 <ul>
                     <li>Projects will be removed when the survey has not been collected in a certain amount of time.
                         <ul>
-                            <li>The project has been inactive for 180 days, and the phase is not published, and the number of plots collected is under 5%</li>
-                            <li>The project has been inactive for 270 days, and the number of plots collected is under 5%</li>
-                            <li>The project has been inactive for 730 days, and the number of plots collected is under 20%</li>
+                            <li>
+                                The project has been inactive for 180 days,
+                                and the phase is not published, and the number of plots collected is under 5%
+                            </li>
+                            <li>
+                                The project has been inactive for 270 days,
+                                and the number of plots collected is under 5%
+                            </li>
+                            <li>
+                                The project has been inactive for 730 days,
+                                and the number of plots collected is under 20%
+                            </li>
                         </ul>
                     </li>
                     <li>Institutions will be removed when there contain no Projects
@@ -74,7 +83,8 @@ function TermsOfService() {
                     </li>
                 </ul>
                 <p>
-                    Admin discretion can be used at any point for projects or institutions that are created with malformed or test data.
+                    Admin discretion can be used at any point for projects or institutions
+                    that are created with malformed or test data.
                 </p>
             </div>
         </section>
@@ -83,7 +93,7 @@ function TermsOfService() {
 
 export function pageInit(args) {
     ReactDOM.render(
-        <NavigationBar userName={args.userName} userId={args.userId}>
+        <NavigationBar userId={args.userId} userName={args.userName}>
             <TermsOfService/>
         </NavigationBar>,
         document.getElementById("app")
