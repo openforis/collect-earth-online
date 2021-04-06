@@ -1,0 +1,5 @@
+.eslintrc.js
+resources/**
+node_modules/**
+src/cljs/**
+src/clj/**
