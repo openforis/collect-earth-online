@@ -1761,7 +1761,7 @@ export function pageInit(args) {
         <GeoDashNavigationBar
             page={() => <Geodash/>}
             userName={args.userName || "guest"}
-            visiblePlotId={parseInt(args.visiblePlotId) || -1}
+            visiblePlotId={args.visiblePlotId ? parseInt(args.visiblePlotId) : -1}
         />,
         document.getElementById("app")
     );
