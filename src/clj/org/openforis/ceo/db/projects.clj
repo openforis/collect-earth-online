@@ -650,7 +650,7 @@
         ;; TODO this can be done more efficiently.  Update when we update how external data is stored.
         (call-sql "delete_all_samples_by_project" project-id)
         (call-sql "delete_user_plots_by_project"  project-id)
-        (call-sql "samples_from_plots_with_files" project-id))
+        (call-sql "samples_from_ext_tables" project-id))
 
       :else
       (let [plot-shape        (:plot_shape project)
