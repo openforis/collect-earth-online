@@ -560,6 +560,41 @@ CREATE OR REPLACE FUNCTION samples_from_plots_with_files(_project_id integer)
 
 $$ LANGUAGE SQL;
 
+CREATE OR REPLACE FUNCTION samples_from_ext_tables(_project_id integer)
+ RETURNS integer AS $$
+
+    WITH plots_tbl AS (
+        SELECT plotId, plot_uid
+        FROM select_partial_table_by_name((
+            SELECT plots_ext_table
+            FROM projects
+            WHERE project_uid = _project_id
+        )) asp
+        INNER JOIN plots p
+            ON p.ext_id = asp.ext_id
+        WHERE project_rid = _project_id
+    ), sample_tbl AS (
+        SELECT * FROM select_partial_table_by_name((
+            SELECT samples_ext_table
+            FROM projects
+            WHERE project_uid = _project_id
+        )) as st
+        INNER JOIN plots_tbl pt
+            ON pt.plotId = st.plotId
+    ), samplerows AS (
+        INSERT INTO samples (plot_rid, sample_geom, ext_id)
+        SELECT plot_uid, center as sample_geom, ext_id
+        FROM sample_tbl
+        RETURNING sample_uid, ext_id, sample_geom
+    )
+
+    SELECT COUNT(*)::integer
+    FROM samplerows
+    INNER JOIN sample_tbl
+        ON samplerows.ext_id = sample_tbl.ext_id
+
+$$ LANGUAGE SQL;
+
 -- Update tables for external data after project is created
 CREATE OR REPLACE FUNCTION update_project_tables(
     _project_id           integer,
