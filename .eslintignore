@@ -3,3 +3,4 @@
 
 # Except src/js
 !src/js/**/*
+!/*.js
