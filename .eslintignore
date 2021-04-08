@@ -1,0 +1,5 @@
+# Ignore all files/dirs
+*
+
+# Except src/js
+!src/js/**/*

@@ -50,9 +50,12 @@ module.exports = {
         "no-alert": 0,
         "no-else-return": 0,
         "no-nested-ternary": 0,
+        "no-param-reassign": 1, //Error
         "no-restricted-globals": 0,
+        "no-underscore-dangle": 1, //Error
         "prefer-template": 0,
         "prefer-promise-reject-errors": 0,
+        "prefer-spread": 1, //Error
         "quote-props": [0, "consistent"],
         "radix": 0,
         "react/destructuring-assignment": 0,
@@ -71,57 +74,58 @@ module.exports = {
         // ESLint
         "arrow-parens": ["error", "as-needed"],
         "arrow-body-style": ["error", "as-needed"],
-        "arrow-spacing": 2,
-        "brace-style": 2,
+        "arrow-spacing": 1, //Error
+        "brace-style": 1, //Error
         "camelcase": 1,
         "consistent-return": [0],
         "comma-dangle": [1, "never"],
-        "comma-spacing": 2,
+        "comma-spacing": 1, //Error
         "comma-style":1,
         "computed-property-spacing": 1,
-        "eol-last": 2,
+        "eol-last": 1, //Error
         "eqeqeq": [2, "smart"],
         "jsx-quotes": 1,
         "key-spacing": [0],
-        "keyword-spacing": 2,
+        "keyword-spacing": 1, //Error
         "linebreak-style": ["error", "unix"],
-        "max-len": [2, {
+        "max-len": [1, {
             "code": 120,
             "ignoreComments": true,
             "ignoreTrailingComments": true,
             "ignoreStrings": true,
             "ignoreTemplateLiterals": true,
             "ignoreRegExpLiterals": true
-        }],
-        "no-trailing-spaces" : 2,
+        }], //Error
+        "no-trailing-spaces" : 1, //Error
         "no-console": 0,
         "no-duplicate-imports": 1,
-        "no-multi-spaces": 2,
+        "no-multi-spaces": 1, //Error
         "no-prototype-builtins": 0,
-        "no-use-before-define": [2, "nofunc"],
+        "no-return-assign": 1, //Error
+        "no-use-before-define": [1, "nofunc"], //Error
         "no-useless-return": 1,
-        "no-unused-vars": 1,
-        "no-var": 2,
+        "no-unused-vars": [1, {"argsIgnorePattern": "^_"}],
+        "no-var": 1, //Error
         "object-curly-newline": [1, {"multiline": true, "consistent": true}],
         "object-curly-spacing": [1, "never"],
         "object-property-newline": ["error", {"allowAllPropertiesOnSameLine": true}],
-        "prefer-const": 2,
-        "prefer-destructuring": [2, {"array": false}],
+        "prefer-const": 1, //Error
+        "prefer-destructuring": [1, {"array": false}],
         "quotes": ["error", "double"],
-        "space-infix-ops": 2,
-        "space-before-blocks": 2,
+        "space-infix-ops": 1, //Error
+        "space-before-blocks": 1, //Error
         "spaced-comment": ["error", "always", {"markers": ["/"], "exceptions": ["***"]}],
 
         // React
-        "react/forbid-prop-types": 2,
+        "react/forbid-prop-types": 1, //Error
         "react/jsx-boolean-value": 1,
         "react/jsx-closing-bracket-location": 1,
         "react/jsx-curly-spacing": 1,
         "react/jsx-curly-newline": [1, {multiline: "forbid", singleline: "forbid"}],
-        "react/jsx-first-prop-new-line": [2, "multiline"],
+        "react/jsx-first-prop-new-line": [1, "multiline"], //Error
         "react/jsx-handler-names": 0,
-        "react/jsx-indent-props": [2, 4],
-        "react/jsx-max-props-per-line": [2, {"when": "multiline", "maximum": 1}],
+        "react/jsx-indent-props": [1, 4], //Error
+        "react/jsx-max-props-per-line": [1, {"when": "multiline", "maximum": 1}], //Error
         "react/jsx-no-bind": 0,
         "react/jsx-no-literals": 0,
         "react/jsx-no-useless-fragment": 1,
@@ -129,8 +133,9 @@ module.exports = {
         "react/jsx-pascal-case": 1,
         "react/jsx-props-no-multi-spaces": 1,
         "react/jsx-sort-props": 1,
-        "react/jsx-tag-spacing": [2, {"beforeSelfClosing": "never"}],
+        "react/jsx-tag-spacing": [1, {"beforeSelfClosing": "never"}], //Error
         "react/button-has-type": 1,
+        "react/no-array-index-key": 1, //Error
         "react/no-danger": 1,
         "react/no-danger-with-children": 1,
         "react/no-deprecated": 1,
