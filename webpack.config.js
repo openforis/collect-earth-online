@@ -26,14 +26,14 @@ module.exports = env => ({
         reviewInstitution    : path.resolve(__dirname, "src/js/reviewInstitution.js"),
         support              : path.resolve(__dirname, "src/js/support.js"),
         widgetLayoutEditor   : path.resolve(__dirname, "src/js/widgetLayoutEditor.js"),
-        termsOfService       : path.resolve(__dirname, "src/js/termsOfService.js"),
+        termsOfService       : path.resolve(__dirname, "src/js/termsOfService.js")
     },
     output: {
         path: path.resolve(__dirname, outdir),
         filename: "[name].[hash].bundle.js",
         chunkFilename: "[chunkhash].chunk.js",
         library: "[name]",
-        libraryTarget: "var",
+        libraryTarget: "var"
     },
     module: {
         rules: [
@@ -45,27 +45,27 @@ module.exports = env => ({
                     options: {
                         presets: [
                             "@babel/preset-env",
-                            "@babel/preset-react",
+                            "@babel/preset-react"
                         ],
                         plugins: [
                             "@babel/plugin-proposal-class-properties",
-                            "lodash",
-                        ],
-                    },
-                },
+                            "lodash"
+                        ]
+                    }
+                }
             },
             {
                 test: /\.css$/, // TODO Find a css optimizer
                 use: [
                     "style-loader",
-                    {loader: "css-loader", options: {url: false}},
-                ],
-            },
-        ],
+                    {loader: "css-loader", options: {url: false}}
+                ]
+            }
+        ]
     },
     plugins: [
         {
-            apply: (compiler) => {
+            apply: compiler => {
                 compiler.hooks.beforeCompile.tap("BeforeCompilePlugin", () => {
                     // Ensure that outdir exists.
                     if (!fs.existsSync("./" + outdir)) {
@@ -96,17 +96,17 @@ module.exports = env => ({
                     const newMap = entryPoints.reduce((acc, [name, ep]) =>
                         ({...acc, [name]: ep.chunks.map(c => "/js/" + c.files[0])}),
                                                       {});
-                    fs.writeFile("./target/entry-points.json", JSON.stringify(newMap), "utf8", (e) => {
+                    fs.writeFile("./target/entry-points.json", JSON.stringify(newMap), "utf8", e => {
                         if (e) console.log(e);
                     });
                 });
-            },
-        },
+            }
+        }
     ],
     optimization: {
         minimize: true,
         splitChunks: {
-            chunks: "all",
-        },
-    },
+            chunks: "all"
+        }
+    }
 });
