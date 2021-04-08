@@ -47,7 +47,7 @@ class HelpSlideDialog extends React.Component {
 
     render() {
         const {currentSlideIdx} = this.state;
-        const {body, img} = this.props.helpSlides[currentSlideIdx];
+        const {alt, body, img} = this.props.helpSlides[currentSlideIdx];
         const isLastSlide = currentSlideIdx === this.props.helpSlides.length - 1;
         return (
             <div
@@ -110,6 +110,7 @@ class HelpSlideDialog extends React.Component {
                             </div>
                             <div style={{height: "100%", width: "33vw"}}>
                                 <img
+                                    alt={alt}
                                     src={"locale/" + this.props.page + img}
                                     style={{maxHeight: "100%", maxWidth: "100%"}}
                                 />
@@ -176,6 +177,7 @@ export class NavigationBar extends React.Component {
                 >
                     <a className="navbar-brand pt-1 pb-1" href="/home">
                         <img
+                            alt="Home"
                             className="img-fluid"
                             id="ceo-site-logo"
                             src="/img/ceo-logo.png"
@@ -249,6 +251,7 @@ export class GeoDashNavigationBar extends React.Component {
                 >
                     <a className="navbar-brand pt-1 pb-1" href="home">
                         <img
+                            alt="Collect Earth Online Home"
                             className="img-fluid"
                             id="ceo-site-logo"
                             src="/img/ceo-logo.png"
@@ -324,7 +327,14 @@ export function LogoBanner() {
         <div id="logo-banner">
             <div className="row mb-4 justify-content-center">
                 <div className="col-sm-4 text-center">
-                    <img className="img-fluid" id="servir" src="/img/servir-logo.png"/>
+                    <a href="https://www.servirglobal.net/" rel="noreferrer noopener" target="_blank">
+                        <img
+                            alt="Servir Global"
+                            className="img-fluid"
+                            id="servir"
+                            src="/img/servir-logo.png"
+                        />
+                    </a>
                 </div>
             </div>
             <div className="row justify-content-center mb-2">
@@ -335,19 +345,38 @@ export function LogoBanner() {
             <div className="row mb-4">
                 <div className="col-sm-3 text-center my-auto">
                     <a href="http://openforis.org" rel="noreferrer noopener" target="_blank">
-                        <img className="img-fluid" id="openforis" src="/img/openforis-logo.png"/>
+                        <img alt="Open Foris" className="img-fluid" id="openforis" src="/img/openforis-logo.png"/>
                     </a>
                 </div>
                 <div className="col-sm-3 text-center my-auto">
-                    <a href="http://fao.org" rel="noreferrer noopener" target="_blank">
-                        <img className="img-fluid" id="fao" src="/img/fao.png"/>
+                    <a href="http://www.fao.org" rel="noreferrer noopener" target="_blank">
+                        <img
+                            alt="Food and Agriculture Organization of the United Nations"
+                            className="img-fluid"
+                            id="fao"
+                            src="/img/fao.png"
+                        />
                     </a>
                 </div>
                 <div className="col-sm-3 text-center my-auto">
-                    <img className="img-fluid" id="usaid" src="/img/usaid.png"/>
+                    <a href="https://www.usaid.gov" rel="noreferrer noopener" target="_blank">
+                        <img
+                            alt="U.S. Agency for International Development"
+                            className="img-fluid"
+                            id="usaid"
+                            src="/img/usaid.png"
+                        />
+                    </a>
                 </div>
                 <div className="col-sm-3 text-center my-auto">
-                    <img className="img-fluid" id="nasa" src="/img/nasa.png"/>
+                    <a href="https://www.nasa.gov" rel="noreferrer noopener" target="_blank">
+                        <img
+                            alt="National Aeronautics and Space Administration"
+                            className="img-fluid"
+                            id="nasa"
+                            src="/img/nasa.png"
+                        />
+                    </a>
                 </div>
             </div>
             <div className="row mb-2 justify-content-center">
@@ -357,32 +386,43 @@ export function LogoBanner() {
             </div>
             <div className="row mb-4 justify-content-center">
                 <div className="col-sm-4 text-center my-auto">
-                    <a href="http://www.silvacarbon.org">
-                        <img className="img-fluid" id="silvacarbon" src="/img/SilvaCarbon.png"/>
+                    <a href="https://www.silvacarbon.org" rel="noreferrer noopener" target="_blank">
+                        <img alt="Silva Carbon" className="img-fluid" id="silvacarbon" src="/img/SilvaCarbon.png"/>
                     </a>
                 </div>
                 <div className="col-sm-4 text-center my-auto">
-                    <a href="http://www.sig-gis.com">
-                        <img className="img-fluid" id="sig" src="/img/sig-logo.png"/>
+                    <a href="https://sig-gis.com" rel="noreferrer noopener" target="_blank">
+                        <img alt="Spatial Informatics Group, Inc." className="img-fluid" id="sig" src="/img/sig-logo.png"/>
                     </a>
                 </div>
                 <div className="col-sm-4 text-center my-auto">
-                    <a href="https://servir.adpc.net">
-                        <img className="img-fluid" id="servir-mekong" src="/img/servir-mekong-logo.png"/>
+                    <a href="https://servir.adpc.net" rel="noreferrer noopener" target="_blank">
+                        <img alt="Servir Mekong" className="img-fluid" id="servir-mekong" src="/img/servir-mekong-logo.png"/>
                     </a>
                 </div>
             </div>
             <div className="row mb-4 justify-content-center">
                 <div className="col-sm-4 text-center my-auto">
-                    <img className="img-fluid" id="google" src="/img/google-logo.png"/>
+                    <a href="https://www.nasa.gov" rel="noreferrer noopener" target="_blank">
+                        <img alt="Google, Inc." className="img-fluid" id="google" src="/img/google-logo.png"/>
+                    </a>
                 </div>
 
                 <div className="col-sm-4 text-center my-auto">
-                    <img className="img-fluid" id="usfs" src="/img/usfs.png" style={{width: "60vh"}}/>
+                    <a href="https://www.fs.usda.gov" rel="noreferrer noopener" target="_blank">
+                        <img alt="U.S. Forest Service" className="img-fluid" id="usfs" src="/img/usfs.png" style={{width: "60vh"}}/>
+                    </a>
                 </div>
 
                 <div className="col-sm-4 text-center my-auto">
-                    <img className="img-fluid" id="gtac" src="/img/gtac-logo.png"/>
+                    <a href="https://www.fs.usda.gov/about-agency/gtac" rel="noreferrer noopener" target="_blank">
+                        <img
+                            alt="Geospatial Technology and Applications Center"
+                            className="img-fluid"
+                            id="gtac"
+                            src="/img/gtac-logo.png"
+                        />
+                    </a>
                 </div>
             </div>
         </div>

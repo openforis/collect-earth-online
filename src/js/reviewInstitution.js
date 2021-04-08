@@ -295,6 +295,7 @@ class InstitutionDescription extends React.Component {
                         <div className="row mb-4">
                             <div className="col-md-3" id="institution-logo-container">
                                 <img
+                                    alt={this.state.institutionDetails.name}
                                     onClick={() => window.open(this.httpAddress(this.state.institutionDetails.url))}
                                     src={safeLength(this.state.institutionDetails.base64Image) > 1
                                         ? `data:*/*;base64,${this.state.institutionDetails.base64Image}`
