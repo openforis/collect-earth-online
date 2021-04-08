@@ -1,12 +1,12 @@
-(ns org.openforis.ceo.db.users
+(ns collect-earth-online.db.users
   (:import java.time.format.DateTimeFormatter
            java.time.LocalDateTime
            java.util.UUID)
   (:require [clojure.string :as str]
-            [org.openforis.ceo.utils.type-conversion :as tc]
-            [org.openforis.ceo.database   :refer [call-sql sql-primitive]]
-            [org.openforis.ceo.utils.mail :refer [email? send-mail get-base-url]]
-            [org.openforis.ceo.views      :refer [data-response]]))
+            [collect-earth-online.utils.type-conversion :as tc]
+            [collect-earth-online.database   :refer [call-sql sql-primitive]]
+            [collect-earth-online.utils.mail :refer [email? send-mail get-base-url]]
+            [collect-earth-online.views      :refer [data-response]]))
 
 (defn login [{:keys [params]}]
   (let [{:keys [email password]} params]

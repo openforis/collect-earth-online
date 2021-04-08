@@ -1,9 +1,9 @@
-(ns org.openforis.ceo.https
+(ns collect-earth-online.https
   (:require [clojure.java.io    :as io]
             [clojure.java.shell :as sh]
             [clojure.string     :as str]
             [clojure.tools.cli         :refer [parse-opts]]
-            [org.openforis.ceo.logging :refer [log-str]]))
+            [collect-earth-online.logging :refer [log-str]]))
 
 (def path-env (System/getenv "PATH"))
 

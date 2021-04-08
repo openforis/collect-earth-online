@@ -1,10 +1,10 @@
-(ns org.openforis.ceo.db.plots
+(ns collect-earth-online.db.plots
   (:import java.sql.Timestamp)
   (:require [clojure.set :as set]
-            [org.openforis.ceo.utils.type-conversion :as tc]
-            [org.openforis.ceo.database    :refer [call-sql sql-primitive]]
-            [org.openforis.ceo.db.projects :refer [is-proj-admin?]]
-            [org.openforis.ceo.views       :refer [data-response]]))
+            [collect-earth-online.utils.type-conversion :as tc]
+            [collect-earth-online.database    :refer [call-sql sql-primitive]]
+            [collect-earth-online.db.projects :refer [is-proj-admin?]]
+            [collect-earth-online.views       :refer [data-response]]))
 
 (defn- time-plus-five-min []
   (Timestamp. (+ (System/currentTimeMillis) (* 5 60 1000))))

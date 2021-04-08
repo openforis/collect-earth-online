@@ -1,8 +1,8 @@
-(ns org.openforis.ceo.database
+(ns collect-earth-online.database
   (:require [clojure.data.json :as json]
             [clojure.string    :as str]
-            [org.openforis.ceo.logging :refer [log-str]]
-            [org.openforis.ceo.views   :refer [data-response]]
+            [collect-earth-online.logging :refer [log-str]]
+            [collect-earth-online.views   :refer [data-response]]
             [next.jdbc :as jdbc]
             [next.jdbc.result-set :as rs]))
 

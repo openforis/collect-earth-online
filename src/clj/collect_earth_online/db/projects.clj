@@ -1,4 +1,4 @@
-(ns org.openforis.ceo.db.projects
+(ns collect-earth-online.db.projects
   (:import java.text.SimpleDateFormat
            java.util.Date
            java.util.UUID)
@@ -6,10 +6,10 @@
             [clojure.set        :as set]
             [clojure.java.io    :as io]
             [clojure.java.shell :as sh]
-            [org.openforis.ceo.utils.type-conversion :as tc]
-            [org.openforis.ceo.utils.part-utils      :as pu]
-            [org.openforis.ceo.database :refer [call-sql sql-primitive]]
-            [org.openforis.ceo.views    :refer [data-response]]))
+            [collect-earth-online.utils.type-conversion :as tc]
+            [collect-earth-online.utils.part-utils      :as pu]
+            [collect-earth-online.database :refer [call-sql sql-primitive]]
+            [collect-earth-online.views    :refer [data-response]]))
 
 ;;; Constants
 

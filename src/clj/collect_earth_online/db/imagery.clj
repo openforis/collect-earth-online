@@ -1,8 +1,8 @@
-(ns org.openforis.ceo.db.imagery
-  (:require [org.openforis.ceo.database :refer [call-sql sql-primitive]]
-            [org.openforis.ceo.db.institutions :refer [is-inst-admin?]]
-            [org.openforis.ceo.utils.type-conversion :as tc]
-            [org.openforis.ceo.views :refer [data-response]]))
+(ns collect-earth-online.db.imagery
+  (:require [collect-earth-online.database :refer [call-sql sql-primitive]]
+            [collect-earth-online.db.institutions :refer [is-inst-admin?]]
+            [collect-earth-online.utils.type-conversion :as tc]
+            [collect-earth-online.views :refer [data-response]]))
 
 (defn- clean-source [source-config]
   (if (#{"GeoServer" "SecureWatch" "Planet"} (:type source-config))
