@@ -1,4 +1,4 @@
-(ns org.openforis.ceo.logging
+(ns collect-earth-online.logging
   (:import java.text.SimpleDateFormat
            java.util.Date)
   (:require [clojure.java.io :as io]

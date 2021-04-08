@@ -1,4 +1,4 @@
-(ns org.openforis.ceo.utils.part-utils
+(ns collect-earth-online.utils.part-utils
   (:import java.util.Base64)
   (:require [clojure.java.io :as io]
             [clojure.string  :as str]))

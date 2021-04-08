@@ -1,7 +1,7 @@
-(ns org.openforis.ceo.utils.mail
+(ns collect-earth-online.utils.mail
   (:require [clojure.edn :as edn]
             [postal.core :refer [send-message]]
-            [org.openforis.ceo.logging :refer [log-str]]))
+            [collect-earth-online.logging :refer [log-str]]))
 
 ;; Example value:
 ;; {:host                  "smtp.gmail.com"

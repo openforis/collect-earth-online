@@ -1,12 +1,12 @@
-(ns org.openforis.ceo.convert-logos
+(ns collect-earth-online.convert-logos
   (:require [clojure.java.io :as io]
-            [org.openforis.ceo.database :refer [call-sql]]
-            [org.openforis.ceo.utils.part-utils :refer [read-file-base64]]
-            [org.openforis.ceo.utils.type-conversion :as tc]))
+            [collect-earth-online.database :refer [call-sql]]
+            [collect-earth-online.utils.part-utils :refer [read-file-base64]]
+            [collect-earth-online.utils.type-conversion :as tc]))
 
 ;; TODO: Delete this file after migration
 ;; TODO: Delete /resources/public/img/institution-logos after migration
-;; Call with clojure -m org.openforis.ceo.convert-logos
+;; Call with clojure -m collect-earth-online.convert-logos
 (defn -main []
   (doseq [logo (->> (io/resource "public/img/institution-logos")
                     (io/file)

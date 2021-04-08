@@ -1,8 +1,8 @@
-(ns org.openforis.ceo.db.institutions
+(ns collect-earth-online.db.institutions
   (:require [clojure.string :as str]
-            [org.openforis.ceo.utils.type-conversion :as tc]
-            [org.openforis.ceo.database         :refer [call-sql sql-primitive]]
-            [org.openforis.ceo.views            :refer [data-response]]))
+            [collect-earth-online.utils.type-conversion :as tc]
+            [collect-earth-online.database         :refer [call-sql sql-primitive]]
+            [collect-earth-online.views            :refer [data-response]]))
 
 (defn is-inst-admin? [user-id institution-id]
   (and (pos? user-id)

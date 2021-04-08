@@ -1,10 +1,10 @@
-(ns org.openforis.ceo.server
+(ns collect-earth-online.server
   (:require [clojure.java.io :as io]
             [clojure.string :as str]
             [clojure.tools.cli  :refer [parse-opts]]
             [ring.adapter.jetty :refer [run-jetty]]
-            [org.openforis.ceo.handler :refer [create-handler-stack]]
-            [org.openforis.ceo.logging :refer [log-str set-log-path!]]))
+            [collect-earth-online.handler :refer [create-handler-stack]]
+            [collect-earth-online.logging :refer [log-str set-log-path!]]))
 
 (defonce server           (atom nil))
 (defonce clean-up-service (atom nil))

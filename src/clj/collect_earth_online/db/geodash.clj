@@ -1,10 +1,10 @@
-(ns org.openforis.ceo.db.geodash
+(ns collect-earth-online.db.geodash
   (:import java.util.UUID)
   (:require [clojure.string  :as str]
             [clj-http.client :as client]
-            [org.openforis.ceo.database :refer [call-sql]]
-            [org.openforis.ceo.utils.type-conversion :as tc]
-            [org.openforis.ceo.views :refer [data-response]]))
+            [collect-earth-online.database :refer [call-sql]]
+            [collect-earth-online.utils.type-conversion :as tc]
+            [collect-earth-online.views :refer [data-response]]))
 
 ;;; TODO, we no longer need dashboardID, projectId should be sufficient
 

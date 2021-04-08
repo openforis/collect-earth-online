@@ -1,12 +1,12 @@
-(ns org.openforis.ceo.routing
-  (:require [org.openforis.ceo.views           :refer [render-page]]
-            [org.openforis.ceo.db.geodash      :as geodash]
-            [org.openforis.ceo.db.imagery      :as imagery]
-            [org.openforis.ceo.db.institutions :as institutions]
-            [org.openforis.ceo.db.plots        :as plots]
-            [org.openforis.ceo.db.projects     :as projects]
-            [org.openforis.ceo.db.users        :as users]
-            [org.openforis.ceo.proxy           :as proxy]))
+(ns collect-earth-online.routing
+  (:require [collect-earth-online.views           :refer [render-page]]
+            [collect-earth-online.db.geodash      :as geodash]
+            [collect-earth-online.db.imagery      :as imagery]
+            [collect-earth-online.db.institutions :as institutions]
+            [collect-earth-online.db.plots        :as plots]
+            [collect-earth-online.db.projects     :as projects]
+            [collect-earth-online.db.users        :as users]
+            [collect-earth-online.proxy           :as proxy]))
 
 ;; TODO: Flatten url structure, conform name and fn, and rename geo-dash to geodash everywhere.
 ;; TODO: The call to render-page does not need the '/'.
