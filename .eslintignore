@@ -1,5 +1,5 @@
-.eslintrc.js
-resources/**
-node_modules/**
-src/cljs/**
-src/clj/**
+# Ignore all files/dirs
+*
+
+# Except src/js
+!src/js/**/*
