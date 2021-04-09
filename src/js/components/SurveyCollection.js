@@ -548,6 +548,7 @@ class SurveyQuestionTree extends React.Component {
                                     ${shadowColor}`
                         }}
                         type="button"
+                        title={removeEnumerator(this.props.surveyNode.question)}
                     >
                         {this.props.hierarchyLabel + removeEnumerator(this.props.surveyNode.question)}
                     </button>
