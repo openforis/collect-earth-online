@@ -80,14 +80,10 @@
                                               :auth-action :block}
    [:get  "/get-home-projects"]              {:handler     projects/get-home-projects}
    [:get  "/get-institution-projects"]       {:handler     projects/get-institution-projects}
-   [:get  "/get-project-by-id"]              {:handler     projects/get-project-by-id
-                                              :auth-type   :collect
-                                              :auth-action :block}
+   [:get  "/get-project-by-id"]              {:handler     projects/get-project-by-id}
    [:get  "/get-template-projects"]          {:handler     projects/get-template-projects}
    [:get  "/get-template-by-id"]             {:handler     projects/get-template-by-id}
-   [:get  "/get-project-stats"]              {:handler     projects/get-project-stats
-                                              :auth-type   :collect
-                                              :auth-action :block}
+   [:get  "/get-project-stats"]              {:handler     projects/get-project-stats}
    [:post "/archive-project"]                {:handler     projects/archive-project
                                               :auth-type   :admin
                                               :auth-action :block}
@@ -113,9 +109,7 @@
    [:get  "/get-prev-plot"]                  {:handler     plots/get-prev-plot
                                               :auth-type   :collect
                                               :auth-action :block}
-   [:get  "/get-project-plots"]              {:handler     plots/get-project-plots
-                                              :auth-type   :collect
-                                              :auth-action :block}
+   [:get  "/get-project-plots"]              {:handler     plots/get-project-plots}
    [:get  "/get-plot-sample-geom"]           {:handler     plots/get-plot-sample-geom}
    [:post "/add-user-samples"]               {:handler     plots/add-user-samples
                                               :auth-type   :collect
