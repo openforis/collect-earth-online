@@ -264,6 +264,14 @@ specify an output path. You can either specify a path relative to
 the toplevel directory of this repository or an absolute path on
 your filesystem. The logger will keep the 10 most recent logs.
 
+*** Using the Announcement Banner
+
+On each page load clojure will read the value of announcement.txt. If text is
+found, the value will be inserted into a HTML element that displays as a red
+banner at the top of the page. To add a new announcement, edit
+announcement.txt and add a new message.  To remove the announcement, edit
+announcement.txt and remove all text.
+
 ** Contact
 
 *Authors:*
