@@ -26,14 +26,14 @@ class SurveyRulesModal extends React.Component {
                 </button>
                 <div
                     aria-hidden="true"
-                    aria-labelledby="exampleModalLabel"
                     className="modal fade show"
+                    onClick={() => this.setState({showModal: false})}
                     role="dialog"
                     style={{display: (showModal ? "block" : "none"), background: "rgba(0,0,0,0.3)"}}
                     tabIndex="-1"
                 >
                     <div className="modal-dialog" role="document">
-                        <div className="modal-content text-left" onClick={e => e.stopPropogation()}>
+                        <div className="modal-content text-left" onClick={e => e.stopPropagation()}>
                             <div className="modal-header" >
                                 <h5 className="modal-title">
                                     Survey Rules
@@ -80,9 +80,8 @@ function SurveyRulesTooltip({rules}) {
 }
 
 export default function SurveyQuestionRules({rules}) {
-    return (rules.length === 0
-        ? <div/>
-        : (rules.length <= 2)
+    return rules.length > 0 && (
+        rules.length <= 2
             ? <SurveyRulesTooltip rules={rules}/>
             : <SurveyRulesModal rules={rules}/>);
 }
