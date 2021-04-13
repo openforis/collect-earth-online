@@ -435,7 +435,7 @@ export function LogoBanner() {
                             className="img-fluid"
                             id="usfs"
                             src="/img/usfs.png"
-                            style={{width: "30vh"}}
+                            style={{width: "120px"}}
                         />
                     </a>
                 </div>
