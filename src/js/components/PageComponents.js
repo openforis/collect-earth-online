@@ -110,7 +110,7 @@ class HelpSlideDialog extends React.Component {
                             </div>
                             <div style={{height: "100%", width: "33vw"}}>
                                 <img
-                                    alt={alt}
+                                    alt={alt || ""}
                                     src={"locale/" + this.props.page + img}
                                     style={{maxHeight: "100%", maxWidth: "100%"}}
                                 />
@@ -251,7 +251,7 @@ export class GeoDashNavigationBar extends React.Component {
                 >
                     <a className="navbar-brand pt-1 pb-1" href="home">
                         <img
-                            alt="Collect Earth Online Home"
+                            alt="Home"
                             className="img-fluid"
                             id="ceo-site-logo"
                             src="/img/ceo-logo.png"
@@ -387,30 +387,56 @@ export function LogoBanner() {
             <div className="row mb-4 justify-content-center">
                 <div className="col-sm-4 text-center my-auto">
                     <a href="https://www.silvacarbon.org" rel="noreferrer noopener" target="_blank">
-                        <img alt="Silva Carbon" className="img-fluid" id="silvacarbon" src="/img/SilvaCarbon.png"/>
+                        <img
+                            alt="Silva Carbon"
+                            className="img-fluid"
+                            id="silvacarbon"
+                            src="/img/SilvaCarbon.png"
+                        />
                     </a>
                 </div>
                 <div className="col-sm-4 text-center my-auto">
                     <a href="https://sig-gis.com" rel="noreferrer noopener" target="_blank">
-                        <img alt="Spatial Informatics Group, Inc." className="img-fluid" id="sig" src="/img/sig-logo.png"/>
+                        <img
+                            alt="Spatial Informatics Group, Inc."
+                            className="img-fluid"
+                            id="sig"
+                            src="/img/sig-logo.png"
+                        />
                     </a>
                 </div>
                 <div className="col-sm-4 text-center my-auto">
                     <a href="https://servir.adpc.net" rel="noreferrer noopener" target="_blank">
-                        <img alt="Servir Mekong" className="img-fluid" id="servir-mekong" src="/img/servir-mekong-logo.png"/>
+                        <img
+                            alt="Servir Mekong"
+                            className="img-fluid"
+                            id="servir-mekong"
+                            src="/img/servir-mekong-logo.png"
+                        />
                     </a>
                 </div>
             </div>
             <div className="row mb-4 justify-content-center">
                 <div className="col-sm-4 text-center my-auto">
-                    <a href="https://www.nasa.gov" rel="noreferrer noopener" target="_blank">
-                        <img alt="Google, Inc." className="img-fluid" id="google" src="/img/google-logo.png"/>
+                    <a href="https://www.google.com" rel="noreferrer noopener" target="_blank">
+                        <img
+                            alt="Google, Inc."
+                            className="img-fluid"
+                            id="google"
+                            src="/img/google-logo.png"
+                        />
                     </a>
                 </div>
 
                 <div className="col-sm-4 text-center my-auto">
                     <a href="https://www.fs.usda.gov" rel="noreferrer noopener" target="_blank">
-                        <img alt="U.S. Forest Service" className="img-fluid" id="usfs" src="/img/usfs.png" style={{width: "60vh"}}/>
+                        <img
+                            alt="U.S. Forest Service"
+                            className="img-fluid"
+                            id="usfs"
+                            src="/img/usfs.png"
+                            style={{width: "30vh"}}
+                        />
                     </a>
                 </div>
 
