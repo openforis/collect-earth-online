@@ -2,6 +2,7 @@ import React, {Fragment} from "react";
 
 import {UnicodeIcon, removeEnumerator, intersection, isNumber} from "../utils/generalUtils";
 import {CollapsibleTitle} from "./FormComponents";
+import SurveyQuestionRules from "./SurveyQuestionRules";
 import SvgIcon from "./SvgIcon";
 import {mercator} from "../utils/mercator";
 
@@ -86,13 +87,13 @@ export class SurveyCollection extends React.Component {
                     || (rule.question1 && (rule.question1 === id || rule.question2 === id)))
         .map((r, uid) => (r.questionId
             ? r.regex
-                ? <li key={uid}>{"Rule: " + r.ruleType + " | Question '" + r.questionsText + "' should match the pattern: " + r.regex + "."}</li>
-                : <li key={uid}>{"Rule: " + r.ruleType + " | Question '" + r.questionsText + "' should be between " + r.min + " and " + r.max + "."}</li>
+                ? <li key={uid}>{`Rule: ${r.ruleType} | Question '${r.questionsText}' should match the pattern: ${r.regex}.`}</li>
+                : <li key={uid}>{`Rule: ${r.ruleType} | Question '${r.questionsText}' should be between: ${r.min} and ${r.max}.`}</li>
             : r.questions
-                ? <li key={uid}>{"Rule: " + r.ruleType + " | Questions '" + r.questionsText + "' should sum up to " + r.validSum + "."}</li>
+                ? <li key={uid}>{`Rule: ${r.ruleType} | Questions '${r.questionsText}' should sum up to ${r.validSum}`}</li>
                 : r.questionSetIds1
-                    ? <li key={uid}>{"Rule: " + r.ruleType + " | Sum of '" + r.questionSetText1 + "' should be equal to sum of  '" + r.questionSetText2 + "'."}</li>
-                    : <li key={uid}>{"Rule: " + r.ruleType + " | 'Question1: " + r.questionText1 + ", Answer1: " + r.answerText1 + "' is not compatible with 'Question2: " + r.questionText2 + ", Answer2: " + r.answerText2 + "'."}</li>));
+                    ? <li key={uid}>{`Rule: ${r.ruleType} | Sum of '${r.questionSetText1}' should be equal to sum of '${r.questionSetText2}'.`}</li>
+                    : <li key={uid}>{`Rule: ${r.ruleType} | 'Question 1: ${r.questionText1}, Answer 1: ${r.answerText1}' is not compatible with 'Question 2: ${r.questionText2}, Answer 2: ${r.answerText2}'.`}</li>));
 
     setDrawTool = newTool => {
         this.setState({drawTool: newTool});
@@ -531,12 +532,7 @@ class SurveyQuestionTree extends React.Component {
                     >
                         {this.state.showAnswers ? <span>-</span> : <span>+</span>}
                     </button>
-                    {rules.length > 0 && (
-                        <div className="text-center btn btn-outline-lightgreen mr-1 tooltip_wrapper">
-                            <SvgIcon icon="rule" size="1.5rem"/>
-                            <ul className="tooltip_content survey_tree">{rules}</ul>
-                        </div>
-                    )}
+                    <SurveyQuestionRules rules={rules}/>
                     <button
                         className="text-center btn btn-outline-lightgreen btn-sm col overflow-hidden text-truncate"
                         id={this.props.surveyNode.question + "_" + this.props.surveyNode.id}
