@@ -2,7 +2,7 @@ import React, {Fragment} from "react";
 
 import {UnicodeIcon, removeEnumerator, intersection, isNumber} from "../utils/generalUtils";
 import {CollapsibleTitle} from "./FormComponents";
-import SurveyRules from "./SurveyRules";
+import SurveyQuestionRules from "./SurveyQuestionRules";
 import SvgIcon from "./SvgIcon";
 import {mercator} from "../utils/mercator";
 
@@ -532,7 +532,7 @@ class SurveyQuestionTree extends React.Component {
                     >
                         {this.state.showAnswers ? <span>-</span> : <span>+</span>}
                     </button>
-                    <SurveyRules rules={rules} />
+                    <SurveyQuestionRules rules={rules}/>
                     <button
                         className="text-center btn btn-outline-lightgreen btn-sm col overflow-hidden text-truncate"
                         id={this.props.surveyNode.question + "_" + this.props.surveyNode.id}
