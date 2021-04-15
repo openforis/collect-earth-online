@@ -14,7 +14,7 @@ import {
 } from "./imagery/collectionMenuControls";
 import {CollapsibleTitle} from "./components/FormComponents";
 
-import {UnicodeIcon, getQueryString, safeLength, isNumber} from "./utils/generalUtils";
+import {UnicodeIcon, getQueryString, safeLength, isNumber, invertColor} from "./utils/generalUtils";
 import {mercator} from "./utils/mercator";
 
 class Collection extends React.Component {
@@ -101,6 +101,7 @@ class Collection extends React.Component {
             }
             clearInterval(this.state.storedInterval);
             this.setState({storedInterval: setInterval(this.resetPlotLock, 2.3 * 60 * 1000)});
+            //  updateMapImagery is poorly named, this function is detecting if we need to show the "zoom to" overlay
             this.updateMapImagery();
         }
 
@@ -124,7 +125,7 @@ class Collection extends React.Component {
             this.updateQuestionStatus();
         }
 
-        //  Update map image stuff
+        //  updateMapImagery is poorly named, this action is detecting if we need to show the "zoom to" overlay
         if (this.state.mapConfig && this.state.currentImagery.id
             && (this.state.currentImagery.id !== prevState.currentImagery.id
                 || this.state.mapConfig !== prevState.mapConfig)) {
@@ -169,6 +170,7 @@ class Collection extends React.Component {
     getProjectById = () => fetch(`/get-project-by-id?projectId=${this.props.projectId}`)
         .then(response => (response.ok ? response.json() : Promise.reject(response)))
         .then(project => {
+            // TODO This logic is currently invalid since this route can never return an archived project.
             if (project.id > 0 && project.availability !== "archived") {
                 this.setState({currentProject: project});
                 return Promise.resolve("resolved");
@@ -731,22 +733,6 @@ class Collection extends React.Component {
         selectedQuestion: newSelectedQuestion
     });
 
-    // TODO move to utils
-    invertColor(hex) {
-        const deHashed = hex.indexOf("#") === 0 ? hex.slice(1) : hex;
-        const hexFormatted = deHashed.length === 3
-            ? deHashed[0] + deHashed[0] + deHashed[1] + deHashed[1] + deHashed[2] + deHashed[2]
-            : deHashed;
-
-        // invert color components
-        const r = (255 - parseInt(hexFormatted.slice(0, 2), 16)).toString(16);
-        const g = (255 - parseInt(hexFormatted.slice(2, 4), 16)).toString(16);
-        const b = (255 - parseInt(hexFormatted.slice(4, 6), 16)).toString(16);
-        // pad each with zeros and return
-        const padZero = str => (new Array(2).join("0") + str).slice(-2);
-        return "#" + padZero(r) + padZero(g) + padZero(b);
-    }
-
     highlightSamplesByQuestion = () => {
         const allFeatures = mercator.getAllFeatures(this.state.mapConfig, "currentSamples") || [];
 
@@ -766,7 +752,7 @@ class Collection extends React.Component {
                 const color = this.state.selectedQuestion.componentType === "input"
                     ? userAnswer.length > 0
                         ? this.state.selectedQuestion.answers[0].color
-                        : this.invertColor(this.state.selectedQuestion.answers[0].color)
+                        : invertColor(this.state.selectedQuestion.answers[0].color)
                     : matchingAnswer
                         ? matchingAnswer.color
                         : "";
