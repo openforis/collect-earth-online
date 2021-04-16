@@ -616,13 +616,12 @@ class SimpleCollection extends React.Component {
                     {/* Side Bar */}
                     <div
                         className="border-left full-height"
-                        id="sidebar"
+                        id="simple-sidebar"
                         style={{
                             background: "white",
-                            right: this.state.showSidebar ? 0 : "-25rem",
+                            right: this.state.showSidebar ? 0 : "max(-25rem, -100%)",
                             zIndex: 101,
-                            width: "25rem",
-                            maxWidth: "100%",
+                            width: "min(25rem, 100%)",
                             position: "absolute",
                             transition: "all 200ms ease-in"
                         }}
@@ -667,9 +666,7 @@ class SimpleCollection extends React.Component {
                             }}
                         >
                             <PlotNavigation
-                                currentPlot={this.state.currentPlot}
                                 isProjectAdmin={this.state.currentProject.isProjectAdmin}
-                                loadingPlots={false}
                                 navigationMode={this.state.navigationMode}
                                 navToFirstPlot={this.navToFirstPlot}
                                 navToNextPlot={this.navToNextPlot}
@@ -679,7 +676,6 @@ class SimpleCollection extends React.Component {
                                 plotId={plotId}
                                 prevPlotButtonDisabled={this.state.prevPlotButtonDisabled}
                                 setNavigationMode={this.setNavigationMode}
-                                showNavButtons={this.state.currentPlot.id}
                             />
                             <div className="my-3"/>
                             <ImageryOptions
@@ -794,61 +790,17 @@ class PlotNavigation extends React.Component {
 
     updateNewPlotId = value => this.setState({newPlotInput: value});
 
-    renderGotoButton = () => (
-        <div className="row mb-2" id="go-to-first-plot">
-            <div className="col">
-                <input
-                    className="btn btn-outline-lightgreen btn-sm btn-block"
-                    id="go-to-first-plot-button"
-                    name="new-plot"
-                    onClick={this.props.navToFirstPlot}
-                    type="button"
-                    value="Go to first plot"
-                />
-            </div>
-        </div>
-    );
-
-    renderNavButtons = () => (
-        <div className="row justify-content-center mb-2">
-            <button
-                className="btn btn-outline-lightgreen btn-sm"
-                disabled={this.props.prevPlotButtonDisabled}
-                onClick={this.props.navToPrevPlot}
-                style={{opacity: this.props.prevPlotButtonDisabled ? "0.25" : "1.0"}}
-                type="button"
-            >
-                <UnicodeIcon icon="leftCaret"/>
-            </button>
-            <button
-                className="btn btn-outline-lightgreen btn-sm mx-1"
-                disabled={this.props.nextPlotButtonDisabled}
-                onClick={this.props.navToNextPlot}
-                style={{opacity: this.props.nextPlotButtonDisabled ? "0.25" : "1.0"}}
-                type="button"
-            >
-                <UnicodeIcon icon="rightCaret"/>
-            </button>
-            <input
-                autoComplete="off"
-                className="col-4 px-0 ml-2 mr-1"
-                id="plotId"
-                onChange={e => this.updateNewPlotId(e.target.value)}
-                type="number"
-                value={this.state.newPlotInput}
-            />
-            <button
-                className="btn btn-outline-lightgreen btn-sm"
-                onClick={() => this.props.navToPlot(this.state.newPlotInput)}
-                type="button"
-            >
-                Go to plot
-            </button>
-        </div>
-    );
-
     render() {
-        const {setNavigationMode, navigationMode, loadingPlots, isProjectAdmin, showNavButtons} = this.props;
+        const {
+            setNavigationMode,
+            navigationMode,
+            isProjectAdmin,
+            prevPlotButtonDisabled,
+            navToPrevPlot,
+            nextPlotButtonDisabled,
+            navToNextPlot,
+            navToPlot
+        } = this.props;
         return (
             <>
                 <div className="d-flex flex-column align-items-center my-2">
@@ -864,11 +816,41 @@ class PlotNavigation extends React.Component {
                         {isProjectAdmin && <option value="all">All analyzed plots</option>}
                     </select>
                 </div>
-                {loadingPlots
-                    ? <h3>Loading plot data...</h3>
-                    : showNavButtons
-                        ? this.renderNavButtons()
-                        : this.renderGotoButton()}
+                <div className="row justify-content-center mb-2">
+                    <button
+                        className="btn btn-outline-lightgreen btn-sm"
+                        disabled={prevPlotButtonDisabled}
+                        onClick={navToPrevPlot}
+                        style={{opacity: prevPlotButtonDisabled ? "0.25" : "1.0"}}
+                        type="button"
+                    >
+                        <UnicodeIcon icon="leftCaret"/>
+                    </button>
+                    <button
+                        className="btn btn-outline-lightgreen btn-sm mx-1"
+                        disabled={nextPlotButtonDisabled}
+                        onClick={navToNextPlot}
+                        style={{opacity: nextPlotButtonDisabled ? "0.25" : "1.0"}}
+                        type="button"
+                    >
+                        <UnicodeIcon icon="rightCaret"/>
+                    </button>
+                    <input
+                        autoComplete="off"
+                        className="col-4 px-0 ml-2 mr-1"
+                        id="plotId"
+                        onChange={e => this.updateNewPlotId(e.target.value)}
+                        type="number"
+                        value={this.state.newPlotInput}
+                    />
+                    <button
+                        className="btn btn-outline-lightgreen btn-sm"
+                        onClick={() => navToPlot(this.state.newPlotInput)}
+                        type="button"
+                    >
+                        Go to plot
+                    </button>
+                </div>
             </>
         );
     }
