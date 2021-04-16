@@ -80,21 +80,6 @@ export class SurveyCollection extends React.Component {
             ? "0px 0px 6px 4px yellow inset"
             : "0px 0px 6px 4px red inset");
 
-    getRulesById = id => (this.props.surveyRules || [])
-        .filter(rule => (rule.questionId && rule.questionId === id)
-                    || (rule.questions && rule.questions.includes(id))
-                    || (rule.questionSetIds1 && (rule.questionSetIds1.includes(id) || rule.questionSetIds2.includes(id)))
-                    || (rule.question1 && (rule.question1 === id || rule.question2 === id)))
-        .map((r, uid) => (r.questionId
-            ? r.regex
-                ? <li key={uid}>{`Rule: ${r.ruleType} | Question '${r.questionsText}' should match the pattern: ${r.regex}.`}</li>
-                : <li key={uid}>{`Rule: ${r.ruleType} | Question '${r.questionsText}' should be between: ${r.min} and ${r.max}.`}</li>
-            : r.questions
-                ? <li key={uid}>{`Rule: ${r.ruleType} | Questions '${r.questionsText}' should sum up to ${r.validSum}`}</li>
-                : r.questionSetIds1
-                    ? <li key={uid}>{`Rule: ${r.ruleType} | Sum of '${r.questionSetText1}' should be equal to sum of '${r.questionSetText2}'.`}</li>
-                    : <li key={uid}>{`Rule: ${r.ruleType} | 'Question 1: ${r.questionText1}, Answer 1: ${r.answerText1}' is not compatible with 'Question 2: ${r.questionText2}, Answer 2: ${r.answerText2}'.`}</li>));
-
     setDrawTool = newTool => {
         this.setState({drawTool: newTool});
         if (this.props.mapConfig) mercator.changeDrawTool(this.props.mapConfig, "drawLayer", newTool);
@@ -368,7 +353,6 @@ export class SurveyCollection extends React.Component {
                         </div>
                         {this.state.topLevelNodeIds.length > 0 && (
                             <SurveyQuestionTree
-                                getRulesById={this.getRulesById}
                                 hierarchyLabel=""
                                 selectedQuestion={this.props.selectedQuestion}
                                 selectedSampleId={this.props.selectedSampleId}
@@ -512,67 +496,70 @@ class SurveyQuestionTree extends React.Component {
     toggleShowAnswers = () => this.setState({showAnswers: !this.state.showAnswers});
 
     render() {
-        const childNodes = this.props.surveyQuestions
-            .filter(surveyNode => surveyNode.parentQuestion === this.props.surveyNode.id);
+        const {hierarchyLabel, surveyNode, surveyQuestions, surveyRules} = this.props;
+        const {selectedQuestion, selectedSampleId} = this.props;
+        const {setSelectedQuestion, validateAndSetCurrentValue} = this.props;
+        const {showAnswers} = this.state;
 
-        const shadowColor = this.props.surveyNode.answered.length === 0
+        const childNodes = surveyQuestions
+            .filter(node => node.parentQuestion === surveyNode.id);
+
+        const shadowColor = surveyNode.answered.length === 0
             ? "0px 0px 6px 4px red inset"
-            : this.props.surveyNode.answered.length === this.props.surveyNode.visible.length
+            : surveyNode.answered.length === surveyNode.visible.length
                 ? "0px 0px 6px 5px #3bb9d6 inset"
                 : "0px 0px 6px 4px yellow inset";
-        const rules = this.props.getRulesById(this.props.surveyNode.id);
+
         return (
             <fieldset className="mb-1 justify-content-center text-center">
                 <div className="SurveyQuestionTree__question-buttons btn-block my-2 d-flex">
                     <button
                         className="text-center btn btn-outline-lightgreen btn-sm text-bold px-3 py-2 mr-1"
-                        id={this.props.surveyNode.question + "_" + this.props.surveyNode.id}
+                        id={surveyNode.question + "_" + surveyNode.id}
                         onClick={this.toggleShowAnswers}
                         type="button"
                     >
-                        {this.state.showAnswers ? <span>-</span> : <span>+</span>}
+                        {showAnswers ? <span>-</span> : <span>+</span>}
                     </button>
-                    <SurveyQuestionRules rules={rules}/>
+                    <SurveyQuestionRules id={surveyNode.id} surveyRules={surveyRules}/>
                     <button
                         className="text-center btn btn-outline-lightgreen btn-sm col overflow-hidden text-truncate"
-                        id={this.props.surveyNode.question + "_" + this.props.surveyNode.id}
-                        onClick={() => this.props.setSelectedQuestion(this.props.surveyNode)}
+                        id={surveyNode.question + "_" + surveyNode.id}
+                        onClick={() => setSelectedQuestion(surveyNode)}
                         style={{
-                            boxShadow: `${(this.props.surveyNode.id === this.props.selectedQuestion.id)
+                            boxShadow: `${(surveyNode.id === selectedQuestion.id)
                                 ? "0px 0px 2px 2px black inset,"
                                 : ""}
                                     ${shadowColor}`
                         }}
-                        title={removeEnumerator(this.props.surveyNode.question)}
+                        title={removeEnumerator(surveyNode.question)}
                         type="button"
                     >
-                        {this.props.hierarchyLabel + removeEnumerator(this.props.surveyNode.question)}
+                        {hierarchyLabel + removeEnumerator(surveyNode.question)}
                     </button>
                 </div>
 
-                {this.state.showAnswers && (
+                {showAnswers && (
                     <SurveyAnswers
-                        selectedSampleId={this.props.selectedSampleId}
-                        surveyNode={this.props.surveyNode}
-                        surveyQuestions={this.props.surveyQuestions}
-                        surveyRules={this.props.surveyRules} // TODO, this is unused
-                        validateAndSetCurrentValue={this.props.validateAndSetCurrentValue}
+                        selectedSampleId={selectedSampleId}
+                        surveyNode={surveyNode}
+                        surveyQuestions={surveyQuestions}
+                        validateAndSetCurrentValue={validateAndSetCurrentValue}
                     />
                 )}
                 {childNodes.map((childNode, uid) => (
                     <Fragment key={uid}>
-                        {this.props.surveyQuestions.find(sq => sq.id === childNode.id).visible.length > 0
+                        {surveyQuestions.find(sq => sq.id === childNode.id).visible.length > 0
                         && (
                             <SurveyQuestionTree
                                 key={uid}
-                                getRulesById={this.props.getRulesById}
-                                hierarchyLabel={this.props.hierarchyLabel + "- "}
-                                selectedQuestion={this.props.selectedQuestion}
-                                selectedSampleId={this.props.selectedSampleId}
-                                setSelectedQuestion={this.props.setSelectedQuestion}
+                                hierarchyLabel={hierarchyLabel + "- "}
+                                selectedQuestion={selectedQuestion}
+                                selectedSampleId={selectedSampleId}
+                                setSelectedQuestion={setSelectedQuestion}
                                 surveyNode={childNode}
-                                surveyQuestions={this.props.surveyQuestions}
-                                validateAndSetCurrentValue={this.props.validateAndSetCurrentValue}
+                                surveyQuestions={surveyQuestions}
+                                validateAndSetCurrentValue={validateAndSetCurrentValue}
                             />
                         )}
                     </Fragment>
@@ -697,6 +684,7 @@ class AnswerInput extends React.Component {
 
     render() {
         const {surveyNode, surveyNode: {answers, dataType}, validateAndSetCurrentValue} = this.props;
+        const {newInput} = this.state;
         return answers[0]
             ? (
                 <div className="d-inline-flex">
@@ -718,13 +706,13 @@ class AnswerInput extends React.Component {
                             : e.target.value)}
                         placeholder={answers[0].answer}
                         type={dataType}
-                        value={this.state.newInput}
+                        value={newInput}
                     />
                     <input
                         className="text-center btn btn-outline-lightgreen btn-sm"
                         id="save-input"
                         name="save-input"
-                        onClick={() => validateAndSetCurrentValue(surveyNode, answers[0].id, this.state.newInput)}
+                        onClick={() => validateAndSetCurrentValue(surveyNode, answers[0].id, newInput)}
                         type="button"
                         value="Save"
                     />
@@ -751,6 +739,7 @@ class AnswerDropDown extends React.Component {
 
     render() {
         const {surveyNode, surveyNode: {answers, answered}, selectedSampleId, validateAndSetCurrentValue} = this.props;
+        const {showDropdown} = this.state;
         const options = answers.map((ans, uid) => (
             <div
                 key={uid}
@@ -826,7 +815,7 @@ class AnswerDropDown extends React.Component {
                         className="dropdown-content flex-column container"
                         id="myDropdown"
                         style={{
-                            display: this.state.showDropdown ? "flex" : "none",
+                            display: showDropdown ? "flex" : "none",
                             position: "absolute",
                             backgroundColor: "#f1f1f1",
                             overflow: "auto",
