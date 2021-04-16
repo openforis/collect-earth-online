@@ -59,6 +59,7 @@
                                :user     (pos? user-id)
                                :super    (= 1  user-id)
                                :collect  (can-collect? user-id project-id (:tokenKey params))
+                               :token    (can-collect? -99 project-id (:tokenKey params))
                                :admin    (cond
                                            (pos? project-id)
                                            (is-proj-admin? user-id project-id (:tokenKey params))

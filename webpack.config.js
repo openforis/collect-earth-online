@@ -24,6 +24,7 @@ module.exports = env => ({
         projectDashboard     : path.resolve(__dirname, "src/js/projectDashboard.js"),
         register             : path.resolve(__dirname, "src/js/register.js"),
         reviewInstitution    : path.resolve(__dirname, "src/js/reviewInstitution.js"),
+        simpleCollection     : path.resolve(__dirname, "src/js/simpleCollection.js"),
         support              : path.resolve(__dirname, "src/js/support.js"),
         widgetLayoutEditor   : path.resolve(__dirname, "src/js/widgetLayoutEditor.js"),
         termsOfService       : path.resolve(__dirname, "src/js/termsOfService.js")
