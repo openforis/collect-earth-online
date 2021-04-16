@@ -244,7 +244,7 @@ export class PlotDesign extends React.Component {
     render() {
         const {plotDistribution, plotShape} = this.context;
         const totalPlots = this.props.getTotalPlots();
-        const plotUnits = plotShape === "circle" ? "Diameter (m)" : "Width (m)";
+        const plotUnits = plotShape === "circle" ? "Plot diameter (m)" : "Plot width (m)";
 
         const plotOptions = {
             random: {
