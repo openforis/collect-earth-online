@@ -197,7 +197,7 @@ class ProjectManagement extends React.Component {
                                     Date Published
                                     <span className="badge badge-pill bg-lightgreen ml-3">
                                         {this.context.publishedDate || (this.context.availability === "unpublished"
-                                            ? "Unpublished"
+                                            ? "Draft"
                                             : "Unknown")}
                                     </span>
                                 </div>
@@ -211,7 +211,7 @@ class ProjectManagement extends React.Component {
                                 </div>
                             </div>
                         </div>
-                        <p>This project is <b>{this.context.availability}</b>. {description}</p>
+                        <p>This project is <b>{this.context.availability === "unpublished" ? "in draft mode" : this.context.availability}</b>. {description}</p>
                     </div>
                     <div className="col-5 d-flex flex-column align-items-center">
                         <h3 className="my-2">Modify Project Details</h3>

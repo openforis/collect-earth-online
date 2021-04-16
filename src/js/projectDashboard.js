@@ -190,7 +190,7 @@ function ProjectStats(props) {
                             <div className="pr-4">
                                 Date Published
                                 <span className="badge badge-pill bg-lightgreen ml-3">
-                                    {publishedDate || (availability === "unpublished" ? "Unpublished" : "Unknown")}
+                                    {publishedDate || (availability === "unpublished" ? "Draft" : "Unknown")}
                                 </span>
                             </div>
                             <div className="pr-4">

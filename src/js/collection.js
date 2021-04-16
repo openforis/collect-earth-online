@@ -156,7 +156,7 @@ class Collection extends React.Component {
         ])
             .then(() => {
                 if (this.state.currentProject.availability === "unpublished") {
-                    alert("This project is unpublished. Only admins can collect. Any plot collections will be erased when the project is published.");
+                    alert("This project is in draft mode. Only admins can collect. Any plot collections will be erased when the project is published.");
                 } else if (this.state.currentProject.availability === "closed") {
                     alert("This project has been closed. Admins can make corrections to any plot.");
                 }
