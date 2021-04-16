@@ -45,7 +45,7 @@ export function ImagerySelection() {
                         </div>
                         <h3>Additional Imagery</h3>
                         <div className="form-group">
-                            <h3 style={{fontSize: "0.8rem"}}>Public Imagery</h3>
+                            <h4>Public Imagery</h4>
                             {renderImageryRow(
                                 institutionImagery.filter(imagery => imagery.visibility === "public"),
                                 imageryId,
@@ -55,7 +55,7 @@ export function ImagerySelection() {
                             )}
                         </div>
                         <div className="form-group">
-                            <h3 style={{fontSize: "0.8rem"}}>Private Institution Imagery*</h3>
+                            <h4>Private Institution Imagery*</h4>
                             {renderImageryRow(
                                 institutionImagery.filter(imagery => imagery.visibility === "private"),
                                 imageryId,
