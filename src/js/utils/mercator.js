@@ -784,7 +784,11 @@ mercator.zoomMapToExtent = (mapConfig, extent, padding) => {
     mapConfig.view.fit(extent,
                        {
                            size: mapConfig.map.getSize(),
-                           padding: padding ? [padding, padding, padding, padding] : [16, 16, 16, 16]
+                           padding: padding
+                               ? Array.isArray(padding)
+                                   ? padding
+                                   : [padding, padding, padding, padding]
+                               : [16, 16, 16, 16]
                        });
     return mapConfig;
 };
@@ -800,7 +804,7 @@ mercator.zoomMapToLayer = (mapConfig, layerId, padding) => {
 
 // [Side Effects] Resizes the map
 mercator.resize = mapConfig => {
-    mapConfig.map.updateSize();
+    if (mapConfig) mapConfig.map.updateSize();
     return mapConfig;
 };
 

@@ -624,6 +624,10 @@ ul.samplevalue {
     z-index: 100;
 }
 
+#mobile-analysis-pane .ol-zoom {
+    top: 2.5rem !important;
+}
+
 /********************/
 /* Institution Page */
 /********************/

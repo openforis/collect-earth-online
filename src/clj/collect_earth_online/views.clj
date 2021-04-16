@@ -16,6 +16,7 @@
    [:meta {:name "viewport"    :content "width=device-width, initial-scale=1.0"}]
    [:meta {:name "description" :content "Collect Earth Online is an Image Analysis Crowdsourcing Platform by OpenForis and Spatial Informatics Group"}]
    [:meta {:name "keywords"    :content "collect earth online image analysis crowdsourcing platform openforis SIG spatial informatics group"}]
+   [:meta {:name "viewport"    :content "width=device-width, user-scalable=no"}] ; prevent touch zoom on mobile
    [:link {:rel "shortcut icon" :href "favicon.ico"}]
    (include-css "/css/bootstrap.min.css")
    (apply include-js
