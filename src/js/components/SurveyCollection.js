@@ -153,7 +153,7 @@ export class SurveyCollection extends React.Component {
     checkRuleTextMatch = (surveyRule, questionToSet, answerId, answerText) => {
         if (surveyRule.questionId === questionToSet.id
             && !RegExp(surveyRule.regex).test(answerText)) {
-            return `Text match validation failed.\r\n\nPlease enter a regular expression that matches ${surveyRule.regex}`;
+            return `Text match validation failed.\r\n\nPlease enter an answer that matches the expression: ${surveyRule.regex}`;
         } else {
             return null;
         }
