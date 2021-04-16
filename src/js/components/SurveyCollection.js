@@ -497,8 +497,14 @@ class SurveyQuestionTree extends React.Component {
 
     render() {
         const {
-            hierarchyLabel, surveyNode, surveyQuestions, surveyRules, selectedQuestion,
-            selectedSampleId, setSelectedQuestion, validateAndSetCurrentValue
+            hierarchyLabel,
+            surveyNode,
+            surveyQuestions,
+            surveyRules,
+            selectedQuestion,
+            selectedSampleId,
+            setSelectedQuestion,
+            validateAndSetCurrentValue
         } = this.props;
         const {showAnswers} = this.state;
 
