@@ -1422,7 +1422,7 @@ class ProjectStats extends React.Component {
                                 <tr>
                                     <td className="small pl-4">My Plots Completed</td>
                                     <td className="small">
-                                        {(userStats && userStats.plots) || "0"}
+                                        {userStats && (userStats.plots || "0")}
                                         ({asPercentage((userStats && userStats.plots) || 0, numPlots)}%)
                                     </td>
                                 </tr>
