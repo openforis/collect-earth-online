@@ -14,7 +14,7 @@ import {
 } from "./imagery/collectionMenuControls";
 import {CollapsibleTitle} from "./components/FormComponents";
 
-import {UnicodeIcon, getQueryString, safeLength, isNumber, invertColor} from "./utils/generalUtils";
+import {UnicodeIcon, getQueryString, safeLength, isNumber, invertColor, asPercentage} from "./utils/generalUtils";
 import {mercator} from "./utils/mercator";
 
 class Collection extends React.Component {
@@ -1388,13 +1388,6 @@ class ProjectStats extends React.Component {
         this.getProjectStats();
     }
 
-    // TODO move to utils
-    asPercentage(part, total) {
-        return (part && total)
-            ? (100.0 * part / total).toFixed(2)
-            : "0.00";
-    }
-
     getProjectStats() {
         fetch(`/get-project-stats?projectId=${this.props.projectId}`)
             .then(response => (response.ok ? response.json() : Promise.reject(response)))
@@ -1429,8 +1422,8 @@ class ProjectStats extends React.Component {
                                 <tr>
                                     <td className="small pl-4">My Plots Completed</td>
                                     <td className="small">
-                                        {userStats && userStats.plots || "0"}
-                                        ({this.asPercentage(userStats && userStats.plots || 0, numPlots)}%)
+                                        {(userStats && userStats.plots) || "0"}
+                                        ({asPercentage((userStats && userStats.plots) || 0, numPlots)}%)
                                     </td>
                                 </tr>
                                 <tr>
@@ -1445,21 +1438,21 @@ class ProjectStats extends React.Component {
                                     <td className="small pl-4">Project Plots Completed</td>
                                     <td className="small">
                                         {stats.analyzedPlots + stats.flaggedPlots || ""}
-                                        ({this.asPercentage(stats.analyzedPlots + stats.flaggedPlots, numPlots)}%)
+                                        ({asPercentage(stats.analyzedPlots + stats.flaggedPlots, numPlots)}%)
                                     </td>
                                 </tr>
                                 <tr>
                                     <td className="small pl-4">-- Analyzed</td>
                                     <td className="small">
                                         {stats.analyzedPlots || ""}
-                                        ({this.asPercentage(stats.analyzedPlots, numPlots)}%)
+                                        ({asPercentage(stats.analyzedPlots, numPlots)}%)
                                     </td>
                                 </tr>
                                 <tr>
                                     <td className="small pl-4">-- Flagged</td>
                                     <td className="small">
                                         {stats.flaggedPlots || ""}
-                                        ({this.asPercentage(stats.flaggedPlots, numPlots)}%)
+                                        ({asPercentage(stats.flaggedPlots, numPlots)}%)
                                     </td>
                                 </tr>
                                 <tr>

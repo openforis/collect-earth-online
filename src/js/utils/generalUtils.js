@@ -157,3 +157,9 @@ export function invertColor(hex) {
 export function pluralize(number, single, plural) {
     return (number === 1) ? single : plural;
 }
+
+export function asPercentage(part, total) {
+    return (part && total)
+        ? ((part / total) * 100).toFixed(2)
+        : "0.00";
+}
