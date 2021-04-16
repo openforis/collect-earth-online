@@ -43,8 +43,9 @@ export function ImagerySelection() {
                                     <option key={uid} value={imagery.id}>{imagery.title}</option>)}
                             </select>
                         </div>
+                        <h3>Additional Imagery</h3>
                         <div className="form-group">
-                            <h3>Public Imagery</h3>
+                            <h3 style={{fontSize: "0.8rem"}}>Public Imagery</h3>
                             {renderImageryRow(
                                 institutionImagery.filter(imagery => imagery.visibility === "public"),
                                 imageryId,
@@ -52,7 +53,9 @@ export function ImagerySelection() {
                                 setProjectDetails,
                                 "public"
                             )}
-                            <h3>Private Institution Imagery*</h3>
+                        </div>
+                        <div className="form-group">
+                            <h3 style={{fontSize: "0.8rem"}}>Private Institution Imagery*</h3>
                             {renderImageryRow(
                                 institutionImagery.filter(imagery => imagery.visibility === "private"),
                                 imageryId,
