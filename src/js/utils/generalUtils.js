@@ -157,3 +157,8 @@ export function invertColor(hex) {
 export function pluralize(number, single, plural) {
     return (number === 1) ? single : plural;
 }
+
+export function detectMacOS() {
+    const macRegex = /(Mac OS X|MacPPC|MacIntel|Mac_PowerPC|Macintosh)/;
+    return macRegex.test(window.navigator.userAgent);
+}
