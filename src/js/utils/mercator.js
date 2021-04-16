@@ -1005,11 +1005,10 @@ mercator.addPlotOverviewLayers = (mapConfig, plots) => {
 
 // [Pure] Returns the map interaction with title === interactionTitle
 // or null if no such interaction exists.
-mercator.getInteractionByTitle = (mapConfig, interactionTitle) => {
+mercator.getInteractionByTitle = (mapConfig, interactionTitle) =>
     mapConfig.map.getInteractions().getArray().find(
         interaction => interaction.get("title") === interactionTitle
     );
-};
 
 // [Side Effects] Removes the interaction with title === interactionTitle from
 // mapConfig's map object.
