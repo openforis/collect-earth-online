@@ -9,9 +9,26 @@ export default class SurveyQuestionRules extends React.Component {
         this.state = {showModal: false};
     }
 
+    getRulesById = (id, surveyRules = []) => surveyRules
+        .filter(rule =>
+            (rule.questionId && rule.questionId === id)
+            || (rule.questions && rule.questions.includes(id))
+            || (rule.questionSetIds1 && (rule.questionSetIds1.includes(id) || rule.questionSetIds2.includes(id)))
+            || (rule.question1 && (rule.question1 === id || rule.question2 === id)))
+        .map((r, uid) => (r.questionId
+            ? r.regex
+                ? <li key={uid}>{`Rule: ${r.ruleType} | Question '${r.questionsText}' should match the pattern: ${r.regex}.`}</li>
+                : <li key={uid}>{`Rule: ${r.ruleType} | Question '${r.questionsText}' should be between: ${r.min} and ${r.max}.`}</li>
+            : r.questions
+                ? <li key={uid}>{`Rule: ${r.ruleType} | Questions '${r.questionsText}' should sum up to ${r.validSum}`}</li>
+                : r.questionSetIds1
+                    ? <li key={uid}>{`Rule: ${r.ruleType} | Sum of '${r.questionSetText1}' should be equal to sum of '${r.questionSetText2}'.`}</li>
+                    : <li key={uid}>{`Rule: ${r.ruleType} | 'Question 1: ${r.questionText1}, Answer 1: ${r.answerText1}' is not compatible with 'Question 2: ${r.questionText2}, Answer 2: ${r.answerText2}'.`}</li>));
+
     render() {
         const {showModal} = this.state;
-        const {rules} = this.props;
+        const {surveyNodeId, surveyRules} = this.props;
+        const rules = this.getRulesById(surveyNodeId, surveyRules);
 
         return (
             rules.length > 0
