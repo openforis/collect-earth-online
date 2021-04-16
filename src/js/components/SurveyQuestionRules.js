@@ -27,8 +27,8 @@ export default class SurveyQuestionRules extends React.Component {
 
     render() {
         const {showModal} = this.state;
-        const {id, surveyRules} = this.props;
-        const rules = this.getRulesById(id, surveyRules);
+        const {surveyNodeId, surveyRules} = this.props;
+        const rules = this.getRulesById(surveyNodeId, surveyRules);
 
         return (
             rules.length > 0

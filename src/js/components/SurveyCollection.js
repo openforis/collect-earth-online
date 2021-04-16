@@ -496,9 +496,10 @@ class SurveyQuestionTree extends React.Component {
     toggleShowAnswers = () => this.setState({showAnswers: !this.state.showAnswers});
 
     render() {
-        const {hierarchyLabel, surveyNode, surveyQuestions, surveyRules} = this.props;
-        const {selectedQuestion, selectedSampleId} = this.props;
-        const {setSelectedQuestion, validateAndSetCurrentValue} = this.props;
+        const {
+            hierarchyLabel, surveyNode, surveyQuestions, surveyRules, selectedQuestion,
+            selectedSampleId, setSelectedQuestion, validateAndSetCurrentValue
+        } = this.props;
         const {showAnswers} = this.state;
 
         const childNodes = surveyQuestions
@@ -515,16 +516,14 @@ class SurveyQuestionTree extends React.Component {
                 <div className="SurveyQuestionTree__question-buttons btn-block my-2 d-flex">
                     <button
                         className="text-center btn btn-outline-lightgreen btn-sm text-bold px-3 py-2 mr-1"
-                        id={surveyNode.question + "_" + surveyNode.id}
                         onClick={this.toggleShowAnswers}
                         type="button"
                     >
                         {showAnswers ? <span>-</span> : <span>+</span>}
                     </button>
-                    <SurveyQuestionRules id={surveyNode.id} surveyRules={surveyRules}/>
+                    <SurveyQuestionRules surveyNodeId={surveyNode.id} surveyRules={surveyRules}/>
                     <button
                         className="text-center btn btn-outline-lightgreen btn-sm col overflow-hidden text-truncate"
-                        id={surveyNode.question + "_" + surveyNode.id}
                         onClick={() => setSelectedQuestion(surveyNode)}
                         style={{
                             boxShadow: `${(surveyNode.id === selectedQuestion.id)
