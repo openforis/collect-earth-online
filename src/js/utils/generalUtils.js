@@ -138,3 +138,18 @@ export function intersection(array1, array2) {
 export function partition(array, n) {
     return array.length ? [array.splice(0, n)].concat(partition(array, n)) : [];
 }
+
+export function invertColor(hex) {
+    const deHashed = hex.indexOf("#") === 0 ? hex.slice(1) : hex;
+    const hexFormatted = deHashed.length === 3
+        ? deHashed[0] + deHashed[0] + deHashed[1] + deHashed[1] + deHashed[2] + deHashed[2]
+        : deHashed;
+
+    // invert color components
+    const r = (255 - parseInt(hexFormatted.slice(0, 2), 16)).toString(16);
+    const g = (255 - parseInt(hexFormatted.slice(2, 4), 16)).toString(16);
+    const b = (255 - parseInt(hexFormatted.slice(4, 6), 16)).toString(16);
+    // pad each with zeros and return
+    const padZero = str => (new Array(2).join("0") + str).slice(-2);
+    return "#" + padZero(r) + padZero(g) + padZero(b);
+}

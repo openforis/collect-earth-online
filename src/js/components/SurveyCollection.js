@@ -543,8 +543,8 @@ class SurveyQuestionTree extends React.Component {
                                 : ""}
                                     ${shadowColor}`
                         }}
-                        type="button"
                         title={removeEnumerator(this.props.surveyNode.question)}
+                        type="button"
                     >
                         {this.props.hierarchyLabel + removeEnumerator(this.props.surveyNode.question)}
                     </button>
@@ -555,7 +555,7 @@ class SurveyQuestionTree extends React.Component {
                         selectedSampleId={this.props.selectedSampleId}
                         surveyNode={this.props.surveyNode}
                         surveyQuestions={this.props.surveyQuestions}
-                        surveyRules={this.props.surveyRules}
+                        surveyRules={this.props.surveyRules} // TODO, this is unused
                         validateAndSetCurrentValue={this.props.validateAndSetCurrentValue}
                     />
                 )}
