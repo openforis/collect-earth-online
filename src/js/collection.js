@@ -654,7 +654,6 @@ class Collection extends React.Component {
         const allFeatures = mercator.getAllFeatures(this.state.mapConfig, "currentSamples") || [];
         const selectedSamples = mercator.getSelectedSamples(this.state.mapConfig);
         const selectedFeatures = selectedSamples ? selectedSamples.getArray() : [];
-
         return (
             (selectedFeatures.length === 0 && question.answered.length === 0)
             || Object.keys(this.state.userSamples).length === 1

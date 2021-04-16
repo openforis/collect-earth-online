@@ -51,7 +51,9 @@ const mercator = {};
 
 // [Pure] Returns the passed in [longitude, latitude] values
 // reprojected to Web Mercator as [x, y].
-mercator.reprojectToMap = (longitude, latitude) => transform([Number(longitude), Number(latitude)], "EPSG:4326", "EPSG:3857");
+mercator.reprojectToMap = (longitude, latitude) => transform(
+    [Number(longitude), Number(latitude)], "EPSG:4326", "EPSG:3857"
+);
 
 // [Pure] Returns the passed in [x, y] values reprojected to WGS84 as
 // [longitude, latitude].
@@ -684,10 +686,12 @@ mercator.destroyMap = mapConfig => {
 // const newMapConfig = mercator.resetMap(mapConfig);
 mercator.resetMap = mapConfig => {
     mercator.destroyMap(mapConfig);
-    return mercator.createMap(mapConfig.init.divName,
-                              mapConfig.init.centerCoords,
-                              mapConfig.init.zoomLevel,
-                              mapConfig.init.layerConfigs);
+    return mercator.createMap(
+        mapConfig.init.divName,
+        mapConfig.init.centerCoords,
+        mapConfig.init.zoomLevel,
+        mapConfig.init.layerConfigs
+    );
 };
 
 /*****************************************************************************
@@ -712,7 +716,8 @@ mercator.setVisibleLayer = (mapConfig, layerId) => {
 };
 
 // [Pure] Returns the map layer with id === layerId or null if no such layer exists.
-mercator.getLayerById = (mapConfig, layerId) => mapConfig.layers.getArray().find(layer => layer.get("id") === layerId);
+mercator.getLayerById = (mapConfig, layerId) =>
+    mapConfig.layers.getArray().find(layer => layer.get("id") === layerId);
 
 // [Pure] Returns the initial layerConfig for the map layer with id === layerId or null if no such layer exists.
 mercator.getLayerConfigById = (mapConfig, layerConfigId) =>
@@ -1005,11 +1010,10 @@ mercator.addPlotOverviewLayers = (mapConfig, plots) => {
 
 // [Pure] Returns the map interaction with title === interactionTitle
 // or null if no such interaction exists.
-mercator.getInteractionByTitle = (mapConfig, interactionTitle) => {
+mercator.getInteractionByTitle = (mapConfig, interactionTitle) =>
     mapConfig.map.getInteractions().getArray().find(
         interaction => interaction.get("title") === interactionTitle
     );
-};
 
 // [Side Effects] Removes the interaction with title === interactionTitle from
 // mapConfig's map object.
@@ -1057,6 +1061,7 @@ mercator.makeDragBoxSelect = (interactionTitle, layer, selectedFeatures) => {
     return dragBox;
 };
 
+// [Side Effects]
 mercator.addAfterSelectionChange = (selectedFeatures, setSampleId) => {
     const afterSelectionChange = () => {
         setSampleId(selectedFeatures.getLength() === 1 ? selectedFeatures.getArray()[0].get("sampleId") : -1);
@@ -1260,7 +1265,8 @@ mercator.disableDragBoxDraw = mapConfig => {
 
 // [Pure] Returns the extent of the rectangle drawn by the passed-in
 // dragBox in lat/lon coords (EPSG:4326).
-mercator.getDragBoxExtent = dragBox => dragBox.getGeometry().clone().transform("EPSG:3857", "EPSG:4326").getExtent();
+mercator.getDragBoxExtent = dragBox =>
+    dragBox.getGeometry().clone().transform("EPSG:3857", "EPSG:4326").getExtent();
 
 /*****************************************************************************
 ***
@@ -1385,7 +1391,8 @@ mercator.asPolygonFeature = feature => (
         : feature
 );
 
-mercator.getKMLFromFeatures = features => (new KML()).writeFeatures(features, {featureProjection: "EPSG:3857"});
+mercator.getKMLFromFeatures = features =>
+    (new KML()).writeFeatures(features, {featureProjection: "EPSG:3857"});
 
 export {
     mercator
