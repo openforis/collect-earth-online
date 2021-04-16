@@ -1,6 +1,7 @@
 import React from "react";
 
 import SvgIcon from "./SvgIcon";
+import {pluralize} from "../utils/generalUtils";
 
 class SurveyRulesModal extends React.Component {
     constructor(props) {
@@ -21,7 +22,7 @@ class SurveyRulesModal extends React.Component {
                 >
                     <SvgIcon icon="rule" size="1.5rem"/>
                     <div className="tooltip_content survey_tree">
-                        {`This question has ${rules.length} rules. Click to see the rule list.`}
+                        {`This question has ${rules.length} ${pluralize(rules.length, "rule", "rules")}. Click to see the rule list.`}
                     </div>
                 </button>
                 <div
@@ -70,18 +71,6 @@ class SurveyRulesModal extends React.Component {
     }
 }
 
-function SurveyRulesTooltip({rules}) {
-    return (
-        <div className="text-center btn btn-outline-lightgreen mr-1 tooltip_wrapper">
-            <SvgIcon icon="rule" size="1.5rem"/>
-            <ul className="tooltip_content survey_tree">{rules}</ul>
-        </div>
-    );
-}
-
 export default function SurveyQuestionRules({rules}) {
-    return rules.length > 0 && (
-        rules.length <= 2
-            ? <SurveyRulesTooltip rules={rules}/>
-            : <SurveyRulesModal rules={rules}/>);
+    return rules.length > 0 && <SurveyRulesModal rules={rules}/>;
 }

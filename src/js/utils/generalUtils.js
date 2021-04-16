@@ -153,3 +153,7 @@ export function invertColor(hex) {
     const padZero = str => (new Array(2).join("0") + str).slice(-2);
     return "#" + padZero(r) + padZero(g) + padZero(b);
 }
+
+export function pluralize(number, single, plural) {
+    return (number === 1) ? single : plural;
+}
