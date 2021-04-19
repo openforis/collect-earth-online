@@ -828,6 +828,7 @@ CREATE OR REPLACE FUNCTION select_project_by_id(_project_id integer)
     created_date           date,
     published_date         date,
     closed_date            date,
+    has_geo_dash           boolean,
     token_key              text
  ) AS $$
 
@@ -854,10 +855,14 @@ CREATE OR REPLACE FUNCTION select_project_by_id(_project_id integer)
         created_date,
         published_date,
         closed_date,
+        count(widget_uid) > 1,
         token_key
     FROM projects
+    LEFT JOIN project_widgets
+        ON project_rid = project_uid
     WHERE project_uid = _project_id
         AND availability <> 'archived'
+    GROUP BY project_uid
 
 $$ LANGUAGE SQL;
 

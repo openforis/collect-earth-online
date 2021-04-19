@@ -41,7 +41,6 @@ class Collection extends React.Component {
             userImages: {},
             storedInterval: null,
             KMLFeatures: null,
-            hasGeoDash: false,
             showSidebar: false,
             showQuitModal: false,
             answerMode: "question",
@@ -95,7 +94,7 @@ class Collection extends React.Component {
         // Initialize when new plot
         if (this.state.currentPlot.id && this.state.currentPlot.id !== prevState.currentPlot.id) {
             this.showProjectPlot();
-            if (this.state.hasGeoDash
+            if (this.state.currentProject.hasGeoDash
                 && this.state.currentProject.projectOptions.autoLaunchGeoDash) {
                 this.showGeoDash();
             }
@@ -151,7 +150,6 @@ class Collection extends React.Component {
         () => Promise.all([
             this.getProjectById(),
             this.getProjectPlots(),
-            this.checkForGeodash(),
             this.getImageryList()
         ])
             .then(() => {
@@ -184,18 +182,6 @@ class Collection extends React.Component {
         });
 
     // TODO, this can easily be a part of get-project-by-id
-    checkForGeodash = () => fetch(`/geo-dash/get-by-projid?projectId=${this.props.projectId}`)
-        .then(response => (response.ok ? response.json() : Promise.reject(response)))
-        .then(data => {
-            const widgets = Array.isArray(data.widgets)
-                ? data.widgets
-                : Array.isArray(eval(data.widgets))
-                    ? eval(data.widgets)
-                    : [];
-            this.setState({hasGeoDash: widgets.length > 0});
-            return Promise.resolve("resolved");
-        });
-
     getProjectPlots = () => fetch(`/get-project-plots?projectId=${this.props.projectId}`)
         .then(response => (response.ok ? response.json() : Promise.reject(response)))
         .then(data => {
@@ -1170,7 +1156,7 @@ class ExternalTools extends React.Component {
                 className="btn btn-outline-lightgreen btn-sm col-6"
                 onClick={this.props.showGeoDash}
                 type="button"
-                value="Geodash"
+                value="GeoDash"
             />
         </div>
     );
