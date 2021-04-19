@@ -159,6 +159,6 @@ export function pluralize(number, single, plural) {
 }
 
 export function detectMacOS() {
-    const macRegex = /(Mac OS X|MacPPC|MacIntel|Mac_PowerPC|Macintosh)/;
+    const macRegex = /Mac/i;
     return macRegex.test(window.navigator.userAgent);
 }
