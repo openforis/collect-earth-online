@@ -1396,7 +1396,7 @@ class WidgetLayoutEditor extends React.PureComponent {
                         onChange={this.onImageCollectionChange}
                     />
                 </div>
-                {this.getAvailableBandsControl(false, isCollection)}
+                {this.getAvailableBandsControl(isCollection)}
                 {this.getImageParamsBlock()}
                 {this.getInstitutionImageryInfo()}
             </React.Fragment>;
