@@ -287,8 +287,8 @@ class WidgetLayoutEditor extends React.PureComponent {
         if (value !== "") {
             const postObject = {
                 path: "getAvailableBands",
+                ...(isCollection ? {imageCollection: value} : {image: value}),
             };
-            if (isCollection) postObject["imageCollection"] = value; else postObject["image"] = value;
             fetch("/geo-dash/gateway-request", {
                 method: "POST",
                 headers: {
