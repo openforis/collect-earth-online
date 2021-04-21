@@ -1295,7 +1295,10 @@ class WidgetLayoutEditor extends React.PureComponent {
                 <label>Available Bands</label>
                 <button className="btn btn-sm btn-secondary mb-1" onClick={() => this.getBandsFromGateway(isDual, isCollection)} type="button">Refresh</button>
             </div>
-            <label>{this.state.availableBands || "Click on refresh to see the Available Bands."}</label>
+            <label>{isDual
+                ? this.state.availableBandsDual || "Click on refresh to see the Available Bands."
+                : this.state.availableBands || "Click on refresh to see the Available Bands."}
+            </label>
         </>
     );
 
