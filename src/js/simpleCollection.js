@@ -94,7 +94,8 @@ class SimpleCollection extends React.Component {
             myHeight: 0,
             isMobile: false,
             localeText: localeLanguages[getLanguage(["en", "es"])],
-            KMLFeatures: null
+            KMLFeatures: null,
+            plotList: []
         };
     }
 
