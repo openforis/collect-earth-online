@@ -268,14 +268,16 @@ class SimpleCollection extends React.Component {
     getImageryById = imageryId => this.state.imageryList.find(imagery => imagery.id === imageryId);
 
     showProjectOverview = () => {
-        mercator.addPlotLayer(this.state.mapConfig,
-                              this.state.plotList,
-                              feature => {
-                                  this.setState({
-                                      prevPlotButtonDisabled: false
-                                  });
-                                  this.getPlotData(feature.get("features")[0].get("plotId"));
-                              });
+        mercator.addPlotLayer(
+            this.state.mapConfig,
+            this.state.plotList,
+            feature => {
+                this.setState({
+                    prevPlotButtonDisabled: false
+                });
+                this.getPlotData(feature.get("features")[0].get("plotId"));
+            }
+        );
     };
 
     setBaseMapSource = newBaseMapSource => {
