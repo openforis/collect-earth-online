@@ -17,11 +17,11 @@ const localeLanguages = {
         "gettingPrevPlot": "Getting previous plot",
         "navPlot": "This plot has already been analyzed.",
         "plotNotFound": "Plot {0} not found.",
-        "navNextUn": "You have not reviewed any plots.",
-        "navNextAn": "All plots have been analyzed for this project.",
+        "navNextAn": "You have not reviewed any plots.",
+        "navNextUn": "All plots have been analyzed for this project.",
         "navNextDone": "You have reached the end of the plot list.",
-        "navPrevUn": "No previous plots were analyzed by you.",
-        "navPrevAn": "All previous plots have been analyzed.",
+        "navPrevAn": "No previous plots were analyzed by you.",
+        "navPrevUn": "All previous plots have been analyzed.",
         "errorNavNum": "Please enter a number to go to plot.",
         "postSave": "Saving plot answers",
         "errorSelect": "Please select at least one sample before choosing an answer.",
@@ -42,11 +42,11 @@ const localeLanguages = {
         "gettingPrevPlot": "Obtener parcela anterior",
         "navPlot": "Esta parcela ya ha sido analizado.",
         "plotNotFound": "Parcela {0} no encontrado.",
-        "navNextUn": "No ha revisado ninguna parcela.",
-        "navNextAn": "Todas las parcelas han sido analizadas para este proyecto.",
+        "navNextAn": "No ha revisado ninguna parcela.",
+        "navNextUn": "Todas las parcelas han sido analizadas para este proyecto.",
         "navNextDone": "Ha llegado al final de la lista de parcelas..",
-        "navPrevUn": "Usted no analizó ninguna parcela anterior.",
-        "navPrevAn": "Todas las parcelas anteriores han sido analizadas..",
+        "navPrevAn": "Usted no analizó ninguna parcela anterior.",
+        "navPrevUn": "Todas las parcelas anteriores han sido analizadas..",
         "errorNavNum": "Ingrese un número para ir a la parcela.",
         "postSave": "Guardar respuestas de la parcela",
         "errorSelect": "Seleccionar al menos una muestra antes de elegir una respuesta.",
@@ -282,7 +282,7 @@ class SimpleCollection extends React.Component {
             .then(data => {
                 if (data === "done") {
                     if (plotId === -1) {
-                        alert(this.state.navigationMode !== "unanalyzed"
+                        alert(this.state.navigationMode === "unanalyzed"
                             ? this.state.localeText.navNextUn
                             : this.state.localeText.navNextAn);
                     } else {
@@ -314,7 +314,7 @@ class SimpleCollection extends React.Component {
             .then(data => {
                 if (data === "done") {
                     this.setState({prevPlotButtonDisabled: true});
-                    alert(this.state.navigationMode !== "unanalyzed"
+                    alert(this.state.navigationMode === "unanalyzed"
                         ? this.state.localeText.navPrevUn
                         : this.state.localeText.navPrevAn);
                 } else {
