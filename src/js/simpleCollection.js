@@ -5,8 +5,61 @@ import {LoadingModal, NavigationBar} from "./components/PageComponents";
 import SvgIcon from "./components/SvgIcon";
 import {PlanetNICFIMenu} from "./imagery/collectionMenuControls";
 
-import {UnicodeIcon, getQueryString, safeLength, isNumber, invertColor} from "./utils/generalUtils";
+import {UnicodeIcon, getQueryString, safeLength, isNumber, invertColor, getLanguage} from "./utils/generalUtils";
 import {mercator} from "./utils/mercator";
+
+const localeLanguages = {
+    "en": {
+        "loadingModal": "Loading project details",
+        "gettingPlot": "Getting plot",
+        "gettingFirstPlot": "Getting first plot",
+        "gettingNextPlot": "Getting next plot",
+        "gettingPrevPlot": "Getting previous plot",
+        "navPlot": "This plot has already been analyzed.",
+        "plotNotFound": "Plot {0} not found.",
+        "navNextAn": "You have not reviewed any plots.",
+        "navNextUn": "All plots have been analyzed for this project.",
+        "navNextDone": "You have reached the end of the plot list.",
+        "navPrevAn": "No previous plots were analyzed by you.",
+        "navPrevUn": "All previous plots have been analyzed.",
+        "errorNavNum": "Please enter a number to go to plot.",
+        "postSave": "Saving plot answers",
+        "errorSelect": "Please select at least one sample before choosing an answer.",
+        "errorSave": "All questions must be answered to save the collection.",
+        "saveButton": "Save",
+        "navLabel": "Navigate through",
+        "optionUn": "Unanalyzed plots",
+        "optionMy": "My analyzed plots",
+        "gotoPlot": "Go to plot",
+        "imageryTitle": "Imagery Options",
+        "imageryLoading": "Loading imagery data"
+    },
+    "es": {
+        "loadingModal": "Cargando detalles del proyecto",
+        "gettingPlot": "Obtener parcela",
+        "gettingFirstPlot": "Obtener primera parcela",
+        "gettingNextPlot": "Obtener siguiente parcela",
+        "gettingPrevPlot": "Obtener parcela anterior",
+        "navPlot": "Esta parcela ya ha sido analizado.",
+        "plotNotFound": "Parcela {0} no encontrado.",
+        "navNextAn": "No ha revisado ninguna parcela.",
+        "navNextUn": "Todas las parcelas han sido analizadas para este proyecto.",
+        "navNextDone": "Ha llegado al final de la lista de parcelas..",
+        "navPrevAn": "Usted no analizó ninguna parcela anterior.",
+        "navPrevUn": "Todas las parcelas anteriores han sido analizadas..",
+        "errorNavNum": "Ingrese un número para ir a la parcela.",
+        "postSave": "Guardar respuestas de la parcela",
+        "errorSelect": "Seleccionar al menos una muestra antes de elegir una respuesta.",
+        "errorSave": "Todas las preguntas deben responderse para guardar la colección.",
+        "saveButton": "Guardar",
+        "navLabel": "Navegar por",
+        "optionUn": "Parcelas no analizadas",
+        "optionMy": "Mis parcelas analizadas",
+        "gotoPlot": "Ir a la parcela",
+        "imageryTitle": "Opciones de imágenes",
+        "imageryLoading": "Cargando datos de imágenes"
+    }
+};
 
 class SimpleCollection extends React.Component {
     constructor(props) {
@@ -32,7 +85,8 @@ class SimpleCollection extends React.Component {
             showSidebar: false,
             modalMessage: null,
             navigationMode: "unanalyzed",
-            height: 0
+            height: 0,
+            localeText: localeLanguages[getLanguage(["en", "es"])]
         };
     }
 
@@ -123,7 +177,7 @@ class SimpleCollection extends React.Component {
     ));
 
     getProjectData = () => this.processModal(
-        "Loading project details",
+        this.state.localeText.loadingModal,
         () => Promise.all([
             this.getProjectById(),
             this.getImageryList()
@@ -190,7 +244,7 @@ class SimpleCollection extends React.Component {
     };
 
     getPlotData = plotId => this.processModal(
-        `Getting plot ${plotId}`,
+        `${this.state.localeText.gettingPlot} ${plotId}`,
         () => fetch("/get-plot-by-id?" + getQueryString({
             plotId,
             projectId: this.props.projectId,
@@ -199,12 +253,9 @@ class SimpleCollection extends React.Component {
             .then(response => (response.ok ? response.json() : Promise.reject(response)))
             .then(data => {
                 if (data === "done") {
-                    // FIXME
-                    alert(this.state.navigationMode !== "unanalyzed"
-                        ? "This plot was analyzed by someone else."
-                        : "This plot has already been analyzed.");
+                    alert(this.state.localeText.navPlot);
                 } else if (data === "not-found") {
-                    alert("Plot " + plotId + " not found.");
+                    alert(this.state.localeText.plotNotFound.replace("{0}", plotId));
                 } else {
                     this.setState({
                         currentPlot: data,
@@ -221,7 +272,7 @@ class SimpleCollection extends React.Component {
     );
 
     getNextPlotData = plotId => this.processModal(
-        plotId >= 0 ? "Getting next plot" : "Getting first plot",
+        plotId >= 0 ? this.state.localeText.gettingNextPlot : this.state.localeText.gettingFirstPlot,
         () => fetch("/get-next-plot?" + getQueryString({
             plotId,
             projectId: this.props.projectId,
@@ -231,12 +282,12 @@ class SimpleCollection extends React.Component {
             .then(data => {
                 if (data === "done") {
                     if (plotId === -1) {
-                        alert(this.state.navigationMode !== "unanalyzed"
-                            ? "You have not reviewed any plots."
-                            : "All plots have been analyzed for this project.");
+                        alert(this.state.navigationMode === "unanalyzed"
+                            ? this.state.localeText.navNextUn
+                            : this.state.localeText.navNextAn);
                     } else {
                         this.setState({nextPlotButtonDisabled: true});
-                        alert("You have reached the end of the plot list.");
+                        alert(this.state.localeText.navNextDone);
                     }
                 } else {
                     this.setState({
@@ -253,7 +304,7 @@ class SimpleCollection extends React.Component {
     );
 
     getPrevPlotData = plotId => this.processModal(
-        "Getting previous plot",
+        this.state.localeText.gettingPrevPlot,
         () => fetch("/get-prev-plot?" + getQueryString({
             plotId,
             projectId: this.props.projectId,
@@ -263,9 +314,9 @@ class SimpleCollection extends React.Component {
             .then(data => {
                 if (data === "done") {
                     this.setState({prevPlotButtonDisabled: true});
-                    alert(this.state.navigationMode !== "unanalyzed"
-                        ? "No previous plots were analyzed by you."
-                        : "All previous plots have been analyzed.");
+                    alert(this.state.navigationMode === "unanalyzed"
+                        ? this.state.localeText.navPrevUn
+                        : this.state.localeText.navPrevAn);
                 } else {
                     this.setState({
                         currentPlot: data,
@@ -364,7 +415,7 @@ class SimpleCollection extends React.Component {
         if (!isNaN(newPlot)) {
             this.getPlotData(newPlot);
         } else {
-            alert("Please enter a number to go to plot.");
+            alert(this.state.localeText.errorNavNum);
         }
     };
 
@@ -376,7 +427,7 @@ class SimpleCollection extends React.Component {
 
     postValuesToDB = () => {
         this.processModal(
-            "Saving plot answers",
+            this.state.localeText.postSave,
             () => fetch(
                 "/add-user-samples",
                 {
@@ -436,10 +487,11 @@ class SimpleCollection extends React.Component {
 
     checkSelection = (sampleIds, questionToSet) => {
         if (sampleIds.some(sid => questionToSet.visible.every(vs => vs.id !== sid))) {
+            // This should never be reached with 1 sample plots.
             alert("Invalid Selection. Try selecting the question before answering.");
             return false;
         } else if (sampleIds.length === 0) {
-            alert("Please select at least one sample before choosing an answer.");
+            alert(this.state.localeText.errorSelect);
             return false;
         } else {
             return true;
@@ -606,6 +658,7 @@ class SimpleCollection extends React.Component {
                         <p style={{fontSize: ".9rem", marginBottom: "0"}}>{imageryAttribution}</p>
                     </div>
                     <MiniQuestions
+                        localeText={this.state.localeText}
                         postValuesToDB={this.postValuesToDB}
                         selectedSampleId={Object.keys(this.state.userSamples).length === 1
                             ? parseInt(Object.keys(this.state.userSamples)[0])
@@ -667,6 +720,7 @@ class SimpleCollection extends React.Component {
                         >
                             <PlotNavigation
                                 isProjectAdmin={this.state.currentProject.isProjectAdmin}
+                                localeText={this.state.localeText}
                                 navigationMode={this.state.navigationMode}
                                 navToFirstPlot={this.navToFirstPlot}
                                 navToNextPlot={this.navToNextPlot}
@@ -685,6 +739,7 @@ class SimpleCollection extends React.Component {
                                 currentProjectBoundary={this.state.currentProject.boundary}
                                 imageryList={this.state.imageryList}
                                 loadingImages={this.state.imageryList.length === 0}
+                                localeText={this.state.localeText}
                                 mapConfig={this.state.mapConfig}
                                 setBaseMapSource={this.setBaseMapSource}
                                 setImageryAttributes={this.setImageryAttributes}
@@ -729,10 +784,10 @@ function AnswerButtons({surveyNode, surveyNode: {answers, answered}, selectedSam
 
 class MiniQuestions extends React.Component {
     checkCanSave = () => {
-        const {surveyQuestions} = this.props;
+        const {surveyQuestions, localeText} = this.props;
         const allAnswered = surveyQuestions.every(sq => safeLength(sq.visible) === safeLength(sq.answered));
         if (!allAnswered) {
-            alert("All questions must be answered to save the collection.");
+            alert(localeText.errorSave);
             return false;
         } else {
             return true;
@@ -740,7 +795,7 @@ class MiniQuestions extends React.Component {
     };
 
     render() {
-        const {postValuesToDB, selectedSampleId, surveyQuestions, setCurrentValue} = this.props;
+        const {postValuesToDB, selectedSampleId, surveyQuestions, setCurrentValue, localeText} = this.props;
         const questionStyle = {
             marginLeft: "auto",
             marginRight: "auto",
@@ -748,7 +803,6 @@ class MiniQuestions extends React.Component {
             right: 0,
             position: "absolute",
             bottom: "42px",
-            // border: "2px solid red",
             maxWidth: "fit-content",
             zIndex: 100
         };
@@ -768,7 +822,7 @@ class MiniQuestions extends React.Component {
                         onClick={() => this.checkCanSave() && postValuesToDB()}
                         type="button"
                     >
-                        Save
+                        {localeText.saveButton}
                     </button>
                 </div>
             </div>
@@ -799,20 +853,22 @@ class PlotNavigation extends React.Component {
             navToPrevPlot,
             nextPlotButtonDisabled,
             navToNextPlot,
-            navToPlot
+            navToPlot,
+            localeText
         } = this.props;
         return (
             <>
                 <div className="d-flex flex-column align-items-center my-2">
-                    <h3 className="w-100">Navigate Through:</h3>
+                    <h3 className="w-100">{localeText.navLabel}:</h3>
                     <select
                         className="form-control form-control-sm mr-2"
                         onChange={e => setNavigationMode(e.target.value)}
                         style={{flex: "1 1 auto"}}
                         value={navigationMode}
                     >
-                        <option value="unanalyzed">Unanalyzed plots</option>
-                        <option value="analyzed">My analyzed plots</option>
+                        <option value="unanalyzed">{localeText.optionUn}</option>
+                        <option value="analyzed">{localeText.optionMy}</option>
+                        {/* This should be un reachable */}
                         {isProjectAdmin && <option value="all">All analyzed plots</option>}
                     </select>
                 </div>
@@ -848,7 +904,7 @@ class PlotNavigation extends React.Component {
                         onClick={() => navToPlot(this.state.newPlotInput)}
                         type="button"
                     >
-                        Go to plot
+                        {localeText.gotoPlot}
                     </button>
                 </div>
             </>
@@ -859,8 +915,8 @@ class PlotNavigation extends React.Component {
 function ImageryOptions(props) {
     return (
         <>
-            <h3>Imagery Options</h3>
-            {props.loadingImages && <h3>Loading imagery data...</h3>}
+            <h3>{props.localeText.imageryTitle}</h3>
+            {props.loadingImages && <h3>{props.localeText.imageryLoading}...</h3>}
             <select
                 className="form-control form-control-sm mb-2"
                 id="base-map-source"
