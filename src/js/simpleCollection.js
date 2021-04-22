@@ -31,8 +31,11 @@ const localeLanguages = {
         "optionUn": "Unanalyzed plots",
         "optionMy": "My analyzed plots",
         "gotoPlot": "Go to plot",
+        "gotoFirstPlot": "Go to first plot",
         "imageryTitle": "Imagery Options",
-        "imageryLoading": "Loading imagery data"
+        "imageryLoading": "Loading imagery data",
+        "kmlTitle": "Plot KML",
+        "kmlDownload": "Download Plot KML"
     },
     "es": {
         "loadingModal": "Cargando detalles del proyecto",
@@ -56,8 +59,11 @@ const localeLanguages = {
         "optionUn": "Parcelas no analizadas",
         "optionMy": "Mis parcelas analizadas",
         "gotoPlot": "Ir a la parcela",
+        "gotoFirstPlot": "Ir a la parcela primera",
         "imageryTitle": "Opciones de imágenes",
-        "imageryLoading": "Cargando datos de imágenes"
+        "imageryLoading": "Cargando datos de imágenes",
+        "kmlTitle": "Parcela KML",
+        "kmlDownload": "Descargar parcela KML"
     }
 };
 
@@ -85,8 +91,10 @@ class SimpleCollection extends React.Component {
             showSidebar: false,
             modalMessage: null,
             navigationMode: "unanalyzed",
-            height: 0,
-            localeText: localeLanguages[getLanguage(["en", "es"])]
+            myHeight: 0,
+            isMobile: false,
+            localeText: localeLanguages[getLanguage(["en", "es"])],
+            KMLFeatures: null
         };
     }
 
@@ -98,8 +106,8 @@ class SimpleCollection extends React.Component {
             {method: "POST"}
         );
 
-        this.getProjectData();
         this.updateWindow();
+        this.getProjectData();
         window.addEventListener("touchend", this.updateWindow);
         window.addEventListener("resize", this.updateWindow);
     }
@@ -114,7 +122,12 @@ class SimpleCollection extends React.Component {
             && this.state.currentProject.boundary
             && this.state.mapConfig == null) {
             this.initializeProjectMap();
-            this.navToFirstPlot();
+        }
+        // Load all project plots initially
+        if (this.state.mapConfig && this.state.plotList.length > 0
+            && (this.state.mapConfig !== prevState.mapConfig
+                || prevState.plotList.length === 0)) {
+            this.showProjectOverview();
         }
         // initialize current imagery to project default
         if (this.state.mapConfig && this.state.currentProject
@@ -145,6 +158,7 @@ class SimpleCollection extends React.Component {
                 || prevState.selectedQuestion.visible !== this.state.selectedQuestion.visible) {
                 this.showPlotSamples();
                 this.highlightSamplesByQuestion();
+                this.createPlotKML();
             }
         }
 
@@ -158,7 +172,10 @@ class SimpleCollection extends React.Component {
     updateWindow = () => {
         window.scrollTo(0, 0);
         this.setState(
-            {height: window.innerHeight - 60},
+            {
+                myHeight: window.innerHeight - 60,
+                isMobile: window.innerWidth < 992 // Not sure where 992 came from but it matches the media query.
+            },
             () => setTimeout(() => mercator.resize(this.state.mapConfig), 50)
         );
     };
@@ -180,7 +197,8 @@ class SimpleCollection extends React.Component {
         this.state.localeText.loadingModal,
         () => Promise.all([
             this.getProjectById(),
-            this.getImageryList()
+            this.getImageryList(),
+            this.getProjectPlots()
         ])
             .catch(response => {
                 console.log(response);
@@ -199,15 +217,27 @@ class SimpleCollection extends React.Component {
             }
         });
 
+    getProjectPlots = () => fetch(`/get-project-plots?projectId=${this.props.projectId}`)
+        .then(response => (response.ok ? response.json() : Promise.reject(response)))
+        .then(data => {
+            if (data.length > 0) {
+                this.setState({plotList: data});
+                return Promise.resolve("resolved");
+            } else {
+                return Promise.reject("No plot information found");
+            }
+        });
+
     getImageryList = () => fetch(`/get-project-imagery?projectId=${this.props.projectId}`)
         .then(response => (response.ok ? response.json() : Promise.reject(response)))
         .then(data => {
             if (data.length > 0) {
                 this.setState({
-                    // Filter list by mobile types
-                    imageryList: data.filter(i =>
-                        !["Planet", "PlanetDaily", "SecureWatch", "Sentinel1", "Sentinel2", "GEEImage", "GEEImageCollection"]
-                            .includes(i.sourceConfig.type))
+                    imageryList: this.state.isMobile
+                        ? data.filter(i =>
+                            !["Planet", "PlanetDaily", "SecureWatch", "Sentinel1", "Sentinel2", "GEEImage", "GEEImageCollection"]
+                                .includes(i.sourceConfig.type))
+                        : data
                 });
                 return Promise.resolve("resolved");
             } else {
@@ -236,6 +266,17 @@ class SimpleCollection extends React.Component {
     };
 
     getImageryById = imageryId => this.state.imageryList.find(imagery => imagery.id === imageryId);
+
+    showProjectOverview = () => {
+        mercator.addPlotLayer(this.state.mapConfig,
+                              this.state.plotList,
+                              feature => {
+                                  this.setState({
+                                      prevPlotButtonDisabled: false
+                                  });
+                                  this.getPlotData(feature.get("features")[0].get("plotId"));
+                              });
+    };
 
     setBaseMapSource = newBaseMapSource => {
         const currentImagery = this.getImageryById(newBaseMapSource);
@@ -364,6 +405,7 @@ class SimpleCollection extends React.Component {
 
         mercator.disableSelection(mapConfig);
         mercator.removeLayerById(mapConfig, "currentPlot");
+        mercator.removeLayerById(mapConfig, "currentPlots");
         mercator.removeLayerById(mapConfig, "currentSamples");
         mercator.removeLayerById(mapConfig, "drawLayer");
         mercator.addVectorLayer(
@@ -399,6 +441,15 @@ class SimpleCollection extends React.Component {
             "currentSamples",
             sampleId => this.setState({selectedSampleId: sampleId})
         );
+    };
+
+    createPlotKML = () => {
+        const plotFeatures = mercator.getAllFeatures(this.state.mapConfig, "currentPlot");
+        const sampleFeatures = mercator.getAllFeatures(this.state.mapConfig, "currentSamples");
+        this.setState({
+            KMLFeatures: mercator.getKMLFromFeatures([mercator.asPolygonFeature(plotFeatures[0]),
+                                                      ...sampleFeatures])
+        });
     };
 
     navToFirstPlot = () => this.getNextPlotData(-10000000);
@@ -651,19 +702,22 @@ class SimpleCollection extends React.Component {
         };
 
         return (
-            <div className="row" style={{height: this.state.height}}>
+            <div className="row" style={{height: this.state.myHeight}}>
                 {this.state.modalMessage && <LoadingModal message={this.state.modalMessage}/>}
                 <div className="w-100 position-relative overflow-hidden" id="mobile-analysis-pane">
                     <div style={infoStyle}>
                         <p style={{fontSize: ".9rem", marginBottom: "0"}}>{imageryAttribution}</p>
                     </div>
                     <MiniQuestions
+                        isMobile={this.state.isMobile}
                         localeText={this.state.localeText}
+                        navToFirstPlot={this.navToFirstPlot}
                         postValuesToDB={this.postValuesToDB}
                         selectedSampleId={Object.keys(this.state.userSamples).length === 1
                             ? parseInt(Object.keys(this.state.userSamples)[0])
                             : this.state.selectedSampleId}
                         setCurrentValue={this.setCurrentValue}
+                        showQuestions={this.state.currentPlot.id}
                         surveyQuestions={this.state.currentProject.surveyQuestions}
                     />
                     {/* Side Bar */}
@@ -745,6 +799,14 @@ class SimpleCollection extends React.Component {
                                 setImageryAttributes={this.setImageryAttributes}
                                 setImageryAttribution={this.setImageryAttribution}
                             />
+                            {!this.state.isMobile && this.state.KMLFeatures && (
+                                <KMLGenerator
+                                    KMLFeatures={this.state.KMLFeatures}
+                                    localeText={this.state.localeText}
+                                    plotId={plotId}
+                                    projectId={this.state.currentProject.id}
+                                />
+                            )}
                         </div>
                     </div>
                 </div>
@@ -757,7 +819,7 @@ function AnswerButtons({surveyNode, surveyNode: {answers, answered}, selectedSam
     return answers.map(ans => (
         <button
             key={ans.id}
-            className="btn btn-outline-darkgray btn-sm pl-1 mr-3"
+            className="btn btn-outline-darkgray mr-3 px-1 py-2"
             onClick={() => setCurrentValue(surveyNode, ans.id, ans.answer)}
             style={{
                 boxShadow: (answered || []).some(a => a.answerId === ans.id && a.sampleId === selectedSampleId)
@@ -777,7 +839,7 @@ function AnswerButtons({surveyNode, surveyNode: {answers, answered}, selectedSam
                     marginTop: "4px"
                 }}
             />
-            <span className="small">{ans.answer}</span>
+            {ans.answer}
         </button>
     ));
 }
@@ -795,35 +857,58 @@ class MiniQuestions extends React.Component {
     };
 
     render() {
-        const {postValuesToDB, selectedSampleId, surveyQuestions, setCurrentValue, localeText} = this.props;
+        const {
+            postValuesToDB,
+            selectedSampleId,
+            surveyQuestions,
+            setCurrentValue,
+            localeText,
+            isMobile,
+            showQuestions,
+            navToFirstPlot
+        } = this.props;
+
         const questionStyle = {
             marginLeft: "auto",
             marginRight: "auto",
             left: 0,
             right: 0,
             position: "absolute",
-            bottom: "42px",
+            bottom: isMobile ? "48px" : "24px",
             maxWidth: "fit-content",
             zIndex: 100
         };
         return (
             <div id="MiniQuestions" style={questionStyle}>
                 <div className="d-flex justify-content-between">
-                    {surveyQuestions.length > 0 && (
-                        <AnswerButtons
-                            selectedSampleId={selectedSampleId}
-                            setCurrentValue={setCurrentValue}
-                            surveyNode={surveyQuestions[0]}
-                            surveyQuestions={surveyQuestions}
-                        />
-                    )}
-                    <button
-                        className="btn btn-lightgreen btn-sm"
-                        onClick={() => this.checkCanSave() && postValuesToDB()}
-                        type="button"
-                    >
-                        {localeText.saveButton}
-                    </button>
+                    {showQuestions
+                        ? (
+                            <>
+                                {surveyQuestions.length > 0 && (
+                                    <AnswerButtons
+                                        selectedSampleId={selectedSampleId}
+                                        setCurrentValue={setCurrentValue}
+                                        surveyNode={surveyQuestions[0]}
+                                        surveyQuestions={surveyQuestions}
+                                    />
+                                )}
+                                <button
+                                    className="btn btn-lightgreen"
+                                    onClick={() => this.checkCanSave() && postValuesToDB()}
+                                    type="button"
+                                >
+                                    {localeText.saveButton}
+                                </button>
+                            </>
+                        ) : (
+                            <button
+                                className="btn btn-lightgreen"
+                                onClick={navToFirstPlot}
+                                type="button"
+                            >
+                                {localeText.gotoFirstPlot}
+                            </button>
+                        )}
                 </div>
             </div>
         );
@@ -946,6 +1031,22 @@ function ImageryOptions(props) {
                         visible={props.currentImageryId === imagery.id}
                     />
                 ))}
+        </>
+    );
+}
+
+function KMLGenerator({projectId, plotId, localeText, KMLFeatures}) {
+    return (
+        <>
+            <h3 className="mt-2">{localeText.kmlTitle}</h3>
+            <a
+                className="btn btn-outline-lightgreen btn-sm btn-block my-2"
+                download={"ceo_projectId-" + projectId + "_plotId-" + plotId + ".kml"}
+                href={"data:earth.kml+xml application/vnd.google-earth.kmz, "
+                    + encodeURIComponent(KMLFeatures)}
+            >
+                {localeText.kmlDownload}
+            </a>
         </>
     );
 }
