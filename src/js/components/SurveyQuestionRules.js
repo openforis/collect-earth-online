@@ -1,7 +1,78 @@
 import React from "react";
 
 import SvgIcon from "./SvgIcon";
-import {pluralize} from "../utils/generalUtils";
+import {pluralize, truncate} from "../utils/generalUtils";
+
+/**
+ * Helper Components
+ */
+function Badge({children}) {
+    return (
+        <div className="badge badge-light">
+            {children}
+        </div>
+    );
+}
+
+function Pre({children}) {
+    return (
+        <pre style={{display: "inline"}}>
+            {children}
+        </pre>
+    );
+}
+
+function EqualToSumRule({questionsText, validSum}) {
+    const truncjoin = qs => qs.map(q => truncate(q, 15)).join(", ");
+    return (
+        <div className="mb-3">
+            <strong>Sum of Answers</strong>
+            <br/>
+            Answers to <i>{truncjoin(questionsText)}</i> should sum up to <Pre>{validSum}.</Pre>
+        </div>
+    );
+}
+
+function IncompatibleRule({answerText1, answerText2, questionText1, questionText2}) {
+    return (
+        <div className="mb-3">
+            <strong>Incompatible Answers</strong>
+            <br/>
+            Answer <Badge>{answerText1}</Badge> from <i>{truncate(questionText1, 15)}</i> is
+            incompatible with <Badge>{answerText2}</Badge> from <i>{truncate(questionText2, 15)}</i>
+        </div>
+    );
+}
+
+function MatchingSumsRule({questionSetText1, questionSetText2}) {
+    const truncjoin = qs => qs.map(q => truncate(q, 15)).join(", ");
+    return (
+        <div className="mb-3">
+            <strong>Matching Sums</strong>
+            <br/>
+            Sum of <i>{truncjoin(questionSetText1)}</i> should be equal to sum of <i>{truncjoin(questionSetText2)}</i>
+        </div>
+    );
+}
+
+function MinMaxRule({questionsText, min, max}) {
+    return (
+        <div className="mb-3">
+            <strong>Min/Max Values</strong>
+            <br/>
+            Answer to <i>{truncate(questionsText, 15)}</i> should be between: <Pre>{min}</Pre> and <Pre>{max}.</Pre>
+        </div>
+    );
+}
+
+function RegexRule({questionsText, regex}) {
+    return (
+        <div className="mb-3">
+            <strong>Text Match</strong><br/>
+            Answer to <i>{truncate(questionsText, 15)}</i> should match the pattern: <Pre>{regex}</Pre>
+        </div>
+    );
+}
 
 export default class SurveyQuestionRules extends React.Component {
     constructor(props) {
@@ -15,15 +86,15 @@ export default class SurveyQuestionRules extends React.Component {
             || (rule.questions && rule.questions.includes(id))
             || (rule.questionSetIds1 && (rule.questionSetIds1.includes(id) || rule.questionSetIds2.includes(id)))
             || (rule.question1 && (rule.question1 === id || rule.question2 === id)))
-        .map((r, uid) => (r.questionId
+        .map(r => (r.questionId
             ? r.regex
-                ? <li key={uid}>{`Rule: ${r.ruleType} | Question '${r.questionsText}' should match the pattern: ${r.regex}.`}</li>
-                : <li key={uid}>{`Rule: ${r.ruleType} | Question '${r.questionsText}' should be between: ${r.min} and ${r.max}.`}</li>
+                ? <RegexRule key={r.id} {...r}/>
+                : <MinMaxRule key={r.id} {...r}/>
             : r.questions
-                ? <li key={uid}>{`Rule: ${r.ruleType} | Questions '${r.questionsText}' should sum up to ${r.validSum}`}</li>
+                ? <EqualToSumRule key={r.id} {...r}/>
                 : r.questionSetIds1
-                    ? <li key={uid}>{`Rule: ${r.ruleType} | Sum of '${r.questionSetText1}' should be equal to sum of '${r.questionSetText2}'.`}</li>
-                    : <li key={uid}>{`Rule: ${r.ruleType} | 'Question 1: ${r.questionText1}, Answer 1: ${r.answerText1}' is not compatible with 'Question 2: ${r.questionText2}, Answer 2: ${r.answerText2}'.`}</li>));
+                    ? <MatchingSumsRule key={r.id} {...r}/>
+                    : <IncompatibleRule key={r.id} {...r}/>));
 
     render() {
         const {showModal} = this.state;
@@ -71,7 +142,7 @@ export default class SurveyQuestionRules extends React.Component {
                                       </button>
                                   </div>
                                   <div className="modal-body text-left">
-                                      <ul>{rules}</ul>
+                                      {rules}
                                   </div>
                                   <div className="modal-footer">
                                       <button
