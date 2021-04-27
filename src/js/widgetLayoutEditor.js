@@ -107,8 +107,8 @@ class WidgetLayoutEditor extends React.PureComponent {
         let row = 0;
         let column = 0;
         const sWidgets = _.orderBy(updatedWidgets, "id", "asc");
-        const widgets = _.map(sWidgets, (w, i) => {
-            const widget = {...w};
+        const widgets = _.map(sWidgets, (paramWidget, i) => {
+            const widget = {...paramWidget};
             if (widget.layout) {
                 if (widget.gridcolumn) {
                     delete widget.gridcolumn;
