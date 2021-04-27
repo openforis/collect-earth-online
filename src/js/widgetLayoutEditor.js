@@ -741,12 +741,18 @@ class WidgetLayoutEditor extends React.PureComponent {
     fetchProject = (id, setDashboardID) => fetch(this.state.theURI + "/get-by-projid?projectId=" + id)
         .then(response => (response.ok ? response.json() : Promise.reject(response)))
         .then(data => {
-            const widgets = Array.isArray(data.widgets)
-                ? data.widgets
-                : Array.isArray(eval(data.widgets))
-                    ? eval(data.widgets)
-                    : [];
-            const updatedWidgets = widgets.map(widget => (widget.layout
+            let jsonWidgets = data.widgets;
+            if (!Array.isArray(jsonWidgets)) {
+                try {
+                    jsonWidgets = JSON.parse(jsonWidgets);
+                    if (!Array.isArray(jsonWidgets)) {
+                        jsonWidgets = [];
+                    }
+                } catch (e) {
+                    jsonWidgets = [];
+                }
+            }
+            const updatedWidgets = jsonWidgets.map(widget => (widget.layout
                 ? {
                     ...widget,
                     layout: {
@@ -1877,10 +1883,11 @@ class WidgetLayoutEditor extends React.PureComponent {
     generateLayout = () => {
         const w = this.state.widgets;
         return _.map(w, (item, i) => {
-            item.layout.i = i.toString();
-            item.layout.minW = 3;
-            item.layout.w = item.layout.w >= 3 ? item.layout.w : 3;
-            return item.layout;
+            const newItem = {...item};
+            newItem.layout.i = i.toString();
+            newItem.layout.minW = 3;
+            newItem.layout.w = item.layout.w >= 3 ? item.layout.w : 3;
+            return newItem.layout;
         });
     };
 
