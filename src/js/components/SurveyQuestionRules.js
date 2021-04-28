@@ -38,8 +38,8 @@ function IncompatibleRule({answerText1, answerText2, questionText1, questionText
         <div className="mb-3">
             <strong>Incompatible Answers</strong>
             <br/>
-            Answer <Badge>{answerText1}</Badge> from <i>{truncate(questionText1, 15)}</i> is
-            incompatible with <Badge>{answerText2}</Badge> from <i>{truncate(questionText2, 15)}</i>
+            Answer <Badge>{truncate(answerText1, 10)}</Badge> from <i>{truncate(questionText1, 15)}</i> is
+            incompatible with <Badge>{truncate(answerText2, 10)}</Badge> from <i>{truncate(questionText2, 15)}</i>
         </div>
     );
 }
