@@ -174,7 +174,7 @@ class SimpleCollection extends React.Component {
         window.scrollTo(0, 0);
         this.setState(
             {
-                myHeight: window.innerHeight - 60,
+                myHeight: window.innerHeight,
                 isMobile: window.innerWidth < 992 // Not sure where 992 came from but it matches the media query.
             },
             () => setTimeout(() => mercator.resize(this.state.mapConfig), 50)
@@ -705,7 +705,7 @@ class SimpleCollection extends React.Component {
         };
 
         return (
-            <div className="row" style={{height: this.state.myHeight}}>
+            <div className="row" style={{height: this.state.myHeight, marginTop: "-60px"}}>
                 {this.state.modalMessage && <LoadingModal message={this.state.modalMessage}/>}
                 <div className="w-100 position-relative overflow-hidden" id="mobile-analysis-pane">
                     <div style={infoStyle}>
@@ -725,7 +725,7 @@ class SimpleCollection extends React.Component {
                     />
                     {/* Side Bar */}
                     <div
-                        className="border-left full-height"
+                        className="border-left h-100"
                         id="simple-sidebar"
                         style={{
                             background: "white",
@@ -988,7 +988,7 @@ class PlotNavigation extends React.Component {
                         value={this.state.newPlotInput}
                     />
                     <button
-                        className="btn btn-outline-lightgreen btn-sm"
+                        className="btn btn-lightgreen btn-sm"
                         onClick={() => navToPlot(this.state.newPlotInput)}
                         type="button"
                     >
@@ -1043,7 +1043,7 @@ function KMLGenerator({projectId, plotId, localeText, KMLFeatures}) {
         <>
             <h3 className="mt-2">{localeText.kmlTitle}</h3>
             <a
-                className="btn btn-outline-lightgreen btn-sm btn-block my-2"
+                className="btn btn-lightgreen btn-sm btn-block my-2"
                 download={"ceo_projectId-" + projectId + "_plotId-" + plotId + ".kml"}
                 href={"data:earth.kml+xml application/vnd.google-earth.kmz, "
                     + encodeURIComponent(KMLFeatures)}
@@ -1056,9 +1056,7 @@ function KMLGenerator({projectId, plotId, localeText, KMLFeatures}) {
 
 export function pageInit(args) {
     ReactDOM.render(
-        <NavigationBar userId={args.userId} userName={args.userName}>
-            <SimpleCollection projectId={args.projectId}/>
-        </NavigationBar>,
+        <SimpleCollection projectId={args.projectId}/>,
         document.getElementById("app")
     );
 }
