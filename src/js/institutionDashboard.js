@@ -35,7 +35,7 @@ class InstitutionDashboard extends React.Component {
                     details.push({
                         id: proj.id,
                         name: proj.name,
-                        numPlots: data.unanalyzedPlots + data.analyzedPlots,
+                        numPlots: proj.numPlots,
                         unanalyzedPlots: data.unanalyzedPlots,
                         analyzedPlots: data.analyzedPlots,
                         flaggedPlots: data.flaggedPlots,

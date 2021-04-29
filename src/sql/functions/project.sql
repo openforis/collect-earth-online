@@ -923,12 +923,14 @@ CREATE OR REPLACE FUNCTION select_institution_projects(_user_id integer, _instit
  RETURNS table (
     project_id       integer,
     name             text,
+    num_plots        integer,
     privacy_level    text,
     pct_complete     real
  ) AS $$
 
     SELECT project_uid,
         name,
+        num_plots,
         privacy_level,
         (SELECT project_percent_complete(project_uid))
     FROM projects as p
