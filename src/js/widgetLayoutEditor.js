@@ -1382,10 +1382,9 @@ class WidgetLayoutEditor extends React.PureComponent {
             );
         }
         if (this.state.selectedWidgetType === "imageAsset" || this.state.selectedWidgetType === "imageCollectionAsset") {
-            const [label, placeholder] = this.state.selectedWidgetType === "imageAsset"
-                ? ["GEE Image Asset", "LANDSAT/LC8_L1T_TOA/LC81290502015036LGN00"]
-                : ["GEE Collection Image Asset", "LANDSAT/LC8_L1T_TOA"];
-            const isCollection = this.state.selectedWidgetType === "imageCollectionAsset";
+            const [label, placeholder, isCollection] = this.state.selectedWidgetType === "imageAsset"
+                ? ["GEE Image Asset", "LANDSAT/LC8_L1T_TOA/LC81290502015036LGN00", false]
+                : ["GEE Collection Image Asset", "LANDSAT/LC8_L1T_TOA", true];
             return (
                 <>
                     {this.getTitleBlock()}
@@ -1548,13 +1547,13 @@ class WidgetLayoutEditor extends React.PureComponent {
                     </button>
                 </>
             );
-        } else if (((this.state.selectedDataType === "imageCollectionAsset" || this.state.selectedDataType === "imageAsset")
+        } else if (((this.state.selectedDataType === "imageCollectionAsset"
+                        || this.state.selectedDataType === "imageAsset")
                         && this.state.selectedWidgetType === "DualImageCollection")
                         && this.state.wizardStep === 1) {
-            const [label, placeholder] = this.state.selectedDataType === "imageAsset"
-                ? ["GEE Image Asset", "LANDSAT/LC8_L1T_TOA/LC81290502015036LGN00"]
-                : ["GEE Collection Image Asset", "LANDSAT/LC8_L1T_TOA"];
-            const isCollection = this.state.selectedDataType === "imageCollectionAsset";
+            const [label, placeholder, isCollection] = this.state.selectedWidgetType === "imageAsset"
+                ? ["GEE Image Asset", "LANDSAT/LC8_L1T_TOA/LC81290502015036LGN00", false]
+                : ["GEE Collection Image Asset", "LANDSAT/LC8_L1T_TOA", true];
             return (
                 <>
                     {this.getTitleBlock()}
@@ -1586,13 +1585,13 @@ class WidgetLayoutEditor extends React.PureComponent {
                     {this.getNextStepButton()}
                 </>
             );
-        } else if (((this.state.selectedDataTypeDual === "imageCollectionAsset" || this.state.selectedDataTypeDual === "imageAsset")
+        } else if (((this.state.selectedDataTypeDual === "imageCollectionAsset"
+                        || this.state.selectedDataTypeDual === "imageAsset")
                         && this.state.selectedWidgetType === "DualImageCollection")
                         && this.state.wizardStep === 2) {
-            const [label, placeholder] = this.state.selectedDataTypeDual === "imageAsset"
-                ? ["GEE Image Asset", "LANDSAT/LC8_L1T_TOA/LC81290502015036LGN00"]
-                : ["GEE Collection Image Asset", "LANDSAT/LC8_L1T_TOA"];
-            const isCollection = this.state.selectedDataTypeDual === "imageCollectionAsset";
+            const [label, placeholder, isCollection] = this.state.selectedWidgetType === "imageAsset"
+                ? ["GEE Image Asset", "LANDSAT/LC8_L1T_TOA/LC81290502015036LGN00", false]
+                : ["GEE Collection Image Asset", "LANDSAT/LC8_L1T_TOA", true];
             return (
                 <>
                     <div className="form-group">
