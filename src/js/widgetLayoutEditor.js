@@ -107,7 +107,8 @@ class WidgetLayoutEditor extends React.PureComponent {
         let row = 0;
         let column = 0;
         const sWidgets = _.orderBy(updatedWidgets, "id", "asc");
-        const widgets = _.map(sWidgets, (widget, i) => {
+        const widgets = _.map(sWidgets, (paramWidget, i) => {
+            const widget = {...paramWidget};
             if (widget.layout) {
                 if (widget.gridcolumn) {
                     delete widget.gridcolumn;
@@ -287,7 +288,7 @@ class WidgetLayoutEditor extends React.PureComponent {
         if (value !== "") {
             const postObject = {
                 path: "getAvailableBands",
-                ...(isCollection ? {imageCollection: value} : {image: value}),
+                ...(isCollection ? {imageCollection: value} : {image: value})
             };
             fetch("/geo-dash/gateway-request", {
                 method: "POST",
@@ -372,13 +373,13 @@ class WidgetLayoutEditor extends React.PureComponent {
     onCreateNewWidget = () => {
         const widget = {};
         const id = this.state.widgets.length > 0
-            ? (Math.max.apply(Math, this.state.widgets.map(o => o.id))) + 1
+            ? (Math.max(...this.state.widgets.map(o => o.id))) + 1
             : 0;
         const name = this.state.widgetTitle;
         widget.id = id;
         widget.name = name;
-        const yval = ((Math.max.apply(Math, this.state.widgets.map(o => (o.layout.y !== null ? o.layout.y : 0)))) + 1) > -1
-            ? (Math.max.apply(Math, this.state.widgets.map(o => (o.layout.y !== null ? o.layout.y : 0)))) + 1
+        const yval = ((Math.max(...this.state.widgets.map(o => (o.layout.y !== null ? o.layout.y : 0)))) + 1) > -1
+            ? (Math.max(...this.state.widgets.map(o => (o.layout.y !== null ? o.layout.y : 0)))) + 1
             : 0;
 
         widget.layout = {
@@ -741,11 +742,17 @@ class WidgetLayoutEditor extends React.PureComponent {
     fetchProject = (id, setDashboardID) => fetch(this.state.theURI + "/get-by-projid?projectId=" + id)
         .then(response => (response.ok ? response.json() : Promise.reject(response)))
         .then(data => {
-            const widgets = Array.isArray(data.widgets)
-                ? data.widgets
-                : Array.isArray(eval(data.widgets))
-                    ? eval(data.widgets)
-                    : [];
+            let widgets = {...data.widgets};
+            if (!Array.isArray(widgets)) {
+                try {
+                    widgets = JSON.parse(widgets);
+                    if (!Array.isArray(widgets)) {
+                        widgets = [];
+                    }
+                } catch (e) {
+                    widgets = [];
+                }
+            }
             const updatedWidgets = widgets.map(widget => (widget.layout
                 ? {
                     ...widget,
@@ -946,8 +953,8 @@ class WidgetLayoutEditor extends React.PureComponent {
                                                 {this.state.projectList
                                                     .filter(({id, name}) => (id + name.toLocaleLowerCase())
                                                         .includes(this.state.projectFilter.toLocaleLowerCase()))
-                                                    .map(({id, name}, uid) =>
-                                                        <option key={uid} value={id}>{id} - {name}</option>)}
+                                                    .map(({id, name}) =>
+                                                        <option key={id} value={id}>{id} - {name}</option>)}
                                             </select>
                                         </div>
                                         <div className="form-group">
@@ -1876,7 +1883,8 @@ class WidgetLayoutEditor extends React.PureComponent {
 
     generateLayout = () => {
         const w = this.state.widgets;
-        return _.map(w, (item, i) => {
+        return _.map(w, (paramItem, i) => {
+            const item = {...paramItem};
             item.layout.i = i.toString();
             item.layout.minW = 3;
             item.layout.w = item.layout.w >= 3 ? item.layout.w : 3;
