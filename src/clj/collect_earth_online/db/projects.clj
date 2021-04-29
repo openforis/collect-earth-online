@@ -50,9 +50,10 @@
 (defn get-institution-projects [{:keys [params]}]
   (let [user-id        (:userId params -1)
         institution-id (tc/val->int (:institutionId params))]
-    (data-response (mapv (fn [{:keys [project_id name privacy_level pct_complete]}]
+    (data-response (mapv (fn [{:keys [project_id name privacy_level pct_complete num_plots]}]
                            {:id              project_id
                             :name            name
+                            :numPlots        num_plots
                             :privacyLevel    privacy_level
                             :percentComplete pct_complete})
                          (call-sql "select_institution_projects" user-id institution-id)))))
