@@ -25,6 +25,10 @@ const dateRangeValidator = ({startDate, endDate}) => (startDate && endDate
 
 const urlValidator = url => /^(?:http|https):\/\/[\w.-]+(?:\.[\w-]+)+[\w\-.,@?^=%&:;/~\\+#]+$/.test(url);
 
+const olProjectionValidator = params => (!params.CRS && !params.SRS)
+    || (params.CRS && params.CRS.toUpperCase() === "EPSG:3857")
+    || (params.SRS && params.SRS.toUpperCase() === "EPSG:3857");
+
 const isValidJSON = str => {
     try {
         JSON.parse(str);
@@ -69,7 +73,13 @@ export const imageryOptions = [
                             .join(",")}}`
                         : value;
                 },
-                validator: value => (!isValidJSON(value) ? "Invalid JSON in the \"Additional WMS Params\" field." : "")
+                validator: value => {
+                    try {
+                        return (!olProjectionValidator(JSON.parse(value))) ? "SRS/CRS is not valid. Only EPSG:3857 is supporded." : "";
+                    } catch (e) {
+                        return "Invalid JSON in the \"Additional WMS Params\" field.";
+                    }
+                }
             }
         ]
         // FIXME, add url if help document is created.
