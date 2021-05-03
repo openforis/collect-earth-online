@@ -282,12 +282,12 @@ class WidgetLayoutEditor extends React.PureComponent {
         this.props.onMouseUp(e);
     };
 
-    getBandsFromGateway = isDual => {
-        // go get available bands
-        if (event.target.value !== "custom") {
+    getBandsFromGateway = (isDual, isCollection) => {
+        const value = isDual ? this.state.imageCollectionDual : this.state.imageCollection;
+        if (value !== "") {
             const postObject = {
                 path: "getAvailableBands",
-                imageCollection: event.target.value // "LANDSAT/LT05/C01/T1"
+                ...(isCollection ? {imageCollection: value} : {image: value}),
             };
             fetch("/geo-dash/gateway-request", {
                 method: "POST",
@@ -319,7 +319,6 @@ class WidgetLayoutEditor extends React.PureComponent {
             availableBands: "",
             selectedDataType: event.target.value
         });
-        this.getBandsFromGateway(false);
     };
 
     onCancelNewWidget = () => {
@@ -572,7 +571,6 @@ class WidgetLayoutEditor extends React.PureComponent {
             imageCollection: event.target.value,
             availableBands: ""
         });
-        this.getBandsFromGateway(false);
     };
 
     onFeatureCollectionChange = event => {
@@ -643,7 +641,6 @@ class WidgetLayoutEditor extends React.PureComponent {
             imageCollectionDual: event.target.value,
             availableBandsDual: ""
         });
-        this.getBandsFromGateway(true);
     };
 
     onImageParamsChangeDual = event => {
@@ -684,7 +681,6 @@ class WidgetLayoutEditor extends React.PureComponent {
             selectedDataTypeDual: event.target.value.trim(),
             formReady: true
         });
-        this.getBandsFromGateway(true);
     };
 
     setFormStateByDates = isDual => {
@@ -1293,21 +1289,18 @@ class WidgetLayoutEditor extends React.PureComponent {
             </div>
         ) : "");
 
-    getAvailableBandsControl = () => ((this.state.availableBands.length > 0)
-        ? (
-            <div>
-                <label>Available Bands: </label><br/>
-                <label>{this.state.availableBands}</label>
+    getAvailableBandsControl = (isDual, isCollection) => (
+        <>
+            <div style={{display: "flex", justifyContent: "space-between", alignItems: "center"}}>
+                <label>Available Bands</label>
+                <button className="btn btn-sm btn-secondary mb-1" onClick={() => this.getBandsFromGateway(isDual, isCollection)} type="button">Refresh</button>
             </div>
-        ) : "");
-
-    getAvailableBandsControlDual = () => ((this.state.availableBandsDual.length > 0)
-        ? (
-            <div>
-                <label>Available Bands: </label><br/>
-                <label>{this.state.availableBandsDual}</label>
-            </div>
-        ) : "");
+            <label>{isDual
+                ? this.state.availableBandsDual || "Click on refresh to see the Available Bands."
+                : this.state.availableBands || "Click on refresh to see the Available Bands."}
+            </label>
+        </>
+    );
 
     getDataForm = () => {
         if (this.state.selectedWidgetType === "ImageElevation") {
@@ -1382,22 +1375,26 @@ class WidgetLayoutEditor extends React.PureComponent {
             );
         }
         if (this.state.selectedWidgetType === "imageAsset" || this.state.selectedWidgetType === "imageCollectionAsset") {
+            const [label, placeholder] = this.state.selectedWidgetType === "imageAsset"
+                ? ["GEE Image Asset", "LANDSAT/LC8_L1T_TOA/LC81290502015036LGN00"]
+                : ["GEE Collection Image Asset", "LANDSAT/LC8_L1T_TOA"];
+            const isCollection = this.state.selectedWidgetType === "imageCollectionAsset";
             return (
                 <>
                     {this.getTitleBlock()}
                     <div className="form-group">
-                        <label htmlFor="imageCollection">GEE Image Asset</label>
+                        <label htmlFor="imageCollection">{label}</label>
                         <input
                             className="form-control"
                             id="imageCollection"
                             name="imageCollection"
                             onChange={this.onImageCollectionChange}
-                            placeholder="LANDSAT/LC8_L1T_TOA"
+                            placeholder={placeholder}
                             type="text"
                             value={this.state.imageCollection}
                         />
                     </div>
-                    {this.getAvailableBandsControl()}
+                    {this.getAvailableBandsControl(false, isCollection)}
                     {this.getImageParamsBlock()}
                     {this.getInstitutionImageryInfo()}
                 </>
@@ -1413,7 +1410,7 @@ class WidgetLayoutEditor extends React.PureComponent {
                     {this.getDateRangeControl()}
                     {this.getDualImageCollectionTimeSpanOption()}
                     {this.getDualLayerDateRangeControl()}
-                    {this.getAvailableBandsControl()}
+                    {this.getAvailableBandsControl(false, true)}
                     <div className="form-group">
                         <label htmlFor="widgetBands">Bands</label>
                         <input
@@ -1489,7 +1486,7 @@ class WidgetLayoutEditor extends React.PureComponent {
                             value={this.state.endDateDual}
                         />
                     </div>
-                    {this.getAvailableBandsControlDual()}
+                    {this.getAvailableBandsControl(true, true)}
                     <div className="form-group">
                         <label htmlFor="widgetBands">Bands</label>
                         <input
@@ -1544,25 +1541,29 @@ class WidgetLayoutEditor extends React.PureComponent {
                     </button>
                 </>
             );
-        } else if (((this.state.selectedDataType === "imageCollectionAsset"
-                        || this.state.selectedDataType === "imageAsset") && this.state.selectedWidgetType === "DualImageCollection")
+        } else if (((this.state.selectedDataType === "imageCollectionAsset" || this.state.selectedDataType === "imageAsset")
+                        && this.state.selectedWidgetType === "DualImageCollection")
                         && this.state.wizardStep === 1) {
+            const [label, placeholder] = this.state.selectedDataType === "imageAsset"
+                ? ["GEE Image Asset", "LANDSAT/LC8_L1T_TOA/LC81290502015036LGN00"]
+                : ["GEE Collection Image Asset", "LANDSAT/LC8_L1T_TOA"];
+            const isCollection = this.state.selectedDataType === "imageCollectionAsset";
             return (
                 <>
                     {this.getTitleBlock()}
                     <div className="form-group">
-                        <label htmlFor="imageCollection">GEE Image Asset</label>
+                        <label htmlFor="imageCollection">{label}</label>
                         <input
                             className="form-control"
                             id="imageCollection"
                             name="imageCollection"
                             onChange={this.onImageCollectionChange}
-                            placeholder="LANDSAT/LC8_L1T_TOA"
+                            placeholder={placeholder}
                             type="text"
                             value={this.state.imageCollection}
                         />
                     </div>
-                    {this.getAvailableBandsControl()}
+                    {this.getAvailableBandsControl(false, isCollection)}
                     <div className="form-group">
                         <label htmlFor="imageParams">Image Parameters (json format)</label>
                         <textarea
@@ -1578,25 +1579,28 @@ class WidgetLayoutEditor extends React.PureComponent {
                     {this.getNextStepButton()}
                 </>
             );
-        } else if (((this.state.selectedDataType === "imageCollectionAsset"
-                        || this.state.selectedDataType === "imageAsset")
+        } else if (((this.state.selectedDataTypeDual === "imageCollectionAsset" || this.state.selectedDataTypeDual === "imageAsset")
                         && this.state.selectedWidgetType === "DualImageCollection")
                         && this.state.wizardStep === 2) {
+            const [label, placeholder] = this.state.selectedDataTypeDual === "imageAsset"
+                ? ["GEE Image Asset", "LANDSAT/LC8_L1T_TOA/LC81290502015036LGN00"]
+                : ["GEE Collection Image Asset", "LANDSAT/LC8_L1T_TOA"];
+            const isCollection = this.state.selectedDataTypeDual === "imageCollectionAsset";
             return (
                 <>
                     <div className="form-group">
-                        <label htmlFor="imageCollection">GEE Image Asset</label>
+                        <label htmlFor="imageCollection">{label}</label>
                         <input
                             className="form-control"
                             id="imageCollection"
                             name="imageCollection"
                             onChange={this.onImageCollectionChangeDual}
-                            placeholder="LANDSAT/LC8_L1T_TOA"
+                            placeholder={placeholder}
                             type="text"
                             value={this.state.imageCollectionDual}
                         />
                     </div>
-                    {this.getAvailableBandsControlDual()}
+                    {this.getAvailableBandsControl(true, isCollection)}
                     <div className="form-group">
                         <label htmlFor="imageParams">Image Parameters (json format)</label>
                         <textarea
@@ -1638,7 +1642,7 @@ class WidgetLayoutEditor extends React.PureComponent {
                             value={this.state.imageCollection}
                         />
                     </div>
-                    {this.getAvailableBandsControl()}
+                    {this.getAvailableBandsControl(false, true)}
                     <div className="form-group">
                         <label htmlFor="imageParams">Image Parameters (json format)</label>
                         <textarea
@@ -1675,7 +1679,7 @@ class WidgetLayoutEditor extends React.PureComponent {
                             value={this.state.imageCollectionDual}
                         />
                     </div>
-                    {this.getAvailableBandsControlDual()}
+                    {this.getAvailableBandsControl(true, true)}
                     <div className="form-group">
                         <label htmlFor="imageParams">Image Parameters (json format)</label>
                         <textarea
@@ -1816,7 +1820,7 @@ class WidgetLayoutEditor extends React.PureComponent {
                             value={this.state.imageCollection}
                         />
                     </div>
-                    {this.getAvailableBandsControl()}
+                    {this.getAvailableBandsControl(false, true)}
                     <div className="form-group">
                         <label htmlFor="graphBand">Band to graph</label>
                         <input
