@@ -3,9 +3,17 @@ import ReactDOM from "react-dom";
 
 import {LoadingModal, NavigationBar} from "./components/PageComponents";
 import SvgIcon from "./components/SvgIcon";
-import {PlanetNICFIMenu} from "./imagery/collectionMenuControls";
 
-import {UnicodeIcon, getQueryString, safeLength, isNumber, invertColor, getLanguage} from "./utils/generalUtils";
+import {nicfiLayers} from "./imagery/imageryOptions";
+import {
+    UnicodeIcon,
+    getQueryString,
+    safeLength,
+    isNumber,
+    invertColor,
+    getLanguage,
+    last
+} from "./utils/generalUtils";
 import {mercator} from "./utils/mercator";
 
 const localeLanguages = {
@@ -34,36 +42,40 @@ const localeLanguages = {
         "gotoFirstPlot": "Go to first plot",
         "imageryTitle": "Imagery Options",
         "imageryLoading": "Loading imagery data",
-        "kmlTitle": "Plot KML",
-        "kmlDownload": "Download Plot KML"
+        "kmlDownload": "Download Plot KML",
+        "selectTime": "Select time",
+        "infrared": "Infrared",
+        "updateMap": "Update Map"
     },
     "es": {
         "loadingModal": "Cargando detalles del proyecto",
-        "gettingPlot": "Obtener parcela",
-        "gettingFirstPlot": "Obtener primera parcela",
-        "gettingNextPlot": "Obtener siguiente parcela",
-        "gettingPrevPlot": "Obtener parcela anterior",
-        "navPlot": "Esta parcela ya ha sido analizado.",
-        "plotNotFound": "Parcela {0} no encontrado.",
-        "navNextAn": "No ha revisado ninguna parcela.",
-        "navNextUn": "Todas las parcelas han sido analizadas para este proyecto.",
-        "navNextDone": "Ha llegado al final de la lista de parcelas.",
-        "navPrevAn": "Usted no analizó ninguna parcela anterior.",
-        "navPrevUn": "Todas las parcelas anteriores han sido analizadas.",
-        "errorNavNum": "Ingrese un número para ir a la parcela.",
-        "postSave": "Guardar respuestas de la parcela",
+        "gettingPlot": "Obtener predicción",
+        "gettingFirstPlot": "Obtener primera predicción",
+        "gettingNextPlot": "Obteniendo siguiente predicción",
+        "gettingPrevPlot": "Obtener predicción anterior",
+        "navPlot": "Esta predicción ya ha sido analizado.",
+        "plotNotFound": "Predicción {0} no encontrado.",
+        "navNextAn": "No ha revisado ninguna predicción.",
+        "navNextUn": "Todas las prediccións han sido analizadas para este proyecto.",
+        "navNextDone": "Ha llegado al final de la lista de prediccións..",
+        "navPrevAn": "Usted no analizó ninguna predicción anterior.",
+        "navPrevUn": "Todas las prediccións anteriores han sido analizadas..",
+        "errorNavNum": "Ingrese un número para ir a la  predicción.",
+        "postSave": "Guardando respuesta",
         "errorSelect": "Seleccionar al menos una muestra antes de elegir una respuesta.",
         "errorSave": "Todas las preguntas deben responderse para guardar la colección.",
         "saveButton": "Guardar",
-        "navLabel": "Navegar por",
-        "optionUn": "Parcelas no analizadas",
-        "optionMy": "Mis parcelas analizadas",
-        "gotoPlot": "Ir a la parcela",
-        "gotoFirstPlot": "Ir a la parcela primera",
+        "navLabel": "Ir a",
+        "optionUn": "Predicciones no analizadas",
+        "optionMy": "Predicciones analizadas",
+        "gotoPlot": "Ir a la predicción",
+        "gotoFirstPlot": "Ir a primera predicción",
         "imageryTitle": "Opciones de imágenes",
         "imageryLoading": "Cargando datos de imágenes",
-        "kmlTitle": "Parcela KML",
-        "kmlDownload": "Descargar parcela KML"
+        "kmlDownload": "Descargar predicción (KML)",
+        "selectTime": "Seleccionar fecha",
+        "infrared": "Infrarrojo",
+        "updateMap": "Actualizar mapa"
     }
 };
 
@@ -803,12 +815,14 @@ class SimpleCollection extends React.Component {
                                 setImageryAttribution={this.setImageryAttribution}
                             />
                             {!this.state.isMobile && this.state.KMLFeatures && (
-                                <KMLGenerator
-                                    KMLFeatures={this.state.KMLFeatures}
-                                    localeText={this.state.localeText}
-                                    plotId={plotId}
-                                    projectId={this.state.currentProject.id}
-                                />
+                                <a
+                                    className="btn btn-outline-lightgreen btn-sm btn-block my-2"
+                                    download={"ceo_projectId-" + this.state.currentProject.id + "_plotId-" + plotId + ".kml"}
+                                    href={"data:earth.kml+xml application/vnd.google-earth.kmz, "
+                                        + encodeURIComponent(this.state.localeText.KMLFeatures)}
+                                >
+                                    {this.state.localeText.kmlDownload}
+                                </a>
                             )}
                         </div>
                     </div>
@@ -1026,6 +1040,7 @@ function ImageryOptions(props) {
                         key={imagery.id}
                         currentPlot={props.currentPlot}
                         currentProjectBoundary={props.currentProjectBoundary}
+                        localeText={props.localeText}
                         mapConfig={props.mapConfig}
                         setImageryAttributes={props.setImageryAttributes}
                         setImageryAttribution={props.setImageryAttribution}
@@ -1038,20 +1053,113 @@ function ImageryOptions(props) {
     );
 }
 
-function KMLGenerator({projectId, plotId, localeText, KMLFeatures}) {
-    return (
-        <>
-            <h3 className="mt-2">{localeText.kmlTitle}</h3>
-            <a
-                className="btn btn-lightgreen btn-sm btn-block my-2"
-                download={"ceo_projectId-" + projectId + "_plotId-" + plotId + ".kml"}
-                href={"data:earth.kml+xml application/vnd.google-earth.kmz, "
-                    + encodeURIComponent(KMLFeatures)}
-            >
-                {localeText.kmlDownload}
-            </a>
-        </>
-    );
+export class PlanetNICFIMenu extends React.Component {
+    constructor(props) {
+        super(props);
+        this.state = {
+            selectedTime: "",
+            selectedBand: ""
+        };
+    }
+
+    componentDidMount() {
+        this.setState({
+            selectedTime: this.props.sourceConfig.time === "newest"
+                ? last(nicfiLayers)
+                : this.props.sourceConfig.time,
+            selectedBand: this.props.sourceConfig.band
+        }, () => this.updatePlanetLayer());
+    }
+
+    componentDidUpdate(prevProps) {
+        if (this.props.visible && prevProps.visible !== this.props.visible) {
+            this.updateImageryInformation();
+        }
+    }
+
+    updateImageryInformation = () => {
+        if (this.props.visible) {
+            this.props.setImageryAttribution(` | ${this.state.selectedTime} Mosaic`);
+            this.props.setImageryAttributes({
+                time: this.state.selectedTime
+            });
+        }
+    };
+
+    updatePlanetLayer = () => {
+        this.updateImageryInformation();
+        mercator.updateLayerSource(
+            this.props.mapConfig,
+            this.props.thisImageryId,
+            this.props.currentProjectBoundary,
+            sourceConfig => ({
+                ...sourceConfig,
+                time: this.state.selectedTime,
+                band: this.state.selectedBand
+            })
+        );
+    };
+
+    render() {
+        const {localeText} = this.props;
+        return (
+            <div className="my-2" style={{display: this.props.visible ? "block" : "none"}}>
+                <div className="slide-container">
+                    <label className="mb-0 mr-3" htmlFor="time-selection">{localeText.selectTime}</label>
+                    <select
+                        id="time-selection"
+                        onChange={e => this.setState({selectedTime: e.target.value})}
+                        value={this.state.selectedTime}
+                    >
+                        {nicfiLayers.map(time => <option key={time} value={time}>{time}</option>)}
+                    </select>
+                </div>
+                <div className="slide-container">
+                    <div id="radio-group">
+                        <div className="form-check form-check-inline">
+                            <input
+                                checked={this.state.selectedBand === "rgb"}
+                                className="form-check-input"
+                                id="visible"
+                                onChange={() => this.setState({selectedBand: "rgb"})}
+                                type="radio"
+                            />
+                            <label
+                                className="form-check-label"
+                                htmlFor="visible"
+                            >
+                                Visible
+                            </label>
+                        </div>
+                        <div className="form-check form-check-inline">
+                            <input
+                                checked={this.state.selectedBand === "cir"}
+                                className="form-check-input"
+                                id="infrared"
+                                onChange={() => this.setState({selectedBand: "cir"})}
+                                type="radio"
+                            />
+                            <label
+                                className="form-check-label"
+                                htmlFor="infrared"
+                            >
+                                {localeText.infrared}
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                <div className="slide-container">
+                    <button
+                        className="btn btn-lightgreen btn-sm"
+                        onClick={this.updatePlanetLayer}
+                        type="button"
+                    >
+                        {localeText.updateMap}
+                    </button>
+                </div>
+            </div>
+        );
+    }
 }
 
 export function pageInit(args) {
