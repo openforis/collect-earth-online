@@ -25,6 +25,8 @@ const dateRangeValidator = ({startDate, endDate}) => (startDate && endDate
 
 const urlValidator = url => /^(?:http|https):\/\/[\w.-]+(?:\.[\w-]+)+[\w\-.,@?^=%&:;/~\\+#]+$/.test(url);
 
+const olProjectionValidator = value => !/crs|srs|epsg|wgs/mi.test(value);
+
 const isValidJSON = str => {
     try {
         JSON.parse(str);
@@ -69,7 +71,11 @@ export const imageryOptions = [
                             .join(",")}}`
                         : value;
                 },
-                validator: value => (!isValidJSON(value) ? "Invalid JSON in the \"Additional WMS Params\" field." : "")
+                validator: value => (!isValidJSON(value)
+                    ? "Invalid JSON in the \"Visualization Parameters\" field."
+                    : !olProjectionValidator(value)
+                        ? "SRS/CRS is not valid. OpenLayers will automatically use EPSG:3857."
+                        : "")
             }
         ]
         // FIXME, add url if help document is created.
