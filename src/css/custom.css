@@ -596,6 +596,9 @@ h2.header {
     margin-left: -8px;
     margin-right: -8px;
 }
+.survey-form .form-group {
+    align-items: center;
+}
 
 /*******************/
 /* Collection Page */
