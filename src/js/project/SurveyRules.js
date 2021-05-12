@@ -366,10 +366,7 @@ export class SumOfAnswers extends React.Component {
             ? (
                 <>
                     <div className="form-group">
-                        <label>
-                            <p>Select survey question</p>
-                            <p>(Hold ctrl/cmd and select multiple questions)</p>
-                        </label>
+                        <label>Select survey question</label>
                         <select
                             className="form-control form-control-sm overflow-auto"
                             multiple="multiple"
@@ -381,6 +378,7 @@ export class SumOfAnswers extends React.Component {
                             {availableQuestions.map((question, uid) =>
                                 <option key={uid} value={question.id}>{question.question}</option>)}
                         </select>
+                        <small className="form-text text-muted">Hold ctrl/cmd and select multiple questions</small>
                     </div>
                     <div className="form-group">
                         <label>Enter valid sum</label>
@@ -457,10 +455,7 @@ export class MatchingSums extends React.Component {
             ? (
                 <>
                     <div className="form-group">
-                        <label>
-                            <p>Select first question set:</p>
-                            <p>(Hold ctrl/cmd and select multiple questions)</p>
-                        </label>
+                        <label>Select first question set</label>
                         <select
                             className="form-control form-control-sm overflow-auto"
                             multiple="multiple"
@@ -472,12 +467,10 @@ export class MatchingSums extends React.Component {
                             {availableQuestions.map((question, uid) =>
                                 <option key={uid} value={question.id}>{question.question}</option>)}
                         </select>
+                        <small className="form-text text-muted">Hold ctrl/cmd and select multiple questions</small>
                     </div>
                     <div className="form-group">
-                        <label>
-                            <p>Select second question set:</p>
-                            <p>(Hold ctrl/cmd and select multiple questions)</p>
-                        </label>
+                        <label>Select second question set</label>
                         <select
                             className="form-control form-control-sm overflow-auto"
                             multiple="multiple"
@@ -489,6 +482,7 @@ export class MatchingSums extends React.Component {
                             {availableQuestions.map((question, uid) =>
                                 <option key={uid} value={question.id}>{question.question}</option>)}
                         </select>
+                        <small className="form-text text-muted">Hold ctrl/cmd and select multiple questions</small>
                     </div>
                     <div className="d-flex justify-content-end">
                         <input
@@ -579,7 +573,7 @@ export class IncompatibleAnswers extends React.Component {
         return availableQuestions.length > 1
             ? (
                 <>
-                    <label>Select the incompatible questions and answers: </label>
+                    <strong className="mb-2" style={{textAlign: "center"}}>Select the incompatible questions and answers</strong>
                     <div className="form-group">
                         <label>Question 1</label>
                         <select
