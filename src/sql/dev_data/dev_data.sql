@@ -2,10 +2,10 @@
 
 -- Adds an administrator and a user
 INSERT INTO users
-    (user_uid, email, password, administrator, on_mailing_list)
+    (user_uid, email, password, administrator, reset_key)
 VALUES
-    (1, 'admin@ceo.dev', crypt('admin', gen_salt('bf')), TRUE, FALSE),
-    (2, 'user@ceo.dev', crypt('user', gen_salt('bf')), FALSE, FALSE);
+    (1, 'admin@ceo.dev', crypt('admin', gen_salt('bf')), TRUE, null),
+    (2, 'user@ceo.dev', crypt('user', gen_salt('bf')), FALSE, null);
 
 SELECT setval(pg_get_serial_sequence('users', 'user_uid'), (SELECT MAX(user_uid) FROM users) + 1);
 
