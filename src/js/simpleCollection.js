@@ -819,7 +819,7 @@ class SimpleCollection extends React.Component {
                                     className="btn btn-outline-lightgreen btn-sm btn-block my-2"
                                     download={"ceo_projectId-" + this.state.currentProject.id + "_plotId-" + plotId + ".kml"}
                                     href={"data:earth.kml+xml application/vnd.google-earth.kmz, "
-                                        + encodeURIComponent(this.state.localeText.KMLFeatures)}
+                                        + encodeURIComponent(this.state.KMLFeatures)}
                                 >
                                     {this.state.localeText.kmlDownload}
                                 </a>
