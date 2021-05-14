@@ -1,75 +1,85 @@
 import React from "react";
 
+import _ from "lodash";
 import SvgIcon from "./SvgIcon";
 import {pluralize, truncate} from "../utils/generalUtils";
 
 /**
  * Helper Components
  */
-function Badge({children}) {
+function truncjoin(qs) {
+    return qs.map(q => truncate(q, 15)).join(", ");
+}
+
+function Badge({text}) {
     return (
-        <div className="badge badge-light">
-            {children}
+        <div className="badge badge-light tooltip_wrapper" style={{color: "black"}}>
+            {truncate(text, 10)}
+            {text.length > 10 && (<div className="tooltip_content">{text}</div>)}
         </div>
     );
 }
 
-function Pre({children}) {
+function Question({text}) {
     return (
-        <pre style={{display: "inline"}}>
-            {children}
-        </pre>
+        <i className="tooltip_wrapper" style={{color: "black"}}>
+            &quot;{(_.isArray(text) ? truncjoin(text) : truncate(text, 15))}&quot;
+            {(_.isArray(text) || text.length >= 15)
+                && (
+                    <span className="tooltip_content" style={{"font-size": "0.8rem"}}>
+                        {_.isArray(text) ? text.join(", ") : text}
+                    </span>
+                )}
+        </i>
     );
 }
 
 function EqualToSumRule({questionsText, validSum}) {
-    const truncjoin = qs => qs.map(q => truncate(q, 15)).join(", ");
     return (
-        <div className="mb-3">
-            <strong>Sum of Answers</strong>
-            <br/>
-            Answers to <i>{truncjoin(questionsText)}</i> should sum up to <Pre>{validSum}.</Pre>
+        <div className="d-flex flex-column mb-3">
+            <div><strong>Sum of Answers</strong></div>
+            <div>Answers to <Question text={questionsText}/> should sum up to {validSum}.</div>
         </div>
     );
 }
 
 function IncompatibleRule({answerText1, answerText2, questionText1, questionText2}) {
     return (
-        <div className="mb-3">
-            <strong>Incompatible Answers</strong>
-            <br/>
-            Answer <Badge>{truncate(answerText1, 10)}</Badge> from <i>{truncate(questionText1, 15)}</i> is
-            incompatible with <Badge>{truncate(answerText2, 10)}</Badge> from <i>{truncate(questionText2, 15)}</i>
+        <div className="d-flex flex-column mb-3">
+            <div><strong>Incompatible Answers</strong></div>
+            <div>
+                Answer <Badge text={answerText1}/> from <Question text={questionText1}/> is
+                incompatible with <Badge text={answerText2}/> from <Question text={questionText2}/>
+            </div>
         </div>
     );
 }
 
 function MatchingSumsRule({questionSetText1, questionSetText2}) {
-    const truncjoin = qs => qs.map(q => truncate(q, 15)).join(", ");
     return (
-        <div className="mb-3">
-            <strong>Matching Sums</strong>
-            <br/>
-            Sum of <i>{truncjoin(questionSetText1)}</i> should be equal to sum of <i>{truncjoin(questionSetText2)}</i>
+        <div className="d-flex flex-column mb-3">
+            <div><strong>Matching Sums</strong></div>
+            <div>
+                Sum of <Question text={questionSetText1}/> should be equal to sum of <Question text={questionSetText2}/>
+            </div>
         </div>
     );
 }
 
 function MinMaxRule({questionsText, min, max}) {
     return (
-        <div className="mb-3">
-            <strong>Min/Max Values</strong>
-            <br/>
-            Answer to <i>{truncate(questionsText, 15)}</i> should be between: <Pre>{min}</Pre> and <Pre>{max}.</Pre>
+        <div className="d-flex flex-column mb-3">
+            <div><strong>Min/Max Values</strong></div>
+            <div>Answer to <Question text={questionsText}/> should be between: {min} and {max}.</div>
         </div>
     );
 }
 
 function RegexRule({questionsText, regex}) {
     return (
-        <div className="mb-3">
-            <strong>Text Match</strong><br/>
-            Answer to <i>{truncate(questionsText, 15)}</i> should match the pattern: <Pre>{regex}</Pre>
+        <div className="d-flex flex-column mb-3">
+            <div><strong>Text Match</strong></div>
+            <div>Answer to <Question text={questionsText}/> should match the pattern: <pre style={{display: "inline"}}>{regex}</pre></div>
         </div>
     );
 }
