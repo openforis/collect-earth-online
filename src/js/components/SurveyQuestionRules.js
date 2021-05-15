@@ -1,12 +1,11 @@
 import React from "react";
 
-import _ from "lodash";
 import SvgIcon from "./SvgIcon";
 import {pluralize, truncate} from "../utils/generalUtils";
 
 /**
  * Helper Components
- */
+ **/
 function truncjoin(qs) {
     return qs.map(q => truncate(q, 15)).join(", ");
 }
@@ -21,13 +20,14 @@ function Badge({text}) {
 }
 
 function Question({text}) {
+    const textIsArray = Array.isArray(text);
     return (
         <i className="tooltip_wrapper" style={{color: "black"}}>
-            &quot;{(_.isArray(text) ? truncjoin(text) : truncate(text, 15))}&quot;
-            {(_.isArray(text) || text.length >= 15)
+            &quot;{(textIsArray ? truncjoin(text) : truncate(text, 15))}&quot;
+            {(textIsArray || text.length >= 15)
                 && (
                     <span className="tooltip_content" style={{"font-size": "0.8rem"}}>
-                        {_.isArray(text) ? text.join(", ") : text}
+                        {textIsArray ? text.join(", ") : text}
                     </span>
                 )}
         </i>
