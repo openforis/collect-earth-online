@@ -14,7 +14,7 @@ import {OSM, Vector, XYZ} from "ol/source";
 import {Style, Stroke} from "ol/style";
 import {getArea as sphereGetArea} from "ol/sphere";
 
-import {mercator} from "./utils/mercator.js";
+import {mercator} from "./utils/mercator";
 import {UnicodeIcon, formatDateISO} from "./utils/generalUtils";
 import {GeoDashNavigationBar} from "./components/PageComponents";
 
