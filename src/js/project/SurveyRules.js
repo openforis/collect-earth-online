@@ -6,13 +6,13 @@ import {ProjectContext} from "./constants";
 const getNextId = array => array.reduce((maxId, obj) => Math.max(maxId, obj.id), 0) + 1;
 
 export const SurveyRuleDesign = () => {
-    const context = useContext(ProjectContext);
+    const {setProjectDetails, surveyRules} = useContext(ProjectContext);
     return (
         <div id="survey-rule-design">
             <SurveyRulesList
                 inDesignMode
-                setProjectDetails={context.setProjectDetails}
-                surveyRules={context.surveyRules}
+                setProjectDetails={setProjectDetails}
+                surveyRules={surveyRules}
             />
             <SurveyRulesForm/>
         </div>
@@ -82,10 +82,11 @@ export class SurveyRulesList extends React.Component {
     };
 
     renderRuleRow = (rule, uid) => {
+        const {inDesignMode} = this.props;
         const {id, ruleType} = rule;
         return (
             <tr key={uid} id={"rule" + id}>
-                {this.props.inDesignMode
+                {inDesignMode
                     && <td>{this.removeButton(id)}</td>}
                 <td>{"Rule " + id}</td>
                 <td>Type: {this.ruleTypeLabel[ruleType]}</td>
@@ -126,6 +127,7 @@ export class SurveyRulesForm extends React.Component {
     }
 
     render() {
+        const {selectedRuleType} = this.state;
         return (
             <div className="mt-3 d-flex justify-content-center">
                 <div style={{display: "flex", flexFlow: "column", width: "25rem"}}>
@@ -135,7 +137,7 @@ export class SurveyRulesForm extends React.Component {
                         <select
                             className="form-control form-control-sm"
                             onChange={e => this.setState({selectedRuleType: e.target.value})}
-                            value={this.state.selectedRuleType}
+                            value={selectedRuleType}
                         >
                             <option value="text-match">Text Regex Match</option>
                             <option value="numeric-range">Numeric Range</option>
@@ -150,7 +152,7 @@ export class SurveyRulesForm extends React.Component {
                         "sum-of-answers": <SumOfAnswers/>,
                         "matching-sums": <MatchingSums/>,
                         "incompatible-answers": <IncompatibleAnswers/>
-                    }[this.state.selectedRuleType]}
+                    }[selectedRuleType]}
                 </div>
             </div>
         );
@@ -193,6 +195,7 @@ export class TextMatch extends React.Component {
     };
 
     render() {
+        const {questionId, regex} = this.state;
         const availableQuestions = this.context.surveyQuestions
             .filter(q => q.componentType === "input" && q.dataType === "text");
         return availableQuestions.length > 0
@@ -203,11 +206,11 @@ export class TextMatch extends React.Component {
                         <select
                             className="form-control form-control-sm"
                             onChange={e => this.setState({questionId: Number(e.target.value)})}
-                            value={this.state.questionId}
+                            value={questionId}
                         >
                             <option value={-1}>- Select Question -</option>
-                            {availableQuestions.map((question, uid) =>
-                                <option key={uid} value={question.id}>{question.question}</option>)}
+                            {availableQuestions.map(question =>
+                                <option key={question.id} value={question.id}>{question.question}</option>)}
                         </select>
                     </div>
                     <div className="form-group">
@@ -217,7 +220,7 @@ export class TextMatch extends React.Component {
                             onChange={e => this.setState({regex: e.target.value})}
                             placeholder="Regular expression"
                             type="text"
-                            value={this.state.regex}
+                            value={regex}
                         />
                     </div>
                     <div className="d-flex justify-content-end">
@@ -272,6 +275,7 @@ export class NumericRange extends React.Component {
     };
 
     render() {
+        const {questionId, min, max} = this.state;
         const availableQuestions = this.context.surveyQuestions
             .filter(q => q.componentType === "input" && q.dataType === "number");
         return availableQuestions.length > 0
@@ -282,11 +286,11 @@ export class NumericRange extends React.Component {
                         <select
                             className="form-control form-control-sm"
                             onChange={e => this.setState({questionId: Number(e.target.value)})}
-                            value={this.state.questionId}
+                            value={questionId}
                         >
                             <option value={-1}>- Select Question -</option>
-                            {availableQuestions.map((question, uid) =>
-                                <option key={uid} value={question.id}>{question.question}</option>)}
+                            {availableQuestions.map(question =>
+                                <option key={question.id} value={question.id}>{question.question}</option>)}
                         </select>
                     </div>
                     <div className="form-group">
@@ -296,7 +300,7 @@ export class NumericRange extends React.Component {
                             onChange={e => this.setState({min: Number(e.target.value)})}
                             placeholder="Minimum value"
                             type="number"
-                            value={this.state.min}
+                            value={min}
                         />
                     </div>
                     <div className="form-group">
@@ -306,7 +310,7 @@ export class NumericRange extends React.Component {
                             onChange={e => this.setState({max: Number(e.target.value)})}
                             placeholder="Maximum value"
                             type="number"
-                            value={this.state.max}
+                            value={max}
                         />
                     </div>
                     <div className="d-flex justify-content-end">
@@ -361,6 +365,7 @@ export class SumOfAnswers extends React.Component {
     };
 
     render() {
+        const {questionIds, validSum} = this.state;
         const availableQuestions = this.context.surveyQuestions.filter(q => q.dataType === "number");
         return availableQuestions.length > 1
             ? (
@@ -373,10 +378,10 @@ export class SumOfAnswers extends React.Component {
                             onChange={e => this.setState({
                                 questionIds: Array.from(e.target.selectedOptions, i => Number(i.value))
                             })}
-                            value={this.state.questionIds}
+                            value={questionIds}
                         >
-                            {availableQuestions.map((question, uid) =>
-                                <option key={uid} value={question.id}>{question.question}</option>)}
+                            {availableQuestions.map(question =>
+                                <option key={question.id} value={question.id}>{question.question}</option>)}
                         </select>
                         <small className="form-text text-muted">Hold ctrl/cmd and select multiple questions</small>
                     </div>
@@ -387,7 +392,7 @@ export class SumOfAnswers extends React.Component {
                             onChange={e => this.setState({validSum: Number(e.target.value)})}
                             placeholder="Valid sum"
                             type="number"
-                            value={this.state.validSum}
+                            value={validSum}
                         />
                     </div>
                     <div className="d-flex justify-content-end">
@@ -450,6 +455,7 @@ export class MatchingSums extends React.Component {
     };
 
     render() {
+        const {questionSetIds1, questionSetIds2} = this.state;
         const availableQuestions = this.context.surveyQuestions.filter(q => q.dataType === "number");
         return availableQuestions.length > 1
             ? (
@@ -462,10 +468,10 @@ export class MatchingSums extends React.Component {
                             onChange={e => this.setState({
                                 questionSetIds1: Array.from(e.target.selectedOptions, i => Number(i.value))
                             })}
-                            value={this.state.questionSetIds1}
+                            value={questionSetIds1}
                         >
-                            {availableQuestions.map((question, uid) =>
-                                <option key={uid} value={question.id}>{question.question}</option>)}
+                            {availableQuestions.map(question =>
+                                <option key={question.id} value={question.id}>{question.question}</option>)}
                         </select>
                         <small className="form-text text-muted">Hold ctrl/cmd and select multiple questions</small>
                     </div>
@@ -477,10 +483,10 @@ export class MatchingSums extends React.Component {
                             onChange={e => this.setState({
                                 questionSetIds2: Array.from(e.target.selectedOptions, i => Number(i.value))
                             })}
-                            value={this.state.questionSetIds2}
+                            value={questionSetIds2}
                         >
-                            {availableQuestions.map((question, uid) =>
-                                <option key={uid} value={question.id}>{question.question}</option>)}
+                            {availableQuestions.map(question =>
+                                <option key={question.id} value={question.id}>{question.question}</option>)}
                         </select>
                         <small className="form-text text-muted">Hold ctrl/cmd and select multiple questions</small>
                     </div>
@@ -569,6 +575,7 @@ export class IncompatibleAnswers extends React.Component {
     };
 
     render() {
+        const {questionId1, answerId1, questionId2, answerId2} = this.state;
         const availableQuestions = this.context.surveyQuestions.filter(q => q.componentType !== "input");
         return availableQuestions.length > 1
             ? (
@@ -582,11 +589,11 @@ export class IncompatibleAnswers extends React.Component {
                                 questionId1: Number(e.target.value),
                                 answerId1: -1
                             })}
-                            value={this.state.questionId1}
+                            value={questionId1}
                         >
                             <option value="-1">- Select Question 1 -</option>
-                            {availableQuestions.map((question, uid) =>
-                                <option key={uid} value={question.id}>{question.question}</option>)}
+                            {availableQuestions.map(question =>
+                                <option key={question.id} value={question.id}>{question.question}</option>)}
                         </select>
                     </div>
                     <div className="form-group">
@@ -594,11 +601,11 @@ export class IncompatibleAnswers extends React.Component {
                         <select
                             className="form-control form-control-sm"
                             onChange={e => this.setState({answerId1: Number(e.target.value)})}
-                            value={this.state.answerId1}
+                            value={answerId1}
                         >
                             <option value="-1">- Select Answer 1 -</option>
-                            {this.safeFindAnswers(this.state.questionId1).map((answer, uid) =>
-                                <option key={uid} value={answer.id}>{answer.answer}</option>)}
+                            {this.safeFindAnswers(questionId1).map(answer =>
+                                <option key={answer.id} value={answer.id}>{answer.answer}</option>)}
                         </select>
                     </div>
                     <div className="form-group">
@@ -609,11 +616,11 @@ export class IncompatibleAnswers extends React.Component {
                                 questionId2: Number(e.target.value),
                                 answerId2: -1
                             })}
-                            value={this.state.questionId2}
+                            value={questionId2}
                         >
                             <option value="-1">- Select Question 2 -</option>
-                            {availableQuestions.map((question, uid) =>
-                                <option key={uid} value={question.id}>{question.question}</option>)}
+                            {availableQuestions.map(question =>
+                                <option key={question.id} value={question.id}>{question.question}</option>)}
                         </select>
                     </div>
                     <div className="form-group">
@@ -621,11 +628,11 @@ export class IncompatibleAnswers extends React.Component {
                         <select
                             className="form-control form-control-sm"
                             onChange={e => this.setState({answerId2: Number(e.target.value)})}
-                            value={this.state.answerId2}
+                            value={answerId2}
                         >
                             <option value="-1">- Select Answer 2 -</option>
-                            {this.safeFindAnswers(this.state.questionId2).map((answer, uid) =>
-                                <option key={uid} value={answer.id}>{answer.answer}</option>)}
+                            {this.safeFindAnswers(questionId2).map(answer =>
+                                <option key={answer.id} value={answer.id}>{answer.answer}</option>)}
                         </select>
                     </div>
                     <div className="d-flex justify-content-end">
