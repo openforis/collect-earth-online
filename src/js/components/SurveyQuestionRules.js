@@ -1,7 +1,88 @@
 import React from "react";
 
 import SvgIcon from "./SvgIcon";
-import {pluralize} from "../utils/generalUtils";
+import {pluralize, truncate} from "../utils/generalUtils";
+
+/**
+ * Helper Components
+ **/
+function truncjoin(qs) {
+    return qs.map(q => truncate(q, 15)).join(", ");
+}
+
+function Badge({text}) {
+    return (
+        <div className="badge badge-light tooltip_wrapper" style={{color: "black"}}>
+            {truncate(text, 10)}
+            {text.length > 10 && (<div className="tooltip_content">{text}</div>)}
+        </div>
+    );
+}
+
+function Question({text}) {
+    const textIsArray = Array.isArray(text);
+    return (
+        <i className="tooltip_wrapper" style={{color: "black"}}>
+            &quot;{(textIsArray ? truncjoin(text) : truncate(text, 15))}&quot;
+            {(textIsArray || text.length >= 15)
+                && (
+                    <span className="tooltip_content" style={{"font-size": "0.8rem"}}>
+                        {textIsArray ? text.join(", ") : text}
+                    </span>
+                )}
+        </i>
+    );
+}
+
+function EqualToSumRule({questionsText, validSum}) {
+    return (
+        <div className="d-flex flex-column mb-3">
+            <div><strong>Sum of Answers</strong></div>
+            <div>Answers to <Question text={questionsText}/> should sum up to {validSum}.</div>
+        </div>
+    );
+}
+
+function IncompatibleRule({answerText1, answerText2, questionText1, questionText2}) {
+    return (
+        <div className="d-flex flex-column mb-3">
+            <div><strong>Incompatible Answers</strong></div>
+            <div>
+                Answer <Badge text={answerText1}/> from <Question text={questionText1}/> is
+                incompatible with <Badge text={answerText2}/> from <Question text={questionText2}/>
+            </div>
+        </div>
+    );
+}
+
+function MatchingSumsRule({questionSetText1, questionSetText2}) {
+    return (
+        <div className="d-flex flex-column mb-3">
+            <div><strong>Matching Sums</strong></div>
+            <div>
+                Sum of <Question text={questionSetText1}/> should be equal to sum of <Question text={questionSetText2}/>
+            </div>
+        </div>
+    );
+}
+
+function MinMaxRule({questionsText, min, max}) {
+    return (
+        <div className="d-flex flex-column mb-3">
+            <div><strong>Min/Max Values</strong></div>
+            <div>Answer to <Question text={questionsText}/> should be between: {min} and {max}.</div>
+        </div>
+    );
+}
+
+function RegexRule({questionsText, regex}) {
+    return (
+        <div className="d-flex flex-column mb-3">
+            <div><strong>Text Match</strong></div>
+            <div>Answer to <Question text={questionsText}/> should match the pattern: <pre style={{display: "inline"}}>{regex}</pre></div>
+        </div>
+    );
+}
 
 export default class SurveyQuestionRules extends React.Component {
     constructor(props) {
@@ -15,15 +96,15 @@ export default class SurveyQuestionRules extends React.Component {
             || (rule.questions && rule.questions.includes(id))
             || (rule.questionSetIds1 && (rule.questionSetIds1.includes(id) || rule.questionSetIds2.includes(id)))
             || (rule.question1 && (rule.question1 === id || rule.question2 === id)))
-        .map((r, uid) => (r.questionId
+        .map(r => (r.questionId
             ? r.regex
-                ? <li key={uid}>{`Rule: ${r.ruleType} | Question '${r.questionsText}' should match the pattern: ${r.regex}.`}</li>
-                : <li key={uid}>{`Rule: ${r.ruleType} | Question '${r.questionsText}' should be between: ${r.min} and ${r.max}.`}</li>
+                ? <RegexRule key={r.id} {...r}/>
+                : <MinMaxRule key={r.id} {...r}/>
             : r.questions
-                ? <li key={uid}>{`Rule: ${r.ruleType} | Questions '${r.questionsText}' should sum up to ${r.validSum}`}</li>
+                ? <EqualToSumRule key={r.id} {...r}/>
                 : r.questionSetIds1
-                    ? <li key={uid}>{`Rule: ${r.ruleType} | Sum of '${r.questionSetText1}' should be equal to sum of '${r.questionSetText2}'.`}</li>
-                    : <li key={uid}>{`Rule: ${r.ruleType} | 'Question 1: ${r.questionText1}, Answer 1: ${r.answerText1}' is not compatible with 'Question 2: ${r.questionText2}, Answer 2: ${r.answerText2}'.`}</li>));
+                    ? <MatchingSumsRule key={r.id} {...r}/>
+                    : <IncompatibleRule key={r.id} {...r}/>));
 
     render() {
         const {showModal} = this.state;
@@ -71,7 +152,7 @@ export default class SurveyQuestionRules extends React.Component {
                                       </button>
                                   </div>
                                   <div className="modal-body text-left">
-                                      <ul>{rules}</ul>
+                                      {rules}
                                   </div>
                                   <div className="modal-footer">
                                       <button
