@@ -1,7 +1,7 @@
 import React from "react";
 import ReactDOM from "react-dom";
 
-import {LoadingModal, NavigationBar} from "./components/PageComponents";
+import {LoadingModal} from "./components/PageComponents";
 import SvgIcon from "./components/SvgIcon";
 
 import {nicfiLayers} from "./imagery/imageryOptions";
@@ -186,7 +186,7 @@ class SimpleCollection extends React.Component {
         window.scrollTo(0, 0);
         this.setState(
             {
-                myHeight: window.innerHeight,
+                myHeight: window.innerHeight - 60,
                 isMobile: window.innerWidth < 992 // Not sure where 992 came from but it matches the media query.
             },
             () => setTimeout(() => mercator.resize(this.state.mapConfig), 50)
@@ -717,7 +717,7 @@ class SimpleCollection extends React.Component {
         };
 
         return (
-            <div className="row" style={{height: this.state.myHeight, marginTop: "-60px"}}>
+            <div className="row" style={{height: this.state.myHeight}}>
                 {this.state.modalMessage && <LoadingModal message={this.state.modalMessage}/>}
                 <div className="w-100 position-relative overflow-hidden" id="mobile-analysis-pane">
                     <div style={infoStyle}>
@@ -1162,9 +1162,34 @@ export class PlanetNICFIMenu extends React.Component {
     }
 }
 
+function NavigationBar({children}) {
+    return (
+        <>
+            <nav
+                className="navbar navbar-expand-lg navbar-light fixed-top py-0"
+                id="main-nav"
+                style={{backgroundColor: "white", borderBottom: "1px solid black"}}
+            >
+                <a className="navbar-brand pt-1 pb-1" href="/home">
+                    <img
+                        alt="Home"
+                        className="img-fluid"
+                        id="ceo-site-logo"
+                        src="/img/ceo-logo.png"
+                    />
+                </a>
+                {/* <a className="nav-link" href="/collection">Desktop</a> */}
+            </nav>
+            {children}
+        </>
+    );
+}
+
 export function pageInit(args) {
     ReactDOM.render(
-        <SimpleCollection projectId={args.projectId}/>,
+        <NavigationBar>
+            <SimpleCollection projectId={args.projectId}/>
+        </NavigationBar>,
         document.getElementById("app")
     );
 }
