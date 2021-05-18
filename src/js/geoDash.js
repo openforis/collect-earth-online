@@ -14,7 +14,7 @@ import {OSM, Vector, XYZ} from "ol/source";
 import {Style, Stroke} from "ol/style";
 import {getArea as sphereGetArea} from "ol/sphere";
 
-import {mercator} from "./utils/mercator.js";
+import {mercator} from "./utils/mercator";
 import {UnicodeIcon, formatDateISO} from "./utils/generalUtils";
 import {GeoDashNavigationBar} from "./components/PageComponents";
 
@@ -237,48 +237,46 @@ class Geodash extends React.Component {
     }
 }
 
-class Widgets extends React.Component {
-    render() {
-        if (this.props.widgets.length > 0) {
-            return (
-                <div className="row placeholders">
-                    {this.props.widgets.map(widget => (
-                        <Widget
-                            key={widget.id}
-                            getParameterByName={this.props.getParameterByName}
-                            id={widget.id}
-                            imageryList={this.props.imageryList}
-                            initCenter={this.props.initCenter}
-                            mapCenter={this.props.mapCenter}
-                            mapZoom={this.props.mapZoom}
-                            onFullScreen={this.props.onFullScreen}
-                            onSliderChange={this.props.onSliderChange}
-                            onSwipeChange={this.props.onSwipeChange}
-                            projAOI={this.props.projAOI}
-                            projPairAOI={this.props.projPairAOI}
-                            resetCenterAndZoom={this.props.resetCenterAndZoom}
-                            setCenterAndZoom={this.props.setCenterAndZoom}
-                            vectorSource={this.props.vectorSource}
-                            widget={widget}
-                        />
-                    ))}
+const Widgets = props => {
+    if (props.widgets.length > 0) {
+        return (
+            <div className="row placeholders">
+                {props.widgets.map(widget => (
+                    <Widget
+                        key={widget.id}
+                        getParameterByName={props.getParameterByName}
+                        id={widget.id}
+                        imageryList={props.imageryList}
+                        initCenter={props.initCenter}
+                        mapCenter={props.mapCenter}
+                        mapZoom={props.mapZoom}
+                        onFullScreen={props.onFullScreen}
+                        onSliderChange={props.onSliderChange}
+                        onSwipeChange={props.onSwipeChange}
+                        projAOI={props.projAOI}
+                        projPairAOI={props.projPairAOI}
+                        resetCenterAndZoom={props.resetCenterAndZoom}
+                        setCenterAndZoom={props.setCenterAndZoom}
+                        vectorSource={props.vectorSource}
+                        widget={widget}
+                    />
+                ))}
+            </div>
+        );
+    } else {
+        return (
+            <div className="row placeholders">
+                <div className="placeholder columnSpan3 rowSpan2" style={{gridArea: "1 / 1 / span 2 / span 12"}}>
+                    <h1 id="noWidgetMessage">
+                        {props.callbackComplete
+                            ? "The Administrator has not configured any Geo-Dash Widgets for this project"
+                            : "Retrieving Geo-Dash configuration for this project"}
+                    </h1>
                 </div>
-            );
-        } else {
-            return (
-                <div className="row placeholders">
-                    <div className="placeholder columnSpan3 rowSpan2" style={{gridArea: "1 / 1 / span 2 / span 12"}}>
-                        <h1 id="noWidgetMessage">
-                            {this.props.callbackComplete
-                                ? "The Administrator has not configured any Geo-Dash Widgets for this project"
-                                : "Retrieving Geo-Dash configuration for this project"}
-                        </h1>
-                    </div>
-                </div>
-            );
-        }
+            </div>
+        );
     }
-}
+};
 
 class Widget extends React.Component {
     constructor(props) {
@@ -1372,7 +1370,7 @@ class GraphWidget extends React.Component {
                             const theKeys = Object.keys(res.timeseries[0][1]);
                             const compiledData = [];
                             res.timeseries.forEach(d => {
-                                for (let i = 0; i < theKeys.length; i++) {
+                                for (let i = 0; i < theKeys.length; i += 1) {
                                     const tempData = [];
                                     const anObject = {};
                                     anObject[theKeys[i]] = d[1][theKeys[i]];
