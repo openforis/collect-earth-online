@@ -108,14 +108,10 @@ class WidgetLayoutEditor extends React.PureComponent {
         let column = 0;
         const sWidgets = _.orderBy(updatedWidgets, "id", "asc");
         const widgets = _.map(sWidgets, (paramWidget, i) => {
-            const widget = {...paramWidget};
+            const widget = _.cloneDeep(paramWidget);
             if (widget.layout) {
-                if (widget.gridcolumn) {
-                    delete widget.gridcolumn;
-                }
-                if (widget.gridrow) {
-                    delete widget.gridrow;
-                }
+                delete widget.gridcolumn;
+                delete widget.gridrow;
                 widget.layout.i = i.toString();
                 return widget;
             } else if (widget.gridcolumn) {
@@ -378,10 +374,8 @@ class WidgetLayoutEditor extends React.PureComponent {
         const name = this.state.widgetTitle;
         widget.id = id;
         widget.name = name;
-        const yval = ((Math.max(...this.state.widgets.map(o => (o.layout.y !== null ? o.layout.y : 0)))) + 1) > -1
-            ? (Math.max(...this.state.widgets.map(o => (o.layout.y !== null ? o.layout.y : 0)))) + 1
-            : 0;
-
+        const maxY = Math.max(...this.state.widgets.map(o => (o.layout.y || 0)));
+        const yval = maxY > -1 ? maxY + 1 : 0;
         widget.layout = {
             i: id.toString(),
             x: 0,
@@ -1880,16 +1874,10 @@ class WidgetLayoutEditor extends React.PureComponent {
         });
     };
 
-    generateLayout = () => {
-        const w = this.state.widgets;
-        return _.map(w, (paramItem, i) => {
-            const item = {...paramItem};
-            item.layout.i = i.toString();
-            item.layout.minW = 3;
-            item.layout.w = item.layout.w >= 3 ? item.layout.w : 3;
-            return item.layout;
-        });
-    };
+    generateLayout = () => _.map(this.state.widgets, (item, i) => {
+        const {layout, layout: {w}} = item;
+        return {...layout, i: i.toString(), minW: 3, w: Math.min(w, 3)};
+    });
 
     onLayoutChange = layout => {
         const newWidgets = this.state.widgets.map((w, i) => {
