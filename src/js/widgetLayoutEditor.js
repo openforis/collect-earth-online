@@ -107,14 +107,11 @@ class WidgetLayoutEditor extends React.PureComponent {
         let row = 0;
         let column = 0;
         const sWidgets = _.orderBy(updatedWidgets, "id", "asc");
-        const widgets = _.map(sWidgets, (widget, i) => {
+        const widgets = _.map(sWidgets, (paramWidget, i) => {
+            const widget = _.cloneDeep(paramWidget);
             if (widget.layout) {
-                if (widget.gridcolumn) {
-                    delete widget.gridcolumn;
-                }
-                if (widget.gridrow) {
-                    delete widget.gridrow;
-                }
+                delete widget.gridcolumn;
+                delete widget.gridrow;
                 widget.layout.i = i.toString();
                 return widget;
             } else if (widget.gridcolumn) {
@@ -287,7 +284,7 @@ class WidgetLayoutEditor extends React.PureComponent {
         if (value !== "") {
             const postObject = {
                 path: "getAvailableBands",
-                ...(isCollection ? {imageCollection: value} : {image: value}),
+                ...(isCollection ? {imageCollection: value} : {image: value})
             };
             fetch("/geo-dash/gateway-request", {
                 method: "POST",
@@ -372,15 +369,13 @@ class WidgetLayoutEditor extends React.PureComponent {
     onCreateNewWidget = () => {
         const widget = {};
         const id = this.state.widgets.length > 0
-            ? (Math.max.apply(Math, this.state.widgets.map(o => o.id))) + 1
+            ? (Math.max(...this.state.widgets.map(o => o.id))) + 1
             : 0;
         const name = this.state.widgetTitle;
         widget.id = id;
         widget.name = name;
-        const yval = ((Math.max.apply(Math, this.state.widgets.map(o => (o.layout.y !== null ? o.layout.y : 0)))) + 1) > -1
-            ? (Math.max.apply(Math, this.state.widgets.map(o => (o.layout.y !== null ? o.layout.y : 0)))) + 1
-            : 0;
-
+        const maxY = Math.max(...this.state.widgets.map(o => (o.layout.y || 0)));
+        const yval = maxY > -1 ? maxY + 1 : 0;
         widget.layout = {
             i: id.toString(),
             x: 0,
@@ -741,11 +736,17 @@ class WidgetLayoutEditor extends React.PureComponent {
     fetchProject = (id, setDashboardID) => fetch(this.state.theURI + "/get-by-projid?projectId=" + id)
         .then(response => (response.ok ? response.json() : Promise.reject(response)))
         .then(data => {
-            const widgets = Array.isArray(data.widgets)
-                ? data.widgets
-                : Array.isArray(eval(data.widgets))
-                    ? eval(data.widgets)
-                    : [];
+            let widgets = {...data.widgets};
+            if (!Array.isArray(widgets)) {
+                try {
+                    widgets = JSON.parse(widgets);
+                    if (!Array.isArray(widgets)) {
+                        widgets = [];
+                    }
+                } catch (e) {
+                    widgets = [];
+                }
+            }
             const updatedWidgets = widgets.map(widget => (widget.layout
                 ? {
                     ...widget,
@@ -946,8 +947,8 @@ class WidgetLayoutEditor extends React.PureComponent {
                                                 {this.state.projectList
                                                     .filter(({id, name}) => (id + name.toLocaleLowerCase())
                                                         .includes(this.state.projectFilter.toLocaleLowerCase()))
-                                                    .map(({id, name}, uid) =>
-                                                        <option key={uid} value={id}>{id} - {name}</option>)}
+                                                    .map(({id, name}) =>
+                                                        <option key={id} value={id}>{id} - {name}</option>)}
                                             </select>
                                         </div>
                                         <div className="form-group">
@@ -1375,10 +1376,9 @@ class WidgetLayoutEditor extends React.PureComponent {
             );
         }
         if (this.state.selectedWidgetType === "imageAsset" || this.state.selectedWidgetType === "imageCollectionAsset") {
-            const [label, placeholder] = this.state.selectedWidgetType === "imageAsset"
-                ? ["GEE Image Asset", "LANDSAT/LC8_L1T_TOA/LC81290502015036LGN00"]
-                : ["GEE Collection Image Asset", "LANDSAT/LC8_L1T_TOA"];
-            const isCollection = this.state.selectedWidgetType === "imageCollectionAsset";
+            const [label, placeholder, isCollection] = this.state.selectedWidgetType === "imageAsset"
+                ? ["GEE Image Asset", "LANDSAT/LC8_L1T_TOA/LC81290502015036LGN00", false]
+                : ["GEE Collection Image Asset", "LANDSAT/LC8_L1T_TOA", true];
             return (
                 <>
                     {this.getTitleBlock()}
@@ -1541,13 +1541,13 @@ class WidgetLayoutEditor extends React.PureComponent {
                     </button>
                 </>
             );
-        } else if (((this.state.selectedDataType === "imageCollectionAsset" || this.state.selectedDataType === "imageAsset")
+        } else if (((this.state.selectedDataType === "imageCollectionAsset"
+                        || this.state.selectedDataType === "imageAsset")
                         && this.state.selectedWidgetType === "DualImageCollection")
                         && this.state.wizardStep === 1) {
-            const [label, placeholder] = this.state.selectedDataType === "imageAsset"
-                ? ["GEE Image Asset", "LANDSAT/LC8_L1T_TOA/LC81290502015036LGN00"]
-                : ["GEE Collection Image Asset", "LANDSAT/LC8_L1T_TOA"];
-            const isCollection = this.state.selectedDataType === "imageCollectionAsset";
+            const [label, placeholder, isCollection] = this.state.selectedWidgetType === "imageAsset"
+                ? ["GEE Image Asset", "LANDSAT/LC8_L1T_TOA/LC81290502015036LGN00", false]
+                : ["GEE Collection Image Asset", "LANDSAT/LC8_L1T_TOA", true];
             return (
                 <>
                     {this.getTitleBlock()}
@@ -1579,13 +1579,13 @@ class WidgetLayoutEditor extends React.PureComponent {
                     {this.getNextStepButton()}
                 </>
             );
-        } else if (((this.state.selectedDataTypeDual === "imageCollectionAsset" || this.state.selectedDataTypeDual === "imageAsset")
+        } else if (((this.state.selectedDataTypeDual === "imageCollectionAsset"
+                        || this.state.selectedDataTypeDual === "imageAsset")
                         && this.state.selectedWidgetType === "DualImageCollection")
                         && this.state.wizardStep === 2) {
-            const [label, placeholder] = this.state.selectedDataTypeDual === "imageAsset"
-                ? ["GEE Image Asset", "LANDSAT/LC8_L1T_TOA/LC81290502015036LGN00"]
-                : ["GEE Collection Image Asset", "LANDSAT/LC8_L1T_TOA"];
-            const isCollection = this.state.selectedDataTypeDual === "imageCollectionAsset";
+            const [label, placeholder, isCollection] = this.state.selectedWidgetType === "imageAsset"
+                ? ["GEE Image Asset", "LANDSAT/LC8_L1T_TOA/LC81290502015036LGN00", false]
+                : ["GEE Collection Image Asset", "LANDSAT/LC8_L1T_TOA", true];
             return (
                 <>
                     <div className="form-group">
@@ -1874,15 +1874,10 @@ class WidgetLayoutEditor extends React.PureComponent {
         });
     };
 
-    generateLayout = () => {
-        const w = this.state.widgets;
-        return _.map(w, (item, i) => {
-            item.layout.i = i.toString();
-            item.layout.minW = 3;
-            item.layout.w = item.layout.w >= 3 ? item.layout.w : 3;
-            return item.layout;
-        });
-    };
+    generateLayout = () => _.map(this.state.widgets, (item, i) => {
+        const {layout, layout: {w}} = item;
+        return {...layout, i: i.toString(), minW: 3, w: Math.min(w, 3)};
+    });
 
     onLayoutChange = layout => {
         const newWidgets = this.state.widgets.map((w, i) => {
