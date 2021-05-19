@@ -105,7 +105,11 @@ class SimpleCollection extends React.Component {
             navigationMode: "unanalyzed",
             myHeight: 0,
             isMobile: false,
-            localeText: localeLanguages[getLanguage(["en", "es"])],
+            localeText:  localeLanguages[
+                ["en", "es"].includes(this.props.locale)
+                    ? this.props.locale
+                    : getLanguage(["en", "es"])
+            ],
             KMLFeatures: null,
             plotList: []
         };
@@ -1188,7 +1192,7 @@ function NavigationBar({children}) {
 export function pageInit(args) {
     ReactDOM.render(
         <NavigationBar>
-            <SimpleCollection projectId={args.projectId}/>
+            <SimpleCollection locale={args.locale} projectId={args.projectId}/>
         </NavigationBar>,
         document.getElementById("app")
     );
