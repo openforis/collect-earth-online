@@ -158,6 +158,16 @@ export function pluralize(number, single, plural) {
     return (number === 1) ? single : plural;
 }
 
+/**
+ * Returns text truncated to max value with an ellipses.
+ * @param {string} text
+ * @param {number} max
+ * @returns {string}
+ **/
+export function truncate(text, max) {
+    return text.length > max ? `${text.substring(0, max)}...` : text;
+}
+
 export function detectMacOS() {
     const macRegex = /Mac/i;
     return macRegex.test(window.navigator.userAgent);
