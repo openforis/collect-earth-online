@@ -5,8 +5,8 @@ import {ProjectContext} from "./constants";
 const renderImageryRow = (filteredImageryList, defaultImageryId, projectImageryList, setProjectDetails, type) => (
     <div className="row mt-3 px-5">
         {filteredImageryList.length > 0
-            ? filteredImageryList.map((imagery, idx) => (
-                <div key={idx} className="col-md-6 form-check">
+            ? filteredImageryList.map(imagery => (
+                <div key={imagery.id} className="col-md-6 form-check">
                     <input
                         checked={projectImageryList.includes(imagery.id) || imagery.id === defaultImageryId}
                         className="form-check-input"
@@ -39,8 +39,8 @@ export function ImagerySelection() {
                                 size="1"
                                 value={imageryId || -1}
                             >
-                                {institutionImagery.map((imagery, uid) =>
-                                    <option key={uid} value={imagery.id}>{imagery.title}</option>)}
+                                {institutionImagery.map(imagery =>
+                                    <option key={imagery.id} value={imagery.id}>{imagery.title}</option>)}
                             </select>
                         </div>
                         <h3>Additional Imagery</h3>
@@ -65,7 +65,8 @@ export function ImagerySelection() {
                             )}
                         </div>
                         <p className="font-italic ml-2 small" id="project-imagery-text">
-                            * Institution imagery will only be visible to institution members, no matter the project visibility.
+                            * Institution imagery will only be visible to institution members,
+                            no matter the project visibility.
                         </p>
                     </div>
                 ) : (

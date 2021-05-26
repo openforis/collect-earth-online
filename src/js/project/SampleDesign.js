@@ -239,6 +239,7 @@ export function SamplePreview() {
                                             plot with {sampleDistribution} samples.
                                         </h3>
                                         <img
+                                            alt="distribution"
                                             className="w-100 h-100"
                                             src={"/img/examples/" + plotShape + "-" + sampleDistribution + ".webp"}
                                         />

@@ -388,8 +388,10 @@ export class SecureWatchMenu extends React.Component {
                         this.setState({
                             availableDates: data.features
                                 .filter(feature =>
-                                    Date.parse(feature.properties.acquisitionDate) <= Date.parse(sourceConfig.endDate)
-                                    && Date.parse(feature.properties.acquisitionDate) >= Date.parse(sourceConfig.startDate))
+                                    Date.parse(feature.properties.acquisitionDate)
+                                        <= Date.parse(sourceConfig.endDate)
+                                    && Date.parse(feature.properties.acquisitionDate)
+                                        >= Date.parse(sourceConfig.startDate))
                                 .map(feature => ({
                                     acquisitionDate: feature.properties.acquisitionDate,
                                     cloudCover: feature.properties.cloudCover,
@@ -427,9 +429,9 @@ export class SecureWatchMenu extends React.Component {
                                 id="securewatch-option-select"
                                 onChange={e => this.onChangeSingleLayer(e.target)}
                             >
-                                {this.state.availableDates.map((obj, uid) => (
+                                {this.state.availableDates.map(obj => (
                                     <option
-                                        key={uid}
+                                        key={obj.featureId}
                                         cloud={obj.cloudCover}
                                         date={obj.acquisitionDate}
                                         value={obj.featureId}

@@ -83,8 +83,8 @@ class InstitutionDashboard extends React.Component {
 }
 
 function ProjectList(props) {
-    return props.details.map((project, uid) => (
-        <tr key={uid}>
+    return props.details.map(project => (
+        <tr key={project.id}>
             <td>{project.id}</td>
             <td>{project.name}</td>
             <td>{project.members}</td>

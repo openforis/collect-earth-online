@@ -82,9 +82,9 @@ class UserStats extends React.Component {
                         && (
                             <div className="ProjectStats__user-table">
                                 <strong>User Stats:</strong>
-                                {perProject.map((project, uid) => (
+                                {perProject.map(project => (
                                     <StatsRow
-                                        key={uid}
+                                        key={project.id}
                                         analysisTime={project.analysisAverage}
                                         plots={project.plotCount}
                                         title={`#${project.id} - ${project.name}`}

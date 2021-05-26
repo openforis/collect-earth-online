@@ -161,7 +161,7 @@ mercator.getTopVisiblePlanetLayerDate = (mapConfig, layerId) => {
 ***
 *****************************************************************************/
 // Helper function
-mercator._sendGEERequest = (theJson, sourceConfig, imageryId, attribution) => {
+mercator.sendGEERequest = (theJson, sourceConfig, imageryId, attribution) => {
     const geeLayer = new XYZ({
         url: "https://earthengine.googleapis.com/v1alpha/projects/earthengine-legacy/maps/temp/tiles/{z}/{x}/{y}",
         id: imageryId,
@@ -342,14 +342,14 @@ mercator.createSource = (sourceConfig,
             dateFrom: sourceConfig.year + "-" + (sourceConfig.month.length === 1 ? "0" : "") + sourceConfig.month + "-01",
             dateTo : formatDateISO(endDate)
         };
-        return mercator._sendGEERequest(theJson, sourceConfig, imageryId, attribution);
+        return mercator.sendGEERequest(theJson, sourceConfig, imageryId, attribution);
     } else if (sourceConfig.type === "GEEImage") {
         const theJson = {
             path: "image",
             imageName: sourceConfig.imageId,
             visParams: JSON.parse(sourceConfig.imageVisParams)
         };
-        return mercator._sendGEERequest(theJson, sourceConfig, imageryId, attribution);
+        return mercator.sendGEERequest(theJson, sourceConfig, imageryId, attribution);
     } else if (sourceConfig.type === "GEEImageCollection") {
         const theJson = {
             path: "meanImageByMosaicCollection",
@@ -358,7 +358,7 @@ mercator.createSource = (sourceConfig,
             dateFrom: sourceConfig.startDate,
             dateTo: sourceConfig.endDate
         };
-        return mercator._sendGEERequest(theJson, sourceConfig, imageryId, attribution);
+        return mercator.sendGEERequest(theJson, sourceConfig, imageryId, attribution);
     } else if (sourceConfig.type === "GeeGateway") {
         // get variables and make ajax call to get mapid and token
         // then add xyz layer
@@ -420,7 +420,7 @@ mercator.createSource = (sourceConfig,
                             attributions: attribution
                         });
                         mercator.currentMap.getLayers().forEach(lyr => {
-                            if (theID && theID === lyr.getSource().get("id")) {
+                            if (theID === lyr.getSource().get("id")) {
                                 lyr.setSource(newLayer);
                             }
                         });
@@ -773,15 +773,13 @@ mercator.updateLayerWmsParams = (mapConfig, layerId, newParams, url = null) => {
 
 // [Side Effects] Zooms the map view to contain the passed in extent.
 mercator.zoomMapToExtent = (mapConfig, extent, padding) => {
-    if (extent) {
-        if (extent[0] <= -13630599.62775418
-                && extent[1] <= -291567.89923496445
-                && extent[2] >= 20060974.510472793
-                && extent[3] >= 10122013.145404479) {
-            extent = [-13630599.62775418, -291567.89923496445, 20060974.510472793, 10122013.145404479];
-        }
-    }
-    mapConfig.view.fit(extent,
+    const validExtent = extent && (extent[0] > -13630599.62775418
+                                    && extent[1] > -291567.89923496445
+                                    && extent[2] < 20060974.510472793
+                                    && extent[3] < 10122013.145404479)
+        ? extent
+        : [-13630599.62775418, -291567.89923496445, 20060974.510472793, 10122013.145404479];
+    mapConfig.view.fit(validExtent,
                        {
                            size: mapConfig.map.getSize(),
                            padding: padding

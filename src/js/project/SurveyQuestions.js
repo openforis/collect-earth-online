@@ -118,7 +118,7 @@ class NewQuestionDesigner extends React.Component {
 
             if (repeatedQuestions === 0
                 || confirm("Warning: This is a duplicate name.  It will be added as "
-                           + this.state.newQuestionText + ` (${repeatedQuestions})` + " in design mode.")) {
+                           + `${this.state.newQuestionText} (${repeatedQuestions}) in design mode.`)) {
                 const newQuestion = {
                     id: surveyQuestions.reduce((p, c) => Math.max(p, c.id), 0) + 1,
                     question: repeatedQuestions > 0
@@ -155,8 +155,8 @@ class NewQuestionDesigner extends React.Component {
                                 size="1"
                                 value={this.state.selectedType}
                             >
-                                {this.componentTypes.map((type, index) => (
-                                    <option key={index} value={index}>
+                                {this.componentTypes.map(type => (
+                                    <option key={type} value={type}>
                                         {`${type.componentType} - ${type.dataType}`}
                                     </option>
                                 ))}

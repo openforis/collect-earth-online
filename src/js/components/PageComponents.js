@@ -9,13 +9,13 @@ function LogOutButton({userName, uri}) {
     const loggedOut = !userName || userName === "guest";
 
     const logout = () => fetch("/logout", {method: "POST"})
-        .then(() => window.location = "/home");
+        .then(() => window.location.assign("/home"));
 
     return loggedOut
         ? (
             <button
                 className="btn btn-lightgreen btn-sm"
-                onClick={() => window.location = "/login?returnurl=" + encodeURIComponent(fullUri)}
+                onClick={() => window.location.assign("/login?returnurl=" + encodeURIComponent(fullUri))}
                 type="button"
             >
                 Login/Register
