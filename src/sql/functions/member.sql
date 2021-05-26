@@ -65,13 +65,13 @@ $$ LANGUAGE SQL;
 --
 
 -- Adds a new user to the database
-CREATE OR REPLACE FUNCTION add_user(_email text, _password text)
+CREATE OR REPLACE FUNCTION add_user(_email text, _password text, _reset_key text)
  RETURNS integer AS $$
 
     INSERT INTO users
-        (email, password)
+        (email, password, reset_key)
     VALUES
-        (_email, crypt(_password, gen_salt('bf')))
+        (_email, crypt(_password, gen_salt('bf')), _reset_key)
     RETURNING user_uid
 
 $$ LANGUAGE SQL;
@@ -90,14 +90,10 @@ CREATE OR REPLACE FUNCTION get_user(_email text)
 
 $$ LANGUAGE SQL;
 
-CREATE OR REPLACE FUNCTION get_user_by_id(_user_id integer)
- RETURNS table (
-    email            text,
-    administrator    boolean,
-    reset_key        text
- ) AS $$
+CREATE OR REPLACE FUNCTION get_user_email(_user_id integer)
+ RETURNS text AS $$
 
-    SELECT email, administrator, reset_key
+    SELECT email
     FROM users
     WHERE user_uid = _user_id
         AND _user_id > 0
@@ -128,10 +124,11 @@ $$ LANGUAGE SQL;
 CREATE OR REPLACE FUNCTION check_login(_email text, _password text)
  RETURNS table (
     user_id          integer,
-    administrator    boolean
+    administrator    boolean,
+    verified         boolean
  ) AS $$
 
-    SELECT user_uid, administrator
+    SELECT user_uid, administrator, verified
     FROM users
     WHERE email = _email
         AND password = crypt(_password, password)
@@ -232,13 +229,22 @@ $$ LANGUAGE SQL;
 
 -- Updates password for a given user and clears the reset key.
 CREATE OR REPLACE FUNCTION update_password(_email text, _password text)
- RETURNS text AS $$
+ RETURNS void AS $$
 
     UPDATE users
     SET password = crypt(_password, gen_salt('bf')),
-        reset_key = NULL
+        reset_key = NULL,
+        verified = TRUE
     WHERE email = _email
-    RETURNING email
+
+$$ LANGUAGE SQL;
+
+CREATE OR REPLACE FUNCTION verify_user(_user_id integer)
+ RETURNS void AS $$
+
+    UPDATE users
+    SET verified = TRUE
+    WHERE user_uid = _user_id
 
 $$ LANGUAGE SQL;
 
@@ -292,7 +298,7 @@ CREATE OR REPLACE FUNCTION select_all_institutions(_user_id integer)
     institution_id    integer,
     name              text,
     is_member         boolean
-) AS $$
+ ) AS $$
 
     SELECT institution_uid,
         i.name,

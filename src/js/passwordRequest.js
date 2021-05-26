@@ -1,7 +1,6 @@
 import React from "react";
 import ReactDOM from "react-dom";
 import {NavigationBar} from "./components/PageComponents";
-import {getQueryString} from "./utils/generalUtils";
 
 class PasswordRequest extends React.Component {
     constructor(props) {
@@ -16,9 +15,10 @@ class PasswordRequest extends React.Component {
               {
                   method: "POST",
                   headers: {
-                      "Content-Type": "application/x-www-form-urlencoded"
+                      "Accept": "application/json",
+                      "Content-Type": "application/json"
                   },
-                  body: getQueryString(this.state)
+                  body: JSON.stringify(this.state)
               })
             .then(response => Promise.all([response.ok, response.json()]))
             .then(data => {

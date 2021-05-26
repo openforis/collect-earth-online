@@ -40,6 +40,7 @@
    [:get  "/login"]                          {:handler     (render-page "/login")}
    [:get  "/password-request"]               {:handler     (render-page "/password-request")}
    [:get  "/password-reset"]                 {:handler     (render-page "/password-reset")}
+   [:get  "/verify-email"]                   {:handler     (render-page "/verify-email")}
    [:get  "/project-dashboard"]              {:handler     (render-page "/project-dashboard")
                                               :auth-type   :admin
                                               :auth-action :redirect}
@@ -73,6 +74,7 @@
                                               :auth-action :block}
    [:post "/password-request"]               {:handler     users/password-request}
    [:post "/password-reset"]                 {:handler     users/password-reset}
+   [:post "/verify-email"]                   {:handler     users/verify-email}
    [:post "/register"]                       {:handler     users/register}
    ;; Projects API
    [:get  "/dump-project-aggregate-data"]    {:handler     projects/dump-project-aggregate-data

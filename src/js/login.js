@@ -1,7 +1,6 @@
 import React from "react";
 import ReactDOM from "react-dom";
 import {NavigationBar} from "./components/PageComponents";
-import {getQueryString} from "./utils/generalUtils";
 
 class Login extends React.Component {
     constructor(props) {
@@ -16,8 +15,11 @@ class Login extends React.Component {
         fetch("/login",
               {
                   method: "POST",
-                  headers: {"Content-Type": "application/x-www-form-urlencoded"},
-                  body: getQueryString(this.state)
+                  headers: {
+                      "Accept": "application/json",
+                      "Content-Type": "application/json"
+                  },
+                  body: JSON.stringify(this.state)
               })
             .then(response => Promise.all([response.ok, response.json()]))
             .then(data => {
