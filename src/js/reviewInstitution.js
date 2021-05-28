@@ -1146,7 +1146,7 @@ function User({user, isAdmin, updateUserInstitutionRole}) {
             <div className="col mb-1 overflow-hidden">
                 <button
                     className="btn btn-sm btn-outline-lightgreen btn-block text-truncate"
-                    onClick={() => window.location.assign(`/account?accountId=${user.id})`)}
+                    onClick={() => window.location.assign(`/account?accountId=${user.id}`)}
                     title={user.email}
                     type="button"
                 >
