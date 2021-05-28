@@ -57,7 +57,7 @@ const localeLanguages = {
         "plotNotFound": "Predicción {0} no encontrado.",
         "navNextAn": "No ha revisado ninguna predicción.",
         "navNextUn": "Todas las prediccións han sido analizadas para este proyecto.",
-        "navNextDone": "Ha llegado al final de la lista de prediccións..",
+        "navNextDone": "Has llegado al final de la lista de predicciones.",
         "navPrevAn": "Usted no analizó ninguna predicción anterior.",
         "navPrevUn": "Todas las prediccións anteriores han sido analizadas..",
         "errorNavNum": "Ingrese un número para ir a la  predicción.",
