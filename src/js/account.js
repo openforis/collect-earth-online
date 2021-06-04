@@ -3,7 +3,6 @@ import ReactDOM from "react-dom";
 
 import {FormLayout, SectionBlock, StatsCell, StatsRow} from "./components/FormComponents";
 import {NavigationBar} from "./components/PageComponents";
-import {getQueryString} from "./utils/generalUtils";
 
 function Account(props) {
     const sameAsUser = props.userId === props.accountId;
@@ -114,8 +113,11 @@ class AccountForm extends React.Component {
         fetch("/account",
               {
                   method: "POST",
-                  headers: {"Content-Type": "application/x-www-form-urlencoded"},
-                  body: getQueryString(this.state)
+                  headers: {
+                      "Accept": "application/json",
+                      "Content-Type": "application/json"
+                  },
+                  body: JSON.stringify(this.state)
               })
             .then(response => Promise.all([response.ok, response.json()]))
             .then(data => {
