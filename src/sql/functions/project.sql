@@ -1282,10 +1282,10 @@ CREATE OR REPLACE FUNCTION select_next_unassigned_plot(_project_id integer, _plo
     FROM select_project_collection_plots(_project_id)
     LEFT JOIN plot_locks pl
         ON plot_id = pl.plot_rid
-        AND localtimestamp > pl.lock_end
     WHERE plotId > _plot_id
         AND user_id IS NULL
-        AND pl.lock_end IS NULL
+        AND (pl.lock_end IS NULL
+            OR localtimestamp > pl.lock_end)
     ORDER BY plotId ASC
     LIMIT 1
 
@@ -1331,10 +1331,10 @@ CREATE OR REPLACE FUNCTION select_prev_unassigned_plot(_project_id integer, _plo
     FROM select_project_collection_plots(_project_id)
     LEFT JOIN plot_locks pl
         ON plot_id = pl.plot_rid
-        AND localtimestamp > pl.lock_end
     WHERE plotId < _plot_id
         AND user_id IS NULL
-        AND pl.lock_end IS NULL
+        AND (pl.lock_end IS NULL
+            OR localtimestamp > pl.lock_end)
     ORDER BY plotId DESC
     LIMIT 1
 
@@ -1380,10 +1380,10 @@ CREATE OR REPLACE FUNCTION select_by_id_unassigned_plot(_project_id integer, _pl
     FROM select_project_collection_plots(_project_id) as spp
     LEFT JOIN plot_locks pl
         ON plot_id = pl.plot_rid
-        AND localtimestamp > pl.lock_end
     WHERE plotId = _plot_id
         AND user_id IS NULL
-        AND pl.lock_end IS NULL
+        AND (pl.lock_end IS NULL
+            OR localtimestamp > pl.lock_end)
 
 $$ LANGUAGE SQL;
 
