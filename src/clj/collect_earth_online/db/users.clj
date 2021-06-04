@@ -101,7 +101,7 @@
     (if-let [error-msg (get-update-account-errors user-id current-email current-password
                                                   new-email password password-confirmation)]
       (data-response error-msg)
-      ;; TODO: Create a single "update_user_information" sql function, use userid instead of email
+      ;; TODO: Create a single "update_user_information" sql function, use user_id instead of email
       (let [updated-email (if (or (str/blank? new-email) (= new-email current-email))
                             current-email
                             (sql-primitive (call-sql "set_user_email" current-email new-email)))]
@@ -126,7 +126,7 @@
                               " was found, but there was a server error.  Please contact support@sig-gis.com."))))
       (data-response "There is no user with that email address."))))
 
-(defn- get-password-reset-errors [email reset-key password password-confirmation user]
+(defn- get-password-reset-errors [user email reset-key password password-confirmation]
   (cond (nil? user)
         "There is no user with that email address."
 
@@ -146,14 +146,14 @@
         reset-key             (:passwordResetKey params)
         password              (:password params)
         password-confirmation (:passwordConfirmation params)
-        user                  (first (call-sql "get_user" email))]
-    (if-let [error-msg (get-password-reset-errors email reset-key password password-confirmation user)]
+        user                  (first (call-sql "get_user_by_email" email))]
+    (if-let [error-msg (get-password-reset-errors user email reset-key password password-confirmation)]
       (data-response error-msg)
       (do
         (call-sql "update_password" email password)
         (data-response "")))))
 
-(defn- get-verify-email-errors [email reset-key user]
+(defn- get-verify-email-errors [user email reset-key]
   (cond (nil? user)
         "There is no user with that email address."
 
@@ -165,11 +165,11 @@
 (defn verify-email [{:keys [params]}]
   (let [email     (:email params)
         reset-key (:passwordResetKey params)
-        user      (first (call-sql "get_user" email))]
-    (if-let [error-msg (get-verify-email-errors email reset-key user)]
+        user      (first (call-sql "get_user_by_email" email))]
+    (if-let [error-msg (get-verify-email-errors user email reset-key)]
       (data-response error-msg)
       (do
-        (call-sql "verify_user" (:user_id user))
+        (call-sql "user_verified" (:user_id user))
         (data-response "")))))
 
 (defn get-institution-users [{:keys [params]}]
@@ -194,12 +194,12 @@
   (let [new-user-email   (:newUserEmail params)
         account-id       (if-let [id (:accountId params)]
                            (tc/val->int id)
-                           (-> (call-sql "get_user" new-user-email)
+                           (-> (call-sql "get_user_by_email" new-user-email)
                                (first)
                                (:user_id -1)))
         institution-id   (tc/val->int (:institutionId params))
         institution-role (:institutionRole params)
-        email            (sql-primitive (call-sql "get_user_email" account-id))]
+        email            (:email (first (call-sql "get_user_by_id" account-id)))]
     (cond
       (nil? email)
       (data-response (str "User " new-user-email " not found."))
@@ -241,7 +241,7 @@
         (let [institution-name (:name (first (call-sql "select_institution_by_id" institution-id -1)))
               timestamp        (-> (DateTimeFormatter/ofPattern "yyyy/MM/dd HH:mm:ss")
                                    (.format (LocalDateTime/now)))
-              user-email       (sql-primitive (call-sql "get_user_email" user-id))
+              user-email       (:email (first (call-sql "get_user_by_id" user-id)))
               admin-emails     (->> (call-sql "get_all_users_by_institution_id" institution-id)
                                     (filter (fn [{:keys [institution_role]}] (= institution_role "admin")))
                                     (map :email))

@@ -77,7 +77,7 @@ CREATE OR REPLACE FUNCTION add_user(_email text, _password text, _reset_key text
 $$ LANGUAGE SQL;
 
 -- Get information for single user
-CREATE OR REPLACE FUNCTION get_user(_email text)
+CREATE OR REPLACE FUNCTION get_user_by_mail(_email text)
  RETURNS table (
     user_id          integer,
     administrator    boolean,
@@ -90,8 +90,12 @@ CREATE OR REPLACE FUNCTION get_user(_email text)
 
 $$ LANGUAGE SQL;
 
-CREATE OR REPLACE FUNCTION get_user_email(_user_id integer)
- RETURNS text AS $$
+CREATE OR REPLACE FUNCTION get_user_by_id(_user_id integer)
+ RETURNS table (
+    email            text,
+    administrator    boolean,
+    reset_key        text
+ ) AS $$
 
     SELECT email
     FROM users
@@ -239,7 +243,7 @@ CREATE OR REPLACE FUNCTION update_password(_email text, _password text)
 
 $$ LANGUAGE SQL;
 
-CREATE OR REPLACE FUNCTION verify_user(_user_id integer)
+CREATE OR REPLACE FUNCTION user_verified(_user_id integer)
  RETURNS void AS $$
 
     UPDATE users
