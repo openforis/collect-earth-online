@@ -736,7 +736,7 @@ class WidgetLayoutEditor extends React.PureComponent {
     fetchProject = (id, setDashboardID) => fetch(this.state.theURI + "/get-by-projid?projectId=" + id)
         .then(response => (response.ok ? response.json() : Promise.reject(response)))
         .then(data => {
-            let widgets = {...data.widgets};
+            let widgets = data.widgets;
             if (!Array.isArray(widgets)) {
                 try {
                     widgets = JSON.parse(widgets);
