@@ -919,7 +919,7 @@ function ProjectList({isAdmin, institutionId, projectList, isVisible, deleteProj
                         <button
                             className="btn btn-sm btn-block btn-outline-yellow py-2 font-weight-bold"
                             id="create-project"
-                            onClick={() => window.location = `/create-project?institutionId=${institutionId}`}
+                            onClick={() => window.location.assign(`/create-project?institutionId=${institutionId}`)}
                             type="button"
                         >
                             <UnicodeIcon backgroundColor="#f1c00f" icon="add"/>Create New Project
@@ -954,7 +954,7 @@ function Project({project, isAdmin, deleteProject}) {
             <div className="col overflow-hidden">
                 <button
                     className="btn btn-sm btn-outline-lightgreen btn-block text-truncate"
-                    onClick={() => window.location = `/collection?projectId=${project.id}`}
+                    onClick={() => window.location.assign(`/collection?projectId=${project.id}`)}
                     style={{
                         boxShadow: project.percentComplete === 0.0
                             ? "0px 0px 6px 1px red inset"
@@ -973,7 +973,7 @@ function Project({project, isAdmin, deleteProject}) {
                     <div className="d-flex">
                         <span
                             className="btn btn-sm btn-outline-yellow btn-block px-3 mr-1"
-                            onClick={() => window.location = `/review-project?projectId=${project.id}`}
+                            onClick={() => window.location.assign(`/review-project?projectId=${project.id}`)}
                             title="Edit Project"
                         >
                             <UnicodeIcon icon="edit"/>
@@ -1120,9 +1120,9 @@ class UserList extends React.Component {
                         || iu.institutionRole === "admin")
                     .sort((a, b) => sortAlphabetically(a.email, b.email))
                     .sort((a, b) => sortAlphabetically(a.institutionRole, b.institutionRole))
-                    .map((iu, uid) => (
+                    .map(iu => (
                         <User
-                            key={uid}
+                            key={iu}
                             isAdmin={this.props.isAdmin}
                             updateUserInstitutionRole={this.updateUserInstitutionRole}
                             user={iu}
@@ -1146,7 +1146,7 @@ function User({user, isAdmin, updateUserInstitutionRole}) {
             <div className="col mb-1 overflow-hidden">
                 <button
                     className="btn btn-sm btn-outline-lightgreen btn-block text-truncate"
-                    onClick={() => window.location = `/account?accountId=${user.id}`}
+                    onClick={() => window.location.assign(`/account?accountId=${user.id}`)}
                     title={user.email}
                     type="button"
                 >

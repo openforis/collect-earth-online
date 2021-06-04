@@ -180,7 +180,10 @@ export class ExpandableImage extends React.Component {
                 style={this.getMainDivStyle()}
             >
                 <img
-                    className={this.state.fullSize ? "ExpandableImage__previewImg fullSize" : "ExpandableImage__previewImg"}
+                    alt="pane"
+                    className={this.state.fullSize
+                        ? "ExpandableImage__previewImg fullSize"
+                        : "ExpandableImage__previewImg"}
                     src={src}
                     style={this.getImageStyle()}
                 />

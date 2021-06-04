@@ -116,7 +116,7 @@ class MapPanel extends React.Component {
     }
 
     componentDidUpdate(prevProps, prevState) {
-        if (this.state.mapConfig == null && this.props.imagery.length > 0 && prevProps.imagery.length === 0) {
+        if (this.state.mapConfig === null && this.props.imagery.length > 0 && prevProps.imagery.length === 0) {
             const homePageLayer = this.props.imagery.find(
                 imagery => imagery.title === "Mapbox Satellite w/ Labels"
             ) || this.props.imagery[0];
@@ -358,9 +358,9 @@ function InstitutionList({
                     ...userInstStyle
                 }}
             >
-                {filteredInstitutions.map((institution, uid) => (
+                {filteredInstitutions.map(institution => (
                     <Institution
-                        key={uid}
+                        key={institution.id}
                         forceInstitutionExpand={!filterInstitution && filterText.length > 0}
                         id={institution.id}
                         name={institution.name}
@@ -549,9 +549,9 @@ class Institution extends React.Component {
 
 function ProjectList(props) {
     return props.projects
-        .map((project, uid) => (
+        .map(project => (
             <Project
-                key={uid}
+                key={project.id}
                 editable={project.editable}
                 id={project.id}
                 institutionId={props.id}

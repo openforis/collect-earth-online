@@ -125,8 +125,8 @@ class SimpleCollection extends React.Component {
 
         this.updateWindow();
         this.getProjectData();
-        window.addEventListener("touchend", this.updateWindow);
-        window.addEventListener("resize", this.updateWindow);
+        window.addEventListener("touchend", this.updateWindow); // deepscan-disable-line REACT_MISSING_CLEANUP_IN_LIFECYCLE
+        window.addEventListener("resize", this.updateWindow); // deepscan-disable-line REACT_MISSING_CLEANUP_IN_LIFECYCLE
     }
 
     componentDidUpdate(prevProps, prevState) {
@@ -396,16 +396,12 @@ class SimpleCollection extends React.Component {
     newPlotValues = (newPlot, copyValues = true) => ({
         newPlotInput: isNumber(newPlot.plotId) ? newPlot.plotId : newPlot.id,
         userSamples: newPlot.samples
-            ? newPlot.samples.reduce((obj, s) => {
-                obj[s.id] = copyValues ? (s.savedAnswers || {}) : {};
-                return obj;
-            }, {})
+            ? newPlot.samples.reduce((acc, cur) =>
+                ({...acc, [cur.id]: copyValues ? (cur.savedAnswers || {}) : {}}), {})
             : {},
         userImages: newPlot.samples
-            ? newPlot.samples.reduce((obj, s) => {
-                obj[s.id] = copyValues ? (s.userImage || {}) : {};
-                return obj;
-            }, {})
+            ? newPlot.samples.reduce((acc, cur) =>
+                ({...acc, [cur.id]: copyValues ? (cur.userImage || {}) : {}}), {})
             : {},
         selectedQuestion: {
             ...this.state.currentProject.surveyQuestions

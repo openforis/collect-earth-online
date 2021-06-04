@@ -7,6 +7,14 @@ import SvgIcon from "./SvgIcon";
 import {mercator} from "../utils/mercator";
 
 export class SurveyCollection extends React.Component {
+    ruleFunctions = {
+        "text-match": this.checkRuleTextMatch,
+        "numeric-range": this.checkRuleNumericRange,
+        "sum-of-answers": this.checkRuleSumOfAnswers,
+        "matching-sums": this.checkRuleMatchingSums,
+        "incompatible-answers": this.checkRuleIncompatibleAnswers
+    };
+
     constructor(props) {
         super(props);
         this.state = {
@@ -214,8 +222,9 @@ export class SurveyCollection extends React.Component {
                             .reduce((sum, num) => sum + parseInt(num), 0);
                         return [sum1, sum2];
                     });
-                    const invalidSum = sampleSums.find(sums => sums[0] + (surveyRule.questionSetIds1.includes(questionToSet.id) ? parseInt(answerText) : 0)
-                        !== sums[1] + (surveyRule.questionSetIds2.includes(questionToSet.id) ? parseInt(answerText) : 0));
+                    const q1Value = surveyRule.questionSetIds1.includes(questionToSet.id) ? parseInt(answerText) : 0;
+                    const q2Value = surveyRule.questionSetIds2.includes(questionToSet.id) ? parseInt(answerText) : 0;
+                    const invalidSum = sampleSums.find(sums => sums[0] + q1Value !== sums[1] + q2Value);
                     if (invalidSum) {
                         return "Matching sums validation failed.\r\n\n"
                             + `Totals of the question sets [${surveyRule.questionSetText1.toString()}] and [${surveyRule.questionSetText2.toString()}] do not match.\r\n\n`
@@ -234,7 +243,7 @@ export class SurveyCollection extends React.Component {
         }
     };
 
-    checkRuleIncompatibleAnswers = (surveyRule, questionToSet, answerId, answerText) => {
+    checkRuleIncompatibleAnswers = (surveyRule, questionToSet, answerId, _answerText) => {
         if (surveyRule.question1 === questionToSet.id && surveyRule.answer1 === answerId) {
             const ques2 = this.props.surveyQuestions.find(q => q.id === surveyRule.question2);
             if (ques2.answered.some(ans => ans.answerId === surveyRule.answer2)) {
@@ -272,14 +281,6 @@ export class SurveyCollection extends React.Component {
         }
     };
 
-    ruleFunctions = {
-        "text-match":           this.checkRuleTextMatch,
-        "numeric-range":        this.checkRuleNumericRange,
-        "sum-of-answers":       this.checkRuleSumOfAnswers,
-        "matching-sums":        this.checkRuleMatchingSums,
-        "incompatible-answers": this.checkRuleIncompatibleAnswers
-    };
-
     rulesViolated = (questionToSet, answerId, answerText) => this.props.surveyRules
         && this.props.surveyRules
             .map(surveyRule => this.ruleFunctions[surveyRule.ruleType](surveyRule, questionToSet, answerId, answerText))
@@ -304,7 +305,12 @@ export class SurveyCollection extends React.Component {
                         <div className="my-2">
                             <div className="slide-container">
                                 <label>Flagged Reason</label>
-                                <textarea className="form-control" onChange={e => this.props.setFlaggedReason(e.target.value)} value={this.props.flaggedReason}/>
+                                <textarea
+                                    className="form-control"
+                                    onChange={e =>
+                                        this.props.setFlaggedReason(e.target.value)}
+                                    value={this.props.flaggedReason}
+                                />
                             </div>
                         </div>
                     </>
@@ -321,9 +327,9 @@ export class SurveyCollection extends React.Component {
                             >
                                 {"<"}
                             </button>
-                            {this.state.topLevelNodeIds.map((node, i) => (
+                            {this.state.topLevelNodeIds.map((nodeId, i) => (
                                 <button
-                                    key={i}
+                                    key={nodeId}
                                     className="btn btn-outline-lightgreen m-2"
                                     id="top-select"
                                     onClick={() => this.setSurveyQuestionTree(i)}
@@ -332,9 +338,9 @@ export class SurveyCollection extends React.Component {
                                     `${(i === this.state.currentNodeIndex)
                                         ? "0px 0px 2px 2px black inset,"
                                         : ""}
-                                    ${this.getTopColor(this.getNodeById(node))}`
+                                    ${this.getTopColor(this.getNodeById(nodeId))}`
                                     }}
-                                    title={removeEnumerator(this.getNodeById(node).question)}
+                                    title={removeEnumerator(this.getNodeById(nodeId).question)}
                                     type="button"
                                 >
                                     {i + 1}
@@ -345,7 +351,11 @@ export class SurveyCollection extends React.Component {
                                 disabled={this.state.currentNodeIndex === this.state.topLevelNodeIds.length - 1}
                                 id="next-survey-question"
                                 onClick={this.nextSurveyQuestionTree}
-                                style={{opacity: this.state.currentNodeIndex === this.state.topLevelNodeIds.length - 1 ? "0.25" : "1.0"}}
+                                style={{
+                                    opacity: this.state.currentNodeIndex === this.state.topLevelNodeIds.length - 1
+                                        ? "0.25"
+                                        : "1.0"
+                                }}
                                 type="button"
                             >
                                 {">"}
@@ -552,12 +562,11 @@ class SurveyQuestionTree extends React.Component {
                         validateAndSetCurrentValue={validateAndSetCurrentValue}
                     />
                 )}
-                {childNodes.map((childNode, uid) => (
-                    <Fragment key={uid}>
+                {childNodes.map(childNode => (
+                    <Fragment key={childNode.id}>
                         {surveyQuestions.find(sq => sq.id === childNode.id).visible.length > 0
                         && (
                             <SurveyQuestionTree
-                                key={uid}
                                 hierarchyLabel={hierarchyLabel + "- "}
                                 selectedQuestion={selectedQuestion}
                                 selectedSampleId={selectedSampleId}
@@ -577,8 +586,8 @@ class SurveyQuestionTree extends React.Component {
 function AnswerButton({surveyNode, surveyNode: {answers, answered}, selectedSampleId, validateAndSetCurrentValue}) {
     return (
         <ul className="samplevalue justify-content-center">
-            {answers.map((ans, uid) => (
-                <li key={uid} className="mb-1">
+            {answers.map(ans => (
+                <li key={ans.id} className="mb-1">
                     <button
                         className="btn btn-outline-darkgray btn-sm btn-block pl-1 overflow-hidden text-truncate"
                         id={ans.answer + "_" + ans.id}
@@ -611,11 +620,16 @@ function AnswerButton({surveyNode, surveyNode: {answers, answered}, selectedSamp
     );
 }
 
-function AnswerRadioButton({surveyNode, surveyNode: {answers, answered}, selectedSampleId, validateAndSetCurrentValue}) {
+function AnswerRadioButton({
+    surveyNode,
+    surveyNode: {answers, answered},
+    selectedSampleId,
+    validateAndSetCurrentValue
+}) {
     return (
         <ul className="samplevalue justify-content-center">
-            {answers.map((ans, uid) => (
-                <li key={uid} className="mb-1">
+            {answers.map(ans => (
+                <li key={ans.id} className="mb-1">
                     <button
                         className="btn btn-outline-darkgray btn-sm btn-block pl-1 overflow-hidden text-truncate"
                         id={ans.answer + "_" + ans.id}

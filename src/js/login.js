@@ -76,7 +76,7 @@ class Login extends React.Component {
                             <input
                                 className="btn btn-lightgreen"
                                 name="register"
-                                onClick={() => window.location = "/register"}
+                                onClick={() => window.location.assign("/register")}
                                 type="button"
                                 value="Register"
                             />
