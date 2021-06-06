@@ -21,7 +21,7 @@ function Support() {
                     <div className="btn-group-vertical btn-block mb-4">
                         <a
                             className="btn btn-outline-lightgreen btn-block"
-                            href="/downloads/CEO_Manual_DataCollector_20201115.pdf"
+                            href="/downloads/CEO_Manual_DataCollector_EN_20210331.pdf"
                             role="button"
                         >
                             &#x1F4BE; Data Collection Manual (English)
@@ -51,7 +51,7 @@ function Support() {
                     <div className="btn-group-vertical btn-block mb-4">
                         <a
                             className="btn btn-outline-lightgreen btn-block"
-                            href="/downloads/CEO_Manual_InstitutionProject_20201115.pdf"
+                            href="/downloads/CEO_Manual_InstitutionProject_EN_20210331.pdf"
                             role="button"
                         >
                             &#x1F4BE; Institution & Project Creation Manual (For Admin)
