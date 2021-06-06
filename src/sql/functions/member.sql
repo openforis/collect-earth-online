@@ -97,7 +97,7 @@ CREATE OR REPLACE FUNCTION get_user_by_id(_user_id integer)
     reset_key        text
  ) AS $$
 
-    SELECT email
+    SELECT email, administrator, reset_key
     FROM users
     WHERE user_uid = _user_id
         AND _user_id > 0
