@@ -67,7 +67,8 @@ FROM (
         availability,
         archived_date,
         EXTRACT(days FROM now() - archived_date) as a_age
-    FROM projects
+    FROM projects, plots
+    WHERE project_uid = project_rid
 ) a
 WHERE availability = 'archived'
     AND a_age > 90;
@@ -94,6 +95,7 @@ FROM (
     LEFT JOIN projects
     ON institution_uid = institution_rid
         AND availability <> 'archived'
+    WHERE archived = FALSE
     GROUP BY institution_uid
     ORDER BY p_cnt desc
 ) a
