@@ -517,7 +517,7 @@ class Collection extends React.Component {
                     + `&aoi=${encodeURIComponent(`[${mercator.getViewExtent(mapConfig)}]`)}`
                     + `&daterange=&bcenter=${currentPlot.center}`
                     + `&bradius=${plotRadius}`,
-                    "_geo-dash");
+                    `_geo-dash_${this.props.projectId}`);
     };
 
     createPlotKML = () => {
