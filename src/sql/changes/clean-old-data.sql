@@ -69,7 +69,7 @@ FROM (
         EXTRACT(days FROM now() - archived_date) as a_age
     FROM projects
 ) a
-WHERE availability = 'archived';
+WHERE availability = 'archived'
     AND a_age > 90;
 
 -- Delete deep archive projects
@@ -81,7 +81,7 @@ FROM (
         EXTRACT(days FROM now() - archived_date) as a_age
     FROM projects
 ) a
-WHERE availability = 'archived';
+WHERE availability = 'archived'
     AND a_age > 365;
 
 -- Archive empty institutions
