@@ -28,6 +28,19 @@ CREATE OR REPLACE FUNCTION select_first_public_imagery()
 
 $$ LANGUAGE SQL;
 
+-- Returns first public OSM imagery
+CREATE OR REPLACE FUNCTION select_public_osm()
+ RETURNS integer AS $$
+
+    SELECT imagery_uid
+    FROM imagery
+    WHERE source_config->>'type' = 'OSM'
+        AND archived = false
+    ORDER BY imagery_uid
+    LIMIT 1
+
+$$ LANGUAGE SQL;
+
 -- Check if imagery title already exists
 CREATE OR REPLACE FUNCTION imagery_name_taken(_institution_rid integer, _title text, _imagery_id integer)
  RETURNS boolean AS $$
@@ -110,6 +123,10 @@ CREATE OR REPLACE FUNCTION archive_imagery(_imagery_id integer)
     UPDATE projects
     SET imagery_rid = (SELECT select_first_public_imagery())
     WHERE imagery_rid = _imagery_id;
+
+    UPDATE project_widgets
+    SET widget = jsonb_set(widget, '{"basemapId"}', to_jsonb((SELECT select_public_osm())))
+    WHERE (widget->>'basemapId')::integer = _imagery_id;
 
     DELETE FROM project_imagery
     WHERE imagery_rid = _imagery_id;

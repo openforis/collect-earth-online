@@ -545,7 +545,11 @@ class MapWidget extends React.Component {
         const {projPairAOI, widget} = this.props;
         let {projAOI} = this.props;
 
-        const baseMapLayer = this.getRasterByBasemapConfig(widget.baseMap);
+        const basemapImagery = this.props.imageryList.find(imagery => imagery.id === widget.basemapId)
+                || this.props.imageryList[0];
+        const basemapLayer = TileLayer({
+            source: mercator.createSource(basemapImagery.sourceConfig, basemapImagery.id)
+        });
         const plotSampleLayer = new VectorLayer({
             source: this.props.vectorSource,
             style: new Style({
@@ -560,7 +564,7 @@ class MapWidget extends React.Component {
 
         const mapdiv = "widgetmap_" + widget.id;
         const map = new Map({
-            layers: [baseMapLayer, plotSampleLayer],
+            layers: [basemapLayer, plotSampleLayer],
             target: mapdiv,
             view: new View({
                 center: [0, 0],
@@ -915,20 +919,6 @@ class MapWidget extends React.Component {
             .catch(error => {
                 console.log(error);
             });
-    };
-
-    getRasterByBasemapConfig = basemapConfig => {
-        const basemapId = (basemapConfig || {}).id || basemapConfig;
-        if (!basemapId || basemapId === "osm") {
-            return new TileLayer({source: new OSM()});
-        } else {
-            const basemapIdInt = parseInt(basemapId);
-            const basemapImagery = this.props.imageryList.find(imagery => imagery.id === basemapIdInt)
-                || this.props.imageryList[0];
-            return new TileLayer({
-                source: mercator.createSource(basemapImagery.sourceConfig, basemapImagery.id)
-            });
-        }
     };
 
     getImageParams = widget => {
