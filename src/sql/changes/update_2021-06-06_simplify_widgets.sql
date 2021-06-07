@@ -1,5 +1,4 @@
-ALTER table project_widgets ADD COLUMN widget_bk jsonb;
-
+-- Reset id numbers. about 25 projects have duplicate ids
 UPDATE project_widgets p
 SET widget = nw.new_widget
 FROM (SELECT widget_uid,
@@ -10,6 +9,7 @@ FROM project_widgets
 ORDER BY project_rid, widget->'id') AS nw
 WHERE p.widget_uid = nw.widget_uid;
 
+-- Convert grid column / row to layout
 UPDATE project_widgets
 SET widget = jsonb_set(widget, '{"layout"}', jsonb_build_object(
     'x', split_part(widget->>'gridcolumn', ' ', 1)::int - 1,
@@ -28,6 +28,7 @@ SET widget = jsonb_set(widget, '{"layout"}', jsonb_build_object(
 ))
 WHERE widget->'gridcolumn' is NOT NULL;
 
+-- Convert width only to layout
 UPDATE project_widgets
 SET widget = jsonb_set(widget, '{"layout"}', jsonb_build_object(
     'x', 0,
@@ -43,9 +44,19 @@ WHERE widget->'gridcolumn' is NULL
     AND widget->'layout' is NULL
     AND widget->'width' is NOT NULL;
 
+-- Remove all unused params
 UPDATE project_widgets
 SET widget = widget - 'width' - 'position' - 'gridcolumn' - 'gridrow'
 WHERE widget->'layout' is NOT NULL;
+
+UPDATE project_widgets
+SET widget = jsonb_set(widget, '{"layout"}', jsonb_build_object(
+    'h', widget->'layout'->'h',
+    'i', widget->'layout'->'i',
+    'w', widget->'layout'->'w',
+    'x', widget->'layout'->'x',
+    'y', widget->'layout'->'y'
+))
 
 -- Check all widget
 SELECT widget
@@ -57,4 +68,7 @@ WHERE widget->'layout' IS NULL
     OR widget->'gridcolumn' IS NOT NULL
     OR widget->'gridrow' IS NOT NULL
     OR widget->'width' IS NOT NULL
-    OR widget->'position' IS NOT NULL;
+    OR widget->'position' IS NOT NULL
+    OR widget->'layout'->'minW' IS NOT NULL
+    OR widget->'layout'->'static' IS NOT NULL
+    OR widget->'layout'->'moved' IS NOT NULL;
