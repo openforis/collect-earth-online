@@ -271,15 +271,3 @@ CREATE UNIQUE INDEX packet_plots_packet_rid_plot_rid ON packet_plots USING btree
 CREATE UNIQUE INDEX plot_comments_project_plot_user_packet ON plot_comments USING btree(project_rid, plot_rid, user_rid, packet_rid);
 CREATE INDEX vertex_project_plot_user_packet ON vertex USING btree(project_rid, plot_rid, user_rid, packet_rid);
 CREATE UNIQUE INDEX image_preference_project_plot_user_packet_year ON image_preference (project_rid, plot_rid, user_rid, packet_rid, image_year);
-
--- Types and views, to be defined once
--- TODO get rid of types or add them to the namespaces in a way they get rebuild each time.
-CREATE TYPE imagery_return AS (
-    imagery_id         integer,
-    institution_id     integer,
-    visibility         text,
-    title              text,
-    attribution        text,
-    extent             jsonb,
-    source_config      jsonb
-);

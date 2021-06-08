@@ -5,6 +5,18 @@
 --  IMAGERY FUNCTIONS
 --
 
+-- Return type for all imagery
+DROP TYPE IF EXISTS imagery_return CASCADE;
+CREATE TYPE imagery_return AS (
+    imagery_id        integer,
+    institution_id    integer,
+    visibility        text,
+    title             text,
+    attribution       text,
+    extent            jsonb,
+    source_config     jsonb
+);
+
 -- Returns a single imagery by ID
 CREATE OR REPLACE FUNCTION select_imagery_by_id(_imagery_id integer)
  RETURNS setOf imagery_return AS $$
