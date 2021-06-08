@@ -7,7 +7,13 @@ WHERE created_date IS NULL;
 UPDATE projects
 SET archived_date = '2018-12-01'::date
 WHERE archived_date IS NULL
-	AND availability = 'archived';
+    AND availability = 'archived';
+
+-- Projects not archived with an archived date
+UPDATE projects
+SET archived_date = NULL
+WHERE archived_date IS NOT NULL
+    AND availability <> 'archived';
 
 -- User plots before saving collection start
 UPDATE user_plots

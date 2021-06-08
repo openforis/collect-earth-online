@@ -15,7 +15,7 @@ DO $$
         WHERE table_schema='ext_tables'
             AND table_type='BASE TABLE'
     ) a
-    WHERE p is null and s is null;
+    WHERE p IS NULL AND s IS NULL;
 
     IF _sql IS NOT NULL THEN
         EXECUTE _sql;
@@ -23,7 +23,7 @@ DO $$
         RAISE NOTICE 'No orphaned tables found.';
     END IF;
  END
-$$ LANGUAGE plpgsql;
+$$ LANGUAGE PLPGSQL;
 
 -- Archive malformed projects
 SELECT (SELECT archive_project(project_uid))
@@ -38,13 +38,16 @@ SELECT archive_project(project_uid)
 FROM (
     SELECT project_uid,
         availability,
-        EXTRACT(days FROM now() - (CASE WHEN MAX(collection_start) IS NULL
-                                            THEN created_date
-                                            ELSE MAX(collection_start)
-                                END)) as p_age,
-        CASE WHEN COUNT(DISTINCT(user_plot_uid)) = 0 THEN 0
-            ELSE COUNT(DISTINCT(user_plot_uid)) / COUNT(DISTINCT(plot_uid))::float
-            END as complete
+        EXTRACT(days FROM now() - (
+            CASE WHEN MAX(collection_start) IS NULL
+                    THEN created_date
+                 ELSE MAX(collection_start)
+            END
+        )) as p_age,
+        CASE WHEN COUNT(DISTINCT(user_plot_uid)) = 0
+                THEN 0
+             ELSE COUNT(DISTINCT(user_plot_uid)) / COUNT(DISTINCT(plot_uid))::float
+        END as complete
     FROM projects
     LEFT JOIN plots
         ON project_uid = project_rid
@@ -52,7 +55,7 @@ FROM (
         ON plot_uid = up.plot_rid
     WHERE availability <> 'archived'
     GROUP BY project_uid
-) A
+) aa
 WHERE (p_age > 180
         AND ((availability = 'unpublished' AND complete < 0.05)
             OR (availability = 'closed' AND complete < 0.05)
@@ -76,28 +79,23 @@ WHERE availability = 'archived'
 -- Delete deep archive projects
 SELECT delete_project(project_uid)
 FROM (
-    SELECT project_uid,
-        availability,
-        archived_date,
-        EXTRACT(days FROM now() - archived_date) as a_age
+    SELECT project_uid, EXTRACT(days FROM now() - archived_date) as a_age
     FROM projects
 ) a
-WHERE availability = 'archived'
-    AND a_age > 365;
+WHERE a_age > 365;
 
 -- Archive empty institutions
 SELECT archive_institution(institution_uid)
 FROM (
     SELECT institution_uid,
         count(project_uid) p_cnt,
-        EXTRACT(days from now() - i.created_date) as i_age
+        EXTRACT(days FROM now() - i.created_date) as i_age
     FROM institutions i
     LEFT JOIN projects
     ON institution_uid = institution_rid
         AND availability <> 'archived'
     WHERE archived = FALSE
     GROUP BY institution_uid
-    ORDER BY p_cnt desc
 ) a
 WHERE i_age > 180
     AND p_cnt = 0;
