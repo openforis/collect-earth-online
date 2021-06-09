@@ -294,13 +294,14 @@ CREATE OR REPLACE FUNCTION archive_project(_project_id integer)
 
 $$ LANGUAGE SQL;
 
--- Delete project plots and external file, leave entry for reference
+-- Delete project items and external files, leave entry for reference
 CREATE OR REPLACE FUNCTION deep_archive_project(_project_id integer)
  RETURNS void AS $$
 
  BEGIN
-    DELETE FROM plots
-    WHERE project_rid = _project_id;
+    DELETE FROM plots WHERE project_rid = _project_id;
+    DELETE FROM project_widgets WHERE project_rid = _project_id;
+    DELETE FROM project_imagery WHERE project_rid = _project_id;
 
     EXECUTE
     'DROP TABLE IF EXISTS ext_tables.project_' || _project_id || '_plots_csv;'
@@ -311,14 +312,13 @@ CREATE OR REPLACE FUNCTION deep_archive_project(_project_id integer)
 
 $$ LANGUAGE PLPGSQL;
 
--- Delete project and external file
+-- Delete project and external files
 CREATE OR REPLACE FUNCTION delete_project(_project_id integer)
  RETURNS void AS $$
 
  BEGIN
-    DELETE FROM plots
-    WHERE project_rid = _project_id;
-
+    -- Delete plots first for performance
+    DELETE FROM plots WHERE project_rid = _project_id;
     DELETE FROM projects WHERE project_uid = _project_id;
 
     EXECUTE
