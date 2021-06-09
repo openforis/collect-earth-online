@@ -10,7 +10,7 @@ import {buffer as ExtentBuffer} from "ol/extent";
 import {Circle, Polygon, Point} from "ol/geom";
 import {Tile as TileLayer, Vector as VectorLayer} from "ol/layer";
 import {transform as projTransform} from "ol/proj";
-import {OSM, Vector, XYZ} from "ol/source";
+import {Vector, XYZ} from "ol/source";
 import {Style, Stroke} from "ol/style";
 import {getArea as sphereGetArea} from "ol/sphere";
 
