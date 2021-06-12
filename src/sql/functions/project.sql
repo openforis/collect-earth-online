@@ -1670,31 +1670,6 @@ CREATE OR REPLACE FUNCTION delete_all_samples_by_project(_project_id integer)
 
 $$ LANGUAGE SQL;
 
--- For clearing user plots and collected samples for a project
-CREATE OR REPLACE FUNCTION get_deleted_user_plots_by_project(_project_id integer)
- RETURNS table (
-    plot_id    integer,
-    lon        double precision,
-    lat        double precision
- ) AS $$
-
-    WITH deleted_user_plots AS (
-        DELETE FROM user_plots WHERE plot_rid IN (SELECT plot_uid FROM plots WHERE project_rid = _project_id)
-        RETURNING plot_rid
-    ), deleted_samples AS (
-        DELETE FROM samples WHERE plot_rid IN (SELECT plot_rid FROM deleted_user_plots)
-        RETURNING plot_rid
-    )
-
-    SELECT distinct(plot_uid),
-        ST_X(center) AS lon,
-        ST_Y(center) AS lat
-    FROM plots
-    INNER JOIN deleted_samples
-        ON plot_uid = plot_rid
-
-$$ LANGUAGE SQL;
-
 -- Get all plots and centers to recreate samples.
 CREATE OR REPLACE FUNCTION get_plot_centers_by_project(_project_id integer)
  RETURNS table (
