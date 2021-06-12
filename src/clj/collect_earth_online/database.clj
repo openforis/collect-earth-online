@@ -84,18 +84,19 @@
         cat
         rows))
 
-(defn insert-rows!
-  [table rows & {:keys [fields custom-row]}]
+(defn insert-rows! [table rows & {:keys [fields custom-row]
+                                  :or {fields (keys (first rows))}}]
   (let [get-fields (apply juxt fields)]
     (doseq [sm-rows (pg-partition fields rows)]
       (jdbc/execute-one! (jdbc/get-datasource pg-db)
                          (for-insert-multi! table
-                                            (or fields (keys (first rows)))
+                                            fields
                                             (map get-fields sm-rows)
                                             custom-row)
                          {}))))
 
-(defn p-insert-rows! [table rows & {:keys [fields custom-row]}]
+(defn p-insert-rows! [table rows & {:keys [fields custom-row]
+                                    :or {fields (keys (first rows))}}]
   (doall (pmap (fn [row-group]
                  (insert-rows! table row-group :fields fields :custom-row custom-row))
                (pg-partition fields rows))))

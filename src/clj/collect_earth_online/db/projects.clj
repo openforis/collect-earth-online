@@ -447,10 +447,7 @@
                                               samples-per-plot
                                               sample-resolution))
                         (call-sql "get_plot_centers_by_project" project-id))]
-    (p-insert-rows! "samples"
-                    samples
-                    :fields     [:plot_rid :sample_geom]
-                    :custom-row "(?, ST_GeomFromText(?, 4326))")))
+    (p-insert-rows! "samples" samples :custom-row "(?, ST_GeomFromText(?, 4326))")))
 
 (defn- create-project-plots [project-id
                              lon-min
