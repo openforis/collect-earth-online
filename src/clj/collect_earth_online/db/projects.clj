@@ -547,14 +547,17 @@
                              "none"    1.0)
                            200.0
                            50000.0)
-        ;; TODO use bulk insert, or use postGIS to generate points.
-        (doseq [plot-center (if (= "gridded" plot-distribution)
-                              (create-gridded-points-in-bounds left bottom right top plot-spacing)
-                              (create-random-points-in-bounds left bottom right top num-plots))]
-          (call-sql "create_project_plot"
-                    {:log? false}
-                    project-id
-                    (make-geo-json-point (first plot-center) (second plot-center))))
+        (let [plot-centers (if (= "gridded" plot-distribution)
+                             (create-gridded-points-in-bounds left bottom right top plot-spacing)
+                             (create-random-points-in-bounds left bottom right top num-plots))]
+          (as-> plot-centers pc
+            (map (fn [[lon lat]]
+                   {:project_rid project-id
+                    :center      (format "POINT(%s %s)" lon lat)})
+                 pc)
+            (p-insert-rows! "plots"
+                            pc
+                            :custom-row "(?, ST_GeomFromText(?, 4326))")))
         (create-project-samples! project-id
                                  sample-distribution
                                  plot-shape
@@ -816,9 +819,9 @@
               (if (#{"csv" "shp"} plot-distribution)
                 plot-file-base64
                 (or (not (same-polygon-boundary? (tc/jsonb->clj boundary) (tc/jsonb->clj (:boundary original-project))))
-                    (not= num-plots (:num_plots original-project))
-                    (not= plot-shape (:plot_shape original-project))
-                    (not= plot-size (:plot_size original-project))
+                    (not= num-plots    (:num_plots original-project))
+                    (not= plot-shape   (:plot_shape original-project))
+                    (not= plot-size    (:plot_size original-project))
                     (not= plot-spacing (:plot_spacing original-project)))))
           (do
             (call-sql "delete_plots_by_project" project-id)
