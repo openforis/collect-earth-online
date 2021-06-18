@@ -385,7 +385,7 @@ export function LogoBanner() {
                 </div>
             </div>
             <div className="row mb-4 justify-content-center">
-                <div className="col-sm-4 text-center my-auto">
+                <div className="col-sm-6 text-center my-auto">
                     <a href="https://www.silvacarbon.org" rel="noreferrer noopener" target="_blank">
                         <img
                             alt="Silva Carbon"
@@ -395,7 +395,7 @@ export function LogoBanner() {
                         />
                     </a>
                 </div>
-                <div className="col-sm-4 text-center my-auto">
+                <div className="col-sm-6 text-center my-auto">
                     <a href="https://sig-gis.com" rel="noreferrer noopener" target="_blank">
                         <img
                             alt="Spatial Informatics Group, Inc."
@@ -405,13 +405,25 @@ export function LogoBanner() {
                         />
                     </a>
                 </div>
-                <div className="col-sm-4 text-center my-auto">
+            </div>
+            <div className="row mb-4 justify-content-center">
+                <div className="col-sm-6 text-center my-auto">
                     <a href="https://servir.adpc.net" rel="noreferrer noopener" target="_blank">
                         <img
                             alt="Servir Mekong"
                             className="img-fluid"
                             id="servir-mekong"
                             src="/img/servir-mekong-logo.png"
+                        />
+                    </a>
+                </div>
+                <div className="col-sm-6 text-center my-auto">
+                    <a href="https://servir.ciat.cgiar.org" rel="noreferrer noopener" target="_blank">
+                        <img
+                            alt="Servir Amazonia"
+                            className="img-fluid"
+                            id="servir-mekong"
+                            src="/img/servir-amazonia-logo.png"
                         />
                     </a>
                 </div>
