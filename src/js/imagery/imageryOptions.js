@@ -24,7 +24,7 @@ const outOfRange = (num, low, high) => isNaN(num) || parseInt(num) < low || pars
 const dateRangeValidator = ({startDate, endDate}) => (startDate && endDate
     && new Date(startDate) > new Date(endDate) ? "Start date must be smaller than the end date." : "");
 
-const urlValidator = url => /^(?:http|https):\/\/[\w.-]+(?:\.[\w-]+)+[\w\-.,@?^=%&:;/~\\+#]+$/.test(url);
+const urlValidator = url => /^(?:http|https):\/\/[\w.-]+(?:\.[\w-]+)+[\w\-.,@?^=%&{}:;/~\\+#]+$/.test(url);
 
 const isValidJSON = str => {
     try {
