@@ -81,32 +81,38 @@ class HelpSlideDialog extends React.Component {
                                 <SvgIcon icon="close" size="2rem"/>
                             </div>
                         </div>
-                        <div className="d-flex" style={{minHeight: "0", minWidth: "0"}}>
+                        <div className="d-flex" style={{minHeight: "0", minWidth: "0", position: "relative"}}>
+                            <div style={{"position": "absolute", top: "50%", left: "0px"}}>
+                                <button
+                                    className="btn btn-dark btn-sm m-2"
+                                    disabled={currentSlideIdx === 0}
+                                    onClick={() => this.setState({currentSlideIdx: currentSlideIdx - 1})}
+                                    style={{"border-radius": "50%", height: "3rem", width: "3rem"}}
+                                    title="Previous"
+                                    type="button"
+                                >
+                                    <SvgIcon color="white" icon="leftArrow" size="2rem"/>
+                                </button>
+                            </div>
+                            <div style={{"position": "absolute", top: "50%", right: "0px"}}>
+                                <button
+                                    className="btn btn-dark btn-sm m-2"
+                                    onClick={() => {
+                                        if (isLastSlide) {
+                                            this.props.closeHelpMenu();
+                                        } else {
+                                            this.setState({currentSlideIdx: currentSlideIdx + 1});
+                                        }
+                                    }}
+                                    style={{"border-radius": "50%", height: "3rem", width: "3rem"}}
+                                    title={isLastSlide ? "Finish" : "Next"}
+                                    type="button"
+                                >
+                                    <SvgIcon color="white" icon={isLastSlide ? "check" : "rightArrow"} size="2rem"/>
+                                </button>
+                            </div>
                             <div className="d-flex flex-column justify-content-between">
                                 <p className="p-3" style={{width: "22vw"}}>{body}</p>
-                                <div className="d-flex justify-content-end">
-                                    <button
-                                        className="btn btn-lightgreen btn-sm m-2"
-                                        disabled={currentSlideIdx === 0}
-                                        onClick={() => this.setState({currentSlideIdx: currentSlideIdx - 1})}
-                                        type="button"
-                                    >
-                                        Previous
-                                    </button>
-                                    <button
-                                        className="btn btn-lightgreen btn-sm m-2"
-                                        onClick={() => {
-                                            if (isLastSlide) {
-                                                this.props.closeHelpMenu();
-                                            } else {
-                                                this.setState({currentSlideIdx: currentSlideIdx + 1});
-                                            }
-                                        }}
-                                        type="button"
-                                    >
-                                        {isLastSlide ? "Finish" : "Next"}
-                                    </button>
-                                </div>
                             </div>
                             <div style={{height: "100%", width: "33vw"}}>
                                 <img

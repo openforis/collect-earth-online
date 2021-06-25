@@ -204,17 +204,35 @@ const ruleIcon = (
     </svg>
 );
 
+const leftArrowIcon = (
+    <svg viewBox="0 0 6.3499999 6.3500002">
+        <g transform="translate(-0.5 -290.65)">
+            <path d="m4.0896849 292.23437a.26460982.26460982 0 0 0 -.1617472.0667l-1.8536336 1.5875a.26460982.26460982 0 0 0 0 .40256l1.8536336 1.58595a.26460982.26460982 0 1 0 .3436483-.40049l-1.6190225-1.38648 1.6190225-1.38699a.26460982.26460982 0 0 0 -.1819011-.46871z"/>
+        </g>
+    </svg>
+);
+
+const rightArrowIcon = (
+    <svg viewBox="0 0 6.3499999 6.3500002">
+        <g transform="translate(0 -290.65)">
+            <path d="m2.2580394 291.96502a.26460982.26460982 0 0 0 -.1741496.46871l1.6190225 1.38699-1.6190225 1.38648a.26460982.26460982 0 1 0 .3436483.40049l1.8536335-1.58595a.26460982.26460982 0 0 0 0-.40256l-1.8536335-1.5875a.26460982.26460982 0 0 0 -.1694987-.0667z"/>
+        </g>
+    </svg>
+);
+
 const iconMap = {
-    "help": helpIcon,
-    "rightDouble": rightDoubleIcon,
-    "leftDouble": leftDoubleIcon,
+    "check": checkIcon,
     "close": closeIcon,
     "draw": drawIcon,
+    "help": helpIcon,
+    "leftArrow": leftArrowIcon,
+    "leftDouble": leftDoubleIcon,
+    "lineString": lineStringIcon,
     "point": pointIcon,
     "polygon": polygonIcon,
-    "lineString": lineStringIcon,
     "question": questionIcon,
-    "check": checkIcon,
+    "rightArrow": rightArrowIcon,
+    "rightDouble": rightDoubleIcon,
     "rule": ruleIcon
 };
 
