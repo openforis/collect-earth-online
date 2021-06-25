@@ -8,7 +8,10 @@
             [clojure.java.shell :as sh]
             [collect-earth-online.utils.type-conversion :as tc]
             [collect-earth-online.utils.part-utils      :as pu]
-            [collect-earth-online.database :refer [call-sql sql-primitive p-insert-rows!]]
+            [collect-earth-online.database :refer [call-sql
+                                                   sql-primitive
+                                                   p-insert-rows!
+                                                   insert-rows!]]
             [collect-earth-online.logging  :refer [log]]
             [collect-earth-online.views    :refer [data-response]]))
 
@@ -196,9 +199,8 @@
 
 ;; Geo JSON
 
-(defn- make-geo-json-point [lon lat]
-  (tc/clj->jsonb {:type        "Point"
-                  :coordinates [lon lat]}))
+(defn- make-wkt-point [lon lat]
+  (format "POINT(%s %s)" lon lat))
 
 (defn- make-geo-json-polygon [lon-min lat-min lon-max lat-max]
   (tc/clj->jsonb {:type        "Polygon"
@@ -420,7 +422,7 @@
   ;;      Update create random / gridded to work on boundary so any plot type can have random and gridded.
   (map (fn [[lon lat]]
          {:plot_rid    plot-id
-          :sample_geom (format "POINT(%s %s)" lon lat)})
+          :sample_geom (make-wkt-point lon lat)})
        (case sample-distribution
          "center"
          [plot-center]
@@ -553,11 +555,12 @@
           (as-> plot-centers pc
             (map (fn [[lon lat]]
                    {:project_rid project-id
-                    :center      (format "POINT(%s %s)" lon lat)})
+                    :center      (make-wkt-point lon lat)})
                  pc)
-            (p-insert-rows! "plots"
-                            pc
-                            :custom-row "(?, ST_GeomFromText(?, 4326))")))
+            (insert-rows! "plots"
+                          pc
+                          :fields     [:project_rid :center]
+                          :custom-row "(?, ST_GeomFromText(?, 4326))")))
         (create-project-samples! project-id
                                  sample-distribution
                                  plot-shape

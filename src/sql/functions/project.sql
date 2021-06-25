@@ -1118,18 +1118,6 @@ $$ LANGUAGE SQL;
 --  PLOT FUNCTIONS
 --
 
--- Create a single project plot with no external file data
-CREATE OR REPLACE FUNCTION create_project_plot(_project_id integer, _center jsonb)
- RETURNS integer AS $$
-
-    INSERT INTO plots
-        (project_rid, center)
-    VALUES
-        (_project_id, ST_SetSRID(ST_GeomFromGeoJSON(_center), 4326))
-    RETURNING plot_uid
-
-$$ LANGUAGE SQL;
-
 -- Flag plot
 CREATE OR REPLACE FUNCTION flag_plot(_plot_id integer, _user_id integer, _collection_start timestamp, _flagged_reason text)
  RETURNS integer AS $$
