@@ -99,4 +99,5 @@
                                     :or {fields (keys (first rows))}}]
   (doall (pmap (fn [row-group]
                  (insert-rows! table row-group :fields fields :custom-row custom-row))
-               (pg-partition fields rows))))
+               (pg-partition fields rows)))
+  nil)
