@@ -572,6 +572,44 @@ h2.header {
     min-height: 71px;
 }
 
+/**************/
+/* About Page */
+/**************/
+
+.circle-logo {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto;
+    background: #fff;
+    border-radius: 50%;
+    box-shadow: 0px 5px 10px rgba(0,0,0,.5);
+}
+
+.circle-logo.circle-logo--small img {
+    max-width: 100px !important;
+    max-height: 100px !important;
+}
+
+.circle-logo--small {
+    max-width: 125px;
+    max-height: 125px;
+    height: 125px;
+    width: 125px;
+}
+
+.circle-logo--large {
+    max-width: 150px;
+    max-height: 150px;
+    height: 150px;
+    width: 150px;
+}
+
+.circle-logo.circle-logo--large img {
+    max-width: 125px !important;
+    max-height: 125px !important;
+}
+
 /****************/
 /* Project Page */
 /****************/
