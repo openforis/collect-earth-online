@@ -8,7 +8,8 @@
             [clojure.java.shell :as sh]
             [collect-earth-online.utils.type-conversion :as tc]
             [collect-earth-online.utils.part-utils      :as pu]
-            [collect-earth-online.database :refer [call-sql sql-primitive]]
+            [collect-earth-online.database :refer [call-sql sql-primitive p-insert-rows!]]
+            [collect-earth-online.logging  :refer [log]]
             [collect-earth-online.views    :refer [data-response]]))
 
 ;;; Constants
@@ -137,7 +138,7 @@
   (sql-primitive (call-sql "select_first_public_imagery")))
 
 ;; TODO use bulk insert statement
-(defn- insert-project-imagery [project-id imagery-list]
+(defn- insert-project-imagery! [project-id imagery-list]
   (doseq [imagery imagery-list]
     (call-sql "insert_project_imagery" project-id imagery)))
 
@@ -386,7 +387,7 @@
     (when invalid-headers
       (init-throw (str "One or more columns contains invalid characters: " (str/join ", " invalid-headers))))))
 
-(defn- load-external-data [distribution project-id ext-file type must-include]
+(defn- load-external-data! [distribution project-id ext-file type must-include]
   (when (#{"csv" "shp"} distribution)
     (let [folder-name (str tmp-dir "/ceo-tmp-" project-id "/")]
       (try-catch-throw #(let [table-name                   (str "project_" project-id "_" type "_" distribution)
@@ -408,49 +409,68 @@
                           table-name)
                        (str (str/capitalize type) " " distribution " file failed to load.")))))
 
-(defn- create-project-samples [plot-id
-                               sample-distribution
-                               plot-center
-                               plot-shape
-                               plot-size
-                               samples-per-plot
-                               sample-resolution]
+(defn- build-plot-samples [plot-id
+                           sample-distribution
+                           plot-center
+                           plot-shape
+                           plot-size
+                           samples-per-plot
+                           sample-resolution]
   ;; TODO Right now you have to have a sample shape or csv file if you have a plot shape file.
   ;;      Update create random / gridded to work on boundary so any plot type can have random and gridded.
-  (doseq [[x y] (case sample-distribution
-                  "center"
-                  [plot-center]
+  (map (fn [[lon lat]]
+         {:plot_rid    plot-id
+          :sample_geom (format "POINT(%s %s)" lon lat)})
+       (case sample-distribution
+         "center"
+         [plot-center]
 
-                  "random"
-                  (create-random-sample-set plot-center plot-shape plot-size samples-per-plot)
+         "random"
+         (create-random-sample-set plot-center plot-shape plot-size samples-per-plot)
 
-                  "gridded"
-                  (create-gridded-sample-set plot-center plot-shape plot-size sample-resolution)
+         "gridded"
+         (create-gridded-sample-set plot-center plot-shape plot-size sample-resolution)
 
-                  [])]
-    (call-sql "create_project_plot_sample"
-              {:log? false}
-              plot-id
-              (make-geo-json-point x y))))
+         [])))
 
-(defn- create-project-plots [project-id
-                             lon-min
-                             lat-min
-                             lon-max
-                             lat-max
-                             plot-distribution
-                             num-plots
-                             plot-spacing
-                             plot-shape
-                             plot-size
-                             sample-distribution
-                             samples-per-plot
-                             sample-resolution
-                             plot-file-name
-                             plot-file-base64
-                             sample-file-name
-                             sample-file-base64
-                             allow-drawn-samples?]
+(defn- create-project-samples! [project-id
+                                sample-distribution
+                                plot-shape
+                                plot-size
+                                samples-per-plot
+                                sample-resolution]
+  (let [samples (mapcat (fn [{:keys [plot_id lon lat]}]
+                          (build-plot-samples plot_id
+                                              sample-distribution
+                                              [lon lat]
+                                              plot-shape
+                                              plot-size
+                                              samples-per-plot
+                                              sample-resolution))
+                        (call-sql "get_plot_centers_by_project" project-id))]
+    (p-insert-rows! "samples"
+                    samples
+                    :fields     [:plot_rid :sample_geom]
+                    :custom-row "(?, ST_GeomFromText(?, 4326))")))
+
+(defn- create-project-plots! [project-id
+                              lon-min
+                              lat-min
+                              lon-max
+                              lat-max
+                              plot-distribution
+                              num-plots
+                              plot-spacing
+                              plot-shape
+                              plot-size
+                              sample-distribution
+                              samples-per-plot
+                              sample-resolution
+                              plot-file-name
+                              plot-file-base64
+                              sample-file-name
+                              sample-file-base64
+                              allow-drawn-samples?]
   (let [write-dir    (str tmp-dir "/ceo-tmp-" project-id "/")
         plots-file   (and (#{"csv" "shp"} plot-distribution)
                           (str write-dir
@@ -466,8 +486,16 @@
                                                           (str "project-" project-id "-samples"))))]
     (if (#{"csv" "shp"} plot-distribution)
       (do
-        (let [plot-table       (load-external-data plot-distribution project-id plots-file "plots" #{"PLOTID"})
-              sample-table     (load-external-data sample-distribution project-id samples-file "samples" #{"PLOTID" "SAMPLEID"})
+        (let [plot-table       (load-external-data! plot-distribution
+                                                    project-id
+                                                    plots-file
+                                                    "plots"
+                                                    #{"PLOTID"})
+              sample-table     (load-external-data! sample-distribution
+                                                    project-id
+                                                    samples-file
+                                                    "samples"
+                                                    #{"PLOTID" "SAMPLEID"})
               counts           (try-catch-throw #(first (call-sql "ext_table_count" project-id plot-table sample-table))
                                                 "SQL Error: cannot count data.")
               ext-plot-count   (:plot_count counts)
@@ -487,14 +515,13 @@
         (if (#{"csv" "shp"} sample-distribution)
           (try-catch-throw #(call-sql "samples_from_plots_with_files" project-id)
                            "Error importing samples file after importing plots file.")
-          (try-catch-throw #(doseq [plot (call-sql "add_file_plots" project-id)]
-                              (create-project-samples (:plot_uid plot)
-                                                      sample-distribution
-                                                      [(:lon plot) (:lat plot)]
-                                                      plot-shape
-                                                      plot-size
-                                                      samples-per-plot
-                                                      sample-resolution))
+          (try-catch-throw #(do (call-sql "add_file_plots" project-id)
+                                (create-project-samples! project-id
+                                                         sample-distribution
+                                                         plot-shape
+                                                         plot-size
+                                                         samples-per-plot
+                                                         sample-resolution))
                            "Error adding plot file with generated samples."))
         (try-catch-throw #(call-sql "cleanup_project_tables" project-id plot-size)
                          "SQL Error: cannot clean external tables.")
@@ -524,23 +551,22 @@
         (doseq [plot-center (if (= "gridded" plot-distribution)
                               (create-gridded-points-in-bounds left bottom right top plot-spacing)
                               (create-random-points-in-bounds left bottom right top num-plots))]
-          (let [plot-id (sql-primitive (call-sql "create_project_plot"
-                                                 {:log? false}
-                                                 project-id
-                                                 (make-geo-json-point (first plot-center) (second plot-center))))]
-            (create-project-samples plot-id
-                                    sample-distribution
-                                    plot-center
-                                    plot-shape
-                                    plot-size
-                                    samples-per-plot
-                                    sample-resolution)))))
+          (call-sql "create_project_plot"
+                    {:log? false}
+                    project-id
+                    (make-geo-json-point (first plot-center) (second plot-center))))
+        (create-project-samples! project-id
+                                 sample-distribution
+                                 plot-shape
+                                 plot-size
+                                 samples-per-plot
+                                 sample-resolution)))
     (call-sql "update_project_counts" project-id)
     (when-not (sql-primitive (call-sql "valid_project_boundary" project-id))
       (init-throw (str "The project boundary is invalid. "
                        "This can come from improper coordinates or projection when uploading shape or csv data.")))))
 
-(defn create-project [{:keys [params]}]
+(defn create-project! [{:keys [params]}]
   (let [institution-id       (tc/val->int (:institutionId params))
         imagery-id           (or (:imageryId params) (get-first-public-imagery))
         name                 (:name params)
@@ -597,7 +623,7 @@
                                                       project-options))]
     (try
       (if-let [imagery-list (:projectImageryList params)]
-        (insert-project-imagery project-id imagery-list)
+        (insert-project-imagery! project-id imagery-list)
         (call-sql "add_all_institution_imagery" project-id))
       ;; TODO this can be a simple SQL query once we drop the dashboard ID
       (when (and (pos? project-template) use-template-widgets)
@@ -609,40 +635,42 @@
                       widget))))
       (if (and (pos? project-template) use-template-plots)
         (call-sql "copy_template_plots" project-template project-id)
-        (create-project-plots project-id
-                              lon-min
-                              lat-min
-                              lon-max
-                              lat-max
-                              plot-distribution
-                              num-plots
-                              plot-spacing
-                              plot-shape
-                              plot-size
-                              sample-distribution
-                              samples-per-plot
-                              sample-resolution
-                              plot-file-name
-                              plot-file-base64
-                              sample-file-name
-                              sample-file-base64
-                              allow-drawn-samples?))
+        (create-project-plots! project-id
+                               lon-min
+                               lat-min
+                               lon-max
+                               lat-max
+                               plot-distribution
+                               num-plots
+                               plot-spacing
+                               plot-shape
+                               plot-size
+                               sample-distribution
+                               samples-per-plot
+                               sample-resolution
+                               plot-file-name
+                               plot-file-base64
+                               sample-file-name
+                               sample-file-base64
+                               allow-drawn-samples?))
       (data-response {:projectId project-id
                       :tokenKey  token-key})
       (catch Exception e
         (try
           (call-sql "delete_project" project-id)
           (catch Exception _))
+        (log e)
         (data-response (if-let [causes (:causes (ex-data e))]
                          (str "-" (str/join "\n-" causes))
                          "Unknown server error."))))))
 
 ;;; Update Project
 
-(defn reset-collected-samples [project-id]
+(defn reset-collected-samples! [project-id]
   (let [project (first (call-sql "select_project_by_id" project-id))
         sample-distribution  (:sample_distribution project)
         allow-drawn-samples? (:allow_drawn_samples project)]
+    ;; samples must also be deleted when allow-drawn-samples? because the user has drawn them.
     (cond
       (not allow-drawn-samples?)
       (call-sql "delete_user_plots_by_project" project-id)
@@ -659,23 +687,23 @@
             plot-size         (tc/val->float (:plot_size project))
             samples-per-plot  (tc/val->int (:samples_per_plot project))
             sample-resolution (tc/val->float (:sample_resolution project))]
-        (doseq [{:keys [plot_id lon lat]} (call-sql "get_deleted_user_plots_by_project" project-id)]
-          (create-project-samples plot_id
-                                  sample-distribution
-                                  [lon lat]
-                                  plot-shape
-                                  plot-size
-                                  samples-per-plot
-                                  sample-resolution))))))
+        (call-sql "delete_all_samples_by_project" project-id)
+        (call-sql "delete_user_plots_by_project"  project-id)
+        (create-project-samples! project-id
+                                 sample-distribution
+                                 plot-shape
+                                 plot-size
+                                 samples-per-plot
+                                 sample-resolution)))))
 
-(defn recreate-samples [project-id
-                        sample-distribution
-                        plot-shape
-                        plot-size
-                        samples-per-plot
-                        sample-resolution
-                        sample-file-name
-                        sample-file-base64]
+(defn recreate-samples! [project-id
+                         sample-distribution
+                         plot-shape
+                         plot-size
+                         samples-per-plot
+                         sample-resolution
+                         sample-file-name
+                         sample-file-base64]
   (try
     (if (#{"csv" "shp"} sample-distribution)
       (let [write-dir     (str tmp-dir "/ceo-tmp-" project-id "/")
@@ -684,23 +712,21 @@
                                                           sample-file-base64
                                                           write-dir
                                                           (str "project-" project-id "-samples")))
-            samples-table (load-external-data sample-distribution
-                                              project-id
-                                              samples-file
-                                              "samples"
-                                              #{"PLOTID" "SAMPLEID"})]
+            samples-table (load-external-data! sample-distribution
+                                               project-id
+                                               samples-file
+                                               "samples"
+                                               #{"PLOTID" "SAMPLEID"})]
         (try-catch-throw #(call-sql "samples_from_plots_with_files" project-id)
                          "Error importing samples file.")
         (try-catch-throw #(call-sql "update_project_sample_table" project-id samples-table)
                          "SQL Error: cannot update project table."))
-      (doseq [{:keys [plot_id lon lat]} (call-sql "get_plot_centers_by_project" project-id)]
-        (create-project-samples plot_id
-                                sample-distribution
-                                [lon lat]
-                                plot-shape
-                                plot-size
-                                samples-per-plot
-                                sample-resolution)))
+      (create-project-samples! project-id
+                               sample-distribution
+                               plot-shape
+                               plot-size
+                               samples-per-plot
+                               sample-resolution))
     (catch Exception e
       (data-response (if-let [causes (:causes (ex-data e))]
                        (str/join "\n" causes)
@@ -725,7 +751,7 @@
        (same-ring? (exterior-ring (:coordinates geom1))
                    (exterior-ring (:coordinates geom2)))))
 
-(defn update-project [{:keys [params]}]
+(defn update-project! [{:keys [params]}]
   (let [project-id           (tc/val->int (:projectId params))
         imagery-id           (or (:imageryId params) (get-first-public-imagery))
         name                 (:name params)
@@ -781,7 +807,7 @@
                   project-options)
         (when-let [imagery-list (:projectImageryList params)]
           (call-sql "delete_project_imagery" project-id)
-          (insert-project-imagery project-id imagery-list))
+          (insert-project-imagery! project-id imagery-list))
         (cond
           (not= "unpublished" (:availability original-project))
           nil
@@ -798,24 +824,24 @@
             (call-sql "delete_plots_by_project" project-id)
             (when (#{"csv" "shp"} (:plot_distribution original-project))
               (call-sql "delete_project_tables" project-id))
-            (create-project-plots project-id
-                                  lon-min
-                                  lat-min
-                                  lon-max
-                                  lat-max
-                                  plot-distribution
-                                  num-plots
-                                  plot-spacing
-                                  plot-shape
-                                  plot-size
-                                  sample-distribution
-                                  samples-per-plot
-                                  sample-resolution
-                                  plot-file-name
-                                  plot-file-base64
-                                  sample-file-name
-                                  sample-file-base64
-                                  allow-drawn-samples?))
+            (create-project-plots! project-id
+                                   lon-min
+                                   lat-min
+                                   lon-max
+                                   lat-max
+                                   plot-distribution
+                                   num-plots
+                                   plot-spacing
+                                   plot-shape
+                                   plot-size
+                                   sample-distribution
+                                   samples-per-plot
+                                   sample-resolution
+                                   plot-file-name
+                                   plot-file-base64
+                                   sample-file-name
+                                   sample-file-base64
+                                   allow-drawn-samples?))
 
           (or (not= sample-distribution (:sample_distribution original-project))
               (if (#{"csv" "shp"} sample-distribution)
@@ -826,38 +852,38 @@
             (call-sql "delete_all_samples_by_project" project-id)
             (when (#{"csv" "shp"} (:sample_distribution original-project))
               (call-sql "delete_project_sample_table" project-id))
-            (recreate-samples project-id
-                              sample-distribution
-                              plot-shape
-                              plot-size
-                              samples-per-plot
-                              sample-resolution
-                              sample-file-name
-                              sample-file-base64))
+            (recreate-samples! project-id
+                               sample-distribution
+                               plot-shape
+                               plot-size
+                               samples-per-plot
+                               sample-resolution
+                               sample-file-name
+                               sample-file-base64))
 
           ;; NOTE: Old stored questions can have a different format than when passed from the UI.
           ;;       This is why we check whether the survey questions are different on the front (for now).
           (or update-survey
               (and (:allow_drawn_samples original-project) (not allow-drawn-samples?)))
-          (reset-collected-samples project-id))
+          (reset-collected-samples! project-id))
         (data-response ""))
       (data-response (str "Project " project-id " not found.")))))
 
-(defn publish-project [{:keys [params]}]
+(defn publish-project! [{:keys [params]}]
   (let [user-id      (:userId params -1)
         project-id   (tc/val->int (:projectId params))
         clear-saved? (tc/val->bool (:clearSaved params))]
-    (when clear-saved? (reset-collected-samples project-id))
+    (when clear-saved? (reset-collected-samples! project-id))
     (call-sql "publish_project" project-id)
     (data-response (build-project-by-id user-id project-id))))
 
-(defn close-project [{:keys [params]}]
+(defn close-project! [{:keys [params]}]
   (let [user-id    (:userId params -1)
         project-id (tc/val->int (:projectId params))]
     (call-sql "close_project" project-id)
     (data-response (build-project-by-id user-id project-id))))
 
-(defn archive-project [{:keys [params]}]
+(defn archive-project! [{:keys [params]}]
   (let [project-id (tc/val->int (:projectId params))]
     (call-sql "archive_project" project-id)
     (data-response "")))
@@ -949,7 +975,7 @@
        (remove (set items))
        (vec)))
 
-(defn dump-project-aggregate-data [{:keys [params]}]
+(defn dump-project-aggregate-data! [{:keys [params]}]
   (let [project-id (tc/val->int (:projectId params))]
     (if-let [project-info (first (call-sql "select_project_by_id" project-id))]
       (let [survey-questions (tc/jsonb->clj (:survey_questions project-info))
@@ -1013,7 +1039,7 @@
                           :imagery_attributions
                           :sample_geom])
 
-(defn dump-project-raw-data [{:keys [params]}]
+(defn dump-project-raw-data! [{:keys [params]}]
   (let [project-id (tc/val->int (:projectId params))]
     (if-let [project-info (first (call-sql "select_project_by_id" project-id))]
       (let [survey-questions (tc/jsonb->clj (:survey_questions project-info))

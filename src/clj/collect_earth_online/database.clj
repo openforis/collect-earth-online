@@ -16,6 +16,18 @@
   [f-str & args]
   (apply format (str/replace f-str #"(%[^ ])" "%s") args))
 
+(defn str-places
+  "Creates a string with the pattern '(?, ?), (?, ?)'"
+  [rows & [custom-row]]
+  (let [row (or custom-row
+                (str "("
+                     (str/join ", " (repeat (count (first rows)) "?"))
+                     ")"))]
+    (str/join ", " (repeat (count rows) row))))
+
+(defn pg-partition [fields rows]
+  (partition-all (quot 32767 (count fields)) rows))
+
 (def sql-primitive (comp val first first))
 
 ;;; Static Data
@@ -60,3 +72,32 @@
                             (json/read-str (:sql-args params "[]")))
         sql-result        (apply call-sql (str schema "." function) sql-args)]
     (data-response sql-result {:type (if (= content-type "application/edn") :edn :json)})))
+
+;;; Insert Queries
+
+(defn for-insert-multi!
+  [table cols rows custom-row]
+  (into [(format-simple "INSERT INTO %1 (%2) VALUES %3"
+                        table
+                        (str/join ", " (map name cols))
+                        (str-places rows custom-row))]
+        cat
+        rows))
+
+(defn insert-rows! [table rows & {:keys [fields custom-row]
+                                  :or {fields (keys (first rows))}}]
+  (let [get-fields (apply juxt fields)]
+    (doseq [sm-rows (pg-partition fields rows)]
+      (jdbc/execute-one! (jdbc/get-datasource pg-db)
+                         (for-insert-multi! table
+                                            fields
+                                            (map get-fields sm-rows)
+                                            custom-row)
+                         {}))))
+
+(defn p-insert-rows! [table rows & {:keys [fields custom-row]
+                                    :or {fields (keys (first rows))}}]
+  (doall (pmap (fn [row-group]
+                 (insert-rows! table row-group :fields fields :custom-row custom-row))
+               (pg-partition fields rows)))
+  nil)
