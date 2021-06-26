@@ -17,6 +17,7 @@ class WidgetLayoutEditor extends React.PureComponent {
             layout: [],
             widgets: [],
             imagery: [],
+            widgetBasemap: -1,
             selectedProjectId: 0,
             projectList: [],
             projectFilter:"",
@@ -32,7 +33,6 @@ class WidgetLayoutEditor extends React.PureComponent {
             imageParams: "",
             dualLayer: false,
             swipeAsDefault: false,
-            widgetBaseMap: "osm",
             startDate: "",
             endDate: "",
             startDate2: "",
@@ -76,9 +76,7 @@ class WidgetLayoutEditor extends React.PureComponent {
             .then(data => {
                 this.setState({
                     imagery: data,
-                    widgetBaseMap: data.map(o => o.id.toString()).includes(this.state.widgetBaseMap)
-                        ? this.state.widgetBaseMap
-                        : data[0].id
+                    widgetBasemap: data[0].id
                 });
             })
             .catch(response => {
@@ -168,7 +166,6 @@ class WidgetLayoutEditor extends React.PureComponent {
             graphBandDeg: "NDFI",
             graphReducer: "Min",
             imageParams: "",
-            widgetBaseMap: "osm",
             dualLayer: false,
             swipeAsDefault: false,
             startDate:"",
@@ -262,7 +259,6 @@ class WidgetLayoutEditor extends React.PureComponent {
             graphBandDeg: "NDFI",
             graphReducer: "Min",
             imageParams: "",
-            widgetBaseMap: "osm",
             dualLayer: false,
             swipeAsDefault: false,
             startDate:"",
@@ -314,13 +310,13 @@ class WidgetLayoutEditor extends React.PureComponent {
             h: 1,
             minW: 3
         };
-        widget.baseMap = (this.state.imagery.filter(imagery => String(imagery.id) === this.state.widgetBaseMap))[0];
         if (this.state.selectedWidgetType === "DualImageCollection") {
             widget.properties = ["", "", "", "", ""];
             widget.filterType = "";
             widget.visParams = {};
             widget.dualImageCollection = [];
             widget.swipeAsDefault = this.state.swipeAsDefault;
+            widget.basemapId = this.state.widgetBasemap;
             const img1 = {};
             const img2 = {};
             img1.collectionType = "ImageCollection" + this.state.selectedDataType;
@@ -374,11 +370,13 @@ class WidgetLayoutEditor extends React.PureComponent {
             widget.filterType = "";
             widget.visParams = this.state.imageParams === "" ? {} : JSON.parse(this.state.imageParams);
             widget.ImageAsset = this.state.imageCollection;
+            widget.basemapId = this.state.widgetBasemap;
         } else if (this.state.selectedWidgetType === "imageCollectionAsset") {
             widget.properties = ["", "", "", "", ""];
             widget.filterType = "";
             widget.visParams = JSON.parse(this.state.imageParams);
             widget.ImageCollectionAsset = this.state.imageCollection;
+            widget.basemapId = this.state.widgetBasemap;
         } else if (this.state.selectedWidgetType === "DegradationTool") {
             widget.type = "DegradationTool";
             widget.properties = ["DegradationTool", "", "", "", ""];
@@ -386,19 +384,23 @@ class WidgetLayoutEditor extends React.PureComponent {
             widget.startDate = this.state.startDate;
             widget.endDate = this.state.endDate;
             widget.graphBand = this.state.graphBandDeg === "" ? "NDFI" : this.state.graphBandDeg;
-            widget.baseMap = this.state.widgetBaseMap;
+            widget.basemapId = this.state.widgetBasemap;
         } else if (this.state.selectedWidgetType === "polygonCompare") {
             widget.type = "polygonCompare";
             widget.properties = ["featureCollection", "", "", "", ""];
             widget.featureCollection = this.state.featureCollection;
             widget.visParams = this.state.visParams;
             widget.field = this.state.matchField;
-            widget.baseMap = this.state.widgetBaseMap;
+            widget.basemapId = this.state.widgetBasemap;
         } else {
-            const wType = this.state.selectedWidgetType === "TimeSeries" ? this.state.selectedDataType.toLowerCase() + this.state.selectedWidgetType
-                : this.state.selectedWidgetType === "ImageCollection" ? this.state.selectedWidgetType + this.state.selectedDataType
-                    : this.state.selectedWidgetType === "statistics" ? "getStats"
-                        : this.state.selectedWidgetType === "ImageElevation" ? "ImageElevation"
+            const wType = this.state.selectedWidgetType === "TimeSeries"
+                ? this.state.selectedDataType.toLowerCase() + this.state.selectedWidgetType
+                : this.state.selectedWidgetType === "ImageCollection"
+                    ? this.state.selectedWidgetType + this.state.selectedDataType
+                    : this.state.selectedWidgetType === "statistics"
+                        ? "getStats"
+                        : this.state.selectedWidgetType === "ImageElevation"
+                            ? "ImageElevation"
                             : "custom";
             let prop1 = "";
             const properties = [];
@@ -409,6 +411,9 @@ class WidgetLayoutEditor extends React.PureComponent {
                 widget.visParams = this.state.imageParams;
                 widget.graphBand = this.state.graphBand;
                 widget.graphReducer = this.state.graphReducer;
+            }
+            if (["ImageCollection", "ImageElevation"].includes(this.state.selectedWidgetType)) {
+                widget.basemapId = this.state.widgetBasemap;
             }
             properties[0] = wType;
             properties[1] = prop1;
@@ -464,7 +469,6 @@ class WidgetLayoutEditor extends React.PureComponent {
                         graphBandDeg: "NDFI",
                         graphReducer: "Min",
                         imageParams: "",
-                        widgetBaseMap: "osm",
                         dualLayer: false,
                         swipeAsDefault: false,
                         startDate:"",
@@ -483,8 +487,8 @@ class WidgetLayoutEditor extends React.PureComponent {
             });
     };
 
-    onDataBaseMapSelectChanged = event => {
-        this.setState({widgetBaseMap: event.target.value});
+    onDataBasemapSelectChanged = event => {
+        this.setState({widgetBasemap: parseInt(event.target.value)});
     };
 
     onWidgetTitleChange = event => {
@@ -791,7 +795,7 @@ class WidgetLayoutEditor extends React.PureComponent {
                                             </option>
                                         </select>
                                     </div>
-                                    {this.getBaseMapSelector()}
+                                    {this.getBasemapSelector()}
                                     {this.getDataTypeSelectionControl()}
                                     {this.getSwipeOpacityDefault()}
                                     {this.getDataForm()}
@@ -903,7 +907,7 @@ class WidgetLayoutEditor extends React.PureComponent {
         </>
     );
 
-    getBaseMapSelector = () => {
+    getBasemapSelector = () => {
         if (["ImageCollection",
              "DualImageCollection",
              "imageAsset",
@@ -927,8 +931,8 @@ class WidgetLayoutEditor extends React.PureComponent {
                         className="form-control"
                         id="widgetIndicesSelect"
                         name="widgetIndicesSelect"
-                        onChange={this.onDataBaseMapSelectChanged}
-                        value={this.state.widgetBaseMap}
+                        onChange={this.onDataBasemapSelectChanged}
+                        value={this.state.widgetBasemap}
                     >
                         {this.state.imagery && this.state.imagery
                             .map(({id, title}) => <option key={id} value={id}>{title}</option>)}

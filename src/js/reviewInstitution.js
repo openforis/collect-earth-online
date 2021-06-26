@@ -432,9 +432,8 @@ class ImageryList extends React.Component {
         const toVisibility = currentVisibility === "private" ? "public" : "private";
         if (this.props.userId === 1
                 && confirm(`Do you want to change the visibility from ${currentVisibility} to ${toVisibility}?`
-                    + toVisibility === "private"
-                    ? "  This will remove the imagery from other institutions' projects."
-                    : "")) {
+                    + `${toVisibility === "private"
+                        && "  This will remove the imagery from other institutions' projects."}`)) {
             fetch("/update-imagery-visibility",
                   {
                       method: "POST",

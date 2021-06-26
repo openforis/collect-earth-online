@@ -33,7 +33,7 @@ CREATE OR REPLACE FUNCTION select_partial_table_by_name(_table_name text)
 
 $$ LANGUAGE PLPGSQL;
 
--- Converts all columns (including uknown) to a single json column for processing
+-- Converts all columns (including unknown) to a single json column for processing
 CREATE OR REPLACE FUNCTION select_json_table_by_name(_table_name text)
  RETURNS table (
     ext_id      integer,
