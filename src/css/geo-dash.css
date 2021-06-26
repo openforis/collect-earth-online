@@ -394,43 +394,18 @@ input:checked+.switchslider:before {
 /*
  * Placeholder dashboard ideas
  */
-.placeholders.row, .placeholdersOld.row {
-    margin-right: auto;
-    margin-left: auto;
-}
-.placeholdersOld{
-    margin-bottom: 30px;
-    text-align: center;
-}
-.placeholdersOld .placeholder{
-    height: 362px;
-}
-.placeholdersOld .minmapwidget {
-    height: calc(100% - 125px);
-}
-
-.placeholdersOld .graphwidget{
-    height:250px;
-}
 .placeholders {
     margin-bottom: 30px;
     text-align: center;
     display: grid;
-    /*grid-gap: 10px;*/
     grid-template-columns: 8.33% 8.33% 8.33% 8.33% 8.33% 8.33% 8.33% 8.33% 8.33% 8.33% 8.33% 8.33%;
-    /* background-color: #fff;
-     color: #444;*/
 }
 
-.placeholders h4, .placeholdersOld h4 {
+.placeholders h4 {
     margin-bottom: 0;
 }
-
 .placeholder {
     margin-bottom: 20px;
-}
-.placeholder.c1{
-
 }
 .placeholder img {
     display: inline-block;
