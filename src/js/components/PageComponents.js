@@ -146,11 +146,20 @@ export class NavigationBar extends React.Component {
             .catch(error => console.log(error));
     }
 
+    autoShowHelpMenu = page => {
+        const autoShowPages = ["home"];
+        const key = `ceo:${page}:seen`;
+        if (autoShowPages.includes(page) && !localStorage.getItem(key)) {
+            this.setState({showHelpMenu: true});
+            localStorage.setItem(key, true);
+        }
+    };
+
     getHelpSlides = (availableLanguages, page) => {
         fetch(`/locale/${page}/${getLanguage(availableLanguages)}.json`,
               {headers: {"Cache-Control": "no-cache", "Pragma": "no-cache", "Accept": "application/json"}})
             .then(response => (response.ok ? response.json() : Promise.reject(response)))
-            .then(data => this.setState({helpSlides: data, page}))
+            .then(data => { this.setState({helpSlides: data, page}); this.autoShowHelpMenu(page); })
             .catch(error => console.log(page, getLanguage(availableLanguages), error));
     };
 
