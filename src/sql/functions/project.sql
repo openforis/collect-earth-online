@@ -162,7 +162,7 @@ CREATE OR REPLACE FUNCTION get_project_widgets_by_project_id(_project_id integer
     project_title    text
  ) AS $$
 
-    SELECT pw.*, p.name
+    SELECT widget_uid, project_uid, dashboard_id, widget, p.name
     FROM project_widgets pw
     INNER JOIN projects p
         ON project_uid = project_rid

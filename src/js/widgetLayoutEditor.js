@@ -102,70 +102,6 @@ class WidgetLayoutEditor extends React.PureComponent {
             : (imageType.toLowerCase().includes("degradationtool")) ? "/img/geodash/degsample.gif"
                 : "/img/geodash/graphsample.gif");
 
-    checkWidgetStructure = updatedWidgets => {
-        let changed = false;
-        let row = 0;
-        let column = 0;
-        const sWidgets = _.orderBy(updatedWidgets, "id", "asc");
-        const widgets = _.map(sWidgets, (paramWidget, i) => {
-            const widget = _.cloneDeep(paramWidget);
-            if (widget.layout) {
-                delete widget.gridcolumn;
-                delete widget.gridrow;
-                widget.layout.i = i.toString();
-                return widget;
-            } else if (widget.gridcolumn) {
-                changed = true;
-                let y;
-                let h;
-                // let layout;
-                // do the x and w
-                const x = parseInt(widget.gridcolumn.split(" ")[0]) - 1;
-                const w = parseInt(widget.gridcolumn.split(" ")[3]);
-                if (widget.gridrow) {
-                    // do the y and h
-                    y = parseInt(widget.gridrow.trim().split(" ")[0]) - 1;
-                    h = widget.gridrow.trim().split(" ")[3] !== undefined ? parseInt(widget.gridrow.trim().split(" ")[3]) : 1;
-                }
-                // create .layout
-                widget.layout = {x, y, w, h};
-                delete widget.gridcolumn;
-                delete widget.gridrow;
-            } else if (widget.position) {
-                changed = true;
-                let x;
-                const h = 1;
-                if (column + parseInt(widget.width) <= 12) {
-                    x = column;
-                    column += parseInt(widget.width);
-                } else {
-                    x = 0;
-                    column = parseInt(widget.width);
-                    row += 1;
-                }
-                widget.layout = {x, y: row, w: parseInt(widget.width), h, i:i.toString()};
-            } else {
-                changed = true;
-                let x;
-                const h = 1;
-                if (column + 3 <= 12) {
-                    x = column;
-                    column += 3;
-                } else {
-                    x = 0;
-                    column = parseInt(widget.width);
-                    row += 1;
-                }
-                widget.layout = {x, y: row, w: parseInt(widget.width), h, i:i.toString()};
-            }
-            return widget;
-        });
-        this.setState({widgets});
-        if (changed) {
-            this.updateAllServerWidgets();
-        }
-    };
-
     serveItUp = (url, widget) => {
         fetch(
             url,
@@ -188,21 +124,15 @@ class WidgetLayoutEditor extends React.PureComponent {
             });
     };
 
-    updateAllServerWidgets = () => {
-        this.state.widgets.forEach(widget => {
-            this.serveItUp(`${this.state.theURI}/update-widget?widgetId=${widget.id}`, widget);
-        });
-    };
-
     deleteWidgetFromServer = widget => {
         this.serveItUp(`${this.state.theURI}/delete-widget?widgetId=${widget.id}`, widget);
     };
 
     generateDOM = () => {
         const x = "x";
-        return _.map(this.state.widgets, (widget, i) => (
+        return _.map(this.state.widgets, widget => (
             <div
-                key={widget.layout ? widget.layout.i : i}
+                key={widget.layout.i}
                 className="front widgetEditor-widgetBackground"
                 data-grid={widget.layout}
                 onDragEnd={this.onDragEnd}
@@ -736,31 +666,10 @@ class WidgetLayoutEditor extends React.PureComponent {
     fetchProject = (id, setDashboardID) => fetch(this.state.theURI + "/get-by-projid?projectId=" + id)
         .then(response => (response.ok ? response.json() : Promise.reject(response)))
         .then(data => {
-            let widgets = data.widgets;
-            if (!Array.isArray(widgets)) {
-                try {
-                    widgets = JSON.parse(widgets);
-                    if (!Array.isArray(widgets)) {
-                        widgets = [];
-                    }
-                } catch (e) {
-                    widgets = [];
-                }
-            }
-            const updatedWidgets = widgets.map(widget => (widget.layout
-                ? {
-                    ...widget,
-                    layout: {
-                        ...widget.layout,
-                        y: widget.layout.y ? widget.layout.y : 0
-                    }
-                }
-                : widget));
-            this.checkWidgetStructure(updatedWidgets);
             this.setState({
                 dashboardID: setDashboardID ? data.dashboardID : this.state.dashboardID,
-                widgets: updatedWidgets,
-                layout: this.generateLayout()
+                widgets: data.widgets,
+                layout: data.widgets.map(dw => ({...dw.layout, minW: 3, w: Math.max(dw.layout.w, 3)}))
             });
         });
 
@@ -1874,17 +1783,18 @@ class WidgetLayoutEditor extends React.PureComponent {
         });
     };
 
-    generateLayout = () => _.map(this.state.widgets, (item, i) => {
-        const {layout, layout: {w}} = item;
-        return {...layout, i: i.toString(), minW: 3, w: Math.min(w, 3)};
-    });
+    sameLayout = (layout1, layout2) => layout1.x === layout2.x
+        && layout1.y === layout2.y
+        && layout1.h === layout2.h
+        && layout1.w === layout2.w;
 
     onLayoutChange = layout => {
-        const newWidgets = this.state.widgets.map((w, i) => {
-            if (_.isEqual(w.layout, layout[i])) {
-                return w;
+        const newWidgets = this.state.widgets.map((stateWidget, idx) => {
+            if (this.sameLayout(stateWidget.layout, layout[idx])) {
+                return stateWidget;
             } else {
-                const newWidget = {...w, layout: layout[i]};
+                const {x, y, h, w, i} = layout[idx];
+                const newWidget = {...stateWidget, layout: {x, y, h, w, i}};
                 this.serveItUp(`${this.state.theURI}/update-widget?widgetId=${newWidget.id}`, newWidget);
                 return newWidget;
             }

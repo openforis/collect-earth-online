@@ -308,57 +308,17 @@ class Widget extends React.Component {
 
     generateGridRow = (y, h) => (y + 1) + " / span " + h;
 
-    getColumnClass = c => (c.includes("span 12")
-        ? " fullcolumnspan"
-        : c.includes("span 9")
-            ? " columnSpan9"
-            : c.includes("span 6")
-                ? " columnSpan6"
-                : " columnSpan3");
-
-    getRowClass = r => (r.includes("span 2")
-        ? " rowSpan2"
-        : r.includes("span 3")
-            ? " rowSpan3"
-            : " rowSpan1");
-
-    getClassNames = (fullState, c, r) => (fullState
-        ? "placeholder fullwidget"
-        : "placeholder" + this.getColumnClass(c) + this.getRowClass(r));
-
-    getWidgetHtml = (widget, onSliderChange, onSwipeChange) => {
-        if (widget.gridcolumn || widget.layout) {
-            return (
-                <div
-                    className={this.getClassNames(
-                        widget.isFull,
-                        widget.gridcolumn || "",
-                        widget.gridrow || (widget.layout && "span " + widget.layout.h) || ""
-                    )}
-                    style={{
-                        gridColumn:widget.gridcolumn != null
-                            ? widget.gridcolumn
-                            : this.generateGridColumn(widget.layout.x, widget.layout.w),
-                        gridRow:widget.gridrow != null
-                            ? widget.gridrow
-                            : this.generateGridRow(widget.layout.y, widget.layout.h)
-                    }}
-                >
-                    {this.getCommonWidgetLayout(widget, onSliderChange, onSwipeChange)}
-                </div>
-            );
-        } else {
-            return (
-                <div
-                    className={widget.isFull
-                        ? "fullwidget columnSpan3 rowSpan1 placeholder"
-                        : "columnSpan3 rowSpan1 placeholder"}
-                >
-                    {this.getCommonWidgetLayout(widget, onSliderChange, onSwipeChange)}
-                </div>
-            );
-        }
-    };
+    getWidgetHtml = (widget, onSliderChange, onSwipeChange) => (
+        <div
+            className={`placeholder columnSpan3 rowSpan${widget.layout.h} ${widget.isFull && "fullwidget"}`}
+            style={{
+                gridColumn: this.generateGridColumn(widget.layout.x, widget.layout.w),
+                gridRow: this.generateGridRow(widget.layout.y, widget.layout.h)
+            }}
+        >
+            {this.getCommonWidgetLayout(widget, onSliderChange, onSwipeChange)}
+        </div>
+    );
 
     getCommonWidgetLayout = (widget, onSliderChange, onSwipeChange) => (
         <div className="panel panel-default" id={"widget_" + widget.id}>
