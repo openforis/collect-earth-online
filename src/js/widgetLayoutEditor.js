@@ -487,7 +487,7 @@ class WidgetLayoutEditor extends React.PureComponent {
             });
     };
 
-    onDataBaseMapSelectChanged = event => {
+    onDataBasemapSelectChanged = event => {
         this.setState({widgetBasemap: parseInt(event.target.value)});
     };
 
@@ -795,7 +795,7 @@ class WidgetLayoutEditor extends React.PureComponent {
                                             </option>
                                         </select>
                                     </div>
-                                    {this.getBaseMapSelector()}
+                                    {this.getBasemapSelector()}
                                     {this.getDataTypeSelectionControl()}
                                     {this.getSwipeOpacityDefault()}
                                     {this.getDataForm()}
@@ -907,7 +907,7 @@ class WidgetLayoutEditor extends React.PureComponent {
         </>
     );
 
-    getBaseMapSelector = () => {
+    getBasemapSelector = () => {
         if (["ImageCollection",
              "DualImageCollection",
              "imageAsset",
@@ -931,7 +931,7 @@ class WidgetLayoutEditor extends React.PureComponent {
                         className="form-control"
                         id="widgetIndicesSelect"
                         name="widgetIndicesSelect"
-                        onChange={this.onDataBaseMapSelectChanged}
+                        onChange={this.onDataBasemapSelectChanged}
                         value={this.state.widgetBasemap}
                     >
                         {this.state.imagery && this.state.imagery
