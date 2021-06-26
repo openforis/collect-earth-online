@@ -1,5 +1,17 @@
 {
-    "collection": ["en"],
-    "home": ["en"],
-    "create-project": ["en"]
+    "collection": [
+        "en"
+    ],
+    "create-imagery": [
+        "en"
+    ],
+    "create-project": [
+        "en"
+    ],
+    "home": [
+        "en"
+    ],
+    "review-institution": [
+        "en"
+    ]
 }
