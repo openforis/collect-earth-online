@@ -47,11 +47,12 @@ class HelpSlideDialog extends React.Component {
 
     render() {
         const {currentSlideIdx} = this.state;
-        const {alt, body, img} = this.props.helpSlides[currentSlideIdx];
+        const {alt, body, img, title} = this.props.helpSlides[currentSlideIdx];
         const isLastSlide = currentSlideIdx === this.props.helpSlides.length - 1;
+        const {closeHelpMenu, page} = this.props;
         return (
             <div
-                onClick={this.props.closeHelpMenu}
+                onClick={closeHelpMenu}
                 style={{
                     position: "fixed",
                     zIndex: "100",
@@ -76,9 +77,11 @@ class HelpSlideDialog extends React.Component {
                         }}
                     >
                         <div className="row justify-content-between bg-lightgreen p-2">
-                            <h2 className="ml-2">{capitalizeFirst(this.props.page)} Help</h2>
-                            <div onClick={this.props.closeHelpMenu}>
-                                <SvgIcon icon="close" size="2rem"/>
+                            <h2 className="ml-2" style={{color: "white"}}>
+                                {title || `${capitalizeFirst(page)} Help`}
+                            </h2>
+                            <div onClick={closeHelpMenu}>
+                                <SvgIcon color="white" icon="close" size="2rem"/>
                             </div>
                         </div>
                         <div className="d-flex" style={{minHeight: "0", minWidth: "0"}}>
@@ -97,7 +100,7 @@ class HelpSlideDialog extends React.Component {
                                         className="btn btn-lightgreen btn-sm m-2"
                                         onClick={() => {
                                             if (isLastSlide) {
-                                                this.props.closeHelpMenu();
+                                                closeHelpMenu();
                                             } else {
                                                 this.setState({currentSlideIdx: currentSlideIdx + 1});
                                             }
@@ -111,7 +114,7 @@ class HelpSlideDialog extends React.Component {
                             <div style={{height: "100%", width: "33vw"}}>
                                 <img
                                     alt={alt || ""}
-                                    src={"locale/" + this.props.page + img}
+                                    src={"locale/" + page + img}
                                     style={{maxHeight: "100%", maxWidth: "100%"}}
                                 />
                             </div>
