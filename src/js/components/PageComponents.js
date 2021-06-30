@@ -70,31 +70,41 @@ class HelpSlideDialog extends React.Component {
                             backgroundColor: "white",
                             border: "1.5px solid",
                             borderRadius: "5px",
-                            maxHeight: "calc(100vh - 150px)",
+                            height: "600px",
                             margin: "90px auto",
                             width: "fit-content"
                         }}
                     >
-                        <div className="row justify-content-between bg-lightgreen p-2">
+                        <div className="row justify-content-between bg-lightgreen p-2" style={{position: "relative"}}>
                             <h2 className="ml-2">{capitalizeFirst(this.props.page)} Help</h2>
-                            <div onClick={this.props.closeHelpMenu}>
+                            <div onClick={this.props.closeHelpMenu} style={{position: "absolute", top: "10px", right: "10px"}}>
                                 <SvgIcon icon="close" size="2rem"/>
                             </div>
                         </div>
-                        <div className="d-flex" style={{minHeight: "0", minWidth: "0", position: "relative"}}>
-                            <div style={{"position": "absolute", top: "50%", left: "0px"}}>
+                        <div className="d-flex align-items-center" style={{height: "100%"}}>
+                            <div className="d-flex flex-column align-items-center">
                                 <button
                                     className="btn btn-dark btn-sm m-2"
                                     disabled={currentSlideIdx === 0}
                                     onClick={() => this.setState({currentSlideIdx: currentSlideIdx - 1})}
-                                    style={{"border-radius": "50%", height: "3rem", width: "3rem"}}
+                                    style={{borderRadius: "50%", margin: "2rem", height: "3rem", width: "3rem"}}
                                     title="Previous"
                                     type="button"
                                 >
                                     <SvgIcon color="white" icon="leftArrow" size="2rem"/>
                                 </button>
                             </div>
-                            <div style={{"position": "absolute", top: "50%", right: "0px"}}>
+                            <div className="d-flex flex-column align-items-center justify-content-between">
+                                <p className="p-3" style={{width: "22vw"}}>{body}</p>
+                            </div>
+                            <div className="d-flex align-items-center justify-content-center" style={{height: "100%", width: "33vw"}}>
+                                <img
+                                    alt={alt || ""}
+                                    src={"locale/" + this.props.page + img}
+                                    style={{height: "auto", maxHeight: "500px", maxWidth: "100%", padding: "2rem"}}
+                                />
+                            </div>
+                            <div className="d-flex flex-column align-items-center">
                                 <button
                                     className="btn btn-dark btn-sm m-2"
                                     onClick={() => {
@@ -104,22 +114,12 @@ class HelpSlideDialog extends React.Component {
                                             this.setState({currentSlideIdx: currentSlideIdx + 1});
                                         }
                                     }}
-                                    style={{"border-radius": "50%", height: "3rem", width: "3rem"}}
-                                    title={isLastSlide ? "Finish" : "Next"}
+                                    style={{borderRadius: "50%", margin: "2rem", height: "3rem", width: "3rem"}}
+                                    title="Next"
                                     type="button"
                                 >
                                     <SvgIcon color="white" icon={isLastSlide ? "check" : "rightArrow"} size="2rem"/>
                                 </button>
-                            </div>
-                            <div className="d-flex flex-column justify-content-between">
-                                <p className="p-3" style={{width: "22vw"}}>{body}</p>
-                            </div>
-                            <div style={{height: "100%", width: "33vw"}}>
-                                <img
-                                    alt={alt || ""}
-                                    src={"locale/" + this.props.page + img}
-                                    style={{maxHeight: "100%", maxWidth: "100%"}}
-                                />
                             </div>
                         </div>
                     </div>
