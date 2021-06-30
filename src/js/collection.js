@@ -419,16 +419,18 @@ class Collection extends React.Component {
         mercator.removeLayerById(mapConfig, "currentPlot");
         mercator.removeLayerById(mapConfig, "currentSamples");
         mercator.removeLayerById(mapConfig, "drawLayer");
-        mercator.addVectorLayer(mapConfig,
-                                "currentPlot",
-                                mercator.geometryToVectorSource(
-                                    currentPlot.geom
-                                        ? mercator.parseGeoJson(currentPlot.geom, true)
-                                        : mercator.getPlotPolygon(currentPlot.center,
-                                                                  currentProject.plotSize,
-                                                                  currentProject.plotShape)
-                                ),
-                                mercator.ceoMapStyles("geom", "yellow"));
+        mercator.addVectorLayer(
+            mapConfig,
+            "currentPlot",
+            mercator.geometryToVectorSource(
+                currentPlot.plotGeom.includes("Point")
+                    ? mercator.getPlotPolygon(currentPlot.plotGeom,
+                                              currentProject.plotSize,
+                                              currentProject.plotShape)
+                    : mercator.parseGeoJson(currentPlot.plotGeom, true)
+            ),
+            mercator.ceoMapStyles("geom", "yellow")
+        );
 
         this.zoomToPlot();
     };
@@ -504,6 +506,7 @@ class Collection extends React.Component {
     };
 
     showGeoDash = () => {
+        // FIXME
         const {currentPlot, mapConfig, currentProject} = this.state;
         const plotRadius = currentProject.plotSize
             ? currentProject.plotSize / 2.0
@@ -511,11 +514,11 @@ class Collection extends React.Component {
         window.open("/geo-dash?"
                     + `institutionId=${this.state.currentProject.institution}`
                     + `&projectId=${this.props.projectId}`
-                    + `&visiblePlotId=${isNumber(currentPlot.plotId) ? currentPlot.plotId : currentPlot.id}`
+                    + `&visiblePlotId=${currentPlot.visibleId}`
                     + `&plotId=${currentPlot.id}`
-                    + `&plotShape=${encodeURIComponent((currentPlot.geom ? "polygon" : currentProject.plotShape))}`
+                    + `&plotShape=${(currentPlot.plotGeom.includes("Point") ? currentProject.plotShape : "polygon")}`
                     + `&aoi=${encodeURIComponent(`[${mercator.getViewExtent(mapConfig)}]`)}`
-                    + `&daterange=&bcenter=${currentPlot.center}`
+                    + `&bcenter=${currentPlot.center}`
                     + `&bradius=${plotRadius}`,
                     `_geo-dash_${this.props.projectId}`);
     };
@@ -531,9 +534,8 @@ class Collection extends React.Component {
 
     navToFirstPlot = () => this.getNextPlotData(-10000000);
 
-    getPlotId = () => (isNumber(this.state.currentPlot.plotId)
-        ? this.state.currentPlot.plotId
-        : this.state.currentPlot.id);
+    // TODO, consider edge cases. Consider using plot_id to navigate.
+    getPlotId = () => this.state.currentPlot.visibleId;
 
     navToNextPlot = () => this.getNextPlotData(this.getPlotId());
 

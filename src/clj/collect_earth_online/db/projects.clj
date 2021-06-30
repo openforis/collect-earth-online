@@ -555,11 +555,11 @@
           (as-> plot-centers pc
             (map (fn [[lon lat]]
                    {:project_rid project-id
-                    :center      (make-wkt-point lon lat)})
+                    :sample_geom (make-wkt-point lon lat)})
                  pc)
             (insert-rows! "plots"
                           pc
-                          :fields     [:project_rid :center]
+                          :fields     [:project_rid :sample_geom]
                           :custom-row "(?, ST_GeomFromText(?, 4326))")))
         (create-project-samples! project-id
                                  sample-distribution
