@@ -47,11 +47,12 @@ class HelpSlideDialog extends React.Component {
 
     render() {
         const {currentSlideIdx} = this.state;
-        const {alt, body, img} = this.props.helpSlides[currentSlideIdx];
+        const {alt, body, img, title} = this.props.helpSlides[currentSlideIdx];
         const isLastSlide = currentSlideIdx === this.props.helpSlides.length - 1;
+        const {closeHelpMenu, page} = this.props;
         return (
             <div
-                onClick={this.props.closeHelpMenu}
+                onClick={closeHelpMenu}
                 style={{
                     position: "fixed",
                     zIndex: "100",
@@ -76,7 +77,9 @@ class HelpSlideDialog extends React.Component {
                         }}
                     >
                         <div className="row justify-content-between bg-lightgreen p-2" style={{position: "relative"}}>
-                            <h2 className="ml-2">{capitalizeFirst(this.props.page)} Help</h2>
+                            <h2 className="ml-2" style={{color: "white"}}>
+                                {title || `${capitalizeFirst(page)} Help`}
+                            </h2>
                             <div onClick={this.props.closeHelpMenu} style={{position: "absolute", top: "10px", right: "10px"}}>
                                 <SvgIcon icon="close" size="2rem"/>
                             </div>

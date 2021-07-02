@@ -1,45 +1,56 @@
 [
     {
+        "title": "Collection Help",
         "body": "This is the map area! Right now it shows the project overview with all plots in the project.",
         "img": "/img/maparea.webp"
     },
     {
+        "title": "Collection Help",
         "body": "This is the analysis area. You must click on \"Go to first plot\" to start analyzing data.",
         "img": "/img/analysisarea.webp"
     },
     {
+        "title": "Collection Help",
         "body": "The yellow square is the plot. The black circle(s) are the sample points. You will answer questions about these sample points to help your institution learn things about the broader landscape.",
         "img": "/img/samplepoints.webp"
     },
     {
+        "title": "Collection Help",
         "body": "This is the plot navigation menu. The arrows allow you to move one plot forward or backward. You can enter a plot number and click \"Go to plot\" to go to a specific plot. By default, you will navigate through your unanalyzed plots. To return to plots you have previously analyzed, switch the dropdown menu next to \"Navigate through\": to \"My analyzed plots\".",
         "img": "/img/plotnavigation.webp"
     },
     {
+        "title": "Collection Help",
         "body": "These are your External Tools. Re-Zoom will refocus the window on the current plot. Geodash will open a new window with additional information about the plot if the institution has set it up. \"Download Plot KML\" will download KML information. If you have Google Earth installed, you can see the plot there. (Optional) \"Go to GEE Script\" will open a Google Earth Engine degradation widget in a new window. It shows multiple panels of information including NDVI time series information.",
         "img": "/img/externaltools.webp"
     },
     {
+        "title": "Collection Help",
         "body": "This is the Imagery Options menu. You can choose the background imagery using the dropdown menu. Changing the background imagery can help you answer survey questions. Some imagery options will also let you change the date of the imagery displayed.",
         "img": "/img/imageryoptions.webp"
     },
     {
+        "title": "Collection Help",
         "body": "This is the Survey Questions menu. Each project asks questions about each sample point to learn things about the broader landscape. You can change the color of the point data with the radio buttons next to Unanswered Color. You must answer all the survey questions to Save the plot data.",
         "img": "/img/surveyquestions.webp"
     },
     {
+        "title": "Collection Help",
         "body": "(Optional) Some projects allow you to draw your own sampling points, and then answer the survey questions. To switch to the drawing tool, click on the pencil icon. Choose point, line, or polygon based on your institution's questions. Then switch back to the question icon to answer the survey questions for each of your drawn samples.",
         "img": "/img/drawingtool.webp"
     },
     {
+        "title": "Collection Help",
         "body": "Finally, you can select \"Flag Plot\" if the imagery quality isn’t good enough to answer the survey questions. Click \"Clear All\" to remove your Survey Question answers. Click \"Quit\" to return to the Home page.",
         "img": "/img/flagplot.webp"
     },
     {
+        "title": "Collection Help",
         "body": "1. Plot boundary is yellow; sample points are black circles. 2. Navigate through unanalyzed or previously analyzed plots. 3. Navigate between plots or enter a plot number. 4. External tools to assist data analaysis. 5. Change background imagery displayed. 6. Navigate between questions. 7. Click to select your answer to the current question. 8. Click to flag plot when imagery is insufficient. 9. Click to save your answers when all questions are answered.",
         "img": "/img/collectionbreakdown.webp"
     },
     {
+        "title": "Collection Help",
         "body": "You can click the ? at any time to be reminded of these features. Start collecting!",
         "img": "/img/questionmark.webp"
     }
