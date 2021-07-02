@@ -175,6 +175,7 @@ CREATE OR REPLACE FUNCTION delete_project(_project_id integer)
  RETURNS void AS $$
 
  BEGIN
+    -- Delete plots first for efficiency
     DELETE FROM plots
     WHERE plot_uid IN (
         SELECT plot_uid
@@ -186,11 +187,6 @@ CREATE OR REPLACE FUNCTION delete_project(_project_id integer)
 
     DELETE FROM projects WHERE project_uid = _project_id;
 
-    EXECUTE
-    'DROP TABLE IF EXISTS ext_tables.project_' || _project_id || '_plots_csv;'
-    'DROP TABLE IF EXISTS ext_tables.project_' || _project_id || '_plots_shp;'
-    'DROP TABLE IF EXISTS ext_tables.project_' || _project_id || '_samples_csv;'
-    'DROP TABLE IF EXISTS ext_tables.project_' || _project_id || '_samples_shp;';
  END
 
 $$ LANGUAGE PLPGSQL;
@@ -269,33 +265,7 @@ CREATE OR REPLACE FUNCTION update_project_counts(_project_id integer)
 
 $$ LANGUAGE SQL;
 
---  CLEAN UP FUNCTIONS
-
--- Delete duplicates after loading
--- FIXME, can this be done in clj? We should probably be rejecting duplicate data
-CREATE OR REPLACE FUNCTION delete_duplicates(_table_name text, _on_cols text)
- RETURNS void AS $$
-
- BEGIN
-    IF _table_name IS NULL OR _table_name = '' THEN RETURN; END IF;
-
-    EXECUTE
-        'WITH duplicates AS (
-            SELECT * FROM
-                (SELECT *, COUNT(*) OVER
-                    (PARTITION BY ' || _on_cols || ') as xx_count
-            FROM ext_tables.' || _table_name || ') tableWithCount
-            WHERE tableWithCount.xx_count > 1
-        )
-
-        DELETE FROM ext_tables.' || _table_name || ' WHERE gid IN
-        (SELECT DISTINCT ON (' || _on_cols || ') gid FROM duplicates)';
- END
-
-$$ LANGUAGE PLPGSQL;
-
--- Calculates boundary from for csv data
--- FIXME, for shapes call with buffer 0
+-- Calculates boundary from for csv / shp data
 CREATE OR REPLACE FUNCTION set_boundary(_project_id integer, _m_buffer real)
  RETURNS void AS $$
 
@@ -308,8 +278,6 @@ CREATE OR REPLACE FUNCTION set_boundary(_project_id integer, _m_buffer real)
     WHERE project_uid = _project_id
 
 $$ LANGUAGE SQL;
-
--- FIXME, call the above two functions from clojure instead of a stored procedure
 
 -- Copy plot data and sample data
 CREATE OR REPLACE FUNCTION copy_project_plots_samples(_old_project_uid integer, _new_project_uid integer)

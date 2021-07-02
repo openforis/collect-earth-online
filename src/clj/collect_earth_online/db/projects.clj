@@ -162,6 +162,7 @@
 (defn- try-catch-throw [try-fn message]
   (try (try-fn)
        (catch Exception e
+         (log (str (ex-message e)))
          (let [causes (conj (:causes (ex-data e) []) message)]
            (throw (ex-info message {:causes causes}))))))
 
@@ -443,14 +444,14 @@
         header-row (first rows)]
     (when (not (str/includes? header-row ","))
       (init-throw "The CSV file must use commas for the delimiter. This error may indicate that the csv file contains only one column."))
-    (let [headers      (as-> header-row hr
-                         (str/split hr #",")
-                         (mapv #(-> %
-                                    (str/lower-case)
-                                    (str/replace #"-| " "_")
-                                    (str/replace #"^(x|longitude|long|center_x)$" "lon")
-                                    (str/replace #"^(y|latitude|center_y)$" "lon"))
-                               hr))
+    (let [headers     (as-> header-row hr
+                        (str/split hr #",")
+                        (mapv #(-> %
+                                   (str/lower-case)
+                                   (str/replace #"-| " "_")
+                                   (str/replace #"^(x|longitude|long|center_x)$" "lon")
+                                   (str/replace #"^(y|latitude|center_y)$" "lon"))
+                              hr))
           header-keys (map (fn [h]
                              (keyword (if (= (str design-type "id") h)
                                         "visible_id"
@@ -470,16 +471,16 @@
 (defmethod get-file-data :default [distribution _ _ _]
   (throw (str "No such distribution (" distribution ") defined for ceo.db.projects/get-file-data")))
 
-(defn- check-headers [headers must-include]
+(defn- check-headers [headers primary-key]
   (let [header-set      (set headers)
-        header-diff     (set/difference must-include header-set)
+        header-diff     (set/difference (set primary-key) header-set)
         invalid-headers (seq (remove #(re-matches #"^[a-zA-Z_][a-zA-Z0-9_]*$" %) headers))]
     (when (seq header-diff)
       (init-throw (str "The required header field(s) " (str/join ", " header-diff) " are missing.")))
     (when invalid-headers
       (init-throw (str "One or more columns contains invalid characters: " (str/join ", " invalid-headers))))))
 
-(defn- load-external-data! [project-id distribution file-name file-base64 design-type must-include]
+(defn- load-external-data! [project-id distribution file-name file-base64 design-type primary-key]
   (when (#{"csv" "shp"} distribution)
     (let [folder-name (str tmp-dir "/ceo-tmp-" project-id "/")
           saved-file  (pu/write-file-part-base64 file-name
@@ -490,11 +491,30 @@
                           (when-not (seq? body)
                             (init-throw (str "The " design-type " file contains no rows of data.")))
 
-                          (check-headers headers must-include)
+                          (check-headers headers primary-key)
 
-                          ;; FIXME, check for duplicates. here using group-by or in PG if we handle those errors correctly.
-                          #_(when duplicates?
-                              (init-throw (str "The " design-type " file contains duplicate primary keys.")))
+                          (let [duplicates (->> body
+                                                (group-by (->> (assoc primary-key
+                                                                      (dec (count primary-key))
+                                                                      :visible_id)
+                                                               (map keyword)
+                                                               (apply juxt)))
+                                                (filter (fn [[_ v]] (> (count v) 1))))]
+                            (when (seq duplicates)
+                              (init-throw (str "The " design-type " file contains duplicate primary keys. "
+                                               (count duplicates)
+                                               " duplicates exists. The first 10 are:\n"
+                                               (->> duplicates
+                                                    (map (fn [[k _]]
+                                                           (str "["
+                                                                (str/join ", "
+                                                                          (->> k
+                                                                               (zipmap primary-key)
+                                                                               (map (fn [[k2 v2]]
+                                                                                      (str k2 ": " v2)))))
+                                                                "]")))
+                                                    (take 10)
+                                                    (str/join "\n"))))))
                           body)
                        (str (str/capitalize design-type) " " distribution " file failed to load.")))))
 
@@ -514,7 +534,7 @@
                                          sample-file-name
                                          sample-file-base64
                                          "sample"
-                                         #{"plotid" "sampleid"})
+                                         ["plotid" "sampleid"])
         plot-keys   (persistent!
                      (reduce (fn [acc {:keys [plot_id visible_id]}]
                                (assoc! acc (str visible_id) plot_id))
@@ -540,7 +560,7 @@
                                        plot-file-name
                                        plot-file-base64
                                        "plot"
-                                       #{"plotid"})]
+                                       ["plotid"])]
     (check-plot-limits (count ext-plots)
                        50000.0)
     (map (fn [p]
@@ -734,10 +754,11 @@
         (try
           (call-sql "delete_project" project-id)
           (catch Exception _))
-        (log (str (ex-data e)))
-        (data-response (if-let [causes (:causes (ex-data e))]
-                         (str "-" (str/join "\n-" causes))
-                         "Unknown server error."))))))
+        (let [causes (:causes (ex-data e))]
+          (when-not causes (log (ex-message e)))
+          (data-response (if causes
+                           (str "-" (str/join "\n-" causes))
+                           "Unknown server error.")))))))
 
 ;;;
 ;;; Update project
