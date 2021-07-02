@@ -989,6 +989,8 @@ class SideBar extends React.Component {
         if (this.props.answerMode !== "question") {
             alert("You must be in question mode to save the collection.");
             return false;
+        } else if (this.props.currentPlot.flagged) {
+            return true;
         } else if (this.props.isProjectAdmin) {
             if (!(noneAnswered || allAnswered)) {
                 alert("Admins can only save the plot if all questions are answered or the answers are cleared.");
