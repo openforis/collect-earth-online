@@ -312,39 +312,45 @@ $$ LANGUAGE SQL;
 -- FIXME, call the above two functions from clojure instead of a stored procedure
 
 -- Copy plot data and sample data
--- CREATE OR REPLACE FUNCTION copy_project_plots_samples(_old_project_uid integer, _new_project_uid integer)
---  RETURNS integer AS $$
+CREATE OR REPLACE FUNCTION copy_project_plots_samples(_old_project_uid integer, _new_project_uid integer)
+ RETURNS integer AS $$
 
---     WITH project_plots AS (
---         SELECT center, ext_id, plot_uid as plid_old, row_number() OVER(order by plot_uid) as rowid
---         FROM projects p
---         INNER JOIN plots pl
---             ON project_rid = project_uid
---             AND project_rid = _old_project_uid
---     ), inserting AS (
---         INSERT INTO plots (project_rid, center, ext_id)
---         SELECT _new_project_uid, center, ext_id
---         FROM project_plots
---         RETURNING plot_uid as plid
---     ), new_ordered AS (
---         SELECT plid, row_number() OVER(order by plid) as rowid FROM inserting
---     ), combined AS (
---         SELECT * from new_ordered inner join project_plots USING (rowid)
---     ), inserting_samples AS (
---         INSERT INTO samples (plot_rid, sample_geom, ext_id)
---         SELECT plid, sample_geom, ext_id
---         FROM (
---             SELECT plid, sample_geom, s.ext_id
---             FROM combined c
---             INNER JOIN samples s
---                 ON c.plid_old = s.plot_rid
---         ) B
---         RETURNING sample_uid
---     )
+    WITH project_plots AS (
+        SELECT plot_geom,
+            visible_id,
+            ext_plot_info,
+            plot_uid as plid_old,
+            row_number() OVER(order by plot_uid) as rowid
+        FROM projects p
+        INNER JOIN plots pl
+            ON project_rid = project_uid
+            AND project_rid = _old_project_uid
+    ), inserting AS (
+        INSERT INTO plots
+            (project_rid, plot_geom, visible_id, ext_plot_info)
+        SELECT _new_project_uid, plot_geom, visible_id, ext_plot_info
+        FROM project_plots
+        RETURNING plot_uid as plid
+    ), new_ordered AS (
+        SELECT plid, row_number() OVER(order by plid) as rowid FROM inserting
+    ), combined AS (
+        SELECT * from new_ordered inner join project_plots USING (rowid)
+    ), inserting_samples AS (
+        INSERT INTO samples
+            (plot_rid,  sample_geom, visible_id, ext_sample_info)
+        SELECT plid, sample_geom, visible_id, ext_sample_info
+        FROM (
+            SELECT plid, sample_geom, s.visible_id, ext_sample_info
+            FROM combined c
+            INNER JOIN samples s
+                ON c.plid_old = s.plot_rid
+        ) B
+        RETURNING sample_uid
+    )
 
---     SELECT COUNT(1)::int FROM inserting_samples
+    SELECT COUNT(1)::int FROM inserting_samples
 
--- $$ LANGUAGE SQL;
+$$ LANGUAGE SQL;
 
 -- Copy other project fields that may not have been correctly passed from UI
 CREATE OR REPLACE FUNCTION copy_project_plots_stats(_old_project_uid integer, _new_project_uid integer)
@@ -378,7 +384,7 @@ $$ LANGUAGE SQL;
 CREATE OR REPLACE FUNCTION copy_template_plots(_old_project_uid integer, _new_project_uid integer)
  RETURNS void AS $$
 
-    -- SELECT * FROM copy_project_plots_samples(_old_project_uid, _new_project_uid);
+    SELECT * FROM copy_project_plots_samples(_old_project_uid, _new_project_uid);
     SELECT * FROM copy_project_plots_stats(_old_project_uid, _new_project_uid);
 
 $$ LANGUAGE SQL;
@@ -837,8 +843,9 @@ CREATE OR REPLACE FUNCTION plot_exists(_project_id integer, _visible_id integer)
  RETURNS boolean AS $$
 
     SELECT count(visible_id) > 0
-    FROM select_project_collection_plots(_project_id) as spp
-    WHERE visible_id = _visible_id
+    FROM plots
+    WHERE project_rid = _project_id
+        AND visible_id = _visible_id
 
 $$ LANGUAGE SQL;
 
@@ -1047,7 +1054,7 @@ CREATE OR REPLACE FUNCTION create_project_plot_sample(_plot_id integer, _sample_
 
 $$ LANGUAGE SQL;
 
--- Select samples. GEOM comes from shp file table.
+-- Select samples for a plot.
 CREATE OR REPLACE FUNCTION select_plot_samples(_plot_id integer)
  RETURNS table (
     sample_id        integer,
@@ -1065,7 +1072,7 @@ CREATE OR REPLACE FUNCTION select_plot_samples(_plot_id integer)
 
 $$ LANGUAGE SQL;
 
--- Select sample geoms. GEOM comes from shp file table, if it exists, otherwise return sample_geom.
+-- Select just sample geoms.
 CREATE OR REPLACE FUNCTION select_plot_sample_geoms(_plot_id integer)
  RETURNS table (sample_geom text) AS $$
 
@@ -1225,12 +1232,14 @@ $$ LANGUAGE SQL;
 -- Get all plots and centers to recreate samples.
 CREATE OR REPLACE FUNCTION get_plot_centers_by_project(_project_id integer)
  RETURNS table (
-    plot_id    integer,
-    lon        double precision,
-    lat        double precision
+    plot_id       integer,
+    visible_id    integer,
+    lon           double precision,
+    lat           double precision
  ) AS $$
 
     SELECT plot_uid,
+        visible_id,
         ST_X(ST_Centroid(plot_geom)) AS lon,
         ST_Y(ST_Centroid(plot_geom)) AS lat
     FROM plots
