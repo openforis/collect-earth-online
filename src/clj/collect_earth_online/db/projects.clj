@@ -15,12 +15,16 @@
             [collect-earth-online.logging  :refer [log]]
             [collect-earth-online.views    :refer [data-response]]))
 
+;;;
 ;;; Constants
+;;;
 
 (def tmp-dir  (System/getProperty "java.io.tmpdir"))
 (def path-env (System/getenv "PATH"))
 
-;;; Auth Functions
+;;;
+;;; Auth functions
+;;;
 
 (defn- check-auth-common [user-id project-id token-key sql-query]
   (or (and token-key
@@ -33,7 +37,9 @@
 (defn is-proj-admin? [user-id project-id token-key]
   (check-auth-common user-id project-id token-key "can_user_edit_project"))
 
-;;; Data Functions
+;;;
+;;; Get data functions
+;;;
 
 (def default-options {:showGEEScript       false
                       :showPlotInformation false
@@ -135,7 +141,10 @@
                     :closedDate      (str (:closed_date stats))
                     :userStats       (tc/jsonb->clj (:user_stats stats))})))
 
-;;; Create/Update Common
+
+;;;
+;;; Create project helper functions
+;;;
 
 (defn- get-first-public-imagery []
   (sql-primitive (call-sql "select_first_public_imagery")))
@@ -145,9 +154,7 @@
   (doseq [imagery imagery-list]
     (call-sql "insert_project_imagery" project-id imagery)))
 
-;;;
-;;; Create project helper functions
-;;;
+;; Errors
 
 (defn- init-throw [message]
   (throw (ex-info message {:causes [message]})))
@@ -202,7 +209,7 @@
                      "."))))
 
 ;;;
-;;; Spacial plots
+;;; Spacial plots generator
 ;;;
 
 ;; Geo JSON
@@ -353,10 +360,10 @@
                      pc)))))
 
 ;;;
-;;; External files
+;;; External files generator
 ;;;
 
-(defn find-file-by-ext [folder-name ext]
+(defn- find-file-by-ext [folder-name ext]
   (->> (io/file folder-name)
        (file-seq)
        (map #(.getName %))
@@ -364,12 +371,12 @@
        (filter #(= ext (peek (str/split % #"\."))))
        (first)))
 
-(defn format-simple
+(defn- format-simple
   "Use any char after % for format."
   [f-str & args]
   (apply format (str/replace f-str #"(%[^ ])" "%s") args))
 
-(defn parse-as-sh-cmd
+(defn- parse-as-sh-cmd
   "Split string into an array for use with clojure.java.shell/sh."
   [s]
   (loop [chars (seq s)
@@ -382,7 +389,7 @@
         (recur (->> chars (drop-while #(not= \` %)))
                (->> chars (take-while #(not= \` %)) (apply str) (str/trim) (#(str/split % #" ")) (remove str/blank?) (into acc)))))))
 
-(defn sh-wrapper [dir env & commands]
+(defn- sh-wrapper [dir env & commands]
   (sh/with-sh-dir dir
     (sh/with-sh-env (merge {:PATH path-env} env)
       (doseq [cmd commands]
@@ -390,7 +397,7 @@
           (when-not (= 0 exit)
             (init-throw err)))))))
 
-(defn sh-wrapper-stdout [dir env cmd]
+(defn- sh-wrapper-stdout [dir env cmd]
   (sh/with-sh-dir dir
     (sh/with-sh-env (merge {:PATH path-env} env)
       (let [{:keys [exit err out]} (apply sh/sh (parse-as-sh-cmd cmd))]
@@ -485,7 +492,7 @@
 
                           (check-headers headers must-include)
 
-                          ;; FIXME, check for duplicates
+                          ;; FIXME, check for duplicates. here using group-by or in PG if we handle those errors correctly.
                           #_(when duplicates?
                               (init-throw (str "The " design-type " file contains duplicate primary keys.")))
                           body)
@@ -543,7 +550,7 @@
          ext-plots)))
 
 ;;;
-;;; Create project helper functions
+;;; Create project
 ;;;
 
 (defn- create-project-samples! [project-id
@@ -933,7 +940,7 @@
              [(str prefix (name key)) val])
            in-map))
 
-(defn map->csv [row-map key-set default]
+(defn- map->csv [row-map key-set default]
   (reduce (fn [acc cur]
             (conj acc (csv-quotes (get row-map cur default))))
           []
