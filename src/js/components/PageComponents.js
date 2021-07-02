@@ -80,7 +80,7 @@ class HelpSlideDialog extends React.Component {
                             <h2 className="ml-2" style={{color: "white"}}>
                                 {title || `${capitalizeFirst(page)} Help`}
                             </h2>
-                            <div onClick={this.props.closeHelpMenu} style={{position: "absolute", top: "10px", right: "10px"}}>
+                            <div onClick={closeHelpMenu} style={{position: "absolute", top: "10px", right: "10px"}}>
                                 <SvgIcon icon="close" size="2rem"/>
                             </div>
                         </div>
@@ -100,11 +100,14 @@ class HelpSlideDialog extends React.Component {
                             <div className="d-flex flex-column align-items-center justify-content-between">
                                 <p className="p-3" style={{width: "22vw"}}>{body}</p>
                             </div>
-                            <div className="d-flex align-items-center justify-content-center" style={{height: "100%", width: "33vw"}}>
+                            <div
+                                className="d-flex align-items-center justify-content-center"
+                                style={{height: "100%", width: "33vw"}}
+                            >
                                 <img
                                     alt={alt || ""}
-                                    src={"locale/" + this.props.page + img}
-                                    style={{height: "auto", maxHeight: "500px", maxWidth: "100%", padding: "2rem"}}
+                                    src={"locale/" + page + img}
+                                    style={{height: "auto", maxWidth: "100%", padding: "2rem"}}
                                 />
                             </div>
                             <div className="d-flex flex-column align-items-center">
@@ -112,7 +115,7 @@ class HelpSlideDialog extends React.Component {
                                     className="btn btn-dark btn-sm m-2"
                                     onClick={() => {
                                         if (isLastSlide) {
-                                            this.props.closeHelpMenu();
+                                            closeHelpMenu();
                                         } else {
                                             this.setState({currentSlideIdx: currentSlideIdx + 1});
                                         }
