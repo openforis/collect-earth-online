@@ -965,8 +965,7 @@ class SideBar extends React.Component {
     checkCanSave = () => {
         const noneAnswered = this.props.surveyQuestions.every(sq => safeLength(sq.answered) === 0);
         const hasSamples = safeLength(this.props.currentPlot.samples) > 0;
-        const allAnswered = this.props.currentPlot.flagged
-            || this.props.surveyQuestions.every(sq => safeLength(sq.visible) === safeLength(sq.answered));
+        const allAnswered = this.props.surveyQuestions.every(sq => safeLength(sq.visible) === safeLength(sq.answered));
         if (this.props.answerMode !== "question") {
             alert("You must be in question mode to save the collection.");
             return false;
