@@ -323,15 +323,37 @@ export class GeoDashNavigationBar extends React.Component {
 }
 
 export function Logo({size, url, name, id, src}) {
+    const logoCSS = logoSize => ({
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        background: "#fff",
+        borderRadius: "50%",
+        boxShadow: "0px 5px 10px rgba(0,0,0,.5)",
+        padding: ".5rem",
+        ...(logoSize === "large" ? {
+            maxWidth: "180px",
+            maxHeight: "180px",
+            height: "180px",
+            width: "180px"
+        } : {
+            maxWidth: "150px",
+            maxHeight: "150px",
+            height: "150px",
+            width: "150px"
+        })
+    });
+
     return (
-        <div className="col-sm-3 text-center">
-            <div className={"circle-logo circle-logo--" + size + " text-center"}>
+        <div className={`col-sm-${size === "large" ? 4 : 3} mb-3 text-center`}>
+            <div style={logoCSS(size)}>
                 <a href={url} rel="noreferrer noopener" target="_blank">
                     <img
                         alt={name}
                         className="img-fluid"
                         id={id}
                         src={src}
+                        style={{padding: "0.9rem"}}
                     />
                 </a>
             </div>
@@ -349,40 +371,33 @@ export function LogoBanner() {
             </div>
             <div className="row justify-content-center mb-2">
                 <Logo
-                    id="servir"
                     name="Servir Global"
                     size="large"
                     src="/img/servir-logo.png"
                     url="https://www.servirglobal.net/"
                 />
                 <Logo
-                    id="openforis"
                     name="Open Foris"
                     size="large"
                     src="/img/openforis-logo.png"
                     url="http://openforis.org"
                 />
                 <Logo
-                    id="usaid"
                     name="Food and Agriculture Organization of the United Nations"
                     size="large"
                     src="/img/fao.png"
                     url="http://www.fao.org"
                 />
-            </div>
-            <div className="row justify-content-center mb-4">
                 <Logo
-                    id="usaid"
                     name="U.S. Agency for International Development"
                     size="large"
                     src="/img/usaid.png"
                     url="https://www.usaid.gov"
                 />
                 <Logo
-                    id="nasa"
                     name="National Aeronautics and Space Administration"
                     size="large"
-                    src="/img/nasa.png"
+                    src="/img/nasa-logo.png"
                     url="https://www.nasa.gov"
                 />
             </div>
@@ -393,51 +408,42 @@ export function LogoBanner() {
             </div>
             <div className="row mb-4 justify-content-center">
                 <Logo
-                    id="silvacarbon"
                     name="Silva Carbon"
                     size="small"
                     src="/img/SilvaCarbon.png"
                     url="https://www.silvacarbon.org"
                 />
                 <Logo
-                    id="sig"
                     name="Spatial Informatics Group, Inc."
                     size="small"
                     src="/img/sig-logo.png"
                     url="https://sig-gis.com"
                 />
                 <Logo
-                    id="servir-mekong"
                     name="Servir Mekong"
                     size="small"
                     src="/img/servir-mekong-logo.png"
                     url="https://servir.adpc.net"
                 />
                 <Logo
-                    id="servir-amazonia"
                     name="Servir Amazonia"
                     size="small"
                     src="/img/servir-amazonia-logo.png"
                     url="https://servir.ciat.cgiar.org"
                 />
-            </div>
-            <div className="row mb-4 justify-content-center">
                 <Logo
-                    id="google"
                     name="Google, Inc."
                     size="small"
                     src="/img/google-logo.png"
                     url="https://www.google.com"
                 />
                 <Logo
-                    id="usfs"
                     name="U.S. Forest Service"
                     size="small"
                     src="/img/usfs.png"
                     url="https://www.fs.usda.gov"
                 />
                 <Logo
-                    id="gtac"
                     name="Geospatial Technology and Applications Center"
                     size="small"
                     src="/img/gtac-logo.png"
