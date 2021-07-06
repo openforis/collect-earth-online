@@ -146,7 +146,7 @@ CREATE TABLE samples (
     plot_rid           integer NOT NULL REFERENCES plots (plot_uid) ON DELETE CASCADE ON UPDATE CASCADE,
     sample_geom        geometry(geometry,4326),
     visible_id         integer,
-    ext_sample_data    jsonb
+    ext_sample_info    jsonb
 );
 
 -- Stores information about a plot as data is collected, including the user who collected it

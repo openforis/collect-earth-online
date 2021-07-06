@@ -956,6 +956,16 @@
     (str "\"" string "\"")
     string))
 
+(defn- get-ext-headers
+  "Gets external headers"
+  [rows ext-key prefix]
+  (->> rows
+       (first)
+       (ext-key)
+       (tc/jsonb->clj)
+       (keys)
+       (mapv #(str prefix (name %)))))
+
 (defn- prefix-keys [prefix in-map]
   (pu/mapm (fn [[key val]]
              [(str prefix (name key)) val])
@@ -974,6 +984,16 @@
              data-type
              "data"
              (.format (SimpleDateFormat. "YYYY-MM-dd") (Date.))]))
+
+(defn- format-time [pg-time]
+  (when pg-time
+    (.format (SimpleDateFormat. "YYYY-MM-dd HH:mm")
+             pg-time)))
+
+(defn- remove-vector-items [coll & items]
+  (->> coll
+       (remove (set items))
+       (vec)))
 
 ;;;
 ;;; Dump aggregate
@@ -1005,20 +1025,6 @@
                                (:saved_answers sample)))
                         samples)))
 
-;; FIXME dumping date
-(defn- get-ext-plot-headers
-  "Gets external plot headers"
-  [project-id]
-  (->> (call-sql "get_plot_headers" project-id)
-       (map :column_names)
-       (remove #(#{"GID" "GEOM" "PLOT_GEOM" "LAT" "LON"} (str/upper-case %)))
-       (mapv #(str "pl_" %))))
-
-(defn- format-time [pg-time]
-  (when pg-time
-    (.format (SimpleDateFormat. "YYYY-MM-dd HH:mm")
-             pg-time)))
-
 (def plot-base-headers [:plot_id
                         :center_lon
                         :center_lat
@@ -1034,22 +1040,18 @@
                         :common_securewatch_date
                         :total_securewatch_dates])
 
-(defn- remove-vector-items [vector & items]
-  (->> vector
-       (remove (set items))
-       (vec)))
-
 (defn dump-project-aggregate-data! [{:keys [params]}]
   (let [project-id (tc/val->int (:projectId params))]
     (if-let [project-info (first (call-sql "select_project_by_id" project-id))]
-      (let [survey-questions (tc/jsonb->clj (:survey_questions project-info))
+      (let [plots            (call-sql "dump_project_plot_data" project-id)
+            survey-questions (tc/jsonb->clj (:survey_questions project-info))
             confidence?      (-> project-info
                                  (:options)
                                  (tc/jsonb->clj)
                                  (:collectConfidence))
             text-headers     (concat (remove-vector-items plot-base-headers
                                                           (when-not confidence? :confidence))
-                                     (get-ext-plot-headers project-id))
+                                     (get-ext-headers plots :ext_plot_info "pl_"))
             number-headers   (get-value-distribution-headers survey-questions)
             headers-out      (->> (concat text-headers number-headers)
                                   (map #(-> % name csv-quotes))
@@ -1057,20 +1059,20 @@
                                   (str "\uFEFF")) ; Prefix headers with a UTF-8 tag
             data-rows        (map (fn [row]
                                     (let [samples       (tc/jsonb->clj (:samples row))
-                                          ext-plot-data (tc/jsonb->clj (:ext_plot_data row))]
+                                          ext-plot-info (tc/jsonb->clj (:ext_plot_info row))]
                                       (str/join ","
                                                 (concat (map->csv (merge (-> row
                                                                              (assoc  :sample_points
                                                                                      (count samples))
                                                                              (update :collection_time format-time)
                                                                              (update :analysis_duration #(when % (str % " secs"))))
-                                                                         (prefix-keys "pl_" ext-plot-data))
+                                                                         (prefix-keys "pl_" ext-plot-info))
                                                                   text-headers
                                                                   "")
                                                         (map->csv (get-value-distribution samples)
                                                                   number-headers
                                                                   0)))))
-                                  (call-sql "dump_project_plot_data" project-id))]
+                                  plots)]
         {:headers {"Content-Type" "text/csv"
                    "Content-Disposition" (str "attachment; filename="
                                               (prepare-file-name (:name project-info) "plot")
@@ -1081,14 +1083,6 @@
 ;;;
 ;;; Dump raw
 ;;;
-
-(defn- get-ext-sample-headers
-  "Gets external sample headers"
-  [project-id]
-  (->> (call-sql "get_sample_headers" project-id)
-       (map :column_names)
-       (remove #(#{"GID" "GEOM" "LAT" "LON" "SAMPLE_GEOM"} (str/upper-case %)))
-       (map #(str "smpl_" %))))
 
 (defn- extract-answers [value]
   (if value
@@ -1110,10 +1104,11 @@
 (defn dump-project-raw-data! [{:keys [params]}]
   (let [project-id (tc/val->int (:projectId params))]
     (if-let [project-info (first (call-sql "select_project_by_id" project-id))]
-      (let [survey-questions (tc/jsonb->clj (:survey_questions project-info))
+      (let [samples          (call-sql "dump_project_sample_data" project-id)
+            survey-questions (tc/jsonb->clj (:survey_questions project-info))
             text-headers     (concat sample-base-headers
-                                     (get-ext-plot-headers project-id)
-                                     (get-ext-sample-headers project-id)
+                                     (get-ext-headers samples :ext_plot_info "pl_")
+                                     (get-ext-headers samples :ext_sample_info "smpl_")
                                      (map :question survey-questions))
             headers-out      (->> text-headers
                                   (map #(-> % name csv-quotes))
@@ -1121,18 +1116,18 @@
                                   (str "\uFEFF")) ; Prefix headers with a UTF-8 tag
             data-rows        (map (fn [row]
                                     (let [saved-answers   (tc/jsonb->clj (:saved_answers row))
-                                          ext-plot-data   (tc/jsonb->clj (:ext_plot_data row))
-                                          ext-sample-data (tc/jsonb->clj (:ext_sample_data row))]
+                                          ext-plot-info   (tc/jsonb->clj (:ext_plot_info row))
+                                          ext-sample-info (tc/jsonb->clj (:ext_sample_info row))]
                                       (str/join ","
                                                 (map->csv (merge (-> row
                                                                      (update :collection_time format-time)
                                                                      (update :analysis_duration #(when % (str % " secs"))))
-                                                                 (prefix-keys "pl_" ext-plot-data)
-                                                                 (prefix-keys "smpl_" ext-sample-data)
+                                                                 (prefix-keys "pl_" ext-plot-info)
+                                                                 (prefix-keys "smpl_" ext-sample-info)
                                                                  (extract-answers saved-answers))
                                                           text-headers
                                                           ""))))
-                                  (call-sql "dump_project_sample_data" project-id))]
+                                  samples)]
         {:headers {"Content-Type" "text/csv"
                    "Content-Disposition" (str "attachment; filename="
                                               (prepare-file-name (:name project-info) "sample")

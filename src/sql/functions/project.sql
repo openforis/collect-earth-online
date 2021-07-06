@@ -1237,7 +1237,7 @@ CREATE OR REPLACE FUNCTION dump_project_plot_data(_project_id integer)
     samples                    text,
     common_securewatch_date    text,
     total_securewatch_dates    integer,
-    ext_plot_data              jsonb
+    ext_plot_info              jsonb
  ) AS $$
 
     SELECT plot_uid,
@@ -1293,14 +1293,14 @@ CREATE OR REPLACE FUNCTION dump_project_sample_data(_project_id integer)
         imagery_attributes    text,
         sample_geom           text,
         saved_answers         jsonb,
-        ext_plot_data         jsonb,
-        ext_sample_data       jsonb
+        ext_plot_info         jsonb,
+        ext_sample_info       jsonb
  ) AS $$
 
     SELECT plot_uid,
         sample_uid,
-        CASE WHEN ST_GeometryType(sample_geom) = 'ST_Point' THEN ST_X(sample_geom) ELSE -1 END AS lon,
-        CASE WHEN ST_GeometryType(sample_geom) = 'ST_Point' THEN ST_Y(sample_geom) ELSE -1 END AS lat,
+        ST_X(ST_Centroid(sample_geom)) AS lon,
+        ST_Y(ST_Centroid(sample_geom)) AS lat,
         email,
         flagged,
         collection_time,
