@@ -286,7 +286,7 @@ CREATE OR REPLACE FUNCTION copy_project_plots_samples(_old_project_uid integer, 
     WITH project_plots AS (
         SELECT plot_geom,
             visible_id,
-            ext_plot_info,
+            extra_plot_info,
             plot_uid as plid_old,
             row_number() OVER(order by plot_uid) as rowid
         FROM projects p
@@ -295,8 +295,8 @@ CREATE OR REPLACE FUNCTION copy_project_plots_samples(_old_project_uid integer, 
             AND project_rid = _old_project_uid
     ), inserting AS (
         INSERT INTO plots
-            (project_rid, plot_geom, visible_id, ext_plot_info)
-        SELECT _new_project_uid, plot_geom, visible_id, ext_plot_info
+            (project_rid, plot_geom, visible_id, extra_plot_info)
+        SELECT _new_project_uid, plot_geom, visible_id, extra_plot_info
         FROM project_plots
         RETURNING plot_uid as plid
     ), new_ordered AS (
@@ -305,10 +305,10 @@ CREATE OR REPLACE FUNCTION copy_project_plots_samples(_old_project_uid integer, 
         SELECT * from new_ordered inner join project_plots USING (rowid)
     ), inserting_samples AS (
         INSERT INTO samples
-            (plot_rid,  sample_geom, visible_id, ext_sample_info)
-        SELECT plid, sample_geom, visible_id, ext_sample_info
+            (plot_rid,  sample_geom, visible_id, extra_sample_info)
+        SELECT plid, sample_geom, visible_id, extra_sample_info
         FROM (
-            SELECT plid, sample_geom, s.visible_id, ext_sample_info
+            SELECT plid, sample_geom, s.visible_id, extra_sample_info
             FROM combined c
             INNER JOIN samples s
                 ON c.plid_old = s.plot_rid
@@ -780,7 +780,6 @@ $$ LANGUAGE SQL;
 CREATE OR REPLACE FUNCTION select_project_collection_plots(_project_id integer)
  RETURNS table (
     plot_id            integer,
-    center             text,
     user_id            integer,
     flagged            boolean,
     flagged_reason     text,
@@ -791,14 +790,13 @@ CREATE OR REPLACE FUNCTION select_project_collection_plots(_project_id integer)
  ) AS $$
 
     SELECT plot_uid,
-        ST_AsGeoJSON(ST_Centroid(plot_geom)) as center,
         user_rid,
         flagged,
         flagged_reason,
         confidence,
         visible_id,
         ST_AsGeoJSON(plot_geom),
-        ext_plot_info
+        extra_plot_info
     FROM plots pl
     LEFT JOIN user_plots
         ON plot_uid = plot_rid
@@ -822,7 +820,6 @@ $$ LANGUAGE SQL;
 DROP TYPE IF EXISTS collection_return;
 CREATE TYPE collection_return AS (
     plot_id            integer,
-    center             text,
     flagged            boolean,
     flagged_reason     text,
     confidence         integer,
@@ -836,7 +833,6 @@ CREATE OR REPLACE FUNCTION select_next_unassigned_plot(_project_id integer, _vis
  RETURNS setOf collection_return AS $$
 
     SELECT plot_id,
-        center,
         flagged,
         flagged_reason,
         confidence,
@@ -864,7 +860,6 @@ CREATE OR REPLACE FUNCTION select_next_user_plot(
  ) RETURNS setOf collection_return AS $$
 
     SELECT plot_id,
-        center,
         flagged,
         flagged_reason,
         confidence,
@@ -885,7 +880,6 @@ CREATE OR REPLACE FUNCTION select_prev_unassigned_plot(_project_id integer, _vis
  RETURNS setOf collection_return AS $$
 
     SELECT plot_id,
-        center,
         flagged,
         flagged_reason,
         confidence,
@@ -913,7 +907,6 @@ CREATE OR REPLACE FUNCTION select_prev_user_plot(
  ) RETURNS setOf collection_return AS $$
 
     SELECT plot_id,
-        center,
         flagged,
         flagged_reason,
         confidence,
@@ -934,7 +927,6 @@ CREATE OR REPLACE FUNCTION select_by_id_unassigned_plot(_project_id integer, _vi
  RETURNS setOf collection_return AS $$
 
     SELECT plot_id,
-        center,
         flagged,
         flagged_reason,
         confidence,
@@ -960,7 +952,6 @@ CREATE OR REPLACE FUNCTION select_by_id_user_plot(
  ) RETURNS setOf collection_return AS $$
 
     SELECT plot_id,
-        center,
         flagged,
         flagged_reason,
         confidence,
@@ -1237,7 +1228,7 @@ CREATE OR REPLACE FUNCTION dump_project_plot_data(_project_id integer)
     samples                    text,
     common_securewatch_date    text,
     total_securewatch_dates    integer,
-    ext_plot_info              jsonb
+    extra_plot_info            jsonb
  ) AS $$
 
     SELECT plot_uid,
@@ -1260,7 +1251,7 @@ CREATE OR REPLACE FUNCTION dump_project_plot_data(_project_id integer)
         )) AS samples,
         MODE() WITHIN GROUP (ORDER BY imagery_attributes->>'imagerySecureWatchDate') AS common_securewatch_date,
         COUNT(DISTINCT(imagery_attributes->>'imagerySecureWatchDate'))::int AS total_securewatch_dates,
-        ext_plot_info
+        extra_plot_info
     FROM projects p
     INNER JOIN plots pl
         ON project_uid = pl.project_rid
@@ -1273,7 +1264,7 @@ CREATE OR REPLACE FUNCTION dump_project_plot_data(_project_id integer)
     LEFT JOIN users u
         ON u.user_uid = up.user_rid
     WHERE project_rid = _project_id
-    GROUP BY project_uid, plot_uid, user_plot_uid, email, ext_plot_info
+    GROUP BY project_uid, plot_uid, user_plot_uid, email, extra_plot_info
     ORDER BY plot_uid
 
 $$ LANGUAGE SQL;
@@ -1293,8 +1284,8 @@ CREATE OR REPLACE FUNCTION dump_project_sample_data(_project_id integer)
         imagery_attributes    text,
         sample_geom           text,
         saved_answers         jsonb,
-        ext_plot_info         jsonb,
-        ext_sample_info       jsonb
+        extra_plot_info       jsonb,
+        extra_sample_info     jsonb
  ) AS $$
 
     SELECT plot_uid,
@@ -1309,8 +1300,8 @@ CREATE OR REPLACE FUNCTION dump_project_sample_data(_project_id integer)
         imagery_attributes::text,
         ST_AsText(sample_geom),
         saved_answers,
-        ext_plot_info,
-        ext_sample_info
+        extra_plot_info,
+        extra_sample_info
     FROM plots pl
     INNER JOIN samples s
         ON s.plot_rid = pl.plot_uid

@@ -141,7 +141,6 @@
                     :closedDate      (str (:closed_date stats))
                     :userStats       (tc/jsonb->clj (:user_stats stats))})))
 
-
 ;;;
 ;;; Create project helper functions
 ;;;
@@ -190,7 +189,7 @@
                      plot-limit
                      "."))))
 
-(defn- check-sample-limits [plots samples-per-plot per-plot-limit sample-limit]
+(defn- check-sample-limits [samples sample-limit samples-per-plot per-plot-limit]
   (cond
     (= 0 samples-per-plot)
     (init-throw "You cannot create a project with 0 samples per plot.")
@@ -202,9 +201,9 @@
                      per-plot-limit
                      "."))
 
-    (> (* plots samples-per-plot) sample-limit)
+    (> samples sample-limit)
     (init-throw (str "This action will create "
-                     (* plots samples-per-plot)
+                     samples
                      " total samples. The maximum allowed for the selected distribution types is "
                      sample-limit
                      "."))))
@@ -297,31 +296,31 @@
                                    (< (distance center-x center-y x y) radius))))
            (map #(pu/EPSG:3857->4326 %))))))
 
-(defn- generate-spacial-samples [plots
-                                 plot-count
-                                 plot-shape
-                                 plot-size
-                                 sample-distribution
-                                 samples-per-plot
-                                 sample-resolution]
-  (let [sample-count (case sample-distribution
-                       "gridded" (count-gridded-sample-set plot-size sample-resolution)
-                       "random"  samples-per-plot
-                       "center"  1.0
-                       "none"    1.0)]
-    (check-sample-limits plot-count
-                         sample-count
-                         200.0
-                         50000.0)
+(defn- generate-point-samples [plots
+                               plot-count
+                               plot-shape
+                               plot-size
+                               sample-distribution
+                               samples-per-plot
+                               sample-resolution]
+  (let [samples-per-plot (case sample-distribution
+                           "gridded" (count-gridded-sample-set plot-size sample-resolution)
+                           "random"  samples-per-plot
+                           "center"  1.0
+                           "none"    1.0)]
+    (check-sample-limits (* plot-count samples-per-plot)
+                         50000.0
+                         samples-per-plot
+                         200.0)
     (mapcat (fn [{:keys [plot_id visible_id lon lat]}]
               (let [plot-center    [lon lat]
-                    visible-offset (-> (- visible_id 1)
-                                       (* sample-count)
-                                       (+ 1))]
+                    visible-offset (-> (dec visible_id)
+                                       (* samples-per-plot)
+                                       (inc))]
                 (map-indexed (fn [idx [lon lat]]
                                {:plot_rid    plot_id
                                 :visible_id  (+ idx visible-offset)
-                                :sample_geom (make-wkt-point lon lat)})
+                                :sample_geom (tc/str->pg (make-wkt-point lon lat) "geometry")})
                              (case sample-distribution
                                "center"
                                [plot-center]
@@ -335,30 +334,28 @@
                                []))))
             plots)))
 
-(defn- generate-spacial-plots [project-id
-                               lon-min
-                               lat-min
-                               lon-max
-                               lat-max
-                               plot-distribution
-                               num-plots
-                               plot-spacing
-                               plot-size]
+(defn- generate-point-plots [project-id
+                             lon-min
+                             lat-min
+                             lon-max
+                             lat-max
+                             plot-distribution
+                             num-plots
+                             plot-spacing
+                             plot-size]
   (let [[[left bottom] [top right]] (pu/EPSG:4326->3857 [lon-min lat-min] [lon-max lat-max])
-        [left bottom right top] (pad-bounds left bottom top right (/ 2.0 plot-size))]
+        [left bottom right top]     (pad-bounds left bottom top right (/ 2.0 plot-size))]
     (check-plot-limits (if (= "gridded" plot-distribution)
                          (count-gridded-points left bottom right top plot-spacing)
                          num-plots)
                        5000.0)
-    (let [plot-centers (if (= "gridded" plot-distribution)
-                         (create-gridded-points-in-bounds left bottom right top plot-spacing)
-                         (create-random-points-in-bounds left bottom right top num-plots))]
-      (as-> plot-centers pc
-        (map-indexed (fn [idx [lon lat]]
-                       {:project_rid project-id
-                        :visible_id  (inc idx)
-                        :plot_geom   (make-wkt-point lon lat)})
-                     pc)))))
+    (map-indexed (fn [idx [lon lat]]
+                   {:project_rid project-id
+                    :visible_id  (inc idx)
+                    :plot_geom   (tc/str->pg (make-wkt-point lon lat) "geometry")})
+                 (if (= "gridded" plot-distribution)
+                   (create-gridded-points-in-bounds left bottom right top plot-spacing)
+                   (create-random-points-in-bounds left bottom right top num-plots)))))
 
 ;;;
 ;;; External files generator
@@ -415,70 +412,71 @@
                                                   (format-simple "shp2pgsql -s 4326 -t 2D -D %1"
                                                                  (find-file-by-ext (str folder-name design-type) "shp")))
                                (str/split #"stdin;\n|\n\\\."))
-        columns     (as-> info i
+        geom-key    (keyword (str design-type "_geom"))
+        header-keys (as-> info i
                       (str/replace i #"\n" "")
                       (re-find #"(?<=CREATE TABLE.*gid serial,).*?(?=\);)" i)
                       (str/replace i #"\"" "")
                       (str/lower-case i)
                       (str/split i #",")
                       (mapv (fn [col] (first (str/split col #" "))) i)
-                      (conj i "geom"))
-        column-keys (map (fn [h]
-                           (keyword (if (= (str design-type "id") h)
-                                      "visible_id"
-                                      h)))
-                         columns)
-        geom-key    (keyword (str design-type "_geom"))
+                      (conj i geom-key)
+                      (map (fn [h]
+                             (keyword (if (= (str design-type "id") h)
+                                        "visible_id"
+                                        h)))
+                           i))
         body        (map (fn [row]
                            (as-> row r
                              (str/split r #"\t")
-                             (zipmap column-keys r)
-                             (update r :geom tc/str->pg "geometry")
-                             (set/rename-keys r {:geom geom-key})
-                             (update r :visible_id tc/val->int))) ;; TODO validate which is faster, converting here or ::int in the custom row
+                             (zipmap header-keys r)
+                             (update r geom-key tc/str->pg "geometry")
+                             (update r :visible_id tc/val->int)))
                          (str/split body-text #"\r\n|\n|\r"))]
-    [columns body]))
+    [header-keys body]))
 
 (defmethod get-file-data :csv [_ design-type ext-file folder-name]
   (let [rows       (str/split (slurp (str folder-name ext-file)) #"\r\n|\n|\r")
         header-row (first rows)]
     (when (not (str/includes? header-row ","))
       (init-throw "The CSV file must use commas for the delimiter. This error may indicate that the csv file contains only one column."))
-    (let [headers     (as-> header-row hr
+    (let [geom-key    (keyword (str design-type "_geom"))
+          header-keys (as-> header-row hr
                         (str/split hr #",")
                         (mapv #(-> %
                                    (str/lower-case)
                                    (str/replace #"-| " "_")
                                    (str/replace #"^(x|longitude|long|center_x)$" "lon")
-                                   (str/replace #"^(y|latitude|center_y)$" "lon"))
+                                   (str/replace #"^(y|latitude|center_y)$" "lat")
+                                   (str/replace (re-pattern (str "^" design-type "id$")) "visible_id")
+                                   (keyword))
                               hr))
-          header-keys (map (fn [h]
-                             (keyword (if (= (str design-type "id") h)
-                                        "visible_id"
-                                        h)))
-                           headers)
-          geom-key    (keyword (str design-type "_geom"))
           body        (map (fn [row]
                              (as-> row r
                                (str/split r #",")
                                (zipmap header-keys r)
                                (assoc r geom-key (tc/str->pg (make-wkt-point (:lon r) (:lat r)) "geometry"))
-                               (update r :visible_id tc/val->int) ;; TODO validate which is faster, converting here or ::int in the custom row
+                               (update r :visible_id tc/val->int)
                                (dissoc r :lon :lat)))
                            (rest rows))]
-      [headers body])))
+      [header-keys body])))
 
 (defmethod get-file-data :default [distribution _ _ _]
   (throw (str "No such distribution (" distribution ") defined for ceo.db.projects/get-file-data")))
 
-(defn- check-headers [headers primary-key]
-  (let [header-set      (set headers)
-        header-diff     (set/difference (set primary-key) header-set)
-        invalid-headers (seq (remove #(re-matches #"^[a-zA-Z_][a-zA-Z0-9_]*$" %) headers))]
+(defn- check-headers [headers primary-key design-type]
+  (let [header-diff     (set/difference (set primary-key) (set headers))
+        invalid-headers (seq (remove #(re-matches #"^[a-zA-Z_][a-zA-Z0-9_]*$" (name %)) headers))]
     (when (seq header-diff)
-      (init-throw (str "The required header field(s) " (str/join ", " header-diff) " are missing.")))
+      (init-throw (str "The required header field(s) "
+                       (as-> header-diff h
+                         (map name h)
+                         (str/join "', '" h)
+                         (str/replace h #"visible_" design-type)
+                         (str "'" h "'"))
+                       " are missing.")))
     (when invalid-headers
-      (init-throw (str "One or more columns contains invalid characters: " (str/join ", " invalid-headers))))))
+      (init-throw (str "One or more headers contains invalid characters: " (str/join ", " invalid-headers))))))
 
 (defn- load-external-data! [project-id distribution file-name file-base64 design-type primary-key]
   (when (#{"csv" "shp"} distribution)
@@ -491,14 +489,10 @@
                           (when-not (seq? body)
                             (init-throw (str "The " design-type " file contains no rows of data.")))
 
-                          (check-headers headers primary-key)
+                          (check-headers headers primary-key design-type)
 
                           (let [duplicates (->> body
-                                                (group-by (->> (assoc primary-key
-                                                                      (dec (count primary-key))
-                                                                      :visible_id)
-                                                               (map keyword)
-                                                               (apply juxt)))
+                                                (group-by (apply juxt primary-key))
                                                 (filter (fn [[_ v]] (> (count v) 1))))]
                             (when (seq duplicates)
                               (init-throw (str "The " design-type " file contains duplicate primary keys. "
@@ -523,50 +517,51 @@
          ext-key
          (tc/clj->jsonb (apply dissoc row main-keys))))
 
-(defn- generate-ext-samples [plots
-                             plot-count
-                             project-id
-                             sample-distribution
-                             sample-file-name
-                             sample-file-base64]
-  (let [ext-samples (load-external-data! project-id
-                                         sample-distribution
-                                         sample-file-name
-                                         sample-file-base64
-                                         "sample"
-                                         ["plotid" "sampleid"])
-        plot-keys   (persistent!
-                     (reduce (fn [acc {:keys [plot_id visible_id]}]
-                               (assoc! acc (str visible_id) plot_id))
-                             (transient {})
-                             plots))]
-    (check-sample-limits plot-count
-                         (count ext-samples)
-                         200.0
-                         350000.0)
+(defn- generate-file-samples [plots
+                              plot-count
+                              project-id
+                              sample-distribution
+                              sample-file-name
+                              sample-file-base64]
+  (let [ext-samples  (load-external-data! project-id
+                                          sample-distribution
+                                          sample-file-name
+                                          sample-file-base64
+                                          "sample"
+                                          [:plotid :visible_id])
+        sample-count (count ext-samples)
+        plot-keys    (persistent!
+                      (reduce (fn [acc {:keys [plot_id visible_id]}]
+                                (assoc! acc (str visible_id) plot_id))
+                              (transient {})
+                              plots))]
+    (check-sample-limits sample-count
+                         350000.0
+                         (/ sample-count plot-count)
+                         200.0)
     ;; TODO check for samples with no plots - OR - ensure that PG errors pass through.
     (map (fn [s]
            (-> s
                (assoc :plot_rid (get plot-keys (:plotid s)))
                (dissoc :plotid)
-               (split-ext :ext_sample_info [:plot_rid :visible_id :sample_geom]))) ext-samples)))
+               (split-ext :extra_sample_info [:plot_rid :visible_id :sample_geom]))) ext-samples)))
 
-(defn- generate-ext-plots [project-id
-                           plot-distribution
-                           plot-file-name
-                           plot-file-base64]
+(defn- generate-file-plots [project-id
+                            plot-distribution
+                            plot-file-name
+                            plot-file-base64]
   (let [ext-plots (load-external-data! project-id
                                        plot-distribution
                                        plot-file-name
                                        plot-file-base64
                                        "plot"
-                                       ["plotid"])]
+                                       [:visible_id])]
     (check-plot-limits (count ext-plots)
                        50000.0)
     (map (fn [p]
            (-> p
                (assoc :project_rid project-id)
-               (split-ext :ext_plot_info [:project_rid :visible_id :plot_geom])))
+               (split-ext :extra_plot_info [:project_rid :visible_id :plot_geom])))
          ext-plots)))
 
 ;;;
@@ -580,24 +575,36 @@
                                 samples-per-plot
                                 sample-resolution
                                 sample-file-name
-                                sample-file-base64]
+                                sample-file-base64
+                                allow-drawn-samples?]
   (let [plots      (call-sql "get_plot_centers_by_project" project-id)
         plot-count (count plots)
         samples    (if (#{"csv" "shp"} sample-distribution)
-                     (generate-ext-samples plots
-                                           plot-count
-                                           project-id
-                                           sample-distribution
-                                           sample-file-name
-                                           sample-file-base64)
-                     (generate-spacial-samples plots
-                                               plot-count
-                                               plot-shape
-                                               plot-size
-                                               sample-distribution
-                                               samples-per-plot
-                                               sample-resolution))]
-    (p-insert-rows! "samples" samples)))
+                     (generate-file-samples plots
+                                            plot-count
+                                            project-id
+                                            sample-distribution
+                                            sample-file-name
+                                            sample-file-base64)
+                     (generate-point-samples plots
+                                             plot-count
+                                             plot-shape
+                                             plot-size
+                                             sample-distribution
+                                             samples-per-plot
+                                             sample-resolution))]
+    (p-insert-rows! "samples" samples)
+    (if allow-drawn-samples?
+      (when (#{"csv" "shp"} sample-distribution)
+        ;; FIXME, Create a copy of external sample so they can be restored.
+        (log "Restoring external samples for user drawn samples is temporarily broken"))
+      (let [bad-plots (map :visible_id (call-sql "plots_missing_samples" project-id))]
+        (when (seq bad-plots)
+          (init-throw (str "The uploaded plot and sample files do not have correctly overlapping data. "
+                           (count bad-plots)
+                           " plots have no samples. The first 10 PLOTIDs are: ["
+                           (str/join ", " (take 10 bad-plots))
+                           "]")))))))
 
 (defn- create-project-plots! [project-id
                               lon-min
@@ -617,38 +624,24 @@
                               sample-file-name
                               sample-file-base64
                               allow-drawn-samples?]
+  ;; Create plots
   (let [plots (if (#{"csv" "shp"} plot-distribution)
-                (generate-ext-plots project-id
-                                    plot-distribution
-                                    plot-file-name
-                                    plot-file-base64)
-                (generate-spacial-plots project-id
-                                        lon-min
-                                        lat-min
-                                        lon-max
-                                        lat-max
-                                        plot-distribution
-                                        num-plots
-                                        plot-spacing
-                                        plot-size))]
+                (generate-file-plots project-id
+                                     plot-distribution
+                                     plot-file-name
+                                     plot-file-base64)
+                (generate-point-plots project-id
+                                      lon-min
+                                      lat-min
+                                      lon-max
+                                      lat-max
+                                      plot-distribution
+                                      num-plots
+                                      plot-spacing
+                                      plot-size))]
     (insert-rows! "plots" plots))
-  (create-project-samples! project-id
-                           plot-shape
-                           plot-size
-                           sample-distribution
-                           samples-per-plot
-                           sample-resolution
-                           sample-file-name
-                           sample-file-base64)
-  ;; Final validation
-  (when (not allow-drawn-samples?)
-    (let [bad-plots (map :visible_id (call-sql "plots_missing_samples" project-id))]
-      (when (seq bad-plots)
-        (init-throw (str "The uploaded plot and sample files do not have correctly overlapping data. "
-                         (count bad-plots)
-                         " plots have no samples. The first 10 are: ["
-                         (str/join ", " (take 10 bad-plots))
-                         "]")))))
+
+  ;; Validate plots after insert
   (when (#{"csv" "shp"} plot-distribution)
     (try-catch-throw #(call-sql "set_boundary"
                                 project-id
@@ -657,6 +650,19 @@
   (when-not (sql-primitive (call-sql "valid_project_boundary" project-id))
     (init-throw (str "The project boundary is invalid. "
                      "This can come from improper coordinates or projection when uploading shape or csv data.")))
+
+  ;; Create samples from plots
+  (create-project-samples! project-id
+                           plot-shape
+                           plot-size
+                           sample-distribution
+                           samples-per-plot
+                           sample-resolution
+                           sample-file-name
+                           sample-file-base64
+                           allow-drawn-samples?)
+
+  ;; Final clean up
   (call-sql "update_project_counts" project-id))
 
 (defn create-project! [{:keys [params]}]
@@ -715,6 +721,7 @@
                                                       token-key
                                                       project-options))]
     (try
+      ;; Create or copy plots
       (if (and (pos? project-template) use-template-plots)
         (call-sql "copy_template_plots" project-template project-id)
         (create-project-plots! project-id
@@ -735,10 +742,11 @@
                                sample-file-name
                                sample-file-base64
                                allow-drawn-samples?))
+      ;; Save project imagery
       (if-let [imagery-list (:projectImageryList params)]
         (insert-project-imagery! project-id imagery-list)
-        ;; This is for backwards compatibility with the API
-        (call-sql "add_all_institution_imagery" project-id))
+        (call-sql "add_all_institution_imagery" project-id)) ; API backwards compatibility
+      ;; Copy template widgets
       ;; TODO this can be a simple SQL query once we drop the dashboard ID
       (when (and (pos? project-template) use-template-widgets)
         (let [new-uuid (tc/str->pg-uuid (str (UUID/randomUUID)))]
@@ -747,15 +755,18 @@
                       project-id
                       new-uuid
                       widget))))
-
+      ;; Return new ID and token
       (data-response {:projectId project-id
                       :tokenKey  token-key})
       (catch Exception e
+        ;; Delete new project on error
         (try
           (call-sql "delete_project" project-id)
           (catch Exception _))
         (let [causes (:causes (ex-data e))]
+          ;; Log unknown errors
           (when-not causes (log (ex-message e)))
+          ;; Return error stack to user
           (data-response (if causes
                            (str "-" (str/join "\n-" causes))
                            "Unknown server error.")))))))
@@ -776,9 +787,10 @@
 
       (#{"csv" "shp"} sample-distribution)
       (do
+        ;; FIXME
+        (init-throw "Restoring external samples for user drawn samples is temporarily broken.")
         (call-sql "delete_all_samples_by_project" project-id)
-        ;; FIXME, restoring external samples for user drawn samples is temporarily broken
-        #_(call-sql "samples_from_ext_tables" project-id))
+        #_(call-sql "copy_saved_samples" project-id))
 
       :else
       (let [plot-shape        (:plot_shape project)
@@ -787,13 +799,14 @@
             sample-resolution (tc/val->float (:sample_resolution project))]
         (call-sql "delete_all_samples_by_project" project-id)
         (create-project-samples! project-id
-                                 sample-distribution
                                  plot-shape
                                  plot-size
+                                 sample-distribution
                                  samples-per-plot
                                  sample-resolution
                                  nil
-                                 nil)))))
+                                 nil
+                                 allow-drawn-samples?)))))
 
 (defn- exterior-ring [coords]
   (map (fn [[a b]] [(tc/val->double a) (tc/val->double b)])
@@ -912,13 +925,14 @@
           (do
             (call-sql "delete_all_samples_by_project" project-id)
             (create-project-samples! project-id
-                                     sample-distribution
                                      plot-shape
                                      plot-size
+                                     sample-distribution
                                      samples-per-plot
                                      sample-resolution
                                      sample-file-name
-                                     sample-file-base64))
+                                     sample-file-base64
+                                     allow-drawn-samples?))
 
           ;; NOTE: Old stored questions can have a different format than when passed from the UI.
           ;;       This is why we check whether the survey questions are different on the front (for now).
@@ -1051,22 +1065,22 @@
                                  (:collectConfidence))
             text-headers     (concat (remove-vector-items plot-base-headers
                                                           (when-not confidence? :confidence))
-                                     (get-ext-headers plots :ext_plot_info "pl_"))
+                                     (get-ext-headers plots :extra_plot_info "pl_"))
             number-headers   (get-value-distribution-headers survey-questions)
             headers-out      (->> (concat text-headers number-headers)
                                   (map #(-> % name csv-quotes))
                                   (str/join ",")
                                   (str "\uFEFF")) ; Prefix headers with a UTF-8 tag
             data-rows        (map (fn [row]
-                                    (let [samples       (tc/jsonb->clj (:samples row))
-                                          ext-plot-info (tc/jsonb->clj (:ext_plot_info row))]
+                                    (let [samples         (tc/jsonb->clj (:samples row))
+                                          extra-plot-info (tc/jsonb->clj (:extra_plot_info row))]
                                       (str/join ","
                                                 (concat (map->csv (merge (-> row
                                                                              (assoc  :sample_points
                                                                                      (count samples))
                                                                              (update :collection_time format-time)
                                                                              (update :analysis_duration #(when % (str % " secs"))))
-                                                                         (prefix-keys "pl_" ext-plot-info))
+                                                                         (prefix-keys "pl_" extra-plot-info))
                                                                   text-headers
                                                                   "")
                                                         (map->csv (get-value-distribution samples)
@@ -1107,23 +1121,23 @@
       (let [samples          (call-sql "dump_project_sample_data" project-id)
             survey-questions (tc/jsonb->clj (:survey_questions project-info))
             text-headers     (concat sample-base-headers
-                                     (get-ext-headers samples :ext_plot_info "pl_")
-                                     (get-ext-headers samples :ext_sample_info "smpl_")
+                                     (get-ext-headers samples :extra_plot_info "pl_")
+                                     (get-ext-headers samples :extra_sample_info "smpl_")
                                      (map :question survey-questions))
             headers-out      (->> text-headers
                                   (map #(-> % name csv-quotes))
                                   (str/join ",")
                                   (str "\uFEFF")) ; Prefix headers with a UTF-8 tag
             data-rows        (map (fn [row]
-                                    (let [saved-answers   (tc/jsonb->clj (:saved_answers row))
-                                          ext-plot-info   (tc/jsonb->clj (:ext_plot_info row))
-                                          ext-sample-info (tc/jsonb->clj (:ext_sample_info row))]
+                                    (let [saved-answers     (tc/jsonb->clj (:saved_answers row))
+                                          extra-plot-info   (tc/jsonb->clj (:extra_plot_info row))
+                                          extra-sample-info (tc/jsonb->clj (:extra_sample_info row))]
                                       (str/join ","
                                                 (map->csv (merge (-> row
                                                                      (update :collection_time format-time)
                                                                      (update :analysis_duration #(when % (str % " secs"))))
-                                                                 (prefix-keys "pl_" ext-plot-info)
-                                                                 (prefix-keys "smpl_" ext-sample-info)
+                                                                 (prefix-keys "pl_" extra-plot-info)
+                                                                 (prefix-keys "smpl_" extra-sample-info)
                                                                  (extract-answers saved-answers))
                                                           text-headers
                                                           ""))))

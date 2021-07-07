@@ -1,9 +1,9 @@
 -- Add new columns
 ALTER TABLE plots ADD COLUMN plot_geom geometry(geometry,4326);
 ALTER TABLE plots ADD COLUMN visible_id integer;
-ALTER TABLE plots ADD COLUMN ext_plot_info jsonb;
+ALTER TABLE plots ADD COLUMN extra_plot_info jsonb;
 ALTER TABLE samples ADD COLUMN visible_id integer;
-ALTER TABLE samples ADD COLUMN ext_sample_info jsonb;
+ALTER TABLE samples ADD COLUMN extra_sample_info jsonb;
 
 -- Migrate data
 CREATE OR REPLACE FUNCTION merge_ext_plots(_project_id integer)
@@ -28,7 +28,7 @@ CREATE OR REPLACE FUNCTION merge_ext_plots(_project_id integer)
         UPDATE plots p
         SET plot_geom = a.plot_geom,
             visible_id = a.plotid,
-            ext_plot_info = a.row
+            extra_plot_info = a.row
         FROM (
             SELECT plot_uid,
                 plotid::integer as plotid,
@@ -52,7 +52,7 @@ CREATE OR REPLACE FUNCTION merge_ext_plots(_project_id integer)
         UPDATE plots p
         SET plot_geom = a.plot_geom,
             visible_id = a.plotid,
-            ext_plot_info = a.row
+            extra_plot_info = a.row
         FROM (
             SELECT plot_uid,
                 plotid::integer as plotid,
@@ -104,7 +104,7 @@ CREATE OR REPLACE FUNCTION merge_ext_samples(_project_id integer)
         UPDATE samples p
         SET sample_geom = a.sample_geom,
             visible_id = a.sampleid,
-            ext_sample_info = a.row
+            extra_sample_info = a.row
         FROM (
             SELECT sample_uid,
                 sampleid::integer as sampleid,
@@ -130,7 +130,7 @@ CREATE OR REPLACE FUNCTION merge_ext_samples(_project_id integer)
         UPDATE samples p
         SET sample_geom = a.sample_geom,
             visible_id = a.sampleid,
-            ext_sample_info = a.row
+            extra_sample_info = a.row
         FROM (
             SELECT sample_uid,
                 sampleid::integer as sampleid,
@@ -167,7 +167,7 @@ UPDATE plots
 SET plot_geom = center
 WHERE plot_geom IS NULL;
 
--- FIXME, use row over query to update visible ids.
+-- Use row over query to update visible ids.
 UPDATE plots p
 SET visible_id = row_num
 FROM (
@@ -179,7 +179,7 @@ FROM (
 ) AS np
 WHERE p.plot_uid = np.plot_uid;
 
-
+-- There are too many samples for the simple query for samples.
 CREATE TABLE temp_samp (
     sample_uid    integer,
     vis_id        integer
@@ -202,13 +202,14 @@ WHERE p.sample_uid = t.sample_uid;
 
 DROP TABLE temp_samp;
 
--- Drop old column
+-- Drop old columns
 ALTER TABLE plots DROP COLUMN center;
 ALTER TABLE plots DROP COLUMN ext_id;
 ALTER TABLE samples DROP COLUMN ext_id;
 ALTER TABLE projects DROP COLUMN plots_ext_table;
 ALTER TABLE projects DROP COLUMN samples_ext_table;
 
+-- Drop old tables
 DO $$
 
  DECLARE
@@ -246,11 +247,3 @@ $$ LANGUAGE PLPGSQL;
 DROP schema ext_tables CASCADE;
 
 VACUUM FULL;
-
--- Verify migration
-SELECT project_uid, plots_ext_table, count(1), count(ext_plot_info)
-FROM projects
-INNER JOIN plots
-    ON project_uid = project_rid
-    AND plots_ext_table is not null
-GROUP BY project_uid

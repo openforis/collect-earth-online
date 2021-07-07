@@ -22,9 +22,9 @@
 (defn get-plot-sample-geom [{:keys [params]}]
   (let [plot-id (tc/val->int (:plotId params))]
     (data-response (if-let [plot-geom (sql-primitive (call-sql "select_plot_geom" plot-id))]
-                     {:plotGeom plot-geom
-                      :samples  (mapv (fn [x] {:sampleGeom (:sample_geom x)})
-                                      (call-sql "select_plot_sample_geoms" plot-id))}
+                     {:plotGeom     plot-geom
+                      :samplesGeoms (mapv :sample_geom
+                                          (call-sql "select_plot_sample_geoms" plot-id))}
                      ""))))
 
 (defn- unlock-plots [user-id]
@@ -50,21 +50,20 @@
 (defn- get-collection-plot [params method]
   (let [navigation-mode (:navigationMode params "unanalyzed")
         project-id      (tc/val->int (:projectId params))
-        plot-id         (tc/val->int (:plotId params))
+        visible-id      (tc/val->int (:visibleId params))
         user-id         (:userId params -1)
         review-all?     (and (= "all" navigation-mode)
                              (is-proj-admin? user-id project-id nil))]
     (data-response (if-let [plot-info (first (if (= "unanalyzed" navigation-mode)
                                                (call-sql (str "select_" method "unassigned_plot")
                                                          project-id
-                                                         plot-id)
+                                                         visible-id)
                                                (call-sql (str "select_" method "user_plot")
                                                          project-id
-                                                         plot-id
+                                                         visible-id
                                                          user-id
                                                          review-all?)))]
                      (let [{:keys [plot_id
-                                   center
                                    flagged
                                    confidence
                                    flagged_reason
@@ -77,7 +76,6 @@
                                  user-id
                                  (time-plus-five-min))
                        {:id            plot_id
-                        :center        center
                         :flagged       flagged
                         :flaggedReason (or flagged_reason "")
                         :confidence    (or confidence 100)
@@ -89,8 +87,8 @@
 
 (defn get-plot-by-id [{:keys [params]}]
   (let  [project-id (tc/val->int (:projectId params))
-         plot-id    (tc/val->int (:plotId params))]
-    (if (sql-primitive (call-sql "plot_exists" project-id plot-id))
+         visible-id (tc/val->int (:visibleId params))]
+    (if (sql-primitive (call-sql "plot_exists" project-id visible-id))
       (get-collection-plot params "by_id_")
       (data-response "not-found"))))
 
