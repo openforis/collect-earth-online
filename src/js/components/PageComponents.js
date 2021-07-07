@@ -331,6 +331,7 @@ export function Logo({size, url, name, id, src}) {
         borderRadius: "50%",
         boxShadow: "0px 5px 10px rgba(0,0,0,.5)",
         padding: ".5rem",
+        margin: "1rem",
         ...(logoSize === "large" ? {
             maxWidth: "180px",
             maxHeight: "180px",
@@ -345,18 +346,16 @@ export function Logo({size, url, name, id, src}) {
     });
 
     return (
-        <div className={`col-sm-${size === "large" ? 4 : 3} mb-3 text-center`}>
-            <div style={logoCSS(size)}>
-                <a href={url} rel="noreferrer noopener" target="_blank">
-                    <img
-                        alt={name}
-                        className="img-fluid"
-                        id={id}
-                        src={src}
-                        style={{padding: "0.9rem"}}
-                    />
-                </a>
-            </div>
+        <div style={logoCSS(size)}>
+            <a href={url} rel="noreferrer noopener" target="_blank">
+                <img
+                    alt={name}
+                    className="img-fluid"
+                    id={id}
+                    src={src}
+                    style={{padding: "0.9rem"}}
+                />
+            </a>
         </div>
     );
 }
