@@ -155,8 +155,8 @@ class NewQuestionDesigner extends React.Component {
                                 size="1"
                                 value={this.state.selectedType}
                             >
-                                {this.componentTypes.map(type => (
-                                    <option key={type} value={type}>
+                                {this.componentTypes.map((type, id) => (
+                                    <option key={id} value={id}>
                                         {`${type.componentType} - ${type.dataType}`}
                                     </option>
                                 ))}
