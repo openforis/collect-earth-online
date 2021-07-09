@@ -686,7 +686,7 @@ class AnswerInput extends React.Component {
 
     defaultVal = () => {
         const {dataType} = this.props.surveyNode;
-        return dataType === "number" ? 0 : "";
+        return dataType === "number" ? null : "";
     };
 
     resetInputText = () => {
