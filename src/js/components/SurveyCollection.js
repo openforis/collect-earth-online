@@ -677,25 +677,19 @@ class AnswerInput extends React.Component {
         if (this.props.surveyNode.id !== prevProps.surveyNode.id) {
             const matchingNode = this.props.surveyNode.answered
                 .find(a => a.answerId === this.props.surveyNode.answers[0].id);
-            this.setState({newInput: matchingNode ? matchingNode.answerText : this.defaultVal()});
+            this.setState({newInput: matchingNode ? matchingNode.answerText : ""});
         }
         if (this.props.selectedSampleId !== prevProps.selectedSampleId) {
             this.resetInputText();
         }
     }
 
-    defaultVal = () => {
-        const {dataType} = this.props.surveyNode;
-        return dataType === "number" ? null : "";
-    };
-
     resetInputText = () => {
-        console.log(this.defaultVal());
         const matchingNode = this.props.surveyNode.answered
             .find(a => a.answerId === this.props.surveyNode.answers[0].id
                   && a.sampleId === this.props.selectedSampleId);
         this.setState({
-            newInput: matchingNode ? matchingNode.answerText : this.defaultVal()
+            newInput: matchingNode ? matchingNode.answerText : ""
         });
     };
 
