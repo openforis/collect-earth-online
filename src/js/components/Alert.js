@@ -1,47 +1,36 @@
 import React from "react";
 import PropTypes from "prop-types";
+import Modal from "./Modal";
 
-// remains hidden, shows a styled menu when the quit button is clicked
+/**
+ * Component for a Alert modal.
+ *
+ * @component
+ * @example
+ * function MyComponent() {
+ *     const [state, setState] = useState({showAlert: true});
+ *     const title = "Completed"
+ *     const body = "Your changes have been saved."
+ *     return (
+ *        {state.showAlert && (
+ *            <Alert
+ *                title={title}
+ *                onClose={() => setState({showAlert: false})}
+ *                body={body}
+ *            />
+ *        )}
+ *     );
+ * }
+ */
 export default function Alert({title, body, closeText, onClose}) {
     return (
-        <div
-            className="modal fade show"
-            id="closeModal"
-            onClick={onClose}
-            style={{display: "block", backgroundColor: "rgba(0, 0, 0, 0.4)"}}
+        <Modal
+            closeText={closeText}
+            onClose={onClose}
+            title={title}
         >
-            <div
-                className="modal-dialog modal-dialog-centered"
-                onClick={e => e.stopPropagation()}
-                role="document"
-            >
-                <div className="modal-content" id="closeModalContent">
-                    <div className="modal-header">
-                        <h5 className="modal-title" id="closeModalTitle">{title}</h5>
-                        <button
-                            aria-label="Close"
-                            className="close"
-                            onClick={onClose}
-                            type="button"
-                        >
-                            &times;
-                        </button>
-                    </div>
-                    <div className="modal-body">
-                        <p>{body}</p>
-                    </div>
-                    <div className="modal-footer">
-                        <button
-                            className="btn btn-secondary btn-sm"
-                            onClick={onClose}
-                            type="button"
-                        >
-                            {closeText}
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
+            <p>{body}</p>
+        </Modal>
     );
 }
 

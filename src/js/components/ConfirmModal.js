@@ -1,54 +1,42 @@
 import React from "react";
 import PropTypes from "prop-types";
+import Modal from "./Modal";
 
-// remains hidden, shows a styled menu when the quit button is clicked
+/**
+ * Component for Confirm Modal. Use `danger` to set the color of the confirm
+ * button to red.
+ *
+ * @component
+ * @example
+ * function MyComponent() {
+ *     const [state, setState] = useState({showConfirm: true});
+ *     const title = "Warning"
+ *     const body = "Are you sure you want to delete this?"
+ *     return (
+ *        {state.showConfirm && (
+ *            <ConfirmModal
+ *                danger
+ *                title={title}
+ *                onClose={() => setState({showConfirm: false})}
+ *                onConfirm={() => this.deleteItem()}
+ *                body={body}
+ *            />
+ *        )}
+ *     );
+ * }
+ */
 export default function ConfirmModal({title, body, confirmText, closeText, danger, onClose, onConfirm}) {
     return (
-        <div
-            className="modal fade show"
-            id="confirmModal"
-            onClick={onClose}
-            style={{display: "block", backgroundColor: "rgba(0, 0, 0, 0.4)"}}
+        <Modal
+            closeText={closeText}
+            confirmText={confirmText}
+            danger={danger}
+            onClose={onClose}
+            onConfirm={onConfirm}
+            title={title}
         >
-            <div
-                className="modal-dialog modal-dialog-centered"
-                onClick={e => e.stopPropagation()}
-                role="document"
-            >
-                <div className="modal-content" id="confirmModalContent">
-                    <div className="modal-header">
-                        <h5 className="modal-title" id="confirmModalTitle">{title}</h5>
-                        <button
-                            aria-label="Close"
-                            className="close"
-                            onClick={onClose}
-                            type="button"
-                        >
-                            &times;
-                        </button>
-                    </div>
-                    <div className="modal-body">
-                        <p>{body}</p>
-                    </div>
-                    <div className="modal-footer">
-                        <button
-                            className="btn btn-secondary btn-sm"
-                            onClick={onClose}
-                            type="button"
-                        >
-                            {closeText}
-                        </button>
-                        <button
-                            className={`btn btn-sm ${danger ? "btn-danger" : "btn-success"}`}
-                            onClick={onConfirm}
-                            type="button"
-                        >
-                            {confirmText}
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
+            <p>{body}</p>
+        </Modal>
     );
 }
 
