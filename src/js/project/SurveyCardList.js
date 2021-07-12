@@ -214,7 +214,9 @@ function SurveyQuestionTree({
                                 </>
                             )}
                         </ul>
-                        <h3 className="font-weight-bold ml-3">Answers:  </h3>
+                        <h3 className="font-weight-bold ml-3">
+                            {surveyQuestion.componentType === "input" ? "Placeholder" : "Answers"}:
+                        </h3>
                     </div>
                     <div className="SurveyQuestionTree__answers">
                         {surveyQuestion.answers.map(surveyAnswer => (
