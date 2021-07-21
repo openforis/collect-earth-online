@@ -409,8 +409,8 @@
   (sh-wrapper folder-name {} (str "7z e -y " ext-file " -o" design-type))
   (let [[info body-text _] (-> (sh-wrapper-stdout (str folder-name design-type)
                                                   {}
-                                                  (format-simple "shp2pgsql -s 4326 -t 2D -D %1"
-                                                                 (find-file-by-ext (str folder-name design-type) "shp")))
+                                                  (str "shp2pgsql -s 4326 -t 2D -D "
+                                                       (find-file-by-ext (str folder-name design-type) "shp")))
                                (str/split #"stdin;\n|\n\\\."))
         geom-key    (keyword (str design-type "_geom"))
         header-keys (as-> info i
@@ -445,6 +445,7 @@
                         (str/split hr #",")
                         (mapv #(-> %
                                    (str/lower-case)
+                                   (str/replace "\uFEFF" "")
                                    (str/replace #"-| " "_")
                                    (str/replace #"^(x|longitude|long|center_x)$" "lon")
                                    (str/replace #"^(y|latitude|center_y)$" "lat")
@@ -476,7 +477,9 @@
                          (str "'" h "'"))
                        " are missing.")))
     (when invalid-headers
-      (init-throw (str "One or more headers contains invalid characters: " (str/join ", " invalid-headers))))))
+      (init-throw (str "One or more headers contains invalid characters: '"
+                       (str/join "', '" (map #(-> % name str/upper-case) invalid-headers))
+                       "'")))))
 
 (defn- load-external-data! [project-id distribution file-name file-base64 design-type primary-key]
   (when (#{"csv" "shp"} distribution)
