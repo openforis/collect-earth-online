@@ -665,7 +665,8 @@ class AnswerInput extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
-            newInput: ""
+            newInput: "",
+            touched: false
         };
     }
 
@@ -697,39 +698,49 @@ class AnswerInput extends React.Component {
 
     render() {
         const {surveyNode, surveyNode: {answers, dataType}, validateAndSetCurrentValue} = this.props;
-        const {newInput} = this.state;
+        const {touched, newInput} = this.state;
         return answers[0]
             ? (
-                <div className="d-inline-flex">
-                    <div className="pr-2 pt-2">
-                        <div
-                            className="circle"
-                            style={{
-                                backgroundColor: answers[0].color,
-                                border: "1px solid"
-                            }}
+                <>
+                    <div className="d-inline-flex">
+                        <div className="pr-2 pt-2">
+                            <div
+                                className="circle"
+                                style={{
+                                    backgroundColor: answers[0].color,
+                                    border: "1px solid"
+                                }}
+                            />
+                        </div>
+                        <input
+                            className="form-control mr-2"
+                            id={answers[0].answer + "_" + answers[0].id}
+                            name={answers[0].answer + "_" + answers[0].id}
+                            onBlur={() => this.setState({touched: true})}
+                            onChange={e => this.updateInputValue(dataType === "number"
+                                ? Number(e.target.value)
+                                : e.target.value)}
+                            placeholder={answers[0].answer}
+                            type={dataType}
+                            value={newInput}
+                        />
+                        <input
+                            className="text-center btn btn-outline-lightgreen btn-sm"
+                            disabled={newInput === "" || newInput === null}
+                            id="save-input"
+                            name="save-input"
+                            onClick={() => validateAndSetCurrentValue(surveyNode, answers[0].id, newInput)}
+                            type="button"
+                            value="Save"
                         />
                     </div>
-                    <input
-                        className="form-control mr-2"
-                        id={answers[0].answer + "_" + answers[0].id}
-                        name={answers[0].answer + "_" + answers[0].id}
-                        onChange={e => this.updateInputValue(dataType === "number"
-                            ? Number(e.target.value)
-                            : e.target.value)}
-                        placeholder={answers[0].answer}
-                        type={dataType}
-                        value={newInput}
-                    />
-                    <input
-                        className="text-center btn btn-outline-lightgreen btn-sm"
-                        id="save-input"
-                        name="save-input"
-                        onClick={() => validateAndSetCurrentValue(surveyNode, answers[0].id, newInput)}
-                        type="button"
-                        value="Save"
-                    />
-                </div>
+                    <div
+                        className="invalid-feedback"
+                        style={{display: touched && (newInput === "" || newInput === null) ? "block" : "none"}}
+                    >
+                        Answer must not be empty.
+                    </div>
+                </>
             ) : null;
     }
 }
