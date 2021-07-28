@@ -545,10 +545,10 @@ class MapWidget extends React.Component {
         const {projPairAOI, widget} = this.props;
         let {projAOI} = this.props;
 
-        const {sourceConfig, id, attribution} = this.props.imageryList.find(imagery =>
+        const {sourceConfig, id, attribution, isProxied} = this.props.imageryList.find(imagery =>
             imagery.id === widget.basemapId) || this.props.imageryList[0];
         const basemapLayer = new TileLayer({
-            source: mercator.createSource(sourceConfig, id, attribution)
+            source: mercator.createSource(sourceConfig, id, attribution, isProxied)
         });
         const plotSampleLayer = new VectorLayer({
             source: this.props.vectorSource,

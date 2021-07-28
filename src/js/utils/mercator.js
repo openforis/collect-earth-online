@@ -208,18 +208,39 @@ mercator.sendGEERequest = (theJson, sourceConfig, imageryId, attribution) => {
 mercator.createSource = (sourceConfig,
                          imageryId,
                          attribution,
+                         isProxied,
                          extent = [[-180, -90], [180, -90], [180, 90], [-180, 90], [-180, -90]],
                          show = false) => {
-    if (sourceConfig.type === "Planet") {
+    const {type} = sourceConfig;
+    if (isProxied) {
+        // TODO it might make sense to create a function for each type that takes isProxied as a param so the types are together.
+        if (["SecureWatch", "GeoServer"].includes(type)) {
+            return new TileWMS({
+                url: "/get-tile",
+                params: {imageryId},
+                attributions: attribution
+            });
+        } if (sourceConfig.type === "Planet") {
+            return new XYZ({
+                url: `/get-tile?imageryId=${imageryId}`
+                    + `&z={z}&x={x}&y={y}&tile={0-3}&month=${sourceConfig.month}`
+                    + `&year=${sourceConfig.year}`,
+                attributions: attribution
+            });
+        } else {
+            return new XYZ({url: "img/source-not-found.png"});
+        }
+    } else if (sourceConfig.type === "Planet") {
         return new XYZ({
-            url: `/get-tile?imageryId=${imageryId}`
-                 + `&z={z}&x={x}&y={y}&tile={0-3}&month=${sourceConfig.month}`
-                 + `&year=${sourceConfig.year}`,
+            url: "https://tiles{0-3}.planet.com/basemaps/v1/global_monthly_"
+                + `${sourceConfig.year}_${sourceConfig.month}`
+                + "_mosaic/gmap/{z}/{x}/{y}.png"
+                + `?api_key=${sourceConfig.accessToken}`,
             attributions: attribution
         });
     } else if (sourceConfig.type === "PlanetNICFI") {
         return new XYZ({
-            url: "https://tiles2.planet.com/basemaps/v1/planet-tiles/planet_medres_normalized_analytic_"
+            url: "https://tiles{0-3}.planet.com/basemaps/v1/planet-tiles/planet_medres_normalized_analytic_"
                 + sourceConfig.time
                 + "_mosaic/gmap/{z}/{x}/{y}"
                 + `?api_key=${sourceConfig.accessToken}`
@@ -309,19 +330,12 @@ mercator.createSource = (sourceConfig,
         });
     } else if (sourceConfig.type === "GeoServer") {
         return new TileWMS({
-            url: "/get-tile",
-            params: {imageryId},
+            url: sourceConfig.geoserverUrl,
+            params: sourceConfig.geoserverParams,
             attributions: attribution
         });
     } else if (sourceConfig.type === "xyz") {
         return new XYZ({url: sourceConfig.url});
-    } else if (sourceConfig.type === "SecureWatch") {
-        return new TileWMS({
-            serverType: "geoserver",
-            url: "/get-tile",
-            params: {imageryId},
-            attributions: attribution
-        });
     } else if (sourceConfig.type === "Sentinel2" || sourceConfig.type === "Sentinel1") {
         const bandCombination = sourceConfig.bandCombination;
         const bands = sourceConfig.type === "Sentinel1" ? bandCombination
@@ -466,6 +480,7 @@ mercator.createLayer = (layerConfig, projectAOI, show = false) => {
         layerConfig.sourceConfig,
         layerConfig.id,
         layerConfig.attribution,
+        layerConfig.isProxied,
         projectAOI,
         show
     );
@@ -747,6 +762,7 @@ mercator.updateLayerSource = (mapConfig, imageryId, projectBoundary, transformer
             layer.setSource(mercator.createSource(newSourceConfig,
                                                   layerConfig.id,
                                                   layerConfig.attribution,
+                                                  layerConfig.isProxied,
                                                   projectAOI));
         }
     }

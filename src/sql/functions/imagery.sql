@@ -14,6 +14,7 @@ CREATE TYPE imagery_return AS (
     title             text,
     attribution       text,
     extent            jsonb,
+    is_proxied        boolean,
     source_config     jsonb
 );
 
@@ -21,7 +22,14 @@ CREATE TYPE imagery_return AS (
 CREATE OR REPLACE FUNCTION select_imagery_by_id(_imagery_id integer)
  RETURNS setOf imagery_return AS $$
 
-    SELECT imagery_uid, institution_rid, visibility, title, attribution, extent, source_config
+    SELECT imagery_uid,
+        institution_rid,
+        visibility,
+        title,
+        attribution,
+        extent,
+        is_proxied,
+        source_config
     FROM imagery
     WHERE imagery_uid = _imagery_id
 
@@ -74,13 +82,14 @@ CREATE OR REPLACE FUNCTION add_institution_imagery(
     _title             text,
     _attribution       text,
     _extent            jsonb,
+    _is_proxied        boolean,
     _source_config     jsonb
  ) RETURNS integer AS $$
 
     INSERT INTO imagery
-        (institution_rid, visibility, title, attribution, extent, source_config)
+        (institution_rid, visibility, title, attribution, extent, is_proxied, source_config)
     VALUES
-        (_institution_id, _visibility, _title, _attribution, _extent, _source_config)
+        (_institution_id, _visibility, _title, _attribution, _extent, _is_proxied, _source_config)
     RETURNING imagery_uid
 
 $$ LANGUAGE SQL;
@@ -90,12 +99,14 @@ CREATE OR REPLACE FUNCTION update_institution_imagery(
     _imagery_id       integer,
     _title            text,
     _attribution      text,
+    _is_proxied       boolean,
     _source_config    jsonb
  ) RETURNS integer AS $$
 
     UPDATE imagery
     SET title = _title,
         attribution = _attribution,
+        is_proxied = _is_proxied,
         source_config = _source_config
     WHERE imagery_uid = _imagery_id
     RETURNING imagery_uid
@@ -150,7 +161,14 @@ $$ LANGUAGE SQL;
 CREATE OR REPLACE FUNCTION select_public_imagery()
  RETURNS setOf imagery_return AS $$
 
-    SELECT imagery_uid, institution_rid, visibility, title, attribution, extent, source_config
+    SELECT imagery_uid,
+        institution_rid,
+        visibility,
+        title,
+        attribution,
+        extent,
+        is_proxied,
+        source_config
     FROM imagery
     WHERE visibility = 'public'
         AND archived = FALSE
@@ -161,15 +179,22 @@ $$ LANGUAGE SQL;
 CREATE OR REPLACE FUNCTION select_imagery_by_institution(_institution_id integer, _user_id integer)
  RETURNS setOf imagery_return AS $$
 
-    SELECT imagery_uid, institution_rid, visibility, title, attribution, extent, source_config
-        FROM imagery
-        WHERE archived = FALSE
-            AND (visibility = 'public'
-                OR (institution_rid = _institution_id
-                    AND ((SELECT count(*) > 0
-                            FROM get_all_users_by_institution_id(_institution_id)
-                            WHERE user_id = _user_id)
-                        OR _user_id = 1)))
+    SELECT imagery_uid,
+        institution_rid,
+        visibility,
+        title,
+        attribution,
+        extent,
+        is_proxied,
+        source_config
+    FROM imagery
+    WHERE archived = FALSE
+        AND (visibility = 'public'
+            OR (institution_rid = _institution_id
+                AND ((SELECT count(*) > 0
+                        FROM get_all_users_by_institution_id(_institution_id)
+                        WHERE user_id = _user_id)
+                    OR _user_id = 1)))
     ORDER BY visibility DESC, title
 
 $$ LANGUAGE SQL;
@@ -178,7 +203,14 @@ $$ LANGUAGE SQL;
 CREATE OR REPLACE FUNCTION select_imagery_by_project(_project_id integer, _user_id integer, _token_key text)
  RETURNS setOf imagery_return AS $$
 
-    SELECT DISTINCT imagery_uid, p.institution_rid, visibility, title, attribution, extent, source_config
+    SELECT DISTINCT imagery_uid,
+        p.institution_rid,
+        visibility,
+        title,
+        attribution,
+        extent,
+        is_proxied,
+        source_config
     FROM projects p
     LEFT JOIN project_imagery pi
         ON pi.project_rid = p.project_uid
@@ -194,33 +226,13 @@ CREATE OR REPLACE FUNCTION select_imagery_by_project(_project_id integer, _user_
                         WHERE user_id = _user_id)
                       OR (token_key IS NOT NULL AND token_key = _token_key)))
              OR _user_id = 1)
-
     ORDER BY title
 
 $$ LANGUAGE SQL;
 
--- Updates imagery attributes
-CREATE OR REPLACE FUNCTION update_imagery(
-    _imagery_id        integer,
-    _institution_id    integer,
-    _visibility        text,
-    _title             text,
-    _attribution       text,
-    _extent            jsonb,
-    _source_config     jsonb
- ) RETURNS integer AS $$
-
-    UPDATE imagery
-    SET institution_rid = _institution_id,
-        visibility = _visibility,
-        title = _title,
-        attribution = _attribution,
-        extent = _extent,
-        source_config = _source_config
-    WHERE imagery_uid = _imagery_id
-    RETURNING imagery_uid
-
-$$ LANGUAGE SQL;
+--
+--  PROJECT IMAGERY FUNCTIONS
+--
 
 -- Deletes all imagery associated with a project
 CREATE OR REPLACE FUNCTION delete_project_imagery(_project_id integer)
