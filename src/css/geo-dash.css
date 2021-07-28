@@ -202,19 +202,6 @@ input:checked+.switchslider:before {
 .mapRange.dual {
     width: calc(100% - 85px);
 }
-.container-fluid.widgetEditor{
-    float:left;
-    margin-right: unset;
-    margin-left: unset;
-}
-.widgetEditor-widgetBackground {
-    background-size: cover!important;
-    background-repeat: no-repeat!important;
-    background-position: 50% 50%!important;
-    text-align:center;
-    border: 1px solid gray;
-    cursor: move;
-}
 .modal {
     position: fixed;
     top: 0;
@@ -222,7 +209,6 @@ input:checked+.switchslider:before {
     bottom: 0;
     left: 0;
 }
-
 .rowSpan1 .minmapwidget {
     height: calc(100% - 95px);
 }
@@ -239,10 +225,10 @@ input:checked+.switchslider:before {
 .rowSpan1 .minmapwidget .graphwidget {
     height: 250px;
 }
-.rowSpan2 .graphwidget{
+.rowSpan2 .graphwidget {
     height:calc(100% - 125px); /*100%!important;*/
 }
-.minmapwidget.graphwidget.normal{
+.minmapwidget.graphwidget.normal {
     height:100%;
 }
 
@@ -266,11 +252,11 @@ input:checked+.switchslider:before {
     display: inline-block;
     border-radius: 50%;
 }
-.widget-container{
+.widget-container {
     position:relative;
     height:100%;
 }
-.widget-container .front{
+.widget-container .front {
     position:absolute;
     height:100%;
 }
@@ -293,10 +279,10 @@ input:checked+.switchslider:before {
 .panel-heading li {
     color: #31bab0;
 }
-.panel-fullscreen{
+.panel-fullscreen {
     cursor:pointer;
 }
-a.list-inline.panel-actions.panel-fullscreen{
+a.list-inline.panel-actions.panel-fullscreen {
     float:right;
 }
 .panel {
@@ -427,7 +413,7 @@ a.list-inline.panel-actions.panel-fullscreen{
 .mapRange:focus::-ms-fill-upper {
     background: #367ebd;
 }
-.graphwidget{
+.graphwidget {
     height: 250px;
 }
 .statsWidget {
@@ -455,17 +441,17 @@ a.list-inline.panel-actions.panel-fullscreen{
     webkit-box-shadow: 8px -10px 3px rgba(0,0,0,.45);
     box-shadow: 8px 5px 3px rgba(0,0,0,.45);
 }
-.panel.panel-default{
+.panel.panel-default {
     overflow:hidden;
 }
-.ol-control button{
+.ol-control button {
     background-color: rgb(49, 186, 176);
 }
 .list-inline {
     margin-bottom: 0px;
 }
 @media (max-width: 990px) {
-    .container-fluid.widgetEditor{
+    .container-fluid.widgetEditor {
         width: 100%;
     }
 }
