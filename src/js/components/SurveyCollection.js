@@ -2,7 +2,7 @@ import React, {Fragment} from "react";
 
 import {UnicodeIcon, removeEnumerator, intersection, isNumber} from "../utils/generalUtils";
 import {CollapsibleTitle} from "./FormComponents";
-import SurveyQuestionRules from "./SurveyQuestionRules";
+import RulesCollectionModal from "./RulesCollectionModal";
 import SvgIcon from "./SvgIcon";
 import {mercator} from "../utils/mercator";
 
@@ -537,7 +537,7 @@ class SurveyQuestionTree extends React.Component {
                     >
                         {showAnswers ? <span>-</span> : <span>+</span>}
                     </button>
-                    <SurveyQuestionRules surveyNodeId={surveyNode.id} surveyRules={surveyRules}/>
+                    <RulesCollectionModal surveyNodeId={surveyNode.id} surveyRules={surveyRules}/>
                     <button
                         className="text-center btn btn-outline-lightgreen btn-sm col overflow-hidden text-truncate"
                         onClick={() => setSelectedQuestion(surveyNode)}
