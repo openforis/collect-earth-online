@@ -20,7 +20,7 @@ export default class RulesCollectionModal extends React.Component {
             || (rule.questions && rule.questions.includes(id))
             || (rule.questionSetIds1 && (rule.questionSetIds1.includes(id) || rule.questionSetIds2.includes(id)))
             || (rule.question1 && (rule.question1 === id || rule.question2 === id)))
-        .map(r => (r.questionId && <SurveyRule key={r.id} ruleOptions={r}/>));
+        .map(r => <SurveyRule key={r.id} ruleOptions={r}/>);
 
     render() {
         const {showModal} = this.state;

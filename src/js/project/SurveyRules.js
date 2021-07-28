@@ -44,7 +44,7 @@ export class SurveyRulesList extends React.Component {
         return (
             <div key={r.id} style={{display: "flex", alignItems: "center"}}>
                 {inDesignMode && this.removeButton(r.id)}
-                {r.questionId && <SurveyRule ruleOptions={r}/>}
+                <SurveyRule ruleOptions={r}/>
             </div>
         );
     };
