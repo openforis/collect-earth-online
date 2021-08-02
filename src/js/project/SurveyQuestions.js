@@ -314,6 +314,7 @@ export class SurveyQuestionHelp extends React.Component {
         super(props);
         this.state = {
             answerMode: "question",
+            flaggedReason: "",
             isFlagged: false,
             selectedQuestion: {id: 0, question: "", answers: [], answered: [], visible: [1]},
             userSamples: {1: {}},
