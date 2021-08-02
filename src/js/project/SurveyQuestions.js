@@ -314,6 +314,8 @@ export class SurveyQuestionHelp extends React.Component {
         super(props);
         this.state = {
             answerMode: "question",
+            flaggedReason: "",
+            isFlagged: false,
             selectedQuestion: {id: 0, question: "", answers: [], answered: [], visible: [1]},
             userSamples: {1: {}},
             unansweredColor: "black",
@@ -416,23 +418,37 @@ export class SurveyQuestionHelp extends React.Component {
         });
     };
 
+    resetAnswers = () => this.setState({
+        isFlagged: false,
+        flaggedReason: "",
+        userSamples: {1: {}}
+    });
+
+    setFlaggedReason = flaggedReason => this.setState({flaggedReason});
+
+    toggleFlagged = () => this.setState({isFlagged: !this.state.isFlagged});
+
     render() {
         return (
             <div className="p-3">
                 <SurveyCollection
                     allowDrawnSamples={this.context.allowDrawnSamples}
                     answerMode={this.state.answerMode}
+                    flagged={this.state.isFlagged}
+                    flaggedReason={this.state.flaggedReason}
                     getSelectedSampleIds={() => [1]}
-                    isFlagged={false}
+                    resetPlotValues={this.resetAnswers}
                     selectedQuestion={this.state.selectedQuestion}
                     selectedSampleId={1}
                     setAnswerMode={mode => this.setState({answerMode: mode})}
                     setCurrentValue={this.setCurrentValue}
+                    setFlaggedReason={this.setFlaggedReason}
                     setSelectedQuestion={newSelectedQuestion => this.setState({selectedQuestion: newSelectedQuestion})}
                     setUnansweredColor={color => this.setState({unansweredColor: color})}
                     surveyQuestions={this.context.surveyQuestions
                         .map(q => ({...q, answered: [], visible: [], ...this.state.visibleAnswered[q.id]}))}
                     surveyRules={this.context.surveyRules}
+                    toggleFlagged={this.toggleFlagged}
                     unansweredColor={this.state.unansweredColor}
                 />
             </div>
