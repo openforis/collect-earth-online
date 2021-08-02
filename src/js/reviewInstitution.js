@@ -1,8 +1,7 @@
 import React from "react";
 import ReactDOM from "react-dom";
 
-import Alert from "./components/Alert";
-import ConfirmModal from "./components/ConfirmModal";
+import Modal from "./components/Modal";
 import InstitutionEditor from "./components/InstitutionEditor";
 import {LoadingModal, NavigationBar} from "./components/PageComponents";
 import {
@@ -403,7 +402,7 @@ class ImageryList extends React.Component {
     };
 
     deleteImagery = imageryId => {
-        this.setState({showDeleteImageryModal: false});
+        this.setState({messageBox: null});
         fetch(
             "/archive-institution-imagery",
             {
@@ -473,6 +472,7 @@ class ImageryList extends React.Component {
         messageBox: {
             body: "Are you sure you want to delete this imagery? This is irreversible.",
             closeText: "Cancel",
+            confirmText: "Yes, I'm sure",
             danger: true,
             onConfirm: () => this.deleteImagery(id),
             title: "Warning: Removing Imagery",
@@ -534,17 +534,13 @@ class ImageryList extends React.Component {
                                     visibility={visibility}
                                 />
                             ))}
-                        {this.state.messageBox && this.state.messageBox.type === "confirm" && (
-                            <ConfirmModal
+                        {this.state.messageBox && (
+                            <Modal
                                 {...this.state.messageBox}
                                 onClose={() => this.setState({messageBox: null})}
-                            />
-                        )}
-                        {this.state.messageBox && this.state.messageBox.type === "alert" && (
-                            <Alert
-                                {...this.state.messageBox}
-                                onClose={() => this.setState({messageBox: null})}
-                            />
+                            >
+                                <p>{this.state.messageBox.body}</p>
+                            </Modal>
                         )}
                     </>
                 )
