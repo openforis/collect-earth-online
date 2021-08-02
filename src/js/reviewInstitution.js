@@ -469,21 +469,24 @@ class ImageryList extends React.Component {
     titleIsTaken = (newTitle, idToExclude) =>
         this.state.imageryList.some(i => i.title === newTitle && i.id !== idToExclude);
 
-    showDeleteImageryModal = id =>
-        this.setState({showDeleteImageryModal: true, deleteImageryId: id});
-
-    showAlert = ({title, body, closeText}) => this.setState({
-        showAlert: true,
-        alertTitle: title,
-        alertBody: body,
-        alertCloseText: closeText
+    showDeleteImageryWarning = id => this.setState({
+        messageBox: {
+            body: "Are you sure you want to delete this imagery? This is irreversible.",
+            closeText: "Cancel",
+            danger: true,
+            onConfirm: () => this.deleteImagery(id),
+            title: "Warning: Removing Imagery",
+            type: "confirm"
+        }
     });
 
-    hideAlert = () => this.setState({
-        showAlert: false,
-        alertTitle: null,
-        alertBody: null,
-        alertCloseText: null
+    showAlert = ({title, body, closeText}) => this.setState({
+        messageBox: {
+            body,
+            closeText,
+            title,
+            type: "alert"
+        }
     });
 
     render() {
@@ -524,29 +527,23 @@ class ImageryList extends React.Component {
                                 <Imagery
                                     key={id}
                                     canEdit={this.props.isAdmin && this.props.institutionId === institution}
-                                    deleteImagery={() => this.showDeleteImageryModal(id)}
+                                    deleteImagery={() => this.showDeleteImageryWarning(id)}
                                     selectEditImagery={() => this.selectEditImagery(id)}
                                     title={title}
                                     toggleVisibility={() => this.toggleVisibility(id, visibility)}
                                     visibility={visibility}
                                 />
                             ))}
-                        {this.state.showDeleteImageryModal && (
+                        {this.state.messageBox && this.state.messageBox.type === "confirm" && (
                             <ConfirmModal
-                                body="Are you sure you want to delete this imagery? This is irreversible."
-                                closeText="Cancel"
-                                danger
-                                onClose={() => this.setState({showDeleteImageryModal: false})}
-                                onConfirm={() => this.deleteImagery(this.state.deleteImageryId)}
-                                title="Warning: Removing Imagery"
+                                {...this.state.messageBox}
+                                onClose={() => this.setState({messageBox: null})}
                             />
                         )}
-                        {this.state.showAlert && (
+                        {this.state.messageBox && this.state.messageBox.type === "alert" && (
                             <Alert
-                                body={this.state.alertBody}
-                                closeText={this.state.alertCloseText}
-                                onClose={this.hideAlert}
-                                title={this.state.alertTitle}
+                                {...this.state.messageBox}
+                                onClose={() => this.setState({messageBox: null})}
                             />
                         )}
                     </>
