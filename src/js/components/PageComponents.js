@@ -197,12 +197,18 @@ export class NavigationBar extends React.Component {
                     style={{backgroundColor: "white", borderBottom: "1px solid black"}}
                 >
                     <a className="navbar-brand pt-1 pb-1" href="/home">
-                        <img
-                            alt="Home"
-                            className="img-fluid"
-                            id="ceo-site-logo"
-                            src="/img/ceo-logo.png"
-                        />
+                        <div className="d-flex flex-column align-items-center justify-content-center">
+                            <img
+                                alt="Home"
+                                className="img-fluid"
+                                id="ceo-site-logo"
+                                src="/img/ceo-logo.png"
+                                style={{maxHeight: "40px"}}
+                            />
+                            <div className="badge badge-pill badge-light" style={{fontSize: "0.6rem"}}>
+                                Version: {this.props.version}
+                            </div>
+                        </div>
                     </a>
                     <button
                         aria-controls="navbarSupportedContent"

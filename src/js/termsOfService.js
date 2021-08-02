@@ -93,7 +93,11 @@ function TermsOfService() {
 
 export function pageInit(args) {
     ReactDOM.render(
-        <NavigationBar userId={args.userId} userName={args.userName}>
+        <NavigationBar
+            userId={args.userId}
+            userName={args.userName}
+            version={args.version}
+        >
             <TermsOfService/>
         </NavigationBar>,
         document.getElementById("app")

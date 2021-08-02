@@ -87,7 +87,11 @@ class CreateInstitution extends React.Component {
 
 export function pageInit(args) {
     ReactDOM.render(
-        <NavigationBar userId={args.userId} userName={args.userName}>
+        <NavigationBar
+            userId={args.userId}
+            userName={args.userName}
+            version={args.version}
+        >
             <CreateInstitution/>
         </NavigationBar>,
         document.getElementById("app")

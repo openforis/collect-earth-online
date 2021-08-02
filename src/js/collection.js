@@ -1541,7 +1541,11 @@ function QuitMenu({projectId, toggleQuitModal}) {
 
 export function pageInit(args) {
     ReactDOM.render(
-        <NavigationBar userId={args.userId} userName={args.userName}>
+        <NavigationBar
+            userId={args.userId}
+            userName={args.userName}
+            version={args.version}
+        >
             <Collection
                 projectId={args.projectId}
                 userName={args.userName || "guest"}
