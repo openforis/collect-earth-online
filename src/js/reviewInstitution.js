@@ -453,7 +453,7 @@ class ImageryList extends React.Component {
                         this.showAlert({title: "Imagery Updated", body: "Imagery visibility has been successfully updated."});
                     } else {
                         console.log(response);
-                        alert({title: "Error", body: "Error updating imagery visibility. See console for details."});
+                        this.showAlert({title: "Error", body: "Error updating imagery visibility. See console for details."});
                     }
                 });
         }
