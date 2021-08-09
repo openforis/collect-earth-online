@@ -1,6 +1,7 @@
 (ns collect-earth-online.utils.mail
   (:require [clojure.edn :as edn]
             [postal.core :refer [send-message]]
+            [triangulum.config :refer [get-config]]
             [collect-earth-online.logging :refer [log-str]]))
 
 ;; Example value:
@@ -11,10 +12,10 @@
 ;;  :port                  587
 ;;  :base-url              "https://collect.earth/"
 ;;  :recipient-limit       100}
-(defonce mail-config (atom (edn/read-string (slurp "mail-config.edn"))))
+(defonce mail-config (get-config :mail))
 
 (defn get-base-url []
-  (:base-url @mail-config))
+  (:base-url mail-config))
 
 (defn email? [string]
   (let [pattern #"[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?"]
@@ -22,8 +23,8 @@
 
 (defn- send-postal [to-addresses cc-addresses bcc-addresses subject body content-type]
   (send-message
-   (select-keys @mail-config [:host :user :pass :tls :port])
-   {:from    (@mail-config :user)
+   (select-keys mail-config [:host :user :pass :tls :port])
+   {:from    (:user mail-config)
     :to      to-addresses
     :cc      cc-addresses
     :bcc     bcc-addresses
@@ -43,7 +44,7 @@
 (defn mass-send [bcc-addresses subject body]
   (->> bcc-addresses
        (filter email?)
-       (partition-all (:recipient-limit @mail-config))
+       (partition-all (:recipient-limit mail-config))
        (reduce (fn [acc cur]
                  (let [response (send-postal nil nil cur subject body "text/html")]
                    (if (= :SUCCESS (:error response))

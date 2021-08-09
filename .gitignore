@@ -13,7 +13,7 @@ collect-earth-online.iml
 logs
 node_modules/
 target/
-mail-config.edn
+config.edn
 package-lock.json
 
 # MacOS X Backups
