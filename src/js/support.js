@@ -28,7 +28,7 @@ function Support() {
                         </a>
                         <a
                             className="btn btn-outline-lightgreen btn-block"
-                            href="/downloads/CEO_Manual_DataCollector_20200520_espanol.pdf"
+                            href="/downloads/CEO_Manual_DataCollector_SP_20210720.pdf"
                             role="button"
                         >
                             &#x1F4BE; Manual de Recolección de Datos (Español)
@@ -58,7 +58,7 @@ function Support() {
                         </a>
                         <a
                             className="btn btn-outline-lightgreen btn-block"
-                            href="/downloads/CEO_Manual_InstitutionProject_20200708_espanol.pdf"
+                            href="/downloads/CEO_Manual_InstitutionProject_SP_20210720.pdf"
                             role="button"
                         >
                             &#x1F4BE; Manual de Creación de Instituciones y Proyectos (para el Administrador)
