@@ -163,14 +163,12 @@ the following EDN object containing server details to the file,
 replacing the values with your own:
 
 #+begin_src clojure
-{:host                  "smtp.gmail.com"
- :user                  "support-my-domain@gmail.com"
- :pass                  "foobarbaz200"
- :tls                   true
- :port                  587
- :base-url              "https://my.domain/"
- :recipient-limit       100
- :mailing-list-interval 600}
+{:host     "smtp.gmail.com"
+ :user     "support-my-domain@gmail.com"
+ :pass     "foobarbaz200"
+ :tls      true
+ :port     587
+ :base-url "https://my.domain/"}
 #+end_src
 
 *** Enabling HTTPS
