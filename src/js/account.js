@@ -209,7 +209,11 @@ class AccountForm extends React.Component {
 
 export function pageInit(args) {
     ReactDOM.render(
-        <NavigationBar userId={args.userId} userName={args.userName}>
+        <NavigationBar
+            userId={args.userId}
+            userName={args.userName}
+            version={args.version}
+        >
             <Account
                 accountId={parseInt(args.accountId || args.userId)}
                 userId={args.userId}

@@ -1267,7 +1267,11 @@ class NewUserButtons extends React.Component {
 
 export function pageInit(args) {
     ReactDOM.render(
-        <NavigationBar userId={args.userId} userName={args.userName}>
+        <NavigationBar
+            userId={args.userId}
+            userName={args.userName}
+            version={args.version}
+        >
             <ReviewInstitution
                 institutionId={parseInt(args.institutionId || "-1")}
                 userId={args.userId || -1}

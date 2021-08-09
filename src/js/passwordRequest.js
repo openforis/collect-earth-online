@@ -68,9 +68,13 @@ class PasswordRequest extends React.Component {
     }
 }
 
-export function pageInit(_args) {
+export function pageInit(args) {
     ReactDOM.render(
-        <NavigationBar userId={-1} userName="">
+        <NavigationBar
+            userId={-1}
+            userName=""
+            version={args.version}
+        >
             <PasswordRequest/>
         </NavigationBar>,
         document.getElementById("app")
