@@ -1,6 +1,6 @@
 import React from "react";
 
-import {formatNumberWithCommas, encodeFileAsBase64} from "../utils/generalUtils";
+import {formatNumberWithCommas, encodeFileAsBase64, truncate} from "../utils/generalUtils";
 import {ProjectContext, plotLimit} from "./constants";
 import {mercator} from "../utils/mercator";
 
@@ -346,7 +346,15 @@ export function PlotDesignReview() {
 export function PlotReview() {
     return (
         <ProjectContext.Consumer>
-            {({plotDistribution, numPlots, plotSpacing, plotShape, plotSize, useTemplatePlots}) => (
+            {({
+                numPlots,
+                plotDistribution,
+                plotFileName,
+                plotShape,
+                plotSize,
+                plotSpacing,
+                useTemplatePlots
+            }) => (
                 <div id="plot-review">
                     {useTemplatePlots && <h3 className="mb-3">Plots will be copied from template project</h3>}
                     <div className="d-flex">
@@ -388,6 +396,17 @@ export function PlotReview() {
                                                 </td>
                                             </tr>
                                         </>
+                                    )}
+                                    {plotFileName && (
+                                        <tr>
+                                            <td className="w-80">Plot file</td>
+                                            <td className="w-20 text-center">
+                                                <span className="badge badge-pill bg-lightgreen tooltip_wrapper" style={{color: "white"}}>
+                                                    {plotFileName.split(".").map(s => truncate(s, 13)).join("")}
+                                                    {plotFileName.length > 16 && (<div className="tooltip_content">{plotFileName}</div>)}
+                                                </span>
+                                            </td>
+                                        </tr>
                                     )}
                                 </tbody>
                             </table>
