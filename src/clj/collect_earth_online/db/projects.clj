@@ -161,7 +161,7 @@
 (defn- try-catch-throw [try-fn message]
   (try (try-fn)
        (catch Exception e
-         (log (str (ex-message e)))
+         (log (ex-message e))
          (let [causes (conj (:causes (ex-data e) []) message)]
            (throw (ex-info message {:causes causes}))))))
 
@@ -209,7 +209,7 @@
                      "."))))
 
 ;;;
-;;; Spacial plots generator
+;;; Spatial plots generator
 ;;;
 
 ;; Geo JSON
@@ -343,8 +343,8 @@
                              num-plots
                              plot-spacing
                              plot-size]
-  (let [[[left bottom] [top right]] (pu/EPSG:4326->3857 [lon-min lat-min] [lon-max lat-max])
-        [left bottom right top]     (pad-bounds left bottom top right (/ 2.0 plot-size))]
+  (let [[[left bottom] [right top]] (pu/EPSG:4326->3857 [lon-min lat-min] [lon-max lat-max])
+        [left bottom right top]     (pad-bounds left bottom right top (/ 2.0 plot-size))]
     (check-plot-limits (if (= "gridded" plot-distribution)
                          (count-gridded-points left bottom right top plot-spacing)
                          num-plots)
@@ -368,11 +368,6 @@
        (remove #(= folder-name %))
        (filter #(= ext (peek (str/split % #"\."))))
        (first)))
-
-(defn- format-simple
-  "Use any char after % for format."
-  [f-str & args]
-  (apply format (str/replace f-str #"(%[^ ])" "%s") args))
 
 (defn- parse-as-sh-cmd
   "Split string into an array for use with clojure.java.shell/sh."
@@ -439,7 +434,9 @@
   (let [rows       (str/split (slurp (str folder-name ext-file)) #"\r\n|\n|\r")
         header-row (first rows)]
     (when (not (str/includes? header-row ","))
-      (init-throw "The CSV file must use commas for the delimiter. This error may indicate that the csv file contains only one column."))
+      (init-throw (str "The provided "
+                       design-type
+                       " CSV file must use commas for the delimiter. This error may indicate that the csv file contains only one column.")))
     (let [geom-key    (keyword (str design-type "_geom"))
           header-keys (as-> header-row hr
                         (str/split hr #",")
@@ -460,10 +457,15 @@
                                (update r :visible_id tc/val->int)
                                (dissoc r :lon :lat)))
                            (rest rows))]
-      [header-keys body])))
+      (if (and (contains? header-keys :lon)
+               (contains? header-keys :lon))
+        [(dissoc header-keys :lon :lat) body]
+        (init-throw (str "The provided "
+                         design-type
+                         " CSV file must contain a LAT and LON column."))))))
 
 (defmethod get-file-data :default [distribution _ _ _]
-  (throw (str "No such distribution (" distribution ") defined for ceo.db.projects/get-file-data")))
+  (throw (str "No such distribution (" distribution ") defined for ollect-earth-online.db.projects/get-file-data")))
 
 (defn- check-headers [headers primary-key design-type]
   (let [header-diff     (set/difference (set primary-key) (set headers))
@@ -471,7 +473,7 @@
     (when (seq header-diff)
       (init-throw (str "The required header field(s) "
                        (as-> header-diff h
-                         (map name h)
+                         (map #(-> % name str/upper-case) h)
                          (str/join "', '" h)
                          (str/replace h #"visible_" design-type)
                          (str "'" h "'"))
@@ -489,7 +491,7 @@
                                                  folder-name
                                                  (str "project-" project-id "-" design-type))]
       (try-catch-throw #(let [[headers body] (get-file-data distribution design-type saved-file folder-name)]
-                          (when-not (seq? body)
+                          (when-not (seq body)
                             (init-throw (str "The " design-type " file contains no rows of data.")))
 
                           (check-headers headers primary-key design-type)
@@ -508,7 +510,7 @@
                                                                           (->> k
                                                                                (zipmap primary-key)
                                                                                (map (fn [[k2 v2]]
-                                                                                      (str k2 ": " v2)))))
+                                                                                      (str (name k2) ": " v2)))))
                                                                 "]")))
                                                     (take 10)
                                                     (str/join "\n"))))))
@@ -547,7 +549,8 @@
            (-> s
                (assoc :plot_rid (get plot-keys (:plotid s)))
                (dissoc :plotid)
-               (split-ext :extra_sample_info [:plot_rid :visible_id :sample_geom]))) ext-samples)))
+               (split-ext :extra_sample_info [:plot_rid :visible_id :sample_geom])))
+         ext-samples)))
 
 (defn- generate-file-plots [project-id
                             plot-distribution
@@ -601,13 +604,12 @@
       (when (#{"csv" "shp"} sample-distribution)
         ;; FIXME, Create a copy of external sample so they can be restored.
         (log "Restoring external samples for user drawn samples is temporarily broken"))
-      (let [bad-plots (map :visible_id (call-sql "plots_missing_samples" project-id))]
-        (when (seq bad-plots)
-          (init-throw (str "The uploaded plot and sample files do not have correctly overlapping data. "
-                           (count bad-plots)
-                           " plots have no samples. The first 10 PLOTIDs are: ["
-                           (str/join ", " (take 10 bad-plots))
-                           "]")))))))
+      (when-let [bad-plots (seq (map :visible_id (call-sql "plots_missing_samples" project-id)))]
+        (init-throw (str "The uploaded plot and sample files do not have correctly overlapping data. "
+                         (count bad-plots)
+                         " plots have no samples. The first 10 PLOTIDs are: ["
+                         (str/join ", " (take 10 bad-plots))
+                         "]"))))))
 
 (defn- create-project-plots! [project-id
                               lon-min
@@ -790,9 +792,9 @@
 
       (#{"csv" "shp"} sample-distribution)
       (do
-        ;; FIXME
+        ;; FIXME Add process to restore external samples when allow-drawn-samples? is true.
         (init-throw "Restoring external samples for user drawn samples is temporarily broken.")
-        (call-sql "delete_all_samples_by_project" project-id)
+        #_(call-sql "delete_all_samples_by_project" project-id)
         #_(call-sql "copy_saved_samples" project-id))
 
       :else
