@@ -23,6 +23,15 @@
 (def path-env (System/getenv "PATH"))
 
 ;;;
+;;; Helper function
+;;;
+
+(defn- remove-vector-items [coll & items]
+  (->> coll
+       (remove (set items))
+       (vec)))
+
+;;;
 ;;; Auth functions
 ;;;
 
@@ -457,15 +466,15 @@
                                (update r :visible_id tc/val->int)
                                (dissoc r :lon :lat)))
                            (rest rows))]
-      (if (and (contains? header-keys :lon)
-               (contains? header-keys :lon))
-        [(dissoc header-keys :lon :lat) body]
+      (if (and (some #(= % :lon) header-keys)
+               (some #(= % :lat) header-keys))
+        [(remove-vector-items header-keys [:lon :lat]) body]
         (init-throw (str "The provided "
                          design-type
                          " CSV file must contain a LAT and LON column."))))))
 
 (defmethod get-file-data :default [distribution _ _ _]
-  (throw (str "No such distribution (" distribution ") defined for ollect-earth-online.db.projects/get-file-data")))
+  (throw (str "No such distribution (" distribution ") defined for collect-earth-online.db.projects/get-file-data")))
 
 (defn- check-headers [headers primary-key design-type]
   (let [header-diff     (set/difference (set primary-key) (set headers))
@@ -1008,11 +1017,6 @@
   (when pg-time
     (.format (SimpleDateFormat. "YYYY-MM-dd HH:mm")
              pg-time)))
-
-(defn- remove-vector-items [coll & items]
-  (->> coll
-       (remove (set items))
-       (vec)))
 
 ;;;
 ;;; Dump aggregate
