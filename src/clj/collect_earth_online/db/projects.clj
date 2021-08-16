@@ -12,10 +12,8 @@
             [collect-earth-online.logging    :refer [log]]
             [collect-earth-online.views      :refer [data-response]]
             [collect-earth-online.utils.geom :refer [make-geo-json-polygon]]
-            [collect-earth-online.generators.clj-point-generator
-             :refer [generate-point-plots generate-point-samples]]
-            [collect-earth-online.generators.external-file-generators
-             :refer [generate-file-plots generate-file-samples]]))
+            [collect-earth-online.generators.clj-point     :refer [generate-point-plots generate-point-samples]]
+            [collect-earth-online.generators.external-file :refer [generate-file-plots generate-file-samples]]))
 
 ;;;
 ;;; Auth functions
