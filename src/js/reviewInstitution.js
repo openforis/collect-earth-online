@@ -705,13 +705,15 @@ class NewImagery extends React.Component {
 
     formCheck = (title, checked, callback) => (
         <div key={title} className="mb-2">
-            <input
-                checked={checked}
-                className="mr-2"
-                onChange={callback}
-                type="checkbox"
-            />
-            <label>{title}</label>
+            <label>
+                <input
+                    checked={checked}
+                    className="mr-2"
+                    onChange={callback}
+                    type="checkbox"
+                />
+                {title}
+            </label>
         </div>
     );
 

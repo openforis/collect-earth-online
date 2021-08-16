@@ -121,7 +121,7 @@ export const imageryOptions = [
     {
         type: "Planet",
         label: "Planet Monthly",
-        optionalProxy: false,
+        optionalProxy: true,
         defaultProxy: true,
         params: [
             {

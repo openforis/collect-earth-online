@@ -220,7 +220,7 @@ mercator.createSource = (sourceConfig,
                 params: {imageryId},
                 attributions: attribution
             });
-        } if (sourceConfig.type === "Planet") {
+        } else if (sourceConfig.type === "Planet") {
             return new XYZ({
                 url: `/get-tile?imageryId=${imageryId}`
                     + `&z={z}&x={x}&y={y}&tile={0-3}&month=${sourceConfig.month}`
