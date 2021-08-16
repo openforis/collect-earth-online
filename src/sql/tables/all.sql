@@ -54,7 +54,8 @@ CREATE TABLE imagery (
     source_config      jsonb,
     archived           boolean DEFAULT FALSE,
     created_date       date DEFAULT NOW(),
-    archived_date      date
+    archived_date      date,
+    is_proxied         boolean DEFAULT FALSE
 );
 
 -- Stores information about projects
