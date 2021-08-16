@@ -2,34 +2,20 @@
   (:import java.text.SimpleDateFormat
            java.util.Date
            java.util.UUID)
-  (:require [clojure.string     :as str]
-            [clojure.set        :as set]
-            [clojure.java.io    :as io]
-            [clojure.java.shell :as sh]
+  (:require [clojure.string :as str]
             [collect-earth-online.utils.type-conversion :as tc]
             [collect-earth-online.utils.part-utils      :as pu]
-            [collect-earth-online.database :refer [call-sql
-                                                   sql-primitive
-                                                   p-insert-rows!
-                                                   insert-rows!]]
-            [collect-earth-online.logging  :refer [log]]
-            [collect-earth-online.views    :refer [data-response]]))
-
-;;;
-;;; Constants
-;;;
-
-(def tmp-dir  (System/getProperty "java.io.tmpdir"))
-(def path-env (System/getenv "PATH"))
-
-;;;
-;;; Helper function
-;;;
-
-(defn- remove-vector-items [coll & items]
-  (->> coll
-       (remove (set items))
-       (vec)))
+            [collect-earth-online.database   :refer [call-sql
+                                                     sql-primitive
+                                                     p-insert-rows!
+                                                     insert-rows!]]
+            [collect-earth-online.logging    :refer [log]]
+            [collect-earth-online.views      :refer [data-response]]
+            [collect-earth-online.utils.geom :refer [make-geo-json-polygon]]
+            [collect-earth-online.generators.clj-point-generator
+             :refer [generate-point-plots generate-point-samples]]
+            [collect-earth-online.generators.external-file-generators
+             :refer [generate-file-plots generate-file-samples]]))
 
 ;;;
 ;;; Auth functions
@@ -162,423 +148,6 @@
   (doseq [imagery imagery-list]
     (call-sql "insert_project_imagery" project-id imagery)))
 
-;; Errors
-
-(defn- init-throw [message]
-  (throw (ex-info message {:causes [message]})))
-
-(defn- try-catch-throw [try-fn message]
-  (try (try-fn)
-       (catch Exception e
-         (log (ex-message e))
-         (let [causes (conj (:causes (ex-data e) []) message)]
-           (throw (ex-info message {:causes causes}))))))
-
-;; Check plot limits
-
-(defn- count-gridded-points [left bottom right top spacing]
-  (let [x-range (- right left)
-        y-range (- top bottom)
-        x-steps (+ (Math/floor (/ x-range spacing)) 1)
-        y-steps (+ (Math/floor (/ y-range spacing)) 1)]
-    (* x-steps y-steps)))
-
-(defn- count-gridded-sample-set [plot-size sample-resolution]
-  (Math/pow (Math/floor (/ plot-size sample-resolution)) 2))
-
-(defn- check-plot-limits [plots plot-limit]
-  (cond
-    (= 0 plots)
-    (init-throw "You cannot create a project with 0 plots.")
-
-    (> plots plot-limit)
-    (init-throw (str "This action will create "
-                     plots
-                     " plots. The maximum allowed for the selected plot distribution is "
-                     plot-limit
-                     "."))))
-
-(defn- check-sample-limits [samples sample-limit samples-per-plot per-plot-limit]
-  (cond
-    (= 0 samples-per-plot)
-    (init-throw "You cannot create a project with 0 samples per plot.")
-
-    (> samples-per-plot per-plot-limit)
-    (init-throw (str "This action will create "
-                     samples-per-plot
-                     " samples per plot. The maximum allowed for the selected sample distribution is "
-                     per-plot-limit
-                     "."))
-
-    (> samples sample-limit)
-    (init-throw (str "This action will create "
-                     samples
-                     " total samples. The maximum allowed for the selected distribution types is "
-                     sample-limit
-                     "."))))
-
-;;;
-;;; Spatial plots generator
-;;;
-
-;; Geo JSON
-
-(defn- make-wkt-point [lon lat]
-  (format "POINT(%s %s)" lon lat))
-
-(defn- make-geo-json-polygon [lon-min lat-min lon-max lat-max]
-  (tc/clj->jsonb {:type        "Polygon"
-                  :coordinates [[[lon-min lat-min]
-                                 [lon-min lat-max]
-                                 [lon-max lat-max]
-                                 [lon-max lat-min]
-                                 [lon-min lat-min]]]}))
-
-;; Create random and gridded points
-
-(defn- random-with-buffer [side size buffer]
-  (+ side
-     (* (Math/floor (* (Math/random) size (/ buffer))) buffer)
-     (/ buffer 2.0)))
-
-(defn- distance [x1 y1 x2 y2]
-  (Math/sqrt (+ (Math/pow (- x2 x1) 2.0)
-                (Math/pow (- y2 y1) 2.0))))
-
-(defn- pad-bounds [left bottom right top buffer]
-  [(+ left buffer) (+ bottom buffer) (- right buffer) (- top buffer)])
-
-;; TODO Use postGIS so arbitrary bounds can be uploaded
-(defn- create-random-points-in-bounds [left bottom right top num-points]
-  (let [x-range (- right left)
-        y-range (- top bottom)
-        buffer  (/ x-range 50.0)]
-    (->> (repeatedly (fn [] [(random-with-buffer left x-range buffer) (random-with-buffer bottom y-range buffer)]))
-         (take num-points)
-         (map #(pu/EPSG:3857->4326 %)))))
-
-;; TODO Use postGIS so arbitrary bounds can be set
-(defn- create-gridded-points-in-bounds [left bottom right top spacing]
-  (let [x-range   (- right left)
-        y-range   (- top bottom)
-        x-steps   (Math/floor (/ x-range spacing))
-        y-steps   (Math/floor (/ y-range spacing))
-        x-padding (/ (- x-range (* x-steps spacing)) 2.0)
-        y-padding (/ (- y-range (* y-steps spacing)) 2.0)]
-    (->> (for [x (range (+ 1 x-steps))
-               y (range (+ 1 y-steps))]
-           [(+ (* x spacing) left x-padding) (+ (* y spacing) bottom y-padding)])
-         (map #(pu/EPSG:3857->4326 %)))))
-
-;; TODO Use postGIS so can be done with shp files
-(defn- create-random-sample-set [plot-center plot-shape plot-size samples-per-plot]
-  (let [[center-x center-y] (pu/EPSG:4326->3857 plot-center)
-        radius (/ plot-size 2.0)
-        left   (- center-x radius)
-        right  (+ center-x radius)
-        top    (+ center-y radius)
-        bottom (- center-y radius)
-        buffer (/ radius 50.0)]
-    (if (= "circle" plot-shape)
-      (->> (repeatedly (fn [] [(random-with-buffer left plot-size buffer) (random-with-buffer bottom plot-size buffer)]))
-           (take (* 10 samples-per-plot)) ; just as a safety net, so no thread can get stuck
-           (filter (fn [[x y]]
-                     (< (distance center-x center-y x y)
-                        (- radius (/ buffer 2.0)))))
-           (take samples-per-plot)
-           (map #(pu/EPSG:3857->4326 %)))
-      (create-random-points-in-bounds left bottom right top samples-per-plot))))
-
-(defn- create-gridded-sample-set [plot-center plot-shape plot-size sample-resolution]
-  (if (>= sample-resolution plot-size)
-    [plot-center]
-    (let [[center-x center-y] (pu/EPSG:4326->3857 plot-center)
-          radius  (/ plot-size 2.0)
-          left    (- center-x radius)
-          bottom  (- center-y radius)
-          steps   (Math/floor (/ plot-size sample-resolution))
-          padding (/ (- plot-size (* steps sample-resolution)) 2.0)]
-      (->> (for [x (range (+ 1 steps))
-                 y (range (+ 1 steps))]
-             [(+ (* x sample-resolution) left padding) (+ (* y sample-resolution) bottom padding)])
-           (filter (fn [[x y]] (or (= "square" plot-shape)
-                                   (< (distance center-x center-y x y) radius))))
-           (map #(pu/EPSG:3857->4326 %))))))
-
-(defn- generate-point-samples [plots
-                               plot-count
-                               plot-shape
-                               plot-size
-                               sample-distribution
-                               samples-per-plot
-                               sample-resolution]
-  (let [samples-per-plot (case sample-distribution
-                           "gridded" (count-gridded-sample-set plot-size sample-resolution)
-                           "random"  samples-per-plot
-                           "center"  1.0
-                           "none"    1.0)]
-    (check-sample-limits (* plot-count samples-per-plot)
-                         50000.0
-                         samples-per-plot
-                         200.0)
-    (mapcat (fn [{:keys [plot_id visible_id lon lat]}]
-              (let [plot-center    [lon lat]
-                    visible-offset (-> (dec visible_id)
-                                       (* samples-per-plot)
-                                       (inc))]
-                (map-indexed (fn [idx [lon lat]]
-                               {:plot_rid    plot_id
-                                :visible_id  (+ idx visible-offset)
-                                :sample_geom (tc/str->pg (make-wkt-point lon lat) "geometry")})
-                             (case sample-distribution
-                               "center"
-                               [plot-center]
-
-                               "random"
-                               (create-random-sample-set plot-center plot-shape plot-size samples-per-plot)
-
-                               "gridded"
-                               (create-gridded-sample-set plot-center plot-shape plot-size sample-resolution)
-
-                               []))))
-            plots)))
-
-(defn- generate-point-plots [project-id
-                             lon-min
-                             lat-min
-                             lon-max
-                             lat-max
-                             plot-distribution
-                             num-plots
-                             plot-spacing
-                             plot-size]
-  (let [[[left bottom] [right top]] (pu/EPSG:4326->3857 [lon-min lat-min] [lon-max lat-max])
-        [left bottom right top]     (pad-bounds left bottom right top (/ 2.0 plot-size))]
-    (check-plot-limits (if (= "gridded" plot-distribution)
-                         (count-gridded-points left bottom right top plot-spacing)
-                         num-plots)
-                       5000.0)
-    (map-indexed (fn [idx [lon lat]]
-                   {:project_rid project-id
-                    :visible_id  (inc idx)
-                    :plot_geom   (tc/str->pg (make-wkt-point lon lat) "geometry")})
-                 (if (= "gridded" plot-distribution)
-                   (create-gridded-points-in-bounds left bottom right top plot-spacing)
-                   (create-random-points-in-bounds left bottom right top num-plots)))))
-
-;;;
-;;; External files generator
-;;;
-
-(defn- find-file-by-ext [folder-name ext]
-  (->> (io/file folder-name)
-       (file-seq)
-       (map #(.getName %))
-       (remove #(= folder-name %))
-       (filter #(= ext (peek (str/split % #"\."))))
-       (first)))
-
-(defn- parse-as-sh-cmd
-  "Split string into an array for use with clojure.java.shell/sh."
-  [s]
-  (loop [chars (seq s)
-         acc   []]
-    (if (empty? chars)
-      acc
-      (if (= \` (first chars))
-        (recur (->> chars (rest) (drop-while #(not= \` %)) (rest))
-               (->> chars (rest) (take-while #(not= \` %)) (apply str) (str/trim) (conj acc)))
-        (recur (->> chars (drop-while #(not= \` %)))
-               (->> chars (take-while #(not= \` %)) (apply str) (str/trim) (#(str/split % #" ")) (remove str/blank?) (into acc)))))))
-
-(defn- sh-wrapper [dir env & commands]
-  (sh/with-sh-dir dir
-    (sh/with-sh-env (merge {:PATH path-env} env)
-      (doseq [cmd commands]
-        (let [{:keys [exit err]} (apply sh/sh (parse-as-sh-cmd cmd))]
-          (when-not (= 0 exit)
-            (init-throw err)))))))
-
-(defn- sh-wrapper-stdout [dir env cmd]
-  (sh/with-sh-dir dir
-    (sh/with-sh-env (merge {:PATH path-env} env)
-      (let [{:keys [exit err out]} (apply sh/sh (parse-as-sh-cmd cmd))]
-        (if (= 0 exit)
-          out
-          (init-throw err))))))
-
-(defmulti get-file-data (fn [distribution _ _ _] (keyword distribution)))
-
-(defmethod get-file-data :shp [_ design-type ext-file folder-name]
-  (sh-wrapper folder-name {} (str "7z e -y " ext-file " -o" design-type))
-  (let [[info body-text _] (-> (sh-wrapper-stdout (str folder-name design-type)
-                                                  {}
-                                                  (str "shp2pgsql -s 4326 -t 2D -D "
-                                                       (find-file-by-ext (str folder-name design-type) "shp")))
-                               (str/split #"stdin;\n|\n\\\."))
-        geom-key    (keyword (str design-type "_geom"))
-        header-keys (as-> info i
-                      (str/replace i #"\n" "")
-                      (re-find #"(?<=CREATE TABLE.*gid serial,).*?(?=\);)" i)
-                      (str/replace i #"\"" "")
-                      (str/lower-case i)
-                      (str/split i #",")
-                      (mapv (fn [col] (first (str/split col #" "))) i)
-                      (conj i geom-key)
-                      (map (fn [h]
-                             (keyword (if (= (str design-type "id") h)
-                                        "visible_id"
-                                        h)))
-                           i))
-        body        (map (fn [row]
-                           (as-> row r
-                             (str/split r #"\t")
-                             (zipmap header-keys r)
-                             (update r geom-key tc/str->pg "geometry")
-                             (update r :visible_id tc/val->int)))
-                         (str/split body-text #"\r\n|\n|\r"))]
-    [header-keys body]))
-
-(defmethod get-file-data :csv [_ design-type ext-file folder-name]
-  (let [rows       (str/split (slurp (str folder-name ext-file)) #"\r\n|\n|\r")
-        header-row (first rows)]
-    (when (not (str/includes? header-row ","))
-      (init-throw (str "The provided "
-                       design-type
-                       " CSV file must use commas for the delimiter. This error may indicate that the csv file contains only one column.")))
-    (let [geom-key    (keyword (str design-type "_geom"))
-          header-keys (as-> header-row hr
-                        (str/split hr #",")
-                        (mapv #(-> %
-                                   (str/lower-case)
-                                   (str/replace "\uFEFF" "")
-                                   (str/replace #"-| " "_")
-                                   (str/replace #"^(x|longitude|long|center_x)$" "lon")
-                                   (str/replace #"^(y|latitude|center_y)$" "lat")
-                                   (str/replace (re-pattern (str "^" design-type "id$")) "visible_id")
-                                   (keyword))
-                              hr))
-          body        (map (fn [row]
-                             (as-> row r
-                               (str/split r #",")
-                               (zipmap header-keys r)
-                               (assoc r geom-key (tc/str->pg (make-wkt-point (:lon r) (:lat r)) "geometry"))
-                               (update r :visible_id tc/val->int)
-                               (dissoc r :lon :lat)))
-                           (rest rows))]
-      (if (and (some #(= % :lon) header-keys)
-               (some #(= % :lat) header-keys))
-        [(remove-vector-items header-keys [:lon :lat]) body]
-        (init-throw (str "The provided "
-                         design-type
-                         " CSV file must contain a LAT and LON column."))))))
-
-(defmethod get-file-data :default [distribution _ _ _]
-  (throw (str "No such distribution (" distribution ") defined for collect-earth-online.db.projects/get-file-data")))
-
-(defn- check-headers [headers primary-key design-type]
-  (let [header-diff     (set/difference (set primary-key) (set headers))
-        invalid-headers (seq (remove #(re-matches #"^[a-zA-Z_][a-zA-Z0-9_]*$" (name %)) headers))]
-    (when (seq header-diff)
-      (init-throw (str "The required header field(s) "
-                       (as-> header-diff h
-                         (map #(-> % name str/upper-case) h)
-                         (str/join "', '" h)
-                         (str/replace h #"visible_" design-type)
-                         (str "'" h "'"))
-                       " are missing.")))
-    (when invalid-headers
-      (init-throw (str "One or more headers contains invalid characters: '"
-                       (str/join "', '" (map #(-> % name str/upper-case) invalid-headers))
-                       "'")))))
-
-(defn- load-external-data! [project-id distribution file-name file-base64 design-type primary-key]
-  (when (#{"csv" "shp"} distribution)
-    (let [folder-name (str tmp-dir "/ceo-tmp-" project-id "/")
-          saved-file  (pu/write-file-part-base64 file-name
-                                                 file-base64
-                                                 folder-name
-                                                 (str "project-" project-id "-" design-type))]
-      (try-catch-throw #(let [[headers body] (get-file-data distribution design-type saved-file folder-name)]
-                          (when-not (seq body)
-                            (init-throw (str "The " design-type " file contains no rows of data.")))
-
-                          (check-headers headers primary-key design-type)
-
-                          (let [duplicates (->> body
-                                                (group-by (apply juxt primary-key))
-                                                (filter (fn [[_ v]] (> (count v) 1))))]
-                            (when (seq duplicates)
-                              (init-throw (str "The " design-type " file contains duplicate primary keys. "
-                                               (count duplicates)
-                                               " duplicates exists. The first 10 are:\n"
-                                               (->> duplicates
-                                                    (map (fn [[k _]]
-                                                           (str "["
-                                                                (str/join ", "
-                                                                          (->> k
-                                                                               (zipmap primary-key)
-                                                                               (map (fn [[k2 v2]]
-                                                                                      (str (name k2) ": " v2)))))
-                                                                "]")))
-                                                    (take 10)
-                                                    (str/join "\n"))))))
-                          body)
-                       (str (str/capitalize design-type) " " distribution " file failed to load.")))))
-
-(defn- split-ext [row ext-key main-keys]
-  (assoc (select-keys row main-keys)
-         ext-key
-         (tc/clj->jsonb (apply dissoc row main-keys))))
-
-(defn- generate-file-samples [plots
-                              plot-count
-                              project-id
-                              sample-distribution
-                              sample-file-name
-                              sample-file-base64]
-  (let [ext-samples  (load-external-data! project-id
-                                          sample-distribution
-                                          sample-file-name
-                                          sample-file-base64
-                                          "sample"
-                                          [:plotid :visible_id])
-        sample-count (count ext-samples)
-        plot-keys    (persistent!
-                      (reduce (fn [acc {:keys [plot_id visible_id]}]
-                                (assoc! acc (str visible_id) plot_id))
-                              (transient {})
-                              plots))]
-    (check-sample-limits sample-count
-                         350000.0
-                         (/ sample-count plot-count)
-                         200.0)
-    ;; TODO check for samples with no plots - OR - ensure that PG errors pass through.
-    (map (fn [s]
-           (-> s
-               (assoc :plot_rid (get plot-keys (:plotid s)))
-               (dissoc :plotid)
-               (split-ext :extra_sample_info [:plot_rid :visible_id :sample_geom])))
-         ext-samples)))
-
-(defn- generate-file-plots [project-id
-                            plot-distribution
-                            plot-file-name
-                            plot-file-base64]
-  (let [ext-plots (load-external-data! project-id
-                                       plot-distribution
-                                       plot-file-name
-                                       plot-file-base64
-                                       "plot"
-                                       [:visible_id])]
-    (check-plot-limits (count ext-plots)
-                       50000.0)
-    (map (fn [p]
-           (-> p
-               (assoc :project_rid project-id)
-               (split-ext :extra_plot_info [:project_rid :visible_id :plot_geom])))
-         ext-plots)))
-
 ;;;
 ;;; Create project
 ;;;
@@ -614,11 +183,11 @@
         ;; FIXME, Create a copy of external sample so they can be restored.
         (log "Restoring external samples for user drawn samples is temporarily broken"))
       (when-let [bad-plots (seq (map :visible_id (call-sql "plots_missing_samples" project-id)))]
-        (init-throw (str "The uploaded plot and sample files do not have correctly overlapping data. "
-                         (count bad-plots)
-                         " plots have no samples. The first 10 PLOTIDs are: ["
-                         (str/join ", " (take 10 bad-plots))
-                         "]"))))))
+        (pu/init-throw (str "The uploaded plot and sample files do not have correctly overlapping data. "
+                            (count bad-plots)
+                            " plots have no samples. The first 10 PLOTIDs are: ["
+                            (str/join ", " (take 10 bad-plots))
+                            "]"))))))
 
 (defn- create-project-plots! [project-id
                               lon-min
@@ -657,13 +226,13 @@
 
   ;; Validate plots after insert
   (when (#{"csv" "shp"} plot-distribution)
-    (try-catch-throw #(call-sql "set_boundary"
-                                project-id
-                                (if (= plot-distribution "shp") 0 plot-size))
-                     "SQL Error: cannot create a project AOI."))
+    (pu/try-catch-throw #(call-sql "set_boundary"
+                                   project-id
+                                   (if (= plot-distribution "shp") 0 plot-size))
+                        "SQL Error: cannot create a project AOI."))
   (when-not (sql-primitive (call-sql "valid_project_boundary" project-id))
-    (init-throw (str "The project boundary is invalid. "
-                     "This can come from improper coordinates or projection when uploading shape or csv data.")))
+    (pu/init-throw (str "The project boundary is invalid. "
+                        "This can come from improper coordinates or projection when uploading shape or csv data.")))
 
   ;; Create samples from plots
   (create-project-samples! project-id
@@ -802,7 +371,7 @@
       (#{"csv" "shp"} sample-distribution)
       (do
         ;; FIXME Add process to restore external samples when allow-drawn-samples? is true.
-        (init-throw "Restoring external samples for user drawn samples is temporarily broken.")
+        (pu/init-throw "Restoring external samples for user drawn samples is temporarily broken.")
         #_(call-sql "delete_all_samples_by_project" project-id)
         #_(call-sql "copy_saved_samples" project-id))
 
@@ -1072,8 +641,8 @@
                                  (:options)
                                  (tc/jsonb->clj)
                                  (:collectConfidence))
-            text-headers     (concat (remove-vector-items plot-base-headers
-                                                          (when-not confidence? :confidence))
+            text-headers     (concat (pu/remove-vector-items plot-base-headers
+                                                             (when-not confidence? :confidence))
                                      (get-ext-headers plots :extra_plot_info "pl_"))
             number-headers   (get-value-distribution-headers survey-questions)
             headers-out      (->> (concat text-headers number-headers)
