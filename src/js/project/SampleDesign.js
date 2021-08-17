@@ -221,7 +221,7 @@ export function SampleReview() {
                                                     <td className="w-20 text-center">
                                                         <span className="badge badge-pill bg-lightgreen tooltip_wrapper" style={{color: "white"}}>
                                                             {sampleFileName.split(".").map(s => truncate(s, 13)).join("")}
-                                                            {sampleFileName.length > 16 && (<div className="tooltip_content">{sampleFileName}</div>)}
+                                                            <div className="tooltip_content">{sampleFileName}</div>
                                                         </span>
                                                     </td>
                                                 </tr>

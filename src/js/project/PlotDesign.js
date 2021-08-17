@@ -403,7 +403,7 @@ export function PlotReview() {
                                             <td className="w-20 text-center">
                                                 <span className="badge badge-pill bg-lightgreen tooltip_wrapper" style={{color: "white"}}>
                                                     {plotFileName.split(".").map(s => truncate(s, 13)).join("")}
-                                                    {plotFileName.length > 16 && (<div className="tooltip_content">{plotFileName}</div>)}
+                                                    <div className="tooltip_content">{plotFileName}</div>
                                                 </span>
                                             </td>
                                         </tr>
