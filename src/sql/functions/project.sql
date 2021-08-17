@@ -290,7 +290,7 @@ CREATE OR REPLACE FUNCTION set_boundary(_project_id integer, _m_buffer real)
 $$ LANGUAGE SQL;
 
 -- Copy plot data and sample data
-CREATE OR REPLACE FUNCTION copy_project_plots_samples(_old_project_uid integer, _new_project_uid integer)
+CREATE OR REPLACE FUNCTION copy_project_plots_samples(_old_project_id integer, _new_project_id integer)
  RETURNS integer AS $$
 
     WITH project_plots AS (
@@ -302,11 +302,11 @@ CREATE OR REPLACE FUNCTION copy_project_plots_samples(_old_project_uid integer, 
         FROM projects p
         INNER JOIN plots pl
             ON project_rid = project_uid
-            AND project_rid = _old_project_uid
+            AND project_rid = _old_project_id
     ), inserting AS (
         INSERT INTO plots
             (project_rid, plot_geom, visible_id, extra_plot_info)
-        SELECT _new_project_uid, plot_geom, visible_id, extra_plot_info
+        SELECT _new_project_id, plot_geom, visible_id, extra_plot_info
         FROM project_plots
         RETURNING plot_uid as plid
     ), new_ordered AS (
@@ -315,7 +315,7 @@ CREATE OR REPLACE FUNCTION copy_project_plots_samples(_old_project_uid integer, 
         SELECT * from new_ordered inner join project_plots USING (rowid)
     ), inserting_samples AS (
         INSERT INTO samples
-            (plot_rid,  sample_geom, visible_id, extra_sample_info)
+            (plot_rid, sample_geom, visible_id, extra_sample_info)
         SELECT plid, sample_geom, visible_id, extra_sample_info
         FROM (
             SELECT plid, sample_geom, s.visible_id, extra_sample_info
@@ -331,7 +331,7 @@ CREATE OR REPLACE FUNCTION copy_project_plots_samples(_old_project_uid integer, 
 $$ LANGUAGE SQL;
 
 -- Copy other project fields that may not have been correctly passed from UI
-CREATE OR REPLACE FUNCTION copy_project_plots_stats(_old_project_uid integer, _new_project_uid integer)
+CREATE OR REPLACE FUNCTION copy_project_plots_stats(_old_project_id integer, _new_project_id integer)
  RETURNS void AS $$
 
     UPDATE projects
@@ -352,18 +352,35 @@ CREATE OR REPLACE FUNCTION copy_project_plots_stats(_old_project_uid integer, _n
             plot_size,            sample_distribution,
             samples_per_plot,     sample_resolution
          FROM projects
-         WHERE project_uid = _old_project_uid) n
+         WHERE project_uid = _old_project_id) n
     WHERE
-        project_uid = _new_project_uid
+        project_uid = _new_project_id
 
 $$ LANGUAGE SQL;
 
 -- Combines individual functions needed to copy all plot and sample information
-CREATE OR REPLACE FUNCTION copy_template_plots(_old_project_uid integer, _new_project_uid integer)
+CREATE OR REPLACE FUNCTION copy_template_plots(_old_project_id integer, _new_project_id integer)
  RETURNS void AS $$
 
-    SELECT * FROM copy_project_plots_samples(_old_project_uid, _new_project_uid);
-    SELECT * FROM copy_project_plots_stats(_old_project_uid, _new_project_uid);
+    SELECT * FROM copy_project_plots_samples(_old_project_id, _new_project_id);
+    SELECT * FROM copy_project_plots_stats(_old_project_id, _new_project_id);
+
+$$ LANGUAGE SQL;
+
+-- Copy samples from external file backup
+CREATE OR REPLACE FUNCTION copy_project_ext_samples(_project_id integer)
+ RETURNS void AS $$
+
+    INSERT INTO samples
+        (plot_rid, sample_geom, visible_id, extra_sample_info)
+    SELECT plot_rid, sample_geom, visible_id, extra_sample_info
+    FROM (
+        SELECT plot_rid, sample_geom, es.visible_id, extra_sample_info
+        FROM ext_samples es
+        INNER JOIN plots
+            ON plot_uid = plot_rid
+        WHERE project_rid = _project_id
+    ) B
 
 $$ LANGUAGE SQL;
 

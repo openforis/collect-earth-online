@@ -126,6 +126,15 @@ CREATE TABLE samples (
     extra_sample_info    jsonb
 );
 
+-- A duplicate of external file samples for restoring samples
+CREATE TABLE ext_samples (
+    ext_sample_uid       SERIAL PRIMARY KEY,
+    plot_rid             integer NOT NULL REFERENCES plots (plot_uid) ON DELETE CASCADE ON UPDATE CASCADE,
+    sample_geom          geometry(geometry,4326),
+    visible_id           integer,
+    extra_sample_info    jsonb
+);
+
 -- Stores information about a plot as data is collected, including the user who collected it
 -- By other means we restrict it to 1 user_plot per plot
 -- 1 project -> many |plots ->                                     many samples|
