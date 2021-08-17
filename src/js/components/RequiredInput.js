@@ -1,17 +1,20 @@
 import React, {useState} from "react";
 
-export default function RequiredInput({label, maxLength, onChange, value, textarea}) {
+export default function RequiredInput({id, label, maxLength, onChange, value, textarea}) {
     const [touched, setTouched] = useState(false);
 
     return (
         <>
-            <label htmlFor="institution-name">
-                <span style={{color: "red"}}>*</span>{label}
-            </label>
+            {label && (
+                <label htmlFor={id}>
+                    <span style={{color: "red"}}>*</span>
+                    {label}
+                </label>
+            )}
             {textarea ? (
                 <textarea
                     className="form-control"
-                    id="institution-description"
+                    id={id}
                     maxLength={maxLength}
                     onBlur={() => setTouched(true)}
                     onChange={onChange}
@@ -22,7 +25,7 @@ export default function RequiredInput({label, maxLength, onChange, value, textar
             ) : (
                 <input
                     className="form-control mb-1 mr-sm-2"
-                    id="institution-name"
+                    id={id}
                     maxLength={maxLength}
                     onBlur={() => setTouched(true)}
                     onChange={onChange}

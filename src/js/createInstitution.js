@@ -21,6 +21,12 @@ class CreateInstitution extends React.Component {
     createInstitution = () => {
         if (this.state.newInstitutionDetails.base64Image.length > KBtoBase64Length(500)) {
             alert("Institution logos must be smaller than 500kb");
+        } else if (this.state.newInstitutionDetails.name.length === 0) {
+            alert("Institution must have a name.");
+        } else if (this.state.newInstitutionDetails.description.length === 0) {
+            alert("Institution must have a description.");
+        } else if (!this.state.newInstitutionDetails.acceptTOS === 0) {
+            alert("Please accept the Terms of Service.");
         } else {
             fetch("/create-institution",
                   {
@@ -60,9 +66,6 @@ class CreateInstitution extends React.Component {
     renderButtonGroup = () => (
         <input
             className="btn btn-outline-lightgreen btn-sm btn-block"
-            disabled={this.state.newInstitutionDetails.name === ""
-                || this.state.newInstitutionDetails.description === ""
-                || this.state.newInstitutionDetails.acceptTOS === false}
             id="create-institution"
             onClick={this.createInstitution}
             type="button"

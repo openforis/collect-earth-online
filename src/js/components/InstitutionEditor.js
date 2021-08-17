@@ -19,6 +19,7 @@ export default function InstitutionEditor({
                 </h2>
                 <div className="mb-3">
                     <RequiredInput
+                        id="institution-name"
                         label="Name"
                         maxLength="400"
                         onChange={e => setInstitutionDetails("name", e.target.value)}
@@ -54,6 +55,7 @@ export default function InstitutionEditor({
                 </div>
                 <div className="mb-3">
                     <RequiredInput
+                        id="institution-description"
                         label="Description"
                         maxLength="2000"
                         onChange={e => setInstitutionDetails("description", e.target.value)}
