@@ -442,26 +442,7 @@
         sample-file-base64   (:sampleFileBase64 params)
         original-project     (first (call-sql "select_project_by_id" project-id))]
     (if original-project
-      (do
-        (call-sql "update_project"
-                  project-id
-                  name
-                  description
-                  privacy-level
-                  imagery-id
-                  boundary
-                  plot-distribution
-                  num-plots
-                  plot-spacing
-                  plot-shape
-                  plot-size
-                  sample-distribution
-                  samples-per-plot
-                  sample-resolution
-                  allow-drawn-samples?
-                  survey-questions
-                  survey-rules
-                  project-options)
+      (try
         (when-let [imagery-list (:projectImageryList params)]
           (call-sql "delete_project_imagery" project-id)
           (insert-project-imagery! project-id imagery-list))
@@ -520,7 +501,34 @@
           (or update-survey
               (and (:allow_drawn_samples original-project) (not allow-drawn-samples?)))
           (reset-collected-samples! project-id))
-        (data-response ""))
+        (call-sql "update_project"
+                  project-id
+                  name
+                  description
+                  privacy-level
+                  imagery-id
+                  boundary
+                  plot-distribution
+                  num-plots
+                  plot-spacing
+                  plot-shape
+                  plot-size
+                  sample-distribution
+                  samples-per-plot
+                  sample-resolution
+                  allow-drawn-samples?
+                  survey-questions
+                  survey-rules
+                  project-options)
+        (data-response "")
+        (catch Exception e
+          (let [causes (:causes (ex-data e))]
+          ;; Log unknown errors
+            (when-not causes (log (ex-message e)))
+          ;; Return error stack to user
+            (data-response (if causes
+                             (str "-" (str/join "\n-" causes))
+                             "Unknown server error.")))))
       (data-response (str "Project " project-id " not found.")))))
 
 (defn publish-project! [{:keys [params]}]
