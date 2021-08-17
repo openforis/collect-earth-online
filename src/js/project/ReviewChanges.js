@@ -85,14 +85,17 @@ export default class ReviewChanges extends React.Component {
                         })
                     }
                 )
-                    .then(response => {
-                        if (!response.ok) {
-                            console.log(response);
-                            alert("Error updating project. See console for details.");
-                        } else {
-                            this.context.setContextState({designMode: "manage"});
+                    .then(response => Promise.all([response.ok, response.json()]))
+                    .then(data => {
+                        if (data[0] && data[1] === "") {
                             alert("Project successfully updated!");
+                            return Promise.resolve();
+                        } else {
+                            return Promise.reject(data[1]);
                         }
+                    })
+                    .catch(message => {
+                        alert("Error creating project:\n" + message);
                     })
             );
         }
