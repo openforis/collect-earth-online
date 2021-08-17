@@ -1,31 +1,37 @@
 [
     {
+        "title": "Create Imagery Help",
         "body": "Welcome to the imagery set-up screen! Here, you can add multiple different types of imagery to your institution, for use in your projects. \nUse the \"Select Type\" dropdown menu to choose what type of imagery you would like to add. Multiple sources are available, including free sources like Bing, Sentinel 1, and Sentinel 2, and paid sources like Planet Monthly, Planet Daily, and SecureWatch (Maxar). You can also connect to WMS and WMTS sources or Google Earth Engine, allowing you to upload and connect to your own imagery.",
-        "img": "/img/imagery1.webp"
+        "img": "/img/create-imagery1.webp"
     },
     {
+        "title": "Create Imagery Help",
         "body": "The information you need to provide differs based on the type of imagery you are adding. \nAll types of imagery need a short \"Title.\" We suggest you include the name of the imagery and the year, if applicable. This is what your data collectors will see when they choose imagery from the drop down list on the data collection page.",
-        "img": "/img/imagery2.webp"
+        "img": "/img/create-imagery2.webp"
     },
     {
+        "title": "Create Imagery Help",
         "body": "For imagery types with \"Default Year\" or \"Default Month\" fields, please enter a valid year as YYYY (e.g. 2019) and a valid month as MM (e.g. 08). \nFor imagery with \"Start Date\" and \"End Dates,\" you may enter dates as mm/dd/yyyy or use the convenient calendar icon on the right hand side. \nFor all options, users will be able to change the date in the data collection interface.",
-        "img":"/img/imagery3.webp"
+        "img": "/img/create-imagery3.webp"
     },
     {
+        "title": "Create Imagery Help",
         "body": "For imagery types with access tokens required, these can often be found on the data provider’s website in your account information. Please be sure to copy and paste the token exactly as it is shown on the data provider’s website (Planet, Maxar, Bing, etc.). \nNote that your Planet access token and Planet NICFI access tokens are different.",
-        "img": "/img/imagery4.webp"
+        "img": "/img/create-imagery4.webp"
     },
     {
+        "title": "Create Imagery Help",
         "body": "For imagery types with Minimum (\"Min\") and Maximum (\"Max\") value fields, these should be values from the data to map to black to white grey scale stretching. For example, using 0 and 3000 would map these data values to black and white respectively.",
-        "img": "/img/imagery5.webp"
+        "img": "/img/create-imagery5.webp"
     },
     {
+        "title": "Create Imagery Help",
         "body": "When you have filled out all of the information for the imagery, you can click on \"Add New Imagery\" to add the imagery to your institution. You can then add it to your new and existing projects. \nYou can also click on \"Add Imagery to All Projects When Saving\" to add the imagery source you have just specified to all of the institution’s existing projects.",
-        "img": "/img/imagery6.webp"
+        "img": "/img/create-imagery6.webp"
     },
     {
+        "title": "Create Imagery Help",
         "body": "Additional information can be found in the Institution and Project Creation Manual, located under the support tab. \nThe manual includes information for \"Visualization Parameters,\" \"Cloud Score,\" and troubleshooting WMS and WMTS connections.",
-        "img": "/img/imagery7.webp"
+        "img": "/img/create-imagery7.webp"
     }
-
 ]

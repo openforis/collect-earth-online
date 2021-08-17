@@ -77,7 +77,7 @@ CREATE OR REPLACE FUNCTION add_user(_email text, _password text, _reset_key text
 $$ LANGUAGE SQL;
 
 -- Get information for single user
-CREATE OR REPLACE FUNCTION get_user_by_mail(_email text)
+CREATE OR REPLACE FUNCTION get_user_by_email(_email text)
  RETURNS table (
     user_id          integer,
     administrator    boolean,
@@ -97,7 +97,7 @@ CREATE OR REPLACE FUNCTION get_user_by_id(_user_id integer)
     reset_key        text
  ) AS $$
 
-    SELECT email
+    SELECT email, administrator, reset_key
     FROM users
     WHERE user_uid = _user_id
         AND _user_id > 0

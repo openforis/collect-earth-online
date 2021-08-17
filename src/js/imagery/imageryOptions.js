@@ -16,14 +16,17 @@ export const nicfiLayers = ["2015-12_2016-05",
                             "2020-12",
                             "2021-01",
                             "2021-02",
-                            "2021-03"];
+                            "2021-03",
+                            "2021-04",
+                            "2021-05",
+                            "2021-06"];
 
 const outOfRange = (num, low, high) => isNaN(num) || parseInt(num) < low || parseInt(num) > high;
 
 const dateRangeValidator = ({startDate, endDate}) => (startDate && endDate
     && new Date(startDate) > new Date(endDate) ? "Start date must be smaller than the end date." : "");
 
-const urlValidator = url => /^(?:http|https):\/\/[\w.-]+(?:\.[\w-]+)+[\w\-.,@?^=%&:;/~\\+#]+$/.test(url);
+const urlValidator = url => /^(?:http|https):\/\/[\w.-]+(?:\.[\w-]+)+[\w\-.,@?^=%&{}:;/~\\+#]+$/.test(url);
 
 const olProjectionValidator = value => !/crs|srs|epsg|wgs/mi.test(value);
 
@@ -37,11 +40,14 @@ const isValidJSON = str => {
 };
 
 export const imageryOptions = [
+    // Note optionalProxy is for optionally proxied imagery. optionalProxy = false && defaultProxy = true are always proxied.
     // Default type is text, default parent is none, a referenced parent must be entered as a json string
     // Parameters can be defined one level deep. {paramParent: {paramChild: "", fields: "", fromJsonStr: ""}}
     {
         type: "GeoServer",
         label: "WMS Imagery",
+        optionalProxy: true,
+        defaultProxy: false,
         params: [
             {
                 key: "geoserverUrl",
@@ -83,6 +89,8 @@ export const imageryOptions = [
     {
         type: "xyz",
         label: "XYZ Imagery",
+        optionalProxy: false,
+        defaultProxy: false,
         params: [{
             key: "url",
             display: "XYZ URL",
@@ -96,6 +104,8 @@ export const imageryOptions = [
     {
         type: "BingMaps",
         label: "Bing Maps",
+        optionalProxy: false,
+        defaultProxy: false,
         params: [
             {
                 key: "imageryId",
@@ -113,6 +123,8 @@ export const imageryOptions = [
     {
         type: "Planet",
         label: "Planet Monthly",
+        optionalProxy: true,
+        defaultProxy: true,
         params: [
             {
                 key: "year",
@@ -133,6 +145,8 @@ export const imageryOptions = [
     {
         type: "PlanetDaily",
         label: "Planet Daily",
+        optionalProxy: false,
+        defaultProxy: false,
         params: [
             {key: "accessToken", display: "Access Token"},
             {key: "startDate", display: "Start Date", type: "date"},
@@ -144,6 +158,8 @@ export const imageryOptions = [
     {
         type: "PlanetNICFI",
         label: "Planet NICFI",
+        optionalProxy: false,
+        defaultProxy: false,
         params: [
             {key: "accessToken", display: "Access Token"},
             {
@@ -169,6 +185,8 @@ export const imageryOptions = [
     },
     {
         type: "SecureWatch",
+        optionalProxy: true,
+        defaultProxy: true,
         params: [
             {
                 key: "baseUrl",
@@ -198,6 +216,8 @@ export const imageryOptions = [
     {
         type: "Sentinel1",
         label: "Sentinel 1",
+        optionalProxy: false,
+        defaultProxy: false,
         params: [
             {
                 key: "year",
@@ -249,6 +269,8 @@ export const imageryOptions = [
     {
         type: "Sentinel2",
         label: "Sentinel 2",
+        optionalProxy: false,
+        defaultProxy: false,
         params: [
             {
                 key: "year",
@@ -314,6 +336,8 @@ export const imageryOptions = [
     {
         type: "GEEImage",
         label: "GEE Image Asset",
+        optionalProxy: false,
+        defaultProxy: false,
         params: [
             {
                 key: "imageId",
@@ -332,6 +356,8 @@ export const imageryOptions = [
     {
         type: "GEEImageCollection",
         label: "GEE ImageCollection Asset",
+        optionalProxy: false,
+        defaultProxy: false,
         params: [
             {
                 key: "collectionId",
@@ -363,6 +389,8 @@ export const imageryOptions = [
     {
         type: "MapBoxRaster",
         label: "Mapbox Raster",
+        optionalProxy: false,
+        defaultProxy: false,
         params: [
             {key: "layerName", display: "Layer Name"},
             {key: "accessToken", display: "Access Token"}
@@ -372,6 +400,8 @@ export const imageryOptions = [
     {
         type: "MapBoxStatic",
         label: "Mapbox Static",
+        optionalProxy: false,
+        defaultProxy: false,
         params: [
             {key: "userName", display: "User Name"},
             {key: "mapStyleId", display: "Map Style Id"},
@@ -382,6 +412,8 @@ export const imageryOptions = [
     {
         type: "OSM",
         label: "Open Street Map",
+        optionalProxy: false,
+        defaultProxy: false,
         params: []
     }
 ];

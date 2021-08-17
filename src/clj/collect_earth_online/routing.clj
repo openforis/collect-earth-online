@@ -77,10 +77,10 @@
    [:post "/verify-email"]                   {:handler     users/verify-email}
    [:post "/register"]                       {:handler     users/register}
    ;; Projects API
-   [:get  "/dump-project-aggregate-data"]    {:handler     projects/dump-project-aggregate-data
+   [:get  "/dump-project-aggregate-data"]    {:handler     projects/dump-project-aggregate-data!
                                               :auth-type   :admin
                                               :auth-action :block}
-   [:get  "/dump-project-raw-data"]          {:handler     projects/dump-project-raw-data
+   [:get  "/dump-project-raw-data"]          {:handler     projects/dump-project-raw-data!
                                               :auth-type   :admin
                                               :auth-action :block}
    [:get  "/get-home-projects"]              {:handler     projects/get-home-projects}
@@ -89,19 +89,19 @@
    [:get  "/get-template-projects"]          {:handler     projects/get-template-projects}
    [:get  "/get-template-by-id"]             {:handler     projects/get-template-by-id}
    [:get  "/get-project-stats"]              {:handler     projects/get-project-stats}
-   [:post "/archive-project"]                {:handler     projects/archive-project
+   [:post "/archive-project"]                {:handler     projects/archive-project!
                                               :auth-type   :admin
                                               :auth-action :block}
-   [:post "/close-project"]                  {:handler     projects/close-project
+   [:post "/close-project"]                  {:handler     projects/close-project!
                                               :auth-type   :admin
                                               :auth-action :block}
-   [:post "/create-project"]                 {:handler     projects/create-project
+   [:post "/create-project"]                 {:handler     projects/create-project!
                                               :auth-type   :admin
                                               :auth-action :block}
-   [:post "/publish-project"]                {:handler     projects/publish-project
+   [:post "/publish-project"]                {:handler     projects/publish-project!
                                               :auth-type   :admin
                                               :auth-action :block}
-   [:post "/update-project"]                 {:handler     projects/update-project
+   [:post "/update-project"]                 {:handler     projects/update-project!
                                               :auth-type   :admin
                                               :auth-action :block}
    ;; Plots API

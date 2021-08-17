@@ -204,17 +204,59 @@ const ruleIcon = (
     </svg>
 );
 
+const leftArrowIcon = (
+    <svg transform="translate(-2 0)" viewBox="0 0 512.2 512.2" x="0px" y="0px">
+        <path
+            d="M501.534,160.111H234.867V42.778c0.011-5.891-4.757-10.675-10.648-10.686 c-2.84-0.005-5.565,1.123-7.571,3.134L3.123,248.559
+            c-4.164,4.165-4.164,10.917,0,15.083l213.525,213.333 c4.16,4.171,10.914,4.179,15.085,0.019c2.006-2.001,3.133-4.717,3.134-7.55V352.111h266.667
+            c5.891,0,10.667-4.776,10.667-10.667 V170.778C512.2,164.886,507.425,160.111,501.534,160.111z"
+        />
+    </svg>
+);
+
+const rightArrowIcon = (
+    <svg viewBox="0 0 512.19 512.19" x="0px" y="0px">
+        <path
+            d="M295.445,35.381c-4.218-4.112-10.972-4.026-15.084,0.192c-1.921,1.971-3.006,4.608-3.028,7.36 v117.333H10.667
+            C4.776,160.266,0,165.042,0,170.933V341.6c0,5.891,4.776,10.667,10.667,10.667h266.667v116.885 c-0.011,5.891,4.757,10.675,10.648,10.686
+            c2.84,0.005,5.565-1.123,7.571-3.134L509.056,263.37c4.171-4.16,4.179-10.914,0.019-15.085
+            c-0.006-0.006-0.013-0.013-0.019-0.019L295.445,35.381z"
+        />
+    </svg>
+);
+
+const editIcon = (
+    <svg viewBox="0 0 512 512" x="0px" y="0px">
+        <rect
+            height="318.717"
+            transform="matrix(-0.7073 -0.7069 0.7069 -0.7073 233.6377 627.3448)"
+            width="160.05"
+            x="166.669"
+            y="105.945"
+        />
+        <path
+            d="M502.625,77.251L434.749,9.375C428.539,3.164,420.413,0.041,412.283,0h-0.338c-8.131,0.041-16.246,3.164-22.441,9.375
+            l-45.312,45.251l113.183,113.121l45.251-45.251c6.211-6.211,9.334-14.326,9.375-22.456v-0.338
+            C511.959,91.576,508.836,83.461,502.625,77.251z"
+        />
+        <polygon points="0,512 147.072,478.049 33.889,364.928"/>
+    </svg>
+);
+
 const iconMap = {
-    "help": helpIcon,
-    "rightDouble": rightDoubleIcon,
-    "leftDouble": leftDoubleIcon,
+    "check": checkIcon,
     "close": closeIcon,
     "draw": drawIcon,
+    "edit": editIcon,
+    "help": helpIcon,
+    "leftArrow": leftArrowIcon,
+    "leftDouble": leftDoubleIcon,
+    "lineString": lineStringIcon,
     "point": pointIcon,
     "polygon": polygonIcon,
-    "lineString": lineStringIcon,
     "question": questionIcon,
-    "check": checkIcon,
+    "rightArrow": rightArrowIcon,
+    "rightDouble": rightDoubleIcon,
     "rule": ruleIcon
 };
 

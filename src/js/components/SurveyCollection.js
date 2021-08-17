@@ -2,7 +2,7 @@ import React, {Fragment} from "react";
 
 import {UnicodeIcon, removeEnumerator, intersection, isNumber} from "../utils/generalUtils";
 import {CollapsibleTitle} from "./FormComponents";
-import SurveyQuestionRules from "./SurveyQuestionRules";
+import RulesCollectionModal from "./RulesCollectionModal";
 import SvgIcon from "./SvgIcon";
 import {mercator} from "../utils/mercator";
 
@@ -537,7 +537,7 @@ class SurveyQuestionTree extends React.Component {
                     >
                         {showAnswers ? <span>-</span> : <span>+</span>}
                     </button>
-                    <SurveyQuestionRules surveyNodeId={surveyNode.id} surveyRules={surveyRules}/>
+                    <RulesCollectionModal surveyNodeId={surveyNode.id} surveyRules={surveyRules}/>
                     <button
                         className="text-center btn btn-outline-lightgreen btn-sm col overflow-hidden text-truncate"
                         onClick={() => setSelectedQuestion(surveyNode)}
@@ -677,25 +677,19 @@ class AnswerInput extends React.Component {
         if (this.props.surveyNode.id !== prevProps.surveyNode.id) {
             const matchingNode = this.props.surveyNode.answered
                 .find(a => a.answerId === this.props.surveyNode.answers[0].id);
-            this.setState({newInput: matchingNode ? matchingNode.answerText : this.defaultVal()});
+            this.setState({newInput: matchingNode ? matchingNode.answerText : ""});
         }
         if (this.props.selectedSampleId !== prevProps.selectedSampleId) {
             this.resetInputText();
         }
     }
 
-    defaultVal = () => {
-        const {dataType} = this.props.surveyNode;
-        return dataType === "number" ? 0 : "";
-    };
-
     resetInputText = () => {
-        console.log(this.defaultVal());
         const matchingNode = this.props.surveyNode.answered
             .find(a => a.answerId === this.props.surveyNode.answers[0].id
                   && a.sampleId === this.props.selectedSampleId);
         this.setState({
-            newInput: matchingNode ? matchingNode.answerText : this.defaultVal()
+            newInput: matchingNode ? matchingNode.answerText : ""
         });
     };
 

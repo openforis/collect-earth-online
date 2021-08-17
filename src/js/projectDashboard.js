@@ -257,7 +257,11 @@ function ProjectAOI() {
 
 export function pageInit(args) {
     ReactDOM.render(
-        <NavigationBar userId={args.userId} userName={args.userName}>
+        <NavigationBar
+            userId={args.userId}
+            userName={args.userName}
+            version={args.version}
+        >
             <ProjectDashboard
                 projectId={args.projectId || "0"}
             />

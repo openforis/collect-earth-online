@@ -21,14 +21,14 @@ function Support() {
                     <div className="btn-group-vertical btn-block mb-4">
                         <a
                             className="btn btn-outline-lightgreen btn-block"
-                            href="/downloads/CEO_Manual_DataCollector_20201115.pdf"
+                            href="/downloads/CEO_Manual_DataCollector_EN_20210331.pdf"
                             role="button"
                         >
                             &#x1F4BE; Data Collection Manual (English)
                         </a>
                         <a
                             className="btn btn-outline-lightgreen btn-block"
-                            href="/downloads/CEO_Manual_DataCollector_20200520_espanol.pdf"
+                            href="/downloads/CEO_Manual_DataCollector_SP_20210720.pdf"
                             role="button"
                         >
                             &#x1F4BE; Manual de Recolección de Datos (Español)
@@ -51,14 +51,14 @@ function Support() {
                     <div className="btn-group-vertical btn-block mb-4">
                         <a
                             className="btn btn-outline-lightgreen btn-block"
-                            href="/downloads/CEO_Manual_InstitutionProject_20201115.pdf"
+                            href="/downloads/CEO_Manual_InstitutionProject_EN_20210331.pdf"
                             role="button"
                         >
                             &#x1F4BE; Institution & Project Creation Manual (For Admin)
                         </a>
                         <a
                             className="btn btn-outline-lightgreen btn-block"
-                            href="/downloads/CEO_Manual_InstitutionProject_20200708_espanol.pdf"
+                            href="/downloads/CEO_Manual_InstitutionProject_SP_20210720.pdf"
                             role="button"
                         >
                             &#x1F4BE; Manual de Creación de Instituciones y Proyectos (para el Administrador)
@@ -130,7 +130,11 @@ function Support() {
 
 export function pageInit(args) {
     ReactDOM.render(
-        <NavigationBar userId={args.userId} userName={args.userName}>
+        <NavigationBar
+            userId={args.userId}
+            userName={args.userName}
+            version={args.version}
+        >
             <Support/>
         </NavigationBar>,
         document.getElementById("app")

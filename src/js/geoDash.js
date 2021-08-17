@@ -10,7 +10,7 @@ import {buffer as ExtentBuffer} from "ol/extent";
 import {Circle, Polygon, Point} from "ol/geom";
 import {Tile as TileLayer, Vector as VectorLayer} from "ol/layer";
 import {transform as projTransform} from "ol/proj";
-import {OSM, Vector, XYZ} from "ol/source";
+import {Vector, XYZ} from "ol/source";
 import {Style, Stroke} from "ol/style";
 import {getArea as sphereGetArea} from "ol/sphere";
 
@@ -108,8 +108,7 @@ class Geodash extends React.Component {
             return fetch(`/get-plot-sample-geom?plotId=${plotId}`)
                 .then(response => (response.ok ? response.json() : Promise.reject(response)))
                 .then(plotJsonObject => {
-                    const sampleGeom = (plotJsonObject.samples || []).map(e => e.geom);
-                    const features = [plotJsonObject.geom].concat(sampleGeom)
+                    const features = [plotJsonObject.plotGeom, ...(plotJsonObject.sampleGeoms || [])]
                         .filter(e => e)
                         .map(geom => new Feature({geometry: mercator.parseGeoJson(geom, true)}));
                     return Promise.resolve(new Vector({features}));
@@ -132,7 +131,7 @@ class Geodash extends React.Component {
         } else if (plotShape === "circle") {
             return Promise.resolve(new Vector({
                 features: [new Feature(new Circle(
-                    projTransform(JSON.parse(center).coordinates, "EPSG:4326", "EPSG:3857"), radius * 1
+                    projTransform(JSON.parse(center).coordinates, "EPSG:4326", "EPSG:3857"), radius
                 ))]
             }));
         } else {
@@ -545,7 +544,11 @@ class MapWidget extends React.Component {
         const {projPairAOI, widget} = this.props;
         let {projAOI} = this.props;
 
-        const baseMapLayer = this.getRasterByBasemapConfig(widget.baseMap);
+        const {sourceConfig, id, attribution, isProxied} = this.props.imageryList.find(imagery =>
+            imagery.id === widget.basemapId) || this.props.imageryList[0];
+        const basemapLayer = new TileLayer({
+            source: mercator.createSource(sourceConfig, id, attribution, isProxied)
+        });
         const plotSampleLayer = new VectorLayer({
             source: this.props.vectorSource,
             style: new Style({
@@ -560,7 +563,7 @@ class MapWidget extends React.Component {
 
         const mapdiv = "widgetmap_" + widget.id;
         const map = new Map({
-            layers: [baseMapLayer, plotSampleLayer],
+            layers: [basemapLayer, plotSampleLayer],
             target: mapdiv,
             view: new View({
                 center: [0, 0],
@@ -792,17 +795,20 @@ class MapWidget extends React.Component {
         }
     }
 
-    checkForCache = (postObject, widget, isSecond) => (localStorage.getItem(postObject.ImageAsset + JSON.stringify(postObject.visParams))
-        ? this.createTileServerFromCache(postObject.ImageAsset + JSON.stringify(postObject.visParams), widget.id, isSecond)
-        : localStorage.getItem(postObject.ImageCollectionAsset + JSON.stringify(postObject.visParams))
-            ? this.createTileServerFromCache(postObject.ImageCollectionAsset + JSON.stringify(postObject.visParams), widget.id, isSecond)
-            : postObject.index && localStorage.getItem(postObject.index + postObject.dateFrom + postObject.dateTo)
-                ? this.createTileServerFromCache(postObject.index + postObject.dateFrom + postObject.dateTo, widget.id, isSecond)
-                : postObject.path && localStorage.getItem(postObject.path + postObject.dateFrom + postObject.dateTo)
-                    ? this.createTileServerFromCache(postObject.path + postObject.dateFrom + postObject.dateTo, widget.id, isSecond)
-                    : localStorage.getItem(JSON.stringify(postObject))
-                        ? this.createTileServerFromCache(JSON.stringify(postObject), widget.id, isSecond)
-                        : true);
+    checkForCache = (postObject, widget, isSecond) => {
+        const visParams = JSON.stringify(postObject.visParams);
+        return (localStorage.getItem(postObject.ImageAsset + visParams)
+            ? this.createTileServerFromCache(postObject.ImageAsset + visParams, widget.id, isSecond)
+            : localStorage.getItem(postObject.ImageCollectionAsset + visParams)
+                ? this.createTileServerFromCache(postObject.ImageCollectionAsset + visParams, widget.id, isSecond)
+                : postObject.index && localStorage.getItem(postObject.index + visParams + postObject.dateFrom + postObject.dateTo)
+                    ? this.createTileServerFromCache(postObject.index + visParams + postObject.dateFrom + postObject.dateTo, widget.id, isSecond)
+                    : postObject.path && localStorage.getItem(postObject.path + visParams + postObject.dateFrom + postObject.dateTo)
+                        ? this.createTileServerFromCache(postObject.path + visParams + postObject.dateFrom + postObject.dateTo, widget.id, isSecond)
+                        : localStorage.getItem(JSON.stringify(postObject))
+                            ? this.createTileServerFromCache(JSON.stringify(postObject), widget.id, isSecond)
+                            : true);
+    };
 
     fetchMapInfo = (postObject, url, widget, dualImageObject) => {
         if (postObject.path === "getDegraditionTileUrl" && url.trim() === "") {
@@ -826,14 +832,15 @@ class MapWidget extends React.Component {
             .then(data => {
                 if (data && data.hasOwnProperty("url")) {
                     data.lastGatewayUpdate = new Date();
-                    if (postObject.ImageAsset && JSON.stringify(postObject.visParams)) {
-                        localStorage.setItem(postObject.ImageAsset + JSON.stringify(postObject.visParams), JSON.stringify(data));
-                    } else if (postObject.ImageCollectionAsset && JSON.stringify(postObject.visParams)) {
-                        localStorage.setItem(postObject.ImageCollectionAsset + JSON.stringify(postObject.visParams), JSON.stringify(data));
-                    } else if (postObject.index && postObject.dateFrom + postObject.dateTo) {
-                        localStorage.setItem(postObject.index + postObject.dateFrom + postObject.dateTo, JSON.stringify(data));
-                    } else if (postObject.path && postObject.dateFrom + postObject.dateTo) {
-                        localStorage.setItem(postObject.path + postObject.dateFrom + postObject.dateTo, JSON.stringify(data));
+                    const visParams = JSON.stringify(postObject.visParams);
+                    if (postObject.ImageAsset && visParams) {
+                        localStorage.setItem(postObject.ImageAsset + visParams, JSON.stringify(data));
+                    } else if (postObject.ImageCollectionAsset && visParams) {
+                        localStorage.setItem(postObject.ImageCollectionAsset + visParams, JSON.stringify(data));
+                    } else if (postObject.index && visParams + postObject.dateFrom + postObject.dateTo) {
+                        localStorage.setItem(postObject.index + visParams + postObject.dateFrom + postObject.dateTo, JSON.stringify(data));
+                    } else if (postObject.path && visParams + postObject.dateFrom + postObject.dateTo) {
+                        localStorage.setItem(postObject.path + visParams + postObject.dateFrom + postObject.dateTo, JSON.stringify(data));
                     } else {
                         localStorage.setItem(JSON.stringify(postObject), JSON.stringify(data));
                     }
@@ -862,12 +869,13 @@ class MapWidget extends React.Component {
                             .then(data => {
                                 if (data.hasOwnProperty("url")) {
                                     data.lastGatewayUpdate = new Date();
-                                    if (postObject.ImageAsset && JSON.stringify(postObject.visParams)) {
-                                        localStorage.setItem(postObject.ImageAsset + JSON.stringify(postObject.visParams), JSON.stringify(data));
-                                    } else if (postObject.ImageCollectionAsset && JSON.stringify(postObject.visParams)) {
-                                        localStorage.setItem(postObject.ImageCollectionAsset + JSON.stringify(postObject.visParams), JSON.stringify(data));
-                                    } else if (postObject.index && postObject.dateFrom + postObject.dateTo) {
-                                        localStorage.setItem(postObject.index + postObject.dateFrom + postObject.dateTo, JSON.stringify(data));
+                                    const visParams = JSON.stringify(postObject.visParams);
+                                    if (postObject.ImageAsset && visParams) {
+                                        localStorage.setItem(postObject.ImageAsset + visParams, JSON.stringify(data));
+                                    } else if (postObject.ImageCollectionAsset && visParams) {
+                                        localStorage.setItem(postObject.ImageCollectionAsset + visParams, JSON.stringify(data));
+                                    } else if (postObject.index && visParams + postObject.dateFrom + postObject.dateTo) {
+                                        localStorage.setItem(postObject.index + visParams + postObject.dateFrom + postObject.dateTo, JSON.stringify(data));
                                     } else {
                                         localStorage.setItem(JSON.stringify(postObject), JSON.stringify(data));
                                     }
@@ -894,12 +902,13 @@ class MapWidget extends React.Component {
                                 .then(data => {
                                     if (data.hasOwnProperty("url")) {
                                         data.lastGatewayUpdate = new Date();
-                                        if (dualImageObject.ImageAsset && JSON.stringify(dualImageObject.visParams)) {
-                                            localStorage.setItem(dualImageObject.ImageAsset + JSON.stringify(dualImageObject.visParams), JSON.stringify(data));
-                                        } else if (dualImageObject.ImageCollectionAsset && JSON.stringify(dualImageObject.visParams)) {
-                                            localStorage.setItem(dualImageObject.ImageCollectionAsset + JSON.stringify(dualImageObject.visParams), JSON.stringify(data));
-                                        } else if (dualImageObject.index && dualImageObject.dateFrom + dualImageObject.dateTo) {
-                                            localStorage.setItem(dualImageObject.index + dualImageObject.dateFrom + dualImageObject.dateTo, JSON.stringify(data));
+                                        const visParams = JSON.stringify(dualImageObject.visParams);
+                                        if (dualImageObject.ImageAsset && visParams) {
+                                            localStorage.setItem(dualImageObject.ImageAsset + visParams, JSON.stringify(data));
+                                        } else if (dualImageObject.ImageCollectionAsset && visParams) {
+                                            localStorage.setItem(dualImageObject.ImageCollectionAsset + visParams, JSON.stringify(data));
+                                        } else if (dualImageObject.index && visParams + dualImageObject.dateFrom + dualImageObject.dateTo) {
+                                            localStorage.setItem(dualImageObject.index + visParams + dualImageObject.dateFrom + dualImageObject.dateTo, JSON.stringify(data));
                                         } else {
                                             localStorage.setItem(JSON.stringify(dualImageObject), JSON.stringify(data));
                                         }
@@ -915,20 +924,6 @@ class MapWidget extends React.Component {
             .catch(error => {
                 console.log(error);
             });
-    };
-
-    getRasterByBasemapConfig = basemapConfig => {
-        const basemapId = (basemapConfig || {}).id || basemapConfig;
-        if (!basemapId || basemapId === "osm") {
-            return new TileLayer({source: new OSM()});
-        } else {
-            const basemapIdInt = parseInt(basemapId);
-            const basemapImagery = this.props.imageryList.find(imagery => imagery.id === basemapIdInt)
-                || this.props.imageryList[0];
-            return new TileLayer({
-                source: mercator.createSource(basemapImagery.sourceConfig, basemapImagery.id)
-            });
-        }
     };
 
     getImageParams = widget => {

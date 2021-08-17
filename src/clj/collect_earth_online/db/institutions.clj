@@ -4,6 +4,11 @@
             [collect-earth-online.database         :refer [call-sql sql-primitive]]
             [collect-earth-online.views            :refer [data-response]]))
 
+;;; Constants
+
+(def ^:private max-name-lenth 400)
+(def ^:private max-description-length 2000)
+
 (defn is-inst-admin? [user-id institution-id]
   (and (pos? user-id)
        (pos? institution-id)
@@ -29,14 +34,33 @@
                         :base64Image      base64_image})) ; base64Image is last so it does not appear in the logs.
       (data-response (str "Institution " institution-id " is not found.")))))
 
+(defn- get-common-errors [name description]
+  (cond
+    (or (nil? name) (= name ""))
+    (str "Name is required.")
+
+    (> (count description) max-name-lenth)
+    (str "Institution name must not exceed " max-name-lenth " characters.")
+
+    (or (nil? description) (= description ""))
+    (str "Description is required.")
+
+    (> (count description) max-description-length)
+    (str "Institution description must not exceed " max-description-length " characters.")))
+
+(defn- get-create-errors [name]
+  (when (sql-primitive (call-sql "institution_name_taken" name -1))
+    (str "Institution with the name " name " already exists.")))
+
 (defn create-institution [{:keys [params]}]
   (let [user-id      (:userId params -1)
         name         (:name params)
         base64-image (:base64Image params)
         url          (:url params)
         description  (:description params)]
-    (if (sql-primitive (call-sql "institution_name_taken" name -1))
-      (data-response (str "Institution with the name " name " already exists."))
+    (if-let [error-message (or (get-common-errors name description)
+                               (get-create-errors name))]
+      (data-response error-message)
       (if-let [institution-id (sql-primitive (call-sql "add_institution" name url description))]
         (do
           (when (pos? (count base64-image))
@@ -44,7 +68,7 @@
           (doseq [admin-id (set [user-id 1])]
             (call-sql "add_institution_user" institution-id admin-id 1))
           (data-response institution-id))
-        (data-response "")))))
+        (data-response "Unknown server error.")))))
 
 (defn- get-update-errors [institution-id user-id name]
   (cond
@@ -61,7 +85,8 @@
         base64-image   (:base64Image params)
         url            (:url params)
         description    (:description params)]
-    (if-let [error-message (get-update-errors institution-id user-id name)]
+    (if-let [error-message (or (get-common-errors name description)
+                               (get-update-errors institution-id user-id name))]
       (data-response error-message)
       (do
         (call-sql "update_institution" institution-id name url description)
