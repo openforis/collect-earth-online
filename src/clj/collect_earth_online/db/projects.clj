@@ -523,9 +523,9 @@
         (data-response "")
         (catch Exception e
           (let [causes (:causes (ex-data e))]
-          ;; Log unknown errors
+            ;; Log unknown errors
             (when-not causes (log (ex-message e)))
-          ;; Return error stack to user
+            ;; Return error stack to user
             (data-response (if causes
                              (str "-" (str/join "\n-" causes))
                              "Unknown server error.")))))
