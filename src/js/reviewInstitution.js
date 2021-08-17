@@ -193,6 +193,10 @@ class InstitutionDescription extends React.Component {
     updateInstitution = () => {
         if (this.state.newInstitutionDetails.base64Image.length > KBtoBase64Length(500)) {
             alert("Institution logos must be smaller than 500kb");
+        } else if (this.state.newInstitutionDetails.name.length === 0) {
+            alert("Institution must have a name.");
+        } else if (this.state.newInstitutionDetails.description.length === 0) {
+            alert("Institution must have a description.");
         } else {
             fetch(
                 `/update-institution?institutionId=${this.props.institutionId}`,
