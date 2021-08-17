@@ -178,8 +178,7 @@
     (p-insert-rows! "samples" samples)
     (if allow-drawn-samples?
       (when (#{"csv" "shp"} sample-distribution)
-        ;; FIXME, Create a copy of external sample so they can be restored.
-        (log "Restoring external samples for user drawn samples is temporarily broken"))
+        (p-insert-rows! "ext_samples" samples)
       (when-let [bad-plots (seq (map :visible_id (call-sql "plots_missing_samples" project-id)))]
         (pu/init-throw (str "The uploaded plot and sample files do not have correctly overlapping data. "
                             (count bad-plots)
@@ -368,10 +367,8 @@
 
       (#{"csv" "shp"} sample-distribution)
       (do
-        ;; FIXME Add process to restore external samples when allow-drawn-samples? is true.
-        (pu/init-throw "Restoring external samples for user drawn samples is temporarily broken.")
-        #_(call-sql "delete_all_samples_by_project" project-id)
-        #_(call-sql "copy_saved_samples" project-id))
+        (call-sql "delete_all_samples_by_project" project-id)
+        (call-sql "copy_project_ext_samples" project-id))
 
       :else
       (let [plot-shape        (:plot_shape project)

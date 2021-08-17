@@ -129,20 +129,26 @@
 (defmethod get-file-data :default [distribution _ _ _]
   (throw (str "No such distribution (" distribution ") defined for collect-earth-online.db.projects/get-file-data")))
 
+(defn- clean-header-text [s design-type]
+  (-> s
+      (name)
+      (str/replace #"visible_" design-type)
+      (str/upper-case)))
+
 (defn- check-headers [headers primary-key design-type]
   (let [header-diff     (set/difference (set primary-key) (set headers))
         invalid-headers (seq (remove #(re-matches #"^[a-zA-Z_][a-zA-Z0-9_]*$" (name %)) headers))]
     (when (seq header-diff)
       (pu/init-throw  (str "The required header field(s) "
                            (as-> header-diff h
-                             (map #(-> % name str/upper-case) h)
+                             (map #(clean-header-text % design-type) h)
                              (str/join "', '" h)
                              (str/replace h #"visible_" design-type)
                              (str "'" h "'"))
                            " are missing.")))
     (when invalid-headers
       (pu/init-throw  (str "One or more headers contains invalid characters: '"
-                           (str/join "', '" (map #(-> % name str/upper-case) invalid-headers))
+                           (str/join "', '" (map #(clean-header-text % design-type) invalid-headers))
                            "'")))))
 
 (defn- load-external-data! [project-id distribution file-name file-base64 design-type primary-key]
