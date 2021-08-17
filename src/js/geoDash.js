@@ -822,13 +822,7 @@ class MapWidget extends React.Component {
             },
             body: JSON.stringify(postObject)
         })
-            .then(res => {
-                if (res.ok) {
-                    return res.json();
-                } else {
-                    Promise.reject();
-                }
-            })
+            .then(res => (res.ok ? res.json() : Promise.reject()))
             .then(data => {
                 if (data && data.hasOwnProperty("url")) {
                     data.lastGatewayUpdate = new Date();
@@ -921,9 +915,7 @@ class MapWidget extends React.Component {
                     }
                 }
             })
-            .catch(error => {
-                console.log(error);
-            });
+            .catch(error => console.error(error));
     };
 
     getImageParams = widget => {
