@@ -17,14 +17,16 @@ export const nicfiLayers = ["2015-12_2016-05",
                             "2021-01",
                             "2021-02",
                             "2021-03",
-                            "2021-04"];
+                            "2021-04",
+                            "2021-05",
+                            "2021-06"];
 
 const outOfRange = (num, low, high) => isNaN(num) || parseInt(num) < low || parseInt(num) > high;
 
 const dateRangeValidator = ({startDate, endDate}) => (startDate && endDate
     && new Date(startDate) > new Date(endDate) ? "Start date must be smaller than the end date." : "");
 
-const urlValidator = url => /^(?:http|https):\/\/[\w.-]+(?:\.[\w-]+)+[\w\-.,@?^=%&:;/~\\+#]+$/.test(url);
+const urlValidator = url => /^(?:http|https):\/\/[\w.-]+(?:\.[\w-]+)+[\w\-.,@?^=%&{}:;/~\\+#]+$/.test(url);
 
 const olProjectionValidator = value => !/crs|srs|epsg|wgs/mi.test(value);
 

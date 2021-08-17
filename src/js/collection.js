@@ -808,6 +808,7 @@ class Collection extends React.Component {
                 this.featuresToDrawLayer(drawTool);
             } else {
                 this.featuresToSampleLayer();
+                this.setSelectedQuestion(this.state.currentProject.surveyQuestions[0]);
             }
             this.setState({answerMode: newMode});
         }
