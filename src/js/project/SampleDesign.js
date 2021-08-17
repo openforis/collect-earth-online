@@ -1,6 +1,6 @@
 import React from "react";
 
-import {formatNumberWithCommas, encodeFileAsBase64} from "../utils/generalUtils";
+import {formatNumberWithCommas, encodeFileAsBase64, truncate} from "../utils/generalUtils";
 import {ProjectContext, perPlotLimit, sampleLimit} from "./constants";
 
 export class SampleDesign extends React.Component {
@@ -178,7 +178,14 @@ SampleDesign.contextType = ProjectContext;
 export function SampleReview() {
     return (
         <ProjectContext.Consumer>
-            {({sampleDistribution, samplesPerPlot, sampleResolution, allowDrawnSamples, useTemplatePlots}) => (
+            {({
+                allowDrawnSamples,
+                sampleDistribution,
+                sampleFileName,
+                sampleResolution,
+                samplesPerPlot,
+                useTemplatePlots
+            }) => (
                 <div id="sample-review">
                     {useTemplatePlots && <h3 className="mb-3">Samples will be copied from template project</h3>}
                     {sampleDistribution === "none"
@@ -205,6 +212,17 @@ export function SampleReview() {
                                                     <td className="w-80">Sample Spacing</td>
                                                     <td className="w-20 text-center">
                                                         <span className="badge badge-pill bg-lightgreen">{sampleResolution} m</span>
+                                                    </td>
+                                                </tr>
+                                            )}
+                                            {sampleFileName && (
+                                                <tr>
+                                                    <td className="w-80">Sample File</td>
+                                                    <td className="w-20 text-center">
+                                                        <span className="badge badge-pill bg-lightgreen tooltip_wrapper" style={{color: "white"}}>
+                                                            {sampleFileName.split(".").map(s => truncate(s, 13)).join("")}
+                                                            <div className="tooltip_content">{sampleFileName}</div>
+                                                        </span>
                                                     </td>
                                                 </tr>
                                             )}
