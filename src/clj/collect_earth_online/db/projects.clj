@@ -178,7 +178,7 @@
     (p-insert-rows! "samples" samples)
     (if allow-drawn-samples?
       (when (#{"csv" "shp"} sample-distribution)
-        (p-insert-rows! "ext_samples" samples)
+        (p-insert-rows! "ext_samples" samples))
       (when-let [bad-plots (seq (map :visible_id (call-sql "plots_missing_samples" project-id)))]
         (pu/init-throw (str "The uploaded plot and sample files do not have correctly overlapping data. "
                             (count bad-plots)
