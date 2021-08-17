@@ -1,21 +1,10 @@
 (ns collect-earth-online.utils.mail
-  (:require [clojure.edn :as edn]
-            [postal.core :refer [send-message]]
+  (:require [postal.core :refer [send-message]]
             [triangulum.config :refer [get-config]]
             [collect-earth-online.logging :refer [log-str]]))
 
-;; Example value:
-;; {:host                  "smtp.gmail.com"
-;;  :user                  "mail@gmail.com"
-;;  :pass                  "mail"
-;;  :tls                   true
-;;  :port                  587
-;;  :base-url              "https://collect.earth/"
-;;  :recipient-limit       100}
-(defonce mail-config (get-config :mail))
-
 (defn get-base-url []
-  (:base-url mail-config))
+  (:base-url (get-config :mail)))
 
 (defn email? [string]
   (let [pattern #"[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?"]
@@ -23,8 +12,8 @@
 
 (defn- send-postal [to-addresses cc-addresses bcc-addresses subject body content-type]
   (send-message
-   (select-keys mail-config [:host :user :pass :tls :port])
-   {:from    (:user mail-config)
+   (select-keys (get-config :mail) [:host :user :pass :tls :port])
+   {:from    (get-config :mail :user)
     :to      to-addresses
     :cc      cc-addresses
     :bcc     bcc-addresses
@@ -40,16 +29,3 @@
                                              body
                                              content-type)]
     (when-not (= :SUCCESS error) (log-str message))))
-
-(defn mass-send [bcc-addresses subject body]
-  (->> bcc-addresses
-       (filter email?)
-       (partition-all (:recipient-limit mail-config))
-       (reduce (fn [acc cur]
-                 (let [response (send-postal nil nil cur subject body "text/html")]
-                   (if (= :SUCCESS (:error response))
-                     acc
-                     (-> acc
-                         (assoc :status 400)
-                         (update :messages #(conj % (:message response)))))))
-               {})))

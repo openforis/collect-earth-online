@@ -349,62 +349,83 @@ export class GeoDashNavigationBar extends React.Component {
     }
 }
 
+export function Logo({size, url, name, id, src}) {
+    const logoCSS = logoSize => ({
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        background: "#fff",
+        borderRadius: "50%",
+        boxShadow: "0px 5px 10px rgba(0,0,0,.5)",
+        padding: ".5rem",
+        margin: "1rem",
+        ...(logoSize === "large" ? {
+            maxWidth: "180px",
+            maxHeight: "180px",
+            height: "180px",
+            width: "180px"
+        } : {
+            maxWidth: "150px",
+            maxHeight: "150px",
+            height: "150px",
+            width: "150px"
+        })
+    });
+
+    return (
+        <div style={logoCSS(size)}>
+            <a href={url} rel="noreferrer noopener" target="_blank">
+                <img
+                    alt={name}
+                    className="img-fluid"
+                    id={id}
+                    src={src}
+                    style={{padding: "0.9rem"}}
+                />
+            </a>
+        </div>
+    );
+}
+
 export function LogoBanner() {
     return (
         <div id="logo-banner">
-            <div className="row mb-4 justify-content-center">
-                <div className="col-sm-4 text-center">
-                    <a href="https://www.servirglobal.net/" rel="noreferrer noopener" target="_blank">
-                        <img
-                            alt="Servir Global"
-                            className="img-fluid"
-                            id="servir"
-                            src="/img/servir-logo.png"
-                        />
-                    </a>
-                </div>
-            </div>
             <div className="row justify-content-center mb-2">
                 <div className="col-sm-6 text-center">
                     <h2>With the support of</h2>
                 </div>
             </div>
-            <div className="row mb-4">
-                <div className="col-sm-3 text-center my-auto">
-                    <a href="http://openforis.org" rel="noreferrer noopener" target="_blank">
-                        <img alt="Open Foris" className="img-fluid" id="openforis" src="/img/openforis-logo.png"/>
-                    </a>
-                </div>
-                <div className="col-sm-3 text-center my-auto">
-                    <a href="http://www.fao.org" rel="noreferrer noopener" target="_blank">
-                        <img
-                            alt="Food and Agriculture Organization of the United Nations"
-                            className="img-fluid"
-                            id="fao"
-                            src="/img/fao.png"
-                        />
-                    </a>
-                </div>
-                <div className="col-sm-3 text-center my-auto">
-                    <a href="https://www.usaid.gov" rel="noreferrer noopener" target="_blank">
-                        <img
-                            alt="U.S. Agency for International Development"
-                            className="img-fluid"
-                            id="usaid"
-                            src="/img/usaid.png"
-                        />
-                    </a>
-                </div>
-                <div className="col-sm-3 text-center my-auto">
-                    <a href="https://www.nasa.gov" rel="noreferrer noopener" target="_blank">
-                        <img
-                            alt="National Aeronautics and Space Administration"
-                            className="img-fluid"
-                            id="nasa"
-                            src="/img/nasa.png"
-                        />
-                    </a>
-                </div>
+            <div className="row justify-content-center mb-2">
+                <Logo
+                    name="Servir Global"
+                    size="large"
+                    src="/img/servir-logo.png"
+                    url="https://www.servirglobal.net/"
+                />
+                <Logo
+                    name="Open Foris"
+                    size="large"
+                    src="/img/openforis-logo.png"
+                    url="http://openforis.org"
+                />
+                <Logo
+                    name="Food and Agriculture Organization of the United Nations"
+                    size="large"
+                    src="/img/fao.png"
+                    url="http://www.fao.org"
+                />
+                <Logo
+                    name="U.S. Agency for International Development"
+                    size="large"
+                    src="/img/usaid.png"
+                    url="https://www.usaid.gov"
+                />
+                <Logo
+                    name="National Aeronautics and Space Administration"
+                    size="large"
+                    src="/img/nasa-logo.png"
+                    url="https://www.nasa.gov"
+                />
             </div>
             <div className="row mb-2 justify-content-center">
                 <div className="col-sm-6 text-center">
@@ -412,83 +433,48 @@ export function LogoBanner() {
                 </div>
             </div>
             <div className="row mb-4 justify-content-center">
-                <div className="col-sm-6 text-center my-auto">
-                    <a href="https://www.silvacarbon.org" rel="noreferrer noopener" target="_blank">
-                        <img
-                            alt="Silva Carbon"
-                            className="img-fluid"
-                            id="silvacarbon"
-                            src="/img/SilvaCarbon.png"
-                        />
-                    </a>
-                </div>
-                <div className="col-sm-6 text-center my-auto">
-                    <a href="https://sig-gis.com" rel="noreferrer noopener" target="_blank">
-                        <img
-                            alt="Spatial Informatics Group, Inc."
-                            className="img-fluid"
-                            id="sig"
-                            src="/img/sig-logo.png"
-                        />
-                    </a>
-                </div>
-            </div>
-            <div className="row mb-4 justify-content-center">
-                <div className="col-sm-6 text-center my-auto">
-                    <a href="https://servir.adpc.net" rel="noreferrer noopener" target="_blank">
-                        <img
-                            alt="Servir Mekong"
-                            className="img-fluid"
-                            id="servir-mekong"
-                            src="/img/servir-mekong-logo.png"
-                        />
-                    </a>
-                </div>
-                <div className="col-sm-6 text-center my-auto">
-                    <a href="https://servir.ciat.cgiar.org" rel="noreferrer noopener" target="_blank">
-                        <img
-                            alt="Servir Amazonia"
-                            className="img-fluid"
-                            id="servir-amazonia"
-                            src="/img/servir-amazonia-logo.png"
-                        />
-                    </a>
-                </div>
-            </div>
-            <div className="row mb-4 justify-content-center">
-                <div className="col-sm-4 text-center my-auto">
-                    <a href="https://www.google.com" rel="noreferrer noopener" target="_blank">
-                        <img
-                            alt="Google, Inc."
-                            className="img-fluid"
-                            id="google"
-                            src="/img/google-logo.png"
-                        />
-                    </a>
-                </div>
-
-                <div className="col-sm-4 text-center my-auto">
-                    <a href="https://www.fs.usda.gov" rel="noreferrer noopener" target="_blank">
-                        <img
-                            alt="U.S. Forest Service"
-                            className="img-fluid"
-                            id="usfs"
-                            src="/img/usfs.png"
-                            style={{width: "120px"}}
-                        />
-                    </a>
-                </div>
-
-                <div className="col-sm-4 text-center my-auto">
-                    <a href="https://www.fs.usda.gov/about-agency/gtac" rel="noreferrer noopener" target="_blank">
-                        <img
-                            alt="Geospatial Technology and Applications Center"
-                            className="img-fluid"
-                            id="gtac"
-                            src="/img/gtac-logo.png"
-                        />
-                    </a>
-                </div>
+                <Logo
+                    name="Silva Carbon"
+                    size="small"
+                    src="/img/SilvaCarbon.png"
+                    url="https://www.silvacarbon.org"
+                />
+                <Logo
+                    name="Spatial Informatics Group, Inc."
+                    size="small"
+                    src="/img/sig-logo.png"
+                    url="https://sig-gis.com"
+                />
+                <Logo
+                    name="Servir Mekong"
+                    size="small"
+                    src="/img/servir-mekong-logo.png"
+                    url="https://servir.adpc.net"
+                />
+                <Logo
+                    name="Servir Amazonia"
+                    size="small"
+                    src="/img/servir-amazonia-logo.png"
+                    url="https://servir.ciat.cgiar.org"
+                />
+                <Logo
+                    name="Google, Inc."
+                    size="small"
+                    src="/img/google-logo.png"
+                    url="https://www.google.com"
+                />
+                <Logo
+                    name="U.S. Forest Service"
+                    size="small"
+                    src="/img/usfs.png"
+                    url="https://www.fs.usda.gov"
+                />
+                <Logo
+                    name="Geospatial Technology and Applications Center"
+                    size="small"
+                    src="/img/gtac-logo.png"
+                    url="https://www.fs.usda.gov/about-agency/gtac"
+                />
             </div>
         </div>
     );

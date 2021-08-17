@@ -108,8 +108,7 @@ class Geodash extends React.Component {
             return fetch(`/get-plot-sample-geom?plotId=${plotId}`)
                 .then(response => (response.ok ? response.json() : Promise.reject(response)))
                 .then(plotJsonObject => {
-                    const sampleGeom = (plotJsonObject.samples || []).map(e => e.geom);
-                    const features = [plotJsonObject.geom].concat(sampleGeom)
+                    const features = [plotJsonObject.plotGeom, ...(plotJsonObject.sampleGeoms || [])]
                         .filter(e => e)
                         .map(geom => new Feature({geometry: mercator.parseGeoJson(geom, true)}));
                     return Promise.resolve(new Vector({features}));
@@ -132,7 +131,7 @@ class Geodash extends React.Component {
         } else if (plotShape === "circle") {
             return Promise.resolve(new Vector({
                 features: [new Feature(new Circle(
-                    projTransform(JSON.parse(center).coordinates, "EPSG:4326", "EPSG:3857"), radius * 1
+                    projTransform(JSON.parse(center).coordinates, "EPSG:4326", "EPSG:3857"), radius
                 ))]
             }));
         } else {
@@ -545,10 +544,10 @@ class MapWidget extends React.Component {
         const {projPairAOI, widget} = this.props;
         let {projAOI} = this.props;
 
-        const {sourceConfig, id, attribution} = this.props.imageryList.find(imagery =>
+        const {sourceConfig, id, attribution, isProxied} = this.props.imageryList.find(imagery =>
             imagery.id === widget.basemapId) || this.props.imageryList[0];
         const basemapLayer = new TileLayer({
-            source: mercator.createSource(sourceConfig, id, attribution)
+            source: mercator.createSource(sourceConfig, id, attribution, isProxied)
         });
         const plotSampleLayer = new VectorLayer({
             source: this.props.vectorSource,
