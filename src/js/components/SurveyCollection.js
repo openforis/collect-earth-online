@@ -378,38 +378,46 @@ export class SurveyCollection extends React.Component {
         </div>
     );
 
+    renderDrawTool = ({icon, title, type, state}) => (
+        <div
+            onClick={() => this.setDrawTool(type)}
+            style={{alignItems: "center", cursor: "pointer", display: "flex"}}
+            title={title}
+        >
+            <span style={this.buttonStyle(state.drawTool === type)}>
+                <SvgIcon icon={icon} size="2rem"/>
+            </span>
+            {`${type} tool`}
+        </div>
+    );
+
     renderDrawTools = () => (
         <div style={{display: "flex", flexDirection: "column"}}>
-            <div
-                onClick={() => this.setDrawTool("Point")}
-                style={{alignItems: "center", cursor: "pointer", display: "flex"}}
-                title="Click anywhere to add a new point."
-            >
-                <span style={this.buttonStyle(this.state.drawTool === "Point")}>
-                    <SvgIcon icon="point" size="2rem"/>
-                </span>
-                Point tool
-            </div>
-            <div
-                onClick={() => this.setDrawTool("LineString")}
-                style={{alignItems: "center", cursor: "pointer", display: "flex"}}
-                title="Click anywhere to start drawing. A new point along the line string can be added with a single click. Right click or double click to finish drawing."
-            >
-                <span style={this.buttonStyle(this.state.drawTool === "LineString")}>
-                    <SvgIcon icon="lineString" size="2rem"/>
-                </span>
-                LineString tool
-            </div>
-            <div
-                onClick={() => this.setDrawTool("Polygon")}
-                style={{alignItems: "center", cursor: "pointer", display: "flex"}}
-                title="Click anywhere to start drawing. A new vertex can be added with a singe click. Right click, double click, or complete the polygon to finish drawing."
-            >
-                <span style={this.buttonStyle(this.state.drawTool === "Polygon")}>
-                    <SvgIcon icon="polygon" size="2rem"/>
-                </span>
-                Polygon tool
-            </div>
+            {this.props.sampleGeometries.points
+                && this.renderDrawTool({
+                    icon: "point",
+                    state: this.state,
+                    title: "Click anywhere to add a new point.",
+                    type: "Point"
+                })}
+            {this.props.sampleGeometries.lines
+                && this.renderDrawTool({
+                    icon: "lineString",
+                    state: this.state,
+                    title: `Click anywhere to start drawing.
+                      A new point along the line string can be added with a single click.
+                      Right click or double click to finish drawing.`,
+                    type: "Linestring"
+                })}
+            {this.props.sampleGeometries.polygons
+                && this.renderDrawTool({
+                    icon: "polygon",
+                    state: this.state,
+                    title: `Click anywhere to start drawing.
+                      A new vertex can be added with a single click.
+                      Right click, double click, or complete the polygon to finish drawing.`,
+                    type: "Polygon"
+                })}
             <ul style={{textAlign: "left"}}>
                 How To:
                 <li>To modify an existing feature, hold ctrl and click to drag</li>

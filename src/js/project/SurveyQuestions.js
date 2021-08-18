@@ -438,6 +438,7 @@ export class SurveyQuestionHelp extends React.Component {
                     flaggedReason={this.state.flaggedReason}
                     getSelectedSampleIds={() => [1]}
                     resetPlotValues={this.resetAnswers}
+                    sampleGeometries={this.context.projectSettings?.sampleGeometries || {}}
                     selectedQuestion={this.state.selectedQuestion}
                     selectedSampleId={1}
                     setAnswerMode={mode => this.setState({answerMode: mode})}

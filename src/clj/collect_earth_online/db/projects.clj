@@ -39,6 +39,10 @@
                       :collectConfidence   false
                       :autoLaunchGeoDash   true})
 
+(def default-settings {:sampleGeometries {:points    true
+                                          :lines     true
+                                          :polygonds true}})
+
 (defn get-home-projects [{:keys [params]}]
   (data-response (mapv (fn [{:keys [project_id institution_id name description num_plots centroid editable]}]
                          {:id            project_id
@@ -90,6 +94,7 @@
      :surveyQuestions    (tc/jsonb->clj (:survey_questions project) [])
      :surveyRules        (tc/jsonb->clj (:survey_rules project) [])
      :projectOptions     (merge default-options (tc/jsonb->clj (:options project)))
+     :projectSettings    (merge default-settings (tc/jsonb->clj (:project_settings project)))
      :createdDate        (str (:created_date project))
      :publishedDate      (str (:published_date project))
      :closedDate         (str (:closed_date project))
@@ -119,7 +124,8 @@
                     :allowDrawnSamples  (:allow_drawn_samples project)
                     :surveyQuestions    (tc/jsonb->clj (:survey_questions project) [])
                     :surveyRules        (tc/jsonb->clj (:survey_rules project) [])
-                    :projectOptions     (merge default-options (tc/jsonb->clj (:options project)))})))
+                    :projectOptions     (merge default-options (tc/jsonb->clj (:options project)))
+                    :projectSettings    (merge default-settings (tc/jsonb->clj (:project_settings project)))})))
 
 (defn get-project-stats [{:keys [params]}]
   (let [project-id (tc/val->int (:projectId params))
@@ -272,6 +278,7 @@
         survey-questions     (tc/clj->jsonb (:surveyQuestions params))
         survey-rules         (tc/clj->jsonb (:surveyRules params))
         project-options      (tc/clj->jsonb (:projectOptions params default-options))
+        project-settings     (tc/clj->jsonb (:projectSettings params default-settings))
         project-template     (tc/val->int (:projectTemplate params))
         use-template-plots   (tc/val->bool (:useTemplatePlots params))
         use-template-widgets (tc/val->bool (:useTemplateWidgets params))
@@ -299,7 +306,8 @@
                                                       survey-questions
                                                       survey-rules
                                                       token-key
-                                                      project-options))]
+                                                      project-options
+                                                      project-settings))]
     (try
       ;; Create or copy plots
       (if (and (pos? project-template) use-template-plots)
@@ -433,6 +441,7 @@
         survey-rules         (tc/clj->jsonb (:surveyRules params))
         update-survey        (tc/val->bool (:updateSurvey params))
         project-options      (tc/clj->jsonb (:projectOptions params default-options))
+        project-settings     (tc/clj->jsonb (:projectSettings params default-settings))
         plot-file-name       (:plotFileName params)
         plot-file-base64     (:plotFileBase64 params)
         sample-file-name     (:sampleFileName params)
@@ -516,7 +525,8 @@
                   allow-drawn-samples?
                   survey-questions
                   survey-rules
-                  project-options)
+                  project-options
+                  project-settings)
         (data-response "")
         (catch Exception e
           (let [causes (:causes (ex-data e))]

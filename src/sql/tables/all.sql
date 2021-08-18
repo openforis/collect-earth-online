@@ -85,7 +85,8 @@ CREATE TABLE projects (
     token_key              text DEFAULT NULL,
     options                jsonb NOT NULL DEFAULT '{}'::jsonb,
     imagery_rid            integer REFERENCES imagery (imagery_uid),
-    allow_drawn_samples    boolean
+    allow_drawn_samples    boolean,
+    project_settings       jsonb NOT NULL DEFAULT '{}'::jsonb
 );
 
 -- Stores project imagery

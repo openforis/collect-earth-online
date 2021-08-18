@@ -117,6 +117,7 @@ export default class ReviewChanges extends React.Component {
             name: this.context.name,
             privacyLevel: this.context.privacyLevel,
             projectOptions: this.context.projectOptions,
+            projectSettings: this.context.projectSettings,
             numPlots: this.context.numPlots,
             plotDistribution: this.context.plotDistribution,
             plotShape: this.context.plotShape,

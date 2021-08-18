@@ -4,6 +4,8 @@ import {formatNumberWithCommas, encodeFileAsBase64, truncate} from "../utils/gen
 import {ProjectContext, perPlotLimit, sampleLimit} from "./constants";
 
 export class SampleDesign extends React.Component {
+    componentDidMount = () => { this.resetSampleGeometry(); };
+
     /// Render Functions
 
     renderLabeledInput = (label, property) => (
@@ -57,8 +59,37 @@ export class SampleDesign extends React.Component {
         </div>
     );
 
+    getSampleGeometry = () => this.context.projectSettings?.sampleGeometries
+        || {points: true, lines: true, polygons: true};
+
+    resetSampleGeometry = () => {
+        const sampleGeometries = this.getSampleGeometry();
+        this.context.setProjectDetails({projectSettings: {sampleGeometries}});
+    };
+
+    isEnabledSampleGeometry = geometry => {
+        const sampleGeometries = this.getSampleGeometry();
+        return sampleGeometries[geometry];
+    };
+
+    toggleSampleGeometry = (geometry, alwaysEnabled) => {
+        const {sampleDistribution} = this.context;
+        const sampleGeometries = this.getSampleGeometry();
+        if (alwaysEnabled && alwaysEnabled.indexOf(sampleDistribution) > 0) {
+            sampleGeometries[geometry] = true;
+        } else {
+            sampleGeometries[geometry] = !this.isEnabledSampleGeometry(geometry);
+        }
+        this.context.setProjectDetails({projectSettings: {sampleGeometries}});
+    };
+
     render() {
-        const {plotDistribution, sampleDistribution, allowDrawnSamples, setProjectDetails} = this.context;
+        const {
+            allowDrawnSamples,
+            plotDistribution,
+            sampleDistribution,
+            setProjectDetails
+        } = this.context;
         const totalPlots = this.props.getTotalPlots();
         const samplesPerPlot = this.props.getSamplesPerPlot();
 
@@ -100,6 +131,19 @@ export class SampleDesign extends React.Component {
             }
         };
 
+        const sampleGeometries = {
+            points: {
+                display: "Points",
+                alwaysEnabled: ["random", "gridded", "center"]
+            },
+            lines: {
+                display: "Lines"
+            },
+            polygons: {
+                display: "Polygons"
+            }
+        };
+
         return (
             <div id="sample-design">
                 <h2>Sample Generation</h2>
@@ -107,7 +151,10 @@ export class SampleDesign extends React.Component {
                     <label>Spatial Distribution</label>
                     <select
                         className="form-control form-control-sm ml-3"
-                        onChange={e => setProjectDetails({sampleDistribution: e.target.value})}
+                        onChange={e => setProjectDetails({
+                            allowDrawnSamples: (e.target.value === "none") || allowDrawnSamples,
+                            sampleDistribution: e.target.value
+                        }) && this.resetSampleGeometry()}
                         style={{width: "initial"}}
                         value={sampleDistribution}
                     >
@@ -121,29 +168,54 @@ export class SampleDesign extends React.Component {
                 <p className="font-italic ml-2 small" id="sample-design-text">
                     - {sampleOptions[sampleDistribution].description}
                 </p>
-                {sampleDistribution !== "none" && (
-                    <div className="mb-3">
-                        <div className="form-check form-check-inline">
-                            <input
-                                checked={allowDrawnSamples || sampleDistribution === "none"}
-                                className="form-check-input"
-                                id="allow-drawn-samples"
-                                onChange={() => setProjectDetails({allowDrawnSamples: !allowDrawnSamples})}
-                                type="checkbox"
-                            />
-                            <label
-                                className="form-check-label"
-                                htmlFor="allow-drawn-samples"
-                            >
-                                Allow users to draw their own samples
-                            </label>
-                        </div>
-                        <p className="font-italic ml-2 small">
-                            - Enable this to allow users to draw and label points, linestrings,
-                            and polygons during data collection.
-                        </p>
+                <div className="mb-3">
+                    <div className="form-check form-check-inline">
+                        <input
+                            checked={allowDrawnSamples || sampleDistribution === "none"}
+                            className="form-check-input"
+                            disabled={sampleDistribution === "none"}
+                            id="allow-drawn-samples"
+                            onChange={() => setProjectDetails({allowDrawnSamples: !allowDrawnSamples})}
+                            type="checkbox"
+                        />
+                        <label
+                            className="form-check-label"
+                            htmlFor="allow-drawn-samples"
+                        >
+                            Allow users to draw their own samples
+                        </label>
                     </div>
-                )}
+                    <p className="font-italic ml-2 small">
+                        - Enable this to allow users to draw and label points, lines,
+                        and polygons during data collection.
+                    </p>
+                    <div className="form-group mx-4">
+                        <label
+                            htmlFor="restrict-sample-geometry"
+                        >
+                            Restrict sample geometry to:
+                        </label>
+                        <p className="font-italic ml-2 small">
+                            - Restrict samples to only points, lines, and/or polygons.
+                        </p>
+                        {Object.entries(sampleGeometries).map(([geometry, options]) => (
+                            <div key={geometry} className="form-check">
+                                <input
+                                    checked={this.isEnabledSampleGeometry(geometry)}
+                                    className="form-check-input"
+                                    disabled={!allowDrawnSamples || options.alwaysEnabled}
+                                    id={geometry}
+                                    onChange={() => this.toggleSampleGeometry(geometry, options.alwaysEnabled)}
+                                    type="checkbox"
+                                    value={geometry}
+                                />
+                                <label htmlFor={geometry}>
+                                    {options.display}
+                                </label>
+                            </div>
+                        ))}
+                    </div>
+                </div>
                 <div style={{display: "flex"}}>
                     {sampleOptions[sampleDistribution].inputs.map((i, idx) => (
                         <div key={idx} className="mr-3">
