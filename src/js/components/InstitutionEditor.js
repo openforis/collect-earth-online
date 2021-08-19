@@ -59,7 +59,7 @@ export default function InstitutionEditor({
                         label="Description"
                         maxLength="2000"
                         onChange={e => setInstitutionDetails("description", e.target.value)}
-                        textarea
+                        type="textarea"
                         value={description}
                     />
                 </div>

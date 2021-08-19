@@ -5,6 +5,7 @@ import {CollapsibleTitle} from "./FormComponents";
 import RulesCollectionModal from "./RulesCollectionModal";
 import SvgIcon from "./SvgIcon";
 import {mercator} from "../utils/mercator";
+import RequiredInput from "./RequiredInput";
 
 export class SurveyCollection extends React.Component {
     ruleFunctions = {
@@ -710,10 +711,10 @@ class AnswerInput extends React.Component {
                             }}
                         />
                     </div>
-                    <input
+                    <RequiredInput
+                        key={answers[0].answer + "_" + answers[0].id}
                         className="form-control mr-2"
                         id={answers[0].answer + "_" + answers[0].id}
-                        name={answers[0].answer + "_" + answers[0].id}
                         onChange={e => this.updateInputValue(dataType === "number"
                             ? Number(e.target.value)
                             : e.target.value)}
@@ -721,14 +722,18 @@ class AnswerInput extends React.Component {
                         type={dataType}
                         value={newInput}
                     />
-                    <input
-                        className="text-center btn btn-outline-lightgreen btn-sm"
+                    <button
+                        className="text-center btn btn-outline-lightgreen btn-sm ml-2"
                         id="save-input"
                         name="save-input"
-                        onClick={() => validateAndSetCurrentValue(surveyNode, answers[0].id, newInput)}
+                        onClick={() => {
+                            if (newInput) validateAndSetCurrentValue(surveyNode, answers[0].id, newInput);
+                        }}
+                        style={{height: "2.5rem"}}
                         type="button"
-                        value="Save"
-                    />
+                    >
+                        Save
+                    </button>
                 </div>
             ) : null;
     }
