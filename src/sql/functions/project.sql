@@ -83,7 +83,7 @@ CREATE OR REPLACE FUNCTION create_project(
     _survey_rules           jsonb,
     _token_key              text,
     _options                jsonb,
-    _project_settings       jsonb
+    _design_settings        jsonb
  ) RETURNS integer AS $$
 
     INSERT INTO projects (
@@ -108,7 +108,7 @@ CREATE OR REPLACE FUNCTION create_project(
         created_date,
         token_key,
         options,
-        project_settings
+        design_settings
     ) VALUES (
         _institution_id,
         'unpublished',
@@ -131,7 +131,7 @@ CREATE OR REPLACE FUNCTION create_project(
         now(),
         _token_key,
         _options,
-        _project_settings
+        _design_settings
     )
     RETURNING project_uid
 
@@ -224,7 +224,7 @@ CREATE OR REPLACE FUNCTION update_project(
     _survey_questions       jsonb,
     _survey_rules           jsonb,
     _options                jsonb,
-    _project_settings       jsonb
+    _design_settings        jsonb
  ) RETURNS void AS $$
 
     UPDATE projects
@@ -245,7 +245,7 @@ CREATE OR REPLACE FUNCTION update_project(
         survey_questions = _survey_questions,
         survey_rules = _survey_rules,
         options = _options,
-        project_settings = _project_settings
+        design_settings = _design_settings
     WHERE project_uid = _project_id
 
 $$ LANGUAGE SQL;
@@ -454,7 +454,7 @@ CREATE OR REPLACE FUNCTION select_project_by_id(_project_id integer)
     survey_questions       jsonb,
     survey_rules           jsonb,
     options                jsonb,
-    project_settings       jsonb,
+    design_settings        jsonb,
     created_date           date,
     published_date         date,
     closed_date            date,
@@ -482,7 +482,7 @@ CREATE OR REPLACE FUNCTION select_project_by_id(_project_id integer)
         survey_questions,
         survey_rules,
         options,
-        project_settings,
+        design_settings,
         created_date,
         published_date,
         closed_date,

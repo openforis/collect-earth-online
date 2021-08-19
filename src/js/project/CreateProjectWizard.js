@@ -282,15 +282,17 @@ export default class CreateProjectWizard extends React.Component {
 
     validateSampleData = () => {
         const {
-            projectId,
-            plotSize,
-            sampleDistribution,
-            sampleResolution,
-            plotShape,
+            allowDrawnSamples,
+            designSettings: {sampleGeometries},
+            originalProject,
             plotFileName,
+            plotShape,
+            plotSize,
+            projectId,
+            sampleDistribution,
             sampleFileName,
-            useTemplatePlots,
-            originalProject
+            sampleResolution,
+            useTemplatePlots
         } = this.context;
         const totalPlots = this.getTotalPlots();
         const samplesPerPlot = this.getSamplesPerPlot();
@@ -314,7 +316,9 @@ export default class CreateProjectWizard extends React.Component {
                 && sampleResolution >= plotSize)
                 && "The sample spacing must be less than the plot width.",
             (samplesPerPlot > perPlotLimit || (totalPlots * samplesPerPlot) > sampleLimit)
-                && "The sample size limit has been exceeded. Check the Sample Design section for detailed info."
+                && "The sample size limit has been exceeded. Check the Sample Design section for detailed info.",
+            (allowDrawnSamples && !(Object.values(sampleGeometries).some(g => g)))
+                && "At least one geometry type must be enabled."
         ];
         return errorList.filter(e => e);
     };
