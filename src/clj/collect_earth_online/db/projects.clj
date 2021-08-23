@@ -41,7 +41,7 @@
 
 (def default-settings {:sampleGeometries {:points    true
                                           :lines     true
-                                          :polygonds true}})
+                                          :polygons  true}})
 
 (defn get-home-projects [{:keys [params]}]
   (data-response (mapv (fn [{:keys [project_id institution_id name description num_plots centroid editable]}]

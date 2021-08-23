@@ -59,8 +59,11 @@ export class SampleDesign extends React.Component {
 
     toggleSampleGeometry = geometry => {
         const {sampleGeometries} = this.context.designSettings;
-        sampleGeometries[geometry] = !sampleGeometries[geometry];
-        this.context.setProjectDetails({designSettings: {sampleGeometries}});
+        this.context.setProjectDetails({
+            designSettings: {
+                sampleGeometries: {...sampleGeometries, [geometry]: !sampleGeometries[geometry]}
+            }
+        });
     };
 
     render() {
@@ -160,6 +163,31 @@ export class SampleDesign extends React.Component {
                 <p className="font-italic ml-2 small" id="sample-design-text">
                     - {sampleOptions[sampleDistribution].description}
                 </p>
+                <div style={{display: "flex"}}>
+                    {sampleOptions[sampleDistribution].inputs.map((i, idx) => (
+                        <div key={idx} className="mr-3">
+                            {i()}
+                        </div>
+                    ))}
+                </div>
+                <p
+                    className="font-italic ml-2"
+                    style={{
+                        color: samplesPerPlot > perPlotLimit ? "#8B0000" : "#006400",
+                        fontSize: "1rem",
+                        whiteSpace: "pre-line"
+                    }}
+                >
+                    {samplesPerPlot > 0 && `Each plot will contain around ${formatNumberWithCommas(samplesPerPlot)} samples.`}
+                    {totalPlots > 0 && samplesPerPlot > 0
+                        ? `  There will be around ${formatNumberWithCommas(totalPlots * samplesPerPlot)} total samples in the project.`
+                        : sampleDistribution === "none"
+                            ? "  No samples will be added to the plot."
+                            : ""}
+                    {totalPlots > 0 && samplesPerPlot > 0 && samplesPerPlot > perPlotLimit
+                        && `* The maximum allowed for the selected sample distribution is ${formatNumberWithCommas(perPlotLimit)}`
+                            + ` samples per plot. * The maximum allowed samples per project is ${formatNumberWithCommas(sampleLimit)}.`}
+                </p>
                 <div className="mb-3">
                     <div className="form-check form-check-inline">
                         <input
@@ -196,8 +224,7 @@ export class SampleDesign extends React.Component {
                                     <input
                                         checked={sampleGeometries[geometry]}
                                         className="form-check-input"
-                                        disabled={!allowDrawnSamples
-                                            || options.alwaysEnabled?.includes(sampleDistribution)}
+                                        disabled={options.alwaysEnabled?.includes(sampleDistribution)}
                                         id={geometry}
                                         onChange={() => this.toggleSampleGeometry(geometry)}
                                         type="checkbox"
@@ -211,31 +238,6 @@ export class SampleDesign extends React.Component {
                         </div>
                     )}
                 </div>
-                <div style={{display: "flex"}}>
-                    {sampleOptions[sampleDistribution].inputs.map((i, idx) => (
-                        <div key={idx} className="mr-3">
-                            {i()}
-                        </div>
-                    ))}
-                </div>
-                <p
-                    className="font-italic ml-2"
-                    style={{
-                        color: samplesPerPlot > perPlotLimit ? "#8B0000" : "#006400",
-                        fontSize: "1rem",
-                        whiteSpace: "pre-line"
-                    }}
-                >
-                    {samplesPerPlot > 0 && `Each plot will contain around ${formatNumberWithCommas(samplesPerPlot)} samples.`}
-                    {totalPlots > 0 && samplesPerPlot > 0
-                        ? `  There will be around ${formatNumberWithCommas(totalPlots * samplesPerPlot)} total samples in the project.`
-                        : sampleDistribution === "none"
-                            ? "  No samples will be added to the plot."
-                            : ""}
-                    {totalPlots > 0 && samplesPerPlot > 0 && samplesPerPlot > perPlotLimit
-                        && `* The maximum allowed for the selected sample distribution is ${formatNumberWithCommas(perPlotLimit)}`
-                            + ` samples per plot. * The maximum allowed samples per project is ${formatNumberWithCommas(sampleLimit)}.`}
-                </p>
             </div>
         );
     }
