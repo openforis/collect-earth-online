@@ -16,6 +16,13 @@ class Project extends React.Component {
             institution: -1,
             name: "",
             description: "",
+            designSettings: {
+                sampleGeometries: {
+                    points: true,
+                    lines: true,
+                    polygons: true
+                }
+            },
             projectOptions: {
                 showGEEScript: false,
                 showPlotInformation: false,

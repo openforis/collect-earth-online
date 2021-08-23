@@ -912,6 +912,7 @@ class Collection extends React.Component {
                                 getSelectedSampleIds={this.getSelectedSampleIds}
                                 mapConfig={this.state.mapConfig}
                                 resetPlotValues={this.resetPlotValues}
+                                sampleGeometries={this.state.currentProject.designSettings.sampleGeometries}
                                 selectedQuestion={this.state.selectedQuestion}
                                 selectedSampleId={Object.keys(this.state.userSamples).length === 1
                                     ? parseInt(Object.keys(this.state.userSamples)[0])
