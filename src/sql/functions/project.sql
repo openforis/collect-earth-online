@@ -181,12 +181,6 @@ CREATE OR REPLACE FUNCTION deep_archive_project(_project_id integer)
     DELETE FROM plots WHERE project_rid = _project_id;
     DELETE FROM project_widgets WHERE project_rid = _project_id;
     DELETE FROM project_imagery WHERE project_rid = _project_id;
-
-    EXECUTE
-    'DROP TABLE IF EXISTS ext_tables.project_' || _project_id || '_plots_csv;'
-    'DROP TABLE IF EXISTS ext_tables.project_' || _project_id || '_plots_shp;'
-    'DROP TABLE IF EXISTS ext_tables.project_' || _project_id || '_samples_csv;'
-    'DROP TABLE IF EXISTS ext_tables.project_' || _project_id || '_samples_shp;';
  END
 
 $$ LANGUAGE PLPGSQL;
