@@ -5,9 +5,9 @@ ALTER TABLE projects DROP COLUMN ts_plot_size;
 
 ALTER TABLE user_plots DROP COLUMN packet_rid;
 
-DROP TABLE packets;
-DROP TABLE packet_users;
-DROP TABLE packet_plots;
-DROP TABLE plot_comments;
-DROP TABLE vertex;
-DROP TABLE image_preference;
+DROP TABLE packets CASCADE;
+DROP TABLE packet_users CASCADE;
+DROP TABLE packet_plots CASCADE;
+DROP TABLE plot_comments CASCADE;
+DROP TABLE vertex CASCADE;
+DROP TABLE image_preference CASCADE;

@@ -1,3 +1,16 @@
+-- Returns first public OSM imagery
+CREATE OR REPLACE FUNCTION select_public_osm()
+ RETURNS integer AS $$
+
+    SELECT imagery_uid
+    FROM imagery
+    WHERE source_config->>'type' = 'OSM'
+        AND archived = false
+    ORDER BY imagery_uid
+    LIMIT 1
+
+$$ LANGUAGE SQL;
+
 -- Convert old object to new imagery id
 UPDATE project_widgets
 SET widget = jsonb_set(widget, '{"baseMap"}', widget->'baseMap'->'id')
