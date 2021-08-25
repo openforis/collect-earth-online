@@ -47,44 +47,61 @@
            :savedAnswers (tc/jsonb->clj saved_answers)})
         (call-sql "select_plot_samples" plot-id)))
 
+(defn- build-collection-plot [plot-info]
+  (let [{:keys [plot_id
+                flagged
+                confidence
+                flagged_reason
+                plot_geom
+                extra_plot_info
+                visible_id]} plot-info]
+    {:id            plot_id
+     :flagged       flagged
+     :flaggedReason (or flagged_reason "")
+     :confidence    (or confidence 100)
+     :visibleId     visible_id
+     :plotGeom      plot_geom
+     :extraPlotInfo (tc/jsonb->clj extra_plot_info {})
+     :samples       (prepare-samples-array plot_id)}))
+
 (defn get-collection-plot [{:keys [params]}]
   (let [navigation-mode (:navigationMode params "unanalyzed")
-        direction       (:direction params "forward")
+        direction       (:direction params "next")
         project-id      (tc/val->int (:projectId params))
         visible-id      (tc/val->int (:visibleId params))
         user-id         (:userId params -1)
-        review-all?     (and (= "all" navigation-mode)
-                             (is-proj-admin? user-id project-id nil))]
-    (data-response (if-let [plot-info (first (if (= "unanalyzed" navigation-mode)
-                                               (call-sql (str "select_" direction "_unanalyzed_plot")
-                                                         project-id
-                                                         visible-id)
-                                               (call-sql (str "select_" direction "_user_plot")
-                                                         project-id
-                                                         visible-id
-                                                         user-id
-                                                         review-all?)))]
-                     (let [{:keys [plot_id
-                                   flagged
-                                   confidence
-                                   flagged_reason
-                                   plot_geom
-                                   extra_plot_info
-                                   visible_id]} plot-info]
-                       (unlock-plots user-id)
-                       (call-sql "lock_plot"
-                                 (:plot_id plot-info)
-                                 user-id
-                                 (time-plus-five-min))
-                       {:id            plot_id
-                        :flagged       flagged
-                        :flaggedReason (or flagged_reason "")
-                        :confidence    (or confidence 100)
-                        :visibleId     visible_id
-                        :plotGeom      plot_geom
-                        :extraPlotInfo (tc/jsonb->clj extra_plot_info {})
-                        :samples       (prepare-samples-array plot_id)})
-                     "not-found"))))
+        proj-plots      (case navigation-mode
+                          "unanalyzed" (call-sql "select_unanalyzed_plots" project-id)
+                          "analyzed"   (call-sql "select_user_analyzed_plots" project-id user-id)
+                           ;; TODO, make admin mode instead of all. This is because future types
+                           ;;       will need admin mode and its less code than duplicate modes for each.
+                          "all"        (if (is-proj-admin? user-id project-id nil)
+                                         (call-sql "select_all_analyzed_plots" project-id user-id)
+                                         [])
+                          [])
+        plot-info       (case direction
+                          "next"     (some (fn [{:keys [visible_id] :as plot}]
+                                             (and (> visible_id visible-id)
+                                                  plot))
+                                           proj-plots)
+                          "previous" (->> proj-plots
+                                          (rseq)
+                                          (some (fn [{:keys [visible_id] :as plot}]
+                                                  (and (< visible_id visible-id)
+                                                       plot))))
+                          "id"       (some (fn [{:keys [visible_id] :as plot}]
+                                             (and (= visible_id visible-id)
+                                                  plot))
+                                           proj-plots))]
+    (if plot-info
+      (do
+        (unlock-plots user-id)
+        (call-sql "lock_plot"
+                  (:plot_id plot-info)
+                  user-id
+                  (time-plus-five-min))
+        (data-response (build-collection-plot plot-info)))
+      (data-response "not-found"))))
 
 (defn add-user-samples [{:keys [params]}]
   (let [project-id       (tc/val->int (:projectId params))
