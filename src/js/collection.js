@@ -31,9 +31,7 @@ class Collection extends React.Component {
             imageryAttributes: {},
             imageryList: [],
             mapConfig: null,
-            nextPlotButtonDisabled: false,
             plotList: [],
-            prevPlotButtonDisabled: false,
             unansweredColor: "black",
             selectedQuestion: {id: 0, question: "", answers: []},
             selectedSampleId: -1,
@@ -226,10 +224,7 @@ class Collection extends React.Component {
         mercator.addPlotLayer(this.state.mapConfig,
                               this.state.plotList,
                               feature => {
-                                  this.setState({
-                                      prevPlotButtonDisabled: false
-                                  });
-                                  this.getPlotData(feature.get("features")[0].get("plotId"));
+                                  this.getPlotData(feature.get("features")[0].get("plotId"), "id");
                               });
     };
 
@@ -270,101 +265,68 @@ class Collection extends React.Component {
         }
     };
 
-    getPlotData = visibleId => this.processModal(
-        `Getting plot ${visibleId}`,
-        () => fetch("/get-plot-by-id?" + getQueryString({
-            visibleId,
-            projectId: this.props.projectId,
-            navigationMode: this.state.navigationMode
-        }))
-            .then(response => (response.ok ? response.json() : Promise.reject(response)))
-            .then(data => {
-                if (data === "done") {
-                    alert(this.state.navigationMode !== "unanalyzed"
-                        ? "This plot was analyzed by someone else. You are logged in as " + this.props.userName + "."
-                        : "This plot has already been analyzed.");
-                } else if (data === "not-found") {
-                    alert("Plot " + visibleId + " not found.");
-                } else {
-                    this.setState({
-                        currentPlot: data,
-                        ...this.newPlotValues(data),
-                        prevPlotButtonDisabled: false,
-                        nextPlotButtonDisabled: false,
-                        answerMode: "question"
-                    });
-                    this.warnOnNoSamples(data);
-                }
-            })
-            .catch(response => {
-                console.log(response);
-                alert("Error retrieving plot data. See console for details.");
-            })
-    );
+    navErrorMessage = (direction, navigationMode) => {
+        if (direction === "id") {
+            return "Plot not found for this navigation mode.";
+        } else {
+            const modeDescription = {
+                all: "the",
+                analyzed: "your",
+                unanalyzed: "the"
+            }[navigationMode];
+            return "You have reached the "
+                + (direction === "forward" ? "end" : "beginning")
+                + " of "
+                + modeDescription
+                + " list of plots.";
+        }
+    };
 
-    getNextPlotData = visibleId => this.processModal(
-        visibleId >= 0 ? "Getting next plot" : "Getting first plot",
-        () => fetch("/get-next-plot?" + getQueryString({
-            visibleId,
-            projectId: this.props.projectId,
-            navigationMode: this.state.navigationMode
-        }))
-            .then(response => (response.ok ? response.json() : Promise.reject(response)))
-            .then(data => {
-                if (data === "done") {
-                    if (visibleId === -1) {
-                        alert(this.state.navigationMode !== "unanalyzed"
-                            ? "You have not reviewed any plots. You are logged in as " + this.props.userName + "."
-                            : "All plots have been analyzed for this project.");
+    getPlotData = (visibleId, direction) => {
+        const {navigationMode} = this.state;
+        const {projectId} = this.props;
+        this.processModal(
+            "Getting plot",
+            () => fetch("/get-collection-plot?" + getQueryString({
+                visibleId,
+                projectId,
+                navigationMode,
+                direction
+            }))
+                .then(response => (response.ok ? response.json() : Promise.reject(response)))
+                .then(data => {
+                    if (data === "not-found") {
+                        alert(this.navErrorMessage(direction, navigationMode));
                     } else {
-                        this.setState({nextPlotButtonDisabled: true});
-                        alert("You have reached the end of the plot list.");
+                        this.setState({
+                            currentPlot: data,
+                            ...this.newPlotValues(data),
+                            answerMode: "question"
+                        });
+                        // TODO, this is probably redundant.  Projects are not allowed to be created with no samples.
+                        this.warnOnNoSamples(data);
                     }
-                } else {
-                    this.setState({
-                        currentPlot: data,
-                        ...this.newPlotValues(data),
-                        prevPlotButtonDisabled: visibleId === -1,
-                        answerMode: "question"
-                    });
-                    this.warnOnNoSamples(data);
-                }
-            })
-            .catch(response => {
-                console.log(response);
-                alert("Error retrieving plot data. See console for details.");
-            })
-    );
+                })
+                .catch(response => {
+                    console.error(response);
+                    alert("Error retrieving plot data. See console for details.");
+                })
+        );
+    };
 
-    getPrevPlotData = visibleId => this.processModal(
-        "Getting previous plot",
-        () => fetch("/get-prev-plot?" + getQueryString({
-            visibleId,
-            projectId: this.props.projectId,
-            navigationMode: this.state.navigationMode
-        }))
-            .then(response => (response.ok ? response.json() : Promise.reject(response)))
-            .then(data => {
-                if (data === "done") {
-                    this.setState({prevPlotButtonDisabled: true});
-                    alert(this.state.navigationMode !== "unanalyzed"
-                        ? "No previous plots were analyzed by you. You are logged in as " + this.props.userName + "."
-                        : "All previous plots have been analyzed.");
-                } else {
-                    this.setState({
-                        currentPlot: data,
-                        ...this.newPlotValues(data),
-                        nextPlotButtonDisabled: false,
-                        answerMode: "question"
-                    });
-                    this.warnOnNoSamples(data);
-                }
-            })
-            .catch(response => {
-                console.log(response);
-                alert("Error retrieving plot data. See console for details.");
-            })
-    );
+    navToFirstPlot = () => this.getPlotData(-10000000, "next");
+
+    navToNextPlot = () => this.getPlotData(this.state.currentPlot.visibleId, "next");
+
+    navToPrevPlot = () => this.getPlotData(this.state.currentPlot.visibleId, "previous");
+
+    navToPlot = newPlot => {
+        if (!isNaN(newPlot)) {
+            this.getPlotData(newPlot, "id");
+        } else {
+            alert("Please enter a number to go to plot.");
+        }
+    };
 
     resetPlotLock = () => {
         fetch("/reset-plot-lock",
@@ -531,25 +493,7 @@ class Collection extends React.Component {
         });
     };
 
-    navToFirstPlot = () => this.getNextPlotData(-10000000);
-
-    navToNextPlot = () => this.getNextPlotData(this.state.currentPlot.visibleId);
-
-    navToPrevPlot = () => this.getPrevPlotData(this.state.currentPlot.visibleId);
-
-    navToPlot = newPlot => {
-        if (!isNaN(newPlot)) {
-            this.getPlotData(newPlot);
-        } else {
-            alert("Please enter a number to go to plot.");
-        }
-    };
-
-    setNavigationMode = newMode => this.setState({
-        navigationMode: newMode,
-        prevPlotButtonDisabled: false,
-        nextPlotButtonDisabled: false
-    });
+    setNavigationMode = newMode => this.setState({navigationMode: newMode});
 
     postValuesToDB = () => {
         if (this.state.currentPlot.flagged) {
@@ -873,8 +817,6 @@ class Collection extends React.Component {
                         navToNextPlot={this.navToNextPlot}
                         navToPlot={this.navToPlot}
                         navToPrevPlot={this.navToPrevPlot}
-                        nextPlotButtonDisabled={this.state.nextPlotButtonDisabled}
-                        prevPlotButtonDisabled={this.state.prevPlotButtonDisabled}
                         setNavigationMode={this.setNavigationMode}
                         showNavButtons={this.state.currentPlot.id}
                     />
@@ -1069,18 +1011,14 @@ class PlotNavigation extends React.Component {
         <div className="row justify-content-center mb-2" id="plot-nav">
             <button
                 className="btn btn-outline-lightgreen btn-sm"
-                disabled={this.props.prevPlotButtonDisabled}
                 onClick={this.props.navToPrevPlot}
-                style={{opacity: this.props.prevPlotButtonDisabled ? "0.25" : "1.0"}}
                 type="button"
             >
                 <UnicodeIcon icon="leftCaret"/>
             </button>
             <button
                 className="btn btn-outline-lightgreen btn-sm mx-1"
-                disabled={this.props.nextPlotButtonDisabled}
                 onClick={this.props.navToNextPlot}
-                style={{opacity: this.props.nextPlotButtonDisabled ? "0.25" : "1.0"}}
                 type="button"
             >
                 <UnicodeIcon icon="rightCaret"/>

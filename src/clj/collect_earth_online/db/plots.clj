@@ -47,18 +47,19 @@
            :savedAnswers (tc/jsonb->clj saved_answers)})
         (call-sql "select_plot_samples" plot-id)))
 
-(defn- get-collection-plot [params method]
+(defn get-collection-plot [{:keys [params]}]
   (let [navigation-mode (:navigationMode params "unanalyzed")
+        direction       (:direction params "forward")
         project-id      (tc/val->int (:projectId params))
         visible-id      (tc/val->int (:visibleId params))
         user-id         (:userId params -1)
         review-all?     (and (= "all" navigation-mode)
                              (is-proj-admin? user-id project-id nil))]
     (data-response (if-let [plot-info (first (if (= "unanalyzed" navigation-mode)
-                                               (call-sql (str "select_" method "unanalyzed_plot")
+                                               (call-sql (str "select_" direction "_unanalyzed_plot")
                                                          project-id
                                                          visible-id)
-                                               (call-sql (str "select_" method "user_plot")
+                                               (call-sql (str "select_" direction "_user_plot")
                                                          project-id
                                                          visible-id
                                                          user-id
@@ -83,20 +84,7 @@
                         :plotGeom      plot_geom
                         :extraPlotInfo (tc/jsonb->clj extra_plot_info {})
                         :samples       (prepare-samples-array plot_id)})
-                     "done"))))
-
-(defn get-plot-by-id [{:keys [params]}]
-  (let  [project-id (tc/val->int (:projectId params))
-         visible-id (tc/val->int (:visibleId params))]
-    (if (sql-primitive (call-sql "plot_exists" project-id visible-id))
-      (get-collection-plot params "by_id_")
-      (data-response "not-found"))))
-
-(defn get-next-plot [{:keys [params]}]
-  (get-collection-plot params "next_"))
-
-(defn get-prev-plot [{:keys [params]}]
-  (get-collection-plot params "prev_"))
+                     "not-found"))))
 
 (defn add-user-samples [{:keys [params]}]
   (let [project-id       (tc/val->int (:projectId params))
