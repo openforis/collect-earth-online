@@ -71,7 +71,7 @@ FROM (
     GROUP BY institution_uid
 ) a
 WHERE (total_project_cnt = 0 AND inst_age > 180) -- Institutions that never had a project
-    OR (active_project_cnt = 0 AND last_project_age > 180) -- Inactive institutions
+    OR (active_project_cnt = 0 AND last_project_age > 180); -- Inactive institutions
 
 REINDEX DATABASE ceo;
 VACUUM FULL;
