@@ -12,11 +12,11 @@
 (defn get-project-plots [{:keys [params]}]
   (let [project-id (tc/val->int (:projectId params))
         max-plots  (tc/val->int (:max params) 100000)] ; 100000 loads in ~1.5 seconds.
-    (data-response (mapv (fn [{:keys [plot_id center flagged assigned]}]
+    (data-response (mapv (fn [{:keys [plot_id center flagged analyzed]}]
                            {:id       plot_id
                             :center   center
                             :flagged  flagged
-                            :analyses assigned})
+                            :analyses analyzed})
                          (call-sql "select_limited_project_plots" project-id max-plots)))))
 
 (defn get-plot-sample-geom [{:keys [params]}]
@@ -55,7 +55,7 @@
         review-all?     (and (= "all" navigation-mode)
                              (is-proj-admin? user-id project-id nil))]
     (data-response (if-let [plot-info (first (if (= "unanalyzed" navigation-mode)
-                                               (call-sql (str "select_" method "unassigned_plot")
+                                               (call-sql (str "select_" method "unanalyzed_plot")
                                                          project-id
                                                          visible-id)
                                                (call-sql (str "select_" method "user_plot")

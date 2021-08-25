@@ -592,8 +592,8 @@ $$ LANGUAGE SQL;
 CREATE OR REPLACE FUNCTION select_project_statistics(_project_id integer)
  RETURNS table (
     flagged_plots       integer,
-    assigned_plots      integer,
-    unassigned_plots    integer,
+    analyzed_plots      integer,
+    unanalyzed_plots    integer,
     members             integer,
     contributors        integer,
     created_date        date,
@@ -638,7 +638,7 @@ CREATE OR REPLACE FUNCTION select_project_statistics(_project_id integer)
         FROM select_project_users(_project_id)
     ), plotsum AS (
         SELECT SUM(coalesce(flagged::int, 0)) as flagged,
-            SUM((user_plot_uid IS NOT NULL)::int) as assigned,
+            SUM((user_plot_uid IS NOT NULL)::int) as analyzed,
             plot_uid
         FROM projects prj
         INNER JOIN plots pl
@@ -653,7 +653,7 @@ CREATE OR REPLACE FUNCTION select_project_statistics(_project_id integer)
             MAX(prj.closed_date) as closed_date,
             MAX(prj.archived_date) as archived_date,
             (CASE WHEN SUM(ps.flagged::int) IS NULL THEN 0 ELSE SUM(ps.flagged::int) END) as flagged,
-            (CASE WHEN SUM(ps.assigned::int) IS NULL THEN 0 ELSE SUM(ps.assigned::int) END) as assigned,
+            (CASE WHEN SUM(ps.analyzed::int) IS NULL THEN 0 ELSE SUM(ps.analyzed::int) END) as analyzed,
             COUNT(distinct pl.plot_uid) as plots
         FROM projects prj
         INNER JOIN plots pl
@@ -672,8 +672,8 @@ CREATE OR REPLACE FUNCTION select_project_statistics(_project_id integer)
     )
 
     SELECT CAST(flagged as int) as flagged_plots,
-        CAST(assigned as int) assigned_plots,
-        CAST(GREATEST(0, (plots-flagged-assigned)) as int) as unassigned_plots,
+        CAST(analyzed as int) analyzed_plots,
+        CAST(GREATEST(0, (plots - flagged - analyzed)) as int) as unanalyzed_plots,
         CAST(members as int) as members,
         CAST(users_count.users as int) as contributors,
         created_date, published_date, closed_date, archived_date,

@@ -131,8 +131,8 @@
   (let [project-id (tc/val->int (:projectId params))
         stats      (first (call-sql "select_project_statistics" project-id))]
     (data-response {:flaggedPlots    (:flagged_plots stats)
-                    :analyzedPlots   (:assigned_plots stats) ;TODO why don't these variable match? unanalyzed is not a word, but unassigned is.
-                    :unanalyzedPlots (:unassigned_plots stats)
+                    :analyzedPlots   (:analyzed_plots stats) ;TODO why don't these variable match?
+                    :unanalyzedPlots (:unanalyzed_plots stats)
                     :members         (:members stats)
                     :contributors    (:contributors stats)
                     :createdDate     (str (:created_date stats))

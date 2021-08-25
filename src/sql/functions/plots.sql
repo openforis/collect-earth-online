@@ -41,13 +41,13 @@ CREATE OR REPLACE FUNCTION select_limited_project_plots(_project_id integer, _ma
     plot_id     integer,
     center      text,
     flagged     boolean,
-    assigned    integer
+    analyzed    boolean
  ) AS $$
 
     SELECT plot_uid,
         ST_AsGeoJSON(ST_Centroid(plot_geom)) as center,
         CASE WHEN flagged IS NULL THEN FALSE ELSE flagged END,
-        CASE WHEN user_plot_uid IS NULL THEN 0 ELSE 1 END
+        CASE WHEN user_plot_uid IS NULL THEN FALSE ELSE TRUE END
     FROM plots
     LEFT JOIN user_plots
         ON plot_uid = plot_rid
@@ -119,7 +119,7 @@ CREATE TYPE collection_return AS (
 );
 
 -- Returns next unanalyzed plot
-CREATE OR REPLACE FUNCTION select_next_unassigned_plot(_project_id integer, _visible_id integer)
+CREATE OR REPLACE FUNCTION select_next_unanalyzed_plot(_project_id integer, _visible_id integer)
  RETURNS setOf collection_return AS $$
 
     SELECT plot_id,
@@ -166,7 +166,7 @@ CREATE OR REPLACE FUNCTION select_next_user_plot(
 $$ LANGUAGE SQL;
 
 -- Returns prev unanalyzed plot
-CREATE OR REPLACE FUNCTION select_prev_unassigned_plot(_project_id integer, _visible_id integer)
+CREATE OR REPLACE FUNCTION select_prev_unanalyzed_plot(_project_id integer, _visible_id integer)
  RETURNS setOf collection_return AS $$
 
     SELECT plot_id,
@@ -213,7 +213,7 @@ CREATE OR REPLACE FUNCTION select_prev_user_plot(
 $$ LANGUAGE SQL;
 
 -- Returns unanalyzed plots by plot id
-CREATE OR REPLACE FUNCTION select_by_id_unassigned_plot(_project_id integer, _visible_id integer)
+CREATE OR REPLACE FUNCTION select_by_id_unanalyzed_plot(_project_id integer, _visible_id integer)
  RETURNS setOf collection_return AS $$
 
     SELECT plot_id,
