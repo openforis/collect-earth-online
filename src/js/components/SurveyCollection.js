@@ -8,14 +8,6 @@ import {mercator} from "../utils/mercator";
 import RequiredInput from "./RequiredInput";
 
 export class SurveyCollection extends React.Component {
-    ruleFunctions = {
-        "text-match": this.checkRuleTextMatch,
-        "numeric-range": this.checkRuleNumericRange,
-        "sum-of-answers": this.checkRuleSumOfAnswers,
-        "matching-sums": this.checkRuleMatchingSums,
-        "incompatible-answers": this.checkRuleIncompatibleAnswers
-    };
-
     constructor(props) {
         super(props);
         this.state = {
@@ -282,10 +274,19 @@ export class SurveyCollection extends React.Component {
         }
     };
 
-    rulesViolated = (questionToSet, answerId, answerText) => this.props.surveyRules
+    rulesViolated = (questionToSet, answerId, answerText) => {
+        const ruleFunctions = {
+            "text-match": this.checkRuleTextMatch,
+            "numeric-range": this.checkRuleNumericRange,
+            "sum-of-answers": this.checkRuleSumOfAnswers,
+            "matching-sums": this.checkRuleMatchingSums,
+            "incompatible-answers": this.checkRuleIncompatibleAnswers
+        };
+        return this.props.surveyRules
         && this.props.surveyRules
-            .map(surveyRule => this.ruleFunctions[surveyRule.ruleType](surveyRule, questionToSet, answerId, answerText))
+            .map(surveyRule => ruleFunctions[surveyRule.ruleType](surveyRule, questionToSet, answerId, answerText))
             .find(msg => msg);
+    };
 
     validateAndSetCurrentValue = (questionToSet, answerId, answerText) => {
         const ruleError = this.rulesViolated(questionToSet, answerId, answerText);
