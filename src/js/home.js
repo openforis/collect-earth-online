@@ -522,7 +522,14 @@ class Institution extends React.Component {
                                     : "\u25BA"
                             )}
                         </div>
-                        <div style={{flex: 1}}>
+                        <div
+                            style={{
+                                flex: 1,
+                                overflow: "hidden",
+                                textOverflow: "ellipsis",
+                                whiteSpace: "nowrap"
+                            }}
+                        >
                             {props.name}
                         </div>
                         <div
@@ -563,28 +570,27 @@ function ProjectList(props) {
 function Project(props) {
     return (
         <div className="bg-lightgrey text-center p-1 px-auto d-flex">
-            <div style={{flexGrow: 1, marginRight: ".25rem"}}>
-                <a
-                    className="btn btn-sm btn-outline-lightgreen btn-block"
-                    href={`/collection?projectId=${props.id}`}
-                    style={{
-                        whiteSpace: "nowrap",
-                        overflow: "hidden",
-                        textOverflow: "ellipsis"
-                    }}
-                >
-                    {props.name || "*un-named*"}
-                </a>
-            </div>
+            <a
+                className="btn btn-sm btn-outline-lightgreen"
+                href={`/collection?projectId=${props.id}`}
+                style={{
+                    flexGrow: 1,
+                    marginRight: ".25rem",
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
+                    whiteSpace: "nowrap"
+                }}
+            >
+                {props.name || "*un-named*"}
+            </a>
             {props.editable && (
-                <div>
-                    <a
-                        className="edit-project btn btn-sm btn-outline-yellow btn-block"
-                        href={`/review-project?projectId=${props.id}`}
-                    >
-                        EDIT
-                    </a>
-                </div>
+                <a
+                    className="edit-project btn btn-sm btn-outline-yellow btn-block"
+                    href={`/review-project?projectId=${props.id}`}
+                    style={{width: "50px"}}
+                >
+                    EDIT
+                </a>
             )}
         </div>
     );
