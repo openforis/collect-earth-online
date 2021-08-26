@@ -78,7 +78,8 @@ CREATE TYPE collection_return AS (
     extra_plot_info    jsonb
 );
 
-CREATE OR REPLACE FUNCTION select_unanalyzed_plots(_project_id integer)
+-- TODO, this only works for assigned plots without overlapping QC/QC
+CREATE OR REPLACE FUNCTION select_unanalyzed_plots(_project_id integer, _user_id integer)
  RETURNS setOf collection_return AS $$
 
     SELECT plot_uid,
@@ -90,13 +91,16 @@ CREATE OR REPLACE FUNCTION select_unanalyzed_plots(_project_id integer)
         extra_plot_info
     FROM plots
     LEFT JOIN user_plots up
-        ON plot_uid = plot_rid
+        ON plot_uid = up.plot_rid
+    LEFT JOIN assigned_plots ap
+        ON plot_uid = ap.plot_rid
     LEFT JOIN plot_locks pl
         ON plot_uid = pl.plot_rid
     WHERE project_rid = _project_id
-        AND up.user_rid IS NULL
-        AND (pl.lock_end IS NULL
-            OR localtimestamp > pl.lock_end)
+        AND user_plot_uid IS NULL
+        AND ((ap.user_rid IS NULL
+                AND (pl.lock_end IS NULL OR localtimestamp > pl.lock_end))
+            OR ap.user_rid = _user_id)
     ORDER BY visible_id ASC
 
 $$ LANGUAGE SQL;

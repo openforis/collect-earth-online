@@ -71,7 +71,7 @@
         visible-id      (tc/val->int (:visibleId params))
         user-id         (:userId params -1)
         proj-plots      (case navigation-mode
-                          "unanalyzed" (call-sql "select_unanalyzed_plots" project-id)
+                          "unanalyzed" (call-sql "select_unanalyzed_plots" project-id user-id)
                           "analyzed"   (call-sql "select_user_analyzed_plots" project-id user-id)
                            ;; TODO, make admin mode instead of all. This is because future types
                            ;;       will need admin mode and its less code than duplicate modes for each.
