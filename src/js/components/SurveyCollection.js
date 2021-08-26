@@ -9,11 +9,11 @@ import RequiredInput from "./RequiredInput";
 
 export class SurveyCollection extends React.Component {
     ruleFunctions = {
-        "text-match": this.checkRuleTextMatch,
-        "numeric-range": this.checkRuleNumericRange,
-        "sum-of-answers": this.checkRuleSumOfAnswers,
-        "matching-sums": this.checkRuleMatchingSums,
-        "incompatible-answers": this.checkRuleIncompatibleAnswers
+        "text-match": (...args) => this.checkRuleTextMatch(...args),
+        "numeric-range": (...args) => this.checkRuleNumericRange(...args),
+        "sum-of-answers": (...args) => this.checkRuleSumOfAnswers(...args),
+        "matching-sums": (...args) => this.checkRuleMatchingSums(...args),
+        "incompatible-answers": (...args) => this.checkRuleIncompatibleAnswers(...args)
     };
 
     constructor(props) {
