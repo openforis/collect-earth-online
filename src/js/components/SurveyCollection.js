@@ -406,18 +406,18 @@ export class SurveyCollection extends React.Component {
                 && this.renderDrawTool({
                     icon: "lineString",
                     state: this.state,
-                    title: `Click anywhere to start drawing.
-                      A new point along the line string can be added with a single click.
-                      Right click or double click to finish drawing.`,
-                    type: "Linestring"
+                    title: "Click anywhere to start drawing.\n"
+                        + "A new point along the line string can be added with a single click.\n"
+                        + "Right click or double click to finish drawing.\n",
+                    type: "LineString"
                 })}
             {this.props.sampleGeometries.polygons
                 && this.renderDrawTool({
                     icon: "polygon",
                     state: this.state,
-                    title: `Click anywhere to start drawing.
-                      A new vertex can be added with a single click.
-                      Right click, double click, or complete the polygon to finish drawing.`,
+                    title: "Click anywhere to start drawing.\n"
+                        + "A new vertex can be added with a single click.\n"
+                        + "Right click, double click, or complete the polygon to finish drawing.\n",
                     type: "Polygon"
                 })}
             <ul style={{textAlign: "left"}}>
