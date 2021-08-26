@@ -2,7 +2,7 @@ import React from "react";
 import ReactDOM from "react-dom";
 import {LoadingModal, NavigationBar} from "./components/PageComponents";
 import {mercator} from "./utils/mercator";
-import {sortAlphabetically, UnicodeIcon, truncate} from "./utils/generalUtils";
+import {sortAlphabetically, UnicodeIcon} from "./utils/generalUtils";
 import SvgIcon from "./components/SvgIcon";
 
 class Home extends React.Component {
@@ -570,23 +570,27 @@ function ProjectList(props) {
 function Project(props) {
     return (
         <div className="bg-lightgrey text-center p-1 px-auto d-flex">
-            <div style={{flexGrow: 1, marginRight: ".25rem"}}>
-                <a
-                    className="btn btn-sm btn-outline-lightgreen btn-block"
-                    href={`/collection?projectId=${props.id}`}
-                >
-                    {(truncate(props.name || "*un-named*", 20))}
-                </a>
-            </div>
+            <a
+                className="btn btn-sm btn-outline-lightgreen"
+                href={`/collection?projectId=${props.id}`}
+                style={{
+                    flexGrow: 1,
+                    marginRight: ".25rem",
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
+                    whiteSpace: "nowrap"
+                }}
+            >
+                {props.name || "*un-named*"}
+            </a>
             {props.editable && (
-                <div>
-                    <a
-                        className="edit-project btn btn-sm btn-outline-yellow btn-block"
-                        href={`/review-project?projectId=${props.id}`}
-                    >
-                        EDIT
-                    </a>
-                </div>
+                <a
+                    className="edit-project btn btn-sm btn-outline-yellow btn-block"
+                    href={`/review-project?projectId=${props.id}`}
+                    style={{width: "50px"}}
+                >
+                    EDIT
+                </a>
             )}
         </div>
     );
