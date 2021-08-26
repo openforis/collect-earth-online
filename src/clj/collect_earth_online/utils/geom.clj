@@ -1,17 +1,18 @@
-(ns collect-earth-online.utils.geom)
+(ns collect-earth-online.utils.geom
+  (:require [collect-earth-online.utils.type-conversion :as tc]))
 
 ;;; GeoJSON
 
 (defn make-wkt-point [lon lat]
   (format "POINT(%s %s)" lon lat))
 
-(defn make-wkt-polygon [lon-min lat-min lon-max lat-max]
-  (format "POLYGON((%s %s, %s %s, %s %s, %s %s, %s %s))"
-          lon-min lat-min
-          lon-min lat-max
-          lon-max lat-max
-          lon-max lat-min
-          lon-min lat-min))
+(defn make-geo-json-polygon [lon-min lat-min lon-max lat-max]
+  (tc/clj->jsonb {:type        "Polygon"
+                  :coordinates [[[lon-min lat-min]
+                                 [lon-min lat-max]
+                                 [lon-max lat-max]
+                                 [lon-max lat-min]
+                                 [lon-min lat-min]]]}))
 
 (defn EPSG:4326->3857
   "Convert wgs84(4326) lon/lat coordinates to web mercator(3857) x/y coordinates"
