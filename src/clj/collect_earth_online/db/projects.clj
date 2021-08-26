@@ -11,7 +11,7 @@
                                                      insert-rows!]]
             [collect-earth-online.logging    :refer [log]]
             [collect-earth-online.views      :refer [data-response]]
-            [collect-earth-online.utils.geom :refer [make-geo-json-polygon]]
+            [collect-earth-online.utils.geom :refer [make-wkt-polygon]]
             [collect-earth-online.generators.clj-point     :refer [generate-point-plots generate-point-samples]]
             [collect-earth-online.generators.external-file :refer [generate-file-plots generate-file-samples]]))
 
@@ -261,10 +261,10 @@
         lat-min              (tc/val->double (:latMin params))
         lon-max              (tc/val->double (:lonMax params))
         lat-max              (tc/val->double (:latMax params))
-        boundary             (make-geo-json-polygon lon-min
-                                                    lat-min
-                                                    lon-max
-                                                    lat-max)
+        boundary             (make-wkt-polygon lon-min
+                                               lat-min
+                                               lon-max
+                                               lat-max)
         plot-distribution    (:plotDistribution params)
         num-plots            (tc/val->int (:numPlots params))
         plot-spacing         (tc/val->float (:plotSpacing params))
@@ -423,10 +423,10 @@
         lat-min              (tc/val->double (:latMin params))
         lon-max              (tc/val->double (:lonMax params))
         lat-max              (tc/val->double (:latMax params))
-        boundary             (make-geo-json-polygon lon-min
-                                                    lat-min
-                                                    lon-max
-                                                    lat-max)
+        boundary             (make-wkt-polygon lon-min
+                                               lat-min
+                                               lon-max
+                                               lat-max)
         plot-distribution    (:plotDistribution params)
         num-plots            (tc/val->int (:numPlots params))
         plot-spacing         (tc/val->float (:plotSpacing params))
