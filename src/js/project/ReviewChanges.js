@@ -96,7 +96,7 @@ export default class ReviewChanges extends React.Component {
                         }
                     })
                     .catch(message => {
-                        alert("Error creating project:\n" + message);
+                        alert("Error updating project:\n" + message);
                     })
             );
         }
