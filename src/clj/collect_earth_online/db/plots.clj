@@ -16,7 +16,7 @@
                            {:id       plot_id
                             :center   center
                             :flagged  flagged
-                            :analyses analyzed})
+                            :analyzed analyzed})
                          (call-sql "select_limited_project_plots" project-id max-plots)))))
 
 (defn get-plot-sample-geom [{:keys [params]}]

@@ -986,19 +986,19 @@ mercator.addPlotOverviewLayers = (mapConfig, plots) => {
     mercator.addVectorLayer(
         mapConfig,
         "flaggedPlots",
-        mercator.plotsToVectorSource(plots.filter(plot => plot.flagged === true)),
+        mercator.plotsToVectorSource(plots.filter(plot => plot.flagged)),
         mercator.ceoMapStyles("overview", "red")
     );
     mercator.addVectorLayer(
         mapConfig,
         "analyzedPlots",
-        mercator.plotsToVectorSource(plots.filter(plot => plot.analyses > 0 && plot.flagged === false)),
+        mercator.plotsToVectorSource(plots.filter(plot => plot.analyzed && !plot.flagged)),
         mercator.ceoMapStyles("overview", "green")
     );
     mercator.addVectorLayer(
         mapConfig,
         "unanalyzedPlots",
-        mercator.plotsToVectorSource(plots.filter(plot => plot.analyses === 0 && plot.flagged === false)),
+        mercator.plotsToVectorSource(plots.filter(plot => !plot.analyzed && !plot.flagged)),
         mercator.ceoMapStyles("overview", "yellow")
     );
     return mapConfig;
