@@ -2,7 +2,7 @@ import React from "react";
 import ReactDOM from "react-dom";
 import {LoadingModal, NavigationBar} from "./components/PageComponents";
 import {mercator} from "./utils/mercator";
-import {sortAlphabetically, UnicodeIcon} from "./utils/generalUtils";
+import {sortAlphabetically, UnicodeIcon, truncate} from "./utils/generalUtils";
 import SvgIcon from "./components/SvgIcon";
 
 class Home extends React.Component {
@@ -522,7 +522,14 @@ class Institution extends React.Component {
                                     : "\u25BA"
                             )}
                         </div>
-                        <div style={{flex: 1}}>
+                        <div
+                            style={{
+                                flex: 1,
+                                overflow: "hidden",
+                                textOverflow: "ellipsis",
+                                whiteSpace: "nowrap"
+                            }}
+                        >
                             {props.name}
                         </div>
                         <div
@@ -567,13 +574,8 @@ function Project(props) {
                 <a
                     className="btn btn-sm btn-outline-lightgreen btn-block"
                     href={`/collection?projectId=${props.id}`}
-                    style={{
-                        whiteSpace: "nowrap",
-                        overflow: "hidden",
-                        textOverflow: "ellipsis"
-                    }}
                 >
-                    {props.name || "*un-named*"}
+                    {(truncate(props.name || "*un-named*", 20))}
                 </a>
             </div>
             {props.editable && (
