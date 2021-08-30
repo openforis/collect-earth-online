@@ -275,7 +275,7 @@ class Collection extends React.Component {
                 unanalyzed: "the"
             }[navigationMode];
             return "You have reached the "
-                + (direction === "forward" ? "end" : "beginning")
+                + (direction === "next" ? "end" : "beginning")
                 + " of "
                 + modeDescription
                 + " list of plots.";

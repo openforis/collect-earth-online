@@ -49,7 +49,7 @@
 
 (defn get-collection-plot [{:keys [params]}]
   (let [navigation-mode (:navigationMode params "unanalyzed")
-        direction       (:direction params "forward")
+        direction       (:direction params "next")
         project-id      (tc/val->int (:projectId params))
         visible-id      (tc/val->int (:visibleId params))
         user-id         (:userId params -1)
