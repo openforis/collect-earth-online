@@ -156,6 +156,46 @@
 ;;; Create project
 ;;;
 
+(defn- add-users-to-plots [user-id users-plots]
+  (map (fn [{:keys [plot_id]}]
+         {:plot_rid plot_id
+          :user_rid user-id})
+       users-plots))
+
+(defn- assign-user-plots
+  "Assigns users to plots. The two assignment options are:
+   {:user-method \"equal\"
+    :users       [4581 1 5]}}
+   and
+   {:user-method \"percent\"
+    :users       [4581 5 11]
+    :percents    [50.0 25.0 25.0]}"
+  [plots design-settings]
+  (let [{:keys [user-method users percents]} (:user-assignment design-settings)
+        plot-count (count plots)]
+    (case user-method
+      "equal"   (->> (partition-all (Math/ceil (/ plot-count
+                                                  (count users)))
+                                    plots)
+                     (map (fn [user-id users-plots]
+                            (add-users-to-plots user-id users-plots))
+                          users)
+                     (apply concat))
+      "percent" (loop [rem-users    users
+                       rem-percents percents
+                       rem-plots    plots
+                       user-plots   []]
+                  (if (= 1 (count rem-users))
+                    (concat user-plots
+                            (add-users-to-plots (first rem-users) rem-plots))
+                    (let [num-plots (Math/ceil (* plot-count (/ (first rem-percents) 100)))]
+                      (recur (rest rem-users)
+                             (rest rem-percents)
+                             (drop num-plots rem-plots)
+                             (concat user-plots (add-users-to-plots (first rem-users)
+                                                                    (take num-plots rem-plots)))))))
+      nil)))
+
 (defn- create-project-samples! [project-id
                                 plot-shape
                                 plot-size
@@ -164,7 +204,8 @@
                                 sample-resolution
                                 sample-file-name
                                 sample-file-base64
-                                allow-drawn-samples?]
+                                allow-drawn-samples?
+                                design-settings]
   (let [plots      (call-sql "get_plot_centers_by_project" project-id)
         plot-count (count plots)
         samples    (if (#{"csv" "shp"} sample-distribution)
@@ -190,7 +231,9 @@
                             (count bad-plots)
                             " plots have no samples. The first 10 PLOTIDs are: ["
                             (str/join ", " (take 10 bad-plots))
-                            "]"))))))
+                            "]"))))
+    (when-let [assigned-plots (assign-user-plots plots design-settings)]
+      (p-insert-rows! "assigned_plots" assigned-plots))))
 
 (defn- create-project-plots! [project-id
                               lon-min
@@ -209,7 +252,8 @@
                               sample-resolution
                               sample-file-name
                               sample-file-base64
-                              allow-drawn-samples?]
+                              allow-drawn-samples?
+                              design-settings]
   ;; Create plots
   (let [plots (if (#{"csv" "shp"} plot-distribution)
                 (generate-file-plots project-id
@@ -246,7 +290,8 @@
                            sample-resolution
                            sample-file-name
                            sample-file-base64
-                           allow-drawn-samples?)
+                           allow-drawn-samples?
+                           design-settings)
 
   ;; Final clean up
   (call-sql "update_project_counts" project-id))
@@ -278,7 +323,13 @@
         survey-questions     (tc/clj->jsonb (:surveyQuestions params))
         survey-rules         (tc/clj->jsonb (:surveyRules params))
         project-options      (tc/clj->jsonb (:projectOptions params default-options))
-        project-settings     (tc/clj->jsonb (:designSettings params default-settings))
+        design-settings      (merge (tc/clj->jsonb (:designSettings params default-settings))
+                                    ;; Test data
+                                    #_{:user-assignment {:user-method "equal"
+                                                         :users       [4581 1]}}
+                                    #_{:user-assignment {:user-method "percent"
+                                                         :users       [4581 5 11]
+                                                         :percents    [50.0 25.0 25.0]}})
         project-template     (tc/val->int (:projectTemplate params))
         use-template-plots   (tc/val->bool (:useTemplatePlots params))
         use-template-widgets (tc/val->bool (:useTemplateWidgets params))
@@ -307,7 +358,7 @@
                                                       survey-rules
                                                       token-key
                                                       project-options
-                                                      project-settings))]
+                                                      design-settings))]
     (try
       ;; Create or copy plots
       (if (and (pos? project-template) use-template-plots)
@@ -329,7 +380,8 @@
                                sample-resolution
                                sample-file-name
                                sample-file-base64
-                               allow-drawn-samples?))
+                               allow-drawn-samples?
+                               design-settings))
       ;; Save project imagery
       (if-let [imagery-list (:projectImageryList params)]
         (insert-project-imagery! project-id imagery-list)
@@ -382,7 +434,8 @@
       (let [plot-shape        (:plot_shape project)
             plot-size         (tc/val->float (:plot_size project))
             samples-per-plot  (tc/val->int (:samples_per_plot project))
-            sample-resolution (tc/val->float (:sample_resolution project))]
+            sample-resolution (tc/val->float (:sample_resolution project))
+            design-settings   (tc/jsonb->clj (:design_settings project))]
         (call-sql "delete_all_samples_by_project" project-id)
         (create-project-samples! project-id
                                  plot-shape
@@ -392,7 +445,8 @@
                                  sample-resolution
                                  nil
                                  nil
-                                 allow-drawn-samples?)))))
+                                 allow-drawn-samples?
+                                 design-settings)))))
 
 (defn- exterior-ring [coords]
   (map (fn [[a b]] [(tc/val->double a) (tc/val->double b)])
@@ -441,7 +495,7 @@
         survey-rules         (tc/clj->jsonb (:surveyRules params))
         update-survey        (tc/val->bool (:updateSurvey params))
         project-options      (tc/clj->jsonb (:projectOptions params default-options))
-        project-settings     (tc/clj->jsonb (:designSettings params default-settings))
+        design-settings      (tc/clj->jsonb (:designSettings params default-settings))
         plot-file-name       (:plotFileName params)
         plot-file-base64     (:plotFileBase64 params)
         sample-file-name     (:sampleFileName params)
@@ -483,7 +537,8 @@
                                    sample-resolution
                                    sample-file-name
                                    sample-file-base64
-                                   allow-drawn-samples?))
+                                   allow-drawn-samples?
+                                   design-settings))
 
           (or (not= sample-distribution (:sample_distribution original-project))
               (if (#{"csv" "shp"} sample-distribution)
@@ -500,7 +555,8 @@
                                      sample-resolution
                                      sample-file-name
                                      sample-file-base64
-                                     allow-drawn-samples?))
+                                     allow-drawn-samples?
+                                     design-settings))
 
           ;; NOTE: Old stored questions can have a different format than when passed from the UI.
           ;;       This is why we check whether the survey questions are different on the front (for now).
@@ -526,7 +582,7 @@
                   survey-questions
                   survey-rules
                   project-options
-                  project-settings)
+                  design-settings)
         (data-response "")
         (catch Exception e
           (let [causes (:causes (ex-data e))]
