@@ -203,7 +203,15 @@
                                                                     :plot_id))))))
       nil)))
 
-(defn- assign-qaqc [assigned-plots design-settings]
+(defn- assign-qaqc
+  "Assigns additional plots to users based on QA/QC method.  The two options are:
+   {:qaqc-method \"overlap\"
+    :percent     50}
+   and
+   {:qaqc-method \"sme\"
+    :percent     100
+    :smes        [2 5]}"
+  [assigned-plots design-settings]
   (when (seq assigned-plots)
     (let [{:keys [qaqc-method percent smes]} (:qaqc-assignment design-settings)
           {:keys [users]}                    (:user-assignment design-settings)]
