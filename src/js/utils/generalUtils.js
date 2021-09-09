@@ -178,3 +178,8 @@ export function asPercentage(part, total) {
         ? (100.0 * (part / total)).toFixed(2)
         : "0.00";
 }
+
+["Arguments", "Function", "String", "Number", "Date", "RegExp"].forEach(
+    // eslint-disable-next-line no-return-assign
+    name => window["is" + name] = (obj => toString.call(obj) === "[object " + name + "]")
+);

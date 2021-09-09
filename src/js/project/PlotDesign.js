@@ -3,6 +3,7 @@ import React from "react";
 import {formatNumberWithCommas, encodeFileAsBase64, truncate} from "../utils/generalUtils";
 import {ProjectContext, plotLimit} from "./constants";
 import {mercator} from "../utils/mercator";
+import AssignPlots from "./AssignPlots";
 
 export class PlotDesign extends React.Component {
     constructor(props) {
@@ -11,12 +12,14 @@ export class PlotDesign extends React.Component {
             lonMin: "",
             latMin: "",
             lonMax: "",
-            latMax: ""
+            latMax: "",
+            institutionUserList: []
         };
     }
 
     componentDidMount() {
         this.setCoordsFromBoundary();
+        this.getInstitutionUserList();
     }
 
     componentDidUpdate(prevProps) {
@@ -24,6 +27,19 @@ export class PlotDesign extends React.Component {
             this.setCoordsFromBoundary();
         }
     }
+
+    getInstitutionUserList = () => {
+        fetch(`/get-institution-users?institutionId=${this.context.institutionId}`)
+            .then(response => (response.ok ? response.json() : Promise.reject(response)))
+            .then(data => {
+                this.setState({institutionUserList: data});
+            })
+            .catch(response => {
+                this.setState({institutionUserList: []});
+                console.log(response);
+                alert("Error retrieving the user list. See console for details.");
+            });
+    };
 
     setCoordsFromBoundary = () => {
         const boundaryExtent = mercator.parseGeoJson(this.props.boundary, false).getExtent();
@@ -245,6 +261,7 @@ export class PlotDesign extends React.Component {
         const {plotDistribution, plotShape} = this.context;
         const totalPlots = this.props.getTotalPlots();
         const plotUnits = plotShape === "circle" ? "Plot diameter (m)" : "Plot width (m)";
+        const {institutionUserList} = this.state;
 
         const plotOptions = {
             random: {
@@ -324,6 +341,9 @@ export class PlotDesign extends React.Component {
                     {totalPlots > 0 && totalPlots > plotLimit
                         && `* The maximum allowed number for the selected plot distribution is ${formatNumberWithCommas(plotLimit)}.`}
                 </p>
+                <div className="d-flex">
+                    <AssignPlots allUsers={institutionUserList.map(u => [u.id, u.email])}/>
+                </div>
             </div>
         );
     }

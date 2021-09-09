@@ -256,7 +256,8 @@ export default class CreateProjectWizard extends React.Component {
             plotSize,
             plotFileName,
             useTemplatePlots,
-            originalProject
+            originalProject,
+            designSettings: {assignedUsers, userAssignment}
         } = this.context;
         const totalPlots = this.getTotalPlots();
         const plotFileNeeded = !useTemplatePlots
@@ -275,7 +276,11 @@ export default class CreateProjectWizard extends React.Component {
             (plotDistribution === "shp" && plotFileNeeded && !(plotFileName || "").includes(".zip"))
                 && "A plot SHP (.zip) file is required.",
             (totalPlots > plotLimit)
-                && "The plot size limit has been exceeded. Check the Plot Design section for detailed info."
+                && "The plot size limit has been exceeded. Check the Plot Design section for detailed info.",
+            (["equal", "percent"].includes(userAssignment) && assignedUsers.length === 0)
+                && "At least one user must be added to the plot assignment.",
+            (userAssignment === "percent" && assignedUsers.reduce((acc, u) => acc + u.percent, 0) !== 100)
+                && "The assigned plot percentages must equal 100%."
         ];
         return errorList.filter(e => e);
     };
