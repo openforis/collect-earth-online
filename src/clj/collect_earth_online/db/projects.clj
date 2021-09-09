@@ -323,7 +323,7 @@
         survey-questions     (tc/clj->jsonb (:surveyQuestions params))
         survey-rules         (tc/clj->jsonb (:surveyRules params))
         project-options      (tc/clj->jsonb (:projectOptions params default-options))
-        design-settings      (merge (tc/clj->jsonb (:designSettings params default-settings))
+        design-settings      (merge (:designSettings params default-settings)
                                     ;; Test data
                                     #_{:user-assignment {:user-method "equal"
                                                          :users       [4581 1]}}
@@ -358,7 +358,7 @@
                                                       survey-rules
                                                       token-key
                                                       project-options
-                                                      design-settings))]
+                                                      (tc/clj->jsonb design-settings)))]
     (try
       ;; Create or copy plots
       (if (and (pos? project-template) use-template-plots)
