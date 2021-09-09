@@ -5,37 +5,8 @@
 --  PLOT FUNCTIONS
 --
 
--- Flag plot
-CREATE OR REPLACE FUNCTION flag_plot(_plot_id integer, _user_id integer, _collection_start timestamp, _flagged_reason text)
- RETURNS integer AS $$
-
-    DELETE
-    FROM sample_values
-    WHERE user_plot_rid = (
-        SELECT user_plot_uid
-        FROM user_plots
-        WHERE user_rid = _user_id
-            AND plot_rid = _plot_id
-    );
-
-    INSERT INTO user_plots
-        (user_rid, plot_rid, flagged, collection_start, collection_time, flagged_reason)
-    VALUES
-        (_user_id, _plot_id, true, _collection_start, Now(), _flagged_reason)
-    ON CONFLICT (user_rid, plot_rid) DO
-        UPDATE
-        SET flagged = excluded.flagged,
-            user_rid = excluded.user_rid,
-            confidence = NULL,
-            collection_start = excluded.collection_start,
-            collection_time = Now(),
-            flagged_reason = excluded.flagged_reason
-
-    RETURNING _plot_id
-
-$$ LANGUAGE SQL;
-
 -- Select plots but only return a maximum number
+-- TODO, CEO-32 update to only show users available plots
 CREATE OR REPLACE FUNCTION select_limited_project_plots(_project_id integer, _maximum integer)
  RETURNS table (
     plot_id     integer,
@@ -78,9 +49,15 @@ CREATE TYPE collection_return AS (
     extra_plot_info    jsonb
 );
 
--- TODO, this only works for assigned plots without overlapping QC/QC
 CREATE OR REPLACE FUNCTION select_unanalyzed_plots(_project_id integer, _user_id integer)
  RETURNS setOf collection_return AS $$
+
+    WITH assigned_count AS (
+        SELECT count(*)
+        FROM plots, assigned_plots
+        WHERE project_rid = _project_id
+            AND plot_uid = plot_rid
+    )
 
     SELECT plot_uid,
         flagged,
@@ -90,10 +67,11 @@ CREATE OR REPLACE FUNCTION select_unanalyzed_plots(_project_id integer, _user_id
         ST_AsGeoJSON(plot_geom) as plot_geom,
         extra_plot_info
     FROM plots
-    LEFT JOIN user_plots up
-        ON plot_uid = up.plot_rid
     LEFT JOIN assigned_plots ap
         ON plot_uid = ap.plot_rid
+    LEFT JOIN user_plots up
+        ON plot_uid = up.plot_rid
+        AND (ap.user_rid = up.user_rid OR (select count from assigned_count) = 0)
     LEFT JOIN plot_locks pl
         ON plot_uid = pl.plot_rid
     WHERE project_rid = _project_id
@@ -192,20 +170,33 @@ CREATE OR REPLACE FUNCTION create_project_plot_sample(_plot_id integer, _sample_
 $$ LANGUAGE SQL;
 
 -- Select samples for a plot.
-CREATE OR REPLACE FUNCTION select_plot_samples(_plot_id integer)
+CREATE OR REPLACE FUNCTION select_plot_samples(_plot_id integer, _user_id integer)
  RETURNS table (
     sample_id        integer,
     sample_geom      text,
     saved_answers    jsonb
  ) AS $$
 
+    WITH assigned_count AS (
+        SELECT count(*)
+        FROM assigned_plots
+        WHERE plot_rid = _plot_id
+    )
+
     SELECT sample_uid,
         ST_AsGeoJSON(sample_geom) as sample_geom,
         (CASE WHEN sv.saved_answers IS NULL THEN '{}' ELSE sv.saved_answers END)
-    FROM samples
+    FROM samples s
+    LEFT JOIN assigned_plots ap
+        ON s.plot_rid = ap.plot_rid
+    LEFT JOIN user_plots up
+        ON s.plot_rid = up.plot_rid
+        AND (ap.user_rid = up.user_rid or (select count from assigned_count) = 0)
     LEFT JOIN sample_values sv
         ON sample_uid = sv.sample_rid
-    WHERE samples.plot_rid = _plot_id
+        AND user_plot_uid = sv.user_plot_rid
+    WHERE s.plot_rid = _plot_id
+        AND (ap.user_rid IS NULL OR ap.user_rid = _user_id)
 
 $$ LANGUAGE SQL;
 
@@ -219,21 +210,45 @@ CREATE OR REPLACE FUNCTION select_plot_sample_geoms(_plot_id integer)
 
 $$ LANGUAGE SQL;
 
--- FIXME this can probably be eliminate with a rewrite to update_user_samples
--- Returns user plots table id if available
-CREATE OR REPLACE FUNCTION check_user_plots(_plot_id integer)
- RETURNS integer AS $$
+--
+--  SAVING COLLECTION
+--
 
-    SELECT user_plot_uid
-    FROM user_plots up
-    WHERE up.plot_rid = _plot_id
+-- Flag plot
+CREATE OR REPLACE FUNCTION flag_plot(
+    _plot_id integer,
+    _user_id integer,
+    _collection_start timestamp,
+    _flagged_reason text
+ ) RETURNS integer AS $$
+
+    DELETE
+    FROM sample_values
+    WHERE user_plot_rid = (
+        SELECT user_plot_uid
+        FROM user_plots
+        WHERE user_rid = _user_id
+            AND plot_rid = _plot_id
+    );
+
+    INSERT INTO user_plots
+        (user_rid, plot_rid, flagged, collection_start, collection_time, flagged_reason)
+    VALUES
+        (_user_id, _plot_id, true, _collection_start, Now(), _flagged_reason)
+    ON CONFLICT (user_rid, plot_rid) DO
+        UPDATE
+        SET flagged = excluded.flagged,
+            user_rid = excluded.user_rid,
+            confidence = NULL,
+            collection_start = excluded.collection_start,
+            collection_time = Now(),
+            flagged_reason = excluded.flagged_reason
+
+    RETURNING _plot_id
 
 $$ LANGUAGE SQL;
 
--- FIXME _project_id is not used
--- Add user sample value selections
-CREATE OR REPLACE FUNCTION add_user_samples(
-    _project_id          integer,
+CREATE OR REPLACE FUNCTION upsert_user_samples(
     _plot_id             integer,
     _user_id             integer,
     _confidence          integer,
@@ -243,55 +258,17 @@ CREATE OR REPLACE FUNCTION add_user_samples(
  ) RETURNS integer AS $$
 
     WITH user_plot_table AS (
-        INSERT INTO user_plots
+        INSERT INTO user_plots AS up
             (user_rid, plot_rid, confidence, collection_start, collection_time)
         VALUES
             (_user_id, _plot_id, _confidence, _collection_start, Now())
-        RETURNING user_plot_uid
-    ), new_sample_values AS (
-        SELECT CAST(key as integer) as sample_id, value FROM jsonb_each(_samples)
-    ), image_values AS (
-        SELECT sample_id, id as imagery_id, attributes as imagery_attributes
-        FROM (SELECT CAST(key as integer) as sample_id, value FROM jsonb_each(_images)) a
-        CROSS JOIN LATERAL
-        jsonb_to_record(a.value) as (id int, attributes text)
-    )
-
-    INSERT INTO sample_values
-        (user_plot_rid, sample_rid, imagery_rid, imagery_attributes, saved_answers)
-    (SELECT user_plot_uid, nsv.sample_id, iv.imagery_id, iv.imagery_attributes::jsonb, nsv.value
-        FROM user_plot_table AS upt, samples AS s
-            INNER JOIN new_sample_values as nsv
-                ON sample_uid = nsv.sample_id
-            INNER JOIN image_values as iv
-                ON sample_uid = iv.sample_id
-        WHERE s.plot_rid = _plot_id)
-
-    RETURNING sample_value_uid
-
-$$ LANGUAGE SQL;
-
--- FIXME _project_id is not used
--- Update user sample value selections
-CREATE OR REPLACE FUNCTION update_user_samples(
-    _user_plots_uid      integer,
-    _project_id          integer,
-    _plot_id             integer,
-    _user_id             integer,
-    _confidence          integer,
-    _collection_start    timestamp,
-    _samples             jsonb,
-    _images              jsonb
- ) RETURNS integer AS $$
-
-    WITH user_plot_table AS (
-        UPDATE user_plots
-            SET confidence = _confidence,
-                collection_start = _collection_start,
-                collection_time = localtimestamp,
+        ON CONFLICT (user_rid, plot_rid) DO
+            UPDATE
+            SET confidence = coalesce(excluded.confidence, up.confidence),
+                collection_start = coalesce(excluded.collection_start, up.collection_start),
+                collection_time = CASE WHEN excluded.collection_start IS NOT NULL THEN localtimestamp ELSE up.collection_time END,
                 flagged = FALSE,
                 flagged_reason = null
-        WHERE user_plot_uid = _user_plots_uid
         RETURNING user_plot_uid
     ), new_sample_values AS (
         SELECT CAST(key as integer) as sample_id, value FROM jsonb_each(_samples)
@@ -313,8 +290,7 @@ CREATE OR REPLACE FUNCTION update_user_samples(
         (SELECT user_plot_uid, sample_id, imagery_id, imagery_attributes, value FROM plot_samples)
     ON CONFLICT (user_plot_rid, sample_rid) DO
         UPDATE
-        SET user_plot_rid = excluded.user_plot_rid,
-            imagery_rid = excluded.imagery_rid,
+        SET imagery_rid = excluded.imagery_rid,
             imagery_attributes = excluded.imagery_attributes,
             saved_answers = excluded.saved_answers
 
@@ -327,10 +303,12 @@ $$ LANGUAGE SQL;
 --
 
 -- For clearing user plots for a single plot
-CREATE OR REPLACE FUNCTION delete_user_plot_by_plot(_plot_id integer)
+CREATE OR REPLACE FUNCTION delete_user_plot_by_plot(_plot_id integer, _user_id integer)
  RETURNS void AS $$
 
-    DELETE FROM user_plots WHERE plot_rid = _plot_id
+    DELETE FROM user_plots
+    WHERE plot_rid = _plot_id
+        AND user_rid = _user_id
 
 $$ LANGUAGE SQL;
 

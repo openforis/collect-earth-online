@@ -687,7 +687,6 @@ $$ LANGUAGE SQL;
 --
 
 -- Returns project aggregate data
--- TODO, return WKT geom
 CREATE OR REPLACE FUNCTION dump_project_plot_data(_project_id integer)
  RETURNS table (
     plot_id                    integer,
@@ -737,6 +736,7 @@ CREATE OR REPLACE FUNCTION dump_project_plot_data(_project_id integer)
         ON up.plot_rid = pl.plot_uid
     LEFT JOIN sample_values sv
         ON sv.sample_rid = s.sample_uid
+        AND user_plot_uid = sv.user_plot_rid
     LEFT JOIN users u
         ON u.user_uid = up.user_rid
     WHERE project_rid = _project_id
@@ -785,6 +785,7 @@ CREATE OR REPLACE FUNCTION dump_project_sample_data(_project_id integer)
         ON up.plot_rid = pl.plot_uid
     LEFT JOIN sample_values sv
         ON sample_uid = sv.sample_rid
+        AND user_plot_uid = sv.user_plot_rid
     LEFT JOIN imagery
         ON imagery_uid = sv.imagery_rid
     LEFT JOIN users u
