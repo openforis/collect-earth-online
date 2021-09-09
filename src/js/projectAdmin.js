@@ -17,10 +17,11 @@ class Project extends React.Component {
             name: "",
             description: "",
             designSettings: {
-                userAssignment: "none",
-                assignedUsers: [],
-                qualityMode: "none",
-                assignedSMEs: [],
+                "user-assignment": {
+                    "user-method": "none",
+                    users: [],
+                    percents: []
+                },
                 sampleGeometries: {
                     points: true,
                     lines: true,

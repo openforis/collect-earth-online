@@ -29,7 +29,9 @@ export class PlotDesign extends React.Component {
     }
 
     getInstitutionUserList = () => {
-        fetch(`/get-institution-users?institutionId=${this.context.institutionId}`)
+        const {institution, institutionId} = this.context;
+        const id = institution > 0 ? institution : institutionId;
+        fetch(`/get-institution-users?institutionId=${id}`)
             .then(response => (response.ok ? response.json() : Promise.reject(response)))
             .then(data => {
                 this.setState({institutionUserList: data});
@@ -342,7 +344,9 @@ export class PlotDesign extends React.Component {
                         && `* The maximum allowed number for the selected plot distribution is ${formatNumberWithCommas(plotLimit)}.`}
                 </p>
                 <div className="d-flex">
-                    <AssignPlots allUsers={institutionUserList.map(u => [u.id, u.email])}/>
+                    <AssignPlots
+                        allUsers={institutionUserList.reduce((acc, u) => { acc[u.id] = u.email; return acc; }, {})}
+                    />
                 </div>
             </div>
         );

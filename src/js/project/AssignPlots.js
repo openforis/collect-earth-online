@@ -6,68 +6,61 @@ import {Select} from "../components/Select";
 export default class AssignPlots extends React.Component {
     constructor(props) {
         super(props);
-        this.state = {selectedUser:  null};
+        this.state = {
+            selectedUser: null
+        };
     }
 
-    UNSAFE_componentWillReceiveProps(props) {
-        const {allUsers} = props;
+    getUserAssignment = () => this.context.designSettings["user-assignment"];
 
-        if (allUsers.length > 0) {
-            this.setState({selectedUser: allUsers[0]});
-        }
-    }
-
-    setUserAssignment = userAssignment =>
-        this.context.setProjectDetails({designSettings: {...this.context.designSettings, userAssignment}});
-
-    addUser = user => {
-        const {designSettings: {assignedUsers}} = this.context;
-
+    setUserAssignment = newUserAssignment => {
+        const {"user-assignment": userAssignment} = this.context.designSettings;
         this.context.setProjectDetails({
-            designSettings: {
-                ...this.context.designSettings,
-                assignedUsers: [...assignedUsers, {id: user[0], email: user[1]}]
-            }
+            designSettings: {...this.context.designSettings, "user-assignment": Object.assign(userAssignment, newUserAssignment)}
         });
     };
 
+    setMethod = method => this.setUserAssignment({"user-method": method});
+
+    addUser = user => {
+        const {users, percents} = this.getUserAssignment();
+        const newUsers = [...users, user[0]];
+        const newPercents = [...percents, 0];
+        this.setUserAssignment({users: newUsers, percents: newPercents});
+    };
+
     removeUser = user => {
-        const {designSettings: {assignedUsers}} = this.context;
-        this.context.setProjectDetails({
-            designSettings: {
-                ...this.context.designSettings,
-                assignedUsers: assignedUsers.filter(u => u.id !== user.id)
-            }
+        const {users, percents} = this.getUserAssignment();
+        const idx = users.indexOf(user);
+        users.splice(idx);
+        percents.splice(idx);
+        this.setUserAssignment({
+            users,
+            percents
         });
     };
 
     assignPlotPercent = (user, percent) => {
-        console.log("Assigning percentage: ", user, percent);
-        const {designSettings: {assignedUsers}} = this.context;
-        this.context.setProjectDetails({
-            designSettings: {
-                ...this.context.designSettings,
-                // eslint-disable-next-line no-confusing-arrow
-                assignedUsers: assignedUsers.map(u => u.id === user.id ? {...u, percent} : u)
-            }
-        });
+        const {users, percents} = this.getUserAssignment();
+        percents[users.indexOf(user)] = percent;
+        this.setUserAssignment({percents});
     };
 
-    renderUsers = (users, isPercentage) => (
+    renderUsers = (users, isPercentage, percents) => (
         <div className="d-flex flex-column mt-3">
-            {users.map(u => (
-                <div key={u.id} className="d-flex justify-content-end">
+            {users.map((user, idx) => (
+                <div key={user.id} className="d-flex justify-content-end">
                     {isPercentage && (
                         <div className="mr-5">
                             <input
                                 className="form-control form-control-sm"
                                 max="100"
                                 min="0"
-                                onChange={e => this.assignPlotPercent(u, parseInt(e.target.value))}
+                                onChange={e => this.assignPlotPercent(user.id, parseInt(e.target.value))}
                                 placeholder="%"
                                 style={{display: "inline-block", width: "3.5rem"}}
                                 type="number"
-                                value={u.percent}
+                                value={percents[idx]}
                             />
                             &#37;
                         </div>
@@ -81,12 +74,12 @@ export default class AssignPlots extends React.Component {
                             padding: ".25rem .5rem"
                         }}
                     >
-                        {u.email}
+                        {user.email}
                     </div>
                     <button
                         className="btn btn-sm btn-danger mx-2"
-                        onClick={() => this.removeUser(u)}
-                        title={`Remove ${u}`}
+                        onClick={() => this.removeUser(user.id)}
+                        title={`Remove ${user.email}`}
                         type="button"
                     >
                         -
@@ -97,15 +90,16 @@ export default class AssignPlots extends React.Component {
     );
 
     render() {
-        const assignments = [
+        const methods = [
             ["none", "No assignments"],
             ["equal", "Equal assignments"],
             ["percent", "Percentage of plots"]
         ];
-        const {userAssignment, assignedUsers} = this.context.designSettings;
-        const assignedUserIds = assignedUsers.map(user => user.id);
+        const {"user-method": userMethod, users, percents} = this.getUserAssignment();
         const {allUsers} = this.props;
-        const assignableUsers = allUsers.filter(u => !assignedUserIds.includes(u[0]));
+        const possibleUsers = Object.keys(allUsers).map(id => [parseInt(id), allUsers[id]]);
+        const assignedUsers = users.map(id => ({id, email: allUsers[id]}));
+        const assignableUsers = possibleUsers.filter(u => !users.includes(u[0]));
 
         return (
             <div className="mr-3" style={{maxWidth: "50%"}}>
@@ -114,12 +108,12 @@ export default class AssignPlots extends React.Component {
                     <Select
                         id="user-assignment"
                         label="User Assignment"
-                        onChange={e => this.setUserAssignment(e.target.value)}
-                        options={assignments}
-                        value={userAssignment || "none"}
+                        onChange={e => this.setMethod(e.target.value)}
+                        options={methods}
+                        value={userMethod || "none"}
                     />
                 </div>
-                {userAssignment !== "none" && (
+                {userMethod !== "none" && (
                     <div className="mt-3">
                         <div className="d-flex">
                             <Select
@@ -132,14 +126,14 @@ export default class AssignPlots extends React.Component {
                             <button
                                 className="btn btn-sm btn-success mx-2"
                                 disabled={assignableUsers.length === 0}
-                                onClick={() => this.addUser(this.state.selectedUser)}
+                                onClick={() => this.addUser(this.state.selectedUser || assignableUsers[0])}
                                 title="Add User"
                                 type="button"
                             >
                                 +
                             </button>
                         </div>
-                        {this.renderUsers(assignedUsers, userAssignment === "percent")}
+                        {this.renderUsers(assignedUsers, userMethod === "percent", percents)}
                     </div>
                 )}
             </div>
