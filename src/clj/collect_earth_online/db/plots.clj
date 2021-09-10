@@ -101,6 +101,10 @@
     (if plot-info
       (do
         (unlock-plots user-id)
+        ;; TODO, CEO-90 Technically there is a race condition here.  We need a lock function
+        ;;       that returns truthy/falsy if it correctly created a unique lock.
+        ;;       The quickest way to finish this is to return a "race condition error."
+        ;;       If we get users complaining we can try a recursive find.
         (call-sql "lock_plot"
                   (:plot_id plot-info)
                   user-id
