@@ -257,7 +257,10 @@ export default class CreateProjectWizard extends React.Component {
             plotFileName,
             useTemplatePlots,
             originalProject,
-            designSettings: {"user-assignment": {"user-method": userMethod, users, percents}}
+            designSettings: {
+                "user-assignment": {"user-method": userMethod, users, percents},
+                "qaqc-assignment": {"qaqc-method": qaqcMethod, smes, percent}
+            }
         } = this.context;
         const totalPlots = this.getTotalPlots();
         const plotFileNeeded = !useTemplatePlots
@@ -279,8 +282,12 @@ export default class CreateProjectWizard extends React.Component {
                 && "The plot size limit has been exceeded. Check the Plot Design section for detailed info.",
             (["equal", "percent"].includes(userMethod) && users.length === 0)
                 && "At least one user must be added to the plot assignment.",
-            (userMethod === "percent" && percents.reduce((acc, percent) => acc + percent, 0) !== 100)
-                && "The assigned plot percentages must equal 100%."
+            (userMethod === "percent" && percents.reduce((acc, p) => acc + p, 0) !== 100)
+                && "The assigned plot percentages must equal 100%.",
+            (["overlap", "sme"].includes(qaqcMethod) && percent === 0)
+                && "The assigned Quality Control percentage must be greater than 0.",
+            (qaqcMethod === "sme" && smes.length === 0)
+                && "At least one user must be added as an SME."
         ];
         return errorList.filter(e => e);
     };
