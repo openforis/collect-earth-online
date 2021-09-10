@@ -47,7 +47,12 @@
            :savedAnswers (tc/jsonb->clj saved_answers)})
         (call-sql "select_plot_samples" plot-id)))
 
-(defn get-collection-plot [{:keys [params]}]
+(defn get-collection-plot
+  "Gets plot information needed for the collections page.  The plot
+   returned is based off of the navigation mode and direction.  Valid
+   navigation modes are analyzed, unanalyzed, and all.  Valid directions
+   are previous, next, and id."
+  [{:keys [params]}]
   (let [navigation-mode (:navigationMode params "unanalyzed")
         direction       (:direction params "next")
         project-id      (tc/val->int (:projectId params))
