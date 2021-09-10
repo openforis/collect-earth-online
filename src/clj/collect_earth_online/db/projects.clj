@@ -131,7 +131,7 @@
   (let [project-id (tc/val->int (:projectId params))
         stats      (first (call-sql "select_project_statistics" project-id))]
     (data-response {:flaggedPlots    (:flagged_plots stats)
-                    :analyzedPlots   (:analyzed_plots stats) ;TODO why don't these variable match?
+                    :analyzedPlots   (:analyzed_plots stats)
                     :unanalyzedPlots (:unanalyzed_plots stats)
                     :members         (:members stats)
                     :contributors    (:contributors stats)

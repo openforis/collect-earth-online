@@ -16,7 +16,7 @@
                            {:id       plot_id
                             :center   center
                             :flagged  flagged
-                            :analyses analyzed})
+                            :analyzed analyzed})
                          (call-sql "select_limited_project_plots" project-id max-plots)))))
 
 (defn get-plot-sample-geom [{:keys [params]}]
@@ -64,7 +64,12 @@
      :extraPlotInfo (tc/jsonb->clj extra_plot_info {})
      :samples       (prepare-samples-array plot_id)}))
 
-(defn get-collection-plot [{:keys [params]}]
+(defn get-collection-plot
+  "Gets plot information needed for the collections page.  The plot
+   returned is based off of the navigation mode and direction.  Valid
+   navigation modes are analyzed, unanalyzed, and all.  Valid directions
+   are previous, next, and id."
+  [{:keys [params]}]
   (let [navigation-mode (:navigationMode params "unanalyzed")
         direction       (:direction params "next")
         project-id      (tc/val->int (:projectId params))
