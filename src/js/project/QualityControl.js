@@ -69,6 +69,7 @@ export default class QualityControl extends React.Component {
             ["sme", "SME Verification"]
         ];
         const {"qaqc-method": method, percent, smes} = this.getAssignment();
+        const {allowDrawnSamples} = this.context;
         const {allUsers} = this.props;
         const assignedSMEs = smes.map(id => ({id, email: allUsers[id]}));
         const possibleSMEs = Object.keys(allUsers)
@@ -76,10 +77,11 @@ export default class QualityControl extends React.Component {
             .filter(u => !smes.includes(u[0]));
 
         return (
-            <div className="ml-3">
+            <div className="ml-3" style={{maxWidth: "50%"}}>
                 <h3 className="mb-3">Quality Control</h3>
                 <div className="d-flex">
                     <Select
+                        disabled={allowDrawnSamples}
                         id="quality-mode"
                         label="Quality Mode"
                         onChange={e => this.setMethod(e.target.value)}
@@ -87,6 +89,12 @@ export default class QualityControl extends React.Component {
                         value={method || "none"}
                     />
                 </div>
+                {allowDrawnSamples && (
+                    <p className="font-italic mt-2 small">
+                        When User-Drawn samples are enabled, the project cannot support Quality Control of plots.
+                        Disable User-Drawn samples to re-enable Quality Control.
+                    </p>
+                )}
                 {method !== "none" && (
                     <div className="d-flex mt-3">
                         <label htmlFor="percent">Percent:</label>
