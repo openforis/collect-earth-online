@@ -25,11 +25,8 @@ const localeLanguages = {
         "gettingPrevPlot": "Getting previous plot",
         "navPlot": "This plot has already been analyzed.",
         "plotNotFound": "Plot {0} not found.",
-        "navNextAn": "You have not reviewed any plots.",
-        "navNextUn": "All plots have been analyzed for this project.",
-        "navNextDone": "You have reached the end of the plot list.",
-        "navPrevAn": "No previous plots were analyzed by you.",
-        "navPrevUn": "All previous plots have been analyzed.",
+        "navNextEnd": "You have reached the end of the plot list.",
+        "navPrevEnd": "You have reached the beginning of the plot list.",
         "errorNavNum": "Please enter a number to go to plot.",
         "postSave": "Saving plot answers",
         "errorSelect": "Please select at least one sample before choosing an answer.",
@@ -54,12 +51,9 @@ const localeLanguages = {
         "gettingNextPlot": "Obteniendo siguiente predicción",
         "gettingPrevPlot": "Obtener predicción anterior",
         "navPlot": "Esta predicción ya ha sido analizado.",
-        "plotNotFound": "Predicción {0} no encontrado.",
-        "navNextAn": "No ha revisado ninguna predicción.",
-        "navNextUn": "Todas las predicciones han sido analizadas para este proyecto.",
-        "navNextDone": "Has llegado al final de la lista de predicciones.",
-        "navPrevAn": "Usted no analizó ninguna predicción anterior.",
-        "navPrevUn": "Todas las predicciones anteriores han sido analizadas..",
+        "plotNotFound": "Predicción no encontrado.",
+        "navNextEnd": "Has llegado al final de la lista de predicciones.",
+        "navPrevEnd": "Has llegado al principio de la lista de predicciones.",
         "errorNavNum": "Ingrese un número para ir a la  predicción.",
         "postSave": "Guardando respuesta",
         "errorSelect": "Seleccionar al menos una muestra antes de elegir una respuesta.",
@@ -93,8 +87,6 @@ class SimpleCollection extends React.Component {
             imageryAttributes: {},
             imageryList: [],
             mapConfig: null,
-            nextPlotButtonDisabled: false,
-            prevPlotButtonDisabled: false,
             unansweredColor: "black",
             selectedQuestion: {id: 0, question: "", answers: []},
             selectedSampleId: -1,
@@ -289,9 +281,6 @@ class SimpleCollection extends React.Component {
             this.state.mapConfig,
             this.state.plotList,
             feature => {
-                this.setState({
-                    prevPlotButtonDisabled: false
-                });
                 this.getPlotData(feature.get("features")[0].get("plotId"));
             }
         );
@@ -303,93 +292,52 @@ class SimpleCollection extends React.Component {
         this.setState({currentImagery, imageryAttribution: currentImagery.attribution});
     };
 
-    getPlotData = visibleId => this.processModal(
-        `${this.state.localeText.gettingPlot} ${visibleId}`,
-        () => fetch("/get-plot-by-id?" + getQueryString({
-            visibleId,
-            projectId: this.props.projectId,
-            navigationMode: this.state.navigationMode
-        }))
-            .then(response => (response.ok ? response.json() : Promise.reject(response)))
-            .then(data => {
-                if (data === "done") {
-                    alert(this.state.localeText.navPlot);
-                } else if (data === "not-found") {
-                    alert(this.state.localeText.plotNotFound.replace("{0}", visibleId));
-                } else {
-                    this.setState({
-                        currentPlot: data,
-                        ...this.newPlotValues(data),
-                        prevPlotButtonDisabled: false,
-                        nextPlotButtonDisabled: false
-                    });
-                }
-            })
-            .catch(response => {
-                console.log(response);
-                alert("Error retrieving plot data. See console for details.");
-            })
-    );
-
-    getNextPlotData = visibleId => this.processModal(
-        visibleId >= 0 ? this.state.localeText.gettingNextPlot : this.state.localeText.gettingFirstPlot,
-        () => fetch("/get-next-plot?" + getQueryString({
-            visibleId,
-            projectId: this.props.projectId,
-            navigationMode: this.state.navigationMode
-        }))
-            .then(response => (response.ok ? response.json() : Promise.reject(response)))
-            .then(data => {
-                if (data === "done") {
-                    if (visibleId === -1) {
-                        alert(this.state.navigationMode === "unanalyzed"
-                            ? this.state.localeText.navNextUn
-                            : this.state.localeText.navNextAn);
+    getPlotData = (visibleId, direction) => {
+        const {navigationMode} = this.state;
+        const {projectId} = this.props;
+        this.processModal(
+            "Getting plot",
+            () => fetch("/get-collection-plot?" + getQueryString({
+                visibleId,
+                projectId,
+                navigationMode,
+                direction
+            }))
+                .then(response => (response.ok ? response.json() : Promise.reject(response)))
+                .then(data => {
+                    if (data === "not-found") {
+                        alert(direction === "id"
+                            ? this.localeText.plotNotFound
+                            : direction === "next"
+                                ? this.localeText.navNextEnd
+                                : this.localeText.navPrevEnd);
                     } else {
-                        this.setState({nextPlotButtonDisabled: true});
-                        alert(this.state.localeText.navNextDone);
+                        this.setState({
+                            currentPlot: data,
+                            ...this.newPlotValues(data)
+                        });
                     }
-                } else {
-                    this.setState({
-                        currentPlot: data,
-                        ...this.newPlotValues(data),
-                        prevPlotButtonDisabled: visibleId === -1
-                    });
-                }
-            })
-            .catch(response => {
-                console.log(response);
-                alert("Error retrieving plot data. See console for details.");
-            })
-    );
+                })
+                .catch(response => {
+                    console.error(response);
+                    alert("Error retrieving plot data. See console for details.");
+                })
+        );
+    };
 
-    getPrevPlotData = visibleId => this.processModal(
-        this.state.localeText.gettingPrevPlot,
-        () => fetch("/get-prev-plot?" + getQueryString({
-            visibleId,
-            projectId: this.props.projectId,
-            navigationMode: this.state.navigationMode
-        }))
-            .then(response => (response.ok ? response.json() : Promise.reject(response)))
-            .then(data => {
-                if (data === "done") {
-                    this.setState({prevPlotButtonDisabled: true});
-                    alert(this.state.navigationMode === "unanalyzed"
-                        ? this.state.localeText.navPrevUn
-                        : this.state.localeText.navPrevAn);
-                } else {
-                    this.setState({
-                        currentPlot: data,
-                        ...this.newPlotValues(data),
-                        nextPlotButtonDisabled: false
-                    });
-                }
-            })
-            .catch(response => {
-                console.log(response);
-                alert("Error retrieving plot data. See console for details.");
-            })
-    );
+    navToFirstPlot = () => this.getPlotData(-10000000, "next");
+
+    navToNextPlot = () => this.getPlotData(this.state.currentPlot.visibleId, "next");
+
+    navToPrevPlot = () => this.getPlotData(this.state.currentPlot.visibleId, "previous");
+
+    navToPlot = newPlot => {
+        if (!isNaN(newPlot)) {
+            this.getPlotData(newPlot, "id");
+        } else {
+            alert(this.state.localeText.errorNavNum);
+        }
+    };
 
     resetPlotValues = () => this.setState(this.newPlotValues(this.state.currentPlot, false));
 
@@ -467,25 +415,7 @@ class SimpleCollection extends React.Component {
         });
     };
 
-    navToFirstPlot = () => this.getNextPlotData(-10000000);
-
-    navToNextPlot = () => this.getNextPlotData(this.state.currentPlot.visibleId);
-
-    navToPrevPlot = () => this.getPrevPlotData(this.state.currentPlot.visibleId);
-
-    navToPlot = newPlot => {
-        if (!isNaN(newPlot)) {
-            this.getPlotData(newPlot);
-        } else {
-            alert(this.state.localeText.errorNavNum);
-        }
-    };
-
-    setNavigationMode = newMode => this.setState({
-        navigationMode: newMode,
-        prevPlotButtonDisabled: false,
-        nextPlotButtonDisabled: false
-    });
+    setNavigationMode = newMode => this.setState({navigationMode: newMode});
 
     postValuesToDB = () => {
         this.processModal(
@@ -789,8 +719,6 @@ class SimpleCollection extends React.Component {
                                 navToNextPlot={this.navToNextPlot}
                                 navToPlot={this.navToPlot}
                                 navToPrevPlot={this.navToPrevPlot}
-                                nextPlotButtonDisabled={this.state.nextPlotButtonDisabled}
-                                prevPlotButtonDisabled={this.state.prevPlotButtonDisabled}
                                 setNavigationMode={this.setNavigationMode}
                                 visibleId={this.state.currentPlot.visibleId}
                             />
@@ -949,9 +877,7 @@ class PlotNavigation extends React.Component {
             setNavigationMode,
             navigationMode,
             isProjectAdmin,
-            prevPlotButtonDisabled,
             navToPrevPlot,
-            nextPlotButtonDisabled,
             navToNextPlot,
             navToPlot,
             localeText
@@ -975,18 +901,14 @@ class PlotNavigation extends React.Component {
                 <div className="row justify-content-center mb-2">
                     <button
                         className="btn btn-outline-lightgreen btn-sm"
-                        disabled={prevPlotButtonDisabled}
                         onClick={navToPrevPlot}
-                        style={{opacity: prevPlotButtonDisabled ? "0.25" : "1.0"}}
                         type="button"
                     >
                         <UnicodeIcon icon="leftCaret"/>
                     </button>
                     <button
                         className="btn btn-outline-lightgreen btn-sm mx-1"
-                        disabled={nextPlotButtonDisabled}
                         onClick={navToNextPlot}
-                        style={{opacity: nextPlotButtonDisabled ? "0.25" : "1.0"}}
                         type="button"
                     >
                         <UnicodeIcon icon="rightCaret"/>

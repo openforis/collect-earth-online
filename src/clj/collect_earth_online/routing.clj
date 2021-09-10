@@ -105,13 +105,7 @@
                                               :auth-type   :admin
                                               :auth-action :block}
    ;; Plots API
-   [:get  "/get-next-plot"]                  {:handler     plots/get-next-plot
-                                              :auth-type   :collect
-                                              :auth-action :block}
-   [:get  "/get-plot-by-id"]                 {:handler     plots/get-plot-by-id
-                                              :auth-type   :collect
-                                              :auth-action :block}
-   [:get  "/get-prev-plot"]                  {:handler     plots/get-prev-plot
+   [:get  "/get-collection-plot"]            {:handler     plots/get-collection-plot
                                               :auth-type   :collect
                                               :auth-action :block}
    [:get  "/get-project-plots"]              {:handler     plots/get-project-plots}

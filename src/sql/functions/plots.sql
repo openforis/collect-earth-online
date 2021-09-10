@@ -166,7 +166,7 @@ CREATE OR REPLACE FUNCTION select_next_user_plot(
 $$ LANGUAGE SQL;
 
 -- Returns prev unanalyzed plot
-CREATE OR REPLACE FUNCTION select_prev_unanalyzed_plot(_project_id integer, _visible_id integer)
+CREATE OR REPLACE FUNCTION select_previous_unanalyzed_plot(_project_id integer, _visible_id integer)
  RETURNS setOf collection_return AS $$
 
     SELECT plot_id,
@@ -189,7 +189,7 @@ CREATE OR REPLACE FUNCTION select_prev_unanalyzed_plot(_project_id integer, _vis
 $$ LANGUAGE SQL;
 
 -- Returns prev user analyzed plot
-CREATE OR REPLACE FUNCTION select_prev_user_plot(
+CREATE OR REPLACE FUNCTION select_previous_user_plot(
     _project_id    integer,
     _visible_id    integer,
     _user_id       integer,
@@ -213,7 +213,7 @@ CREATE OR REPLACE FUNCTION select_prev_user_plot(
 $$ LANGUAGE SQL;
 
 -- Returns unanalyzed plots by plot id
-CREATE OR REPLACE FUNCTION select_by_id_unanalyzed_plot(_project_id integer, _visible_id integer)
+CREATE OR REPLACE FUNCTION select_id_unanalyzed_plot(_project_id integer, _visible_id integer)
  RETURNS setOf collection_return AS $$
 
     SELECT plot_id,
@@ -234,7 +234,7 @@ CREATE OR REPLACE FUNCTION select_by_id_unanalyzed_plot(_project_id integer, _vi
 $$ LANGUAGE SQL;
 
 -- Returns user analyzed plots by plot id
-CREATE OR REPLACE FUNCTION select_by_id_user_plot(
+CREATE OR REPLACE FUNCTION select_id_user_plot(
     _project_id    integer,
     _visible_id    integer,
     _user_id       integer,
