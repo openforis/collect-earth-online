@@ -61,6 +61,7 @@ export class SampleDesign extends React.Component {
         const {sampleGeometries} = this.context.designSettings;
         this.context.setProjectDetails({
             designSettings: {
+                ...this.context.designSettings,
                 sampleGeometries: {...sampleGeometries, [geometry]: !sampleGeometries[geometry]}
             }
         });
@@ -143,6 +144,7 @@ export class SampleDesign extends React.Component {
                                 allowDrawnSamples: (newDistributionType === "none") || allowDrawnSamples,
                                 sampleDistribution: newDistributionType,
                                 designSettings: {
+                                    ...this.context.designSettings,
                                     sampleGeometries: {
                                         ...sampleGeometries,
                                         points: points || pointRequired

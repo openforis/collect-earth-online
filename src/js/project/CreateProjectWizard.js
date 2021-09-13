@@ -55,6 +55,7 @@ export default class CreateProjectWizard extends React.Component {
                         <PlotDesign
                             boundary={this.context.boundary}
                             getTotalPlots={this.getTotalPlots}
+                            institutionUserList={this.state.institutionUserList}
                         />
                     )),
                 helpDescription: "Collection Map Preview",
@@ -104,14 +105,19 @@ export default class CreateProjectWizard extends React.Component {
             complete: new Set(),
             templateProject: {},
             templatePlots: [],
-            templateProjectList: [{id: -1, name: "Loading..."}]
+            templateProjectList: [{id: -1, name: "Loading..."}],
+            institutionUserList: []
         };
     }
 
     /// Lifecycle Methods
 
     componentDidMount() {
-        this.getTemplateProjects();
+        Promise.all([this.getTemplateProjects(), this.getInstitutionUserList()])
+            .catch(response => {
+                console.error(response);
+                alert("Error retrieving the project data. See console for details.");
+            });
         if (this.context.name !== "" || this.context.description !== "") this.checkAllSteps();
     }
 
@@ -187,6 +193,22 @@ export default class CreateProjectWizard extends React.Component {
             Promise.reject("Error retrieving imagery list. See console for details.");
         });
 
+    getInstitutionUserList = () => {
+        // FIXME: institution > 0 indicates that we are using the review-project route
+        const {institution, institutionId} = this.context;
+        const id = institution > 0 ? institution : institutionId;
+        fetch(`/get-institution-users?institutionId=${id}`)
+            .then(response => (response.ok ? response.json() : Promise.reject(response)))
+            .then(data => {
+                this.setState({institutionUserList: data});
+            })
+            .catch(response => {
+                this.setState({institutionUserList: []});
+                console.error(response);
+                alert("Error retrieving the user list. See console for details.");
+            });
+    };
+
     /// Validations
 
     getTotalPlots = () => {
@@ -256,7 +278,8 @@ export default class CreateProjectWizard extends React.Component {
             plotSize,
             plotFileName,
             useTemplatePlots,
-            originalProject
+            originalProject,
+            designSettings: {userAssignment: {userMethod, users, percents}}
         } = this.context;
         const totalPlots = this.getTotalPlots();
         const plotFileNeeded = !useTemplatePlots
@@ -275,7 +298,11 @@ export default class CreateProjectWizard extends React.Component {
             (plotDistribution === "shp" && plotFileNeeded && !(plotFileName || "").includes(".zip"))
                 && "A plot SHP (.zip) file is required.",
             (totalPlots > plotLimit)
-                && "The plot size limit has been exceeded. Check the Plot Design section for detailed info."
+                && "The plot size limit has been exceeded. Check the Plot Design section for detailed info.",
+            (["equal", "percent"].includes(userMethod) && users.length === 0)
+                && "At least one user must be added to the plot assignment.",
+            (userMethod === "percent" && percents.reduce((acc, percent) => acc + percent, 0) !== 100)
+                && "The assigned plot percentages must equal 100%."
         ];
         return errorList.filter(e => e);
     };
