@@ -18,8 +18,9 @@
         sig-gis/triangulum        {:git/url "https://github.com/sig-gis/triangulum"
                                    :sha     "833283921dfbe53d950805cf4a4a4b1f074acae4"}}
 
- :aliases {:build-db         {:main-opts ["-m" "collect-earth-online.build-db"]}
-           :https            {:main-opts ["-m" "collect-earth-online.https"]}
+ :aliases {:build-db         {:main-opts ["-m" "triangulum.build-db"]}
+           :https            {:main-opts ["-m" "triangulum.https"]}
+           :systemd          {:main-opts ["-m" "triangulum.systemd"]}
            :rebel            {:extra-deps {com.bhauman/rebel-readline {:mvn/version "0.1.4"}}
                               :main-opts  ["-m" "rebel-readline.main"]}
            :production       {:jvm-opts  ["-Xmx4096m" "-XX:+PrintFlagsFinal"]}
