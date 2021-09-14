@@ -66,48 +66,8 @@ CREATE OR REPLACE FUNCTION select_plot_geom(_plot_id integer)
 
 $$ LANGUAGE SQL;
 
--- Select plots
-CREATE OR REPLACE FUNCTION select_project_collection_plots(_project_id integer)
- RETURNS table (
-    plot_id            integer,
-    user_id            integer,
-    flagged            boolean,
-    flagged_reason     text,
-    confidence         integer,
-    visible_id         integer,
-    plot_geom          text,
-    extra_plot_info    jsonb
- ) AS $$
-
-    SELECT plot_uid,
-        user_rid,
-        flagged,
-        flagged_reason,
-        confidence,
-        visible_id,
-        ST_AsGeoJSON(plot_geom),
-        extra_plot_info
-    FROM plots pl
-    LEFT JOIN user_plots
-        ON plot_uid = plot_rid
-    WHERE project_rid = _project_id
-
-$$ LANGUAGE SQL;
-
--- Check if plot exists by visible_id
-CREATE OR REPLACE FUNCTION plot_exists(_project_id integer, _visible_id integer)
- RETURNS boolean AS $$
-
-    SELECT count(visible_id) > 0
-    FROM plots
-    WHERE project_rid = _project_id
-        AND visible_id = _visible_id
-
-$$ LANGUAGE SQL;
-
--- FIXME, I dont think we need 6 functions for navigating plots.
--- This return type is so the 6 functions match return types.
-DROP TYPE IF EXISTS collection_return;
+-- This return type is so the collection functions match return types.
+DROP TYPE IF EXISTS collection_return CASCADE;
 CREATE TYPE collection_return AS (
     plot_id            integer,
     flagged            boolean,
@@ -118,140 +78,64 @@ CREATE TYPE collection_return AS (
     extra_plot_info    jsonb
 );
 
--- Returns next unanalyzed plot
-CREATE OR REPLACE FUNCTION select_next_unanalyzed_plot(_project_id integer, _visible_id integer)
+CREATE OR REPLACE FUNCTION select_unanalyzed_plots(_project_id integer)
  RETURNS setOf collection_return AS $$
 
-    SELECT plot_id,
+    SELECT plot_uid,
         flagged,
         flagged_reason,
         confidence,
         visible_id,
-        plot_geom,
+        ST_AsGeoJSON(plot_geom) as plot_geom,
         extra_plot_info
-    FROM select_project_collection_plots(_project_id)
+    FROM plots
+    LEFT JOIN user_plots up
+        ON plot_uid = plot_rid
     LEFT JOIN plot_locks pl
-        ON plot_id = pl.plot_rid
-    WHERE visible_id > _visible_id
-        AND user_id IS NULL
+        ON plot_uid = pl.plot_rid
+    WHERE project_rid = _project_id
+        AND up.user_rid IS NULL
         AND (pl.lock_end IS NULL
             OR localtimestamp > pl.lock_end)
     ORDER BY visible_id ASC
-    LIMIT 1
 
 $$ LANGUAGE SQL;
 
--- Returns next user analyzed plot
-CREATE OR REPLACE FUNCTION select_next_user_plot(
-    _project_id    integer,
-    _visible_id    integer,
-    _user_id       integer,
-    _review_all    boolean
- ) RETURNS setOf collection_return AS $$
+CREATE OR REPLACE FUNCTION select_user_analyzed_plots(_project_id integer, _user_id integer)
+ RETURNS setOf collection_return AS $$
 
-    SELECT plot_id,
+    SELECT plot_uid,
         flagged,
         flagged_reason,
         confidence,
         visible_id,
-        plot_geom,
+        ST_AsGeoJSON(plot_geom) as plot_geom,
         extra_plot_info
-    FROM select_project_collection_plots(_project_id)
-    WHERE visible_id > _visible_id
-        AND ((_review_all AND user_id IS NOT NULL)
-             OR user_id = _user_id)
+    FROM plots
+    LEFT JOIN user_plots up
+        ON plot_uid = plot_rid
+    WHERE project_rid = _project_id
+        AND up.user_rid = _user_id
     ORDER BY visible_id ASC
-    LIMIT 1
 
 $$ LANGUAGE SQL;
 
--- Returns prev unanalyzed plot
-CREATE OR REPLACE FUNCTION select_previous_unanalyzed_plot(_project_id integer, _visible_id integer)
+CREATE OR REPLACE FUNCTION select_all_analyzed_plots(_project_id integer, _user_id integer)
  RETURNS setOf collection_return AS $$
 
-    SELECT plot_id,
+    SELECT plot_uid,
         flagged,
         flagged_reason,
         confidence,
         visible_id,
-        plot_geom,
+        ST_AsGeoJSON(plot_geom) as plot_geom,
         extra_plot_info
-    FROM select_project_collection_plots(_project_id)
-    LEFT JOIN plot_locks pl
-        ON plot_id = pl.plot_rid
-    WHERE visible_id < _visible_id
-        AND user_id IS NULL
-        AND (pl.lock_end IS NULL
-            OR localtimestamp > pl.lock_end)
-    ORDER BY visible_id DESC
-    LIMIT 1
-
-$$ LANGUAGE SQL;
-
--- Returns prev user analyzed plot
-CREATE OR REPLACE FUNCTION select_previous_user_plot(
-    _project_id    integer,
-    _visible_id    integer,
-    _user_id       integer,
-    _review_all    boolean
- ) RETURNS setOf collection_return AS $$
-
-    SELECT plot_id,
-        flagged,
-        flagged_reason,
-        confidence,
-        visible_id,
-        plot_geom,
-        extra_plot_info
-    FROM select_project_collection_plots(_project_id) as spp
-    WHERE visible_id < _visible_id
-        AND ((_review_all AND user_id IS NOT NULL)
-             OR user_id = _user_id)
-    ORDER BY visible_id DESC
-    LIMIT 1
-
-$$ LANGUAGE SQL;
-
--- Returns unanalyzed plots by plot id
-CREATE OR REPLACE FUNCTION select_id_unanalyzed_plot(_project_id integer, _visible_id integer)
- RETURNS setOf collection_return AS $$
-
-    SELECT plot_id,
-        flagged,
-        flagged_reason,
-        confidence,
-        visible_id,
-        plot_geom,
-        extra_plot_info
-    FROM select_project_collection_plots(_project_id) as spp
-    LEFT JOIN plot_locks pl
-        ON plot_id = pl.plot_rid
-    WHERE visible_id = _visible_id
-        AND user_id IS NULL
-        AND (pl.lock_end IS NULL
-            OR localtimestamp > pl.lock_end)
-
-$$ LANGUAGE SQL;
-
--- Returns user analyzed plots by plot id
-CREATE OR REPLACE FUNCTION select_id_user_plot(
-    _project_id    integer,
-    _visible_id    integer,
-    _user_id       integer,
-    _review_all    boolean
- ) RETURNS setOf collection_return AS $$
-
-    SELECT plot_id,
-        flagged,
-        flagged_reason,
-        confidence,
-        visible_id,
-        plot_geom,
-        extra_plot_info
-    FROM select_project_collection_plots(_project_id)
-    WHERE visible_id = _visible_id
-        AND ((_review_all AND user_id IS NOT NULL)
-             OR user_id = _user_id)
+    FROM plots
+    LEFT JOIN user_plots up
+        ON plot_uid = plot_rid
+    WHERE project_rid = _project_id
+        AND up.user_rid IS NOT NULL
+    ORDER BY visible_id ASC
 
 $$ LANGUAGE SQL;
 
