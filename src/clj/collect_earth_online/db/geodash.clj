@@ -2,8 +2,8 @@
   (:import java.util.UUID)
   (:require [clojure.string  :as str]
             [clj-http.client :as client]
-            [collect-earth-online.database :refer [call-sql]]
-            [collect-earth-online.utils.type-conversion :as tc]
+            [triangulum.database :refer [call-sql]]
+            [triangulum.type-conversion :as tc]
             [collect-earth-online.views :refer [data-response]]))
 
 ;;; TODO, we no longer need dashboardID, projectId should be sufficient
@@ -21,7 +21,7 @@
 
 (defn create-dashboard-widget-by-id [{:keys [params]}]
   (let [project-id         (tc/val->int (:projectId params))
-        dashboard-id       (tc/str->pg-uuid (:dashID params))
+        dashboard-id       (tc/str->pg (:dashID params) "uuid")
         widget-json-string (tc/json->jsonb (:widgetJSON params))]
     (call-sql "add_project_widget"
               project-id
@@ -35,7 +35,7 @@
 ;;      calls by only updating the one widget that moves.
 (defn update-dashboard-widget-by-id [{:keys [params]}]
   (let [widget-id          (tc/val->int (:widgetId params))
-        dashboard-id       (tc/str->pg-uuid (:dashID params))
+        dashboard-id       (tc/str->pg (:dashID params) "uuid")
         widget-json-string (tc/json->jsonb (:widgetJSON params))]
     (call-sql "update_project_widget_by_widget_id"
               widget-id
@@ -45,7 +45,7 @@
 
 (defn delete-dashboard-widget-by-id [{:keys [params]}]
   (let [widget-id    (tc/val->int (:widgetId params))
-        dashboard-id (tc/str->pg-uuid (:dashID params))]
+        dashboard-id (tc/str->pg (:dashID params) "uuid")]
     (call-sql "delete_project_widget_by_widget_id"
               widget-id
               dashboard-id)

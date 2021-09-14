@@ -3,8 +3,8 @@
             [clojure.string :as str]
             [clojure.tools.cli  :refer [parse-opts]]
             [ring.adapter.jetty :refer [run-jetty]]
-            [collect-earth-online.handler :refer [create-handler-stack]]
-            [collect-earth-online.logging :refer [log-str set-log-path!]]))
+            [triangulum.logging :refer [log-str set-log-path!]]
+            [collect-earth-online.handler :refer [create-handler-stack]]))
 
 (defonce server           (atom nil))
 (defonce clean-up-service (atom nil))

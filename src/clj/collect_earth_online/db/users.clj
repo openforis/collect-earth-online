@@ -4,8 +4,8 @@
            java.time.LocalDateTime
            java.util.UUID)
   (:require [clojure.string :as str]
-            [collect-earth-online.utils.type-conversion :as tc]
-            [collect-earth-online.database   :refer [call-sql sql-primitive]]
+            [triangulum.database :refer [call-sql sql-primitive]]
+            [triangulum.type-conversion :as tc]
             [collect-earth-online.utils.mail :refer [email? send-mail get-base-url]]
             [collect-earth-online.views      :refer [data-response]]))
 

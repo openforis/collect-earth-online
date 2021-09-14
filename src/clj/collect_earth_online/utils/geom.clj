@@ -1,5 +1,5 @@
 (ns collect-earth-online.utils.geom
-  (:require [collect-earth-online.utils.type-conversion :as tc]))
+  (:require [triangulum.type-conversion :as tc]))
 
 ;;; GeoJSON
 
