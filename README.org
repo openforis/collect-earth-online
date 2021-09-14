@@ -27,7 +27,7 @@ should navigate to the toplevel directory (i.e., the directory
 containing this README) and run the database build command as follows:
 
 #+begin_src sh
-clojure -M:build-db build-all
+clojure -M:build-db build-all -d ceo
 #+end_src
 
 This will begin by creating a new database and role called ceo and
@@ -118,13 +118,38 @@ Replace *X* with the PostgreSQL version installed on your computer.
 
 ** Development Web Server
 
+*** Configurations
+
+Begin by making a copy of the default config file:
+#+begin_src sh
+cp config.default.edn config.edn
+#+end_src
+
+**** Database
+
+Enter the database configurations into to ~:database~ portion of the
+~config.edn~ file. If you are using an external database, be sure to provide
+a ~:host~ and ~:port~.
+
+#+begin_src sh
+;; config.edn
+{:database {:host     "localhost" ; optional
+            :port     5432        ; optional
+            :dbname   "ceo"
+            :user     "ceo"
+            :password "ceo"}
+ ...}
+#+end_src
+
+**** Compile and run
+
 To compile and run the web application, navigate to the top level
 project directory and run:
 
 #+begin_src sh
 npm install
 npm run webpack-dev
-clojure -M:build-db only-functions
+clojure -M:build-db functions -d ceo
 clojure -M:run-server -m dev [-p 8080] [-P 8443]
 #+end_src
 
@@ -155,20 +180,44 @@ system performance.
 - [[https://certbot.eff.org/][certbot]]
 - [[https://www.openssl.org/source/][openssl]]
 
-*** Email Server
+*** Configurations
 
-To set up the email server for system emails, start by creating a file
-named "mail-config.edn" in the root directory of the application. Add
-the following EDN object containing server details to the file,
-replacing the values with your own:
+Begin by making a copy of the default config file in the project root directory:
+#+begin_src sh
+cp config.default.edn config.edn
+#+end_src
+
+**** Database
+
+Enter the database configurations into to ~:database~ portion of the
+~config.edn~ file. If you are using an external database, be sure to provide
+a ~:host~ and ~:port~.
+
+#+begin_src sh
+;; config.edn
+{:database {:host     "localhost" ; optional
+            :port     5432        ; optional
+            :dbname   "ceo"
+            :user     "ceo"
+            :password "ceo"}
+ ...}
+#+end_src
+
+**** Email Server
+
+To set up the email server for system emails, open the "config.edn" file in
+the root directory of the application. Add the following EDN object containing
+server details to the file, replacing the values with your own:
 
 #+begin_src clojure
-{:host     "smtp.gmail.com"
- :user     "support-my-domain@gmail.com"
- :pass     "foobarbaz200"
- :tls      true
- :port     587
- :base-url "https://my.domain/"}
+;; config.edn
+{...
+ :mail     {:host                  "smtp.gmail.com"
+            :user                  "support-my-domain@gmail.com"
+            :pass                  "foobarbaz200"
+            :tls                   true
+            :port                  587
+            :base-url              "https://my.domain/"}}
 #+end_src
 
 *** Enabling HTTPS
@@ -243,7 +292,7 @@ project directory and run:
 #+begin_src sh
 npm install
 npm run webpack-prod
-clojure -M:build-db only-functions
+clojure -M:build-db functions -d ceo
 clojure -M:run-server -m [dev|prod] [-p 8080] [-P 8443]
 #+end_src
 
