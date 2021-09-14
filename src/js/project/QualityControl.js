@@ -94,8 +94,11 @@ export default class QualityControl extends React.Component {
                     />
                 </div>
                 {qaqcMethod !== "none" && (
-                    <div className="d-flex mt-3">
+                    <div className="d-flex flex-column mt-3">
                         <label htmlFor="percent">Percent:</label>
+                        <p className="font-italic ml-2 small">
+                            - Percent of each users plots to review
+                        </p>
                         <div className="d-flex mx-3">
                             <input
                                 id="percent"
