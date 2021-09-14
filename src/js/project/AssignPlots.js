@@ -8,7 +8,7 @@ export default class AssignPlots extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
-            selectedUserIdId: -1
+            selectedUserId: -1
         };
     }
 
@@ -55,10 +55,10 @@ export default class AssignPlots extends React.Component {
         this.setUserAssignment({percents});
     };
 
-    renderAssignedUsers = (users, isPercentage, percents) => (
+    renderAssignedUsers = (assignedUsers, isPercentage, percents) => (
         <div className="d-flex flex-column mt-3">
-            {users.map((user, userIndex) => (
-                <div key={user.id} className="d-flex justify-content-between mt-1">
+            {assignedUsers.map(({id, email}, userIndex) => (
+                <div key={id} className="d-flex justify-content-between mt-1">
                     <div className="mr-5">
                         {isPercentage && (
                             <>
@@ -86,12 +86,12 @@ export default class AssignPlots extends React.Component {
                                 padding: ".25rem .5rem"
                             }}
                         >
-                            {user.email}
+                            {email}
                         </div>
                         <button
                             className="btn btn-sm btn-danger mx-2"
-                            onClick={() => this.removeUser(user.id)}
-                            title={`Remove ${user.email}`}
+                            onClick={() => this.removeUser(id)}
+                            title={`Remove ${email}`}
                             type="button"
                         >
                             -
@@ -109,14 +109,13 @@ export default class AssignPlots extends React.Component {
             ["percent", "Percentage of plots"]
         ];
         const {selectedUserId} = this.state;
-        // allUsers is a positional array of [id, email]
-        const {allUsers} = this.props;
+        const {institutionUserList} = this.props;
         const {userMethod, users, percents} = this.getUserAssignment();
-        const possibleUsers = [[-1, "Select user..."],
-                               ...Object.keys(allUsers)
-                                   .map(id => [parseInt(id), allUsers[id]])
-                                   .filter(u => !users.includes(u[0]))]; // Comparing user ids
-        const assignedUsers = users.map(id => ({id, email: allUsers[id]}));
+        const possibleUsers = [
+            {id: -1, email: "Select user..."},
+            ...institutionUserList.filter(u => !users.includes(u.id))
+        ];
+        const assignedUsers = institutionUserList.filter(u => users.includes(u.id));
 
         return (
             <div className="mr-3" style={{maxWidth: "50%"}}>
@@ -137,9 +136,11 @@ export default class AssignPlots extends React.Component {
                                 disabled={possibleUsers.length === 1}
                                 id="assigned-users"
                                 label="Assigned Users"
+                                labelKey="email"
                                 onChange={e => this.setState({selectedUserId: parseInt(e.target.value)})}
                                 options={possibleUsers.length > 1 ? possibleUsers : ["No users to assign."]}
                                 value={this.state.selectedUserId}
+                                valueKey="id"
                             />
                             <button
                                 className="btn btn-sm btn-success mx-2"

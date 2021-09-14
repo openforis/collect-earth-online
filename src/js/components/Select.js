@@ -2,16 +2,27 @@ import React from "react";
 
 import {isString} from "../utils/generalUtils";
 
-function Option({option}) {
+function Option({option, valueKey = "value", labelKey = "label"}) {
     const [value, label] = isString(option, "String")
-        ? [option, option] : Array.isArray(option)
-            ? [option[0], option[1]] : [option.value, option.label];
+        ? [option, option]
+        : Array.isArray(option)
+            ? [option[0], option[1]]
+            : [option[valueKey], option[labelKey]];
     return (
         <option key={value} value={value}>{label}</option>
     );
 }
 
-export function Select({disabled, label, id, onChange, value, options}) {
+export function Select({
+    disabled,
+    label,
+    id,
+    onChange,
+    value,
+    options,
+    valueKey,
+    labelKey
+}) {
     return (
         <div className="form-inline">
             <label htmlFor={id}>{label}</label>
@@ -23,10 +34,12 @@ export function Select({disabled, label, id, onChange, value, options}) {
                 value={value}
             >
                 {Array.isArray(options)
-                    /* eslint-disable-next-line react/no-array-index-key */
-                    ? options.map((o, i) => (<Option key={i} option={o}/>))
-                    /* eslint-disable-next-line react/no-array-index-key */
-                    : Object.values(options).map((o, i) => (<Option key={i} option={o}/>))}
+                    ? options.map((o, i) =>
+                        /* eslint-disable-next-line react/no-array-index-key */
+                        <Option key={i} labelKey={labelKey} option={o} valueKey={valueKey}/>)
+                    : Object.values(options).map((o, i) =>
+                        /* eslint-disable-next-line react/no-array-index-key */
+                        <Option key={i} labelKey={labelKey} option={o} valueKey={valueKey}/>)}
             </select>
         </div>
     );

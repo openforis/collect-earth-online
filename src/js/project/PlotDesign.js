@@ -327,9 +327,7 @@ export class PlotDesign extends React.Component {
                         && `* The maximum allowed number for the selected plot distribution is ${formatNumberWithCommas(plotLimit)}.`}
                 </p>
                 <div className="d-flex">
-                    <AssignPlots
-                        allUsers={institutionUserList.reduce((acc, u) => { acc[u.id] = u.email; return acc; }, {})}
-                    />
+                    <AssignPlots institutionUserList={institutionUserList}/>
                 </div>
             </div>
         );
