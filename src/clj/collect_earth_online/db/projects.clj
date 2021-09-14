@@ -3,13 +3,13 @@
            java.util.Date
            java.util.UUID)
   (:require [clojure.string :as str]
-            [triangulum.logging :refer [log]]
-            [collect-earth-online.utils.type-conversion :as tc]
-            [collect-earth-online.utils.part-utils      :as pu]
-            [collect-earth-online.database   :refer [call-sql
-                                                     sql-primitive
-                                                     p-insert-rows!
-                                                     insert-rows!]]
+            [triangulum.logging  :refer [log]]
+            [triangulum.database :refer [call-sql
+                                         sql-primitive
+                                         p-insert-rows!
+                                         insert-rows!]]
+            [triangulum.type-conversion :as tc]
+            [collect-earth-online.utils.part-utils :as pu]
             [collect-earth-online.views      :refer [data-response]]
             [collect-earth-online.utils.geom :refer [make-geo-json-polygon]]
             [collect-earth-online.generators.clj-point     :refer [generate-point-plots generate-point-samples]]
@@ -181,10 +181,10 @@
                                              sample-distribution
                                              samples-per-plot
                                              sample-resolution))]
-    (p-insert-rows! "samples" samples)
+    (p-insert-rows! "samples" samples (keys (first samples)))
     (if allow-drawn-samples?
       (when (#{"csv" "shp"} sample-distribution)
-        (p-insert-rows! "ext_samples" samples))
+        (p-insert-rows! "ext_samples" samples (keys (first samples))))
       (when-let [bad-plots (seq (map :visible_id (call-sql "plots_missing_samples" project-id)))]
         (pu/init-throw (str "The uploaded plot and sample files do not have correctly overlapping data. "
                             (count bad-plots)
@@ -337,7 +337,7 @@
       ;; Copy template widgets
       ;; TODO this can be a simple SQL query once we drop the dashboard ID
       (when (and (pos? project-template) use-template-widgets)
-        (let [new-uuid (tc/str->pg-uuid (str (UUID/randomUUID)))]
+        (let [new-uuid (tc/str->pg (str (UUID/randomUUID)) "uuid")]
           (doseq [{:keys [widget]} (call-sql "get_project_widgets_by_project_id" project-template)]
             (call-sql "add_project_widget"
                       project-id
