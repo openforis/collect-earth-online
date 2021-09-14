@@ -17,6 +17,16 @@ class Project extends React.Component {
             name: "",
             description: "",
             designSettings: {
+                userAssignment: {
+                    userMethod: "none",
+                    users: [],
+                    percents: []
+                },
+                qaqcAssignment: {
+                    qaqcMethod: "none",
+                    percent: 0,
+                    smes: []
+                },
                 sampleGeometries: {
                     points: true,
                     lines: true,

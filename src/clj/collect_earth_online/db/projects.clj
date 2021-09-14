@@ -41,7 +41,13 @@
 
 (def default-settings {:sampleGeometries {:points   true
                                           :lines    true
-                                          :polygons true}})
+                                          :polygons true}
+                       :userAssignment   {:userMethod "none"
+                                          :users      []
+                                          :percents   []}
+                       :qaqcAssignment   {:qaqcMethod "none"
+                                          :percent    0
+                                          :smes       []}})
 
 (defn get-home-projects [{:keys [params]}]
   (data-response (mapv (fn [{:keys [project_id institution_id name description num_plots centroid editable]}]
@@ -131,7 +137,7 @@
   (let [project-id (tc/val->int (:projectId params))
         stats      (first (call-sql "select_project_statistics" project-id))]
     (data-response {:flaggedPlots    (:flagged_plots stats)
-                    :analyzedPlots   (:analyzed_plots stats) ;TODO why don't these variable match?
+                    :analyzedPlots   (:analyzed_plots stats)
                     :unanalyzedPlots (:unanalyzed_plots stats)
                     :members         (:members stats)
                     :contributors    (:contributors stats)
@@ -176,14 +182,16 @@
 
 (defn- assign-user-plots
   "Assigns users to plots. The two assignment options are:
-   {:user-method \"equal\"
-    :users       [4581 1 5]}}
+   {:userMethod \"equal\"
+    :users      [4581 1 5]}}
    and
-   {:user-method \"percent\"
-    :users       [4581 5 11]
-    :percents    [50.0 25.0 25.0]}"
+   {:userMethod \"percent\"
+    :users      [4581 5 11]
+    :percents   [50.0 25.0 25.0]}"
   [plots design-settings]
-  (let [{:keys [user-method users percents]} (:user-assignment design-settings)
+  (let [{users       :users
+         percents    :percents
+         user-method :userMethod} (:userAssignment design-settings)
         plot-count (count plots)]
     (case user-method
       "equal"   (equally-assign-users plots users :plot_id)
@@ -358,18 +366,7 @@
         survey-questions     (tc/clj->jsonb (:surveyQuestions params))
         survey-rules         (tc/clj->jsonb (:surveyRules params))
         project-options      (tc/clj->jsonb (:projectOptions params default-options))
-        design-settings      (merge (:designSettings params default-settings)
-                                    ;; Test data
-                                    #_{:user-assignment {:user-method "equal"
-                                                         :users       [4581 1]}}
-                                    #_{:user-assignment {:user-method "percent"
-                                                         :users       [4581 5 11]
-                                                         :percents    [50.0 25.0 25.0]}}
-                                    #_{:qaqc-assignment {:qaqc-method "overlap"
-                                                         :percent     50}}
-                                    #_{:qaqc-assignment {:qaqc-method "sme"
-                                                         :percent     100
-                                                         :smes        [2 5]}})
+        design-settings      (:designSettings params default-settings)
         project-template     (tc/val->int (:projectTemplate params))
         use-template-plots   (tc/val->bool (:useTemplatePlots params))
         use-template-widgets (tc/val->bool (:useTemplateWidgets params))
