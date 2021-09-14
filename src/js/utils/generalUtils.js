@@ -178,3 +178,19 @@ export function asPercentage(part, total) {
         ? (100.0 * (part / total)).toFixed(2)
         : "0.00";
 }
+
+export function isArguments(val) { return toString.call(val) === "[object Arguments]"; }
+export function isFunction(val) { return toString.call(val) === "[object Function]"; }
+export function isString(val) { return toString.call(val) === "[object String]"; }
+export function isDate(val) { return toString.call(val) === "[object Date]"; }
+export function isRegExp(val) { return toString.call(val) === "[object RegExp]"; }
+
+/**
+* Removes the item from array at index
+* @param {array} arr
+* @param {number} index
+* @returns {array}
+*/
+export function removeAtIndex(arr, index) {
+    return arr.slice(0, index).concat(arr.slice(index + 1, arr.length));
+}

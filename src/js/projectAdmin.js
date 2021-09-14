@@ -17,6 +17,11 @@ class Project extends React.Component {
             name: "",
             description: "",
             designSettings: {
+                userAssignment: {
+                    userMethod: "none",
+                    users: [],
+                    percents: []
+                },
                 sampleGeometries: {
                     points: true,
                     lines: true,
