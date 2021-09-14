@@ -1,7 +1,7 @@
 (ns collect-earth-online.database
   (:require [clojure.data.json :as json]
             [clojure.string    :as str]
-            [collect-earth-online.logging :refer [log-str]]
+            [triangulum.logging :refer [log-str]]
             [collect-earth-online.views   :refer [data-response]]
             [next.jdbc :as jdbc]
             [next.jdbc.result-set :as rs]))

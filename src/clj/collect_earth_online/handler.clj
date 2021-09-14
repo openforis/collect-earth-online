@@ -20,7 +20,7 @@
             [ring.middleware.x-headers          :refer [wrap-frame-options wrap-content-type-options wrap-xss-protection]]
             [ring.util.response                 :refer [redirect]]
             [ring.util.codec                    :refer [url-encode url-decode]]
-            [collect-earth-online.logging          :refer [log-str]]
+            [triangulum.logging :refer [log-str]]
             [collect-earth-online.routing          :refer [routes]]
             [collect-earth-online.views            :refer [not-found-page data-response]]
             [collect-earth-online.db.projects      :refer [can-collect? is-proj-admin?]]

@@ -2,8 +2,8 @@
   (:require [clojure.java.io    :as io]
             [clojure.java.shell :as sh]
             [clojure.string     :as str]
-            [clojure.tools.cli         :refer [parse-opts]]
-            [collect-earth-online.logging :refer [log-str]]))
+            [clojure.tools.cli  :refer [parse-opts]]
+            [triangulum.logging :refer [log-str]]))
 
 (def path-env (System/getenv "PATH"))
 

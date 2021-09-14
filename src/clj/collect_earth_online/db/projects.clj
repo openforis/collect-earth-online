@@ -3,13 +3,13 @@
            java.util.Date
            java.util.UUID)
   (:require [clojure.string :as str]
+            [triangulum.logging :refer [log]]
             [collect-earth-online.utils.type-conversion :as tc]
             [collect-earth-online.utils.part-utils      :as pu]
             [collect-earth-online.database   :refer [call-sql
                                                      sql-primitive
                                                      p-insert-rows!
                                                      insert-rows!]]
-            [collect-earth-online.logging    :refer [log]]
             [collect-earth-online.views      :refer [data-response]]
             [collect-earth-online.utils.geom :refer [make-geo-json-polygon]]
             [collect-earth-online.generators.clj-point     :refer [generate-point-plots generate-point-samples]]
