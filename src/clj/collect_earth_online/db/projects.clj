@@ -213,16 +213,18 @@
 
 (defn- assign-qaqc
   "Assigns additional plots to users based on QA/QC method.  The two options are:
-   {:qaqc-method \"overlap\"
-    :percent     50}
+   {:qaqcMethod \"overlap\"
+    :percent    50}
    and
-   {:qaqc-method \"sme\"
-    :percent     100
-    :smes        [2 5]}"
+   {:qaqcMethod \"sme\"
+    :percent    100
+    :smes       [2 5]}"
   [assigned-plots design-settings]
   (when (seq assigned-plots)
-    (let [{:keys [qaqc-method percent smes]} (:qaqc-assignment design-settings)
-          {:keys [users]}                    (:user-assignment design-settings)]
+    (let [{qaqc-method :qaqcMethod
+           percent    :percent
+           smes       :smes} (:qaqcAssignment design-settings)
+          {:keys [users]}    (:userAssignment design-settings)]
       (concat assigned-plots
               (->> assigned-plots
                    (group-by :user_rid)
