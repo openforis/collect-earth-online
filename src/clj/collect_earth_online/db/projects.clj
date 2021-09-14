@@ -44,7 +44,10 @@
                                           :polygons true}
                        :userAssignment   {:userMethod "none"
                                           :users      []
-                                          :percents   []}})
+                                          :percents   []}
+                       :qaqcAssignment   {:qaqcMethod "none"
+                                          :percent    0
+                                          :smes       []}})
 
 (defn get-home-projects [{:keys [params]}]
   (data-response (mapv (fn [{:keys [project_id institution_id name description num_plots centroid editable]}]

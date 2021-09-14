@@ -4,6 +4,7 @@ import {formatNumberWithCommas, encodeFileAsBase64, truncate} from "../utils/gen
 import {ProjectContext, plotLimit} from "./constants";
 import {mercator} from "../utils/mercator";
 import AssignPlots from "./AssignPlots";
+import QualityControl from "./QualityControl";
 
 export class PlotDesign extends React.Component {
     constructor(props) {
@@ -326,8 +327,9 @@ export class PlotDesign extends React.Component {
                     {totalPlots > 0 && totalPlots > plotLimit
                         && `* The maximum allowed number for the selected plot distribution is ${formatNumberWithCommas(plotLimit)}.`}
                 </p>
-                <div className="d-flex">
+                <div className="d-flex row">
                     <AssignPlots institutionUserList={institutionUserList}/>
+                    <QualityControl institutionUserList={institutionUserList}/>
                 </div>
             </div>
         );

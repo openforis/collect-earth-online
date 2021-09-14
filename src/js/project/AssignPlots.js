@@ -118,7 +118,7 @@ export default class AssignPlots extends React.Component {
         const assignedUsers = institutionUserList.filter(u => users.includes(u.id));
 
         return (
-            <div className="mr-3" style={{maxWidth: "50%"}}>
+            <div className="mx-5 col-4">
                 <h3 className="mb-3">Assign Plots</h3>
                 <div className="d-flex">
                     <Select

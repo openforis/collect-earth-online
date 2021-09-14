@@ -22,6 +22,11 @@ class Project extends React.Component {
                     users: [],
                     percents: []
                 },
+                qaqcAssignment: {
+                    qaqcMethod: "none",
+                    percent: 0,
+                    smes: []
+                },
                 sampleGeometries: {
                     points: true,
                     lines: true,
