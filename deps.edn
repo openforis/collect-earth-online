@@ -16,7 +16,7 @@
         ring/ring-json            {:mvn/version "0.5.0"}
         seancorfield/next.jdbc    {:mvn/version "1.1.613"}
         sig-gis/triangulum        {:git/url "https://github.com/sig-gis/triangulum"
-                                   :sha     "f844f50bac019ddd12035af83dba1b1827d0793a"}}
+                                   :sha     "6c99c9abd465ecb8ff8cc1f797d71708c46b02e2"}}
 
  :aliases {:build-db         {:main-opts ["-m" "triangulum.build-db"]}
            :https            {:main-opts ["-m" "triangulum.https"]}
