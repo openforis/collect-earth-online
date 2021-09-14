@@ -280,8 +280,6 @@ export class PlotDesign extends React.Component {
             }
         };
 
-        const allUsers = institutionUserList.reduce((acc, u) => { acc[u.id] = u.email; return acc; }, {});
-
         return (
             <div id="plot-design">
                 <div className="row">

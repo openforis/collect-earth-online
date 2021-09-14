@@ -38,10 +38,10 @@ export default class QualityControl extends React.Component {
         this.resetSelectedUser();
     };
 
-    renderUsers = users => (
+    renderAssignedSMEs = assignedSMEs => (
         <div className="d-flex flex-column mt-3">
-            {users.map(user => (
-                <div key={user.id} className="d-flex justify-content-end mt-1">
+            {assignedSMEs.map(({id, email}) => (
+                <div key={id} className="d-flex justify-content-end mt-1">
                     <div
                         style={{
                             background: "white",
@@ -51,12 +51,12 @@ export default class QualityControl extends React.Component {
                             padding: ".25rem .5rem"
                         }}
                     >
-                        {user.email}
+                        {email}
                     </div>
                     <button
                         className="btn btn-sm btn-danger mx-2"
-                        onClick={() => this.removeSME(user.id)}
-                        title={`Remove ${user.email}`}
+                        onClick={() => this.removeSME(id)}
+                        title={`Remove ${email}`}
                         type="button"
                     >
                         -
@@ -74,12 +74,12 @@ export default class QualityControl extends React.Component {
         ];
         const {qaqcMethod, percent, smes} = this.getAssignment();
         const {selectedUser} = this.state;
-        const {allUsers} = this.props;
-        const assignedSMEs = smes.map(id => ({id, email: allUsers[id]}));
-        const possibleSMEs = [[-1, "Select user..."],
-                              ...Object.keys(allUsers)
-                                  .map(id => [parseInt(id), allUsers[id]])
-                                  .filter(u => !smes.includes(u[0]))];
+        const {institutionUserList} = this.props;
+        const possibleSMEs = [
+            {id: -1, email: "Select user..."},
+            ...institutionUserList.filter(({id}) => !smes.includes(id))
+        ];
+        const assignedSMEs = institutionUserList.filter(({id}) => smes.includes(id));
 
         return (
             <div className="col-4 mx-5">
@@ -115,15 +115,17 @@ export default class QualityControl extends React.Component {
                     <div className="mt-3">
                         <div className="d-flex">
                             <Select
-                                disabled={possibleSMEs.length === 0}
+                                disabled={possibleSMEs.length === 1}
                                 id="assigned-smes"
                                 label="Assigned SMEs"
+                                labelKey="email"
                                 onChange={e => this.setState({selectedUser: parseInt(e.target.value)})}
                                 options={possibleSMEs.length > 1 ? possibleSMEs : ["No Users to Assign"]}
+                                valueKey="id"
                             />
                             <button
                                 className="btn btn-sm btn-success mx-2"
-                                disabled={possibleSMEs.length === 0 || selectedUser === -1}
+                                disabled={possibleSMEs.length === 1 || selectedUser === -1}
                                 onClick={() => this.addSME(selectedUser)}
                                 title="Add User"
                                 type="button"
@@ -131,7 +133,7 @@ export default class QualityControl extends React.Component {
                                 +
                             </button>
                         </div>
-                        {this.renderUsers(assignedSMEs)}
+                        {this.renderAssignedSMEs(assignedSMEs)}
                     </div>
                 )}
             </div>
