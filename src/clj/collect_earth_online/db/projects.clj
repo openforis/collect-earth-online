@@ -41,7 +41,10 @@
 
 (def default-settings {:sampleGeometries {:points   true
                                           :lines    true
-                                          :polygons true}})
+                                          :polygons true}
+                       :userAssignment   {:userMethod "none"
+                                          :users      []
+                                          :percents   []}})
 
 (defn get-home-projects [{:keys [params]}]
   (data-response (mapv (fn [{:keys [project_id institution_id name description num_plots centroid editable]}]
@@ -131,7 +134,7 @@
   (let [project-id (tc/val->int (:projectId params))
         stats      (first (call-sql "select_project_statistics" project-id))]
     (data-response {:flaggedPlots    (:flagged_plots stats)
-                    :analyzedPlots   (:analyzed_plots stats) ;TODO why don't these variable match?
+                    :analyzedPlots   (:analyzed_plots stats)
                     :unanalyzedPlots (:unanalyzed_plots stats)
                     :members         (:members stats)
                     :contributors    (:contributors stats)

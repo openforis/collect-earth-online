@@ -16,7 +16,7 @@
                            {:id       plot_id
                             :center   center
                             :flagged  flagged
-                            :analyses analyzed})
+                            :analyzed analyzed})
                          (call-sql "select_limited_project_plots" project-id max-plots)))))
 
 (defn get-plot-sample-geom [{:keys [params]}]
@@ -64,7 +64,12 @@
      :extraPlotInfo (tc/jsonb->clj extra_plot_info {})
      :samples       (prepare-samples-array plot_id)}))
 
-(defn get-collection-plot [{:keys [params]}]
+(defn get-collection-plot
+  "Gets plot information needed for the collections page.  The plot
+   returned is based off of the navigation mode and direction.  Valid
+   navigation modes are analyzed, unanalyzed, and all.  Valid directions
+   are previous, next, and id."
+  [{:keys [params]}]
   (let [navigation-mode (:navigationMode params "unanalyzed")
         direction       (:direction params "next")
         project-id      (tc/val->int (:projectId params))
@@ -96,6 +101,10 @@
     (if plot-info
       (do
         (unlock-plots user-id)
+        ;; TODO, CEO-90 Technically there is a race condition here.  We need a lock function
+        ;;       that returns truthy/falsy if it correctly created a unique lock.
+        ;;       The quickest way to finish this is to return a "race condition error."
+        ;;       If we get users complaining we can try a recursive find.
         (call-sql "lock_plot"
                   (:plot_id plot-info)
                   user-id

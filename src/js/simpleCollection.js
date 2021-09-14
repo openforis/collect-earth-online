@@ -923,7 +923,7 @@ class PlotNavigation extends React.Component {
                     />
                     <button
                         className="btn btn-lightgreen btn-sm"
-                        onClick={() => navToPlot(this.state.newPlotInput, "id")}
+                        onClick={() => navToPlot(this.state.newPlotInput)}
                         type="button"
                     >
                         {localeText.gotoPlot}
