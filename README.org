@@ -131,7 +131,7 @@ Enter the database configurations into to ~:database~ portion of the
 ~config.edn~ file. If you are using an external database, be sure to provide
 a ~:host~ and ~:port~.
 
-#+begin_src sh
+#+begin_src clojure
 ;; config.edn
 {:database {:host     "localhost" ; optional
             :port     5432        ; optional
@@ -193,7 +193,7 @@ Enter the database configurations into to ~:database~ portion of the
 ~config.edn~ file. If you are using an external database, be sure to provide
 a ~:host~ and ~:port~.
 
-#+begin_src sh
+#+begin_src clojure
 ;; config.edn
 {:database {:host     "localhost" ; optional
             :port     5432        ; optional
@@ -206,7 +206,7 @@ a ~:host~ and ~:port~.
 **** Email Server
 
 To set up the email server for system emails, open the "config.edn" file in
-the root directory of the application. Add the following EDN object containing
+the root directory of the application. Edit the following EDN object containing
 server details to the file, replacing the values with your own:
 
 #+begin_src clojure
