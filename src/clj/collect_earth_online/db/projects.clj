@@ -167,14 +167,16 @@
 
 (defn- assign-user-plots
   "Assigns users to plots. The two assignment options are:
-   {:user-method \"equal\"
-    :users       [4581 1 5]}}
+   {:userMethod \"equal\"
+    :users      [4581 1 5]}}
    and
-   {:user-method \"percent\"
-    :users       [4581 5 11]
-    :percents    [50.0 25.0 25.0]}"
+   {:userMethod \"percent\"
+    :users      [4581 5 11]
+    :percents   [50.0 25.0 25.0]}"
   [plots design-settings]
-  (let [{:keys [user-method users percents]} (:user-assignment design-settings)
+  (let [{users       :users
+         percents    :percents
+         user-method :userMethod} (:userAssignment design-settings)
         plot-count (count plots)]
     (case user-method
       "equal"   (->> (partition-all (Math/ceil (/ plot-count
@@ -326,13 +328,7 @@
         survey-questions     (tc/clj->jsonb (:surveyQuestions params))
         survey-rules         (tc/clj->jsonb (:surveyRules params))
         project-options      (tc/clj->jsonb (:projectOptions params default-options))
-        design-settings      (merge (:designSettings params default-settings)
-                                    ;; Test data
-                                    #_{:user-assignment {:user-method "equal"
-                                                         :users       [4581 1]}}
-                                    #_{:user-assignment {:user-method "percent"
-                                                         :users       [4581 5 11]
-                                                         :percents    [50.0 25.0 25.0]}})
+        design-settings      (:designSettings params default-settings)
         project-template     (tc/val->int (:projectTemplate params))
         use-template-plots   (tc/val->bool (:useTemplatePlots params))
         use-template-widgets (tc/val->bool (:useTemplateWidgets params))
