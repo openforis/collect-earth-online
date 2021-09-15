@@ -75,7 +75,6 @@
         project-id      (tc/val->int (:projectId params))
         visible-id      (tc/val->int (:visibleId params))
         user-id         (:userId params -1)
-        admin-mode      (contains? #{"true"} (:adminMode params "false"))
         proj-plots      (case navigation-mode
                           "unanalyzed" (call-sql "select_unanalyzed_plots" project-id user-id)
                           "analyzed"   (call-sql "select_user_analyzed_plots" project-id user-id)
