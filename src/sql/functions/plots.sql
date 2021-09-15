@@ -49,7 +49,7 @@ CREATE TYPE collection_return AS (
     extra_plot_info    jsonb
 );
 
-CREATE OR REPLACE FUNCTION select_unanalyzed_plots(_project_id integer, _user_id integer)
+CREATE OR REPLACE FUNCTION select_unanalyzed_plots(_project_id integer, _user_id integer, _admin_mode boolean)
  RETURNS setOf collection_return AS $$
 
     WITH assigned_count AS (
@@ -77,13 +77,15 @@ CREATE OR REPLACE FUNCTION select_unanalyzed_plots(_project_id integer, _user_id
     WHERE project_rid = _project_id
         AND user_plot_uid IS NULL
         AND ((ap.user_rid IS NULL
-                AND (pl.lock_end IS NULL OR localtimestamp > pl.lock_end))
-            OR ap.user_rid = _user_id)
+                AND (pl.lock_end IS NULL
+                     OR localtimestamp > pl.lock_end)) -- unlocked
+             OR ap.user_rid = _user_id                  -- assigned
+             OR _admin_mode)                            -- admin TODO, CEO-208 should admin be able to visit a locked plot? probably.
     ORDER BY visible_id ASC
 
 $$ LANGUAGE SQL;
 
-CREATE OR REPLACE FUNCTION select_user_analyzed_plots(_project_id integer, _user_id integer)
+CREATE OR REPLACE FUNCTION select_analyzed_plots(_project_id integer, _user_id integer, _admin_mode boolean)
  RETURNS setOf collection_return AS $$
 
     SELECT plot_uid,
@@ -94,29 +96,10 @@ CREATE OR REPLACE FUNCTION select_user_analyzed_plots(_project_id integer, _user
         ST_AsGeoJSON(plot_geom) as plot_geom,
         extra_plot_info
     FROM plots
-    LEFT JOIN user_plots up
+    INNER JOIN user_plots up
         ON plot_uid = plot_rid
     WHERE project_rid = _project_id
-        AND up.user_rid = _user_id
-    ORDER BY visible_id ASC
-
-$$ LANGUAGE SQL;
-
-CREATE OR REPLACE FUNCTION select_all_analyzed_plots(_project_id integer, _user_id integer)
- RETURNS setOf collection_return AS $$
-
-    SELECT plot_uid,
-        flagged,
-        flagged_reason,
-        confidence,
-        visible_id,
-        ST_AsGeoJSON(plot_geom) as plot_geom,
-        extra_plot_info
-    FROM plots
-    LEFT JOIN user_plots up
-        ON plot_uid = plot_rid
-    WHERE project_rid = _project_id
-        AND up.user_rid IS NOT NULL
+        AND (up.user_rid = _user_id OR _admin_mode)
     ORDER BY visible_id ASC
 
 $$ LANGUAGE SQL;
