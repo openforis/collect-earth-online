@@ -9,6 +9,7 @@
 (defn- time-plus-five-min []
   (Timestamp. (+ (System/currentTimeMillis) (* 5 60 1000))))
 
+;; TODO, CEO-32 update to only show users available plots
 (defn get-project-plots [{:keys [params]}]
   (let [project-id (tc/val->int (:projectId params))
         max-plots  (tc/val->int (:max params) 100000)] ; 100000 loads in ~1.5 seconds.
@@ -40,14 +41,14 @@
   (unlock-plots (:userId params -1))
   (data-response ""))
 
-(defn- prepare-samples-array [plot-id]
+(defn- prepare-samples-array [plot-id user-id]
   (mapv (fn [{:keys [sample_id sample_geom saved_answers]}]
           {:id           sample_id
            :sampleGeom   sample_geom
            :savedAnswers (tc/jsonb->clj saved_answers)})
-        (call-sql "select_plot_samples" plot-id)))
+        (call-sql "select_plot_samples" plot-id user-id)))
 
-(defn- build-collection-plot [plot-info]
+(defn- build-collection-plot [plot-info user-id]
   (let [{:keys [plot_id
                 flagged
                 confidence
@@ -62,7 +63,7 @@
      :visibleId     visible_id
      :plotGeom      plot_geom
      :extraPlotInfo (tc/jsonb->clj extra_plot_info {})
-     :samples       (prepare-samples-array plot_id)}))
+     :samples       (prepare-samples-array plot_id user-id)}))
 
 (defn get-collection-plot
   "Gets plot information needed for the collections page.  The plot
@@ -78,8 +79,9 @@
         proj-plots      (case navigation-mode
                           "unanalyzed" (call-sql "select_unanalyzed_plots" project-id user-id)
                           "analyzed"   (call-sql "select_user_analyzed_plots" project-id user-id)
-                           ;; TODO, make admin mode instead of all. This is because future types
+                           ;; TODO, CEO-201 make admin mode instead of all. This is because future types
                            ;;       will need admin mode and its less code than duplicate modes for each.
+                           ;; FIXME, CEO-201 all mode does not work for multiple users.  Admin mode will need to fix this.
                           "all"        (if (is-proj-admin? user-id project-id nil)
                                          (call-sql "select_all_analyzed_plots" project-id user-id)
                                          [])
@@ -109,22 +111,21 @@
                   (:plot_id plot-info)
                   user-id
                   (time-plus-five-min))
-        (data-response (build-collection-plot plot-info)))
+        (data-response (build-collection-plot plot-info user-id)))
       (data-response "not-found"))))
 
 (defn add-user-samples [{:keys [params]}]
-  (let [project-id       (tc/val->int (:projectId params))
-        plot-id          (tc/val->int (:plotId params))
+  (let [plot-id          (tc/val->int (:plotId params))
         user-id          (:userId params -1)
         confidence       (tc/val->int (:confidence params))
         collection-start (tc/val->long (:collectionStart params))
         user-samples     (:userSamples params)
         user-images      (:userImages params)
-        plot-samples     (:plotSamples params)
-        user-plot-id     (when (not plot-samples)
-                           (sql-primitive (call-sql "check_user_plots" plot-id)))
-        id-translation   (when plot-samples
-                           (call-sql "delete_user_plot_by_plot" plot-id)
+        new-plot-samples (:newPlotSamples params)
+        ;; Samples created in the UI have IDs starting with 1. When the new sample is created
+        ;; in Postgres, it gets different ID.  The user sample ID needs to be updated to match.
+        id-translation   (when new-plot-samples
+                           (call-sql "delete_user_plot_by_plot" plot-id user-id)
                            (call-sql "delete_samples_by_plot" plot-id)
                            (reduce (fn [acc {:keys [id sampleGeom]}]
                                      (let [new-id (sql-primitive (call-sql "create_project_plot_sample"
@@ -133,20 +134,16 @@
                                                                            (tc/json->jsonb sampleGeom)))]
                                        (assoc acc (str id) (str new-id))))
                                    {}
-                                   plot-samples))]
+                                   new-plot-samples))]
     (if (some seq (vals user-samples))
-      (apply call-sql
-             (concat (if user-plot-id
-                       ["update_user_samples" user-plot-id]
-                       ["add_user_samples"])
-                     [project-id
-                      plot-id
-                      user-id
-                      (when (pos? confidence) confidence)
-                      (Timestamp. collection-start)
-                      (tc/clj->jsonb (set/rename-keys user-samples id-translation))
-                      (tc/clj->jsonb (set/rename-keys user-images id-translation))]))
-      (call-sql "delete_user_plot_by_plot" plot-id))
+      (call-sql "upsert_user_samples"
+                plot-id
+                user-id ; FIXME, CEO-208 in admin mode, we need to get the existing user id for the plot.
+                (when (pos? confidence) confidence)
+                (Timestamp. collection-start) ; TODO, CEO-208 dont update collection time for admin in admin mode.
+                (tc/clj->jsonb (set/rename-keys user-samples id-translation))
+                (tc/clj->jsonb (set/rename-keys user-images id-translation)))
+      (call-sql "delete_user_plot_by_plot" plot-id user-id)) ; FIXME, CEO-208 in admin mode, we need to get the existing user id for the plot.
     (unlock-plots user-id)
     (data-response "")))
 
