@@ -82,6 +82,7 @@
                           "unanalyzed" (call-sql "select_unanalyzed_plots" project-id user-id admin-mode?)
                            ;; FIXME, CEO-217 analyzed mode + admin mode does not work for multiple users.
                           "analyzed"   (call-sql "select_analyzed_plots" project-id user-id admin-mode?)
+                          "flagged"    (call-sql "select_flagged_plots" project-id user-id admin-mode?)
                           [])
         plot-info       (case direction
                           "next"     (some (fn [{:keys [visible_id] :as plot}]

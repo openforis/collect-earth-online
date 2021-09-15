@@ -1,5 +1,5 @@
 -- NAMESPACE: imagery
--- REQUIRES: clear, member
+-- REQUIRES: clear, member, project
 
 --
 --  IMAGERY FUNCTIONS
