@@ -77,7 +77,7 @@ export class SampleDesign extends React.Component {
         } = this.context;
         const totalPlots = this.props.getTotalPlots();
         const samplesPerPlot = this.props.getSamplesPerPlot();
-        const qaqcEnabled = ["overlap", "sme"].includes(qaqcMethod);
+        const qaqcEnabled = qaqcMethod !== "none";
 
         const sampleOptions = {
             random: {
