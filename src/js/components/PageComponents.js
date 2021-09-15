@@ -3,6 +3,7 @@ import "../../css/custom.css";
 import React from "react";
 import SvgIcon from "./SvgIcon";
 import {getLanguage, capitalizeFirst} from "../utils/generalUtils";
+import {getPreference, setPreference} from "../utils/preferences";
 
 function LogOutButton({userName, uri}) {
     const fullUri = uri + window.location.search;
@@ -160,10 +161,10 @@ export class NavigationBar extends React.Component {
 
     autoShowHelpMenu = page => {
         const autoShowPages = ["home"];
-        const key = `ceo:${page}:seen`;
-        if (autoShowPages.includes(page) && !localStorage.getItem(key)) {
+        const key = `${page}:seen`;
+        if (autoShowPages.includes(page) && !getPreference(key)) {
             this.setState({showHelpMenu: true});
-            localStorage.setItem(key, true);
+            setPreference(key, true);
         }
     };
 
