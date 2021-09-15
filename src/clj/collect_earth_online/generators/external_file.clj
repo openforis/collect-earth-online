@@ -105,7 +105,8 @@
                         (mapv #(-> %
                                    (str/lower-case)
                                    (str/replace "\uFEFF" "")
-                                   (str/replace #"-| " "_")
+                                   (str/replace #"^\"|\"$" "")
+                                   (str/replace #"-| |\"" "_")
                                    (str/replace #"^(x|longitude|long|center_x)$" "lon")
                                    (str/replace #"^(y|latitude|center_y)$" "lat")
                                    (str/replace (re-pattern (str "^" design-type "id$")) "visible_id")
