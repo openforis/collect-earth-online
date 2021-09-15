@@ -1,21 +1,22 @@
 /**
- * Preferences are stored in localStorage and are per-project.
+ * Preferences stored in localStorage.
  */
 
-const ceoProject = "ceo:project:";
+const ceo = "ceo:";
+const project = "project:";
 
-const defaultPreferences = {isAdminMode: null};
+const defaultPreferences = {inAdminMode: null};
 
-function getItem(key) {
-    return window.localStorage.getItem(key);
+export function getPreference(key) {
+    return window.localStorage.getItem(ceo + key);
 }
 
-function setItem(key, value) {
-    return window.localStorage.setItem(key, value);
+export function setPreference(key, value) {
+    return window.localStorage.setItem(ceo + key, value);
 }
 
-export function getPreferences(projectId) {
-    const storedPreferences = getItem(ceoProject + projectId);
+export function getProjectPreferences(projectId) {
+    const storedPreferences = getPreference(project + projectId);
     if (storedPreferences) {
         return JSON.parse(storedPreferences);
     } else {
@@ -23,7 +24,7 @@ export function getPreferences(projectId) {
     }
 }
 
-export function setPreferences(projectId, newPreferences) {
-    const preferences = getPreferences();
-    setItem(ceoProject + projectId, JSON.stringify({...preferences, ...newPreferences}));
+export function setProjectPreferences(projectId, newPreferences) {
+    const preferences = getProjectPreferences(projectId);
+    setPreference(project + projectId, JSON.stringify({...preferences, ...newPreferences}));
 }

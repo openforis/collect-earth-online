@@ -17,7 +17,7 @@ import Modal from "./components/Modal";
 import Switch from "./components/Switch";
 
 import {UnicodeIcon, getQueryString, safeLength, isNumber, invertColor, asPercentage} from "./utils/generalUtils";
-import {getPreferences, setPreferences} from "./utils/preferences";
+import {getProjectPreferences, setProjectPreferences} from "./utils/preferences";
 import {mercator} from "./utils/mercator";
 
 class Collection extends React.Component {
@@ -33,7 +33,7 @@ class Collection extends React.Component {
             // attributes to record when sample is saved
             imageryAttributes: {},
             imageryList: [],
-            isAdminMode: false,
+            inAdminMode: false,
             mapConfig: null,
             messageBox: null,
             plotList: [],
@@ -165,19 +165,19 @@ class Collection extends React.Component {
             this.getImageryList()
         ])
             .then(() => {
-                const adminWarning = this.state.isAdminMode ? "\r\n You are currently in 'Admin Mode.'" : "";
+                const adminWarning = this.state.inAdminMode ? "You are currently in 'Admin Mode.'" : "";
                 if (this.state.currentProject.availability === "unpublished") {
                     this.showAlert({
                         title: "Warning: Draft Mode",
-                        body: "This project is in draft mode. Only admins can collect. Any plot collections will be erased when the project is published." + adminWarning,
+                        body: "This project is in draft mode. Only admins can collect. Any plot collections will be erased when the project is published.\n" + adminWarning,
                         closeText: "OK, I understand"
                     });
                 } else if (this.state.currentProject.availability === "closed") {
                     this.showAlert({
                         title: "Project Closed",
-                        body: "This project has been closed. Admins can make corrections to any plot." + adminWarning
+                        body: "This project has been closed. Admins can make corrections to any plot.\n " + adminWarning
                     });
-                } else if (this.state.isAdminMode) {
+                } else if (this.state.inAdminMode) {
                     this.showAlert({
                         title: "Admin Mode",
                         body: adminWarning
@@ -195,10 +195,10 @@ class Collection extends React.Component {
         .then(project => {
             // TODO This logic is currently invalid since this route can never return an archived project.
             if (project.id > 0 && project.availability !== "archived") {
-                const {isAdminMode} = getPreferences(project.id);
+                const {inAdminMode} = getProjectPreferences(project.id);
                 this.setState({
                     currentProject: project,
-                    isAdminMode: project.isProjectAdmin && (isAdminMode === null || isAdminMode)
+                    inAdminMode: project.isProjectAdmin && (inAdminMode === null || inAdminMode)
                 });
                 return Promise.resolve("resolved");
             } else {
@@ -314,7 +314,7 @@ class Collection extends React.Component {
     };
 
     getPlotData = (visibleId, direction) => {
-        const {navigationMode, isAdminMode} = this.state;
+        const {navigationMode, inAdminMode} = this.state;
         const {projectId} = this.props;
         this.processModal(
             "Getting plot",
@@ -323,7 +323,7 @@ class Collection extends React.Component {
                 projectId,
                 navigationMode,
                 direction,
-                adminMode: isAdminMode
+                inAdminMode
             }))
                 .then(response => (response.ok ? response.json() : Promise.reject(response)))
                 .then(data => {
@@ -529,9 +529,9 @@ class Collection extends React.Component {
 
     setAdminMode = () => {
         const {currentProject} = this.state;
-        const isAdminMode = !this.state.isAdminMode;
-        this.setState({isAdminMode});
-        setPreferences(currentProject.id, {isAdminMode});
+        const inAdminMode = !this.state.inAdminMode;
+        this.setState({inAdminMode});
+        setProjectPreferences(currentProject.id, {inAdminMode});
     };
 
     postValuesToDB = () => {
@@ -849,7 +849,7 @@ class Collection extends React.Component {
                 >
                     <PlotNavigation
                         currentPlot={this.state.currentPlot}
-                        isAdminMode={this.state.isAdminMode}
+                        inAdminMode={this.state.inAdminMode}
                         isProjectAdmin={this.state.currentProject.isProjectAdmin}
                         loadingPlots={this.state.plotList.length === 0}
                         navigationMode={this.state.navigationMode}
@@ -1090,12 +1090,12 @@ class PlotNavigation extends React.Component {
         </div>
     );
 
-    adminMode = (isAdminMode, setAdminMode) => (
+    adminMode = (inAdminMode, setAdminMode) => (
         <div className="my-2">
             <h4 className="w-100 mr-2" style={{display: "inline"}}>Admin Mode:</h4>
             <div style={{display: "inline-block"}}>
                 <Switch
-                    checked={isAdminMode}
+                    checked={inAdminMode}
                     onChange={setAdminMode}
                 />
             </div>
@@ -1107,7 +1107,7 @@ class PlotNavigation extends React.Component {
             setNavigationMode,
             navigationMode,
             loadingPlots,
-            isAdminMode,
+            inAdminMode,
             isProjectAdmin,
             setAdminMode,
             showNavButtons
@@ -1127,7 +1127,7 @@ class PlotNavigation extends React.Component {
                         <option value="flagged">Flagged plots</option>
                     </select>
                 </div>
-                {isProjectAdmin && this.adminMode(isAdminMode, setAdminMode)}
+                {isProjectAdmin && this.adminMode(inAdminMode, setAdminMode)}
                 {loadingPlots
                     ? <h3>Loading plot data...</h3>
                     : showNavButtons
