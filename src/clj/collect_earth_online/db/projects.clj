@@ -162,11 +162,23 @@
 ;;; Create project
 ;;;
 
-(defn- add-users-to-plots [user-id users-plots]
-  (map (fn [{:keys [plot_id]}]
-         {:plot_rid plot_id
+(defn- ceil-percent [num percent]
+  (Math/ceil (* num (/ percent 100))))
+
+;; TODO consider returning plot_rid from get_plot_centers_by_project instead of passing in key.
+(defn- add-users-to-plots [user-id users-plots plot-key]
+  (map (fn [old-plot]
+         {:plot_rid (get old-plot plot-key)
           :user_rid user-id})
        users-plots))
+
+(defn- equally-assign-users [plots users plot-key]
+  (->> (partition-all (Math/ceil (/ (count plots) (count users)))
+                      plots)
+       (map (fn [user-id users-plots]
+              (add-users-to-plots user-id users-plots plot-key))
+            users)
+       (apply concat)))
 
 (defn- assign-user-plots
   "Assigns users to plots. The two assignment options are:
@@ -182,27 +194,52 @@
          user-method :userMethod} (:userAssignment design-settings)
         plot-count (count plots)]
     (case user-method
-      "equal"   (->> (partition-all (Math/ceil (/ plot-count
-                                                  (count users)))
-                                    plots)
-                     (map (fn [user-id users-plots]
-                            (add-users-to-plots user-id users-plots))
-                          users)
-                     (apply concat))
+      "equal"   (equally-assign-users plots users :plot_id)
       "percent" (loop [rem-users    users
                        rem-percents percents
                        rem-plots    plots
                        user-plots   []]
                   (if (= 1 (count rem-users))
                     (concat user-plots
-                            (add-users-to-plots (first rem-users) rem-plots))
-                    (let [num-plots (Math/ceil (* plot-count (/ (first rem-percents) 100)))]
+                            (add-users-to-plots (first rem-users) rem-plots :plot_id))
+                    (let [num-plots (ceil-percent plot-count (first rem-percents))]
                       (recur (rest rem-users)
                              (rest rem-percents)
                              (drop num-plots rem-plots)
                              (concat user-plots (add-users-to-plots (first rem-users)
-                                                                    (take num-plots rem-plots)))))))
+                                                                    (take num-plots rem-plots)
+                                                                    :plot_id))))))
       nil)))
+
+(defn- assign-qaqc
+  "Assigns additional plots to users based on QA/QC method.  The two options are:
+   {:qaqcMethod \"overlap\"
+    :percent    50}
+   and
+   {:qaqcMethod \"sme\"
+    :percent    100
+    :smes       [2 5]}"
+  [assigned-plots design-settings]
+  (when (seq assigned-plots)
+    (let [{qaqc-method :qaqcMethod
+           percent    :percent
+           smes       :smes} (:qaqcAssignment design-settings)
+          {:keys [users]}    (:userAssignment design-settings)]
+      (concat assigned-plots
+              (->> assigned-plots
+                   (group-by :user_rid)
+                   (map (fn [[user-id user-plots]]
+                          [user-id (take (ceil-percent (count user-plots) percent)
+                                         user-plots)]))
+                   (reduce (fn [acc [user-id user-plots]]
+                             (let [other-users (case qaqc-method
+                                                 "overlap" (remove #(= user-id %) users)
+                                                 "sme"     smes
+                                                 nil)]
+                               (concat acc (equally-assign-users user-plots
+                                                                 other-users
+                                                                 :plot_rid))))
+                           []))))))
 
 (defn- create-project-samples! [project-id
                                 plot-shape
@@ -241,7 +278,7 @@
                             (str/join ", " (take 10 bad-plots))
                             "]"))))
     (when-let [assigned-plots (assign-user-plots plots design-settings)]
-      (p-insert-rows! "assigned_plots" assigned-plots))))
+      (p-insert-rows! "assigned_plots" (assign-qaqc assigned-plots design-settings)))))
 
 (defn- create-project-plots! [project-id
                               lon-min
