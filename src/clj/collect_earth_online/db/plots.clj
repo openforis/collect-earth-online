@@ -76,15 +76,12 @@
         project-id      (tc/val->int (:projectId params))
         visible-id      (tc/val->int (:visibleId params))
         user-id         (:userId params -1)
+        admin-mode?     (and (tc/val->bool (:inAdminMode params))
+                             (is-proj-admin? user-id project-id nil))
         proj-plots      (case navigation-mode
-                          "unanalyzed" (call-sql "select_unanalyzed_plots" project-id user-id)
-                          "analyzed"   (call-sql "select_user_analyzed_plots" project-id user-id)
-                           ;; TODO, CEO-201 make admin mode instead of all. This is because future types
-                           ;;       will need admin mode and its less code than duplicate modes for each.
-                           ;; FIXME, CEO-201 all mode does not work for multiple users.  Admin mode will need to fix this.
-                          "all"        (if (is-proj-admin? user-id project-id nil)
-                                         (call-sql "select_all_analyzed_plots" project-id user-id)
-                                         [])
+                          "unanalyzed" (call-sql "select_unanalyzed_plots" project-id user-id admin-mode?)
+                           ;; FIXME, CEO-217 analyzed mode + admin mode does not work for multiple users.
+                          "analyzed"   (call-sql "select_analyzed_plots" project-id user-id admin-mode?)
                           [])
         plot-info       (case direction
                           "next"     (some (fn [{:keys [visible_id] :as plot}]
