@@ -1,6 +1,11 @@
-{:mail {:host     "smtp.gmail.com"
-        :user     "<email>"
-        :pass     "<pass>"
-        :tls      true
-        :port     587
-        :base-url "https://my.domain/"}}
+{:database {:host     "localhost"
+            :port     5432
+            :dbname   "ceo"
+            :user     "ceo"
+            :password "ceo"}
+ :mail     {:host     "smtp.gmail.com"
+            :user     "<email>"
+            :pass     "<pass>"
+            :tls      true
+            :port     587
+            :base-url "https://my.domain/"}}
