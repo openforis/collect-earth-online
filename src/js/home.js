@@ -116,7 +116,7 @@ class MapPanel extends React.Component {
     }
 
     componentDidUpdate(prevProps, prevState) {
-        if (this.state.mapConfig == null && this.props.imagery.length > 0 && prevProps.imagery.length === 0) {
+        if (this.state.mapConfig === null && this.props.imagery.length > 0 && prevProps.imagery.length === 0) {
             const homePageLayer = this.props.imagery.find(
                 imagery => imagery.title === "Mapbox Satellite w/ Labels"
             ) || this.props.imagery[0];
@@ -358,9 +358,9 @@ function InstitutionList({
                     ...userInstStyle
                 }}
             >
-                {filteredInstitutions.map((institution, uid) => (
+                {filteredInstitutions.map(institution => (
                     <Institution
-                        key={uid}
+                        key={institution.id}
                         forceInstitutionExpand={!filterInstitution && filterText.length > 0}
                         id={institution.id}
                         name={institution.name}
@@ -522,7 +522,14 @@ class Institution extends React.Component {
                                     : "\u25BA"
                             )}
                         </div>
-                        <div style={{flex: 1}}>
+                        <div
+                            style={{
+                                flex: 1,
+                                overflow: "hidden",
+                                textOverflow: "ellipsis",
+                                whiteSpace: "nowrap"
+                            }}
+                        >
                             {props.name}
                         </div>
                         <div
@@ -549,9 +556,9 @@ class Institution extends React.Component {
 
 function ProjectList(props) {
     return props.projects
-        .map((project, uid) => (
+        .map(project => (
             <Project
-                key={uid}
+                key={project.id}
                 editable={project.editable}
                 id={project.id}
                 institutionId={props.id}
@@ -563,28 +570,27 @@ function ProjectList(props) {
 function Project(props) {
     return (
         <div className="bg-lightgrey text-center p-1 px-auto d-flex">
-            <div style={{flexGrow: 1, marginRight: ".25rem"}}>
-                <a
-                    className="btn btn-sm btn-outline-lightgreen btn-block"
-                    href={`/collection?projectId=${props.id}`}
-                    style={{
-                        whiteSpace: "nowrap",
-                        overflow: "hidden",
-                        textOverflow: "ellipsis"
-                    }}
-                >
-                    {props.name || "*un-named*"}
-                </a>
-            </div>
+            <a
+                className="btn btn-sm btn-outline-lightgreen"
+                href={`/collection?projectId=${props.id}`}
+                style={{
+                    flexGrow: 1,
+                    marginRight: ".25rem",
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
+                    whiteSpace: "nowrap"
+                }}
+            >
+                {props.name || "*un-named*"}
+            </a>
             {props.editable && (
-                <div>
-                    <a
-                        className="edit-project btn btn-sm btn-outline-yellow btn-block"
-                        href={`/review-project?projectId=${props.id}`}
-                    >
-                        EDIT
-                    </a>
-                </div>
+                <a
+                    className="edit-project btn btn-sm btn-outline-yellow btn-block"
+                    href={`/review-project?projectId=${props.id}`}
+                    style={{width: "50px"}}
+                >
+                    EDIT
+                </a>
             )}
         </div>
     );
@@ -660,7 +666,11 @@ class ProjectPopup extends React.Component {
 
 export function pageInit(args) {
     ReactDOM.render(
-        <NavigationBar userId={args.userId} userName={args.userName}>
+        <NavigationBar
+            userId={args.userId}
+            userName={args.userName}
+            version={args.version}
+        >
             <Home
                 userId={args.userId || -1}
                 userRole={args.userRole || ""}

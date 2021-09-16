@@ -245,8 +245,7 @@ class ProjectManagement extends React.Component {
                             onClick={() => window.open(
                                 "/widget-layout-editor?editable=true&" // TODO, drop unused 'editable'
                                     + `institutionId=${this.context.institution}`
-                                    + `&projectId=${this.context.id}`,
-                                "_geo-dash"
+                                    + `&projectId=${this.context.id}`
                             )}
                             type="button"
                             value="Configure Geo-Dash"

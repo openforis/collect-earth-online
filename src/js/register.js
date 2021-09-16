@@ -1,7 +1,6 @@
 import React from "react";
 import ReactDOM from "react-dom";
 import {NavigationBar} from "./components/PageComponents";
-import {getQueryString} from "./utils/generalUtils";
 
 class Register extends React.Component {
     constructor(props) {
@@ -22,14 +21,15 @@ class Register extends React.Component {
                   {
                       method: "POST",
                       headers: {
-                          "Content-Type": "application/x-www-form-urlencoded"
+                          "Accept": "application/json",
+                          "Content-Type": "application/json"
                       },
-                      body: getQueryString(this.state)
+                      body: JSON.stringify(this.state)
                   })
                 .then(response => Promise.all([response.ok, response.json()]))
                 .then(data => {
                     if (data[0] && data[1] === "") {
-                        alert("You have successfully created an account.");
+                        alert("You have successfully created an account.  Please check your email for a link to verify your account.");
                         window.location = "/home";
                     } else {
                         alert(data[1]);
@@ -113,7 +113,11 @@ class Register extends React.Component {
 
 export function pageInit(args) {
     ReactDOM.render(
-        <NavigationBar userId={-1} userName="">
+        <NavigationBar
+            userId={-1}
+            userName=""
+            version={args.version}
+        >
             <Register/>
         </NavigationBar>,
         document.getElementById("app")

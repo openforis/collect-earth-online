@@ -1,17 +1,21 @@
 [
     {
+        "title": "Institutions Help",
         "body": "This is the institution management page. \nThe information shown will be different based on if you are not a member of the institution, an institution member, or an institution administrator. \n(Admin) At the top, you can edit your institution’s information, delete your institution (this is not reversible) or view your institution’s dashboard. \n(All) There are three tabs on the page: \"Projects,\" \"Imagery,\" and \"Users.\" Each of these tabs have important information and tools for your institution.",
         "img": "/img/institution1.webp"
     },
     {
+        "title": "Institutions Help - Projects",
         "body": "Click on the \"Projects\" tab to view your institution’s projects. \n(Admin) Create new projects by clicking on the \"Create New Project\" button.\n(All) For each project, the privacy level is shown on the left. You can collect data for the project by clicking on the project’s name.\n(Admin) On the right, you can edit (hand icon), delete (trash can), and download your plot (\"P\") and sample (\"S\") data for each project.",
         "img": "/img/institution2.webp"
     },
     {
+        "title": "Institutions Help - Imagery",
         "body": "Click on the \"Imagery\" tab to view your institution’s imagery.\nFor each imagery, the privacy level is shown on the left. \n(Admin) Add new imagery by clicking on the \"Add New Imagery\" button.",
         "img":"/img/institution3.webp"
     },
     {
+        "title": "Institutions Help - Users",
         "body": "Click on the \"Users\" tab to view your institution’s user list. \n(Non-member) Request membership to an institution by clicking on the \"Request membership\" button. \n(Admin) Add users to your institution by typing in their email address and clicking on the \"Add User\" button. \n(Admin) Make users Administrators or remove them from your institution using the dropdown menu next to each member’s email address.",
         "img":"/img/institution4.webp"
     }

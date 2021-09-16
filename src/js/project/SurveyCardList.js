@@ -9,7 +9,7 @@ export default function SurveyCardList(props) {
 
     return topLevelNodes.map((sq, index) => (
         <SurveyCard
-            key={index}
+            key={sq.id}
             cardNumber={index + 1}
             inDesignMode={props.inDesignMode}
             newAnswerComponent={props.newAnswerComponent}
@@ -145,8 +145,8 @@ function SurveyQuestionTree({
     return (
         <>
             <div className="SurveyQuestionTree__question d-flex border-top pt-3 pb-1">
-                {[...Array(indentLevel)].map((e, i) => (
-                    <div key={i} className="pl-4">
+                {[...Array(indentLevel)].map(l => (
+                    <div key={l} className="pl-4">
                         <UnicodeIcon icon="rightArrow"/>
                     </div>
                 ))}
@@ -177,14 +177,14 @@ function SurveyQuestionTree({
                                 <li>
                                     <span className="font-weight-bold">Rules:  </span>
                                     <ul>
-                                        {surveyRules.map((rule, uid) =>
+                                        {surveyRules.map(rule =>
                                             [rule.questionId, rule.question1, rule.question2]
                                                 .concat(rule.questions)
                                                 .concat(rule.questionSetIds1)
                                                 .concat(rule.questionSetIds2)
                                                 .includes(surveyQuestion.id)
                                                 && (
-                                                    <li key={uid}>
+                                                    <li key={rule.id}>
                                                         <div className="tooltip_wrapper">
                                                             {"Rule " + rule.id + ": " + rule.ruleType}
                                                             <span className="tooltip_content">
@@ -214,12 +214,14 @@ function SurveyQuestionTree({
                                 </>
                             )}
                         </ul>
-                        <h3 className="font-weight-bold ml-3">Answers:  </h3>
+                        <h3 className="font-weight-bold ml-3">
+                            {surveyQuestion.componentType === "input" ? "Placeholder" : "Answers"}:
+                        </h3>
                     </div>
                     <div className="SurveyQuestionTree__answers">
-                        {surveyQuestion.answers.map((surveyAnswer, uid) => (
+                        {surveyQuestion.answers.map(surveyAnswer => (
                             <ExistingAnswer
-                                key={uid}
+                                key={surveyAnswer.id}
                                 answer={surveyAnswer.answer}
                                 color={surveyAnswer.color}
                                 removeAnswer={() => inDesignMode && removeAnswer(surveyQuestion.id, surveyAnswer.id)}
@@ -229,16 +231,16 @@ function SurveyQuestionTree({
                     </div>
                 </div>
             </div>
-            {childNodes.map((surveyQuestion, uid) => (
+            {childNodes.map(childQuestion => (
                 <SurveyQuestionTree
-                    key={uid}
+                    key={childQuestion.id}
                     getRulesById={getRulesById}
                     indentLevel={indentLevel + 1}
                     inDesignMode={inDesignMode}
                     newAnswerComponent={newAnswerComponent}
                     removeAnswer={removeAnswer}
                     removeQuestion={removeQuestion}
-                    surveyQuestion={surveyQuestion}
+                    surveyQuestion={childQuestion}
                     surveyQuestions={surveyQuestions}
                     surveyRules={surveyRules}
                 />

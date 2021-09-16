@@ -83,8 +83,8 @@ class InstitutionDashboard extends React.Component {
 }
 
 function ProjectList(props) {
-    return props.details.map((project, uid) => (
-        <tr key={uid}>
+    return props.details.map(project => (
+        <tr key={project.id}>
             <td>{project.id}</td>
             <td>{project.name}</td>
             <td>{project.members}</td>
@@ -99,7 +99,11 @@ function ProjectList(props) {
 
 export function pageInit(args) {
     ReactDOM.render(
-        <NavigationBar userId={args.userId} userName={args.userName}>
+        <NavigationBar
+            userId={args.userId}
+            userName={args.userName}
+            version={args.version}
+        >
             <InstitutionDashboard
                 institutionId={args.institutionId || "0"}
             />

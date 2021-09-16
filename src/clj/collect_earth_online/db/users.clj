@@ -1,21 +1,30 @@
 (ns collect-earth-online.db.users
-  (:import java.time.format.DateTimeFormatter
+  (:import java.net.URLEncoder
+           java.time.format.DateTimeFormatter
            java.time.LocalDateTime
            java.util.UUID)
   (:require [clojure.string :as str]
-            [collect-earth-online.utils.type-conversion :as tc]
-            [collect-earth-online.database   :refer [call-sql sql-primitive]]
+            [triangulum.database :refer [call-sql sql-primitive]]
+            [triangulum.type-conversion :as tc]
             [collect-earth-online.utils.mail :refer [email? send-mail get-base-url]]
             [collect-earth-online.views      :refer [data-response]]))
 
+(defn- get-login-errors [user]
+  (cond (nil? user)
+        "Invalid email/password combination."
+
+        (not (:verified user))
+        "You have not verified your email. Please check your email for a link to verify your account, or click the forgot password link below to generate a new email."))
+
 (defn login [{:keys [params]}]
-  (let [{:keys [email password]} params]
-    (if-let [user (first (call-sql "check_login" {:log? false} email password))]
+  (let [{:keys [email password]} params
+        user (first (call-sql "check_login" {:log? false} email password))]
+    (if-let [error-msg (get-login-errors user)]
+      (data-response error-msg)
       (data-response ""
                      {:session {:userId   (:user_id user)
                                 :userName email
-                                :userRole (if (:administrator user) "admin" "user")}}) ; TODO user 1 is the only superuser
-      (data-response "Invalid email/password combination."))))
+                                :userRole (if (:administrator user) "admin" "user")}})))) ; TODO user 1 is the only superuser
 
 (defn- get-register-errors [email password password-confirmation]
   (cond (not (email? email))
@@ -33,29 +42,30 @@
         :else nil))
 
 (defn register [{:keys [params]}]
-  (let [email                 (:email params)
+  (let [reset-key             (str (UUID/randomUUID))
+        email                 (:email params)
         password              (:password params)
         password-confirmation (:passwordConfirmation params)]
     (if-let [error-msg (get-register-errors email password password-confirmation)]
       (data-response error-msg)
-      (let [user-id   (sql-primitive (call-sql "add_user" email password))
-            timestamp (-> (DateTimeFormatter/ofPattern "yyyy/MM/dd HH:mm:ss")
+      (let [timestamp (-> (DateTimeFormatter/ofPattern "yyyy/MM/dd HH:mm:ss")
                           (.format (LocalDateTime/now)))
             email-msg (format (str "Dear %s,\n\n"
                                    "Thank you for signing up for CEO!\n\n"
                                    "Your Account Summary Details:\n\n"
                                    "  Email: %s\n"
                                    "  Created on: %s\n\n"
+                                   "  Click the following link to verify your email:\n"
+                                   "  %sverify-email?email=%s&passwordResetKey=%s\n\n"
                                    "Kind Regards,\n"
                                    "  The CEO Team")
-                              email email timestamp)]
+                              email email timestamp (get-base-url) (URLEncoder/encode email) reset-key)]
+        (call-sql "add_user" email password reset-key)
         (try
           (send-mail email nil nil "Welcome to CEO!" email-msg "text/plain")
-          (catch Exception _))
-        (data-response ""
-                       {:session {:userId   user-id
-                                  :userName email
-                                  :userRole "user"}})))))
+          (data-response "")
+          (catch Exception _
+            (data-response (str "A new user account was created but there was a server error.  Please contact support@sig-gis.com."))))))))
 
 (defn logout [_]
   (data-response "" {:session nil}))
@@ -92,7 +102,7 @@
     (if-let [error-msg (get-update-account-errors user-id current-email current-password
                                                   new-email password password-confirmation)]
       (data-response error-msg)
-      ;; TODO: Create a single "update_user_information" sql function, use userid instead of email
+      ;; TODO: Create a single "update_user_information" sql function, use user_id instead of email
       (let [updated-email (if (or (str/blank? new-email) (= new-email current-email))
                             current-email
                             (sql-primitive (call-sql "set_user_email" current-email new-email)))]
@@ -117,7 +127,7 @@
                               " was found, but there was a server error.  Please contact support@sig-gis.com."))))
       (data-response "There is no user with that email address."))))
 
-(defn- get-password-reset-errors [email reset-key password password-confirmation user]
+(defn- get-password-reset-errors [user email reset-key password password-confirmation]
   (cond (nil? user)
         "There is no user with that email address."
 
@@ -137,11 +147,30 @@
         reset-key             (:passwordResetKey params)
         password              (:password params)
         password-confirmation (:passwordConfirmation params)
-        user                  (first (call-sql "get_user" email))]
-    (if-let [error-msg (get-password-reset-errors email reset-key password password-confirmation user)]
+        user                  (first (call-sql "get_user_by_email" email))]
+    (if-let [error-msg (get-password-reset-errors user email reset-key password password-confirmation)]
       (data-response error-msg)
       (do
         (call-sql "update_password" email password)
+        (data-response "")))))
+
+(defn- get-verify-email-errors [user email reset-key]
+  (cond (nil? user)
+        "There is no user with that email address."
+
+        (not= reset-key (:reset_key user))
+        (str "Invalid reset key for user " email ".")
+
+        :else nil))
+
+(defn verify-email [{:keys [params]}]
+  (let [email     (:email params)
+        reset-key (:passwordResetKey params)
+        user      (first (call-sql "get_user_by_email" email))]
+    (if-let [error-msg (get-verify-email-errors user email reset-key)]
+      (data-response error-msg)
+      (do
+        (call-sql "user_verified" (:user_id user))
         (data-response "")))))
 
 (defn get-institution-users [{:keys [params]}]
@@ -166,7 +195,9 @@
   (let [new-user-email   (:newUserEmail params)
         account-id       (if-let [id (:accountId params)]
                            (tc/val->int id)
-                           (-> (call-sql "get_user" new-user-email) (first) (:user_id -1)))
+                           (-> (call-sql "get_user_by_email" new-user-email)
+                               (first)
+                               (:user_id -1)))
         institution-id   (tc/val->int (:institutionId params))
         institution-role (:institutionRole params)
         email            (:email (first (call-sql "get_user_by_id" account-id)))]

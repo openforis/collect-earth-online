@@ -172,3 +172,9 @@ export function detectMacOS() {
     const macRegex = /Mac/i;
     return macRegex.test(window.navigator.userAgent);
 }
+
+export function asPercentage(part, total) {
+    return (part && total)
+        ? (100.0 * (part / total)).toFixed(2)
+        : "0.00";
+}

@@ -4,7 +4,7 @@ import ReactDOM from "react-dom";
 import {StatsCell, StatsRow} from "./components/FormComponents";
 import {NavigationBar} from "./components/PageComponents";
 
-import {mercator} from "./utils/mercator.js";
+import {mercator} from "./utils/mercator";
 
 class ProjectDashboard extends React.Component {
     constructor(props) {
@@ -229,9 +229,9 @@ function ProjectStats(props) {
                                 plots={userStats.reduce((p, c) => p + c.plots, 0)}
                                 title="Total"
                             />
-                            {isProjectAdmin && userStats.map((user, uid) => (
+                            {isProjectAdmin && userStats.map(user => (
                                 <StatsRow
-                                    key={uid}
+                                    key={user.user}
                                     analysisTime={user.timedPlots > 0
                                         ? (user.seconds / user.timedPlots / 1.0).toFixed(2)
                                         : 0}
@@ -257,7 +257,11 @@ function ProjectAOI() {
 
 export function pageInit(args) {
     ReactDOM.render(
-        <NavigationBar userId={args.userId} userName={args.userName}>
+        <NavigationBar
+            userId={args.userId}
+            userName={args.userName}
+            version={args.version}
+        >
             <ProjectDashboard
                 projectId={args.projectId || "0"}
             />

@@ -85,14 +85,18 @@ export default class ReviewChanges extends React.Component {
                         })
                     }
                 )
-                    .then(response => {
-                        if (!response.ok) {
-                            console.log(response);
-                            alert("Error updating project. See console for details.");
-                        } else {
+                    .then(response => Promise.all([response.ok, response.json()]))
+                    .then(data => {
+                        if (data[0] && data[1] === "") {
                             this.context.setContextState({designMode: "manage"});
                             alert("Project successfully updated!");
+                            return Promise.resolve();
+                        } else {
+                            return Promise.reject(data[1]);
                         }
+                    })
+                    .catch(message => {
+                        alert("Error updating project:\n" + message);
                     })
             );
         }
@@ -114,6 +118,7 @@ export default class ReviewChanges extends React.Component {
             name: this.context.name,
             privacyLevel: this.context.privacyLevel,
             projectOptions: this.context.projectOptions,
+            designSettings: this.context.designSettings,
             numPlots: this.context.numPlots,
             plotDistribution: this.context.plotDistribution,
             plotShape: this.context.plotShape,

@@ -2,9 +2,10 @@ import React, {Fragment} from "react";
 
 import {UnicodeIcon, removeEnumerator, intersection, isNumber} from "../utils/generalUtils";
 import {CollapsibleTitle} from "./FormComponents";
-import SurveyQuestionRules from "./SurveyQuestionRules";
+import RulesCollectionModal from "./RulesCollectionModal";
 import SvgIcon from "./SvgIcon";
 import {mercator} from "../utils/mercator";
+import RequiredInput from "./RequiredInput";
 
 export class SurveyCollection extends React.Component {
     constructor(props) {
@@ -214,8 +215,9 @@ export class SurveyCollection extends React.Component {
                             .reduce((sum, num) => sum + parseInt(num), 0);
                         return [sum1, sum2];
                     });
-                    const invalidSum = sampleSums.find(sums => sums[0] + (surveyRule.questionSetIds1.includes(questionToSet.id) ? parseInt(answerText) : 0)
-                        !== sums[1] + (surveyRule.questionSetIds2.includes(questionToSet.id) ? parseInt(answerText) : 0));
+                    const q1Value = surveyRule.questionSetIds1.includes(questionToSet.id) ? parseInt(answerText) : 0;
+                    const q2Value = surveyRule.questionSetIds2.includes(questionToSet.id) ? parseInt(answerText) : 0;
+                    const invalidSum = sampleSums.find(sums => sums[0] + q1Value !== sums[1] + q2Value);
                     if (invalidSum) {
                         return "Matching sums validation failed.\r\n\n"
                             + `Totals of the question sets [${surveyRule.questionSetText1.toString()}] and [${surveyRule.questionSetText2.toString()}] do not match.\r\n\n`
@@ -234,7 +236,7 @@ export class SurveyCollection extends React.Component {
         }
     };
 
-    checkRuleIncompatibleAnswers = (surveyRule, questionToSet, answerId, answerText) => {
+    checkRuleIncompatibleAnswers = (surveyRule, questionToSet, answerId, _answerText) => {
         if (surveyRule.question1 === questionToSet.id && surveyRule.answer1 === answerId) {
             const ques2 = this.props.surveyQuestions.find(q => q.id === surveyRule.question2);
             if (ques2.answered.some(ans => ans.answerId === surveyRule.answer2)) {
@@ -272,18 +274,19 @@ export class SurveyCollection extends React.Component {
         }
     };
 
-    ruleFunctions = {
-        "text-match":           this.checkRuleTextMatch,
-        "numeric-range":        this.checkRuleNumericRange,
-        "sum-of-answers":       this.checkRuleSumOfAnswers,
-        "matching-sums":        this.checkRuleMatchingSums,
-        "incompatible-answers": this.checkRuleIncompatibleAnswers
-    };
-
-    rulesViolated = (questionToSet, answerId, answerText) => this.props.surveyRules
+    rulesViolated = (questionToSet, answerId, answerText) => {
+        const ruleFunctions = {
+            "text-match": this.checkRuleTextMatch,
+            "numeric-range": this.checkRuleNumericRange,
+            "sum-of-answers": this.checkRuleSumOfAnswers,
+            "matching-sums": this.checkRuleMatchingSums,
+            "incompatible-answers": this.checkRuleIncompatibleAnswers
+        };
+        return this.props.surveyRules
         && this.props.surveyRules
-            .map(surveyRule => this.ruleFunctions[surveyRule.ruleType](surveyRule, questionToSet, answerId, answerText))
+            .map(surveyRule => ruleFunctions[surveyRule.ruleType](surveyRule, questionToSet, answerId, answerText))
             .find(msg => msg);
+    };
 
     validateAndSetCurrentValue = (questionToSet, answerId, answerText) => {
         const ruleError = this.rulesViolated(questionToSet, answerId, answerText);
@@ -304,7 +307,12 @@ export class SurveyCollection extends React.Component {
                         <div className="my-2">
                             <div className="slide-container">
                                 <label>Flagged Reason</label>
-                                <textarea className="form-control" onChange={e => this.props.setFlaggedReason(e.target.value)} value={this.props.flaggedReason}/>
+                                <textarea
+                                    className="form-control"
+                                    onChange={e =>
+                                        this.props.setFlaggedReason(e.target.value)}
+                                    value={this.props.flaggedReason}
+                                />
                             </div>
                         </div>
                     </>
@@ -321,9 +329,9 @@ export class SurveyCollection extends React.Component {
                             >
                                 {"<"}
                             </button>
-                            {this.state.topLevelNodeIds.map((node, i) => (
+                            {this.state.topLevelNodeIds.map((nodeId, i) => (
                                 <button
-                                    key={i}
+                                    key={nodeId}
                                     className="btn btn-outline-lightgreen m-2"
                                     id="top-select"
                                     onClick={() => this.setSurveyQuestionTree(i)}
@@ -332,9 +340,9 @@ export class SurveyCollection extends React.Component {
                                     `${(i === this.state.currentNodeIndex)
                                         ? "0px 0px 2px 2px black inset,"
                                         : ""}
-                                    ${this.getTopColor(this.getNodeById(node))}`
+                                    ${this.getTopColor(this.getNodeById(nodeId))}`
                                     }}
-                                    title={removeEnumerator(this.getNodeById(node).question)}
+                                    title={removeEnumerator(this.getNodeById(nodeId).question)}
                                     type="button"
                                 >
                                     {i + 1}
@@ -345,7 +353,11 @@ export class SurveyCollection extends React.Component {
                                 disabled={this.state.currentNodeIndex === this.state.topLevelNodeIds.length - 1}
                                 id="next-survey-question"
                                 onClick={this.nextSurveyQuestionTree}
-                                style={{opacity: this.state.currentNodeIndex === this.state.topLevelNodeIds.length - 1 ? "0.25" : "1.0"}}
+                                style={{
+                                    opacity: this.state.currentNodeIndex === this.state.topLevelNodeIds.length - 1
+                                        ? "0.25"
+                                        : "1.0"
+                                }}
                                 type="button"
                             >
                                 {">"}
@@ -368,38 +380,46 @@ export class SurveyCollection extends React.Component {
         </div>
     );
 
+    renderDrawTool = ({icon, title, type, state}) => (
+        <div
+            onClick={() => this.setDrawTool(type)}
+            style={{alignItems: "center", cursor: "pointer", display: "flex"}}
+            title={title}
+        >
+            <span style={this.buttonStyle(state.drawTool === type)}>
+                <SvgIcon icon={icon} size="2rem"/>
+            </span>
+            {`${type} tool`}
+        </div>
+    );
+
     renderDrawTools = () => (
         <div style={{display: "flex", flexDirection: "column"}}>
-            <div
-                onClick={() => this.setDrawTool("Point")}
-                style={{alignItems: "center", cursor: "pointer", display: "flex"}}
-                title="Click anywhere to add a new point."
-            >
-                <span style={this.buttonStyle(this.state.drawTool === "Point")}>
-                    <SvgIcon icon="point" size="2rem"/>
-                </span>
-                Point tool
-            </div>
-            <div
-                onClick={() => this.setDrawTool("LineString")}
-                style={{alignItems: "center", cursor: "pointer", display: "flex"}}
-                title="Click anywhere to start drawing. A new point along the line string can be added with a single click. Right click or double click to finish drawing."
-            >
-                <span style={this.buttonStyle(this.state.drawTool === "LineString")}>
-                    <SvgIcon icon="lineString" size="2rem"/>
-                </span>
-                LineString tool
-            </div>
-            <div
-                onClick={() => this.setDrawTool("Polygon")}
-                style={{alignItems: "center", cursor: "pointer", display: "flex"}}
-                title="Click anywhere to start drawing. A new vertex can be added with a singe click. Right click, double click, or complete the polygon to finish drawing."
-            >
-                <span style={this.buttonStyle(this.state.drawTool === "Polygon")}>
-                    <SvgIcon icon="polygon" size="2rem"/>
-                </span>
-                Polygon tool
-            </div>
+            {this.props.sampleGeometries.points
+                && this.renderDrawTool({
+                    icon: "point",
+                    state: this.state,
+                    title: "Click anywhere to add a new point.",
+                    type: "Point"
+                })}
+            {this.props.sampleGeometries.lines
+                && this.renderDrawTool({
+                    icon: "lineString",
+                    state: this.state,
+                    title: "Click anywhere to start drawing.\n"
+                        + "A new point along the line string can be added with a single click.\n"
+                        + "Right click or double click to finish drawing.\n",
+                    type: "LineString"
+                })}
+            {this.props.sampleGeometries.polygons
+                && this.renderDrawTool({
+                    icon: "polygon",
+                    state: this.state,
+                    title: "Click anywhere to start drawing.\n"
+                        + "A new vertex can be added with a single click.\n"
+                        + "Right click, double click, or complete the polygon to finish drawing.\n",
+                    type: "Polygon"
+                })}
             <ul style={{textAlign: "left"}}>
                 How To:
                 <li>To modify an existing feature, hold ctrl and click to drag</li>
@@ -527,7 +547,7 @@ class SurveyQuestionTree extends React.Component {
                     >
                         {showAnswers ? <span>-</span> : <span>+</span>}
                     </button>
-                    <SurveyQuestionRules surveyNodeId={surveyNode.id} surveyRules={surveyRules}/>
+                    <RulesCollectionModal surveyNodeId={surveyNode.id} surveyRules={surveyRules}/>
                     <button
                         className="text-center btn btn-outline-lightgreen btn-sm col overflow-hidden text-truncate"
                         onClick={() => setSelectedQuestion(surveyNode)}
@@ -552,12 +572,11 @@ class SurveyQuestionTree extends React.Component {
                         validateAndSetCurrentValue={validateAndSetCurrentValue}
                     />
                 )}
-                {childNodes.map((childNode, uid) => (
-                    <Fragment key={uid}>
+                {childNodes.map(childNode => (
+                    <Fragment key={childNode.id}>
                         {surveyQuestions.find(sq => sq.id === childNode.id).visible.length > 0
                         && (
                             <SurveyQuestionTree
-                                key={uid}
                                 hierarchyLabel={hierarchyLabel + "- "}
                                 selectedQuestion={selectedQuestion}
                                 selectedSampleId={selectedSampleId}
@@ -577,8 +596,8 @@ class SurveyQuestionTree extends React.Component {
 function AnswerButton({surveyNode, surveyNode: {answers, answered}, selectedSampleId, validateAndSetCurrentValue}) {
     return (
         <ul className="samplevalue justify-content-center">
-            {answers.map((ans, uid) => (
-                <li key={uid} className="mb-1">
+            {answers.map(ans => (
+                <li key={ans.id} className="mb-1">
                     <button
                         className="btn btn-outline-darkgray btn-sm btn-block pl-1 overflow-hidden text-truncate"
                         id={ans.answer + "_" + ans.id}
@@ -611,11 +630,16 @@ function AnswerButton({surveyNode, surveyNode: {answers, answered}, selectedSamp
     );
 }
 
-function AnswerRadioButton({surveyNode, surveyNode: {answers, answered}, selectedSampleId, validateAndSetCurrentValue}) {
+function AnswerRadioButton({
+    surveyNode,
+    surveyNode: {answers, answered},
+    selectedSampleId,
+    validateAndSetCurrentValue
+}) {
     return (
         <ul className="samplevalue justify-content-center">
-            {answers.map((ans, uid) => (
-                <li key={uid} className="mb-1">
+            {answers.map(ans => (
+                <li key={ans.id} className="mb-1">
                     <button
                         className="btn btn-outline-darkgray btn-sm btn-block pl-1 overflow-hidden text-truncate"
                         id={ans.answer + "_" + ans.id}
@@ -663,25 +687,19 @@ class AnswerInput extends React.Component {
         if (this.props.surveyNode.id !== prevProps.surveyNode.id) {
             const matchingNode = this.props.surveyNode.answered
                 .find(a => a.answerId === this.props.surveyNode.answers[0].id);
-            this.setState({newInput: matchingNode ? matchingNode.answerText : this.defaultVal()});
+            this.setState({newInput: matchingNode ? matchingNode.answerText : ""});
         }
         if (this.props.selectedSampleId !== prevProps.selectedSampleId) {
             this.resetInputText();
         }
     }
 
-    defaultVal = () => {
-        const {dataType} = this.props.surveyNode;
-        return dataType === "number" ? 0 : "";
-    };
-
     resetInputText = () => {
-        console.log(this.defaultVal());
         const matchingNode = this.props.surveyNode.answered
             .find(a => a.answerId === this.props.surveyNode.answers[0].id
                   && a.sampleId === this.props.selectedSampleId);
         this.setState({
-            newInput: matchingNode ? matchingNode.answerText : this.defaultVal()
+            newInput: matchingNode ? matchingNode.answerText : ""
         });
     };
 
@@ -702,10 +720,10 @@ class AnswerInput extends React.Component {
                             }}
                         />
                     </div>
-                    <input
+                    <RequiredInput
+                        key={answers[0].answer + "_" + answers[0].id}
                         className="form-control mr-2"
                         id={answers[0].answer + "_" + answers[0].id}
-                        name={answers[0].answer + "_" + answers[0].id}
                         onChange={e => this.updateInputValue(dataType === "number"
                             ? Number(e.target.value)
                             : e.target.value)}
@@ -713,14 +731,18 @@ class AnswerInput extends React.Component {
                         type={dataType}
                         value={newInput}
                     />
-                    <input
-                        className="text-center btn btn-outline-lightgreen btn-sm"
+                    <button
+                        className="text-center btn btn-outline-lightgreen btn-sm ml-2"
                         id="save-input"
                         name="save-input"
-                        onClick={() => validateAndSetCurrentValue(surveyNode, answers[0].id, newInput)}
+                        onClick={() => {
+                            if (newInput) validateAndSetCurrentValue(surveyNode, answers[0].id, newInput);
+                        }}
+                        style={{height: "2.5rem"}}
                         type="button"
-                        value="Save"
-                    />
+                    >
+                        Save
+                    </button>
                 </div>
             ) : null;
     }

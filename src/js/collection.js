@@ -14,7 +14,7 @@ import {
 } from "./imagery/collectionMenuControls";
 import {CollapsibleTitle} from "./components/FormComponents";
 
-import {UnicodeIcon, getQueryString, safeLength, isNumber, invertColor} from "./utils/generalUtils";
+import {UnicodeIcon, getQueryString, safeLength, isNumber, invertColor, asPercentage} from "./utils/generalUtils";
 import {mercator} from "./utils/mercator";
 
 class Collection extends React.Component {
@@ -41,7 +41,6 @@ class Collection extends React.Component {
             userImages: {},
             storedInterval: null,
             KMLFeatures: null,
-            hasGeoDash: false,
             showSidebar: false,
             showQuitModal: false,
             answerMode: "question",
@@ -95,7 +94,7 @@ class Collection extends React.Component {
         // Initialize when new plot
         if (this.state.currentPlot.id && this.state.currentPlot.id !== prevState.currentPlot.id) {
             this.showProjectPlot();
-            if (this.state.hasGeoDash
+            if (this.state.currentProject.hasGeoDash
                 && this.state.currentProject.projectOptions.autoLaunchGeoDash) {
                 this.showGeoDash();
             }
@@ -151,7 +150,6 @@ class Collection extends React.Component {
         () => Promise.all([
             this.getProjectById(),
             this.getProjectPlots(),
-            this.checkForGeodash(),
             this.getImageryList()
         ])
             .then(() => {
@@ -184,18 +182,6 @@ class Collection extends React.Component {
         });
 
     // TODO, this can easily be a part of get-project-by-id
-    checkForGeodash = () => fetch(`/geo-dash/get-by-projid?projectId=${this.props.projectId}`)
-        .then(response => (response.ok ? response.json() : Promise.reject(response)))
-        .then(data => {
-            const widgets = Array.isArray(data.widgets)
-                ? data.widgets
-                : Array.isArray(eval(data.widgets))
-                    ? eval(data.widgets)
-                    : [];
-            this.setState({hasGeoDash: widgets.length > 0});
-            return Promise.resolve("resolved");
-        });
-
     getProjectPlots = () => fetch(`/get-project-plots?projectId=${this.props.projectId}`)
         .then(response => (response.ok ? response.json() : Promise.reject(response)))
         .then(data => {
@@ -284,10 +270,10 @@ class Collection extends React.Component {
         }
     };
 
-    getPlotData = plotId => this.processModal(
-        `Getting plot ${plotId}`,
+    getPlotData = visibleId => this.processModal(
+        `Getting plot ${visibleId}`,
         () => fetch("/get-plot-by-id?" + getQueryString({
-            plotId,
+            visibleId,
             projectId: this.props.projectId,
             navigationMode: this.state.navigationMode
         }))
@@ -298,7 +284,7 @@ class Collection extends React.Component {
                         ? "This plot was analyzed by someone else. You are logged in as " + this.props.userName + "."
                         : "This plot has already been analyzed.");
                 } else if (data === "not-found") {
-                    alert("Plot " + plotId + " not found.");
+                    alert("Plot " + visibleId + " not found.");
                 } else {
                     this.setState({
                         currentPlot: data,
@@ -316,17 +302,17 @@ class Collection extends React.Component {
             })
     );
 
-    getNextPlotData = plotId => this.processModal(
-        plotId >= 0 ? "Getting next plot" : "Getting first plot",
+    getNextPlotData = visibleId => this.processModal(
+        visibleId >= 0 ? "Getting next plot" : "Getting first plot",
         () => fetch("/get-next-plot?" + getQueryString({
-            plotId,
+            visibleId,
             projectId: this.props.projectId,
             navigationMode: this.state.navigationMode
         }))
             .then(response => (response.ok ? response.json() : Promise.reject(response)))
             .then(data => {
                 if (data === "done") {
-                    if (plotId === -1) {
+                    if (visibleId === -1) {
                         alert(this.state.navigationMode !== "unanalyzed"
                             ? "You have not reviewed any plots. You are logged in as " + this.props.userName + "."
                             : "All plots have been analyzed for this project.");
@@ -338,7 +324,7 @@ class Collection extends React.Component {
                     this.setState({
                         currentPlot: data,
                         ...this.newPlotValues(data),
-                        prevPlotButtonDisabled: plotId === -1,
+                        prevPlotButtonDisabled: visibleId === -1,
                         answerMode: "question"
                     });
                     this.warnOnNoSamples(data);
@@ -350,10 +336,10 @@ class Collection extends React.Component {
             })
     );
 
-    getPrevPlotData = plotId => this.processModal(
+    getPrevPlotData = visibleId => this.processModal(
         "Getting previous plot",
         () => fetch("/get-prev-plot?" + getQueryString({
-            plotId,
+            visibleId,
             projectId: this.props.projectId,
             navigationMode: this.state.navigationMode
         }))
@@ -404,18 +390,14 @@ class Collection extends React.Component {
     resetPlotValues = () => this.setState(this.newPlotValues(this.state.currentPlot, false));
 
     newPlotValues = (newPlot, copyValues = true) => ({
-        newPlotInput: isNumber(newPlot.plotId) ? newPlot.plotId : newPlot.id,
+        newPlotInput: newPlot.visibleId,
         userSamples: newPlot.samples
-            ? newPlot.samples.reduce((obj, s) => {
-                obj[s.id] = copyValues ? (s.savedAnswers || {}) : {};
-                return obj;
-            }, {})
+            ? newPlot.samples.reduce((acc, cur) =>
+                ({...acc, [cur.id]: copyValues ? (cur.savedAnswers || {}) : {}}), {})
             : {},
         userImages: newPlot.samples
-            ? newPlot.samples.reduce((obj, s) => {
-                obj[s.id] = copyValues ? (s.userImage || {}) : {};
-                return obj;
-            }, {})
+            ? newPlot.samples.reduce((acc, cur) =>
+                ({...acc, [cur.id]: copyValues ? (cur.userImage || {}) : {}}), {})
             : {},
         selectedQuestion: {
             ...this.state.currentProject.surveyQuestions
@@ -437,16 +419,18 @@ class Collection extends React.Component {
         mercator.removeLayerById(mapConfig, "currentPlot");
         mercator.removeLayerById(mapConfig, "currentSamples");
         mercator.removeLayerById(mapConfig, "drawLayer");
-        mercator.addVectorLayer(mapConfig,
-                                "currentPlot",
-                                mercator.geometryToVectorSource(
-                                    currentPlot.geom
-                                        ? mercator.parseGeoJson(currentPlot.geom, true)
-                                        : mercator.getPlotPolygon(currentPlot.center,
-                                                                  currentProject.plotSize,
-                                                                  currentProject.plotShape)
-                                ),
-                                mercator.ceoMapStyles("geom", "yellow"));
+        mercator.addVectorLayer(
+            mapConfig,
+            "currentPlot",
+            mercator.geometryToVectorSource(
+                currentPlot.plotGeom.includes("Point")
+                    ? mercator.getPlotPolygon(currentPlot.plotGeom,
+                                              currentProject.plotSize,
+                                              currentProject.plotShape)
+                    : mercator.parseGeoJson(currentPlot.plotGeom, true)
+            ),
+            mercator.ceoMapStyles("geom", "yellow")
+        );
 
         this.zoomToPlot();
     };
@@ -510,13 +494,13 @@ class Collection extends React.Component {
 
         this.setState({
             currentPlot: {...currentPlot, samples: newSamples},
-            userSamples: newSamples.reduce((obj, s) => {
-                obj[s.id] = userSamples[s.id] || {};
-                return obj;
+            userSamples: newSamples.reduce((acc, cur) => {
+                acc[cur.id] = userSamples[cur.id] || {};
+                return acc;
             }, {}),
-            userImages: newSamples.reduce((obj, s) => {
-                obj[s.id] = userImages[s.id] || {};
-                return obj;
+            userImages: newSamples.reduce((acc, cur) => {
+                acc[cur.id] = userImages[cur.id] || {};
+                return acc;
             }, {})
         });
     };
@@ -529,13 +513,13 @@ class Collection extends React.Component {
         window.open("/geo-dash?"
                     + `institutionId=${this.state.currentProject.institution}`
                     + `&projectId=${this.props.projectId}`
-                    + `&visiblePlotId=${isNumber(currentPlot.plotId) ? currentPlot.plotId : currentPlot.id}`
+                    + `&visiblePlotId=${currentPlot.visibleId}`
                     + `&plotId=${currentPlot.id}`
-                    + `&plotShape=${encodeURIComponent((currentPlot.geom ? "polygon" : currentProject.plotShape))}`
+                    + `&plotShape=${currentPlot.plotGeom.includes("Point") ? currentProject.plotShape : "polygon"}`
                     + `&aoi=${encodeURIComponent(`[${mercator.getViewExtent(mapConfig)}]`)}`
-                    + `&daterange=&bcenter=${currentPlot.center}`
+                    + `&bcenter=${currentPlot.plotGeom.includes("Point") ? currentPlot.plotGeom : ""}`
                     + `&bradius=${plotRadius}`,
-                    "_geo-dash");
+                    `_geo-dash_${this.props.projectId}`);
     };
 
     createPlotKML = () => {
@@ -549,13 +533,9 @@ class Collection extends React.Component {
 
     navToFirstPlot = () => this.getNextPlotData(-10000000);
 
-    getPlotId = () => (isNumber(this.state.currentPlot.plotId)
-        ? this.state.currentPlot.plotId
-        : this.state.currentPlot.id);
+    navToNextPlot = () => this.getNextPlotData(this.state.currentPlot.visibleId);
 
-    navToNextPlot = () => this.getNextPlotData(this.getPlotId());
-
-    navToPrevPlot = () => this.getPrevPlotData(this.getPlotId());
+    navToPrevPlot = () => this.getPrevPlotData(this.state.currentPlot.visibleId);
 
     navToPlot = newPlot => {
         if (!isNaN(newPlot)) {
@@ -843,7 +823,6 @@ class Collection extends React.Component {
     };
 
     render() {
-        const plotId = this.getPlotId();
         return (
             <div className="row" style={{height: "-webkit-fill-available"}}>
                 {this.state.modalMessage && <LoadingModal message={this.state.modalMessage}/>}
@@ -878,7 +857,6 @@ class Collection extends React.Component {
                     answerMode={this.state.answerMode}
                     currentPlot={this.state.currentPlot}
                     isProjectAdmin={this.state.currentProject.isProjectAdmin}
-                    plotId={plotId}
                     postValuesToDB={this.postValuesToDB}
                     projectId={this.props.projectId}
                     projectName={this.state.currentProject.name}
@@ -896,7 +874,6 @@ class Collection extends React.Component {
                         navToPlot={this.navToPlot}
                         navToPrevPlot={this.navToPrevPlot}
                         nextPlotButtonDisabled={this.state.nextPlotButtonDisabled}
-                        plotId={plotId}
                         prevPlotButtonDisabled={this.state.prevPlotButtonDisabled}
                         setNavigationMode={this.setNavigationMode}
                         showNavButtons={this.state.currentPlot.id}
@@ -905,7 +882,6 @@ class Collection extends React.Component {
                         currentPlot={this.state.currentPlot}
                         currentProject={this.state.currentProject}
                         KMLFeatures={this.state.KMLFeatures}
-                        plotId={plotId}
                         showGeoDash={this.showGeoDash}
                         zoomMapToPlot={this.zoomToPlot}
                     />
@@ -936,6 +912,7 @@ class Collection extends React.Component {
                                 getSelectedSampleIds={this.getSelectedSampleIds}
                                 mapConfig={this.state.mapConfig}
                                 resetPlotValues={this.resetPlotValues}
+                                sampleGeometries={this.state.currentProject.designSettings.sampleGeometries}
                                 selectedQuestion={this.state.selectedQuestion}
                                 selectedSampleId={Object.keys(this.state.userSamples).length === 1
                                     ? parseInt(Object.keys(this.state.userSamples)[0])
@@ -984,11 +961,12 @@ class SideBar extends React.Component {
     checkCanSave = () => {
         const noneAnswered = this.props.surveyQuestions.every(sq => safeLength(sq.answered) === 0);
         const hasSamples = safeLength(this.props.currentPlot.samples) > 0;
-        const allAnswered = this.props.currentPlot.flagged
-            || this.props.surveyQuestions.every(sq => safeLength(sq.visible) === safeLength(sq.answered));
+        const allAnswered = this.props.surveyQuestions.every(sq => safeLength(sq.visible) === safeLength(sq.answered));
         if (this.props.answerMode !== "question") {
             alert("You must be in question mode to save the collection.");
             return false;
+        } else if (this.props.currentPlot.flagged) {
+            return true;
         } else if (this.props.isProjectAdmin) {
             if (!(noneAnswered || allAnswered)) {
                 alert("Admins can only save the plot if all questions are answered or the answers are cleared.");
@@ -1037,16 +1015,16 @@ class SideBar extends React.Component {
                 style={{overflowY: "scroll", overflowX: "hidden"}}
             >
                 <ProjectTitle
-                    plotId={this.props.plotId}
                     projectId={this.props.projectId}
                     projectName={this.props.projectName || ""}
                     userName={this.props.userName}
+                    visibleId={this.props.currentPlot.visibleId}
                 />
                 {this.props.children}
 
                 <div className="row">
                     <div className="col-sm-12 btn-block">
-                        {isNumber(this.props.plotId)
+                        {isNumber(this.props.currentPlot.id)
                             ? this.renderSaveButtonGroup()
                             : this.renderQuitButton()}
                     </div>
@@ -1065,7 +1043,9 @@ class PlotNavigation extends React.Component {
     }
 
     componentDidUpdate(prevProps) {
-        if (this.props.plotId !== prevProps.plotId) this.setState({newPlotInput: this.props.plotId});
+        if (this.props.currentPlot.visibleId !== prevProps.currentPlot.visibleId) {
+            this.setState({newPlotInput: this.props.currentPlot.visibleId});
+        }
     }
 
     updateNewPlotId = value => this.setState({newPlotInput: value});
@@ -1171,28 +1151,29 @@ class ExternalTools extends React.Component {
                 className="btn btn-outline-lightgreen btn-sm col-6"
                 onClick={this.props.showGeoDash}
                 type="button"
-                value="Geodash"
+                value="GeoDash"
             />
         </div>
     );
 
     loadGEEScript = () => {
-        const urlParams = this.props.currentPlot.geom
-            ? "geoJson=" + this.props.currentPlot.geom
-            : this.props.currentProject.plotShape === "circle"
+        const {currentPlot, currentProject} = this.props;
+        const urlParams = currentPlot.plotGeom.includes("Point")
+            ? currentProject.plotShape === "circle"
                 ? "center=["
-                        + mercator.parseGeoJson(this.props.currentPlot.center).getCoordinates()
-                        + "];radius=" + this.props.currentProject.plotSize / 2
+                        + mercator.parseGeoJson(currentPlot.plotGeom).getCoordinates()
+                        + "];radius=" + currentProject.plotSize / 2
                 : "geoJson=" + mercator.geometryToGeoJSON(
                     mercator.getPlotPolygon(
-                        this.props.currentPlot.center,
-                        this.props.currentProject.plotSize,
-                        this.props.currentProject.plotShape
+                        currentPlot.plotGeom,
+                        currentProject.plotSize,
+                        currentProject.plotShape
                     ),
                     "EPSG:4326",
                     "EPSG:3857",
                     5
-                );
+                )
+            : "geoJson=" + currentPlot.plotGeom;
         if (this.state.auxWindow) this.state.auxWindow.close();
         this.setState({
             auxWindow: window.open(
@@ -1214,7 +1195,7 @@ class ExternalTools extends React.Component {
     kmlButton = () => (
         <a
             className="btn btn-outline-lightgreen btn-sm btn-block my-2"
-            download={"ceo_projectId-" + this.props.currentProject.id + "_plotId-" + this.props.plotId + ".kml"}
+            download={"ceo_projectId-" + this.props.currentProject.id + "_plotId-" + this.props.currentPlot.visible + ".kml"}
             href={"data:earth.kml+xml application/vnd.google-earth.kmz, "
                 + encodeURIComponent(this.props.KMLFeatures)}
         >
@@ -1265,7 +1246,7 @@ class PlotInformation extends React.Component {
                         ? (
                             <ul className="mb-3 mx-1">
                                 {Object.entries(this.props.extraPlotInfo)
-                                    .filter(([key, value]) => value && !(value instanceof Object))
+                                    .filter(([_key, value]) => value && !(value instanceof Object))
                                     .map(([key, value]) => <li key={key}>{key} - {value}</li>)}
                             </ul>
                         ) : (
@@ -1294,11 +1275,11 @@ class ImageryOptions extends React.Component {
             currentPlot: props.currentPlot,
             currentProjectBoundary: props.currentProjectBoundary,
             extent: props.currentPlot.id && props.currentProject.id
-                ? props.currentPlot.geom
-                    ? mercator.parseGeoJson(props.currentPlot.geom, true).getExtent()
-                    : mercator.getPlotPolygon(props.currentPlot.center,
+                ? props.currentPlot.plotGeom.includes("Point")
+                    ? mercator.getPlotPolygon(props.currentPlot.plotGeom,
                                               props.currentProject.plotSize,
                                               props.currentProject.plotShape).getExtent()
+                    : mercator.parseGeoJson(props.currentPlot.plotGeom, true).getExtent()
                 : []
         };
 
@@ -1362,7 +1343,7 @@ class ProjectTitle extends React.Component {
     }
 
     componentDidUpdate(prevProps) {
-        if (prevProps.plotId !== this.props.plotId) {
+        if (this.props.visibleId !== prevProps.visibleId) {
             this.setState({showStats: false});
         }
     }
@@ -1404,13 +1385,6 @@ class ProjectStats extends React.Component {
         this.getProjectStats();
     }
 
-    // TODO move to utils
-    asPercentage(part, total) {
-        return (part && total)
-            ? (100.0 * part / total).toFixed(2)
-            : "0.00";
-    }
-
     getProjectStats() {
         fetch(`/get-project-stats?projectId=${this.props.projectId}`)
             .then(response => (response.ok ? response.json() : Promise.reject(response)))
@@ -1445,8 +1419,8 @@ class ProjectStats extends React.Component {
                                 <tr>
                                     <td className="small pl-4">My Plots Completed</td>
                                     <td className="small">
-                                        {userStats && userStats.plots || "0"}
-                                        ({this.asPercentage(userStats && userStats.plots || 0, numPlots)}%)
+                                        {(userStats && userStats.plots) || "0"}
+                                        ({asPercentage((userStats && userStats.plots) || 0, numPlots)}%)
                                     </td>
                                 </tr>
                                 <tr>
@@ -1461,21 +1435,21 @@ class ProjectStats extends React.Component {
                                     <td className="small pl-4">Project Plots Completed</td>
                                     <td className="small">
                                         {stats.analyzedPlots + stats.flaggedPlots || ""}
-                                        ({this.asPercentage(stats.analyzedPlots + stats.flaggedPlots, numPlots)}%)
+                                        ({asPercentage(stats.analyzedPlots + stats.flaggedPlots, numPlots)}%)
                                     </td>
                                 </tr>
                                 <tr>
                                     <td className="small pl-4">-- Analyzed</td>
                                     <td className="small">
                                         {stats.analyzedPlots || ""}
-                                        ({this.asPercentage(stats.analyzedPlots, numPlots)}%)
+                                        ({asPercentage(stats.analyzedPlots, numPlots)}%)
                                     </td>
                                 </tr>
                                 <tr>
                                     <td className="small pl-4">-- Flagged</td>
                                     <td className="small">
                                         {stats.flaggedPlots || ""}
-                                        ({this.asPercentage(stats.flaggedPlots, numPlots)}%)
+                                        ({asPercentage(stats.flaggedPlots, numPlots)}%)
                                     </td>
                                 </tr>
                                 <tr>
@@ -1552,7 +1526,7 @@ function QuitMenu({projectId, toggleQuitModal}) {
                             id="quit-button"
                             onClick={() => fetch(`/release-plot-locks?projectId=${projectId}`,
                                                  {method: "POST"})
-                                .then(() => window.location = "/home")}
+                                .then(() => window.location.assign("/home"))}
                             type="button"
                         >
                             Yes, I&apos;m sure
@@ -1566,7 +1540,11 @@ function QuitMenu({projectId, toggleQuitModal}) {
 
 export function pageInit(args) {
     ReactDOM.render(
-        <NavigationBar userId={args.userId} userName={args.userName}>
+        <NavigationBar
+            userId={args.userId}
+            userName={args.userName}
+            version={args.version}
+        >
             <Collection
                 projectId={args.projectId}
                 userName={args.userName || "guest"}

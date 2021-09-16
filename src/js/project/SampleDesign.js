@@ -1,6 +1,6 @@
 import React from "react";
 
-import {formatNumberWithCommas, encodeFileAsBase64} from "../utils/generalUtils";
+import {formatNumberWithCommas, encodeFileAsBase64, truncate} from "../utils/generalUtils";
 import {ProjectContext, perPlotLimit, sampleLimit} from "./constants";
 
 export class SampleDesign extends React.Component {
@@ -57,8 +57,23 @@ export class SampleDesign extends React.Component {
         </div>
     );
 
+    toggleSampleGeometry = geometry => {
+        const {sampleGeometries} = this.context.designSettings;
+        this.context.setProjectDetails({
+            designSettings: {
+                sampleGeometries: {...sampleGeometries, [geometry]: !sampleGeometries[geometry]}
+            }
+        });
+    };
+
     render() {
-        const {plotDistribution, sampleDistribution, allowDrawnSamples, setProjectDetails} = this.context;
+        const {
+            allowDrawnSamples,
+            designSettings: {sampleGeometries},
+            plotDistribution,
+            sampleDistribution,
+            setProjectDetails
+        } = this.context;
         const totalPlots = this.props.getTotalPlots();
         const samplesPerPlot = this.props.getSamplesPerPlot();
 
@@ -100,6 +115,19 @@ export class SampleDesign extends React.Component {
             }
         };
 
+        const geometries = {
+            points: {
+                display: "Points",
+                alwaysEnabled: ["random", "gridded", "center"]
+            },
+            lines: {
+                display: "Lines"
+            },
+            polygons: {
+                display: "Polygons"
+            }
+        };
+
         return (
             <div id="sample-design">
                 <h2>Sample Generation</h2>
@@ -107,7 +135,21 @@ export class SampleDesign extends React.Component {
                     <label>Spatial Distribution</label>
                     <select
                         className="form-control form-control-sm ml-3"
-                        onChange={e => setProjectDetails({sampleDistribution: e.target.value})}
+                        onChange={e => {
+                            const newDistributionType = e.target.value;
+                            const pointRequired = ["random", "gridded", "center"].includes(newDistributionType);
+                            const {points} = sampleGeometries;
+                            setProjectDetails({
+                                allowDrawnSamples: (newDistributionType === "none") || allowDrawnSamples,
+                                sampleDistribution: newDistributionType,
+                                designSettings: {
+                                    sampleGeometries: {
+                                        ...sampleGeometries,
+                                        points: points || pointRequired
+                                    }
+                                }
+                            });
+                        }}
                         style={{width: "initial"}}
                         value={sampleDistribution}
                     >
@@ -121,29 +163,6 @@ export class SampleDesign extends React.Component {
                 <p className="font-italic ml-2 small" id="sample-design-text">
                     - {sampleOptions[sampleDistribution].description}
                 </p>
-                {sampleDistribution !== "none" && (
-                    <div className="mb-3">
-                        <div className="form-check form-check-inline">
-                            <input
-                                checked={allowDrawnSamples || sampleDistribution === "none"}
-                                className="form-check-input"
-                                id="allow-drawn-samples"
-                                onChange={() => setProjectDetails({allowDrawnSamples: !allowDrawnSamples})}
-                                type="checkbox"
-                            />
-                            <label
-                                className="form-check-label"
-                                htmlFor="allow-drawn-samples"
-                            >
-                                Allow users to draw their own samples
-                            </label>
-                        </div>
-                        <p className="font-italic ml-2 small">
-                            - Enable this to allow users to draw and label points, linestrings,
-                            and polygons during data collection.
-                        </p>
-                    </div>
-                )}
                 <div style={{display: "flex"}}>
                     {sampleOptions[sampleDistribution].inputs.map((i, idx) => (
                         <div key={idx} className="mr-3">
@@ -169,6 +188,56 @@ export class SampleDesign extends React.Component {
                         && `* The maximum allowed for the selected sample distribution is ${formatNumberWithCommas(perPlotLimit)}`
                             + ` samples per plot. * The maximum allowed samples per project is ${formatNumberWithCommas(sampleLimit)}.`}
                 </p>
+                <div className="mb-3">
+                    <div className="form-check form-check-inline">
+                        <input
+                            checked={allowDrawnSamples || sampleDistribution === "none"}
+                            className="form-check-input"
+                            disabled={sampleDistribution === "none"}
+                            id="allow-drawn-samples"
+                            onChange={() => setProjectDetails({allowDrawnSamples: !allowDrawnSamples})}
+                            type="checkbox"
+                        />
+                        <label
+                            className="form-check-label"
+                            htmlFor="allow-drawn-samples"
+                        >
+                            Allow users to draw their own samples
+                        </label>
+                    </div>
+                    <p className="font-italic ml-2 small">
+                        - Enable this to allow users to draw and label points, lines,
+                        and polygons during data collection.
+                    </p>
+                    {allowDrawnSamples && (
+                        <div className="form-group">
+                            <label
+                                htmlFor="restrict-sample-geometry"
+                            >
+                                Allowed sample geometries:
+                            </label>
+                            <p className="font-italic ml-2 small">
+                                - Allow sample geometries to points, lines, and/or polygons.
+                            </p>
+                            {Object.entries(geometries).map(([geometry, options]) => (
+                                <div key={geometry} className="form-check">
+                                    <input
+                                        checked={sampleGeometries[geometry]}
+                                        className="form-check-input"
+                                        disabled={options.alwaysEnabled?.includes(sampleDistribution)}
+                                        id={geometry}
+                                        onChange={() => this.toggleSampleGeometry(geometry)}
+                                        type="checkbox"
+                                        value={geometry}
+                                    />
+                                    <label htmlFor={geometry}>
+                                        {options.display}
+                                    </label>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                </div>
             </div>
         );
     }
@@ -178,7 +247,14 @@ SampleDesign.contextType = ProjectContext;
 export function SampleReview() {
     return (
         <ProjectContext.Consumer>
-            {({sampleDistribution, samplesPerPlot, sampleResolution, allowDrawnSamples, useTemplatePlots}) => (
+            {({
+                allowDrawnSamples,
+                sampleDistribution,
+                sampleFileName,
+                sampleResolution,
+                samplesPerPlot,
+                useTemplatePlots
+            }) => (
                 <div id="sample-review">
                     {useTemplatePlots && <h3 className="mb-3">Samples will be copied from template project</h3>}
                     {sampleDistribution === "none"
@@ -205,6 +281,17 @@ export function SampleReview() {
                                                     <td className="w-80">Sample Spacing</td>
                                                     <td className="w-20 text-center">
                                                         <span className="badge badge-pill bg-lightgreen">{sampleResolution} m</span>
+                                                    </td>
+                                                </tr>
+                                            )}
+                                            {sampleFileName && (
+                                                <tr>
+                                                    <td className="w-80">Sample File</td>
+                                                    <td className="w-20 text-center">
+                                                        <span className="badge badge-pill bg-lightgreen tooltip_wrapper" style={{color: "white"}}>
+                                                            {sampleFileName.split(".").map(s => truncate(s, 13)).join("")}
+                                                            <div className="tooltip_content">{sampleFileName}</div>
+                                                        </span>
                                                     </td>
                                                 </tr>
                                             )}
@@ -239,6 +326,7 @@ export function SamplePreview() {
                                             plot with {sampleDistribution} samples.
                                         </h3>
                                         <img
+                                            alt="distribution"
                                             className="w-100 h-100"
                                             src={"/img/examples/" + plotShape + "-" + sampleDistribution + ".webp"}
                                         />

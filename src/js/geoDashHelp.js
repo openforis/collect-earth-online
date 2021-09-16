@@ -50,10 +50,22 @@ class GeoDashHelp extends React.Component {
                                         <li>
                                             {lngObject.ic_data_info_configure}
                                             <ol style={{listStyleType: "lower-roman"}}>
-                                                <li>Landsat 5 - B1, B2, B3, B4, B5, B6, B7 - Sample parameters: bands: 'B4,B5,B3', min: '0.05,0.01,0.07', max: '0.45,0.5,0.4', cloudLessThan: 90</li>
-                                                <li>Landsat 7 - B1, B2, B3, B4, B5, B6_VCID_1, B6_VCID_2, B7, B8 - Sample parameters: bands: 'B4,B5,B3', min: '0.03,0.01,0.05', max: '0.45,0.5,0.4', cloudLessThan: 90</li>
-                                                <li>Landsat 8 - B1, B2, B3, B4, B5, B6, B7, B8, B9, B10, B11 - Sample parameters: bands: 'B5,B6,B4', min: '0.03,0.01,0.04', max: '0.45,0.5,0.32', cloudLessThan: 90</li>
-                                                <li>Sentinel 2 - B1, B2, B3, B4, B5, B6, B7, B8, B8a, B9, B10, B11, B12 - Sample parameters: bands: 'B8,B4,B3', min: '900,450,800', max: '5200,3000,2000', cloudLessThan: 10</li>
+                                                <li>
+                                                    Landsat 5 - B1, B2, B3, B4, B5, B6, B7 - Sample parameters: bands:
+                                                    &apos;B4,B5,B3&apos; min: &apos;0.05,0.01,0.07&apos;, max: &apos;0.45,0.5,0.4&apos;, cloudLessThan: 90
+                                                </li>
+                                                <li>
+                                                    Landsat 7 - B1, B2, B3, B4, B5, B6_VCID_1, B6_VCID_2, B7, B8 - Sample parameters: bands:
+                                                    &apos;B4,B5,B3&apos;, min: &apos;0.03,0.01,0.05&apos;, max: &apos;0.45,0.5,0.4&apos;, cloudLessThan: 90
+                                                </li>
+                                                <li>
+                                                    Landsat 8 - B1, B2, B3, B4, B5, B6, B7, B8, B9, B10, B11 - Sample parameters: bands:
+                                                    &apos;B5,B6,B4&apos;, min: &apos;0.03,0.01,0.04&apos;, max: &apos;0.45,0.5,0.32&apos;, cloudLessThan: 90
+                                                </li>
+                                                <li>
+                                                    Sentinel 2 - B1, B2, B3, B4, B5, B6, B7, B8, B8a, B9, B10, B11, B12 - Sample parameters: bands:
+                                                    &apos;B8,B4,B3&apos;, min: &apos;900,450,800&apos;, max: &apos;5200,3000,2000&apos;, cloudLessThan: 10
+                                                </li>
                                             </ol>
                                         </li>
                                         <li>
@@ -283,7 +295,11 @@ class GeoDashHelp extends React.Component {
 
 export function pageInit(args) {
     ReactDOM.render(
-        <NavigationBar userId={args.userId} userName={args.userName}>
+        <NavigationBar
+            userId={args.userId}
+            userName={args.userName}
+            version={args.version}
+        >
             <GeoDashHelp/>
         </NavigationBar>,
         document.getElementById("app")

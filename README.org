@@ -13,6 +13,19 @@ Crowd-sourced visual interpretation of on-demand satellite imagery
 - [[https://www.7-zip.org/][p7zip]]
 - [[https://nodejs.org/en/][node 10]]
 
+** Application Configuration
+
+On startup, the CEO application reads a file called config.edn
+in the top level directory of this repository, which contains various
+user-configurable system parameters. A sample file called
+config.default.edn is provided with this repository to get you started.
+To begin, simply copy it to config.edn. Then edit it according to the
+following sections.
+
+Please note that you must replace all values surrounded with angle
+brackets (e.g., "<api-key>") with actual values for the application to
+work correctly. Most of the fields should be self-explanatory.
+
 ** Postgresql Database Setup
 
 *Postgresql* needs to be installed on the machine that will be hosting
@@ -118,13 +131,15 @@ Replace *X* with the PostgreSQL version installed on your computer.
 
 ** Development Web Server
 
+*** Compile and run
+
 To compile and run the web application, navigate to the top level
 project directory and run:
 
 #+begin_src sh
 npm install
 npm run webpack-dev
-clojure -M:build-db only-functions
+clojure -M:build-db functions
 clojure -M:run-server -m dev [-p 8080] [-P 8443]
 #+end_src
 
@@ -157,21 +172,9 @@ system performance.
 
 *** Email Server
 
-To set up the email server for system emails, start by creating a file
-named "mail-config.edn" in the root directory of the application. Add
-the following EDN object containing server details to the file,
-replacing the values with your own:
-
-#+begin_src clojure
-{:host                  "smtp.gmail.com"
- :user                  "support-my-domain@gmail.com"
- :pass                  "foobarbaz200"
- :tls                   true
- :port                  587
- :base-url              "https://my.domain/"
- :recipient-limit       100
- :mailing-list-interval 600}
-#+end_src
+To set up the email server for system emails, open the "config.edn" file in
+the root directory of the application. Edit the default EDN object containing
+server details to the file, replacing the values with your own.
 
 *** Enabling HTTPS
 
@@ -245,7 +248,7 @@ project directory and run:
 #+begin_src sh
 npm install
 npm run webpack-prod
-clojure -M:build-db only-functions
+clojure -M:build-db functions -d ceo
 clojure -M:run-server -m [dev|prod] [-p 8080] [-P 8443]
 #+end_src
 

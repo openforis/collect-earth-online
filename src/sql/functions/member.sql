@@ -65,19 +65,19 @@ $$ LANGUAGE SQL;
 --
 
 -- Adds a new user to the database
-CREATE OR REPLACE FUNCTION add_user(_email text, _password text)
+CREATE OR REPLACE FUNCTION add_user(_email text, _password text, _reset_key text)
  RETURNS integer AS $$
 
     INSERT INTO users
-        (email, password)
+        (email, password, reset_key)
     VALUES
-        (_email, crypt(_password, gen_salt('bf')))
+        (_email, crypt(_password, gen_salt('bf')), _reset_key)
     RETURNING user_uid
 
 $$ LANGUAGE SQL;
 
 -- Get information for single user
-CREATE OR REPLACE FUNCTION get_user(_email text)
+CREATE OR REPLACE FUNCTION get_user_by_email(_email text)
  RETURNS table (
     user_id          integer,
     administrator    boolean,
@@ -128,10 +128,11 @@ $$ LANGUAGE SQL;
 CREATE OR REPLACE FUNCTION check_login(_email text, _password text)
  RETURNS table (
     user_id          integer,
-    administrator    boolean
+    administrator    boolean,
+    verified         boolean
  ) AS $$
 
-    SELECT user_uid, administrator
+    SELECT user_uid, administrator, verified
     FROM users
     WHERE email = _email
         AND password = crypt(_password, password)
@@ -232,13 +233,22 @@ $$ LANGUAGE SQL;
 
 -- Updates password for a given user and clears the reset key.
 CREATE OR REPLACE FUNCTION update_password(_email text, _password text)
- RETURNS text AS $$
+ RETURNS void AS $$
 
     UPDATE users
     SET password = crypt(_password, gen_salt('bf')),
-        reset_key = NULL
+        reset_key = NULL,
+        verified = TRUE
     WHERE email = _email
-    RETURNING email
+
+$$ LANGUAGE SQL;
+
+CREATE OR REPLACE FUNCTION user_verified(_user_id integer)
+ RETURNS void AS $$
+
+    UPDATE users
+    SET verified = TRUE
+    WHERE user_uid = _user_id
 
 $$ LANGUAGE SQL;
 
@@ -292,7 +302,7 @@ CREATE OR REPLACE FUNCTION select_all_institutions(_user_id integer)
     institution_id    integer,
     name              text,
     is_member         boolean
-) AS $$
+ ) AS $$
 
     SELECT institution_uid,
         i.name,

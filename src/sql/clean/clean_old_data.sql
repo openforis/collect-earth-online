@@ -1,30 +1,5 @@
 -- Validate and then move to functions where it can run every time the server is re-deployed
 
--- Clean up any orphaned tables
-DO $$
- DECLARE
-    _sql text;
- BEGIN
-    SELECT INTO _sql
-        string_agg(format('DROP TABLE ext_tables.%s;', table_name), E'\n')
-    FROM (
-        SELECT table_name,
-            (SELECT project_uid FROM projects WHERE plots_ext_table = table_name) as p,
-            (SELECT project_uid FROM projects WHERE samples_ext_table = table_name) as s
-        FROM information_schema.tables
-        WHERE table_schema='ext_tables'
-            AND table_type='BASE TABLE'
-    ) a
-    WHERE p IS NULL AND s IS NULL;
-
-    IF _sql IS NOT NULL THEN
-        EXECUTE _sql;
-    ELSE
-        RAISE NOTICE 'No orphaned tables found.';
-    END IF;
- END
-$$ LANGUAGE PLPGSQL;
-
 -- Archive malformed projects
 SELECT archive_project(project_uid)
 FROM projects
@@ -96,7 +71,7 @@ FROM (
     GROUP BY institution_uid
 ) a
 WHERE (total_project_cnt = 0 AND inst_age > 180) -- Institutions that never had a project
-    OR (active_project_cnt = 0 AND last_project_age > 180) -- Inactive institutions
+    OR (active_project_cnt = 0 AND last_project_age > 180); -- Inactive institutions
 
 REINDEX DATABASE ceo;
 VACUUM FULL;

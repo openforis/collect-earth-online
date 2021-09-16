@@ -1,16 +1,17 @@
 (ns collect-earth-online.db.imagery
-  (:require [collect-earth-online.database :refer [call-sql sql-primitive]]
+  (:require [triangulum.database :refer [call-sql sql-primitive]]
+            [triangulum.type-conversion :as tc]
             [collect-earth-online.db.institutions :refer [is-inst-admin?]]
-            [collect-earth-online.utils.type-conversion :as tc]
             [collect-earth-online.views :refer [data-response]]))
 
 (defn- clean-source [source-config]
-  (if (#{"GeoServer" "SecureWatch" "Planet"} (:type source-config))
-    (dissoc source-config [:geoserverParams :accessToken])
-    source-config))
+  (let [image-type (:type source-config)]
+    (cond-> source-config
+      (#{"GeoServer" "SecureWatch"} image-type) (dissoc source-config :geoserverParams)
+      (#{"Planet" "PlanetNICFI"}    image-type) (dissoc source-config :accessToken))))
 
 (defn- prepare-imagery [imagery inst-admin?]
-  (mapv (fn [{:keys [imagery_id institution_id visibility title attribution extent source_config]}]
+  (mapv (fn [{:keys [imagery_id institution_id visibility title attribution extent is_proxied source_config]}]
           (let [source-config (tc/jsonb->clj source_config)]
             {:id           imagery_id
              :institution  institution_id ; FIXME, legacy variable name, update to institutionId
@@ -18,7 +19,10 @@
              :title        title
              :attribution  attribution
              :extent       (tc/jsonb->clj extent)
-             :sourceConfig (if inst-admin? source-config (clean-source source-config))}))
+             :isProxied    is_proxied
+             :sourceConfig (if (or inst-admin? (not is_proxied))
+                             source-config
+                             (clean-source source-config))}))
         imagery))
 
 (defn get-institution-imagery [{:keys [params]}]
@@ -51,6 +55,7 @@
         imagery-title        (:imageryTitle params)
         imagery-attribution  (:imageryAttribution params)
         source-config        (tc/clj->jsonb (:sourceConfig params))
+        is-proxied?          (tc/val->bool (:isProxied params))
         add-to-all-projects? (tc/val->bool (:addToAllProjects params) true)]
     (if (sql-primitive (call-sql "imagery_name_taken" institution-id imagery-title -1))
       (data-response "The title you have chosen is already taken.")
@@ -60,6 +65,7 @@
                                                     imagery-title
                                                     imagery-attribution
                                                     nil
+                                                    is-proxied?
                                                     source-config))]
         (when add-to-all-projects?
           (call-sql "add_imagery_to_all_institution_projects" new-imagery-id))
@@ -70,6 +76,7 @@
         imagery-title        (:imageryTitle params)
         imagery-attribution  (:imageryAttribution params)
         source-config        (tc/clj->jsonb (:sourceConfig params))
+        is-proxied?          (tc/val->bool (:isProxied params))
         add-to-all-projects? (tc/val->bool (:addToAllProjects params) true)
         institution-id       (tc/val->int (:institutionId params))]
     (if (sql-primitive (call-sql "imagery_name_taken" institution-id imagery-title imagery-id))
@@ -79,6 +86,7 @@
                   imagery-id
                   imagery-title
                   imagery-attribution
+                  is-proxied?
                   source-config)
         (when add-to-all-projects?
           (call-sql "add_imagery_to_all_institution_projects" imagery-id))

@@ -1,6 +1,7 @@
 import React from "react";
 import ReactDOM from "react-dom";
 
+import Modal from "./components/Modal";
 import InstitutionEditor from "./components/InstitutionEditor";
 import {LoadingModal, NavigationBar} from "./components/PageComponents";
 import {
@@ -192,6 +193,10 @@ class InstitutionDescription extends React.Component {
     updateInstitution = () => {
         if (this.state.newInstitutionDetails.base64Image.length > KBtoBase64Length(500)) {
             alert("Institution logos must be smaller than 500kb");
+        } else if (this.state.newInstitutionDetails.name.length === 0) {
+            alert("Institution must have a name.");
+        } else if (this.state.newInstitutionDetails.description.length === 0) {
+            alert("Institution must have a description.");
         } else {
             fetch(
                 `/update-institution?institutionId=${this.props.institutionId}`,
@@ -385,7 +390,7 @@ class ImageryList extends React.Component {
             .catch(response => {
                 this.setState({imageryList: []});
                 console.log(response);
-                alert("Error retrieving the imagery list. See console for details.");
+                this.showAlert({title: "Error", body: "Error retrieving the imagery list. See console for details."});
             });
     };
 
@@ -396,45 +401,43 @@ class ImageryList extends React.Component {
         if (imageryOptions.find(io => io.type === imagery.sourceConfig.type)) {
             this.setState({imageryToEdit: imagery});
         } else {
-            alert("This imagery type is no longer supported and cannot be edited.");
+            this.showAlert({title: "Imagery Not Supported", body: "This imagery type is no longer supported and cannot be edited."});
         }
     };
 
     deleteImagery = imageryId => {
-        if (confirm("Do you REALLY want to delete this imagery?")) {
-            fetch(
-                "/archive-institution-imagery",
-                {
-                    method: "POST",
-                    headers: {
-                        "Accept": "application/json",
-                        "Content-Type": "application/json"
-                    },
-                    body: JSON.stringify({
-                        institutionId: this.props.institutionId,
-                        imageryId
-                    })
+        this.setState({messageBox: null});
+        fetch(
+            "/archive-institution-imagery",
+            {
+                method: "POST",
+                headers: {
+                    "Accept": "application/json",
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    institutionId: this.props.institutionId,
+                    imageryId
+                })
+            }
+        )
+            .then(response => {
+                if (response.ok) {
+                    this.getImageryList();
+                    this.showAlert({title: "Imagery Deleted", body: "Imagery has been successfully deleted."});
+                } else {
+                    console.log(response);
+                    this.showAlert({title: "Error", body: "Error deleting imagery. See console for details."});
                 }
-            )
-                .then(response => {
-                    if (response.ok) {
-                        this.getImageryList();
-                        alert("Imagery has been successfully deleted.");
-                    } else {
-                        console.log(response);
-                        alert("Error deleting imagery. See console for details.");
-                    }
-                });
-        }
+            });
     };
 
     toggleVisibility = (imageryId, currentVisibility) => {
         const toVisibility = currentVisibility === "private" ? "public" : "private";
         if (this.props.userId === 1
                 && confirm(`Do you want to change the visibility from ${currentVisibility} to ${toVisibility}?`
-                    + toVisibility === "private"
-                    ? "  This will remove the imagery from other institutions' projects."
-                    : "")) {
+                    + `${toVisibility === "private"
+                        && "  This will remove the imagery from other institutions' projects."}`)) {
             fetch("/update-imagery-visibility",
                   {
                       method: "POST",
@@ -451,10 +454,10 @@ class ImageryList extends React.Component {
                 .then(response => {
                     if (response.ok) {
                         this.getImageryList();
-                        alert("Imagery visibility has been successfully updated.");
+                        this.showAlert({title: "Imagery Updated", body: "Imagery visibility has been successfully updated."});
                     } else {
                         console.log(response);
-                        alert("Error updating imagery visibility. See console for details.");
+                        this.showAlert({title: "Error", body: "Error updating imagery visibility. See console for details."});
                     }
                 });
         }
@@ -468,6 +471,27 @@ class ImageryList extends React.Component {
 
     titleIsTaken = (newTitle, idToExclude) =>
         this.state.imageryList.some(i => i.title === newTitle && i.id !== idToExclude);
+
+    showDeleteImageryWarning = id => this.setState({
+        messageBox: {
+            body: "Are you sure you want to delete this imagery? This is irreversible.",
+            closeText: "Cancel",
+            confirmText: "Yes, I'm sure",
+            danger: true,
+            onConfirm: () => this.deleteImagery(id),
+            title: "Warning: Removing Imagery",
+            type: "confirm"
+        }
+    });
+
+    showAlert = ({title, body, closeText}) => this.setState({
+        messageBox: {
+            body,
+            closeText,
+            title,
+            type: "alert"
+        }
+    });
 
     render() {
         return this.props.isVisible && (
@@ -507,13 +531,21 @@ class ImageryList extends React.Component {
                                 <Imagery
                                     key={id}
                                     canEdit={this.props.isAdmin && this.props.institutionId === institution}
-                                    deleteImagery={() => this.deleteImagery(id)}
+                                    deleteImagery={() => this.showDeleteImageryWarning(id)}
                                     selectEditImagery={() => this.selectEditImagery(id)}
                                     title={title}
                                     toggleVisibility={() => this.toggleVisibility(id, visibility)}
                                     visibility={visibility}
                                 />
                             ))}
+                        {this.state.messageBox && (
+                            <Modal
+                                {...this.state.messageBox}
+                                onClose={() => this.setState({messageBox: null})}
+                            >
+                                <p>{this.state.messageBox.body}</p>
+                            </Modal>
+                        )}
                     </>
                 )
         );
@@ -524,24 +556,26 @@ class NewImagery extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
-            newImageryTitle: "",
-            newImageryAttribution: "",
             selectedType: 0,
-            newImageryParams: {},
+            imageryTitle: "",
+            imageryAttribution: "",
+            imageryParams: {},
+            isProxied: false,
             addToAllProjects: false
         };
     }
 
     componentDidMount() {
-        const {imageryToEdit} = this.props;
-        if (imageryToEdit.id !== -1) {
-            const {type, ...imageryParams} = imageryToEdit.sourceConfig;
+        const {id, title, attribution, isProxied, sourceConfig} = this.props.imageryToEdit;
+        if (id !== -1) {
+            const {type, ...imageryParams} = sourceConfig;
             const selectedType = imageryOptions.findIndex(io => io.type === type);
             this.setState({
-                newImageryTitle: imageryToEdit.title,
-                newImageryAttribution: imageryToEdit.attribution,
                 selectedType,
-                newImageryParams: this.getImageryParams(type, imageryParams)
+                imageryTitle: title,
+                imageryAttribution: attribution,
+                isProxied,
+                imageryParams: this.getImageryParams(type, imageryParams)
             });
         } else {
             this.imageryTypeChangeHandler(0);
@@ -594,16 +628,16 @@ class NewImagery extends React.Component {
     };
 
     uploadCustomImagery = isNew => {
-        const sanitizedParams = this.sanitizeParams(this.state.selectedType, this.state.newImageryParams);
+        const sanitizedParams = this.sanitizeParams(this.state.selectedType, this.state.imageryParams);
         const messages = this.validateParams(this.state.selectedType, sanitizedParams);
         if (messages.length > 0) {
             alert(messages.join(", "));
         } else {
             const sourceConfig = this.buildSecureWatch(this.stackParams(sanitizedParams)); // TODO define SecureWatch so stack params works correctly.
-            if (this.state.newImageryTitle.length === 0 || this.state.newImageryAttribution.length === 0) {
+            if (this.state.imageryTitle.length === 0 || this.state.imageryAttribution.length === 0) {
                 alert("You must include a title and attribution.");
-            } else if (this.props.titleIsTaken(this.state.newImageryTitle, this.props.imageryToEdit.id)) {
-                alert("The title '" + this.state.newImageryTitle + "' is already taken.");
+            } else if (this.props.titleIsTaken(this.state.imageryTitle, this.props.imageryToEdit.id)) {
+                alert("The title '" + this.state.imageryTitle + "' is already taken.");
             } else {
                 fetch(isNew ? "/add-institution-imagery" : "/update-institution-imagery",
                       {
@@ -615,8 +649,9 @@ class NewImagery extends React.Component {
                           body: JSON.stringify({
                               institutionId: this.props.institutionId,
                               imageryId: this.props.imageryToEdit.id,
-                              imageryTitle: this.state.newImageryTitle,
-                              imageryAttribution: this.state.newImageryAttribution,
+                              imageryTitle: this.state.imageryTitle,
+                              imageryAttribution: this.state.imageryAttribution,
+                              isProxied: this.state.isProxied,
                               addToAllProjects: this.state.addToAllProjects,
                               sourceConfig
                           })
@@ -701,6 +736,20 @@ class NewImagery extends React.Component {
         </div>
     );
 
+    formCheck = (title, checked, callback) => (
+        <div key={title} className="mb-2">
+            <label>
+                <input
+                    checked={checked}
+                    className="mr-2"
+                    onChange={callback}
+                    type="checkbox"
+                />
+                {title}
+            </label>
+        </div>
+    );
+
     formTextArea = (title, value, callback, link = null, options = {}) => (
         <div key={title} className="mb-3">
             <label>{title}</label> {link}
@@ -724,15 +773,15 @@ class NewImagery extends React.Component {
         o.type === "select"
             ? this.formSelect(
                 o.display,
-                this.state.newImageryParams[o.key],
+                this.state.imageryParams[o.key],
                 e => this.setState({
-                    newImageryParams: {
-                        ...this.state.newImageryParams,
+                    imageryParams: {
+                        ...this.state.imageryParams,
                         [o.key]: e.target.value
                     },
-                    newImageryAttribution: imageryOptions[this.state.selectedType].type === "BingMaps"
+                    imageryAttribution: imageryOptions[this.state.selectedType].type === "BingMaps"
                         ? "Bing Maps API: " + e.target.value + " | © Microsoft Corporation"
-                        : this.state.newImageryAttribution
+                        : this.state.imageryAttribution
                 }),
                 o.options.map(el => <option key={el.value} value={el.value}>{el.label}</option>),
                 this.accessTokenLink(imageryOptions[this.state.selectedType].url, o.key)
@@ -740,9 +789,9 @@ class NewImagery extends React.Component {
             : ["textarea", "JSON"].includes(o.type)
                 ? this.formTextArea(
                     o.display,
-                    this.state.newImageryParams[o.key],
+                    this.state.imageryParams[o.key],
                     e => this.setState({
-                        newImageryParams: {...this.state.newImageryParams, [o.key]: e.target.value}
+                        imageryParams: {...this.state.imageryParams, [o.key]: e.target.value}
                     }),
                     this.accessTokenLink(imageryOptions[this.state.selectedType].url, o.key),
                     o.options ? o.options : {}
@@ -750,9 +799,9 @@ class NewImagery extends React.Component {
                 : this.formInput(
                     o.display,
                     o.type || "text",
-                    this.state.newImageryParams[o.key],
+                    this.state.imageryParams[o.key],
                     e => this.setState({
-                        newImageryParams: {...this.state.newImageryParams, [o.key]: e.target.value}
+                        imageryParams: {...this.state.imageryParams, [o.key]: e.target.value}
                     }),
                     this.accessTokenLink(imageryOptions[this.state.selectedType].url, o.key),
                     o.options ? o.options : {}
@@ -777,19 +826,22 @@ class NewImagery extends React.Component {
                             : "");
 
     imageryTypeChangeHandler = val => {
-        const defaultState = imageryOptions[val].params.reduce((acc, cur) => ({
+        const {type, params, defaultProxy} = imageryOptions[val];
+        const defaultState = params.reduce((acc, cur) => ({
             ...acc,
             [cur.key]: cur.type === "select" ? cur.options[0].value : ""
         }), {});
         this.setState({
             selectedType: val,
-            newImageryParams: defaultState,
-            newImageryAttribution: this.getImageryAttribution(imageryOptions[val].type)
+            imageryAttribution: this.getImageryAttribution(type),
+            isProxied: defaultProxy,
+            imageryParams: defaultState
         });
     };
 
     render() {
         const isNewImagery = this.props.imageryToEdit.id === -1;
+        const {type, params, optionalProxy} = imageryOptions[this.state.selectedType];
         return (
             <div className="mb-2 p-4 border rounded">
                 {/* Selection for imagery type */}
@@ -801,29 +853,33 @@ class NewImagery extends React.Component {
                         onChange={e => this.imageryTypeChangeHandler(e.target.value)}
                         value={this.state.selectedType}
                     >
+                        {/* eslint-disable-next-line react/no-array-index-key */}
                         {imageryOptions.map((o, i) => <option key={i} value={i}>{o.label || o.type}</option>)}
                     </select>
                 </div>
                 {/* Add fields. Include same for all and unique to selected type. */}
                 {this.formInput("Title",
                                 "text",
-                                this.state.newImageryTitle,
-                                e => this.setState({newImageryTitle: e.target.value}))}
+                                this.state.imageryTitle,
+                                e => this.setState({imageryTitle: e.target.value}))}
                 {/* This should be generalized into the imageryOptions */}
-                {["GeoServer", "xyz"].includes(imageryOptions[this.state.selectedType].type)
+                {["GeoServer", "xyz"].includes(type)
                     && this.formInput(
                         "Attribution",
                         "text",
-                        this.state.newImageryAttribution,
-                        e => this.setState({newImageryAttribution: e.target.value})
+                        this.state.imageryAttribution,
+                        e => this.setState({imageryAttribution: e.target.value})
                     )}
-                {imageryOptions[this.state.selectedType].params.map(o => this.formTemplate(o))}
+                {params.map(o => this.formTemplate(o))}
+                {optionalProxy && this.formCheck("Proxy Imagery",
+                                                 this.state.isProxied,
+                                                 () => this.setState({isProxied: !this.state.isProxied}))}
                 {/* Action buttons for save and quit */}
                 <div className="btn-group-vertical btn-block">
-                    <div>
+                    <div className="mb-3">
                         <input
                             checked={this.state.addToAllProjects}
-                            className="mr-3"
+                            className="mr-2"
                             id="add-to-all"
                             onChange={() => this.setState({addToAllProjects: !this.state.addToAllProjects})}
                             type="checkbox"
@@ -919,7 +975,7 @@ function ProjectList({isAdmin, institutionId, projectList, isVisible, deleteProj
                         <button
                             className="btn btn-sm btn-block btn-outline-yellow py-2 font-weight-bold"
                             id="create-project"
-                            onClick={() => window.location = `/create-project?institutionId=${institutionId}`}
+                            onClick={() => window.location.assign(`/create-project?institutionId=${institutionId}`)}
                             type="button"
                         >
                             <UnicodeIcon backgroundColor="#f1c00f" icon="add"/>Create New Project
@@ -954,7 +1010,7 @@ function Project({project, isAdmin, deleteProject}) {
             <div className="col overflow-hidden">
                 <button
                     className="btn btn-sm btn-outline-lightgreen btn-block text-truncate"
-                    onClick={() => window.location = `/collection?projectId=${project.id}`}
+                    onClick={() => window.location.assign(`/collection?projectId=${project.id}`)}
                     style={{
                         boxShadow: project.percentComplete === 0.0
                             ? "0px 0px 6px 1px red inset"
@@ -973,7 +1029,7 @@ function Project({project, isAdmin, deleteProject}) {
                     <div className="d-flex">
                         <span
                             className="btn btn-sm btn-outline-yellow btn-block px-3 mr-1"
-                            onClick={() => window.location = `/review-project?projectId=${project.id}`}
+                            onClick={() => window.location.assign(`/review-project?projectId=${project.id}`)}
                             title="Edit Project"
                         >
                             <UnicodeIcon icon="edit"/>
@@ -1120,9 +1176,9 @@ class UserList extends React.Component {
                         || iu.institutionRole === "admin")
                     .sort((a, b) => sortAlphabetically(a.email, b.email))
                     .sort((a, b) => sortAlphabetically(a.institutionRole, b.institutionRole))
-                    .map((iu, uid) => (
+                    .map(iu => (
                         <User
-                            key={uid}
+                            key={iu}
                             isAdmin={this.props.isAdmin}
                             updateUserInstitutionRole={this.updateUserInstitutionRole}
                             user={iu}
@@ -1146,7 +1202,7 @@ function User({user, isAdmin, updateUserInstitutionRole}) {
             <div className="col mb-1 overflow-hidden">
                 <button
                     className="btn btn-sm btn-outline-lightgreen btn-block text-truncate"
-                    onClick={() => window.location = `/account?accountId=${user.id}`}
+                    onClick={() => window.location.assign(`/account?accountId=${user.id}`)}
                     title={user.email}
                     type="button"
                 >
@@ -1239,7 +1295,11 @@ class NewUserButtons extends React.Component {
 
 export function pageInit(args) {
     ReactDOM.render(
-        <NavigationBar userId={args.userId} userName={args.userName}>
+        <NavigationBar
+            userId={args.userId}
+            userName={args.userName}
+            version={args.version}
+        >
             <ReviewInstitution
                 institutionId={parseInt(args.institutionId || "-1")}
                 userId={args.userId || -1}

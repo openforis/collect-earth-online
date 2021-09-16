@@ -2,7 +2,8 @@
   (:require [clojure.data.json :as json]
             [clojure.string :as str]
             [cognitect.transit :as transit]
-            [hiccup.page :refer [html5 include-js include-css]])
+            [hiccup.page :refer [html5 include-js include-css]]
+            [collect-earth-online.git :refer [current-version]])
   (:import java.io.ByteArrayOutputStream))
 
 (defn kebab->camel [kebab]
@@ -68,7 +69,8 @@
                           announcement]))
                      [:div#app]]
                     [:label "No webpack files found. Check if webpack is running, or wait for it to finish compiling."])
-                  (js-init page (:params request))])})))
+                  (js-init page (assoc (:params request)
+                                       :version (current-version)))])})))
 
 (defn not-found-page [request]
   (-> request

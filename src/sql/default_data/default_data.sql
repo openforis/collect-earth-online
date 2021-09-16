@@ -8,6 +8,6 @@ VALUES
     (3, 'pending');
 
 INSERT INTO users
-    (user_uid, email, password, administrator, reset_key, on_mailing_list)
+    (user_uid, email, password, administrator, reset_key)
 VALUES
-    (-1, 'guest', '', false, null, false);
+    (-1, 'guest', '', false, null);

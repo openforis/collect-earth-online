@@ -1,7 +1,6 @@
 import React from "react";
 import ReactDOM from "react-dom";
 import {NavigationBar} from "./components/PageComponents";
-import {getQueryString} from "./utils/generalUtils";
 
 class Login extends React.Component {
     constructor(props) {
@@ -16,8 +15,11 @@ class Login extends React.Component {
         fetch("/login",
               {
                   method: "POST",
-                  headers: {"Content-Type": "application/x-www-form-urlencoded"},
-                  body: getQueryString(this.state)
+                  headers: {
+                      "Accept": "application/json",
+                      "Content-Type": "application/json"
+                  },
+                  body: JSON.stringify(this.state)
               })
             .then(response => Promise.all([response.ok, response.json()]))
             .then(data => {
@@ -76,7 +78,7 @@ class Login extends React.Component {
                             <input
                                 className="btn btn-lightgreen"
                                 name="register"
-                                onClick={() => window.location = "/register"}
+                                onClick={() => window.location.assign("/register")}
                                 type="button"
                                 value="Register"
                             />
@@ -90,7 +92,11 @@ class Login extends React.Component {
 
 export function pageInit(args) {
     ReactDOM.render(
-        <NavigationBar userId={args.userId} userName={args.userName}>
+        <NavigationBar
+            userId={args.userId}
+            userName={args.userName}
+            version={args.version}
+        >
             <Login
                 returnurl={args.returnurl || ""}
             />

@@ -3,7 +3,6 @@ import ReactDOM from "react-dom";
 
 import {FormLayout, SectionBlock, StatsCell, StatsRow} from "./components/FormComponents";
 import {NavigationBar} from "./components/PageComponents";
-import {getQueryString} from "./utils/generalUtils";
 
 function Account(props) {
     const sameAsUser = props.userId === props.accountId;
@@ -82,9 +81,9 @@ class UserStats extends React.Component {
                         && (
                             <div className="ProjectStats__user-table">
                                 <strong>User Stats:</strong>
-                                {perProject.map((project, uid) => (
+                                {perProject.map(project => (
                                     <StatsRow
-                                        key={uid}
+                                        key={project.id}
                                         analysisTime={project.analysisAverage}
                                         plots={project.plotCount}
                                         title={`#${project.id} - ${project.name}`}
@@ -114,8 +113,11 @@ class AccountForm extends React.Component {
         fetch("/account",
               {
                   method: "POST",
-                  headers: {"Content-Type": "application/x-www-form-urlencoded"},
-                  body: getQueryString(this.state)
+                  headers: {
+                      "Accept": "application/json",
+                      "Content-Type": "application/json"
+                  },
+                  body: JSON.stringify(this.state)
               })
             .then(response => Promise.all([response.ok, response.json()]))
             .then(data => {
@@ -207,7 +209,11 @@ class AccountForm extends React.Component {
 
 export function pageInit(args) {
     ReactDOM.render(
-        <NavigationBar userId={args.userId} userName={args.userName}>
+        <NavigationBar
+            userId={args.userId}
+            userName={args.userName}
+            version={args.version}
+        >
             <Account
                 accountId={parseInt(args.accountId || args.userId)}
                 userId={args.userId}

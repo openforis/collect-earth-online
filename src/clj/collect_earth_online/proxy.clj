@@ -1,7 +1,7 @@
 (ns collect-earth-online.proxy
   (:require [clojure.string  :as str]
             [clj-http.client :as client]
-            [collect-earth-online.utils.type-conversion :as tc]
+            [triangulum.type-conversion :as tc]
             [collect-earth-online.utils.part-utils      :as pu]
             [collect-earth-online.db.imagery :refer [get-imagery-source-config]]))
 

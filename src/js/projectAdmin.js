@@ -16,6 +16,13 @@ class Project extends React.Component {
             institution: -1,
             name: "",
             description: "",
+            designSettings: {
+                sampleGeometries: {
+                    points: true,
+                    lines: true,
+                    polygons: true
+                }
+            },
             projectOptions: {
                 showGEEScript: false,
                 showPlotInformation: false,
@@ -54,7 +61,8 @@ class Project extends React.Component {
             originalProject: {},
             institutionImagery: [],
             designMode: "loading",
-            modalMessage: null
+            modalMessage: null,
+            wizardStep: "overview"
         };
     }
 
@@ -140,7 +148,8 @@ class Project extends React.Component {
                     setProjectDetails: this.setProjectDetails,
                     setContextState: this.setContextState,
                     resetProject: this.resetProject,
-                    processModal: this.processModal
+                    processModal: this.processModal,
+                    wizardStep: this.state.wizardStep
                 }}
             >
                 {this.state.modalMessage && <LoadingModal message={this.state.modalMessage}/>}
@@ -154,7 +163,11 @@ class Project extends React.Component {
 
 export function pageInit(args) {
     ReactDOM.render(
-        <NavigationBar userId={args.userId} userName={args.userName}>
+        <NavigationBar
+            userId={args.userId}
+            userName={args.userName}
+            version={args.version}
+        >
             <Project
                 institutionId={parseInt(args.institutionId) || -1}
                 projectId={parseInt(args.projectId) || -1}
