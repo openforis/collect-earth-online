@@ -225,21 +225,23 @@
            percent    :percent
            smes       :smes} (:qaqcAssignment design-settings)
           {:keys [users]}    (:userAssignment design-settings)]
-      (concat assigned-plots
-              (->> assigned-plots
-                   (group-by :user_rid)
-                   (map (fn [[user-id user-plots]]
-                          [user-id (take (ceil-percent (count user-plots) percent)
-                                         user-plots)]))
-                   (reduce (fn [acc [user-id user-plots]]
-                             (let [other-users (case qaqc-method
-                                                 "overlap" (remove #(= user-id %) users)
-                                                 "sme"     smes
-                                                 nil)]
-                               (concat acc (equally-assign-users user-plots
-                                                                 other-users
-                                                                 :plot_rid))))
-                           []))))))
+      (if (= "none" qaqc-method)
+        assigned-plots
+        (concat assigned-plots
+                (->> assigned-plots
+                     (group-by :user_rid)
+                     (map (fn [[user-id user-plots]]
+                            [user-id (take (ceil-percent (count user-plots) percent)
+                                           user-plots)]))
+                     (reduce (fn [acc [user-id user-plots]]
+                               (let [other-users (case qaqc-method
+                                                   "overlap" (remove #(= user-id %) users)
+                                                   "sme"     smes
+                                                   nil)]
+                                 (concat acc (equally-assign-users user-plots
+                                                                   other-users
+                                                                   :plot_rid))))
+                             [])))))))
 
 (defn- create-project-samples! [project-id
                                 plot-shape
