@@ -13,6 +13,19 @@ Crowd-sourced visual interpretation of on-demand satellite imagery
 - [[https://www.7-zip.org/][p7zip]]
 - [[https://nodejs.org/en/][node 10]]
 
+** Application Configuration
+
+On startup, the CEO application reads a file called config.edn
+in the top level directory of this repository, which contains various
+user-configurable system parameters. A sample file called
+config.default.edn is provided with this repository to get you started.
+To begin, simply copy it to config.edn. Then edit it according to the
+following sections.
+
+Please note that you must replace all values surrounded with angle
+brackets (e.g., "<api-key>") with actual values for the application to
+work correctly. Most of the fields should be self-explanatory.
+
 ** Postgresql Database Setup
 
 *Postgresql* needs to be installed on the machine that will be hosting
@@ -27,7 +40,7 @@ should navigate to the toplevel directory (i.e., the directory
 containing this README) and run the database build command as follows:
 
 #+begin_src sh
-clojure -M:build-db build-all -d ceo
+clojure -M:build-db build-all
 #+end_src
 
 This will begin by creating a new database and role called ceo and
@@ -118,30 +131,7 @@ Replace *X* with the PostgreSQL version installed on your computer.
 
 ** Development Web Server
 
-*** Configurations
-
-Begin by making a copy of the default config file:
-#+begin_src sh
-cp config.default.edn config.edn
-#+end_src
-
-**** Database
-
-Enter the database configurations into to ~:database~ portion of the
-~config.edn~ file. If you are using an external database, be sure to provide
-a ~:host~ and ~:port~.
-
-#+begin_src clojure
-;; config.edn
-{:database {:host     "localhost" ; optional
-            :port     5432        ; optional
-            :dbname   "ceo"
-            :user     "ceo"
-            :password "ceo"}
- ...}
-#+end_src
-
-**** Compile and run
+*** Compile and run
 
 To compile and run the web application, navigate to the top level
 project directory and run:
@@ -149,7 +139,7 @@ project directory and run:
 #+begin_src sh
 npm install
 npm run webpack-dev
-clojure -M:build-db functions -d ceo
+clojure -M:build-db functions
 clojure -M:run-server -m dev [-p 8080] [-P 8443]
 #+end_src
 
@@ -180,45 +170,11 @@ system performance.
 - [[https://certbot.eff.org/][certbot]]
 - [[https://www.openssl.org/source/][openssl]]
 
-*** Configurations
-
-Begin by making a copy of the default config file in the project root directory:
-#+begin_src sh
-cp config.default.edn config.edn
-#+end_src
-
-**** Database
-
-Enter the database configurations into to ~:database~ portion of the
-~config.edn~ file. If you are using an external database, be sure to provide
-a ~:host~ and ~:port~.
-
-#+begin_src clojure
-;; config.edn
-{:database {:host     "localhost" ; optional
-            :port     5432        ; optional
-            :dbname   "ceo"
-            :user     "ceo"
-            :password "ceo"}
- ...}
-#+end_src
-
-**** Email Server
+*** Email Server
 
 To set up the email server for system emails, open the "config.edn" file in
-the root directory of the application. Edit the following EDN object containing
-server details to the file, replacing the values with your own:
-
-#+begin_src clojure
-;; config.edn
-{...
- :mail     {:host                  "smtp.gmail.com"
-            :user                  "support-my-domain@gmail.com"
-            :pass                  "foobarbaz200"
-            :tls                   true
-            :port                  587
-            :base-url              "https://my.domain/"}}
-#+end_src
+the root directory of the application. Edit the default EDN object containing
+server details to the file, replacing the values with your own.
 
 *** Enabling HTTPS
 
