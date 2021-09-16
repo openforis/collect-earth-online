@@ -1109,7 +1109,7 @@ class PlotNavigation extends React.Component {
         </div>
     );
 
-    confidenceThreshold = (threshold, setThreshold) => (
+    thresholdSlider = (threshold, setThreshold) => (
         <div className="my-2 d-flex align-items-center">
             <h3 className="w-100 mx-2 my-0">Threshold:</h3>
             <div className="d-flex">
@@ -1157,7 +1157,7 @@ class PlotNavigation extends React.Component {
                     </select>
                 </div>
                 {isProjectAdmin && this.adminMode(inAdminMode, setAdminMode)}
-                {navigationMode === "confidence" && this.confidenceThreshold(threshold, setThreshold)}
+                {navigationMode === "confidence" && this.thresholdSlider(threshold, setThreshold)}
                 {loadingPlots
                     ? <h3>Loading plot data...</h3>
                     : showNavButtons
