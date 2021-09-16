@@ -14,6 +14,7 @@ import {
 } from "./imagery/collectionMenuControls";
 import {CollapsibleTitle} from "./components/FormComponents";
 import Modal from "./components/Modal";
+import Select from "./components/Select";
 import Switch from "./components/Switch";
 
 import {UnicodeIcon, getQueryString, safeLength, isNumber, invertColor, asPercentage} from "./utils/generalUtils";
@@ -333,12 +334,13 @@ class Collection extends React.Component {
                         alert(this.navErrorMessage(direction, navigationMode));
                     } else {
                         this.setState({
-                            currentPlot: data,
-                            ...this.newPlotValues(data),
+                            allPlots: data,
+                            currentPlot: data[0],
+                            ...this.newPlotValues(data[0]),
                             answerMode: "question"
                         });
                         // TODO, this is probably redundant.  Projects are not allowed to be created with no samples.
-                        this.warnOnNoSamples(data);
+                        this.warnOnNoSamples(data[0]);
                     }
                 })
                 .catch(response => {
@@ -537,6 +539,8 @@ class Collection extends React.Component {
     };
 
     setThreshold = threshold => this.setState({threshold});
+
+    setCurrentPlot = currentPlot => this.setState({currentPlot, ...this.newPlotValues(currentPlot)});
 
     postValuesToDB = () => {
         if (this.state.currentPlot.flagged) {
@@ -852,6 +856,7 @@ class Collection extends React.Component {
                     userName={this.props.userName}
                 >
                     <PlotNavigation
+                        allPlots={this.state.allPlots}
                         collectConfidence={this.state.currentProject?.projectOptions?.collectConfidence}
                         currentPlot={this.state.currentPlot}
                         inAdminMode={this.state.inAdminMode}
@@ -863,6 +868,7 @@ class Collection extends React.Component {
                         navToPlot={this.navToPlot}
                         navToPrevPlot={this.navToPrevPlot}
                         setAdminMode={this.setAdminMode}
+                        setCurrentPlot={this.setCurrentPlot}
                         setNavigationMode={this.setNavigationMode}
                         setThreshold={this.setThreshold}
                         showNavButtons={this.state.currentPlot.id}
@@ -1127,14 +1133,34 @@ class PlotNavigation extends React.Component {
         </div>
     );
 
+    selectPlot = (currentPlot, allPlots, setCurrentPlot) => {
+        const options = allPlots.map(({email}, index) => ({index, email}));
+        const currentIndex = allPlots.indexOf(currentPlot);
+        return (
+            <div className="my-2 d-flex align-items-center justify-content-center">
+                <Select
+                    label="User:"
+                    labelKey="email"
+                    onChange={e => setCurrentPlot(allPlots[parseInt(e.target.value)])}
+                    options={options}
+                    value={currentIndex}
+                    valueKey="index"
+                />
+            </div>
+        );
+    };
+
     render() {
         const {
+            allPlots,
+            currentPlot,
             collectConfidence,
             inAdminMode,
             isProjectAdmin,
             loadingPlots,
             navigationMode,
             setAdminMode,
+            setCurrentPlot,
             setNavigationMode,
             setThreshold,
             showNavButtons,
@@ -1159,6 +1185,7 @@ class PlotNavigation extends React.Component {
                     </div>
                     {isProjectAdmin && this.adminMode(inAdminMode, setAdminMode)}
                     {navigationMode === "confidence" && this.thresholdSlider(threshold, setThreshold)}
+                    {inAdminMode && allPlots?.length > 1 && this.selectPlot(currentPlot, allPlots, setCurrentPlot)}
                 </div>
                 <div className="mt-2">
                     {loadingPlots

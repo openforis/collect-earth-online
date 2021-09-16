@@ -1,7 +1,7 @@
 import React from "react";
 
 import {ProjectContext} from "./constants";
-import {Select} from "../components/Select";
+import Select from "../components/Select";
 
 export default class QualityControl extends React.Component {
     constructor(props) {

@@ -1,7 +1,7 @@
 import React from "react";
 
 import {ProjectContext} from "./constants";
-import {Select} from "../components/Select";
+import Select from "../components/Select";
 import {removeAtIndex} from "../utils/generalUtils";
 
 export default class AssignPlots extends React.Component {
