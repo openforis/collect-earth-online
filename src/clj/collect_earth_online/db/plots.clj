@@ -75,6 +75,7 @@
         direction       (:direction params "next")
         project-id      (tc/val->int (:projectId params))
         visible-id      (tc/val->int (:visibleId params))
+        threshold       (tc/val->int (:threshold params))
         user-id         (:userId params -1)
         admin-mode?     (and (tc/val->bool (:inAdminMode params))
                              (is-proj-admin? user-id project-id nil))
@@ -83,6 +84,7 @@
                            ;; FIXME, CEO-217 analyzed mode + admin mode does not work for multiple users.
                           "analyzed"   (call-sql "select_analyzed_plots" project-id user-id admin-mode?)
                           "flagged"    (call-sql "select_flagged_plots" project-id user-id admin-mode?)
+                          "confidence" (call-sql "select_confidence_plots" project-id user-id admin-mode? threshold)
                           [])
         plot-info       (case direction
                           "next"     (some (fn [{:keys [visible_id] :as plot}]
