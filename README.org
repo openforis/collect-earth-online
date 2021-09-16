@@ -15,18 +15,16 @@ Crowd-sourced visual interpretation of on-demand satellite imagery
 
 ** Application Configuration
 
-On startup, the Pyregence application reads a file called config.edn
-in the toplevel directory of this repository, which contains various
+On startup, the CEO application reads a file called config.edn
+in the top level directory of this repository, which contains various
 user-configurable system parameters. A sample file called
-config.default.edn is provided with this repository to get you
-started. To begin, simply rename (or copy) it to config.edn. Then edit
-it according to the following sections.
+config.default.edn is provided with this repository to get you started.
+To begin, simply copy it to config.edn. Then edit it according to the
+following sections.
 
 Please note that you must replace all values surrounded with angle
 brackets (e.g., "<api-key>") with actual values for the application to
-work correctly. While most of the fields should be self-explanatory,
-the ~:wildfire-camera-api-key~ field may not be. This is simply an API
-key for the [[http://alertwildfire.org][AlertWildfire]] API.
+work correctly. Most of the fields should be self-explanatory.
 
 ** Postgresql Database Setup
 
