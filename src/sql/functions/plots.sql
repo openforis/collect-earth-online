@@ -124,6 +124,26 @@ CREATE OR REPLACE FUNCTION select_flagged_plots(_project_id integer, _user_id in
 
 $$ LANGUAGE SQL;
 
+CREATE OR REPLACE FUNCTION select_confidence_plots(_project_id integer, _user_id integer, _admin_mode boolean, _threshold integer)
+ RETURNS setOf collection_return AS $$
+
+    SELECT plot_uid,
+        flagged,
+        flagged_reason,
+        confidence,
+        visible_id,
+        ST_AsGeoJSON(plot_geom) as plot_geom,
+        extra_plot_info
+    FROM plots
+    INNER JOIN user_plots up
+        ON plot_uid = plot_rid
+    WHERE project_rid = _project_id
+        AND (up.user_rid = _user_id OR _admin_mode)
+        AND confidence <= _threshold
+    ORDER BY visible_id ASC
+
+$$ LANGUAGE SQL;
+
 -- Lock plot to user
 CREATE OR REPLACE FUNCTION lock_plot(_plot_id integer, _user_id integer, _lock_end timestamp)
  RETURNS VOID AS $$

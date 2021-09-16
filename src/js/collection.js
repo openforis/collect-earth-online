@@ -48,7 +48,8 @@ class Collection extends React.Component {
             showQuitModal: false,
             answerMode: "question",
             modalMessage: null,
-            navigationMode: "unanalyzed"
+            navigationMode: "unanalyzed",
+            threshold: 90
         };
     }
 
@@ -314,7 +315,7 @@ class Collection extends React.Component {
     };
 
     getPlotData = (visibleId, direction) => {
-        const {navigationMode, inAdminMode} = this.state;
+        const {navigationMode, inAdminMode, threshold} = this.state;
         const {projectId} = this.props;
         this.processModal(
             "Getting plot",
@@ -323,7 +324,8 @@ class Collection extends React.Component {
                 projectId,
                 navigationMode,
                 direction,
-                inAdminMode
+                inAdminMode,
+                threshold
             }))
                 .then(response => (response.ok ? response.json() : Promise.reject(response)))
                 .then(data => {
@@ -533,6 +535,8 @@ class Collection extends React.Component {
         this.setState({inAdminMode});
         setProjectPreferences(currentProject.id, {inAdminMode});
     };
+
+    setThreshold = threshold => this.setState({threshold});
 
     postValuesToDB = () => {
         if (this.state.currentPlot.flagged) {
@@ -848,6 +852,7 @@ class Collection extends React.Component {
                     userName={this.props.userName}
                 >
                     <PlotNavigation
+                        collectConfidence={this.state.currentProject?.projectOptions?.collectConfidence}
                         currentPlot={this.state.currentPlot}
                         inAdminMode={this.state.inAdminMode}
                         isProjectAdmin={this.state.currentProject.isProjectAdmin}
@@ -859,7 +864,9 @@ class Collection extends React.Component {
                         navToPrevPlot={this.navToPrevPlot}
                         setAdminMode={this.setAdminMode}
                         setNavigationMode={this.setNavigationMode}
+                        setThreshold={this.setThreshold}
                         showNavButtons={this.state.currentPlot.id}
+                        threshold={this.state.threshold}
                     />
                     <ExternalTools
                         currentPlot={this.state.currentPlot}
@@ -1091,8 +1098,8 @@ class PlotNavigation extends React.Component {
     );
 
     adminMode = (inAdminMode, setAdminMode) => (
-        <div className="my-2">
-            <h4 className="w-100 mr-2" style={{display: "inline"}}>Admin Mode:</h4>
+        <div className="d-flex my-2 mx-2 align-items-center justify-content-end">
+            <h4 className="mx-2 my-0">Admin Mode:</h4>
             <div style={{display: "inline-block"}}>
                 <Switch
                     checked={inAdminMode}
@@ -1102,20 +1109,41 @@ class PlotNavigation extends React.Component {
         </div>
     );
 
+    confidenceThreshold = (threshold, setThreshold) => (
+        <div className="my-2 d-flex align-items-center">
+            <h3 className="w-100 mx-2 my-0">Threshold:</h3>
+            <div className="d-flex">
+                <input
+                    max="100"
+                    min="0"
+                    onChange={e => setThreshold(parseInt(e.target.value))}
+                    type="range"
+                    value={threshold}
+                />
+                <div className="ml-2" style={{fontSize: "0.8rem"}}>
+                    {`${threshold}%`}
+                </div>
+            </div>
+        </div>
+    );
+
     render() {
         const {
-            setNavigationMode,
-            navigationMode,
-            loadingPlots,
+            collectConfidence,
             inAdminMode,
             isProjectAdmin,
+            loadingPlots,
+            navigationMode,
             setAdminMode,
-            showNavButtons
+            setNavigationMode,
+            setThreshold,
+            showNavButtons,
+            threshold
         } = this.props;
         return (
-            <div className="text-center mt-2">
+            <div className="mt-2">
                 <div className="d-flex align-items-center my-2">
-                    <h3 className="w-100">Navigate Through:</h3>
+                    <h3 className="w-100 mx-2 my-0">Navigate Through:</h3>
                     <select
                         className="form-control form-control-sm mr-2"
                         onChange={e => setNavigationMode(e.target.value)}
@@ -1125,9 +1153,11 @@ class PlotNavigation extends React.Component {
                         <option value="unanalyzed">Unanalyzed plots</option>
                         <option value="analyzed">Analyzed plots</option>
                         <option value="flagged">Flagged plots</option>
+                        {collectConfidence && (<option value="confidence">Low Confidence</option>)}
                     </select>
                 </div>
                 {isProjectAdmin && this.adminMode(inAdminMode, setAdminMode)}
+                {navigationMode === "confidence" && this.confidenceThreshold(threshold, setThreshold)}
                 {loadingPlots
                     ? <h3>Loading plot data...</h3>
                     : showNavButtons

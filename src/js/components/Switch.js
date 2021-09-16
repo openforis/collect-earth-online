@@ -2,7 +2,7 @@ import React from "react";
 
 export default function Switch({label, onChange, checked}) {
     return (
-        <label className="switch">
+        <label className="switch mb-0">
             <input
                 checked={checked}
                 onChange={onChange}
