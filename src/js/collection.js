@@ -1142,27 +1142,31 @@ class PlotNavigation extends React.Component {
         } = this.props;
         return (
             <div className="mt-2">
-                <div className="d-flex align-items-center my-2">
-                    <h3 className="w-100 mx-2 my-0">Navigate Through:</h3>
-                    <select
-                        className="form-control form-control-sm mr-2"
-                        onChange={e => setNavigationMode(e.target.value)}
-                        style={{flex: "1 1 auto"}}
-                        value={navigationMode}
-                    >
-                        <option value="unanalyzed">Unanalyzed plots</option>
-                        <option value="analyzed">Analyzed plots</option>
-                        <option value="flagged">Flagged plots</option>
-                        {collectConfidence && (<option value="confidence">Low Confidence</option>)}
-                    </select>
+                <div className="p-1" style={{border: "1px solid lightgray", borderRadius: "0.2rem"}}>
+                    <div className="d-flex align-items-center my-2">
+                        <h3 className="w-100 mx-2 my-0">Navigate Through:</h3>
+                        <select
+                            className="form-control form-control-sm mr-2"
+                            onChange={e => setNavigationMode(e.target.value)}
+                            style={{flex: "1 1 auto"}}
+                            value={navigationMode}
+                        >
+                            <option value="unanalyzed">Unanalyzed plots</option>
+                            <option value="analyzed">Analyzed plots</option>
+                            <option value="flagged">Flagged plots</option>
+                            {collectConfidence && (<option value="confidence">Low Confidence</option>)}
+                        </select>
+                    </div>
+                    {isProjectAdmin && this.adminMode(inAdminMode, setAdminMode)}
+                    {navigationMode === "confidence" && this.thresholdSlider(threshold, setThreshold)}
                 </div>
-                {isProjectAdmin && this.adminMode(inAdminMode, setAdminMode)}
-                {navigationMode === "confidence" && this.thresholdSlider(threshold, setThreshold)}
-                {loadingPlots
-                    ? <h3>Loading plot data...</h3>
-                    : showNavButtons
-                        ? this.navButtons()
-                        : this.gotoButton()}
+                <div className="mt-2">
+                    {loadingPlots
+                        ? <h3>Loading plot data...</h3>
+                        : showNavButtons
+                            ? this.navButtons()
+                            : this.gotoButton()}
+                </div>
             </div>
         );
     }
