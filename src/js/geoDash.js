@@ -108,7 +108,7 @@ class Geodash extends React.Component {
             return fetch(`/get-plot-sample-geom?plotId=${plotId}`)
                 .then(response => (response.ok ? response.json() : Promise.reject(response)))
                 .then(plotJsonObject => {
-                    const features = [plotJsonObject.plotGeom, ...(plotJsonObject.sampleGeoms || [])]
+                    const features = [plotJsonObject.plotGeom, ...(plotJsonObject.samplesGeoms || [])] // FIXME, samplesGeoms should be sampleGeoms
                         .filter(e => e)
                         .map(geom => new Feature({geometry: mercator.parseGeoJson(geom, true)}));
                     return Promise.resolve(new Vector({features}));
