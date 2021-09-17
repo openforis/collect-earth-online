@@ -1242,7 +1242,7 @@ $$ LANGUAGE SQL;
 -- TODO, return WKT geom
 CREATE OR REPLACE FUNCTION dump_project_plot_data(_project_id integer)
  RETURNS table (
-    plot_id                    integer,
+    plotid                     integer,
     center_lon                 double precision,
     center_lat                 double precision,
     size_m                     text,
@@ -1259,7 +1259,7 @@ CREATE OR REPLACE FUNCTION dump_project_plot_data(_project_id integer)
     extra_plot_info            jsonb
  ) AS $$
 
-    SELECT plot_uid,
+    SELECT pl.visible_id,
         ST_X(ST_Centroid(plot_geom)) AS lon,
         ST_Y(ST_Centroid(plot_geom)) AS lat,
         plot_shape,
@@ -1300,8 +1300,8 @@ $$ LANGUAGE SQL;
 -- Returns project raw data
 CREATE OR REPLACE FUNCTION dump_project_sample_data(_project_id integer)
  RETURNS table (
-        plot_id               integer,
-        sample_id             integer,
+        plotid                integer,
+        sampleid              integer,
         lon                   double precision,
         lat                   double precision,
         email                 text,
@@ -1316,8 +1316,8 @@ CREATE OR REPLACE FUNCTION dump_project_sample_data(_project_id integer)
         extra_sample_info     jsonb
  ) AS $$
 
-    SELECT plot_uid,
-        sample_uid,
+    SELECT pl.visible_id,
+        s.visible_id,
         ST_X(ST_Centroid(sample_geom)) AS lon,
         ST_Y(ST_Centroid(sample_geom)) AS lat,
         email,
