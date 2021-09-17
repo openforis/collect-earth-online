@@ -708,6 +708,7 @@ class AnswerInput extends React.Component {
     render() {
         const {surveyNode, surveyNode: {answers, dataType}, validateAndSetCurrentValue} = this.props;
         const {newInput} = this.state;
+        const required = false;
         return answers[0]
             ? (
                 <div className="d-inline-flex">
@@ -720,7 +721,7 @@ class AnswerInput extends React.Component {
                             }}
                         />
                     </div>
-                    {require ? (
+                    {required ? (
                         <RequiredInput
                             key={answers[0].answer + "_" + answers[0].id}
                             className="form-control mr-2"
@@ -750,7 +751,7 @@ class AnswerInput extends React.Component {
                         id="save-input"
                         name="save-input"
                         onClick={() => {
-                            if (newInput) validateAndSetCurrentValue(surveyNode, answers[0].id, newInput);
+                            if (!required || newInput) validateAndSetCurrentValue(surveyNode, answers[0].id, newInput);
                         }}
                         style={{height: "2.5rem"}}
                         type="button"
