@@ -720,17 +720,31 @@ class AnswerInput extends React.Component {
                             }}
                         />
                     </div>
-                    <RequiredInput
-                        key={answers[0].answer + "_" + answers[0].id}
-                        className="form-control mr-2"
-                        id={answers[0].answer + "_" + answers[0].id}
-                        onChange={e => this.updateInputValue(dataType === "number"
-                            ? Number(e.target.value)
-                            : e.target.value)}
-                        placeholder={answers[0].answer}
-                        type={dataType}
-                        value={newInput}
-                    />
+                    {require ? (
+                        <RequiredInput
+                            key={answers[0].answer + "_" + answers[0].id}
+                            className="form-control mr-2"
+                            id={answers[0].answer + "_" + answers[0].id}
+                            onChange={e => this.updateInputValue(dataType === "number"
+                                ? Number(e.target.value)
+                                : e.target.value)}
+                            placeholder={answers[0].answer}
+                            type={dataType}
+                            value={newInput}
+                        />
+                    ) : (
+                        <input
+                            className="form-control mr-2"
+                            id={answers[0].answer + "_" + answers[0].id}
+                            name={answers[0].answer + "_" + answers[0].id}
+                            onChange={e => this.updateInputValue(dataType === "number"
+                                ? Number(e.target.value)
+                                : e.target.value)}
+                            placeholder={answers[0].answer}
+                            type={dataType}
+                            value={newInput}
+                        />
+                    )}
                     <button
                         className="text-center btn btn-outline-lightgreen btn-sm ml-2"
                         id="save-input"
