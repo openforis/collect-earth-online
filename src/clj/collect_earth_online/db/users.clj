@@ -1,10 +1,11 @@
 (ns collect-earth-online.db.users
-  (:import java.time.format.DateTimeFormatter
+  (:import java.net.URLEncoder
+           java.time.format.DateTimeFormatter
            java.time.LocalDateTime
            java.util.UUID)
   (:require [clojure.string :as str]
-            [collect-earth-online.utils.type-conversion :as tc]
-            [collect-earth-online.database   :refer [call-sql sql-primitive]]
+            [triangulum.database :refer [call-sql sql-primitive]]
+            [triangulum.type-conversion :as tc]
             [collect-earth-online.utils.mail :refer [email? send-mail get-base-url]]
             [collect-earth-online.views      :refer [data-response]]))
 
@@ -58,7 +59,7 @@
                                    "  %sverify-email?email=%s&passwordResetKey=%s\n\n"
                                    "Kind Regards,\n"
                                    "  The CEO Team")
-                              email email timestamp (get-base-url) email reset-key)]
+                              email email timestamp (get-base-url) (URLEncoder/encode email) reset-key)]
         (call-sql "add_user" email password reset-key)
         (try
           (send-mail email nil nil "Welcome to CEO!" email-msg "text/plain")

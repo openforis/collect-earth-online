@@ -777,21 +777,30 @@ mercator.updateLayerWmsParams = (mapConfig, layerId, newParams, url = null) => {
 
 // [Side Effects] Zooms the map view to contain the passed in extent.
 mercator.zoomMapToExtent = (mapConfig, extent, padding) => {
-    mapConfig.view.fit([Math.max(extent[0], -13630599.62775418),
-                        Math.max(extent[1], -291567.89923496445),
-                        Math.min(extent[2], 20060974.510472793),
-                        Math.min(extent[3], 10122013.145404479)],
-                       {
-                           size: mapConfig.map.getSize(),
-                           padding: padding
-                               ? Array.isArray(padding)
-                                   ? padding
-                                   : [padding, padding, padding, padding]
-                               : [16, 16, 16, 16]
-                       });
+    try {
+        mapConfig.view.fit(extent,
+                           {
+                               size: mapConfig.map.getSize(),
+                               padding: padding
+                                   ? Array.isArray(padding)
+                                       ? padding
+                                       : [padding, padding, padding, padding]
+                                   : [16, 16, 16, 16]
+                           });
+    } catch {
+        mapConfig.view.fit([-13630599.62775418, -291567.89923496445, 20060974.510472793, 10122013.145404479],
+                           {
+                               size: mapConfig.map.getSize(),
+                               padding: padding
+                                   ? Array.isArray(padding)
+                                       ? padding
+                                       : [padding, padding, padding, padding]
+                                   : [16, 16, 16, 16]
+                           });
+    }
+
     return mapConfig;
 };
-
 // [Side Effects] Zooms the map view to contain the layer with id === layerId.
 mercator.zoomMapToLayer = (mapConfig, layerId, padding) => {
     const layer = mercator.getLayerById(mapConfig, layerId);

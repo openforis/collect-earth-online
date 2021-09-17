@@ -1,7 +1,7 @@
 (ns collect-earth-online.db.imagery
-  (:require [collect-earth-online.database :refer [call-sql sql-primitive]]
+  (:require [triangulum.database :refer [call-sql sql-primitive]]
+            [triangulum.type-conversion :as tc]
             [collect-earth-online.db.institutions :refer [is-inst-admin?]]
-            [collect-earth-online.utils.type-conversion :as tc]
             [collect-earth-online.views :refer [data-response]]))
 
 (defn- clean-source [source-config]

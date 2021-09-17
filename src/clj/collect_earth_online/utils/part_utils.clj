@@ -2,7 +2,7 @@
   (:import java.util.Base64)
   (:require [clojure.java.io :as io]
             [clojure.string  :as str]
-            [collect-earth-online.logging :refer [log]]))
+            [triangulum.logging :refer [log]]))
 
 ;;; General
 

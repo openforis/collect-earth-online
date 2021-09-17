@@ -3,13 +3,13 @@
            java.util.Date
            java.util.UUID)
   (:require [clojure.string :as str]
-            [collect-earth-online.utils.type-conversion :as tc]
-            [collect-earth-online.utils.part-utils      :as pu]
-            [collect-earth-online.database   :refer [call-sql
-                                                     sql-primitive
-                                                     p-insert-rows!
-                                                     insert-rows!]]
-            [collect-earth-online.logging    :refer [log]]
+            [triangulum.logging  :refer [log]]
+            [triangulum.database :refer [call-sql
+                                         sql-primitive
+                                         p-insert-rows!
+                                         insert-rows!]]
+            [triangulum.type-conversion :as tc]
+            [collect-earth-online.utils.part-utils :as pu]
             [collect-earth-online.views      :refer [data-response]]
             [collect-earth-online.utils.geom :refer [make-geo-json-polygon]]
             [collect-earth-online.generators.clj-point     :refer [generate-point-plots generate-point-samples]]
@@ -430,7 +430,7 @@
       ;; Copy template widgets
       ;; TODO this can be a simple SQL query once we drop the dashboard ID
       (when (and (pos? project-template) use-template-widgets)
-        (let [new-uuid (tc/str->pg-uuid (str (UUID/randomUUID)))]
+        (let [new-uuid (tc/str->pg (str (UUID/randomUUID)) "uuid")]
           (doseq [{:keys [widget]} (call-sql "get_project_widgets_by_project_id" project-template)]
             (call-sql "add_project_widget"
                       project-id

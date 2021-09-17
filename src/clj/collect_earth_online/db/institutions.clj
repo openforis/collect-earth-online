@@ -1,8 +1,8 @@
 (ns collect-earth-online.db.institutions
   (:require [clojure.string :as str]
-            [collect-earth-online.utils.type-conversion :as tc]
-            [collect-earth-online.database         :refer [call-sql sql-primitive]]
-            [collect-earth-online.views            :refer [data-response]]))
+            [triangulum.database :refer [call-sql sql-primitive]]
+            [triangulum.type-conversion :as tc]
+            [collect-earth-online.views :refer [data-response]]))
 
 ;;; Constants
 

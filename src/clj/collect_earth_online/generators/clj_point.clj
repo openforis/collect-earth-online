@@ -1,5 +1,5 @@
 (ns collect-earth-online.generators.clj-point
-  (:require [collect-earth-online.utils.type-conversion :as tc]
+  (:require [triangulum.type-conversion :as tc]
             [collect-earth-online.utils.project :refer [check-plot-limits check-sample-limits]]
             [collect-earth-online.utils.geom    :refer [make-wkt-point EPSG:3857->4326 EPSG:4326->3857]]))
 

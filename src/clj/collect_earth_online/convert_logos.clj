@@ -1,8 +1,8 @@
 (ns collect-earth-online.convert-logos
   (:require [clojure.java.io :as io]
-            [collect-earth-online.database :refer [call-sql]]
-            [collect-earth-online.utils.part-utils :refer [read-file-base64]]
-            [collect-earth-online.utils.type-conversion :as tc]))
+            [triangulum.type-conversion :as tc]
+            [triangulum.database :refer [call-sql]]
+            [collect-earth-online.utils.part-utils :refer [read-file-base64]]))
 
 ;; TODO: Delete this file after migration
 ;; TODO: Delete /resources/public/img/institution-logos after migration

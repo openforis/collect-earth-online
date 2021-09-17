@@ -3,8 +3,8 @@
             [clojure.set        :as set]
             [clojure.java.io    :as io]
             [clojure.java.shell :as sh]
-            [collect-earth-online.utils.type-conversion :as tc]
-            [collect-earth-online.utils.part-utils      :as pu]
+            [triangulum.type-conversion :as tc]
+            [collect-earth-online.utils.part-utils :as pu]
             [collect-earth-online.utils.geom    :refer [make-wkt-point]]
             [collect-earth-online.utils.project :refer [check-plot-limits check-sample-limits]]))
 

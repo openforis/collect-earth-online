@@ -88,6 +88,7 @@ export default class ReviewChanges extends React.Component {
                     .then(response => Promise.all([response.ok, response.json()]))
                     .then(data => {
                         if (data[0] && data[1] === "") {
+                            this.context.setContextState({designMode: "manage"});
                             alert("Project successfully updated!");
                             return Promise.resolve();
                         } else {
@@ -95,7 +96,7 @@ export default class ReviewChanges extends React.Component {
                         }
                     })
                     .catch(message => {
-                        alert("Error creating project:\n" + message);
+                        alert("Error updating project:\n" + message);
                     })
             );
         }

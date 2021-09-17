@@ -1,8 +1,8 @@
 (ns collect-earth-online.db.plots
   (:import java.sql.Timestamp)
   (:require [clojure.set :as set]
-            [collect-earth-online.utils.type-conversion :as tc]
-            [collect-earth-online.database    :refer [call-sql sql-primitive]]
+            [triangulum.type-conversion :as tc]
+            [triangulum.database :refer [call-sql sql-primitive]]
             [collect-earth-online.db.projects :refer [is-proj-admin?]]
             [collect-earth-online.views       :refer [data-response]]))
 

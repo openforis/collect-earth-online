@@ -102,14 +102,14 @@ class Geodash extends React.Component {
 
     getVectorSource = () => {
         const plotShape = this.getParameterByName("plotShape");
-        const radius = this.getParameterByName("bradius");
+        const radius = parseInt(this.getParameterByName("bradius") || 0);
         const center = this.getParameterByName("bcenter");
         const plotId = this.getParameterByName("plotId");
         if (plotShape === "polygon") {
             return fetch(`/get-plot-sample-geom?plotId=${plotId}`)
                 .then(response => (response.ok ? response.json() : Promise.reject(response)))
                 .then(plotJsonObject => {
-                    const features = [plotJsonObject.plotGeom, ...(plotJsonObject.sampleGeoms || [])]
+                    const features = [plotJsonObject.plotGeom, ...(plotJsonObject.samplesGeoms || [])] // FIXME, samplesGeoms should be sampleGeoms
                         .filter(e => e)
                         .map(geom => new Feature({geometry: mercator.parseGeoJson(geom, true)}));
                     return Promise.resolve(new Vector({features}));
@@ -119,7 +119,7 @@ class Geodash extends React.Component {
                 new Point(projTransform(JSON.parse(center).coordinates, "EPSG:4326", "EPSG:3857"))
             );
             const pointExtent = pointFeature.getGeometry().getExtent();
-            const bufferedExtent = new ExtentBuffer(pointExtent, parseInt(radius));
+            const bufferedExtent = new ExtentBuffer(pointExtent, radius);
             return Promise.resolve(new Vector({
                 features: [new Feature(new Polygon(
                     [[[bufferedExtent[0], bufferedExtent[1]],
@@ -130,11 +130,18 @@ class Geodash extends React.Component {
                 ))]
             }));
         } else if (plotShape === "circle") {
-            return Promise.resolve(new Vector({
-                features: [new Feature(new Circle(
-                    projTransform(JSON.parse(center).coordinates, "EPSG:4326", "EPSG:3857"), radius
-                ))]
-            }));
+            console.log(radius);
+            console.log(projTransform(JSON.parse(center).coordinates, "EPSG:4326", "EPSG:3857"));
+            return Promise.resolve(
+                new Vector({
+                    features: [
+                        new Feature(
+                            new Circle(
+                                projTransform(JSON.parse(center).coordinates, "EPSG:4326", "EPSG:3857"), radius
+                            )
+                        )]
+                })
+            );
         } else {
             return Promise.resolve(new Vector({features: []}));
         }
@@ -546,7 +553,9 @@ class MapWidget extends React.Component {
         let {projAOI} = this.props;
 
         const {sourceConfig, id, attribution, isProxied} = this.props.imageryList.find(imagery =>
-            imagery.id === widget.basemapId) || this.props.imageryList[0];
+            imagery.id === widget.basemapId)
+            || this.props.imageryList.find(imagery => imagery.title === "Open Street Map")
+            || this.props.imageryList[0];
         const basemapLayer = new TileLayer({
             source: mercator.createSource(sourceConfig, id, attribution, isProxied)
         });

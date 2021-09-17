@@ -3,13 +3,14 @@
             [clojure.string :as str]
             [clojure.tools.cli  :refer [parse-opts]]
             [ring.adapter.jetty :refer [run-jetty]]
-            [collect-earth-online.handler :refer [create-handler-stack]]
-            [collect-earth-online.logging :refer [log-str set-log-path!]]))
+            [triangulum.logging :refer [log-str set-log-path!]]
+            [collect-earth-online.handler :refer [create-handler-stack]]))
 
 (defonce server           (atom nil))
 (defonce clean-up-service (atom nil))
 
-(def expires-in "1 hour in msecs" (* 1000 60 60))
+(def ^:private expires-in "1 hour in msecs" (* 1000 60 60))
+(def ^:private keystore-scan-interval 60) ; seconds
 
 (defn- expired? [last-mod-time]
   (> (- (System/currentTimeMillis) last-mod-time) expires-in))
@@ -62,11 +63,12 @@
                         {:port  (:http-port options)
                          :join? false}
                         (when ssl?
-                          {:ssl?          true
-                           :ssl-port      https-port
-                           :keystore      "./.key/keystore.pkcs12"
-                           :keystore-type "pkcs12"
-                           :key-password  "foobar"}))]
+                          {:ssl?                   true
+                           :ssl-port               https-port
+                           :keystore               "./.key/keystore.pkcs12"
+                           :keystore-type          "pkcs12"
+                           :keystore-scan-interval keystore-scan-interval
+                           :key-password           "foobar"}))]
         (if (and (not has-key?) https-port)
           (println "ERROR:\n"
                    "  An SSL key is required if an HTTPS port is specified.\n"
