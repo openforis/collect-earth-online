@@ -1195,7 +1195,7 @@ class ExternalTools extends React.Component {
     kmlButton = () => (
         <a
             className="btn btn-outline-lightgreen btn-sm btn-block my-2"
-            download={"ceo_projectId-" + this.props.currentProject.id + "_plotId-" + this.props.currentPlot.visible + ".kml"}
+            download={"ceo_projectId-" + this.props.currentProject.id + "_plotId-" + this.props.currentPlot.visibleId + ".kml"}
             href={"data:earth.kml+xml application/vnd.google-earth.kmz, "
                 + encodeURIComponent(this.props.KMLFeatures)}
         >
