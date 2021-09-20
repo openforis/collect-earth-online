@@ -48,14 +48,16 @@
            :savedAnswers (tc/jsonb->clj saved_answers)})
         (call-sql "select_plot_samples" plot-id user-id)))
 
-(defn- build-collection-plot [plot-info user-id]
+(defn- build-collection-plot [plot-info user-id admin-mode?]
   (let [{:keys [plot_id
                 flagged
                 confidence
                 flagged_reason
                 plot_geom
                 extra_plot_info
-                visible_id]} plot-info]
+                visible_id
+                user_id
+                email]} plot-info]
     {:id            plot_id
      :flagged       flagged
      :flaggedReason (or flagged_reason "")
@@ -63,7 +65,9 @@
      :visibleId     visible_id
      :plotGeom      plot_geom
      :extraPlotInfo (tc/jsonb->clj extra_plot_info {})
-     :samples       (prepare-samples-array plot_id user-id)}))
+     :samples       (prepare-samples-array plot_id (if admin-mode? user_id user-id))
+     :userId        user_id
+     :email         email}))
 
 (defn get-collection-plot
   "Gets plot information needed for the collections page.  The plot
@@ -86,21 +90,22 @@
                           "flagged"    (call-sql "select_flagged_plots" project-id user-id admin-mode?)
                           "confidence" (call-sql "select_confidence_plots" project-id user-id admin-mode? threshold)
                           [])
-        plot-info       (case direction
-                          "next"     (some (fn [{:keys [visible_id] :as plot}]
-                                             (and (> visible_id visible-id)
-                                                  plot))
-                                           proj-plots)
-                          "previous" (->> proj-plots
-                                          (rseq)
-                                          (some (fn [{:keys [visible_id] :as plot}]
-                                                  (and (< visible_id visible-id)
-                                                       plot))))
-                          "id"       (some (fn [{:keys [visible_id] :as plot}]
-                                             (and (= visible_id visible-id)
-                                                  plot))
-                                           proj-plots))]
-    (if plot-info
+        grouped-plots   (into (sorted-map) (group-by :visible_id proj-plots))
+        plots-info      (case direction
+                          "next"     (some (fn [[plot-id plots]]
+                                             (and (> plot-id visible-id)
+                                                  plots))
+                                           grouped-plots)
+                          "previous" (->> grouped-plots
+                                          (sort-by first #(compare %2 %1))
+                                          (some (fn [[plot-id plots]]
+                                                  (and (< plot-id visible-id)
+                                                       plots))))
+                          "id"       (some (fn [[plot-id plots]]
+                                             (and (= plot-id visible-id)
+                                                  plots))
+                                           grouped-plots))]
+    (if plots-info
       (do
         (unlock-plots user-id)
         ;; TODO, CEO-90 Technically there is a race condition here.  We need a lock function
@@ -108,10 +113,10 @@
         ;;       The quickest way to finish this is to return a "race condition error."
         ;;       If we get users complaining we can try a recursive find.
         (call-sql "lock_plot"
-                  (:plot_id plot-info)
+                  (:plot_id (first plots-info))
                   user-id
                   (time-plus-five-min))
-        (data-response (build-collection-plot plot-info user-id)))
+        (data-response (map #(build-collection-plot % user-id admin-mode?) plots-info)))
       (data-response "not-found"))))
 
 (defn add-user-samples [{:keys [params]}]

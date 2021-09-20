@@ -13,7 +13,7 @@ function Option({option, valueKey = "value", labelKey = "label"}) {
     );
 }
 
-export function Select({
+export default function Select({
     disabled,
     label,
     id,

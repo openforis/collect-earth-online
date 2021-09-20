@@ -46,7 +46,9 @@ CREATE TYPE collection_return AS (
     confidence         integer,
     visible_id         integer,
     plot_geom          text,
-    extra_plot_info    jsonb
+    extra_plot_info    jsonb,
+    user_id            integer,
+    email              text
 );
 
 CREATE OR REPLACE FUNCTION select_unanalyzed_plots(_project_id integer, _user_id integer, _admin_mode boolean)
@@ -65,7 +67,9 @@ CREATE OR REPLACE FUNCTION select_unanalyzed_plots(_project_id integer, _user_id
         confidence,
         visible_id,
         ST_AsGeoJSON(plot_geom) as plot_geom,
-        extra_plot_info
+        extra_plot_info,
+        -1,
+        NULL
     FROM plots
     LEFT JOIN assigned_plots ap
         ON plot_uid = ap.plot_rid
@@ -94,10 +98,14 @@ CREATE OR REPLACE FUNCTION select_analyzed_plots(_project_id integer, _user_id i
         confidence,
         visible_id,
         ST_AsGeoJSON(plot_geom) as plot_geom,
-        extra_plot_info
+        extra_plot_info,
+        u.user_uid,
+        u.email
     FROM plots
     INNER JOIN user_plots up
         ON plot_uid = plot_rid
+    INNER JOIN users u
+        ON u.user_uid = up.user_rid
     WHERE project_rid = _project_id
         AND (up.user_rid = _user_id OR _admin_mode)
     ORDER BY visible_id ASC
@@ -113,10 +121,14 @@ CREATE OR REPLACE FUNCTION select_flagged_plots(_project_id integer, _user_id in
         confidence,
         visible_id,
         ST_AsGeoJSON(plot_geom) as plot_geom,
-        extra_plot_info
+        extra_plot_info,
+        u.user_uid,
+        u.email
     FROM plots
     LEFT JOIN user_plots up
         ON plot_uid = plot_rid
+    INNER JOIN users u
+        ON u.user_uid = up.user_rid
     WHERE project_rid = _project_id
         AND (up.user_rid = _user_id OR _admin_mode)
         AND flagged = TRUE
@@ -133,10 +145,14 @@ CREATE OR REPLACE FUNCTION select_confidence_plots(_project_id integer, _user_id
         confidence,
         visible_id,
         ST_AsGeoJSON(plot_geom) as plot_geom,
-        extra_plot_info
+        extra_plot_info,
+        u.user_uid,
+        u.email
     FROM plots
     INNER JOIN user_plots up
         ON plot_uid = plot_rid
+    INNER JOIN users u
+        ON u.user_uid = up.user_rid
     WHERE project_rid = _project_id
         AND (up.user_rid = _user_id OR _admin_mode)
         AND confidence <= _threshold
