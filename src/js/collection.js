@@ -519,6 +519,9 @@ class Collection extends React.Component {
         const inAdminMode = !this.state.inAdminMode;
         this.setState({inAdminMode});
         setProjectPreferences(currentProject.id, {inAdminMode});
+        if (inAdminMode && this.state.navigationMode === "natural") {
+            this.setNavigationMode("unanalyzed");
+        }
     };
 
     setThreshold = threshold => this.setState({threshold});
@@ -1160,7 +1163,7 @@ class PlotNavigation extends React.Component {
                             style={{flex: "1 1 auto"}}
                             value={navigationMode}
                         >
-                            <option value="natural">Natural</option>
+                            {!inAdminMode && (<option value="natural">Natural</option>)}
                             <option value="unanalyzed">Unanalyzed plots</option>
                             <option value="analyzed">Analyzed plots</option>
                             <option value="flagged">Flagged plots</option>
