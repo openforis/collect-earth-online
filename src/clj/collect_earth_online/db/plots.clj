@@ -69,6 +69,19 @@
      :userId        user_id
      :email         email}))
 
+(defn- get-natural-plots
+  "Returns un/analyzed plots depending on `direction`.
+   \"next\" returns the unanalyzed plus the first analyzed plot.
+   \"previous\" returns analyzed plus the last unanalyzed plot.
+   \"id\" returns all plots"
+  [direction project-id user-id admin-mode?]
+  (let [unanalyzed (->> (call-sql "select_unanalyzed_plots" project-id user-id admin-mode?) (sort-by :visible_id))
+        analyzed   (->> (call-sql "select_analyzed_plots" project-id user-id admin-mode?) (group-by :visible_id) (sort-by first))]
+    (case direction
+      "next"     (concat unanalyzed (-> analyzed (first) (val)))
+      "previous" (concat (mapcat val analyzed) [(last unanalyzed)])
+      "id"       (concat (mapcat val analyzed) unanalyzed))))
+
 (defn get-collection-plot
   "Gets plot information needed for the collections page.  The plot
    returned is based off of the navigation mode and direction.  Valid
@@ -88,28 +101,29 @@
                           "analyzed"   (call-sql "select_analyzed_plots"   project-id user-id admin-mode?)
                           "flagged"    (call-sql "select_flagged_plots"    project-id user-id admin-mode?)
                           "confidence" (call-sql "select_confidence_plots" project-id user-id admin-mode? threshold)
+                          "natural"    (get-natural-plots direction project-id user-id admin-mode?)
                           [])
-        grouped-plots   (into (sorted-map) (group-by :visible_id proj-plots))
+        sorted-plots    (sort-by first (group-by :visible_id proj-plots))
         plots-info      (case direction
                           "next"     (or (some (fn [[plot-id plots]]
                                                  (and (> plot-id visible-id)
                                                       plots))
-                                               grouped-plots)
-                                         (->> grouped-plots
+                                               sorted-plots)
+                                         (->> sorted-plots
                                               (first)
                                               (second)))
-                          "previous" (or (->> grouped-plots
+                          "previous" (or (->> sorted-plots
                                               (sort-by first #(compare %2 %1))
                                               (some (fn [[plot-id plots]]
                                                       (and (< plot-id visible-id)
                                                            plots))))
-                                         (->> grouped-plots
+                                         (->> sorted-plots
                                               (last)
                                               (second)))
                           "id"       (some (fn [[plot-id plots]]
                                              (and (= plot-id visible-id)
                                                   plots))
-                                           grouped-plots))]
+                                           sorted-plots))]
     (if plots-info
       (do
         (unlock-plots user-id)

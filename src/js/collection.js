@@ -49,7 +49,7 @@ class Collection extends React.Component {
             showQuitModal: false,
             answerMode: "question",
             modalMessage: null,
-            navigationMode: "unanalyzed",
+            navigationMode: "natural",
             threshold: 90
         };
     }
@@ -1160,6 +1160,7 @@ class PlotNavigation extends React.Component {
                             style={{flex: "1 1 auto"}}
                             value={navigationMode}
                         >
+                            <option value="natural">Natural</option>
                             <option value="unanalyzed">Unanalyzed plots</option>
                             <option value="analyzed">Analyzed plots</option>
                             <option value="flagged">Flagged plots</option>
