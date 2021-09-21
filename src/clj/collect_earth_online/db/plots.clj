@@ -85,22 +85,27 @@
                              (is-proj-admin? user-id project-id nil))
         proj-plots      (case navigation-mode
                           "unanalyzed" (call-sql "select_unanalyzed_plots" project-id user-id admin-mode?)
-                           ;; FIXME, CEO-217 analyzed mode + admin mode does not work for multiple users.
-                          "analyzed"   (call-sql "select_analyzed_plots" project-id user-id admin-mode?)
-                          "flagged"    (call-sql "select_flagged_plots" project-id user-id admin-mode?)
+                          "analyzed"   (call-sql "select_analyzed_plots"   project-id user-id admin-mode?)
+                          "flagged"    (call-sql "select_flagged_plots"    project-id user-id admin-mode?)
                           "confidence" (call-sql "select_confidence_plots" project-id user-id admin-mode? threshold)
                           [])
         grouped-plots   (into (sorted-map) (group-by :visible_id proj-plots))
         plots-info      (case direction
-                          "next"     (some (fn [[plot-id plots]]
-                                             (and (> plot-id visible-id)
-                                                  plots))
-                                           grouped-plots)
-                          "previous" (->> grouped-plots
-                                          (sort-by first #(compare %2 %1))
-                                          (some (fn [[plot-id plots]]
-                                                  (and (< plot-id visible-id)
-                                                       plots))))
+                          "next"     (or (some (fn [[plot-id plots]]
+                                                 (and (> plot-id visible-id)
+                                                      plots))
+                                               grouped-plots)
+                                         (->> grouped-plots
+                                              (first)
+                                              (second)))
+                          "previous" (or (->> grouped-plots
+                                              (sort-by first #(compare %2 %1))
+                                              (some (fn [[plot-id plots]]
+                                                      (and (< plot-id visible-id)
+                                                           plots))))
+                                         (->> grouped-plots
+                                              (last)
+                                              (second)))
                           "id"       (some (fn [[plot-id plots]]
                                              (and (= plot-id visible-id)
                                                   plots))
