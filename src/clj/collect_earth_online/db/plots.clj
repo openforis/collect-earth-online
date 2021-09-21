@@ -97,8 +97,7 @@
                                                grouped-plots)
                                          (->> grouped-plots
                                               (first)
-                                              (second)
-                                              (into [])))
+                                              (second)))
                           "previous" (or (->> grouped-plots
                                               (sort-by first #(compare %2 %1))
                                               (some (fn [[plot-id plots]]
@@ -106,8 +105,7 @@
                                                            plots))))
                                          (->> grouped-plots
                                               (last)
-                                              (second)
-                                              (into [])))
+                                              (second)))
                           "id"       (some (fn [[plot-id plots]]
                                              (and (= plot-id visible-id)
                                                   plots))
