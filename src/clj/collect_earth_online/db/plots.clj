@@ -88,6 +88,7 @@
         project-id      (tc/val->int (:projectId params))
         visible-id      (tc/val->int (:visibleId params))
         threshold       (tc/val->int (:threshold params))
+        concordance     (tc/val->int (:concordance params))
         user-id         (:userId params -1)
         current-user-id (tc/val->int (:currentUserId params -1))
         admin-mode?     (and (tc/val->bool (:inAdminMode params))
@@ -100,6 +101,7 @@
                           "natural"    (concat (call-sql "select_analyzed_plots" project-id user-id false)
                                                (call-sql "select_unanalyzed_plots" project-id user-id false))
                           "user"       (call-sql "select_analyzed_plots" project-id current-user-id false)
+                          "qaqc"       (call-sql "select_qaqc_plots" project-id concordance)
                           [])
         grouped-plots   (group-by :visible_id proj-plots)
         plots-info      (case direction
