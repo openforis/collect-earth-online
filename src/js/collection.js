@@ -298,23 +298,6 @@ class Collection extends React.Component {
         }
     };
 
-    navErrorMessage = (direction, navigationMode) => {
-        if (direction === "id") {
-            return "Plot not found for this navigation mode.";
-        } else {
-            const modeDescription = {
-                all: "the",
-                analyzed: "your",
-                unanalyzed: "the"
-            }[navigationMode];
-            return "You have reached the "
-                + (direction === "next" ? "end" : "beginning")
-                + " of "
-                + modeDescription
-                + " list of plots.";
-        }
-    };
-
     getPlotData = (visibleId, direction) => {
         const {navigationMode, inAdminMode, threshold} = this.state;
         const {projectId} = this.props;
@@ -331,7 +314,7 @@ class Collection extends React.Component {
                 .then(response => (response.ok ? response.json() : Promise.reject(response)))
                 .then(data => {
                     if (data === "not-found") {
-                        alert(this.navErrorMessage(direction, navigationMode));
+                        alert((direction === "id" ? "Plot not" : "No more plots") + " found for this navigation mode.");
                     } else {
                         this.setState({
                             allPlots: data,
