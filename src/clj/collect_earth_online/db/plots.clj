@@ -20,6 +20,14 @@
                             :analyzed analyzed})
                          (call-sql "select_limited_project_plots" project-id max-plots)))))
 
+(defn get-plotters
+  "Gets all users that have collected plots on a project"
+  [{:keys [params]}]
+  (let [project-id (tc/val->int (:projectId params))]
+    (data-response (mapv (fn [{:keys [user_id email]}]
+                           {:userId user_id :email email})
+                         (call-sql "select_plotters" project-id)))))
+
 (defn get-plot-sample-geom [{:keys [params]}]
   (let [plot-id (tc/val->int (:plotId params))]
     (data-response (if-let [plot-geom (sql-primitive (call-sql "select_plot_geom" plot-id))]
@@ -81,6 +89,7 @@
         visible-id      (tc/val->int (:visibleId params))
         threshold       (tc/val->int (:threshold params))
         user-id         (:userId params -1)
+        current-user-id (tc/val->int (:currentUserId params -1))
         admin-mode?     (and (tc/val->bool (:inAdminMode params))
                              (is-proj-admin? user-id project-id nil))
         proj-plots      (case navigation-mode
@@ -90,6 +99,7 @@
                           "confidence" (call-sql "select_confidence_plots" project-id user-id admin-mode? threshold)
                           "natural"    (concat (call-sql "select_analyzed_plots" project-id user-id false)
                                                (call-sql "select_unanalyzed_plots" project-id user-id false))
+                          "user"       (call-sql "select_analyzed_plots" project-id current-user-id false)
                           [])
         grouped-plots   (group-by :visible_id proj-plots)
         plots-info      (case direction

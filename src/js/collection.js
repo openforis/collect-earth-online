@@ -29,6 +29,7 @@ class Collection extends React.Component {
             currentProject: {surveyQuestions: [], institution: ""},
             currentImagery: {id: "", sourceConfig: {}},
             currentPlot: {},
+            currentUserId: -1,
             // attribution for showing in the map
             imageryAttribution: "",
             // attributes to record when sample is saved
@@ -38,6 +39,7 @@ class Collection extends React.Component {
             mapConfig: null,
             messageBox: null,
             plotList: [],
+            plotters: [],
             unansweredColor: "black",
             selectedQuestion: {id: 0, question: "", answers: []},
             selectedSampleId: -1,
@@ -164,7 +166,8 @@ class Collection extends React.Component {
         () => Promise.all([
             this.getProjectById(),
             this.getProjectPlots(),
-            this.getImageryList()
+            this.getImageryList(),
+            this.getPlotters()
         ])
             .then(() => {
                 const adminWarning = this.state.inAdminMode ? "You are currently in 'Admin Mode.'" : "";
@@ -233,6 +236,17 @@ class Collection extends React.Component {
             }
         });
 
+    getPlotters = () => fetch(`/get-plotters?projectId=${this.props.projectId}`)
+        .then(response => (response.ok ? response.json() : Promise.reject(response)))
+        .then(data => {
+            if (data.length > 0) {
+                this.setState({plotters: data});
+                return Promise.resolve("resolved");
+            } else {
+                return Promise.reject("No plotters found");
+            }
+        });
+
     initializeProjectMap = () => {
         const mapConfig = mercator.createMap("image-analysis-pane",
                                              [0.0, 0.0],
@@ -297,7 +311,7 @@ class Collection extends React.Component {
     };
 
     getPlotData = (visibleId, direction) => {
-        const {navigationMode, inAdminMode, threshold} = this.state;
+        const {currentUserId, navigationMode, inAdminMode, threshold} = this.state;
         const {projectId} = this.props;
         this.processModal(
             "Getting plot",
@@ -307,7 +321,8 @@ class Collection extends React.Component {
                 navigationMode,
                 direction,
                 inAdminMode,
-                threshold
+                threshold,
+                currentUserId
             }))
                 .then(response => (response.ok ? response.json() : Promise.reject(response)))
                 .then(data => {
@@ -524,6 +539,8 @@ class Collection extends React.Component {
     setThreshold = threshold => this.setState({threshold});
 
     setCurrentPlot = currentPlot => this.setState({currentPlot, ...this.newPlotValues(currentPlot)});
+
+    setCurrentUserId = currentUserId => this.setState({currentUserId});
 
     postValuesToDB = () => {
         if (this.state.currentPlot.flagged) {
@@ -842,6 +859,7 @@ class Collection extends React.Component {
                         allPlots={this.state.allPlots}
                         collectConfidence={this.state.currentProject?.projectOptions?.collectConfidence}
                         currentPlot={this.state.currentPlot}
+                        currentUserId={this.state.currentUserId}
                         inAdminMode={this.state.inAdminMode}
                         isProjectAdmin={this.state.currentProject.isProjectAdmin}
                         loadingPlots={this.state.plotList.length === 0}
@@ -850,8 +868,10 @@ class Collection extends React.Component {
                         navToNextPlot={this.navToNextPlot}
                         navToPlot={this.navToPlot}
                         navToPrevPlot={this.navToPrevPlot}
+                        plotters={this.state.plotters}
                         setAdminMode={this.setAdminMode}
                         setCurrentPlot={this.setCurrentPlot}
+                        setCurrentUserId={this.setCurrentUserId}
                         setNavigationMode={this.setNavigationMode}
                         setThreshold={this.setThreshold}
                         showNavButtons={this.state.currentPlot.id}
@@ -1116,6 +1136,19 @@ class PlotNavigation extends React.Component {
         </div>
     );
 
+    selectUser = (users, currentUserId, setCurrentUserId) => (
+        <div className="my-2 d-flex align-items-center justify-content-center">
+            <Select
+                label="User:"
+                labelKey="email"
+                onChange={e => setCurrentUserId(parseInt(e.target.value))}
+                options={users}
+                value={currentUserId}
+                valueKey="userId"
+            />
+        </div>
+    );
+
     selectPlot = (currentPlot, allPlots, setCurrentPlot) => {
         const options = allPlots.map(({email}, index) => ({index, email}));
         const currentIndex = allPlots.indexOf(currentPlot);
@@ -1137,13 +1170,16 @@ class PlotNavigation extends React.Component {
         const {
             allPlots,
             currentPlot,
+            currentUserId,
             collectConfidence,
             inAdminMode,
             isProjectAdmin,
             loadingPlots,
             navigationMode,
+            plotters,
             setAdminMode,
             setCurrentPlot,
+            setCurrentUserId,
             setNavigationMode,
             setThreshold,
             showNavButtons,
@@ -1165,11 +1201,13 @@ class PlotNavigation extends React.Component {
                             <option value="analyzed">Analyzed plots</option>
                             <option value="flagged">Flagged plots</option>
                             {collectConfidence && (<option value="confidence">Low Confidence</option>)}
+                            {inAdminMode && (<option value="user">User</option>)}
                         </select>
                     </div>
                     {isProjectAdmin && this.adminMode(inAdminMode, setAdminMode)}
                     {navigationMode === "confidence" && this.thresholdSlider(threshold, setThreshold)}
-                    {inAdminMode && allPlots?.length > 1 && this.selectPlot(currentPlot, allPlots, setCurrentPlot)}
+                    {navigationMode === "user" && this.selectUser(plotters, currentUserId, setCurrentUserId)}
+                    {inAdminMode && navigationMode !== "user" && allPlots?.length > 1 && this.selectPlot(currentPlot, allPlots, setCurrentPlot)}
                 </div>
                 <div className="mt-2">
                     {loadingPlots

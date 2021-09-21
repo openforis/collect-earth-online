@@ -37,6 +37,24 @@ CREATE OR REPLACE FUNCTION select_plot_geom(_plot_id integer)
 
 $$ LANGUAGE SQL;
 
+-- Get all users who have plotted on a project
+CREATE OR REPLACE FUNCTION select_plotters(_project_id integer)
+ RETURNS table (
+    user_id    integer,
+    email      text
+ ) AS $$
+
+    SELECT DISTINCT(up.user_rid) user_id, u.email
+    FROM plots p
+    INNER JOIN user_plots up
+        ON p.plot_uid = up.plot_rid
+    INNER JOIN users u
+        ON u.user_uid = up.user_rid
+    WHERE p.project_rid = _project_id
+    ORDER BY user_id
+
+$$ LANGUAGE SQL;
+
 -- This return type is so the collection functions match return types.
 DROP TYPE IF EXISTS collection_return CASCADE;
 CREATE TYPE collection_return AS (
