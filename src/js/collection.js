@@ -49,7 +49,7 @@ class Collection extends React.Component {
             showQuitModal: false,
             answerMode: "question",
             modalMessage: null,
-            navigationMode: "unanalyzed",
+            navigationMode: "natural",
             threshold: 90
         };
     }
@@ -197,11 +197,9 @@ class Collection extends React.Component {
         .then(project => {
             // TODO This logic is currently invalid since this route can never return an archived project.
             if (project.id > 0 && project.availability !== "archived") {
+                this.setState({currentProject: project});
                 const {inAdminMode} = getProjectPreferences(project.id);
-                this.setState({
-                    currentProject: project,
-                    inAdminMode: project.isProjectAdmin && (inAdminMode === null || inAdminMode)
-                });
+                this.setAdminMode(project.isProjectAdmin && (inAdminMode === null || inAdminMode));
                 return Promise.resolve("resolved");
             } else {
                 return Promise.reject(
@@ -514,11 +512,13 @@ class Collection extends React.Component {
 
     setNavigationMode = newMode => this.setState({navigationMode: newMode});
 
-    setAdminMode = () => {
+    setAdminMode = inAdminMode => {
         const {currentProject} = this.state;
-        const inAdminMode = !this.state.inAdminMode;
         this.setState({inAdminMode});
         setProjectPreferences(currentProject.id, {inAdminMode});
+        if (inAdminMode && this.state.navigationMode === "natural") {
+            this.setNavigationMode("unanalyzed");
+        }
     };
 
     setThreshold = threshold => this.setState({threshold});
@@ -1092,7 +1092,7 @@ class PlotNavigation extends React.Component {
             <div style={{display: "inline-block"}}>
                 <Switch
                     checked={inAdminMode}
-                    onChange={setAdminMode}
+                    onChange={() => setAdminMode(!inAdminMode)}
                 />
             </div>
         </div>
@@ -1160,6 +1160,7 @@ class PlotNavigation extends React.Component {
                             style={{flex: "1 1 auto"}}
                             value={navigationMode}
                         >
+                            {!inAdminMode && (<option value="natural">Natural</option>)}
                             <option value="unanalyzed">Unanalyzed plots</option>
                             <option value="analyzed">Analyzed plots</option>
                             <option value="flagged">Flagged plots</option>
