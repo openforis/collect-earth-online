@@ -25,7 +25,8 @@ class Project extends React.Component {
                 qaqcAssignment: {
                     qaqcMethod: "none",
                     percent: 0,
-                    smes: []
+                    smes: [],
+                    timesToReview: 2
                 },
                 sampleGeometries: {
                     points: true,

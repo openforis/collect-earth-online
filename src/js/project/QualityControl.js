@@ -24,6 +24,8 @@ export default class QualityControl extends React.Component {
 
     setPercent = percent => this.setAssignment({percent});
 
+    setTimesToReview = timesToReview => this.setAssignment({timesToReview});
+
     resetSelectedUser = () => this.setState({selectedUser: -1});
 
     addSME = id => {
@@ -72,7 +74,7 @@ export default class QualityControl extends React.Component {
             ["overlap", "Overlap"],
             ["sme", "SME Verification"]
         ];
-        const {qaqcMethod, percent, smes} = this.getAssignment();
+        const {qaqcMethod, percent, smes, timesToReview} = this.getAssignment();
         const {allowDrawnSamples} = this.context;
         const {selectedUser} = this.state;
         const {institutionUserList} = this.props;
@@ -120,6 +122,20 @@ export default class QualityControl extends React.Component {
                                 {percent}%
                             </div>
                         </div>
+                    </div>
+                )}
+                {qaqcMethod === "overlap" && (
+                    <div className="mt-3 form-inline">
+                        <label htmlFor="reviews"># of Reviews:</label>
+                        <input
+                            className="form-control form-control-sm ml-3"
+                            id="reviews"
+                            max="100"
+                            min="0"
+                            onChange={e => this.setTimesToReview(parseInt(e.target.value))}
+                            type="number"
+                            value={timesToReview}
+                        />
                     </div>
                 )}
                 {qaqcMethod === "sme" && (
