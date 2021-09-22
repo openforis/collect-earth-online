@@ -88,10 +88,10 @@
                           "analyzed"   (call-sql "select_analyzed_plots"   project-id user-id admin-mode?)
                           "flagged"    (call-sql "select_flagged_plots"    project-id user-id admin-mode?)
                           "confidence" (call-sql "select_confidence_plots" project-id user-id admin-mode? threshold)
-                          "natural"    (concat (call-sql "select_unanalyzed_plots" project-id user-id admin-mode?)
-                                               (call-sql "select_analyzed_plots" project-id user-id admin-mode?))
+                          "natural"    (concat (call-sql "select_analyzed_plots" project-id user-id false)
+                                               (call-sql "select_unanalyzed_plots" project-id user-id false))
                           [])
-        grouped-plots    (group-by :visible_id proj-plots)
+        grouped-plots   (group-by :visible_id proj-plots)
         plots-info      (case direction
                           "next"     (or (some (fn [[plot-id plots]]
                                                  (and (> plot-id visible-id)
