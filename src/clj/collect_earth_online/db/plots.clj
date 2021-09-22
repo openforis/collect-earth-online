@@ -91,27 +91,27 @@
                           "natural"    (concat (call-sql "select_unanalyzed_plots" project-id user-id admin-mode?)
                                                (call-sql "select_analyzed_plots" project-id user-id admin-mode?))
                           [])
-        sorted-plots    (sort-by first (group-by :visible_id proj-plots))
+        grouped-plots    (group-by :visible_id proj-plots)
         plots-info      (case direction
                           "next"     (or (some (fn [[plot-id plots]]
                                                  (and (> plot-id visible-id)
                                                       plots))
-                                               sorted-plots)
-                                         (->> sorted-plots
+                                               grouped-plots)
+                                         (->> grouped-plots
                                               (first)
                                               (second)))
-                          "previous" (or (->> sorted-plots
+                          "previous" (or (->> grouped-plots
                                               (sort-by first #(compare %2 %1))
                                               (some (fn [[plot-id plots]]
                                                       (and (< plot-id visible-id)
                                                            plots))))
-                                         (->> sorted-plots
+                                         (->> grouped-plots
                                               (last)
                                               (second)))
                           "id"       (some (fn [[plot-id plots]]
                                              (and (= plot-id visible-id)
                                                   plots))
-                                           sorted-plots))]
+                                           grouped-plots))]
     (if plots-info
       (do
         (unlock-plots user-id)
