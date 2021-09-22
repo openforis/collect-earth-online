@@ -533,6 +533,8 @@ class Collection extends React.Component {
         setProjectPreferences(currentProject.id, {inAdminMode});
         if (inAdminMode && this.state.navigationMode === "natural") {
             this.setNavigationMode("unanalyzed");
+        } else if (!inAdminMode && this.state.navigationMode === "qaqc") {
+            this.setNavigationMode("natural");
         }
     };
 
