@@ -158,6 +158,9 @@
   (doseq [imagery imagery-list]
     (call-sql "insert_project_imagery" project-id imagery)))
 
+(defn- cycle-list [coll]
+  (cons (last coll) (butlast coll)))
+
 ;;;
 ;;; Create project
 ;;;
@@ -213,18 +216,20 @@
 
 (defn- assign-qaqc
   "Assigns additional plots to users based on QA/QC method.  The two options are:
-   {:qaqcMethod \"overlap\"
-    :percent    50}
+   {:qaqcMethod    \"overlap\"
+    :percent       50
+    :timesToReview 2}
    and
    {:qaqcMethod \"sme\"
     :percent    100
     :smes       [2 5]}"
   [assigned-plots design-settings]
   (when (seq assigned-plots)
-    (let [{qaqc-method :qaqcMethod
-           percent    :percent
-           smes       :smes} (:qaqcAssignment design-settings)
-          {:keys [users]}    (:userAssignment design-settings)]
+    (let [{qaqc-method     :qaqcMethod
+           percent         :percent
+           times-to-review :timesToReview
+           smes            :smes} (:qaqcAssignment design-settings)
+          {:keys [users]}         (:userAssignment design-settings)]
       (if (= "none" qaqc-method)
         assigned-plots
         (concat assigned-plots
@@ -238,9 +243,17 @@
                                                    "overlap" (remove #(= user-id %) users)
                                                    "sme"     smes
                                                    nil)]
-                                 (concat acc (equally-assign-users user-plots
-                                                                   other-users
-                                                                   :plot_rid))))
+                                 (loop [to-users     other-users
+                                        cycles-left  (dec (or times-to-review 2))
+                                        new-assigned acc]
+                                   (if (pos? cycles-left)
+                                     (recur (cycle-list to-users)
+                                            (dec cycles-left)
+                                            (concat new-assigned
+                                                    (equally-assign-users user-plots
+                                                                          to-users
+                                                                          :plot_rid)))
+                                     new-assigned))))
                              [])))))))
 
 (defn- create-project-samples! [project-id
