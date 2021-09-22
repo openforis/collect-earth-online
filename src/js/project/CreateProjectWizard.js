@@ -281,7 +281,7 @@ export default class CreateProjectWizard extends React.Component {
             originalProject,
             designSettings: {
                 userAssignment: {userMethod, users, percents},
-                qaqcAssignment: {qaqcMethod, smes, percent}
+                qaqcAssignment: {qaqcMethod, smes, percent, timesToReview}
             }
         } = this.context;
         const totalPlots = this.getTotalPlots();
@@ -309,7 +309,11 @@ export default class CreateProjectWizard extends React.Component {
             (["overlap", "sme"].includes(qaqcMethod) && percent === 0)
                 && "The assigned Quality Control percentage must be greater than 0.",
             (qaqcMethod === "sme" && smes.length === 0)
-                && "At least one user must be added as an SME."
+                && "At least one user must be added as an SME.",
+            (qaqcMethod === "overlap" && timesToReview >= 2)
+                && "# of Reviews must be at least 2.",
+            (qaqcMethod === "overlap" && timesToReview > users.length)
+                && "# of Reviews cannot be greater than the number of assigned users."
         ];
         return errorList.filter(e => e);
     };
