@@ -108,6 +108,9 @@
    [:get  "/get-collection-plot"]            {:handler     plots/get-collection-plot
                                               :auth-type   :collect
                                               :auth-action :block}
+   [:get  "/get-plotters"]                   {:handler     plots/get-plotters
+                                              :auth-type   :collect
+                                              :auth-action :block}
    [:get  "/get-project-plots"]              {:handler     plots/get-project-plots}
    [:get  "/get-plot-sample-geom"]           {:handler     plots/get-plot-sample-geom}
    [:post "/add-user-samples"]               {:handler     plots/add-user-samples
