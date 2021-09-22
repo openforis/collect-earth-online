@@ -136,8 +136,12 @@ CREATE OR REPLACE FUNCTION select_flagged_plots(_project_id integer, _user_id in
 
 $$ LANGUAGE SQL;
 
-CREATE OR REPLACE FUNCTION select_confidence_plots(_project_id integer, _user_id integer, _admin_mode boolean, _threshold integer)
- RETURNS setOf collection_return AS $$
+CREATE OR REPLACE FUNCTION select_confidence_plots(
+    _project_id integer,
+    _user_id integer,
+    _admin_mode boolean,
+    _threshold integer
+ ) RETURNS setOf collection_return AS $$
 
     SELECT plot_uid,
         flagged,
