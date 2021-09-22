@@ -13,6 +13,8 @@ export default class QualityControl extends React.Component {
 
     getAssignment = () => this.context.designSettings.qaqcAssignment;
 
+    getUserAssignment = () => this.context.designSettings.userAssignment;
+
     setAssignment = newAssignment => {
         const assignment = this.getAssignment();
         this.context.setProjectDetails({
@@ -75,6 +77,7 @@ export default class QualityControl extends React.Component {
             ["sme", "SME Verification"]
         ];
         const {qaqcMethod, percent, smes, timesToReview} = this.getAssignment();
+        const {users} = this.getUserAssignment();
         const {allowDrawnSamples} = this.context;
         const {selectedUser} = this.state;
         const {institutionUserList} = this.props;
@@ -89,7 +92,7 @@ export default class QualityControl extends React.Component {
                 <h3 className="mb-3">Quality Control</h3>
                 <div className="d-flex">
                     <Select
-                        disabled={allowDrawnSamples}
+                        disabled={allowDrawnSamples || users.length === 0}
                         id="quality-mode"
                         label="Quality Mode"
                         onChange={e => this.setMethod(e.target.value)}
@@ -97,6 +100,11 @@ export default class QualityControl extends React.Component {
                         value={qaqcMethod}
                     />
                 </div>
+                {users.length === 0 && (
+                    <p className="font-italic mt-2 small">
+                        Please add assigned users to enable Quality Control.
+                    </p>
+                )}
                 {allowDrawnSamples && (
                     <p className="font-italic mt-2 small">
                         When User-Drawn samples are enabled, the project cannot support Quality Control of plots.
