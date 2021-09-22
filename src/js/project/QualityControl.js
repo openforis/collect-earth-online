@@ -100,16 +100,16 @@ export default class QualityControl extends React.Component {
                         value={qaqcMethod}
                     />
                 </div>
-                {users.length === 0 && (
-                    <p className="font-italic mt-2 small">
-                        Please add assigned users to enable Quality Control.
-                    </p>
-                )}
-                {allowDrawnSamples && (
+                {allowDrawnSamples ? (
                     <p className="font-italic mt-2 small">
                         When User-Drawn samples are enabled, the project cannot support Quality Control of plots.
                         Disable User-Drawn samples to re-enable Quality Control.
                     </p>
+                ) : users.length === 0 && (
+                    <p className="font-italic mt-2 small">
+                        Please add assigned users to enable Quality Control.
+                    </p>
+
                 )}
                 {qaqcMethod !== "none" && (
                     <div className="d-flex flex-column mt-3">
