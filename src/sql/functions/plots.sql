@@ -182,6 +182,40 @@ CREATE OR REPLACE FUNCTION select_confidence_plots(
 
 $$ LANGUAGE SQL;
 
+CREATE OR REPLACE FUNCTION select_qaqc_plots(_project_id integer, _threshold integer)
+ RETURNS setOf collection_return AS $$
+
+    WITH assigned_count AS (
+        SELECT ap.plot_rid plot_rid, count(ap.user_rid) users
+        FROM plots, assigned_plots ap
+        WHERE project_rid = _project_id
+            AND plot_uid = ap.plot_rid
+        GROUP BY ap.plot_rid
+    )
+
+    SELECT plot_uid,
+        up.flagged,
+        up.flagged_reason,
+        confidence,
+        visible_id,
+        ST_AsGeoJSON(plot_geom) as plot_geom,
+        extra_plot_info,
+        u.user_uid,
+        u.email
+    FROM plots
+    INNER JOIN assigned_count ac
+        ON plot_uid = ac.plot_rid
+    INNER JOIN user_plots up
+        ON plot_uid = up.plot_rid
+    INNER JOIN users u
+        ON u.user_uid = up.user_rid
+    WHERE project_rid = _project_id
+        AND ac.users > 1
+    ORDER BY visible_id ASC
+
+$$ LANGUAGE SQL;
+
+
 -- Lock plot to user
 CREATE OR REPLACE FUNCTION lock_plot(_plot_id integer, _user_id integer, _lock_end timestamp)
  RETURNS VOID AS $$

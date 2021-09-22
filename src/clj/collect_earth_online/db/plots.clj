@@ -100,6 +100,7 @@
                           "natural"    (concat (call-sql "select_analyzed_plots" project-id user-id false)
                                                (call-sql "select_unanalyzed_plots" project-id user-id false))
                           "user"       (call-sql "select_analyzed_plots" project-id current-user-id false)
+                          "qaqc"       (call-sql "select_qaqc_plots" project-id threshold)
                           [])
         grouped-plots   (group-by :visible_id proj-plots)
         plots-info      (case direction

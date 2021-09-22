@@ -533,6 +533,8 @@ class Collection extends React.Component {
         setProjectPreferences(currentProject.id, {inAdminMode});
         if (inAdminMode && this.state.navigationMode === "natural") {
             this.setNavigationMode("unanalyzed");
+        } else if (!inAdminMode && ["qaqc", "user"].includes(this.state.navigationMode)) {
+            this.setNavigationMode("natural");
         }
     };
 
@@ -1202,11 +1204,13 @@ class PlotNavigation extends React.Component {
                             <option value="flagged">Flagged plots</option>
                             {collectConfidence && (<option value="confidence">Low Confidence</option>)}
                             {inAdminMode && (<option value="user">User</option>)}
+                            {inAdminMode && (<option value="qaqc">QA/QC</option>)}
                         </select>
                     </div>
                     {isProjectAdmin && this.adminMode(inAdminMode, setAdminMode)}
                     {navigationMode === "confidence" && this.thresholdSlider(threshold, setThreshold)}
                     {navigationMode === "user" && this.selectUser(plotters, currentUserId, setCurrentUserId)}
+                    {navigationMode === "qaqc" && this.thresholdSlider(threshold, setThreshold)}
                     {inAdminMode && navigationMode !== "user" && allPlots?.length > 1 && this.selectPlot(currentPlot, allPlots, setCurrentPlot)}
                 </div>
                 <div className="mt-2">
