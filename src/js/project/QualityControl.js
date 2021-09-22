@@ -131,7 +131,7 @@ export default class QualityControl extends React.Component {
                             className="form-control form-control-sm ml-3"
                             id="reviews"
                             max="100"
-                            min="0"
+                            min="2"
                             onChange={e => this.setTimesToReview(parseInt(e.target.value))}
                             type="number"
                             value={timesToReview}
