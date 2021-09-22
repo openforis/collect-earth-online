@@ -182,7 +182,7 @@ CREATE OR REPLACE FUNCTION select_confidence_plots(
 
 $$ LANGUAGE SQL;
 
-CREATE OR REPLACE FUNCTION select_qaqc_plots(_project_id integer, _concordance integer)
+CREATE OR REPLACE FUNCTION select_qaqc_plots(_project_id integer, _threshold integer)
  RETURNS setOf collection_return AS $$
 
     WITH assigned_count AS (

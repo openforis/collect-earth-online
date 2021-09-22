@@ -30,7 +30,6 @@ class Collection extends React.Component {
             currentImagery: {id: "", sourceConfig: {}},
             currentPlot: {},
             currentUserId: -1,
-            concordance: 90,
             // attribution for showing in the map
             imageryAttribution: "",
             // attributes to record when sample is saved
@@ -312,7 +311,7 @@ class Collection extends React.Component {
     };
 
     getPlotData = (visibleId, direction) => {
-        const {concordance, currentUserId, navigationMode, inAdminMode, threshold} = this.state;
+        const {currentUserId, navigationMode, inAdminMode, threshold} = this.state;
         const {projectId} = this.props;
         this.processModal(
             "Getting plot",
@@ -323,8 +322,7 @@ class Collection extends React.Component {
                 direction,
                 inAdminMode,
                 threshold,
-                currentUserId,
-                concordance
+                currentUserId
             }))
                 .then(response => (response.ok ? response.json() : Promise.reject(response)))
                 .then(data => {
@@ -539,8 +537,6 @@ class Collection extends React.Component {
     };
 
     setThreshold = threshold => this.setState({threshold});
-
-    setConcordance = concordance => this.setState({concordance});
 
     setCurrentPlot = currentPlot => this.setState({currentPlot, ...this.newPlotValues(currentPlot)});
 
@@ -864,7 +860,6 @@ class Collection extends React.Component {
                         collectConfidence={this.state.currentProject?.projectOptions?.collectConfidence}
                         currentPlot={this.state.currentPlot}
                         currentUserId={this.state.currentUserId}
-                        concordance={this.state.concordance}
                         inAdminMode={this.state.inAdminMode}
                         isProjectAdmin={this.state.currentProject.isProjectAdmin}
                         loadingPlots={this.state.plotList.length === 0}
@@ -877,7 +872,6 @@ class Collection extends React.Component {
                         setAdminMode={this.setAdminMode}
                         setCurrentPlot={this.setCurrentPlot}
                         setCurrentUserId={this.setCurrentUserId}
-                        setConcordance={this.setConcordance}
                         setNavigationMode={this.setNavigationMode}
                         setThreshold={this.setThreshold}
                         showNavButtons={this.state.currentPlot.id}
@@ -1124,19 +1118,19 @@ class PlotNavigation extends React.Component {
         </div>
     );
 
-    percentSlider = (label, value, setValue) => (
+    thresholdSlider = (threshold, setThreshold) => (
         <div className="my-2 d-flex align-items-center">
-            <h3 className="w-100 mx-2 my-0">{label}</h3>
+            <h3 className="w-100 mx-2 my-0">Threshold:</h3>
             <div className="d-flex">
                 <input
                     max="100"
                     min="0"
-                    onChange={e => setValue(parseInt(e.target.value))}
+                    onChange={e => setThreshold(parseInt(e.target.value))}
                     type="range"
-                    value={value}
+                    value={threshold}
                 />
                 <div className="ml-2" style={{fontSize: "0.8rem"}}>
-                    {`${value}%`}
+                    {`${threshold}%`}
                 </div>
             </div>
         </div>
@@ -1178,7 +1172,6 @@ class PlotNavigation extends React.Component {
             currentPlot,
             currentUserId,
             collectConfidence,
-            concordance,
             inAdminMode,
             isProjectAdmin,
             loadingPlots,
@@ -1187,7 +1180,6 @@ class PlotNavigation extends React.Component {
             setAdminMode,
             setCurrentPlot,
             setCurrentUserId,
-            setConcordance,
             setNavigationMode,
             setThreshold,
             showNavButtons,
@@ -1214,9 +1206,9 @@ class PlotNavigation extends React.Component {
                         </select>
                     </div>
                     {isProjectAdmin && this.adminMode(inAdminMode, setAdminMode)}
-                    {navigationMode === "confidence" && this.percentSlider("Threshold:", threshold, setThreshold)}
+                    {navigationMode === "confidence" && this.thresholdSlider(threshold, setThreshold)}
                     {navigationMode === "user" && this.selectUser(plotters, currentUserId, setCurrentUserId)}
-                    {navigationMode === "qaqc" && this.percentSlider("Concordance:", concordance, setConcordance)}
+                    {navigationMode === "qaqc" && this.thresholdSlider(threshold, setThreshold)}
                     {inAdminMode && navigationMode !== "user" && allPlots?.length > 1 && this.selectPlot(currentPlot, allPlots, setCurrentPlot)}
                 </div>
                 <div className="mt-2">
