@@ -169,6 +169,9 @@ export default class QualityControl extends React.Component {
                             </button>
                         </div>
                         {this.renderAssignedSMEs(assignedSMEs)}
+                        <p className="font-italic ml-2 small">
+                            - SME: Subject Matter Expert
+                        </p>
                     </div>
                 )}
             </div>
