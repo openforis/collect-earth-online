@@ -123,6 +123,7 @@ export default class QualityControl extends React.Component {
                                 max="100"
                                 min="0"
                                 onChange={e => this.setPercent(parseInt(e.target.value))}
+                                steps="5"
                                 type="range"
                                 value={percent}
                             />
