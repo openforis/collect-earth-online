@@ -545,12 +545,16 @@ class Collection extends React.Component {
 
     setCurrentUserId = currentUserId => {
         const {allPlots} = this.state;
-        const newPlot = allPlots.find(p => p.userId === currentUserId);
-        this.setState({
-            currentUserId,
-            currentPlot: newPlot,
-            ...this.newPlotValues(newPlot)
-        });
+        const newPlot = (allPlots || []).find(p => p.userId === currentUserId);
+        if (newPlot) {
+            this.setState({
+                currentUserId,
+                currentPlot: newPlot,
+                ...this.newPlotValues(newPlot)
+            });
+        } else {
+            this.setState({currentUserId});
+        }
     };
 
     postValuesToDB = () => {
@@ -879,7 +883,7 @@ class Collection extends React.Component {
                         navToPlot={this.navToPlot}
                         navToPrevPlot={this.navToPrevPlot}
                         plotters={this.state.plotters}
-                        plotUser={(this.state.allPlots || []).filter(p => p.userId)}
+                        plotUsers={(this.state.allPlots || []).filter(p => p.userId)}
                         setAdminMode={this.setAdminMode}
                         setCurrentUserId={this.setCurrentUserId}
                         setNavigationMode={this.setNavigationMode}
