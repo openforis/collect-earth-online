@@ -543,9 +543,19 @@ class Collection extends React.Component {
 
     setThreshold = threshold => this.setState({threshold});
 
-    setCurrentPlot = currentPlot => this.setState({currentPlot, ...this.newPlotValues(currentPlot)});
-
-    setCurrentUserId = currentUserId => this.setState({currentUserId});
+    setCurrentUserId = currentUserId => {
+        const {allPlots} = this.state;
+        const newPlot = (allPlots || []).find(p => p.userId === currentUserId);
+        if (newPlot) {
+            this.setState({
+                currentUserId,
+                currentPlot: newPlot,
+                ...this.newPlotValues(newPlot)
+            });
+        } else {
+            this.setState({currentUserId});
+        }
+    };
 
     postValuesToDB = () => {
         if (this.state.currentPlot.flagged) {
@@ -861,7 +871,6 @@ class Collection extends React.Component {
                     userName={this.props.userName}
                 >
                     <PlotNavigation
-                        allPlots={this.state.allPlots}
                         collectConfidence={this.state.currentProject?.projectOptions?.collectConfidence}
                         currentPlot={this.state.currentPlot}
                         currentUserId={this.state.currentUserId}
@@ -875,10 +884,10 @@ class Collection extends React.Component {
                         navToPlot={this.navToPlot}
                         navToPrevPlot={this.navToPrevPlot}
                         plotters={this.state.plotters}
-                        setReviewMode={this.setReviewMode}
-                        setCurrentPlot={this.setCurrentPlot}
+                        plotUsers={(this.state.allPlots || []).filter(p => p.userId)}
                         setCurrentUserId={this.setCurrentUserId}
                         setNavigationMode={this.setNavigationMode}
+                        setReviewMode={this.setReviewMode}
                         setThreshold={this.setThreshold}
                         showNavButtons={this.state.currentPlot.id}
                         threshold={this.state.threshold}
@@ -1146,41 +1155,22 @@ class PlotNavigation extends React.Component {
         </div>
     );
 
-    selectUser = (users, currentUserId, setCurrentUserId) => (
+    selectUser = (users, currentUserId, onChange) => (
         <div className="my-2 d-flex align-items-center justify-content-center">
             <Select
-                disabled={users.length === 0}
+                disabled={users.length <= 1}
                 label="User:"
                 labelKey="email"
-                onChange={e => setCurrentUserId(parseInt(e.target.value))}
-                options={users.length > 0 ? users : ["No users found"]}
+                onChange={e => onChange(parseInt(e.target.value))}
+                options={users.length > 0 ? users : ["No users to select"]}
                 value={currentUserId}
                 valueKey="userId"
             />
         </div>
     );
 
-    selectPlot = (currentPlot, allPlots, setCurrentPlot) => {
-        const options = allPlots.map(({email}, index) => ({index, email}));
-        const currentIndex = allPlots.indexOf(currentPlot);
-        return (
-            <div className="my-2 d-flex align-items-center justify-content-center">
-                <Select
-                    label="User:"
-                    labelKey="email"
-                    onChange={e => setCurrentPlot(allPlots[parseInt(e.target.value)])}
-                    options={options}
-                    value={currentIndex}
-                    valueKey="index"
-                />
-            </div>
-        );
-    };
-
     render() {
         const {
-            allPlots,
-            currentPlot,
             currentUserId,
             collectConfidence,
             inReviewMode,
@@ -1189,8 +1179,8 @@ class PlotNavigation extends React.Component {
             loadingPlots,
             navigationMode,
             plotters,
+            plotUsers,
             setReviewMode,
-            setCurrentPlot,
             setCurrentUserId,
             setNavigationMode,
             setThreshold,
@@ -1218,10 +1208,12 @@ class PlotNavigation extends React.Component {
                         </select>
                     </div>
                     {isProjectAdmin && this.reviewMode(inReviewMode, setReviewMode)}
-                    {navigationMode === "confidence" && this.thresholdSlider(threshold, setThreshold)}
-                    {navigationMode === "user" && this.selectUser(plotters, currentUserId, setCurrentUserId)}
-                    {navigationMode === "qaqc" && this.thresholdSlider(threshold, setThreshold)}
-                    {inReviewMode && navigationMode !== "user" && allPlots?.length > 1 && this.selectPlot(currentPlot, allPlots, setCurrentPlot)}
+                    {["confidence", "qaqc"].includes(navigationMode) && this.thresholdSlider(threshold, setThreshold)}
+                    {inReviewMode && this.selectUser(
+                        navigationMode === "user" ? plotters : plotUsers,
+                        currentUserId,
+                        setCurrentUserId
+                    )}
                 </div>
                 <div className="mt-2">
                     {loadingPlots
