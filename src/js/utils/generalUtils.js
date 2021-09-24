@@ -180,6 +180,7 @@ export function asPercentage(part, total) {
 }
 
 export function isArguments(val) { return toString.call(val) === "[object Arguments]"; }
+export function isArray(val) { return toString.call(val) === "[object Array]"; }
 export function isFunction(val) { return toString.call(val) === "[object Function]"; }
 export function isString(val) { return toString.call(val) === "[object String]"; }
 export function isDate(val) { return toString.call(val) === "[object Date]"; }
