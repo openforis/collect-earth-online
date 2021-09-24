@@ -86,8 +86,8 @@ CREATE OR REPLACE FUNCTION select_unanalyzed_plots(_project_id integer, _user_id
         visible_id,
         ST_AsGeoJSON(plot_geom) as plot_geom,
         extra_plot_info,
-        -1,
-        NULL
+        ap.user_rid,
+        u.email
     FROM plots
     LEFT JOIN assigned_plots ap
         ON plot_uid = ap.plot_rid
@@ -96,6 +96,8 @@ CREATE OR REPLACE FUNCTION select_unanalyzed_plots(_project_id integer, _user_id
         AND (ap.user_rid = up.user_rid OR (select count from assigned_count) = 0)
     LEFT JOIN plot_locks pl
         ON plot_uid = pl.plot_rid
+    LEFT JOIN users u
+        ON ap.user_rid = u.user_uid
     WHERE project_rid = _project_id
         AND user_plot_uid IS NULL
         AND ((ap.user_rid IS NULL
@@ -182,7 +184,7 @@ CREATE OR REPLACE FUNCTION select_confidence_plots(
 
 $$ LANGUAGE SQL;
 
-CREATE OR REPLACE FUNCTION select_qaqc_plots(_project_id integer, _threshold integer)
+CREATE OR REPLACE FUNCTION select_qaqc_plots(_project_id integer)
  RETURNS setOf collection_return AS $$
 
     WITH assigned_count AS (
