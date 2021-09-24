@@ -1128,6 +1128,7 @@ class PlotNavigation extends React.Component {
                     max="100"
                     min="0"
                     onChange={e => setThreshold(parseInt(e.target.value))}
+                    step="5"
                     type="range"
                     value={threshold}
                 />
