@@ -1209,7 +1209,7 @@ class PlotNavigation extends React.Component {
                     </div>
                     {isProjectAdmin && this.reviewMode(inReviewMode, setReviewMode)}
                     {["confidence", "qaqc"].includes(navigationMode) && this.thresholdSlider(threshold, setThreshold)}
-                    {inAdminMode && this.selectUser(
+                    {inReviewMode && this.selectUser(
                         navigationMode === "user" ? plotters : plotUsers,
                         currentUserId,
                         setCurrentUserId
