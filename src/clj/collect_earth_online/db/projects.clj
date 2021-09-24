@@ -294,7 +294,7 @@
                             (str/join ", " (take 10 bad-plots))
                             "]"))))
     (when-let [assigned-plots (assign-user-plots plots design-settings)]
-      (p-insert-rows! "assigned_plots" (assign-qaqc assigned-plots design-settings)))))
+      (p-insert-rows! "plot_assignments" (assign-qaqc assigned-plots design-settings)))))
 
 (defn- create-project-plots! [project-id
                               lon-min

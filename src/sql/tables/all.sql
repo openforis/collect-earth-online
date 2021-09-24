@@ -100,7 +100,7 @@ CREATE TABLE project_imagery (
 
 --            1 project -> many |plots ->                                       many samples|
 --                              |plots -> many user_plots -> 1 sample_values many <- samples|
---  1 users -> many assigned_plots -^                ^- many users
+--  1 users -> many plot_assignments -^            ^- many users
 
 -- Stores plot information, including a reference to external plot data if it exists
 CREATE TABLE plots (
@@ -164,7 +164,7 @@ CREATE TABLE plot_locks (
 
 -- Stores assigned user information for a plot
 -- many plots <-> many users
-CREATE TABLE assigned_plots (
+CREATE TABLE plot_assignments (
     user_rid    integer NOT NULL REFERENCES users(user_uid),
     plot_rid    integer NOT NULL REFERENCES plots(plot_uid) ON DELETE CASCADE,
     PRIMARY KEY(user_rid, plot_rid)
