@@ -5,7 +5,7 @@
 const ceo = "ceo:";
 const project = "project:";
 
-const defaultPreferences = {inAdminMode: null};
+const defaultPreferences = {inReviewMode: null};
 
 export function getPreference(key) {
     return window.localStorage.getItem(ceo + key);
