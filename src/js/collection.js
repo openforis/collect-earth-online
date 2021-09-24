@@ -202,9 +202,7 @@ class Collection extends React.Component {
             if (project.id > 0 && project.availability !== "archived") {
                 this.setState({currentProject: project});
                 const {inReviewMode} = getProjectPreferences(project.id);
-                if (project.isProjectAdmin && inReviewMode) {
-                    this.setReviewMode(inReviewMode);
-                }
+                this.setReviewMode(project.isProjectAdmin && (inReviewMode || (project.availability === "published" && inReviewMode !== false)));
                 return Promise.resolve("resolved");
             } else {
                 return Promise.reject(
@@ -537,7 +535,7 @@ class Collection extends React.Component {
         this.setState({inReviewMode});
         setProjectPreferences(currentProject.id, {inReviewMode});
         if (inReviewMode && this.state.navigationMode === "natural") {
-            this.setNavigationMode("unanalyzed");
+            this.setNavigationMode("analyzed");
         } else if (!inReviewMode && ["qaqc", "user"].includes(this.state.navigationMode)) {
             this.setNavigationMode("natural");
         }
