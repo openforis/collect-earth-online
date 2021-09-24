@@ -310,9 +310,11 @@ export default class CreateProjectWizard extends React.Component {
                 && "The assigned Quality Control percentage must be greater than 0.",
             (qaqcMethod === "sme" && smes.length === 0)
                 && "At least one user must be added as an SME.",
+            (qaqcMethod === "overlap" && users.length === 1)
+                    && "At least two assigned users are required for overlap mode.",
             (qaqcMethod === "overlap" && timesToReview < 2)
                 && "# of Reviews must be at least 2.",
-            (qaqcMethod === "overlap" && timesToReview > users.length)
+            (qaqcMethod === "overlap" && timesToReview > users.length && users.length > 1)
                 && "# of Reviews cannot be greater than the number of assigned users."
         ];
         return errorList.filter(e => e);
