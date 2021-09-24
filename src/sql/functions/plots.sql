@@ -44,12 +44,15 @@ CREATE OR REPLACE FUNCTION select_plotters(_project_id integer)
     email      text
  ) AS $$
 
-    SELECT DISTINCT(up.user_rid) user_id, u.email
+    SELECT DISTINCT(u.user_uid) user_id, u.email
     FROM plots p
-    INNER JOIN user_plots up
+    LEFT JOIN user_plots up
         ON p.plot_uid = up.plot_rid
+    LEFT JOIN assigned_plots ap
+        ON p.plot_uid = ap.plot_rid
     INNER JOIN users u
         ON u.user_uid = up.user_rid
+        OR u.user_uid = ap.user_rid
     WHERE p.project_rid = _project_id
     ORDER BY user_id
 

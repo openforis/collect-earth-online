@@ -17,7 +17,7 @@ import Modal from "./components/Modal";
 import Select from "./components/Select";
 import Switch from "./components/Switch";
 
-import {UnicodeIcon, getQueryString, safeLength, isNumber, invertColor, asPercentage} from "./utils/generalUtils";
+import {UnicodeIcon, getQueryString, safeLength, isNumber, invertColor, asPercentage, isArray} from "./utils/generalUtils";
 import {getProjectPreferences, setProjectPreferences} from "./utils/preferences";
 import {mercator} from "./utils/mercator";
 
@@ -239,11 +239,14 @@ class Collection extends React.Component {
     getPlotters = () => fetch(`/get-plotters?projectId=${this.props.projectId}`)
         .then(response => (response.ok ? response.json() : Promise.reject(response)))
         .then(data => {
-            if (data.length > 0) {
-                this.setState({plotters: data});
+            if (isArray(data)) {
+                this.setState({
+                    plotters: data,
+                    currentUserId: (data[0]?.userId || -1)
+                });
                 return Promise.resolve("resolved");
             } else {
-                return Promise.reject("No plotters found");
+                return Promise.reject("Error getting plotter data.");
             }
         });
 
@@ -1142,10 +1145,11 @@ class PlotNavigation extends React.Component {
     selectUser = (users, currentUserId, setCurrentUserId) => (
         <div className="my-2 d-flex align-items-center justify-content-center">
             <Select
+                disabled={users.length === 0}
                 label="User:"
                 labelKey="email"
                 onChange={e => setCurrentUserId(parseInt(e.target.value))}
-                options={users}
+                options={users.length > 0 ? users : ["No users found"]}
                 value={currentUserId}
                 valueKey="userId"
             />
