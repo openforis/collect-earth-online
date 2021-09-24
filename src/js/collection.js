@@ -1106,7 +1106,10 @@ class PlotNavigation extends React.Component {
                 onClick={() => this.props.navToPlot(this.state.newPlotInput)}
                 type="button"
             >
-                Go to plot
+                {this.state.newPlotInput === this.props.currentPlot.visibleId
+                    && this.props.inAdminMode
+                    ? "Refresh"
+                    : "Go to plot"}
             </button>
         </div>
     );
