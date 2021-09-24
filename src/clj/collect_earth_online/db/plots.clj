@@ -161,7 +161,7 @@
   (let [navigation-mode (:navigationMode params "unanalyzed")
         direction       (:direction params "next")
         project-id      (tc/val->int (:projectId params))
-        visible-id      (tc/val->int (:visibleId params))
+        old-visible-id  (tc/val->int (:visibleId params))
         threshold       (tc/val->int (:threshold params))
         user-id         (:userId params -1)
         current-user-id (tc/val->int (:currentUserId params -1))
@@ -182,8 +182,8 @@
                           (filter-plot-agreement project-id grouped-plots threshold)
                           grouped-plots)
         plots-info      (case direction
-                          "next"     (or (some (fn [[plot-id plots]]
-                                                 (and (> plot-id visible-id)
+                          "next"     (or (some (fn [[visible-id plots]]
+                                                 (and (> visible-id old-visible-id)
                                                       plots))
                                                final-plots)
                                          (->> final-plots
@@ -191,14 +191,14 @@
                                               (second)))
                           "previous" (or (->> final-plots
                                               (sort-by first #(compare %2 %1))
-                                              (some (fn [[plot-id plots]]
-                                                      (and (< plot-id visible-id)
+                                              (some (fn [[visible-id plots]]
+                                                      (and (< visible-id old-visible-id)
                                                            plots))))
                                          (->> final-plots
                                               (last)
                                               (second)))
-                          "id"       (some (fn [[plot-id plots]]
-                                             (and (= plot-id visible-id)
+                          "id"       (some (fn [[visible-id plots]]
+                                             (and (= visible-id old-visible-id)
                                                   plots))
                                            final-plots))]
     (if plots-info
