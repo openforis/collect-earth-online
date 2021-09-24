@@ -35,7 +35,7 @@ class Collection extends React.Component {
             // attributes to record when sample is saved
             imageryAttributes: {},
             imageryList: [],
-            inAdminMode: false,
+            inReviewMode: false,
             mapConfig: null,
             messageBox: null,
             plotList: [],
@@ -170,22 +170,22 @@ class Collection extends React.Component {
             this.getPlotters()
         ])
             .then(() => {
-                const adminWarning = this.state.inAdminMode ? "You are currently in 'Admin Mode.'" : "";
+                const reviewWarning = this.state.inReviewMode ? "You are currently in 'Review Mode.'" : "";
                 if (this.state.currentProject.availability === "unpublished") {
                     this.showAlert({
                         title: "Warning: Draft Mode",
-                        body: "This project is in draft mode. Only admins can collect. Any plot collections will be erased when the project is published.\n" + adminWarning,
+                        body: "This project is in draft mode. Only admins can collect. Any plot collections will be erased when the project is published.\n" + reviewWarning,
                         closeText: "OK, I understand"
                     });
                 } else if (this.state.currentProject.availability === "closed") {
                     this.showAlert({
                         title: "Project Closed",
-                        body: "This project has been closed. Admins can make corrections to any plot.\n " + adminWarning
+                        body: "This project has been closed. Admins can make corrections to any plot.\n " + reviewWarning
                     });
-                } else if (this.state.inAdminMode) {
+                } else if (this.state.inReviewMode) {
                     this.showAlert({
-                        title: "Admin Mode",
-                        body: adminWarning
+                        title: "Review Mode",
+                        body: reviewWarning
                     });
                 }
             })
@@ -201,8 +201,8 @@ class Collection extends React.Component {
             // TODO This logic is currently invalid since this route can never return an archived project.
             if (project.id > 0 && project.availability !== "archived") {
                 this.setState({currentProject: project});
-                const {inAdminMode} = getProjectPreferences(project.id);
-                this.setAdminMode(project.isProjectAdmin && (inAdminMode === null || inAdminMode));
+                const {inReviewMode} = getProjectPreferences(project.id);
+                this.setReviewMode(project.isProjectAdmin && (inReviewMode || (project.availability === "published" && inReviewMode !== false)));
                 return Promise.resolve("resolved");
             } else {
                 return Promise.reject(
@@ -314,7 +314,7 @@ class Collection extends React.Component {
     };
 
     getPlotData = (visibleId, direction) => {
-        const {currentUserId, navigationMode, inAdminMode, threshold} = this.state;
+        const {currentUserId, navigationMode, inReviewMode, threshold} = this.state;
         const {projectId} = this.props;
         this.processModal(
             "Getting plot",
@@ -323,7 +323,7 @@ class Collection extends React.Component {
                 projectId,
                 navigationMode,
                 direction,
-                inAdminMode,
+                inReviewMode,
                 threshold,
                 currentUserId
             }))
@@ -530,13 +530,13 @@ class Collection extends React.Component {
 
     setNavigationMode = newMode => this.setState({navigationMode: newMode});
 
-    setAdminMode = inAdminMode => {
+    setReviewMode = inReviewMode => {
         const {currentProject} = this.state;
-        this.setState({inAdminMode});
-        setProjectPreferences(currentProject.id, {inAdminMode});
-        if (inAdminMode && this.state.navigationMode === "natural") {
-            this.setNavigationMode("unanalyzed");
-        } else if (!inAdminMode && ["qaqc", "user"].includes(this.state.navigationMode)) {
+        this.setState({inReviewMode});
+        setProjectPreferences(currentProject.id, {inReviewMode});
+        if (inReviewMode && this.state.navigationMode === "natural") {
+            this.setNavigationMode("analyzed");
+        } else if (!inReviewMode && ["qaqc", "user"].includes(this.state.navigationMode)) {
             this.setNavigationMode("natural");
         }
     };
@@ -874,8 +874,9 @@ class Collection extends React.Component {
                         collectConfidence={this.state.currentProject?.projectOptions?.collectConfidence}
                         currentPlot={this.state.currentPlot}
                         currentUserId={this.state.currentUserId}
-                        inAdminMode={this.state.inAdminMode}
+                        inReviewMode={this.state.inReviewMode}
                         isProjectAdmin={this.state.currentProject.isProjectAdmin}
+                        isQAQCEnabled={this.state.currentProject.designSettings?.qaqcAssignment?.qaqcMethod !== "none"}
                         loadingPlots={this.state.plotList.length === 0}
                         navigationMode={this.state.navigationMode}
                         navToFirstPlot={this.navToFirstPlot}
@@ -884,9 +885,9 @@ class Collection extends React.Component {
                         navToPrevPlot={this.navToPrevPlot}
                         plotters={this.state.plotters}
                         plotUsers={(this.state.allPlots || []).filter(p => p.userId)}
-                        setAdminMode={this.setAdminMode}
                         setCurrentUserId={this.setCurrentUserId}
                         setNavigationMode={this.setNavigationMode}
+                        setReviewMode={this.setReviewMode}
                         setThreshold={this.setThreshold}
                         showNavButtons={this.state.currentPlot.id}
                         threshold={this.state.threshold}
@@ -1115,18 +1116,21 @@ class PlotNavigation extends React.Component {
                 onClick={() => this.props.navToPlot(this.state.newPlotInput)}
                 type="button"
             >
-                Go to plot
+                {this.state.newPlotInput === this.props.currentPlot.visibleId
+                    && this.props.inReviewMode
+                    ? "Refresh"
+                    : "Go to plot"}
             </button>
         </div>
     );
 
-    adminMode = (inAdminMode, setAdminMode) => (
+    reviewMode = (inReviewMode, setReviewMode) => (
         <div className="d-flex my-2 mx-2 align-items-center justify-content-end">
-            <h4 className="mx-2 my-0">Admin Mode:</h4>
+            <h4 className="mx-2 my-0">Review Mode:</h4>
             <div style={{display: "inline-block"}}>
                 <Switch
-                    checked={inAdminMode}
-                    onChange={() => setAdminMode(!inAdminMode)}
+                    checked={inReviewMode}
+                    onChange={() => setReviewMode(!inReviewMode)}
                 />
             </div>
         </div>
@@ -1140,6 +1144,7 @@ class PlotNavigation extends React.Component {
                     max="100"
                     min="0"
                     onChange={e => setThreshold(parseInt(e.target.value))}
+                    step="5"
                     type="range"
                     value={threshold}
                 />
@@ -1168,13 +1173,14 @@ class PlotNavigation extends React.Component {
         const {
             currentUserId,
             collectConfidence,
-            inAdminMode,
+            inReviewMode,
             isProjectAdmin,
+            isQAQCEnabled,
             loadingPlots,
             navigationMode,
             plotters,
             plotUsers,
-            setAdminMode,
+            setReviewMode,
             setCurrentUserId,
             setNavigationMode,
             setThreshold,
@@ -1192,16 +1198,16 @@ class PlotNavigation extends React.Component {
                             style={{flex: "1 1 auto"}}
                             value={navigationMode}
                         >
-                            {!inAdminMode && (<option value="natural">Natural</option>)}
+                            {!inReviewMode && (<option value="natural">Natural</option>)}
                             <option value="unanalyzed">Unanalyzed plots</option>
                             <option value="analyzed">Analyzed plots</option>
                             <option value="flagged">Flagged plots</option>
                             {collectConfidence && (<option value="confidence">Low Confidence</option>)}
-                            {inAdminMode && (<option value="user">User</option>)}
-                            {inAdminMode && (<option value="qaqc">QA/QC</option>)}
+                            {inReviewMode && (<option value="user">User</option>)}
+                            {inReviewMode && isQAQCEnabled && (<option value="qaqc">QA/QC</option>)}
                         </select>
                     </div>
-                    {isProjectAdmin && this.adminMode(inAdminMode, setAdminMode)}
+                    {isProjectAdmin && this.reviewMode(inReviewMode, setReviewMode)}
                     {["confidence", "qaqc"].includes(navigationMode) && this.thresholdSlider(threshold, setThreshold)}
                     {inAdminMode && this.selectUser(
                         navigationMode === "user" ? plotters : plotUsers,

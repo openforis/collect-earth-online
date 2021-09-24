@@ -77,7 +77,7 @@ export default class QualityControl extends React.Component {
             ["sme", "SME Verification"]
         ];
         const {qaqcMethod, percent, smes, timesToReview} = this.getAssignment();
-        const {users} = this.getUserAssignment();
+        const {userMethod} = this.getUserAssignment();
         const {allowDrawnSamples} = this.context;
         const {selectedUser} = this.state;
         const {institutionUserList} = this.props;
@@ -92,7 +92,7 @@ export default class QualityControl extends React.Component {
                 <h3 className="mb-3">Quality Control</h3>
                 <div className="d-flex">
                     <Select
-                        disabled={allowDrawnSamples || users.length === 0}
+                        disabled={allowDrawnSamples || userMethod === "none"}
                         id="quality-mode"
                         label="Quality Mode"
                         onChange={e => this.setMethod(e.target.value)}
@@ -105,9 +105,9 @@ export default class QualityControl extends React.Component {
                         When User-Drawn samples are enabled, the project cannot support Quality Control of plots.
                         Disable User-Drawn samples to re-enable Quality Control.
                     </p>
-                ) : users.length === 0 && (
+                ) : userMethod === "none" && (
                     <p className="font-italic mt-2 small">
-                        Please add assigned users to enable Quality Control.
+                        Please assign users to enable Quality Control.
                     </p>
 
                 )}
@@ -123,6 +123,7 @@ export default class QualityControl extends React.Component {
                                 max="100"
                                 min="0"
                                 onChange={e => this.setPercent(parseInt(e.target.value))}
+                                steps="5"
                                 type="range"
                                 value={percent}
                             />

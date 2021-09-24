@@ -1,13 +1,35 @@
 (ns collect-earth-online.db.plots
   (:import java.sql.Timestamp)
   (:require [clojure.set :as set]
+            [clojure.data.json :refer [read-str]]
             [triangulum.type-conversion :as tc]
             [triangulum.database :refer [call-sql sql-primitive]]
+            [triangulum.utils    :refer [filterm]]
             [collect-earth-online.db.projects :refer [is-proj-admin?]]
             [collect-earth-online.views       :refer [data-response]]))
 
+;;;
+;;; Helpers
+;;;
+
 (defn- time-plus-five-min []
   (Timestamp. (+ (System/currentTimeMillis) (* 5 60 1000))))
+
+;; TODO move to triangulum.type_conversion
+(defn- jsonb->clj-str
+  "Convert PG jsonb object to clj equivalent."
+  ([jsonb]
+   (jsonb->clj-str jsonb nil))
+  ([jsonb default]
+   (-> jsonb str (read-str))))
+
+(defn- average [coll]
+  (/ (tc/val->float (apply + coll))
+     (count coll)))
+
+;;;
+;;; Project Level
+;;;
 
 ;; TODO, CEO-32 update to only show users available plots
 (defn get-project-plots [{:keys [params]}]
@@ -28,6 +50,10 @@
                            {:userId user_id :email email})
                          (call-sql "select_plotters" project-id)))))
 
+;;;
+;;; GeoDash
+;;;
+
 (defn get-plot-sample-geom [{:keys [params]}]
   (let [plot-id (tc/val->int (:plotId params))]
     (data-response (if-let [plot-geom (sql-primitive (call-sql "select_plot_geom" plot-id))]
@@ -35,6 +61,53 @@
                       :samplesGeoms (mapv :sample_geom
                                           (call-sql "select_plot_sample_geoms" plot-id))}
                      ""))))
+
+;;;
+;;; Plot Agreement
+;;;
+
+(defn- get-samples-answer-array [plot-id user-id]
+  (map (fn [{:keys [saved_answers]}]
+         (jsonb->clj-str saved_answers))
+       (call-sql "select_plot_samples" {:log? false} plot-id user-id)))
+
+(defn- sample-answer-agreement [sample-ans]
+  (average (apply map
+                  (fn [& sa]
+                    (if (apply = sa) 100.0 0.0))
+                  sample-ans)))
+
+(defn- question-agreement [survey-questions users-samples]
+  (map (fn [sq]
+         (let [question   (:question sq)
+               sample-ans (map (fn [sv]
+                                 (map #(get-in % [question "answerId"])
+                                      sv))
+                               users-samples)]
+           (if (->> sample-ans
+                    (map #(every? nil? %))
+                    (some true?))
+             9999
+             (sample-answer-agreement sample-ans))))
+       survey-questions))
+
+(defn- filter-plot-agreement [project-id grouped-plots threshold]
+  (let [survey-questions (->> (call-sql "select_project_by_id" project-id)
+                              (first)
+                              (:survey_questions)
+                              (tc/jsonb->clj))]
+    (filterm (fn [[_ plots]]
+               (let [plot-id (-> plots (first) :plot_id)]
+                 (->> (question-agreement survey-questions
+                                          (map #(get-samples-answer-array plot-id %)
+                                               (map :user_id plots)))
+                      (apply min)
+                      (<= threshold))))
+             grouped-plots)))
+
+;;;
+;;; Plot Collection
+;;;
 
 (defn- unlock-plots [user-id]
   (call-sql "unlock_plots" {:log? false} user-id))
@@ -56,7 +129,7 @@
            :savedAnswers (tc/jsonb->clj saved_answers)})
         (call-sql "select_plot_samples" plot-id user-id)))
 
-(defn- build-collection-plot [plot-info user-id admin-mode?]
+(defn- build-collection-plot [plot-info user-id review-mode?]
   (let [{:keys [plot_id
                 flagged
                 confidence
@@ -73,7 +146,9 @@
      :visibleId     visible_id
      :plotGeom      plot_geom
      :extraPlotInfo (tc/jsonb->clj extra_plot_info {})
-     :samples       (prepare-samples-array plot_id (if admin-mode? user_id user-id))
+     :samples       (prepare-samples-array plot_id (if (and review-mode? (pos? user_id))
+                                                     user_id
+                                                     user-id))
      :userId        user_id
      :email         email}))
 
@@ -86,43 +161,46 @@
   (let [navigation-mode (:navigationMode params "unanalyzed")
         direction       (:direction params "next")
         project-id      (tc/val->int (:projectId params))
-        visible-id      (tc/val->int (:visibleId params))
+        old-visible-id  (tc/val->int (:visibleId params))
         threshold       (tc/val->int (:threshold params))
         user-id         (:userId params -1)
         current-user-id (tc/val->int (:currentUserId params -1))
-        admin-mode?     (and (tc/val->bool (:inAdminMode params))
+        review-mode?     (and (tc/val->bool (:inReviewMode params))
                              (is-proj-admin? user-id project-id nil))
         proj-plots      (case navigation-mode
-                          "unanalyzed" (call-sql "select_unanalyzed_plots" project-id user-id admin-mode?)
-                          "analyzed"   (call-sql "select_analyzed_plots"   project-id user-id admin-mode?)
-                          "flagged"    (call-sql "select_flagged_plots"    project-id user-id admin-mode?)
-                          "confidence" (call-sql "select_confidence_plots" project-id user-id admin-mode? threshold)
+                          "unanalyzed" (call-sql "select_unanalyzed_plots" project-id user-id review-mode?)
+                          "analyzed"   (call-sql "select_analyzed_plots"   project-id user-id review-mode?)
+                          "flagged"    (call-sql "select_flagged_plots"    project-id user-id review-mode?)
+                          "confidence" (call-sql "select_confidence_plots" project-id user-id review-mode? threshold)
                           "natural"    (concat (call-sql "select_analyzed_plots" project-id user-id false)
                                                (call-sql "select_unanalyzed_plots" project-id user-id false))
                           "user"       (call-sql "select_analyzed_plots" project-id current-user-id false)
-                          "qaqc"       (call-sql "select_qaqc_plots" project-id threshold)
+                          "qaqc"       (call-sql "select_qaqc_plots" project-id)
                           [])
-        grouped-plots   (group-by :visible_id proj-plots)
+        grouped-plots   (into (sorted-map) (group-by :visible_id proj-plots))
+        final-plots     (if (= navigation-mode "qaqc")
+                          (filter-plot-agreement project-id grouped-plots threshold)
+                          grouped-plots)
         plots-info      (case direction
-                          "next"     (or (some (fn [[plot-id plots]]
-                                                 (and (> plot-id visible-id)
+                          "next"     (or (some (fn [[visible-id plots]]
+                                                 (and (> visible-id old-visible-id)
                                                       plots))
-                                               grouped-plots)
-                                         (->> grouped-plots
+                                               final-plots)
+                                         (->> final-plots
                                               (first)
                                               (second)))
-                          "previous" (or (->> grouped-plots
+                          "previous" (or (->> final-plots
                                               (sort-by first #(compare %2 %1))
-                                              (some (fn [[plot-id plots]]
-                                                      (and (< plot-id visible-id)
+                                              (some (fn [[visible-id plots]]
+                                                      (and (< visible-id old-visible-id)
                                                            plots))))
-                                         (->> grouped-plots
+                                         (->> final-plots
                                               (last)
                                               (second)))
-                          "id"       (some (fn [[plot-id plots]]
-                                             (and (= plot-id visible-id)
+                          "id"       (some (fn [[visible-id plots]]
+                                             (and (= visible-id old-visible-id)
                                                   plots))
-                                           grouped-plots))]
+                                           final-plots))]
     (if plots-info
       (do
         (unlock-plots user-id)
@@ -134,8 +212,12 @@
                   (:plot_id (first plots-info))
                   user-id
                   (time-plus-five-min))
-        (data-response (map #(build-collection-plot % user-id admin-mode?) plots-info)))
+        (data-response (map #(build-collection-plot % user-id review-mode?) plots-info)))
       (data-response "not-found"))))
+
+;;;
+;;; Saving Plots
+;;;
 
 (defn add-user-samples [{:keys [params]}]
   (let [plot-id          (tc/val->int (:plotId params))

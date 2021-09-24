@@ -48,7 +48,7 @@ CREATE OR REPLACE FUNCTION select_plotters(_project_id integer)
     FROM plots p
     LEFT JOIN user_plots up
         ON p.plot_uid = up.plot_rid
-    LEFT JOIN assigned_plots ap
+    LEFT JOIN plot_assignments ap
         ON p.plot_uid = ap.plot_rid
     INNER JOIN users u
         ON u.user_uid = up.user_rid
@@ -72,12 +72,12 @@ CREATE TYPE collection_return AS (
     email              text
 );
 
-CREATE OR REPLACE FUNCTION select_unanalyzed_plots(_project_id integer, _user_id integer, _admin_mode boolean)
+CREATE OR REPLACE FUNCTION select_unanalyzed_plots(_project_id integer, _user_id integer, _review_mode boolean)
  RETURNS setOf collection_return AS $$
 
     WITH assigned_count AS (
         SELECT count(*)
-        FROM plots, assigned_plots
+        FROM plots, plot_assignments
         WHERE project_rid = _project_id
             AND plot_uid = plot_rid
     )
@@ -92,7 +92,7 @@ CREATE OR REPLACE FUNCTION select_unanalyzed_plots(_project_id integer, _user_id
         ap.user_rid,
         u.email
     FROM plots
-    LEFT JOIN assigned_plots ap
+    LEFT JOIN plot_assignments ap
         ON plot_uid = ap.plot_rid
     LEFT JOIN user_plots up
         ON plot_uid = up.plot_rid
@@ -107,12 +107,12 @@ CREATE OR REPLACE FUNCTION select_unanalyzed_plots(_project_id integer, _user_id
                 AND (pl.lock_end IS NULL
                      OR localtimestamp > pl.lock_end)) -- unlocked
              OR ap.user_rid = _user_id                 -- assigned
-             OR _admin_mode)                           -- admin TODO, CEO-208 should admin be able to visit a locked plot? probably.
+             OR _review_mode)                           -- admin TODO, CEO-208 should admin be able to visit a locked plot? probably.
     ORDER BY visible_id ASC
 
 $$ LANGUAGE SQL;
 
-CREATE OR REPLACE FUNCTION select_analyzed_plots(_project_id integer, _user_id integer, _admin_mode boolean)
+CREATE OR REPLACE FUNCTION select_analyzed_plots(_project_id integer, _user_id integer, _review_mode boolean)
  RETURNS setOf collection_return AS $$
 
     SELECT plot_uid,
@@ -130,12 +130,12 @@ CREATE OR REPLACE FUNCTION select_analyzed_plots(_project_id integer, _user_id i
     INNER JOIN users u
         ON u.user_uid = up.user_rid
     WHERE project_rid = _project_id
-        AND (up.user_rid = _user_id OR _admin_mode)
+        AND (up.user_rid = _user_id OR _review_mode)
     ORDER BY visible_id ASC
 
 $$ LANGUAGE SQL;
 
-CREATE OR REPLACE FUNCTION select_flagged_plots(_project_id integer, _user_id integer, _admin_mode boolean)
+CREATE OR REPLACE FUNCTION select_flagged_plots(_project_id integer, _user_id integer, _review_mode boolean)
  RETURNS setOf collection_return AS $$
 
     SELECT plot_uid,
@@ -153,7 +153,7 @@ CREATE OR REPLACE FUNCTION select_flagged_plots(_project_id integer, _user_id in
     INNER JOIN users u
         ON u.user_uid = up.user_rid
     WHERE project_rid = _project_id
-        AND (up.user_rid = _user_id OR _admin_mode)
+        AND (up.user_rid = _user_id OR _review_mode)
         AND flagged = TRUE
     ORDER BY visible_id ASC
 
@@ -162,7 +162,7 @@ $$ LANGUAGE SQL;
 CREATE OR REPLACE FUNCTION select_confidence_plots(
     _project_id integer,
     _user_id integer,
-    _admin_mode boolean,
+    _review_mode boolean,
     _threshold integer
  ) RETURNS setOf collection_return AS $$
 
@@ -181,18 +181,18 @@ CREATE OR REPLACE FUNCTION select_confidence_plots(
     INNER JOIN users u
         ON u.user_uid = up.user_rid
     WHERE project_rid = _project_id
-        AND (up.user_rid = _user_id OR _admin_mode)
+        AND (up.user_rid = _user_id OR _review_mode)
         AND confidence <= _threshold
     ORDER BY visible_id ASC
 
 $$ LANGUAGE SQL;
 
-CREATE OR REPLACE FUNCTION select_qaqc_plots(_project_id integer, _threshold integer)
+CREATE OR REPLACE FUNCTION select_qaqc_plots(_project_id integer)
  RETURNS setOf collection_return AS $$
 
     WITH assigned_count AS (
         SELECT ap.plot_rid plot_rid, count(ap.user_rid) users
-        FROM plots, assigned_plots ap
+        FROM plots, plot_assignments ap
         WHERE project_rid = _project_id
             AND plot_uid = ap.plot_rid
         GROUP BY ap.plot_rid
@@ -279,7 +279,7 @@ CREATE OR REPLACE FUNCTION select_plot_samples(_plot_id integer, _user_id intege
 
     WITH assigned_count AS (
         SELECT count(*)
-        FROM assigned_plots
+        FROM plot_assignments
         WHERE plot_rid = _plot_id
     )
 
@@ -287,7 +287,7 @@ CREATE OR REPLACE FUNCTION select_plot_samples(_plot_id integer, _user_id intege
         ST_AsGeoJSON(sample_geom) as sample_geom,
         (CASE WHEN sv.saved_answers IS NULL THEN '{}' ELSE sv.saved_answers END)
     FROM samples s
-    LEFT JOIN assigned_plots ap
+    LEFT JOIN plot_assignments ap
         ON s.plot_rid = ap.plot_rid
     LEFT JOIN user_plots up
         ON s.plot_rid = up.plot_rid
