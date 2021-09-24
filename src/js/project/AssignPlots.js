@@ -12,19 +12,26 @@ export default class AssignPlots extends React.Component {
         };
     }
 
+    getQaqcAssignment = () => this.context.designSettings.qaqcAssignment;
+
     getUserAssignment = () => this.context.designSettings.userAssignment;
 
-    setUserAssignment = newUserAssignment => {
+    setUserAssignment = (newUserAssignment, newQaqcAssignment) => {
+        const qaqcAssignment = this.getQaqcAssignment();
         const userAssignment = this.getUserAssignment();
         this.context.setProjectDetails({
             designSettings: {
                 ...this.context.designSettings,
+                qaqcAssignment: {...qaqcAssignment, ...newQaqcAssignment},
                 userAssignment: {...userAssignment, ...newUserAssignment}
             }
         });
     };
 
-    setMethod = userMethod => this.setUserAssignment({userMethod});
+    setMethod = newUserMethod => this.setUserAssignment(
+        {userMethod: newUserMethod},
+        newUserMethod === "none" ? {qaqcMethod: "none"} : null
+    );
 
     resetSelectedUser = () => {
         this.setState({selectedUserId: -1});
