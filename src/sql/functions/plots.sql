@@ -72,7 +72,7 @@ CREATE TYPE collection_return AS (
     email              text
 );
 
-CREATE OR REPLACE FUNCTION select_unanalyzed_plots(_project_id integer, _user_id integer, _admin_mode boolean)
+CREATE OR REPLACE FUNCTION select_unanalyzed_plots(_project_id integer, _user_id integer, _review_mode boolean)
  RETURNS setOf collection_return AS $$
 
     WITH assigned_count AS (
@@ -107,12 +107,12 @@ CREATE OR REPLACE FUNCTION select_unanalyzed_plots(_project_id integer, _user_id
                 AND (pl.lock_end IS NULL
                      OR localtimestamp > pl.lock_end)) -- unlocked
              OR ap.user_rid = _user_id                 -- assigned
-             OR _admin_mode)                           -- admin TODO, CEO-208 should admin be able to visit a locked plot? probably.
+             OR _review_mode)                           -- admin TODO, CEO-208 should admin be able to visit a locked plot? probably.
     ORDER BY visible_id ASC
 
 $$ LANGUAGE SQL;
 
-CREATE OR REPLACE FUNCTION select_analyzed_plots(_project_id integer, _user_id integer, _admin_mode boolean)
+CREATE OR REPLACE FUNCTION select_analyzed_plots(_project_id integer, _user_id integer, _review_mode boolean)
  RETURNS setOf collection_return AS $$
 
     SELECT plot_uid,
@@ -130,12 +130,12 @@ CREATE OR REPLACE FUNCTION select_analyzed_plots(_project_id integer, _user_id i
     INNER JOIN users u
         ON u.user_uid = up.user_rid
     WHERE project_rid = _project_id
-        AND (up.user_rid = _user_id OR _admin_mode)
+        AND (up.user_rid = _user_id OR _review_mode)
     ORDER BY visible_id ASC
 
 $$ LANGUAGE SQL;
 
-CREATE OR REPLACE FUNCTION select_flagged_plots(_project_id integer, _user_id integer, _admin_mode boolean)
+CREATE OR REPLACE FUNCTION select_flagged_plots(_project_id integer, _user_id integer, _review_mode boolean)
  RETURNS setOf collection_return AS $$
 
     SELECT plot_uid,
@@ -153,7 +153,7 @@ CREATE OR REPLACE FUNCTION select_flagged_plots(_project_id integer, _user_id in
     INNER JOIN users u
         ON u.user_uid = up.user_rid
     WHERE project_rid = _project_id
-        AND (up.user_rid = _user_id OR _admin_mode)
+        AND (up.user_rid = _user_id OR _review_mode)
         AND flagged = TRUE
     ORDER BY visible_id ASC
 
@@ -162,7 +162,7 @@ $$ LANGUAGE SQL;
 CREATE OR REPLACE FUNCTION select_confidence_plots(
     _project_id integer,
     _user_id integer,
-    _admin_mode boolean,
+    _review_mode boolean,
     _threshold integer
  ) RETURNS setOf collection_return AS $$
 
@@ -181,7 +181,7 @@ CREATE OR REPLACE FUNCTION select_confidence_plots(
     INNER JOIN users u
         ON u.user_uid = up.user_rid
     WHERE project_rid = _project_id
-        AND (up.user_rid = _user_id OR _admin_mode)
+        AND (up.user_rid = _user_id OR _review_mode)
         AND confidence <= _threshold
     ORDER BY visible_id ASC
 

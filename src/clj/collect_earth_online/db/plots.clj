@@ -129,7 +129,7 @@
            :savedAnswers (tc/jsonb->clj saved_answers)})
         (call-sql "select_plot_samples" plot-id user-id)))
 
-(defn- build-collection-plot [plot-info user-id admin-mode?]
+(defn- build-collection-plot [plot-info user-id review-mode?]
   (let [{:keys [plot_id
                 flagged
                 confidence
@@ -146,7 +146,7 @@
      :visibleId     visible_id
      :plotGeom      plot_geom
      :extraPlotInfo (tc/jsonb->clj extra_plot_info {})
-     :samples       (prepare-samples-array plot_id (if (and admin-mode? (pos? user_id))
+     :samples       (prepare-samples-array plot_id (if (and review-mode? (pos? user_id))
                                                      user_id
                                                      user-id))
      :userId        user_id
@@ -165,13 +165,13 @@
         threshold       (tc/val->int (:threshold params))
         user-id         (:userId params -1)
         current-user-id (tc/val->int (:currentUserId params -1))
-        admin-mode?     (and (tc/val->bool (:inAdminMode params))
+        review-mode?     (and (tc/val->bool (:inReviewMode params))
                              (is-proj-admin? user-id project-id nil))
         proj-plots      (case navigation-mode
-                          "unanalyzed" (call-sql "select_unanalyzed_plots" project-id user-id admin-mode?)
-                          "analyzed"   (call-sql "select_analyzed_plots"   project-id user-id admin-mode?)
-                          "flagged"    (call-sql "select_flagged_plots"    project-id user-id admin-mode?)
-                          "confidence" (call-sql "select_confidence_plots" project-id user-id admin-mode? threshold)
+                          "unanalyzed" (call-sql "select_unanalyzed_plots" project-id user-id review-mode?)
+                          "analyzed"   (call-sql "select_analyzed_plots"   project-id user-id review-mode?)
+                          "flagged"    (call-sql "select_flagged_plots"    project-id user-id review-mode?)
+                          "confidence" (call-sql "select_confidence_plots" project-id user-id review-mode? threshold)
                           "natural"    (concat (call-sql "select_analyzed_plots" project-id user-id false)
                                                (call-sql "select_unanalyzed_plots" project-id user-id false))
                           "user"       (call-sql "select_analyzed_plots" project-id current-user-id false)
@@ -212,7 +212,7 @@
                   (:plot_id (first plots-info))
                   user-id
                   (time-plus-five-min))
-        (data-response (map #(build-collection-plot % user-id admin-mode?) plots-info)))
+        (data-response (map #(build-collection-plot % user-id review-mode?) plots-info)))
       (data-response "not-found"))))
 
 ;;;
