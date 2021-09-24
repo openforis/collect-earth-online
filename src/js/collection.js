@@ -867,6 +867,7 @@ class Collection extends React.Component {
                         currentUserId={this.state.currentUserId}
                         inAdminMode={this.state.inAdminMode}
                         isProjectAdmin={this.state.currentProject.isProjectAdmin}
+                        isQAQCEnabled={this.state.currentProject.designSettings?.qaqcAssignment?.qaqcMethod !== "none"}
                         loadingPlots={this.state.plotList.length === 0}
                         navigationMode={this.state.navigationMode}
                         navToFirstPlot={this.navToFirstPlot}
@@ -1184,6 +1185,7 @@ class PlotNavigation extends React.Component {
             collectConfidence,
             inAdminMode,
             isProjectAdmin,
+            isQAQCEnabled,
             loadingPlots,
             navigationMode,
             plotters,
@@ -1212,7 +1214,7 @@ class PlotNavigation extends React.Component {
                             <option value="flagged">Flagged plots</option>
                             {collectConfidence && (<option value="confidence">Low Confidence</option>)}
                             {inAdminMode && (<option value="user">User</option>)}
-                            {inAdminMode && (<option value="qaqc">QA/QC</option>)}
+                            {inAdminMode && isQAQCEnabled && (<option value="qaqc">QA/QC</option>)}
                         </select>
                     </div>
                     {isProjectAdmin && this.adminMode(inAdminMode, setAdminMode)}
