@@ -333,7 +333,7 @@ class Collection extends React.Component {
                         alert((direction === "id" ? "Plot not" : "No more plots") + " found for this navigation mode.");
                     } else {
                         this.setState({
-                            allPlots: data,
+                            userPlotList: data,
                             currentPlot: data[0],
                             ...this.newPlotValues(data[0]),
                             answerMode: "question"
@@ -544,8 +544,8 @@ class Collection extends React.Component {
     setThreshold = threshold => this.setState({threshold});
 
     setCurrentUserId = currentUserId => {
-        const {allPlots} = this.state;
-        const newPlot = (allPlots || []).find(p => p.userId === currentUserId);
+        const {userPlotList} = this.state;
+        const newPlot = (userPlotList || []).find(p => p.userId === currentUserId);
         if (newPlot) {
             this.setState({
                 currentUserId,
@@ -884,7 +884,7 @@ class Collection extends React.Component {
                         navToPlot={this.navToPlot}
                         navToPrevPlot={this.navToPrevPlot}
                         plotters={this.state.plotters}
-                        plotUsers={(this.state.allPlots || []).filter(p => p.userId)}
+                        plotUsers={(this.state.userPlotList || []).filter(p => p.userId)}
                         setCurrentUserId={this.setCurrentUserId}
                         setNavigationMode={this.setNavigationMode}
                         setReviewMode={this.setReviewMode}
