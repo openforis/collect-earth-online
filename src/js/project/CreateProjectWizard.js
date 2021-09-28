@@ -55,7 +55,7 @@ export default class CreateProjectWizard extends React.Component {
                         <PlotDesign
                             boundary={this.context.boundary}
                             getTotalPlots={this.getTotalPlots}
-                            institutionUserList={this.state.institutionUserList}
+                            institutionUserList={this.context.institutionUserList}
                         />
                     )),
                 helpDescription: "Collection Map Preview",
@@ -200,10 +200,10 @@ export default class CreateProjectWizard extends React.Component {
         fetch(`/get-institution-users?institutionId=${id}`)
             .then(response => (response.ok ? response.json() : Promise.reject(response)))
             .then(data => {
-                this.setState({institutionUserList: data});
+                this.context.setContextState({institutionUserList: data});
             })
             .catch(response => {
-                this.setState({institutionUserList: []});
+                this.context.setContextState({institutionUserList: []});
                 console.error(response);
                 alert("Error retrieving the user list. See console for details.");
             });

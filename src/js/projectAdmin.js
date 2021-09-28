@@ -71,6 +71,7 @@ class Project extends React.Component {
             projectDetails: {...this.blankProject, privacyLevel: "institution"},
             originalProject: {},
             institutionImagery: [],
+            institutionUserList: [],
             designMode: "loading",
             modalMessage: null,
             wizardStep: "overview"
@@ -156,6 +157,7 @@ class Project extends React.Component {
                     originalProject: this.state.originalProject,
                     designMode: this.state.designMode,
                     institutionImagery: this.state.institutionImagery,
+                    institutionUserList: this.state.institutionUserList,
                     setProjectDetails: this.setProjectDetails,
                     setContextState: this.setContextState,
                     resetProject: this.resetProject,

@@ -20,6 +20,7 @@ export default class ManageProject extends React.Component {
         this.getProjectImagery(this.context.projectId),
         this.getProjectPlots(this.context.projectId)
     ])
+        .then(() => this.getInstitutionUserList())
         .catch(response => {
             console.log(response);
             alert("Error retrieving the project info. See console for details.");
@@ -37,6 +38,20 @@ export default class ManageProject extends React.Component {
             }
         })
         .catch(() => Promise.reject("Error retrieving the project."));
+
+    getInstitutionUserList = () => {
+        fetch(`/get-institution-users?institutionId=${this.context.institution}`)
+            .then(response => (response.ok ? response.json() : Promise.reject(response)))
+            .then(data => {
+                this.context.setContextState({institutionUserList: data});
+                console.log(this.context);
+            })
+            .catch(response => {
+                this.context.setContextState({institutionUserList: []});
+                console.error(response);
+                alert("Error retrieving the user list. See console for details.");
+            });
+    };
 
     // TODO: just return with the project info
     getProjectImagery = projectId => fetch(`/get-project-imagery?projectId=${projectId}`)
