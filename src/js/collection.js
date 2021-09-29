@@ -52,7 +52,8 @@ class Collection extends React.Component {
             answerMode: "question",
             modalMessage: null,
             navigationMode: "natural",
-            threshold: 90
+            threshold: 90,
+            isUnsaved: false
         };
     }
 
@@ -313,6 +314,27 @@ class Collection extends React.Component {
         }
     };
 
+    // https://developer.mozilla.org/en-US/docs/Web/API/Window/beforeunload_event
+    unsavedWarning = e => {
+        e.preventDefault();
+        e.returnValue = "You have unsaved changes. Are you sure you want to leave?";
+        return "You have unsaved changes. Are you sure you want to leave?";
+    };
+
+    enableUnsavedWarning = () => {
+        if (!this.state.isUnsaved) {
+            this.setState({isUnsaved: true});
+            window.addEventListener("beforeunload", this.unsavedWarning, {capture: true});
+        }
+    };
+
+    resetUnsavedWarning = () => {
+        if (this.state.isUnsaved) {
+            this.setState({isUnsaved: false});
+            window.removeEventListener("beforeunload", this.unsavedWarning, {capture: true});
+        }
+    };
+
     getPlotData = (visibleId, direction) => {
         const {currentUserId, navigationMode, inReviewMode, threshold} = this.state;
         const {projectId} = this.props;
@@ -384,7 +406,10 @@ class Collection extends React.Component {
             });
     };
 
-    resetPlotValues = () => this.setState(this.newPlotValues(this.state.currentPlot, false));
+    resetPlotValues = () => {
+        this.setState(this.newPlotValues(this.state.currentPlot, false));
+        this.resetUnsavedWarning();
+    };
 
     newPlotValues = (newPlot, copyValues = true) => ({
         newPlotInput: newPlot.visibleId,
@@ -579,6 +604,7 @@ class Collection extends React.Component {
                 )
                     .then(response => {
                         if (response.ok) {
+                            this.resetUnsavedWarning();
                             return this.navToNextPlot();
                         } else {
                             console.log(response);
@@ -613,6 +639,7 @@ class Collection extends React.Component {
                 )
                     .then(response => {
                         if (response.ok) {
+                            this.resetUnsavedWarning();
                             return this.navToNextPlot();
                         } else {
                             console.log(response);
@@ -711,6 +738,8 @@ class Collection extends React.Component {
                 userImages: {...this.state.userImages, ...newUserImages},
                 selectedQuestion: questionToSet
             });
+
+            this.enableUnsavedWarning();
         }
     };
 
@@ -804,6 +833,7 @@ class Collection extends React.Component {
         this.setState({
             currentPlot: {...this.state.currentPlot, flagged: !this.state.currentPlot.flagged}
         });
+        this.enableUnsavedWarning();
     };
 
     setUnansweredColor = newColor => this.setState({unansweredColor: newColor});
@@ -822,10 +852,12 @@ class Collection extends React.Component {
 
     setConfidence = confidence => {
         this.setState({currentPlot: {...this.state.currentPlot, confidence}});
+        this.enableUnsavedWarning();
     };
 
     setFlaggedReason = flaggedReason => {
         this.setState({currentPlot: {...this.state.currentPlot, flaggedReason}});
+        this.enableUnsavedWarning();
     };
 
     render() {
@@ -960,6 +992,7 @@ class Collection extends React.Component {
                 {this.state.showQuitModal && (
                     <QuitMenu
                         projectId={this.props.projectId}
+                        resetUnsavedWarning={this.resetUnsavedWarning}
                         toggleQuitModal={this.toggleQuitModal}
                     />
                 )}
@@ -1582,7 +1615,7 @@ class ProjectStats extends React.Component {
 }
 
 // remains hidden, shows a styled menu when the quit button is clicked
-function QuitMenu({projectId, toggleQuitModal}) {
+function QuitMenu({projectId, resetUnsavedWarning, toggleQuitModal}) {
     return (
         <div
             className="modal fade show"
@@ -1623,7 +1656,10 @@ function QuitMenu({projectId, toggleQuitModal}) {
                             id="quit-button"
                             onClick={() => fetch(`/release-plot-locks?projectId=${projectId}`,
                                                  {method: "POST"})
-                                .then(() => window.location.assign("/home"))}
+                                .then(() => {
+                                    resetUnsavedWarning();
+                                    window.location.assign("/home");
+                                })}
                             type="button"
                         >
                             Yes, I&apos;m sure
