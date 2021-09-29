@@ -2,6 +2,7 @@ import React from "react";
 
 import {ProjectContext} from "./constants";
 import Select from "../components/Select";
+import {formatNumberWithCommas} from "../utils/generalUtils";
 
 export default class QualityControl extends React.Component {
     constructor(props) {
@@ -43,9 +44,17 @@ export default class QualityControl extends React.Component {
     };
 
     renderAssignedSMEs = assignedSMEs => (
-        <div className="d-flex flex-column mt-3">
+        <div className="d-flex flex-column my-3">
             {assignedSMEs.map(({id, email}) => (
-                <div key={id} className="d-flex justify-content-end mt-1">
+                <div key={id} className="d-flex mt-1">
+                    <button
+                        className="btn btn-sm btn-danger mx-2"
+                        onClick={() => this.removeSME(id)}
+                        title={`Remove ${email}`}
+                        type="button"
+                    >
+                        -
+                    </button>
                     <div
                         style={{
                             background: "white",
@@ -57,14 +66,6 @@ export default class QualityControl extends React.Component {
                     >
                         {email}
                     </div>
-                    <button
-                        className="btn btn-sm btn-danger mx-2"
-                        onClick={() => this.removeSME(id)}
-                        title={`Remove ${email}`}
-                        type="button"
-                    >
-                        -
-                    </button>
                 </div>
             ))}
         </div>
@@ -80,15 +81,17 @@ export default class QualityControl extends React.Component {
         const {userMethod} = this.getUserAssignment();
         const {allowDrawnSamples} = this.context;
         const {selectedUser} = this.state;
-        const {institutionUserList} = this.props;
+        const {institutionUserList, totalPlots} = this.props;
         const possibleSMEs = [
             {id: -1, email: "Select user..."},
             ...institutionUserList.filter(({id}) => !smes.includes(id))
         ];
         const assignedSMEs = institutionUserList.filter(({id}) => smes.includes(id));
+        const plotsToReview = Math.round(totalPlots * (percent / 100));
+        const plotsPerSME = Math.round(plotsToReview / smes.length);
 
         return (
-            <div className="col-4 mx-5">
+            <div className="col-6">
                 <h3 className="mb-3">Quality Control</h3>
                 <div className="d-flex">
                     <Select
@@ -134,19 +137,25 @@ export default class QualityControl extends React.Component {
                     </div>
                 )}
                 {qaqcMethod === "overlap" && (
-                    <div className="mt-3 form-inline">
-                        <label htmlFor="reviews"># of Reviews:</label>
-                        <input
-                            className="form-control form-control-sm ml-3"
-                            id="reviews"
-                            max="100"
-                            min="2"
-                            onChange={e => this.setTimesToReview(parseInt(e.target.value))}
-                            type="number"
-                            value={timesToReview}
-                        />
-                    </div>
+                    <>
+                        <div className="mt-3 form-inline">
+                            <label htmlFor="reviews"># of Reviews:</label>
+                            <input
+                                className="form-control form-control-sm ml-3"
+                                id="reviews"
+                                max="100"
+                                min="2"
+                                onChange={e => this.setTimesToReview(parseInt(e.target.value))}
+                                type="number"
+                                value={timesToReview}
+                            />
+                        </div>
+                        <p className="font-italic mt-2 small">
+                            - Plots to review: {formatNumberWithCommas(plotsToReview)}
+                        </p>
+                    </>
                 )}
+
                 {qaqcMethod === "sme" && (
                     <div className="mt-3">
                         <div className="d-flex">
@@ -170,9 +179,14 @@ export default class QualityControl extends React.Component {
                             </button>
                         </div>
                         {this.renderAssignedSMEs(assignedSMEs)}
-                        <p className="font-italic ml-2 small">
+                        <p className="font-italic ml-2 mb-0 small">
                             - SME: Subject Matter Expert
                         </p>
+                        {smes.length > 0 && (
+                            <p className="font-italic ml-2 small">
+                                - Each SME will review ~{formatNumberWithCommas(plotsPerSME)} plots
+                            </p>
+                        )}
                     </div>
                 )}
             </div>
