@@ -306,6 +306,8 @@ export default class CreateProjectWizard extends React.Component {
                 && "At least one user must be added to the plot assignment.",
             (userMethod === "percent" && percents.reduce((acc, p) => acc + p, 0) !== 100)
                 && "The assigned plot percentages must equal 100%.",
+            (userMethod === "percent" && percents.reduce((acc, p) => (acc || p === 0), false))
+                && "All plot percentages must be greater than 0%.",
             (["overlap", "sme"].includes(qaqcMethod) && percent === 0)
                 && "The assigned Quality Control percentage must be greater than 0.",
             (qaqcMethod === "sme" && smes.length === 0)
