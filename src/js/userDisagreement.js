@@ -2,14 +2,40 @@ import React from "react";
 import ReactDOM from "react-dom";
 import {NavigationBar} from "./components/PageComponents";
 
-function UserDisagreement({visibleId, plotId}) {
-    return (
-        <div style={{display: "flex", flexDirection: "column", margin: "5rem"}}>
-            <p>This page is under construction.</p>
-            <p>Plot check: {plotId}</p>
-            <p>Visible plot check: {visibleId}</p>
-        </div>
-    );
+class UserDisagreement extends React.Component {
+    constructor(props) {
+        super(props);
+        this.state = {
+            questions: []
+        };
+    }
+
+    componentDidMount() {
+        this.getProjectQuestions();
+    }
+
+    getProjectQuestions = () => {
+        const {plotId, projectId} = this.props;
+        return fetch(`/get-plot-disagreement?projectId=${projectId}&plotId=${plotId}`)
+            .then(response => (response.ok ? response.json() : Promise.reject(response)))
+            .then(questions => {
+                this.setState({questions});
+            });
+    };
+
+    render() {
+        const {questions} = this.state;
+        const {visibleId, plotId, projectId} = this.props;
+        return (
+            <div style={{display: "flex", flexDirection: "column", margin: "5rem"}}>
+                <p>This page is under construction.</p>
+                <p>Project check: {projectId}</p>
+                <p>Plot check: {plotId}</p>
+                <p>Visible plot check: {visibleId}</p>
+                <p>API Check: {JSON.stringify(questions)}</p>
+            </div>
+        );
+    }
 }
 
 export function pageInit(args) {
@@ -21,6 +47,7 @@ export function pageInit(args) {
         >
             <UserDisagreement
                 plotId={args.plotId}
+                projectId={args.projectId}
                 visibleId={args.visibleId}
             />
         </NavigationBar>,

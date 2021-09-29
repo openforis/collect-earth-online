@@ -98,12 +98,37 @@
                               (tc/jsonb->clj))]
     (filterm (fn [[_ plots]]
                (let [plot-id (-> plots (first) :plot_id)]
-                 (->> (question-agreement survey-questions
-                                          (map #(get-samples-answer-array plot-id %)
-                                               (map :user_id plots)))
+                 (->> (map #(get-samples-answer-array plot-id (:user_id %))
+                           plots)
+                      (question-agreement survey-questions)
                       (apply min)
                       (<= threshold))))
              grouped-plots)))
+
+;; TODO: This is named "disagreement" in preparation for COE-252, but still returns agreement.
+(defn get-plot-disagreement
+  "Returns data containing questions and agreement."
+  [{:keys [params]}]
+  (let [plot-id    (tc/val->int (:plotId params))
+        project-id (tc/val->int (:projectId params))]
+    (data-response (->> (call-sql "select_project_by_id" project-id)
+                        (first)
+                        (:survey_questions)
+                        (tc/jsonb->clj)
+                        (map (fn [sq]
+                               (let [question   (:question sq)
+                                     sample-ans (map (fn [user]
+                                                       (map #(get-in % [question "answerId"])
+                                                            (get-samples-answer-array plot-id (:user_id user))))
+                                                     (call-sql "select_plotters" project-id))]
+                                 (merge sq
+                                        {:agreement (if (->> sample-ans
+                                                             (map #(every? nil? %))
+                                                             (some true?))
+                                                      9999
+                                                      (sample-answer-agreement sample-ans))
+                                         ;; TODO, CEO-257 generate stats
+                                         :answerStats ()}))))))))
 
 ;;;
 ;;; Plot Collection
@@ -166,7 +191,7 @@
         user-id         (:userId params -1)
         current-user-id (tc/val->int (:currentUserId params -1))
         review-mode?     (and (tc/val->bool (:inReviewMode params))
-                             (is-proj-admin? user-id project-id nil))
+                              (is-proj-admin? user-id project-id nil))
         proj-plots      (case navigation-mode
                           "unanalyzed" (call-sql "select_unanalyzed_plots" project-id user-id review-mode?)
                           "analyzed"   (call-sql "select_analyzed_plots"   project-id user-id review-mode?)
