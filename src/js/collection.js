@@ -372,7 +372,7 @@ class Collection extends React.Component {
     navToFirstPlot = () => this.getPlotData(-10000000, "next");
 
     navToNextPlot = ignoreCheck => {
-        if (ignoreCheck === true || this.confirmUnsaved()) {
+        if (ignoreCheck || this.confirmUnsaved()) {
             this.getPlotData(this.state.currentPlot.visibleId, "next");
         }
     };
@@ -1131,7 +1131,7 @@ class PlotNavigation extends React.Component {
             </button>
             <button
                 className="btn btn-outline-lightgreen btn-sm mx-1"
-                onClick={this.props.navToNextPlot}
+                onClick={() => this.props.navToNextPlot()}
                 type="button"
             >
                 <UnicodeIcon icon="rightCaret"/>
