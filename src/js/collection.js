@@ -1,5 +1,6 @@
 import React from "react";
 import ReactDOM from "react-dom";
+import _ from "lodash";
 
 import {LoadingModal, NavigationBar} from "./components/PageComponents";
 import {SurveyCollection} from "./components/SurveyCollection";
@@ -52,13 +53,13 @@ class Collection extends React.Component {
             answerMode: "question",
             modalMessage: null,
             navigationMode: "natural",
-            threshold: 90,
-            isUnsaved: false
+            threshold: 90
         };
     }
 
     componentDidMount() {
         window.name = "_ceocollection";
+        window.addEventListener("beforeunload", this.unsavedWarning, {capture: true});
 
         fetch(
             `/release-plot-locks?projectId=${this.props.projectId}`,
@@ -138,6 +139,10 @@ class Collection extends React.Component {
                 || this.state.mapConfig !== prevState.mapConfig)) {
             this.updateMapImagery();
         }
+    }
+
+    componentWillUnmount() {
+        window.removeEventListener("beforeunload", this.unsavedWarning, {capture: true});
     }
 
     setImageryAttribution = attributionSuffix => this.setState({
@@ -316,22 +321,10 @@ class Collection extends React.Component {
 
     // https://developer.mozilla.org/en-US/docs/Web/API/Window/beforeunload_event
     unsavedWarning = e => {
-        e.preventDefault();
-        e.returnValue = "You have unsaved changes. Are you sure you want to leave?";
-        return "You have unsaved changes. Are you sure you want to leave?";
-    };
-
-    enableUnsavedWarning = () => {
-        if (!this.state.isUnsaved) {
-            this.setState({isUnsaved: true});
-            window.addEventListener("beforeunload", this.unsavedWarning, {capture: true});
-        }
-    };
-
-    resetUnsavedWarning = () => {
-        if (this.state.isUnsaved) {
-            this.setState({isUnsaved: false});
-            window.removeEventListener("beforeunload", this.unsavedWarning, {capture: true});
+        if (this.hasChanged()) {
+            e.preventDefault();
+            e.returnValue = "You have unsaved changes. Are you sure you want to leave?";
+            return "You have unsaved changes. Are you sure you want to leave?";
         }
     };
 
@@ -371,15 +364,27 @@ class Collection extends React.Component {
         );
     };
 
+    confirmUnsaved = () => confirm("You have unsaved changes. Any answered questions will be lost. Are you sure you want to continue?");
+
     navToFirstPlot = () => this.getPlotData(-10000000, "next");
 
-    navToNextPlot = () => this.getPlotData(this.state.currentPlot.visibleId, "next");
+    navToNextPlot = () => {
+        if (!this.hasChanged() || this.confirmUnsaved()) {
+            this.getPlotData(this.state.currentPlot.visibleId, "next");
+        }
+    };
 
-    navToPrevPlot = () => this.getPlotData(this.state.currentPlot.visibleId, "previous");
+    navToPrevPlot = () => {
+        if (!this.hasChanged() || this.confirmUnsaved()) {
+            this.getPlotData(this.state.currentPlot.visibleId, "previous");
+        }
+    };
 
     navToPlot = newPlot => {
         if (!isNaN(newPlot)) {
-            this.getPlotData(newPlot, "id");
+            if (!this.hasChanged() || this.confirmUnsaved("id")) {
+                this.getPlotData(newPlot, "id");
+            }
         } else {
             alert("Please enter a number to go to plot.");
         }
@@ -417,6 +422,12 @@ class Collection extends React.Component {
             ? newPlot.samples.reduce((acc, cur) =>
                 ({...acc, [cur.id]: copyValues ? (cur.savedAnswers || {}) : {}}), {})
             : {},
+        originalUserSamples: newPlot.samples
+            ? copyValues
+                ? newPlot.samples.reduce((acc, cur) =>
+                    ({...acc, [cur.id]: (cur.savedAnswers || {})}), {})
+                : this.state.originalUserSamples
+            : {},
         userImages: newPlot.samples
             ? newPlot.samples.reduce((acc, cur) =>
                 ({...acc, [cur.id]: copyValues ? (cur.userImage || {}) : {}}), {})
@@ -430,6 +441,8 @@ class Collection extends React.Component {
         collectionStart: Date.now(),
         unansweredColor: "black"
     });
+
+    hasChanged = () => !(_.isEqual(this.state.userSamples, this.state.originalUserSamples));
 
     zoomToPlot = () => mercator.zoomMapToLayer(this.state.mapConfig, "currentPlot", 36);
 
@@ -604,7 +617,7 @@ class Collection extends React.Component {
                 )
                     .then(response => {
                         if (response.ok) {
-                            this.resetUnsavedWarning();
+                            this.setState({originalUserSamples: this.state.userSamples});
                             return this.navToNextPlot();
                         } else {
                             console.log(response);
@@ -639,7 +652,7 @@ class Collection extends React.Component {
                 )
                     .then(response => {
                         if (response.ok) {
-                            this.resetUnsavedWarning();
+                            this.setState({originalUserSamples: this.state.userSamples});
                             return this.navToNextPlot();
                         } else {
                             console.log(response);
@@ -738,8 +751,6 @@ class Collection extends React.Component {
                 userImages: {...this.state.userImages, ...newUserImages},
                 selectedQuestion: questionToSet
             });
-
-            this.enableUnsavedWarning();
         }
     };
 
@@ -829,12 +840,9 @@ class Collection extends React.Component {
 
     toggleQuitModal = () => this.setState({showQuitModal: !this.state.showQuitModal});
 
-    toggleFlagged = () => {
-        this.setState({
-            currentPlot: {...this.state.currentPlot, flagged: !this.state.currentPlot.flagged}
-        });
-        this.enableUnsavedWarning();
-    };
+    toggleFlagged = () => this.setState({
+        currentPlot: {...this.state.currentPlot, flagged: !this.state.currentPlot.flagged}
+    });
 
     setUnansweredColor = newColor => this.setState({unansweredColor: newColor});
 
@@ -850,15 +858,9 @@ class Collection extends React.Component {
         }
     };
 
-    setConfidence = confidence => {
-        this.setState({currentPlot: {...this.state.currentPlot, confidence}});
-        this.enableUnsavedWarning();
-    };
+    setConfidence = confidence => this.setState({currentPlot: {...this.state.currentPlot, confidence}});
 
-    setFlaggedReason = flaggedReason => {
-        this.setState({currentPlot: {...this.state.currentPlot, flaggedReason}});
-        this.enableUnsavedWarning();
-    };
+    setFlaggedReason = flaggedReason => this.setState({currentPlot: {...this.state.currentPlot, flaggedReason}});
 
     render() {
         return (
@@ -992,7 +994,6 @@ class Collection extends React.Component {
                 {this.state.showQuitModal && (
                     <QuitMenu
                         projectId={this.props.projectId}
-                        resetUnsavedWarning={this.resetUnsavedWarning}
                         toggleQuitModal={this.toggleQuitModal}
                     />
                 )}
@@ -1615,7 +1616,7 @@ class ProjectStats extends React.Component {
 }
 
 // remains hidden, shows a styled menu when the quit button is clicked
-function QuitMenu({projectId, resetUnsavedWarning, toggleQuitModal}) {
+function QuitMenu({projectId, toggleQuitModal}) {
     return (
         <div
             className="modal fade show"
@@ -1656,10 +1657,7 @@ function QuitMenu({projectId, resetUnsavedWarning, toggleQuitModal}) {
                             id="quit-button"
                             onClick={() => fetch(`/release-plot-locks?projectId=${projectId}`,
                                                  {method: "POST"})
-                                .then(() => {
-                                    resetUnsavedWarning();
-                                    window.location.assign("/home");
-                                })}
+                                .then(() => window.location.assign("/home"))}
                             type="button"
                         >
                             Yes, I&apos;m sure
