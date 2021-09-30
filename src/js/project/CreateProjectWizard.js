@@ -105,8 +105,7 @@ export default class CreateProjectWizard extends React.Component {
             complete: new Set(),
             templateProject: {},
             templatePlots: [],
-            templateProjectList: [{id: -1, name: "Loading..."}],
-            institutionUserList: []
+            templateProjectList: [{id: -1, name: "Loading..."}]
         };
     }
 
@@ -114,8 +113,8 @@ export default class CreateProjectWizard extends React.Component {
 
     componentDidMount() {
         Promise.all([this.getTemplateProjects(), this.getInstitutionUserList()])
-            .catch(response => {
-                console.error(response);
+            .catch(error => {
+                console.error(error);
                 alert("Error retrieving the project data. See console for details.");
             });
         if (this.context.name !== "" || this.context.description !== "") this.checkAllSteps();
@@ -130,10 +129,19 @@ export default class CreateProjectWizard extends React.Component {
                 ? data
                 : [{id: -1, name: "No template projects found"}]
         }))
-        .catch(response => {
-            console.log(response);
+        .catch(error => {
             this.setState({templateProjectList: [{id: -1, name: "Failed to load"}]});
+            Promise.reject(error);
         });
+
+    getInstitutionUserList = () => {
+        const {institutionId} = this.context;
+        if (institutionId > 0) {
+            fetch(`/get-institution-users?institutionId=${institutionId}`)
+                .then(response => (response.ok ? response.json() : Promise.reject(response)))
+                .then(data => this.context.setContextState({institutionUserList: data}));
+        }
+    };
 
     getTemplateProject = projectId => Promise.all(
         [this.getTemplateById(projectId),
@@ -141,10 +149,10 @@ export default class CreateProjectWizard extends React.Component {
          this.getProjectImagery(projectId)]
     )
         .then(() => this.context.setProjectDetails({templateProjectId: projectId}))
-        .catch(response => {
-            console.log(response);
+        .catch(error => {
             this.setState({templatePlots: [], templateProject: {}});
             this.context.setProjectDetails({templateProjectId: -1});
+            console.error(error);
             alert("Error getting complete template info. See console for details.");
         });
 
@@ -162,10 +170,6 @@ export default class CreateProjectWizard extends React.Component {
                 useTemplatePlots: true,
                 useTemplateWidgets: true
             }, this.checkAllSteps);
-        })
-        .catch(error => {
-            console.log(error);
-            Promise.reject("Get project info failed.");
         });
 
     getProjectPlots = projectId => fetch(`/get-project-plots?projectId=${projectId}`)
@@ -173,10 +177,6 @@ export default class CreateProjectWizard extends React.Component {
         .then(data => {
             this.setState({templatePlots: data});
             this.context.setProjectDetails({plots: data});
-        })
-        .catch(error => {
-            console.log(error);
-            Promise.reject("Error retrieving plot list. See console for details.");
         });
 
     // TODO: just return with the project info because we only need the integer ID
@@ -187,21 +187,7 @@ export default class CreateProjectWizard extends React.Component {
             this.context.setProjectDetails({
                 projectImageryList: data.map(i => i.id).filter(id => institutionImageryIds.includes(id))
             });
-        })
-        .catch(error => {
-            console.log(error);
-            Promise.reject("Error retrieving imagery list. See console for details.");
         });
-
-    getInstitutionUserList = () => {
-        const {institutionId} = this.context;
-        if (institutionId > 0) {
-            fetch(`/get-institution-users?institutionId=${institutionId}`)
-                .then(response => (response.ok ? response.json() : Promise.reject(response)))
-                .then(data => this.context.setContextState({institutionUserList: data}))
-                .catch(response => Promise.reject(response));
-        }
-    };
 
     /// Validations
 
