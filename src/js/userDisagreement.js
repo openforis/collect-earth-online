@@ -6,12 +6,14 @@ class UserDisagreement extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
-            questions: []
+            questions: [],
+            plotters: []
         };
     }
 
     componentDidMount() {
-        this.getProjectQuestions();
+        Promise.all([this.getProjectQuestions(), this.getPlotters()])
+            .catch(error => console.error(error));
     }
 
     getProjectQuestions = () => {
@@ -20,19 +22,89 @@ class UserDisagreement extends React.Component {
             .then(response => (response.ok ? response.json() : Promise.reject(response)))
             .then(questions => {
                 this.setState({questions});
+                return Promise.resolve("resolved");
             });
+    };
+
+    getPlotters = () => {
+        const {plotId, projectId} = this.props;
+        return fetch(`/get-plotters?projectId=${projectId}&plotId=${plotId}`)
+            .then(response => (response.ok ? response.json() : Promise.reject(response)))
+            .then(plotters => {
+                this.setState({plotters});
+                return Promise.resolve("resolved");
+            });
+    };
+
+    findByKey = (array, keyId, matchVal) => array.find(e => e[keyId] === matchVal);
+
+    renderUser = (user, answers) => {
+        const {plotters} = this.state;
+        return (
+            <div
+                key={user.userId}
+                style={{
+                    border: "1px solid rgba(0, 0, 0, 0.2)",
+                    borderRadius: "6px",
+                    boxShadow: "0 0 2px 1px rgba(0, 0, 0, 0.2)",
+                    display: "flex",
+                    margin: ".5rem",
+                    padding: ".5rem"
+                }}
+            >
+                <label>{this.findByKey(plotters, "userId", user.userId)?.email}</label>
+                <ul>
+                    {Object.keys(user.answers).length > 0
+                        ? (Object.keys(user.answers).map(a => (
+                            <li key={a}>
+                                {`${this.findByKey(answers, "id", parseInt(a))?.answer} - ${user.answers[a]}`}
+                            </li>
+                        ))) : (
+                            "This user did not answer"
+                        )}
+                </ul>
+            </div>
+        );
+    };
+
+    renderQuestion = thisQuestion => {
+        const {question, answers, agreement, answerFrequency} = thisQuestion;
+        return (
+            <div
+                key="question"
+                style={{
+                    border: "1px solid rgba(0, 0, 0, 0.2)",
+                    borderRadius: "6px",
+                    boxShadow: "0 0 2px 1px rgba(0, 0, 0, 0.2)",
+                    margin: ".5rem",
+                    overflow: "hidden"
+                }}
+            >
+                <div
+                    className="bg-lightgreen"
+                    style={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        padding: "1rem"
+                    }}
+                >
+                    <h3 style={{margin: 0}}>{question}</h3>
+                    <h3 style={{margin: 0}}>{agreement > 100 ? "None" : agreement + "%"}</h3>
+                </div>
+                <div style={{display: "flex"}}>
+                    {answerFrequency.map(as => this.renderUser(as, answers))}
+                </div>
+            </div>
+        );
     };
 
     render() {
         const {questions} = this.state;
-        const {visibleId, plotId, projectId} = this.props;
         return (
-            <div style={{display: "flex", flexDirection: "column", margin: "5rem"}}>
-                <p>This page is under construction.</p>
-                <p>Project check: {projectId}</p>
-                <p>Plot check: {plotId}</p>
-                <p>Visible plot check: {visibleId}</p>
-                <p>API Check: {JSON.stringify(questions)}</p>
+            <div style={{display: "flex", justifyContent: "center", width: "100%"}}>
+                <div style={{display: "flex", flexDirection: "column", margin: "1rem", width: "50%"}}>
+                    {questions.map(q => this.renderQuestion(q))}
+                </div>
             </div>
         );
     }

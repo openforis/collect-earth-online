@@ -38,7 +38,7 @@ CREATE OR REPLACE FUNCTION select_plot_geom(_plot_id integer)
 $$ LANGUAGE SQL;
 
 -- Get all users who have plotted on a project
-CREATE OR REPLACE FUNCTION select_plotters(_project_id integer)
+CREATE OR REPLACE FUNCTION select_plotters(_project_id integer, _plot_id integer)
  RETURNS table (
     user_id    integer,
     email      text
@@ -54,6 +54,8 @@ CREATE OR REPLACE FUNCTION select_plotters(_project_id integer)
         ON u.user_uid = up.user_rid
         OR u.user_uid = ap.user_rid
     WHERE p.project_rid = _project_id
+        AND (plot_uid = _plot_id
+             OR _plot_id = -1)
     ORDER BY user_id
 
 $$ LANGUAGE SQL;

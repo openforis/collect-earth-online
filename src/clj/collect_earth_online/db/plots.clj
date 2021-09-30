@@ -4,7 +4,7 @@
             [clojure.data.json :refer [read-str]]
             [triangulum.type-conversion :as tc]
             [triangulum.database :refer [call-sql sql-primitive]]
-            [triangulum.utils    :refer [filterm]]
+            [triangulum.utils    :refer [filterm mapm]]
             [collect-earth-online.db.projects :refer [is-proj-admin?]]
             [collect-earth-online.views       :refer [data-response]]))
 
@@ -43,12 +43,14 @@
                          (call-sql "select_limited_project_plots" project-id max-plots)))))
 
 (defn get-plotters
-  "Gets all users that have collected plots on a project"
+  "Gets all users that have collected plots on a project.  If optional plotId
+   is passed, return results only for that plot."
   [{:keys [params]}]
-  (let [project-id (tc/val->int (:projectId params))]
+  (let [project-id (tc/val->int (:projectId params))
+        plot-id    (tc/val->int (:plotId params))]
     (data-response (mapv (fn [{:keys [user_id email]}]
                            {:userId user_id :email email})
-                         (call-sql "select_plotters" project-id)))))
+                         (call-sql "select_plotters" project-id plot-id)))))
 
 ;;;
 ;;; GeoDash
@@ -116,19 +118,25 @@
                         (:survey_questions)
                         (tc/jsonb->clj)
                         (map (fn [sq]
-                               (let [question   (:question sq)
-                                     sample-ans (map (fn [user]
-                                                       (map #(get-in % [question "answerId"])
-                                                            (get-samples-answer-array plot-id (:user_id user))))
-                                                     (call-sql "select_plotters" project-id))]
+                               (let [question    (:question sq)
+                                     plotters    (call-sql "select_plotters" project-id -1)
+                                     sample-ans  (map (fn [user]
+                                                        (map #(get-in % [question "answerId"])
+                                                             (get-samples-answer-array plot-id (:user_id user))))
+                                                      plotters)
+                                     answer-freq (map (fn [user ans]
+                                                        {:userId  (:user_id user)
+                                                         :answers (-> (frequencies ans)
+                                                                      (dissoc nil))})
+                                                      plotters
+                                                      sample-ans)]
                                  (merge sq
-                                        {:agreement (if (->> sample-ans
-                                                             (map #(every? nil? %))
-                                                             (some true?))
-                                                      9999
-                                                      (sample-answer-agreement sample-ans))
-                                         ;; TODO, CEO-257 generate stats
-                                         :answerStats ()}))))))))
+                                        {:agreement       (if (->> sample-ans
+                                                                   (map #(every? nil? %))
+                                                                   (some true?))
+                                                            9999
+                                                            (sample-answer-agreement sample-ans))
+                                         :answerFrequency answer-freq}))))))))
 
 ;;;
 ;;; Plot Collection
