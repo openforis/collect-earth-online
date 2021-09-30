@@ -522,6 +522,10 @@
        (same-ring? (exterior-ring (:coordinates geom1))
                    (exterior-ring (:coordinates geom2)))))
 
+(defn modified-design? [ds1 ds2]
+  (not= (-> ds1 (tc/jsonb->clj))
+        (-> ds2 (tc/jsonb->clj))))
+
 (defn update-project! [{:keys [params]}]
   (let [project-id           (tc/val->int (:projectId params))
         imagery-id           (or (:imageryId params) (get-first-public-imagery))
@@ -566,6 +570,7 @@
           nil
 
           (or (not= plot-distribution (:plot_distribution original-project))
+              (modified-design? design-settings (:design_settings original-project))
               (if (#{"csv" "shp"} plot-distribution)
                 plot-file-base64
                 (or (not (same-polygon-boundary? (tc/jsonb->clj boundary) (tc/jsonb->clj (:boundary original-project))))
