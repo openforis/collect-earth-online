@@ -46,15 +46,7 @@ export default class QualityControl extends React.Component {
     renderAssignedSMEs = assignedSMEs => (
         <div className="d-flex flex-column my-3">
             {assignedSMEs.map(({id, email}) => (
-                <div key={id} className="d-flex mt-1">
-                    <button
-                        className="btn btn-sm btn-danger mx-2"
-                        onClick={() => this.removeSME(id)}
-                        title={`Remove ${email}`}
-                        type="button"
-                    >
-                        -
-                    </button>
+                <div key={id} className="d-flex justify-content-end mt-1">
                     <div
                         style={{
                             background: "white",
@@ -66,6 +58,14 @@ export default class QualityControl extends React.Component {
                     >
                         {email}
                     </div>
+                    <button
+                        className="btn btn-sm btn-danger mx-2"
+                        onClick={() => this.removeSME(id)}
+                        title={`Remove ${email}`}
+                        type="button"
+                    >
+                        -
+                    </button>
                 </div>
             ))}
         </div>
