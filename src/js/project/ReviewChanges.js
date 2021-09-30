@@ -146,8 +146,7 @@ export default class ReviewChanges extends React.Component {
             || !_.isEqual(projectDetails.surveyRules, originalProject.surveyRules);
 
     plotDesignChanged = ({designSettings}, {designSettings: originalDesignSettings}) =>
-        !(_.isEqual(designSettings?.userAssignment, originalDesignSettings?.userAssignment))
-            || !(_.isEqual(designSettings?.qaqcAssignment, originalDesignSettings?.qaqcAssignment));
+        !(_.isEqual(designSettings, originalDesignSettings));
 
     plotsUpdated = (projectDetails, originalProject) =>
         projectDetails.plotDistribution !== originalProject.plotDistribution
