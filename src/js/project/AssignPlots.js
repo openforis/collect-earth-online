@@ -68,33 +68,9 @@ export default class AssignPlots extends React.Component {
                 const numPlots = Math.round((percents[userIndex] / 100) * totalPlots);
                 return (
                     <div key={id} className="d-flex justify-content-between mt-1">
-                        <div className="d-flex">
-                            <button
-                                className="btn btn-sm btn-danger mx-2"
-                                onClick={() => this.removeUser(id)}
-                                title={`Remove ${email}`}
-                                type="button"
-                            >
-                                -
-                            </button>
-                            <div
-                                style={{
-                                    background: "white",
-                                    border: "1px solid #ced4da",
-                                    borderRadius: ".25rem",
-                                    fontSize: ".875rem",
-                                    padding: ".25rem .5rem"
-                                }}
-                            >
-                                {email}
-                            </div>
-                        </div>
                         <div className="mr-5">
                             {isPercentage && (
-                                <div className="d-flex justify-content-center align-items-center">
-                                    <div className="font-italic mx-1 small">
-                                        - ~{formatNumberWithCommas(numPlots)} plots
-                                    </div>
+                                <div className="d-flex flex-column">
                                     <div>
                                         <input
                                             className="form-control form-control-sm"
@@ -108,8 +84,32 @@ export default class AssignPlots extends React.Component {
                                         />
                                         &#37;
                                     </div>
+                                    <div className="font-italic mx-1 small">
+                                        - ~{formatNumberWithCommas(numPlots)} plots
+                                    </div>
                                 </div>
                             )}
+                        </div>
+                        <div className="d-flex">
+                            <div
+                                style={{
+                                    background: "white",
+                                    border: "1px solid #ced4da",
+                                    borderRadius: ".25rem",
+                                    fontSize: ".875rem",
+                                    padding: ".25rem .5rem"
+                                }}
+                            >
+                                {email}
+                            </div>
+                            <button
+                                className="btn btn-sm btn-danger mx-2"
+                                onClick={() => this.removeUser(id)}
+                                title={`Remove ${email}`}
+                                type="button"
+                            >
+                                -
+                            </button>
                         </div>
                     </div>
                 );

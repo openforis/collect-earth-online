@@ -103,6 +103,9 @@ export default class QualityControl extends React.Component {
                         value={qaqcMethod}
                     />
                 </div>
+                <p className="font-italic ml-2 my-1 small">
+                  - SME: Subject Matter Expert
+                </p>
                 {allowDrawnSamples ? (
                     <p className="font-italic mt-2 small">
                         When User-Drawn samples are enabled, the project cannot support Quality Control of plots.
@@ -179,9 +182,6 @@ export default class QualityControl extends React.Component {
                             </button>
                         </div>
                         {this.renderAssignedSMEs(assignedSMEs)}
-                        <p className="font-italic ml-2 mb-0 small">
-                            - SME: Subject Matter Expert
-                        </p>
                         {smes.length > 0 && (
                             <p className="font-italic ml-2 small">
                                 - Each SME will review ~{formatNumberWithCommas(plotsPerSME)} plots
