@@ -194,19 +194,13 @@ export default class CreateProjectWizard extends React.Component {
         });
 
     getInstitutionUserList = () => {
-        // FIXME: institution > 0 indicates that we are using the review-project route
-        const {institution, institutionId} = this.context;
-        const id = institution > 0 ? institution : institutionId;
-        fetch(`/get-institution-users?institutionId=${id}`)
-            .then(response => (response.ok ? response.json() : Promise.reject(response)))
-            .then(data => {
-                this.context.setContextState({institutionUserList: data});
-            })
-            .catch(response => {
-                this.context.setContextState({institutionUserList: []});
-                console.error(response);
-                alert("Error retrieving the user list. See console for details.");
-            });
+        const {institutionId} = this.context;
+        if (institutionId > 0) {
+            fetch(`/get-institution-users?institutionId=${institutionId}`)
+                .then(response => (response.ok ? response.json() : Promise.reject(response)))
+                .then(data => this.context.setContextState({institutionUserList: data}))
+                .catch(response => Promise.reject(response));
+        }
     };
 
     /// Validations

@@ -85,15 +85,13 @@ export default function ReviewForm() {
                                     institutionUserList={context.institutionUserList}
                                 />
                             </div>
-                            {context.designSettings?.qaqcAssignment?.qaqcMethod !== "none" && (
-                                <div className="col-6 pt-3">
-                                    <h2>Quality Control</h2>
-                                    <QAQCReview
-                                        designSettings={context.designSettings}
-                                        institutionUserList={context.institutionUserList}
-                                    />
-                                </div>
-                            )}
+                            <div className="col-6 pt-3">
+                                <h2>Quality Control</h2>
+                                <QAQCReview
+                                    designSettings={context.designSettings}
+                                    institutionUserList={context.institutionUserList}
+                                />
+                            </div>
                         </div>
                     )}
             </div>

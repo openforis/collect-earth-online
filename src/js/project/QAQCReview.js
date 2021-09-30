@@ -26,10 +26,12 @@ export default function QAQCReview({designSettings, institutionUserList = []}) {
                 <table className="table table-sm" id="sample-review-table">
                     <tbody>
                         <ReviewRow content={qaqcMethod} title="Method"/>
+                        {qaqcMethod !== "none" && (
+                            <ReviewRow content={("" + percent + "%")} title="Percent"/>
+                        )}
                         {qaqcMethod === "overlap" && (
                             <ReviewRow content={timesToReview} title="Times to Review"/>
                         )}
-                        <ReviewRow content={("" + percent + "%")} title="Percent"/>
                         {qaqcMethod === "sme" && (
                             <tr>
                                 <td className="w-80 pr-5">SMEs</td>
