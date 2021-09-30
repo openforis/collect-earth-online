@@ -304,6 +304,8 @@ export default class CreateProjectWizard extends React.Component {
                 && "The plot size limit has been exceeded. Check the Plot Design section for detailed info.",
             (["equal", "percent"].includes(userMethod) && users.length === 0)
                 && "At least one user must be added to the plot assignment.",
+            (users.length > Math.round((totalPlots * (percent / 100)) / users.length))
+                && `Too few plots per user for Quality Control Overlap. Each user must have at least ${users.length} plots.`,
             (userMethod === "percent" && percents.reduce((acc, p) => acc + p, 0) !== 100)
                 && "The assigned plot percentages must equal 100%.",
             (["overlap", "sme"].includes(qaqcMethod) && percent === 0)
