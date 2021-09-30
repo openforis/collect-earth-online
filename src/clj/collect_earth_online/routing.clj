@@ -50,6 +50,7 @@
                                               :auth-type   :admin
                                               :auth-action :redirect}
    [:get  "/support"]                        {:handler     (render-page "/support")}
+   [:get  "/user-disagreement"]              {:handler     (render-page "/user-disagreement")}
    [:get  "/terms-of-service"]               {:handler     (render-page "/terms-of-service")}
    [:get  "/widget-layout-editor"]           {:handler     (render-page "/widget-layout-editor")
                                               :auth-type   :admin
@@ -108,11 +109,12 @@
    [:get  "/get-collection-plot"]            {:handler     plots/get-collection-plot
                                               :auth-type   :collect
                                               :auth-action :block}
+   [:get  "/get-plot-disagreement"]          {:handler     plots/get-plot-disagreement}
+   [:get  "/get-plot-sample-geom"]           {:handler     plots/get-plot-sample-geom}
    [:get  "/get-plotters"]                   {:handler     plots/get-plotters
                                               :auth-type   :collect
                                               :auth-action :block}
    [:get  "/get-project-plots"]              {:handler     plots/get-project-plots}
-   [:get  "/get-plot-sample-geom"]           {:handler     plots/get-plot-sample-geom}
    [:post "/add-user-samples"]               {:handler     plots/add-user-samples
                                               :auth-type   :collect
                                               :auth-action :block}

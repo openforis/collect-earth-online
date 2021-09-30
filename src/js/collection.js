@@ -871,7 +871,7 @@ class Collection extends React.Component {
                     userName={this.props.userName}
                 >
                     <PlotNavigation
-                        collectConfidence={this.state.currentProject?.projectOptions?.collectConfidence}
+                        collectConfidence={this.state.currentProject.projectOptions?.collectConfidence}
                         currentPlot={this.state.currentPlot}
                         currentUserId={this.state.currentUserId}
                         inReviewMode={this.state.inReviewMode}
@@ -885,11 +885,11 @@ class Collection extends React.Component {
                         navToPrevPlot={this.navToPrevPlot}
                         plotters={this.state.plotters}
                         plotUsers={(this.state.userPlotList || []).filter(p => p.userId)}
+                        projectId={this.props.projectId}
                         setCurrentUserId={this.setCurrentUserId}
                         setNavigationMode={this.setNavigationMode}
                         setReviewMode={this.setReviewMode}
                         setThreshold={this.setThreshold}
-                        showNavButtons={this.state.currentPlot.id}
                         threshold={this.state.threshold}
                     />
                     <ExternalTools
@@ -1172,6 +1172,7 @@ class PlotNavigation extends React.Component {
     render() {
         const {
             currentUserId,
+            currentPlot,
             collectConfidence,
             inReviewMode,
             isProjectAdmin,
@@ -1180,11 +1181,11 @@ class PlotNavigation extends React.Component {
             navigationMode,
             plotters,
             plotUsers,
+            projectId,
             setReviewMode,
             setCurrentUserId,
             setNavigationMode,
             setThreshold,
-            showNavButtons,
             threshold
         } = this.props;
         return (
@@ -1209,6 +1210,28 @@ class PlotNavigation extends React.Component {
                     </div>
                     {isProjectAdmin && this.reviewMode(inReviewMode, setReviewMode)}
                     {["confidence", "qaqc"].includes(navigationMode) && this.thresholdSlider(threshold, setThreshold)}
+                    {navigationMode === "qaqc" && currentPlot.id && (
+                        <div
+                            style={{
+                                display: "flex",
+                                justifyContent: "flex-end",
+                                padding: ".5rem",
+                                width: "100%"
+                            }}
+                        >
+                            <button
+                                className="btn btn-secondary btn-sm"
+                                onClick={() =>
+                                    window.open(
+                                        `/user-disagreement?projectId=${projectId}&plotId=${currentPlot.id}`,
+                                        `disagreement_${projectId}`
+                                    )}
+                                type="button"
+                            >
+                                View Disagreements
+                            </button>
+                        </div>
+                    )}
                     {inReviewMode && this.selectUser(
                         navigationMode === "user" ? plotters : plotUsers,
                         currentUserId,
@@ -1218,7 +1241,7 @@ class PlotNavigation extends React.Component {
                 <div className="mt-2">
                     {loadingPlots
                         ? <h3>Loading plot data...</h3>
-                        : showNavButtons
+                        : currentPlot?.id
                             ? this.navButtons()
                             : this.gotoButton()}
                 </div>

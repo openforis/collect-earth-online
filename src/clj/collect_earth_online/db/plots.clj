@@ -4,7 +4,7 @@
             [clojure.data.json :refer [read-str]]
             [triangulum.type-conversion :as tc]
             [triangulum.database :refer [call-sql sql-primitive]]
-            [triangulum.utils    :refer [filterm]]
+            [triangulum.utils    :refer [filterm mapm]]
             [collect-earth-online.db.projects :refer [is-proj-admin?]]
             [collect-earth-online.views       :refer [data-response]]))
 
@@ -43,12 +43,14 @@
                          (call-sql "select_limited_project_plots" project-id max-plots)))))
 
 (defn get-plotters
-  "Gets all users that have collected plots on a project"
+  "Gets all users that have collected plots on a project.  If optional plotId
+   is passed, return results only for that plot."
   [{:keys [params]}]
-  (let [project-id (tc/val->int (:projectId params))]
+  (let [project-id (tc/val->int (:projectId params))
+        plot-id    (tc/val->int (:plotId params))]
     (data-response (mapv (fn [{:keys [user_id email]}]
                            {:userId user_id :email email})
-                         (call-sql "select_plotters" project-id)))))
+                         (call-sql "select_plotters" project-id plot-id)))))
 
 ;;;
 ;;; GeoDash
@@ -98,12 +100,43 @@
                               (tc/jsonb->clj))]
     (filterm (fn [[_ plots]]
                (let [plot-id (-> plots (first) :plot_id)]
-                 (->> (question-agreement survey-questions
-                                          (map #(get-samples-answer-array plot-id %)
-                                               (map :user_id plots)))
+                 (->> (map #(get-samples-answer-array plot-id (:user_id %))
+                           plots)
+                      (question-agreement survey-questions)
                       (apply min)
                       (<= threshold))))
              grouped-plots)))
+
+;; TODO: This is named "disagreement" in preparation for COE-252, but still returns agreement.
+(defn get-plot-disagreement
+  "Returns data containing questions and agreement."
+  [{:keys [params]}]
+  (let [plot-id    (tc/val->int (:plotId params))
+        project-id (tc/val->int (:projectId params))]
+    (data-response (->> (call-sql "select_project_by_id" project-id)
+                        (first)
+                        (:survey_questions)
+                        (tc/jsonb->clj)
+                        (map (fn [sq]
+                               (let [question    (:question sq)
+                                     plotters    (call-sql "select_plotters" project-id -1)
+                                     sample-ans  (map (fn [user]
+                                                        (map #(get-in % [question "answerId"])
+                                                             (get-samples-answer-array plot-id (:user_id user))))
+                                                      plotters)
+                                     answer-freq (map (fn [user ans]
+                                                        {:userId  (:user_id user)
+                                                         :answers (-> (frequencies ans)
+                                                                      (dissoc nil))})
+                                                      plotters
+                                                      sample-ans)]
+                                 (merge sq
+                                        {:agreement       (if (->> sample-ans
+                                                                   (map #(every? nil? %))
+                                                                   (some true?))
+                                                            9999
+                                                            (sample-answer-agreement sample-ans))
+                                         :answerFrequency answer-freq}))))))))
 
 ;;;
 ;;; Plot Collection
@@ -166,7 +199,7 @@
         user-id         (:userId params -1)
         current-user-id (tc/val->int (:currentUserId params -1))
         review-mode?     (and (tc/val->bool (:inReviewMode params))
-                             (is-proj-admin? user-id project-id nil))
+                              (is-proj-admin? user-id project-id nil))
         proj-plots      (case navigation-mode
                           "unanalyzed" (call-sql "select_unanalyzed_plots" project-id user-id review-mode?)
                           "analyzed"   (call-sql "select_analyzed_plots"   project-id user-id review-mode?)
