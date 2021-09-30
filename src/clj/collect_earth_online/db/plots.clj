@@ -102,7 +102,9 @@
                                         plots)]
                  (->> survey-questions
                       (map (fn [{:keys [question]}]
-                             (question-disagreement (users-samples->answers users-samples question))))
+                             (->> question
+                                  (users-samples->answers users-samples)
+                                  (question-disagreement))))
                       (apply max)
                       (<= threshold))))
              grouped-plots)))
