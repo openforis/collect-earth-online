@@ -319,15 +319,6 @@ class Collection extends React.Component {
         }
     };
 
-    // https://developer.mozilla.org/en-US/docs/Web/API/Window/beforeunload_event
-    unsavedWarning = e => {
-        if (this.hasChanged()) {
-            e.preventDefault();
-            e.returnValue = "You have unsaved changes. Are you sure you want to leave?";
-            return "You have unsaved changes. Are you sure you want to leave?";
-        }
-    };
-
     getPlotData = (visibleId, direction) => {
         const {currentUserId, navigationMode, inReviewMode, threshold} = this.state;
         const {projectId} = this.props;
@@ -364,25 +355,37 @@ class Collection extends React.Component {
         );
     };
 
-    confirmUnsaved = () => confirm("You have unsaved changes. Any answered questions will be lost. Are you sure you want to continue?");
+    hasChanged = () => !(_.isEqual(this.state.userSamples, this.state.originalUserSamples));
+
+    // https://developer.mozilla.org/en-US/docs/Web/API/Window/beforeunload_event
+    unsavedWarning = e => {
+        if (this.hasChanged()) {
+            e.preventDefault();
+            e.returnValue = "You have unsaved changes. Are you sure you want to leave?";
+            return "You have unsaved changes. Are you sure you want to leave?";
+        }
+    };
+
+    confirmUnsaved = () => !this.hasChanged()
+        || confirm("You have unsaved changes. Any answered questions will be lost. Are you sure you want to continue?");
 
     navToFirstPlot = () => this.getPlotData(-10000000, "next");
 
-    navToNextPlot = () => {
-        if (!this.hasChanged() || this.confirmUnsaved()) {
+    navToNextPlot = ignoreCheck => {
+        if (ignoreCheck === true || this.confirmUnsaved()) {
             this.getPlotData(this.state.currentPlot.visibleId, "next");
         }
     };
 
     navToPrevPlot = () => {
-        if (!this.hasChanged() || this.confirmUnsaved()) {
+        if (this.confirmUnsaved()) {
             this.getPlotData(this.state.currentPlot.visibleId, "previous");
         }
     };
 
     navToPlot = newPlot => {
         if (!isNaN(newPlot)) {
-            if (!this.hasChanged() || this.confirmUnsaved("id")) {
+            if (this.confirmUnsaved()) {
                 this.getPlotData(newPlot, "id");
             }
         } else {
@@ -441,8 +444,6 @@ class Collection extends React.Component {
         collectionStart: Date.now(),
         unansweredColor: "black"
     });
-
-    hasChanged = () => !(_.isEqual(this.state.userSamples, this.state.originalUserSamples));
 
     zoomToPlot = () => mercator.zoomMapToLayer(this.state.mapConfig, "currentPlot", 36);
 
@@ -617,8 +618,7 @@ class Collection extends React.Component {
                 )
                     .then(response => {
                         if (response.ok) {
-                            this.setState({originalUserSamples: this.state.userSamples});
-                            return this.navToNextPlot();
+                            return this.navToNextPlot(true);
                         } else {
                             console.log(response);
                             alert("Error flagging plot as bad. See console for details.");
@@ -652,8 +652,7 @@ class Collection extends React.Component {
                 )
                     .then(response => {
                         if (response.ok) {
-                            this.setState({originalUserSamples: this.state.userSamples});
-                            return this.navToNextPlot();
+                            return this.navToNextPlot(true);
                         } else {
                             console.log(response);
                             alert("Error saving your assignments to the database. See console for details.");
