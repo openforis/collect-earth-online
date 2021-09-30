@@ -68,7 +68,7 @@ class UserDisagreement extends React.Component {
     };
 
     renderQuestion = thisQuestion => {
-        const {question, answers, agreement, answerFrequency} = thisQuestion;
+        const {question, answers, disagreement, answerFrequencies} = thisQuestion;
         return (
             <div
                 key="question"
@@ -89,10 +89,10 @@ class UserDisagreement extends React.Component {
                     }}
                 >
                     <h3 style={{margin: 0}}>{question}</h3>
-                    <h3 style={{margin: 0}}>{agreement > 100 ? "None" : agreement + "%"}</h3>
+                    <h3 style={{margin: 0}}>{disagreement < 0 ? "N\\A" : disagreement + "%"}</h3>
                 </div>
                 <div style={{display: "flex"}}>
-                    {answerFrequency.map(as => this.renderUser(as, answers))}
+                    {answerFrequencies.map(as => this.renderUser(as, answers))}
                 </div>
             </div>
         );

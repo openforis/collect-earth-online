@@ -1136,9 +1136,9 @@ class PlotNavigation extends React.Component {
         </div>
     );
 
-    thresholdSlider = (threshold, setThreshold) => (
+    thresholdSlider = (label, threshold, setThreshold) => (
         <div className="my-2 d-flex align-items-center">
-            <h3 className="w-100 mx-2 my-0">Threshold:</h3>
+            <h3 className="w-100 mx-2 my-0">{label}:</h3>
             <div className="d-flex">
                 <input
                     max="100"
@@ -1209,7 +1209,8 @@ class PlotNavigation extends React.Component {
                         </select>
                     </div>
                     {isProjectAdmin && this.reviewMode(inReviewMode, setReviewMode)}
-                    {["confidence", "qaqc"].includes(navigationMode) && this.thresholdSlider(threshold, setThreshold)}
+                    {navigationMode === "confidence" && this.thresholdSlider("Confidence", threshold, setThreshold)}
+                    {navigationMode === "qaqc" && this.thresholdSlider("Disagreement", threshold, setThreshold)}
                     {navigationMode === "qaqc" && currentPlot.id && (
                         <div
                             style={{
