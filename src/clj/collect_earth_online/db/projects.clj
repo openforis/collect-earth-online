@@ -522,13 +522,9 @@
        (same-ring? (exterior-ring (:coordinates geom1))
                    (exterior-ring (:coordinates geom2)))))
 
-(defn modified-assignment? [ds1 ds2]
-  (not= (-> ds1 (tc/jsonb->clj) (:userAssignment))
-        (-> ds2 (tc/jsonb->clj) (:userAssignment))))
-
-(defn modified-qaqc? [ds1 ds2]
-  (not= (-> ds1 (tc/jsonb->clj) (:qaqcAssignment))
-        (-> ds2 (tc/jsonb->clj) (:qaqcAssignment))))
+(defn modified-design? [ds1 ds2]
+  (not= (-> ds1 (tc/jsonb->clj))
+        (-> ds2 (tc/jsonb->clj))))
 
 (defn update-project! [{:keys [params]}]
   (let [project-id           (tc/val->int (:projectId params))
@@ -574,8 +570,7 @@
           nil
 
           (or (not= plot-distribution (:plot_distribution original-project))
-              (modified-assignment? design-settings (:design_settings original-project))
-              (modified-qaqc? design-settings (:design_settings original-project))
+              (modified-design? design-settings (:design_settings original-project))
               (if (#{"csv" "shp"} plot-distribution)
                 plot-file-base64
                 (or (not (same-polygon-boundary? (tc/jsonb->clj boundary) (tc/jsonb->clj (:boundary original-project))))

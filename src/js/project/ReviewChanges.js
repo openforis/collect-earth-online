@@ -59,7 +59,7 @@ export default class ReviewChanges extends React.Component {
         // TODO: Match project details in context as in state (i.e. do not spread into context).
         const updateSurvey = this.surveyQuestionUpdated(this.context, this.context.originalProject);
         const extraMessage = (this.plotsUpdated(this.context, this.context.originalProject)
-          || this.assignmentsUpdated(this.context, this.context.originalProject))
+          || this.plotDesignChanged(this.context, this.context.originalProject))
             ? "  Plots and samples will be recreated, losing all collection data."
             : this.samplesUpdated(this.context, this.context.originalProject)
                 ? "  Samples will be recreated, losing all collection data."
@@ -145,7 +145,7 @@ export default class ReviewChanges extends React.Component {
         !_.isEqual(projectDetails.surveyQuestions, originalProject.surveyQuestions)
             || !_.isEqual(projectDetails.surveyRules, originalProject.surveyRules);
 
-    assignmentsUpdated = ({designSettings}, {designSettings: originalDesignSettings}) =>
+    plotDesignChanged = ({designSettings}, {designSettings: originalDesignSettings}) =>
         !(_.isEqual(designSettings?.userAssignment, originalDesignSettings?.userAssignment))
             || !(_.isEqual(designSettings?.qaqcAssignment, originalDesignSettings?.qaqcAssignment));
 
