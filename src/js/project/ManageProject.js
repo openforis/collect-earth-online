@@ -20,8 +20,8 @@ export default class ManageProject extends React.Component {
         this.getProjectImagery(this.context.projectId),
         this.getProjectPlots(this.context.projectId)
     ])
-        .catch(response => {
-            console.log(response);
+        .catch(error => {
+            console.error(error);
             alert("Error retrieving the project info. See console for details.");
         });
 
@@ -34,22 +34,27 @@ export default class ManageProject extends React.Component {
             } else {
                 this.context.setProjectDetails(data);
                 this.context.setContextState({originalProject: data});
+                return data.institution;
             }
         })
-        .catch(() => Promise.reject("Error retrieving the project."));
+        .then(institutionId => this.getInstitutionUserList(institutionId));
+
+    getInstitutionUserList = institutionId => {
+        fetch(`/get-institution-users?institutionId=${institutionId}`)
+            .then(response => (response.ok ? response.json() : Promise.reject(response)))
+            .then(data => this.context.setContextState({institutionUserList: data}));
+    };
 
     // TODO: just return with the project info
     getProjectImagery = projectId => fetch(`/get-project-imagery?projectId=${projectId}`)
         .then(response => (response.ok ? response.json() : Promise.reject(response)))
         .then(data => {
             this.context.setProjectDetails({projectImageryList: data.map(imagery => imagery.id)});
-        })
-        .catch(() => Promise.reject("Error retrieving the project imagery list."));
+        });
 
     getProjectPlots = projectId => fetch(`/get-project-plots?projectId=${projectId}`)
         .then(response => (response.ok ? response.json() : Promise.reject(response)))
-        .then(data => this.context.setProjectDetails({plots: data}))
-        .catch(() => Promise.reject("Error retrieving the plot list."));
+        .then(data => this.context.setProjectDetails({plots: data}));
 
     render() {
         return (
