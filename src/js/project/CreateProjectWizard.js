@@ -308,8 +308,10 @@ export default class CreateProjectWizard extends React.Component {
                 && `Too few plots per user for Quality Control Overlap. Each user must have at least ${users.length} plots.`,
             (userMethod === "percent" && percents.reduce((acc, p) => acc + p, 0) !== 100)
                 && "The assigned plot percentages must equal 100%.",
+            (userMethod === "percent" && percents.reduce((acc, p) => (acc || p === 0), false))
+                && "All plot assignment percentages must be greater than 0%.",
             (["overlap", "sme"].includes(qaqcMethod) && percent === 0)
-                && "The assigned Quality Control percentage must be greater than 0.",
+                && "The assigned Quality Control percentage must be greater than 0%.",
             (qaqcMethod === "sme" && smes.length === 0)
                 && "At least one user must be added as an SME.",
             (qaqcMethod === "overlap" && users.length === 1)
