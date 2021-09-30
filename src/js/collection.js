@@ -1223,7 +1223,7 @@ class PlotNavigation extends React.Component {
                                 className="btn btn-secondary btn-sm"
                                 onClick={() =>
                                     window.open(
-                                        `http://local.collect.earth:8080/user-disagreement?projectId=${projectId}&plotId=${currentPlot.id}`,
+                                        `/user-disagreement?projectId=${projectId}&plotId=${currentPlot.id}`,
                                         `disagreement_${projectId}`
                                     )}
                                 type="button"
