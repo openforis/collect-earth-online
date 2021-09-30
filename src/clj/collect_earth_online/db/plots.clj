@@ -77,6 +77,12 @@
        (:survey_questions)
        (tc/jsonb->clj)))
 
+(defn- users-samples->answers [users-samples question]
+  (map (fn [sv]
+         (map #(get-in % [question "answerId"])
+              sv))
+       users-samples))
+
 (defn- question-disagreement [sample-answers]
   (if (->> sample-answers
            (map #(every? nil? %))
@@ -87,40 +93,33 @@
                       (if (apply = sa) 0.0 100.0)) ; sample disagreement
                     sample-answers))))
 
-(defn- plot-disagreement [survey-questions users-samples]
-  (map (fn [{:keys [question]}]
-         (question-disagreement (map (fn [sv]
-                                       (map #(get-in % [question "answerId"])
-                                            sv))
-                                     users-samples)))
-       survey-questions))
-
 (defn- filter-plot-disagreement [project-id grouped-plots threshold]
-  (filterm (fn [[_ plots]]
-             (let [plot-id (-> plots (first) :plot_id)]
-               (->> (map (fn [plot]
-                           (get-samples-answer-array plot-id (:user_id plot)))
-                         plots)
-                    (plot-disagreement (get-survey-questions project-id))
-                    (apply max)
-                    (<= threshold))))
-           grouped-plots))
+  (let [survey-questions (get-survey-questions project-id)]
+    (filterm (fn [[_ plots]]
+               (let [plot-id       (-> plots (first) :plot_id)
+                     users-samples (map (fn [plot]
+                                          (get-samples-answer-array plot-id (:user_id plot)))
+                                        plots)]
+                 (->> survey-questions
+                      (map (fn [{:keys [question]}]
+                             (question-disagreement (users-samples->answers users-samples question))))
+                      (apply max)
+                      (<= threshold))))
+             grouped-plots)))
 
 (defn get-plot-disagreement
   "Returns data containing the survey questions augmented with agreement
    and answer frequency."
   [{:keys [params]}]
-  (let [plot-id    (tc/val->int (:plotId params))
-        project-id (tc/val->int (:projectId params))]
+  (let [plot-id       (tc/val->int (:plotId params))
+        project-id    (tc/val->int (:projectId params))
+        plotters      (call-sql "select_plotters" project-id -1)
+        users-samples (map (fn [user]
+                             (get-samples-answer-array plot-id (:user_id user)))
+                           plotters)]
     (data-response (->> (get-survey-questions project-id)
                         (map (fn [{:keys [question] :as sq}]
-                               (let [plotters       (call-sql "select_plotters" project-id -1)
-                                     sample-answers (map (fn [user]
-                                                           (->> (get-samples-answer-array plot-id (:user_id user))
-                                                                (map (fn [sv]
-                                                                       (map #(get-in % [question "answerId"])
-                                                                            sv)))))
-                                                         plotters)]
+                               (let [sample-answers (users-samples->answers users-samples question)]
                                  (assoc sq
                                         :disagreement      (question-disagreement sample-answers)
                                         :answerFrequencies (map (fn [user ans]

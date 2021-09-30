@@ -71,7 +71,7 @@ class UserDisagreement extends React.Component {
         const {question, answers, disagreement, answerFrequencies} = thisQuestion;
         return (
             <div
-                key="question"
+                key={question}
                 style={{
                     border: "1px solid rgba(0, 0, 0, 0.2)",
                     borderRadius: "6px",
