@@ -2,7 +2,7 @@ import React from "react";
 
 import {ProjectContext} from "./constants";
 import Select from "../components/Select";
-import {removeAtIndex} from "../utils/generalUtils";
+import {formatNumberWithCommas, removeAtIndex} from "../utils/generalUtils";
 
 export default class AssignPlots extends React.Component {
     constructor(props) {
@@ -62,50 +62,58 @@ export default class AssignPlots extends React.Component {
         this.setUserAssignment({percents});
     };
 
-    renderAssignedUsers = (assignedUsers, isPercentage, percents) => (
+    renderAssignedUsers = (assignedUsers, isPercentage, percents, totalPlots) => (
         <div className="d-flex flex-column mt-3">
-            {assignedUsers.map(({id, email}, userIndex) => (
-                <div key={id} className="d-flex justify-content-between mt-1">
-                    <div className="mr-5">
-                        {isPercentage && (
-                            <>
-                                <input
-                                    className="form-control form-control-sm"
-                                    max="100"
-                                    min="0"
-                                    onChange={e => this.assignPlotPercent(userIndex, parseInt(e.target.value))}
-                                    placeholder="%"
-                                    style={{display: "inline-block", width: "3.5rem"}}
-                                    type="number"
-                                    value={percents[userIndex]}
-                                />
-                                &#37;
-                            </>
-                        )}
-                    </div>
-                    <div className="d-flex">
-                        <div
-                            style={{
-                                background: "white",
-                                border: "1px solid #ced4da",
-                                borderRadius: ".25rem",
-                                fontSize: ".875rem",
-                                padding: ".25rem .5rem"
-                            }}
-                        >
-                            {email}
+            {assignedUsers.map(({id, email}, userIndex) => {
+                const numPlots = Math.round((percents[userIndex] / 100) * totalPlots);
+                return (
+                    <div key={id} className="d-flex justify-content-between mt-1">
+                        <div className="mr-5">
+                            {isPercentage && (
+                                <div className="d-flex flex-column">
+                                    <div>
+                                        <input
+                                            className="form-control form-control-sm"
+                                            max="100"
+                                            min="0"
+                                            onChange={e => this.assignPlotPercent(userIndex, parseInt(e.target.value))}
+                                            placeholder="%"
+                                            style={{display: "inline-block", width: "3.5rem"}}
+                                            type="number"
+                                            value={percents[userIndex]}
+                                        />
+                                        &#37;
+                                    </div>
+                                    <div className="font-italic mx-1 small">
+                                        - ~{formatNumberWithCommas(numPlots)} plots
+                                    </div>
+                                </div>
+                            )}
                         </div>
-                        <button
-                            className="btn btn-sm btn-danger mx-2"
-                            onClick={() => this.removeUser(id)}
-                            title={`Remove ${email}`}
-                            type="button"
-                        >
-                            -
-                        </button>
+                        <div className="d-flex">
+                            <div
+                                style={{
+                                    background: "white",
+                                    border: "1px solid #ced4da",
+                                    borderRadius: ".25rem",
+                                    fontSize: ".875rem",
+                                    padding: ".25rem .5rem"
+                                }}
+                            >
+                                {email}
+                            </div>
+                            <button
+                                className="btn btn-sm btn-danger mx-2"
+                                onClick={() => this.removeUser(id)}
+                                title={`Remove ${email}`}
+                                type="button"
+                            >
+                                -
+                            </button>
+                        </div>
                     </div>
-                </div>
-            ))}
+                );
+            })}
         </div>
     );
 
@@ -116,16 +124,17 @@ export default class AssignPlots extends React.Component {
             ["percent", "Percentage of plots"]
         ];
         const {selectedUserId} = this.state;
-        const {institutionUserList} = this.props;
+        const {institutionUserList, totalPlots} = this.props;
         const {userMethod, users, percents} = this.getUserAssignment();
         const possibleUsers = [
             {id: -1, email: "Select user..."},
             ...institutionUserList.filter(u => !users.includes(u.id))
         ];
         const assignedUsers = institutionUserList.filter(u => users.includes(u.id));
+        const plotsPerUser = Math.round(totalPlots / users.length);
 
         return (
-            <div className="mx-5 col-4">
+            <div className="col-6">
                 <h3 className="mb-3">Assign Plots</h3>
                 <div className="d-flex">
                     <Select
@@ -159,7 +168,12 @@ export default class AssignPlots extends React.Component {
                                 +
                             </button>
                         </div>
-                        {this.renderAssignedUsers(assignedUsers, userMethod === "percent", percents)}
+                        {this.renderAssignedUsers(assignedUsers, userMethod === "percent", percents, totalPlots)}
+                        {userMethod === "equal" && (
+                            <p className="font-italic mt-2 small">
+                                - Each user will be assigned ~{formatNumberWithCommas(plotsPerUser)} plots
+                            </p>
+                        )}
                     </div>
                 )}
             </div>

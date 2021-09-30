@@ -283,7 +283,7 @@ export class PlotDesign extends React.Component {
         return (
             <div id="plot-design">
                 <div className="row">
-                    <div className="col mb-3" id="plot-design-col1">
+                    <div className="col" id="plot-design-col1">
                         <h2 className="mb-3">Plot Generation</h2>
                         <div className="d-flex">
                             <div className="d-flex flex-column">
@@ -317,7 +317,6 @@ export class PlotDesign extends React.Component {
                 <p
                     className="font-italic ml-2 small"
                     style={{
-                        marginTop: "10px",
                         color: totalPlots > plotLimit ? "#8B0000" : "#006400",
                         fontSize: "1rem",
                         whiteSpace: "pre-line"
@@ -328,8 +327,8 @@ export class PlotDesign extends React.Component {
                         && `* The maximum allowed number for the selected plot distribution is ${formatNumberWithCommas(plotLimit)}.`}
                 </p>
                 <div className="d-flex row">
-                    <AssignPlots institutionUserList={institutionUserList}/>
-                    <QualityControl institutionUserList={institutionUserList}/>
+                    <AssignPlots institutionUserList={institutionUserList} totalPlots={totalPlots}/>
+                    <QualityControl institutionUserList={institutionUserList} totalPlots={totalPlots}/>
                 </div>
             </div>
         );
