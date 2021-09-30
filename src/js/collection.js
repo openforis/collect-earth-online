@@ -1,5 +1,6 @@
 import React from "react";
 import ReactDOM from "react-dom";
+import _ from "lodash";
 
 import {LoadingModal, NavigationBar} from "./components/PageComponents";
 import {SurveyCollection} from "./components/SurveyCollection";
@@ -58,6 +59,7 @@ class Collection extends React.Component {
 
     componentDidMount() {
         window.name = "_ceocollection";
+        window.addEventListener("beforeunload", this.unsavedWarning, {capture: true});
 
         fetch(
             `/release-plot-locks?projectId=${this.props.projectId}`,
@@ -137,6 +139,10 @@ class Collection extends React.Component {
                 || this.state.mapConfig !== prevState.mapConfig)) {
             this.updateMapImagery();
         }
+    }
+
+    componentWillUnmount() {
+        window.removeEventListener("beforeunload", this.unsavedWarning, {capture: true});
     }
 
     setImageryAttribution = attributionSuffix => this.setState({
@@ -349,15 +355,39 @@ class Collection extends React.Component {
         );
     };
 
+    hasChanged = () => !(_.isEqual(this.state.userSamples, this.state.originalUserSamples));
+
+    // https://developer.mozilla.org/en-US/docs/Web/API/Window/beforeunload_event
+    unsavedWarning = e => {
+        if (this.hasChanged()) {
+            e.preventDefault();
+            e.returnValue = "You have unsaved changes. Are you sure you want to leave?";
+            return "You have unsaved changes. Are you sure you want to leave?";
+        }
+    };
+
+    confirmUnsaved = () => !this.hasChanged()
+        || confirm("You have unsaved changes. Any answered questions will be lost. Are you sure you want to continue?");
+
     navToFirstPlot = () => this.getPlotData(-10000000, "next");
 
-    navToNextPlot = () => this.getPlotData(this.state.currentPlot.visibleId, "next");
+    navToNextPlot = ignoreCheck => {
+        if (ignoreCheck || this.confirmUnsaved()) {
+            this.getPlotData(this.state.currentPlot.visibleId, "next");
+        }
+    };
 
-    navToPrevPlot = () => this.getPlotData(this.state.currentPlot.visibleId, "previous");
+    navToPrevPlot = () => {
+        if (this.confirmUnsaved()) {
+            this.getPlotData(this.state.currentPlot.visibleId, "previous");
+        }
+    };
 
     navToPlot = newPlot => {
         if (!isNaN(newPlot)) {
-            this.getPlotData(newPlot, "id");
+            if (this.confirmUnsaved()) {
+                this.getPlotData(newPlot, "id");
+            }
         } else {
             alert("Please enter a number to go to plot.");
         }
@@ -384,13 +414,22 @@ class Collection extends React.Component {
             });
     };
 
-    resetPlotValues = () => this.setState(this.newPlotValues(this.state.currentPlot, false));
+    resetPlotValues = () => {
+        this.setState(this.newPlotValues(this.state.currentPlot, false));
+        this.resetUnsavedWarning();
+    };
 
     newPlotValues = (newPlot, copyValues = true) => ({
         newPlotInput: newPlot.visibleId,
         userSamples: newPlot.samples
             ? newPlot.samples.reduce((acc, cur) =>
                 ({...acc, [cur.id]: copyValues ? (cur.savedAnswers || {}) : {}}), {})
+            : {},
+        originalUserSamples: newPlot.samples
+            ? copyValues
+                ? newPlot.samples.reduce((acc, cur) =>
+                    ({...acc, [cur.id]: (cur.savedAnswers || {})}), {})
+                : this.state.originalUserSamples
             : {},
         userImages: newPlot.samples
             ? newPlot.samples.reduce((acc, cur) =>
@@ -579,7 +618,7 @@ class Collection extends React.Component {
                 )
                     .then(response => {
                         if (response.ok) {
-                            return this.navToNextPlot();
+                            return this.navToNextPlot(true);
                         } else {
                             console.log(response);
                             alert("Error flagging plot as bad. See console for details.");
@@ -613,7 +652,7 @@ class Collection extends React.Component {
                 )
                     .then(response => {
                         if (response.ok) {
-                            return this.navToNextPlot();
+                            return this.navToNextPlot(true);
                         } else {
                             console.log(response);
                             alert("Error saving your assignments to the database. See console for details.");
@@ -800,11 +839,9 @@ class Collection extends React.Component {
 
     toggleQuitModal = () => this.setState({showQuitModal: !this.state.showQuitModal});
 
-    toggleFlagged = () => {
-        this.setState({
-            currentPlot: {...this.state.currentPlot, flagged: !this.state.currentPlot.flagged}
-        });
-    };
+    toggleFlagged = () => this.setState({
+        currentPlot: {...this.state.currentPlot, flagged: !this.state.currentPlot.flagged}
+    });
 
     setUnansweredColor = newColor => this.setState({unansweredColor: newColor});
 
@@ -820,13 +857,9 @@ class Collection extends React.Component {
         }
     };
 
-    setConfidence = confidence => {
-        this.setState({currentPlot: {...this.state.currentPlot, confidence}});
-    };
+    setConfidence = confidence => this.setState({currentPlot: {...this.state.currentPlot, confidence}});
 
-    setFlaggedReason = flaggedReason => {
-        this.setState({currentPlot: {...this.state.currentPlot, flaggedReason}});
-    };
+    setFlaggedReason = flaggedReason => this.setState({currentPlot: {...this.state.currentPlot, flaggedReason}});
 
     render() {
         return (
@@ -1098,7 +1131,7 @@ class PlotNavigation extends React.Component {
             </button>
             <button
                 className="btn btn-outline-lightgreen btn-sm mx-1"
-                onClick={this.props.navToNextPlot}
+                onClick={() => this.props.navToNextPlot()}
                 type="button"
             >
                 <UnicodeIcon icon="rightCaret"/>
