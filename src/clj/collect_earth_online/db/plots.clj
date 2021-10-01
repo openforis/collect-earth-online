@@ -246,8 +246,13 @@
 ;;;
 
 (defn add-user-samples [{:keys [params]}]
-  (let [plot-id          (tc/val->int (:plotId params))
+  (let [project-id       (tc/val->int (:projectId params))
+        plot-id          (tc/val->int (:plotId params))
         user-id          (:userId params -1)
+        plot-user-id     (tc/val->int (:plotUserId params -1))
+        review-mode?     (and (tc/val->bool (:inReviewMode params))
+                              (pos? plot-user-id)
+                              (is-proj-admin? user-id project-id nil))
         confidence       (tc/val->int (:confidence params))
         collection-start (tc/val->long (:collectionStart params))
         user-samples     (:userSamples params)
@@ -256,7 +261,7 @@
         ;; Samples created in the UI have IDs starting with 1. When the new sample is created
         ;; in Postgres, it gets different ID.  The user sample ID needs to be updated to match.
         id-translation   (when new-plot-samples
-                           (call-sql "delete_user_plot_by_plot" plot-id user-id)
+                           (call-sql "delete_user_plot_by_plot" plot-id (if review-mode? plot-user-id user-id))
                            (call-sql "delete_samples_by_plot" plot-id)
                            (reduce (fn [acc {:keys [id sampleGeom]}]
                                      (let [new-id (sql-primitive (call-sql "create_project_plot_sample"
@@ -269,20 +274,29 @@
     (if (some seq (vals user-samples))
       (call-sql "upsert_user_samples"
                 plot-id
-                user-id ; FIXME, CEO-208 in admin mode, we need to get the existing user id for the plot.
+                (if review-mode? plot-user-id user-id)
                 (when (pos? confidence) confidence)
-                (Timestamp. collection-start) ; TODO, CEO-208 dont update collection time for admin in admin mode.
+                (when-not review-mode? (Timestamp. collection-start))
                 (tc/clj->jsonb (set/rename-keys user-samples id-translation))
                 (tc/clj->jsonb (set/rename-keys user-images id-translation)))
-      (call-sql "delete_user_plot_by_plot" plot-id user-id)) ; FIXME, CEO-208 in admin mode, we need to get the existing user id for the plot.
+      (call-sql "delete_user_plot_by_plot" plot-id (if review-mode? plot-user-id user-id)))
     (unlock-plots user-id)
     (data-response "")))
 
 (defn flag-plot [{:keys [params]}]
-  (let [plot-id          (tc/val->int (:plotId params))
+  (let [project-id       (tc/val->int (:projectId params))
+        plot-id          (tc/val->int (:plotId params))
         user-id          (:userId params -1)
+        plot-user-id     (tc/val->int (:plotUserId params -1))
+        review-mode?     (and (tc/val->bool (:inReviewMode params false))
+                              (pos? plot-user-id)
+                              (is-proj-admin? user-id project-id nil))
         collection-start (tc/val->long (:collectionStart params))
         flagged-reason   (:flaggedReason params)]
-    (call-sql "flag_plot" plot-id user-id (Timestamp. collection-start) flagged-reason)
+    (call-sql "flag_plot"
+              plot-id
+              (if review-mode? plot-user-id user-id)
+              (when-not review-mode? (Timestamp. collection-start))
+              flagged-reason)
     (unlock-plots user-id)
     (data-response "")))
