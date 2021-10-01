@@ -24,10 +24,10 @@ export default function Select({
     labelKey
 }) {
     return (
-        <div className="form-inline">
-            <label htmlFor={id}>{label}</label>
+        <>
+            <label className="col-5" htmlFor={id}>{label}</label>
             <select
-                className="form-control form-control-sm ml-3"
+                className="form-control form-control-sm col-5"
                 disabled={disabled}
                 id={id}
                 onChange={onChange}
@@ -41,6 +41,6 @@ export default function Select({
                         /* eslint-disable-next-line react/no-array-index-key */
                         <Option key={i} labelKey={labelKey} option={o} valueKey={valueKey}/>)}
             </select>
-        </div>
+        </>
     );
 }

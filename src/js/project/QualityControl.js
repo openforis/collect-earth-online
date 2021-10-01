@@ -2,16 +2,10 @@ import React from "react";
 
 import {ProjectContext} from "./constants";
 import Select from "../components/Select";
+import UserSelect from "../components/UserSelect";
 import {formatNumberWithCommas} from "../utils/generalUtils";
 
 export default class QualityControl extends React.Component {
-    constructor(props) {
-        super(props);
-        this.state = {
-            selectedUser: -1
-        };
-    }
-
     getAssignment = () => this.context.designSettings.qaqcAssignment;
 
     getUserAssignment = () => this.context.designSettings.userAssignment;
@@ -29,43 +23,46 @@ export default class QualityControl extends React.Component {
 
     setTimesToReview = timesToReview => this.setAssignment({timesToReview});
 
-    resetSelectedUser = () => this.setState({selectedUser: -1});
-
     addSME = id => {
         const {smes} = this.getAssignment();
         this.setAssignment({smes: [...smes, id]});
-        this.resetSelectedUser();
     };
 
     removeSME = id => {
         const {smes} = this.getAssignment();
         this.setAssignment({smes: smes.filter(s => s !== id)});
-        this.resetSelectedUser();
     };
 
     renderAssignedSMEs = assignedSMEs => (
-        <div className="d-flex flex-column my-3">
+        <div>
             {assignedSMEs.map(({id, email}) => (
-                <div key={id} className="d-flex justify-content-end mt-1">
-                    <div
-                        style={{
-                            background: "white",
-                            border: "1px solid #ced4da",
-                            borderRadius: ".25rem",
-                            fontSize: ".875rem",
-                            padding: ".25rem .5rem"
-                        }}
-                    >
-                        {email}
+                <div key={id} className="form-row mt-1">
+                    <div className="col-5 offset-5">
+                        <div
+                            style={{
+                                background: "white",
+                                border: "1px solid #ced4da",
+                                borderRadius: ".25rem",
+                                fontSize: ".875rem",
+                                overflow: "hidden",
+                                padding: ".25rem .5rem",
+                                textOverflow: "ellipsis",
+                                whiteSpace: "nowrap"
+                            }}
+                        >
+                            {email}
+                        </div>
                     </div>
-                    <button
-                        className="btn btn-sm btn-danger mx-2"
-                        onClick={() => this.removeSME(id)}
-                        title={`Remove ${email}`}
-                        type="button"
-                    >
-                        -
-                    </button>
+                    <div className="col-1">
+                        <button
+                            className="btn btn-sm btn-danger"
+                            onClick={() => this.removeSME(id)}
+                            title={`Remove ${email}`}
+                            type="button"
+                        >
+                            -
+                        </button>
+                    </div>
                 </div>
             ))}
         </div>
@@ -80,7 +77,6 @@ export default class QualityControl extends React.Component {
         const {qaqcMethod, percent, smes, timesToReview} = this.getAssignment();
         const {userMethod} = this.getUserAssignment();
         const {allowDrawnSamples} = this.context;
-        const {selectedUser} = this.state;
         const {institutionUserList, totalPlots} = this.props;
         const possibleSMEs = [
             {id: -1, email: "Select user..."},
@@ -93,7 +89,7 @@ export default class QualityControl extends React.Component {
         return (
             <div className="col-6">
                 <h3 className="mb-3">Quality Control</h3>
-                <div className="d-flex">
+                <div className="form-row">
                     <Select
                         disabled={allowDrawnSamples || userMethod === "none"}
                         id="quality-mode"
@@ -103,7 +99,7 @@ export default class QualityControl extends React.Component {
                         value={qaqcMethod}
                     />
                 </div>
-                <p className="font-italic ml-2 my-1 small">
+                <p className="font-italic ml-2 mt-2 small">
                   - SME: Subject Matter Expert
                 </p>
                 {allowDrawnSamples ? (
@@ -118,33 +114,36 @@ export default class QualityControl extends React.Component {
 
                 )}
                 {qaqcMethod !== "none" && (
-                    <div className="d-flex flex-column mt-3">
-                        <label htmlFor="percent">Percent:</label>
+                    <>
+                        <div className="form-row mt-3">
+                            <label className="col-5" htmlFor="percent">Percent:</label>
+                            <div className="col-5 d-flex align-items-center">
+                                <input
+                                    className="form-control"
+                                    id="percent"
+                                    max="100"
+                                    min="0"
+                                    onChange={e => this.setPercent(parseInt(e.target.value))}
+                                    steps="5"
+                                    type="range"
+                                    value={percent}
+                                />
+                                <div style={{fontSize: "0.9rem", marginLeft: "0.5rem"}}>
+                                    {percent}%
+                                </div>
+                            </div>
+                        </div>
                         <p className="font-italic ml-2 small">
                             - Percent of each users plots to review
                         </p>
-                        <div className="d-flex mx-3">
-                            <input
-                                id="percent"
-                                max="100"
-                                min="0"
-                                onChange={e => this.setPercent(parseInt(e.target.value))}
-                                steps="5"
-                                type="range"
-                                value={percent}
-                            />
-                            <div style={{fontSize: "0.9rem", margin: "0.25rem 1rem"}}>
-                                {percent}%
-                            </div>
-                        </div>
-                    </div>
+                    </>
                 )}
                 {qaqcMethod === "overlap" && (
                     <>
-                        <div className="mt-3 form-inline">
-                            <label htmlFor="reviews"># of Reviews:</label>
+                        <div className="form-row mt-3">
+                            <label className="col-5" htmlFor="reviews"># of Reviews:</label>
                             <input
-                                className="form-control form-control-sm ml-3"
+                                className="col-5 form-control form-control-sm"
                                 id="reviews"
                                 max="100"
                                 min="2"
@@ -153,41 +152,27 @@ export default class QualityControl extends React.Component {
                                 value={timesToReview}
                             />
                         </div>
-                        <p className="font-italic mt-2 small">
+                        <p className="font-italic ml-2 mt-2 small">
                             - Plots to review: {formatNumberWithCommas(plotsToReview)}
                         </p>
                     </>
                 )}
 
                 {qaqcMethod === "sme" && (
-                    <div className="mt-3">
-                        <div className="d-flex">
-                            <Select
-                                disabled={possibleSMEs.length === 1}
-                                id="assigned-smes"
-                                label="Assigned SMEs"
-                                labelKey="email"
-                                onChange={e => this.setState({selectedUser: parseInt(e.target.value)})}
-                                options={possibleSMEs.length > 1 ? possibleSMEs : ["No Users to Assign"]}
-                                valueKey="id"
-                            />
-                            <button
-                                className="btn btn-sm btn-success mx-2"
-                                disabled={possibleSMEs.length === 1 || selectedUser === -1}
-                                onClick={() => this.addSME(selectedUser)}
-                                title="Add User"
-                                type="button"
-                            >
-                                +
-                            </button>
-                        </div>
+                    <>
+                        <UserSelect
+                            addUser={this.addSME}
+                            id="assigned-smes"
+                            label="Assigned SMEs"
+                            possibleUsers={possibleSMEs}
+                        />
                         {this.renderAssignedSMEs(assignedSMEs)}
                         {smes.length > 0 && (
-                            <p className="font-italic ml-2 small">
+                            <p className="font-italic ml-2 mt-2 small">
                                 - Each SME will review ~{formatNumberWithCommas(plotsPerSME)} plots
                             </p>
                         )}
-                    </div>
+                    </>
                 )}
             </div>
         );

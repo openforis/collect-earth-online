@@ -2,16 +2,10 @@ import React from "react";
 
 import {ProjectContext} from "./constants";
 import Select from "../components/Select";
+import UserSelect from "../components/UserSelect";
 import {formatNumberWithCommas, removeAtIndex} from "../utils/generalUtils";
 
 export default class AssignPlots extends React.Component {
-    constructor(props) {
-        super(props);
-        this.state = {
-            selectedUserId: -1
-        };
-    }
-
     getQaqcAssignment = () => this.context.designSettings.qaqcAssignment;
 
     getUserAssignment = () => this.context.designSettings.userAssignment;
@@ -33,16 +27,11 @@ export default class AssignPlots extends React.Component {
         newUserMethod === "none" ? {qaqcMethod: "none"} : null
     );
 
-    resetSelectedUser = () => {
-        this.setState({selectedUserId: -1});
-    };
-
     addUser = userId => {
         const {users, percents} = this.getUserAssignment();
         const newUsers = [...users, userId];
         const newPercents = [...percents, 0];
         this.setUserAssignment({users: newUsers, percents: newPercents});
-        this.resetSelectedUser();
     };
 
     removeUser = userId => {
@@ -53,7 +42,6 @@ export default class AssignPlots extends React.Component {
             users: newUsers,
             percents: removeAtIndex(percents, idx)
         });
-        this.resetSelectedUser();
     };
 
     assignPlotPercent = (userIndex, percent) => {
@@ -63,15 +51,15 @@ export default class AssignPlots extends React.Component {
     };
 
     renderAssignedUsers = (assignedUsers, isPercentage, percents, totalPlots) => (
-        <div className="d-flex flex-column mt-3">
+        <div>
             {assignedUsers.map(({id, email}, userIndex) => {
                 const numPlots = Math.round((percents[userIndex] / 100) * totalPlots);
                 return (
-                    <div key={id} className="d-flex justify-content-between mt-1">
-                        <div className="mr-5">
+                    <div key={id} className="form-row mt-1">
+                        <div className="col-5">
                             {isPercentage && (
                                 <div className="d-flex flex-column">
-                                    <div>
+                                    <div className="ml-2">
                                         <input
                                             className="form-control form-control-sm"
                                             max="100"
@@ -84,26 +72,31 @@ export default class AssignPlots extends React.Component {
                                         />
                                         &#37;
                                     </div>
-                                    <div className="font-italic mx-1 small">
-                                        - ~{formatNumberWithCommas(numPlots)} plots
+                                    <div className="font-italic small ml-2">
+                                        ~{formatNumberWithCommas(numPlots)} plots
                                     </div>
                                 </div>
                             )}
                         </div>
-                        <div className="d-flex">
+                        <div className="col-5">
                             <div
                                 style={{
                                     background: "white",
                                     border: "1px solid #ced4da",
                                     borderRadius: ".25rem",
                                     fontSize: ".875rem",
-                                    padding: ".25rem .5rem"
+                                    overflow: "hidden",
+                                    padding: ".25rem .5rem",
+                                    textOverflow: "ellipsis",
+                                    whiteSpace: "nowrap"
                                 }}
                             >
                                 {email}
                             </div>
+                        </div>
+                        <div className="col-1">
                             <button
-                                className="btn btn-sm btn-danger mx-2"
+                                className="btn btn-sm btn-danger"
                                 onClick={() => this.removeUser(id)}
                                 title={`Remove ${email}`}
                                 type="button"
@@ -123,7 +116,6 @@ export default class AssignPlots extends React.Component {
             ["equal", "Equal assignments"],
             ["percent", "Percentage of plots"]
         ];
-        const {selectedUserId} = this.state;
         const {institutionUserList, totalPlots} = this.props;
         const {userMethod, users, percents} = this.getUserAssignment();
         const possibleUsers = [
@@ -136,7 +128,7 @@ export default class AssignPlots extends React.Component {
         return (
             <div className="col-6">
                 <h3 className="mb-3">Assign Plots</h3>
-                <div className="d-flex">
+                <div className="form-row">
                     <Select
                         id="user-assignment"
                         label="User Assignment"
@@ -147,30 +139,15 @@ export default class AssignPlots extends React.Component {
                 </div>
                 {userMethod !== "none" && (
                     <div className="mt-3">
-                        <div className="d-flex">
-                            <Select
-                                disabled={possibleUsers.length === 1}
-                                id="assigned-users"
-                                label="Assigned Users"
-                                labelKey="email"
-                                onChange={e => this.setState({selectedUserId: parseInt(e.target.value)})}
-                                options={possibleUsers.length > 1 ? possibleUsers : ["No users to assign."]}
-                                value={this.state.selectedUserId}
-                                valueKey="id"
-                            />
-                            <button
-                                className="btn btn-sm btn-success mx-2"
-                                disabled={possibleUsers.length === 1 || selectedUserId === -1}
-                                onClick={() => this.addUser(selectedUserId)}
-                                title="Add User"
-                                type="button"
-                            >
-                                +
-                            </button>
-                        </div>
+                        <UserSelect
+                            addUser={this.addUser}
+                            id="assigned-users"
+                            label="Assigned Users"
+                            possibleUsers={possibleUsers}
+                        />
                         {this.renderAssignedUsers(assignedUsers, userMethod === "percent", percents, totalPlots)}
-                        {userMethod === "equal" && (
-                            <p className="font-italic mt-2 small">
+                        {userMethod === "equal" && assignedUsers.length > 0 && (
+                            <p className="font-italic ml-2 mt-2 small">
                                 - Each user will be assigned ~{formatNumberWithCommas(plotsPerUser)} plots
                             </p>
                         )}
