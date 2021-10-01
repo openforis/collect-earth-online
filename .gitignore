@@ -15,6 +15,7 @@ node_modules/
 target/
 config.edn
 package-lock.json
+announcement.txt
 
 # MacOS X Backups
 .DS_Store
