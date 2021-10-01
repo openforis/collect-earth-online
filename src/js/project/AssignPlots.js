@@ -126,10 +126,10 @@ export default class AssignPlots extends React.Component {
         const {selectedUserId} = this.state;
         const {institutionUserList, totalPlots} = this.props;
         const {userMethod, users, percents} = this.getUserAssignment();
-        const {smes} = this.getQaqcAssignment();
+        const {qaqcMethod, smes} = this.getQaqcAssignment();
         const possibleUsers = [
             {id: -1, email: "Select user..."},
-            ...institutionUserList.filter(u => !users.includes(u.id) && !smes.includes(u.id))
+            ...institutionUserList.filter(u => !users.includes(u.id) && (qaqcMethod !== "sme" || !smes.includes(u.id)))
         ];
         const assignedUsers = institutionUserList.filter(u => users.includes(u.id));
         const plotsPerUser = Math.round(totalPlots / users.length);
