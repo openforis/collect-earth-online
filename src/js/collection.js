@@ -596,8 +596,16 @@ class Collection extends React.Component {
         }
     };
 
+    hasAnswers = () =>
+        (Object.values(this.state.userSamples)
+            .reduce((acc, sample) => acc || (Object.keys(sample).length > 0), false)
+        || Object.values(this.state.originalUserSamples)
+            .reduce((acc, sample) => acc || (Object.keys(sample).length > 0), false));
+
+    confirmFlag = () => !this.hasAnswers() || confirm("Flagging this plot will delete your previous answers. Are you sure you want to continue?");
+
     postValuesToDB = () => {
-        if (this.state.currentPlot.flagged) {
+        if (this.state.currentPlot.flagged && this.confirmFlag()) {
             this.processModal(
                 "Saving flagged plot",
                 () => fetch(
