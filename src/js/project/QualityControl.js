@@ -78,13 +78,13 @@ export default class QualityControl extends React.Component {
             ["sme", "SME Verification"]
         ];
         const {qaqcMethod, percent, smes, timesToReview} = this.getAssignment();
-        const {userMethod} = this.getUserAssignment();
+        const {userMethod, users} = this.getUserAssignment();
         const {allowDrawnSamples} = this.context;
         const {selectedUser} = this.state;
         const {institutionUserList, totalPlots} = this.props;
         const possibleSMEs = [
             {id: -1, email: "Select user..."},
-            ...institutionUserList.filter(({id}) => !smes.includes(id))
+            ...institutionUserList.filter(u => !users.includes(u.id) && !smes.includes(u.id))
         ];
         const assignedSMEs = institutionUserList.filter(({id}) => smes.includes(id));
         const plotsToReview = Math.round(totalPlots * (percent / 100));
