@@ -218,20 +218,6 @@ certificate is renewed, certbot-deploy-hook.sh will be run
 automatically to repackage the updated certificate into the correct
 format.
 
-*** Forwarding Ports
-
-Forwarding ports from the defaults for http and https allows the web server
-to run without sudo privileges. To forward ports use iptables. Installing
-iptables-persistent after setting up the routing will automatically save
-the rules persistently.
-
-#+begin_src sh
-sudo iptables -t nat -A PREROUTING -p tcp --dport 80 -j REDIRECT --to-ports 8080
-sudo iptables -t nat -I PREROUTING -p tcp --dport 443 -j REDIRECT --to-ports 8443
-sudo iptables-save
-sudo apt -y install iptables-persistent
-#+end_src
-
 *** Building GEE-Gateway
 
 In order to use the Geo-Dash portion of CEO, we need to install an
