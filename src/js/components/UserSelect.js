@@ -1,6 +1,7 @@
 import React, {useState} from "react";
 
 import Select from "./Select";
+import {ButtonSvgIcon} from "./SvgIcon";
 
 export default function UserSelect({label, id, possibleUsers = [], addUser}) {
     const [selectedUserId, setSelectedUserId] = useState(-1);
@@ -13,7 +14,7 @@ export default function UserSelect({label, id, possibleUsers = [], addUser}) {
                 label={label}
                 labelKey="email"
                 onChange={e => setSelectedUserId(parseInt(e.target.value))}
-                options={possibleUsers.length > 1 ? possibleUsers : ["No users to assign."]}
+                options={possibleUsers.length === 1 ? ["No users to assign."] : possibleUsers}
                 value={selectedUserId}
                 valueKey="id"
             />
@@ -28,7 +29,7 @@ export default function UserSelect({label, id, possibleUsers = [], addUser}) {
                     title="Add User"
                     type="button"
                 >
-                        +
+                    <ButtonSvgIcon icon="plus" size="1rem"/>
                 </button>
             </div>
         </div>

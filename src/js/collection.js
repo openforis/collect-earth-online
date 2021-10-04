@@ -1189,9 +1189,10 @@ class PlotNavigation extends React.Component {
     );
 
     selectUser = (users, currentUserId, onChange) => (
-        <div className="my-2 d-flex align-items-center justify-content-center">
+        <div className="my-2 d-flex align-items-center justify-content-center form-inline">
             <Select
                 disabled={users.length <= 1}
+                inlined
                 label="User:"
                 labelKey="email"
                 onChange={e => onChange(parseInt(e.target.value))}

@@ -17,6 +17,7 @@ export default function Select({
     disabled,
     label,
     id,
+    inlined = false,
     onChange,
     value,
     options,
@@ -25,9 +26,9 @@ export default function Select({
 }) {
     return (
         <>
-            <label className="col-5" htmlFor={id}>{label}</label>
+            <label className={inlined ? "" : "col-5"} htmlFor={id}>{label}</label>
             <select
-                className="form-control form-control-sm col-5"
+                className={"form-control form-control-sm " + (inlined ? "ml-3" : " col-6")}
                 disabled={disabled}
                 id={id}
                 onChange={onChange}
