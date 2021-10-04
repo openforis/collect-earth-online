@@ -248,20 +248,21 @@
 (defn add-user-samples [{:keys [params]}]
   (let [project-id       (tc/val->int (:projectId params))
         plot-id          (tc/val->int (:plotId params))
-        user-id          (:userId params -1)
+        session-user-id  (:userId params -1)
         plot-user-id     (tc/val->int (:plotUserId params -1))
         review-mode?     (and (tc/val->bool (:inReviewMode params))
                               (pos? plot-user-id)
-                              (is-proj-admin? user-id project-id nil))
+                              (is-proj-admin? session-user-id project-id nil))
         confidence       (tc/val->int (:confidence params))
         collection-start (tc/val->long (:collectionStart params))
         user-samples     (:userSamples params)
         user-images      (:userImages params)
         new-plot-samples (:newPlotSamples params)
+        user-id          (if review-mode? plot-user-id session-user-id)
         ;; Samples created in the UI have IDs starting with 1. When the new sample is created
         ;; in Postgres, it gets different ID.  The user sample ID needs to be updated to match.
         id-translation   (when new-plot-samples
-                           (call-sql "delete_user_plot_by_plot" plot-id (if review-mode? plot-user-id user-id))
+                           (call-sql "delete_user_plot_by_plot" plot-id user-id)
                            (call-sql "delete_samples_by_plot" plot-id)
                            (reduce (fn [acc {:keys [id sampleGeom]}]
                                      (let [new-id (sql-primitive (call-sql "create_project_plot_sample"
@@ -274,12 +275,12 @@
     (if (some seq (vals user-samples))
       (call-sql "upsert_user_samples"
                 plot-id
-                (if review-mode? plot-user-id user-id)
+                user-id
                 (when (pos? confidence) confidence)
                 (when-not review-mode? (Timestamp. collection-start))
                 (tc/clj->jsonb (set/rename-keys user-samples id-translation))
                 (tc/clj->jsonb (set/rename-keys user-images id-translation)))
-      (call-sql "delete_user_plot_by_plot" plot-id (if review-mode? plot-user-id user-id)))
+      (call-sql "delete_user_plot_by_plot" plot-id user-id))
     (unlock-plots user-id)
     (data-response "")))
 
