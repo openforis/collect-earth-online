@@ -908,7 +908,7 @@ class Collection extends React.Component {
                         currentPlot={this.state.currentPlot}
                         currentUserId={this.state.currentUserId}
                         inReviewMode={this.state.inReviewMode}
-                        isAssignedPlots={this.state.currentProject.designSettings?.userAssignment?.userMethod !== "none"}
+                        hasAssignedPlots={this.state.currentProject.designSettings?.userAssignment?.userMethod !== "none"}
                         isProjectAdmin={this.state.currentProject.isProjectAdmin}
                         isQAQCEnabled={this.state.currentProject.designSettings?.qaqcAssignment?.qaqcMethod !== "none"}
                         loadingPlots={this.state.plotList.length === 0}
@@ -1209,7 +1209,7 @@ class PlotNavigation extends React.Component {
             currentPlot,
             collectConfidence,
             inReviewMode,
-            isAssignedPlots,
+            hasAssignedPlots,
             isProjectAdmin,
             isQAQCEnabled,
             loadingPlots,
@@ -1234,7 +1234,7 @@ class PlotNavigation extends React.Component {
                             style={{flex: "1 1 auto"}}
                             value={navigationMode}
                         >
-                            {!inReviewMode && (<option value="natural">{isAssignedPlots ? "Assigned" : "Default"}</option>)}
+                            {!inReviewMode && (<option value="natural">{hasAssignedPlots ? "Assigned" : "Default"}</option>)}
                             <option value="unanalyzed">Unanalyzed plots</option>
                             <option value="analyzed">Analyzed plots</option>
                             <option value="flagged">Flagged plots</option>
