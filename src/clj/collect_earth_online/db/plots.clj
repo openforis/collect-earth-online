@@ -249,16 +249,16 @@
   (let [project-id       (tc/val->int (:projectId params))
         plot-id          (tc/val->int (:plotId params))
         session-user-id  (:userId params -1)
-        plot-user-id     (tc/val->int (:plotUserId params -1))
+        current-user-id  (tc/val->int (:currentUserId params -1))
         review-mode?     (and (tc/val->bool (:inReviewMode params))
-                              (pos? plot-user-id)
+                              (pos? current-user-id)
                               (is-proj-admin? session-user-id project-id nil))
         confidence       (tc/val->int (:confidence params))
         collection-start (tc/val->long (:collectionStart params))
         user-samples     (:userSamples params)
         user-images      (:userImages params)
         new-plot-samples (:newPlotSamples params)
-        user-id          (if review-mode? plot-user-id session-user-id)
+        user-id          (if review-mode? current-user-id session-user-id)
         ;; Samples created in the UI have IDs starting with 1. When the new sample is created
         ;; in Postgres, it gets different ID.  The user sample ID needs to be updated to match.
         id-translation   (when new-plot-samples
@@ -288,15 +288,15 @@
   (let [project-id       (tc/val->int (:projectId params))
         plot-id          (tc/val->int (:plotId params))
         user-id          (:userId params -1)
-        plot-user-id     (tc/val->int (:plotUserId params -1))
+        current-user-id  (tc/val->int (:currentUserId params -1))
         review-mode?     (and (tc/val->bool (:inReviewMode params false))
-                              (pos? plot-user-id)
+                              (pos? current-user-id)
                               (is-proj-admin? user-id project-id nil))
         collection-start (tc/val->long (:collectionStart params))
         flagged-reason   (:flaggedReason params)]
     (call-sql "flag_plot"
               plot-id
-              (if review-mode? plot-user-id user-id)
+              (if review-mode? current-user-id user-id)
               (when-not review-mode? (Timestamp. collection-start))
               flagged-reason)
     (unlock-plots user-id)

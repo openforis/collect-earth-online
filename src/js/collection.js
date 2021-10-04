@@ -620,7 +620,7 @@ class Collection extends React.Component {
                                 collectionStart: this.state.collectionStart,
                                 flaggedReason: this.state.currentPlot.flaggedReason,
                                 inReviewMode: this.state.inReviewMode,
-                                plotUserId: this.state.currentUserId
+                                currentUserId: this.state.currentUserId
                             })
                         }
                     )
@@ -657,7 +657,7 @@ class Collection extends React.Component {
                             plotSamples: this.state.currentProject.allowDrawnSamples
                                 && this.state.currentPlot.samples,
                             inReviewMode: this.state.inReviewMode,
-                            plotUserId: this.state.currentUserId
+                            currentUserId: this.state.currentUserId
                         })
                     }
                 )
