@@ -246,13 +246,19 @@
 ;;;
 
 (defn add-user-samples [{:keys [params]}]
-  (let [plot-id          (tc/val->int (:plotId params))
-        user-id          (:userId params -1)
+  (let [project-id       (tc/val->int (:projectId params))
+        plot-id          (tc/val->int (:plotId params))
+        session-user-id  (:userId params -1)
+        current-user-id  (tc/val->int (:currentUserId params -1))
+        review-mode?     (and (tc/val->bool (:inReviewMode params))
+                              (pos? current-user-id)
+                              (is-proj-admin? session-user-id project-id nil))
         confidence       (tc/val->int (:confidence params))
         collection-start (tc/val->long (:collectionStart params))
         user-samples     (:userSamples params)
         user-images      (:userImages params)
         new-plot-samples (:newPlotSamples params)
+        user-id          (if review-mode? current-user-id session-user-id)
         ;; Samples created in the UI have IDs starting with 1. When the new sample is created
         ;; in Postgres, it gets different ID.  The user sample ID needs to be updated to match.
         id-translation   (when new-plot-samples
@@ -269,20 +275,29 @@
     (if (some seq (vals user-samples))
       (call-sql "upsert_user_samples"
                 plot-id
-                user-id ; FIXME, CEO-208 in admin mode, we need to get the existing user id for the plot.
+                user-id
                 (when (pos? confidence) confidence)
-                (Timestamp. collection-start) ; TODO, CEO-208 dont update collection time for admin in admin mode.
+                (when-not review-mode? (Timestamp. collection-start))
                 (tc/clj->jsonb (set/rename-keys user-samples id-translation))
                 (tc/clj->jsonb (set/rename-keys user-images id-translation)))
-      (call-sql "delete_user_plot_by_plot" plot-id user-id)) ; FIXME, CEO-208 in admin mode, we need to get the existing user id for the plot.
+      (call-sql "delete_user_plot_by_plot" plot-id user-id))
     (unlock-plots user-id)
     (data-response "")))
 
 (defn flag-plot [{:keys [params]}]
-  (let [plot-id          (tc/val->int (:plotId params))
+  (let [project-id       (tc/val->int (:projectId params))
+        plot-id          (tc/val->int (:plotId params))
         user-id          (:userId params -1)
+        current-user-id  (tc/val->int (:currentUserId params -1))
+        review-mode?     (and (tc/val->bool (:inReviewMode params false))
+                              (pos? current-user-id)
+                              (is-proj-admin? user-id project-id nil))
         collection-start (tc/val->long (:collectionStart params))
         flagged-reason   (:flaggedReason params)]
-    (call-sql "flag_plot" plot-id user-id (Timestamp. collection-start) flagged-reason)
+    (call-sql "flag_plot"
+              plot-id
+              (if review-mode? current-user-id user-id)
+              (when-not review-mode? (Timestamp. collection-start))
+              flagged-reason)
     (unlock-plots user-id)
     (data-response "")))

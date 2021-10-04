@@ -618,7 +618,9 @@ class Collection extends React.Component {
                                 projectId: this.props.projectId,
                                 plotId: this.state.currentPlot.id,
                                 collectionStart: this.state.collectionStart,
-                                flaggedReason: this.state.currentPlot.flaggedReason
+                                flaggedReason: this.state.currentPlot.flaggedReason,
+                                inReviewMode: this.state.inReviewMode,
+                                currentUserId: this.state.currentUserId
                             })
                         }
                     )
@@ -653,7 +655,9 @@ class Collection extends React.Component {
                             userSamples: this.state.userSamples,
                             userImages: this.state.userImages,
                             plotSamples: this.state.currentProject.allowDrawnSamples
-                                && this.state.currentPlot.samples
+                                && this.state.currentPlot.samples,
+                            inReviewMode: this.state.inReviewMode,
+                            currentUserId: this.state.currentUserId
                         })
                     }
                 )
