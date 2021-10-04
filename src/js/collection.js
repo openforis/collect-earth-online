@@ -596,35 +596,42 @@ class Collection extends React.Component {
         }
     };
 
+    hasAnswers = () => _.some(Object.values(this.state.userSamples), sample => !(_.isEmpty(sample)))
+        || _.some(Object.values(this.state.userSamples), sample => !(_.isEmpty(sample)));
+
+    confirmFlag = () => !this.hasAnswers() || confirm("Flagging this plot will delete your previous answers. Are you sure you want to continue?");
+
     postValuesToDB = () => {
         if (this.state.currentPlot.flagged) {
-            this.processModal(
-                "Saving flagged plot",
-                () => fetch(
-                    "/flag-plot",
-                    {
-                        method: "POST",
-                        headers: {
-                            "Accept": "application/json",
-                            "Content-Type": "application/json"
-                        },
-                        body: JSON.stringify({
-                            projectId: this.props.projectId,
-                            plotId: this.state.currentPlot.id,
-                            collectionStart: this.state.collectionStart,
-                            flaggedReason: this.state.currentPlot.flaggedReason
-                        })
-                    }
-                )
-                    .then(response => {
-                        if (response.ok) {
-                            return this.navToNextPlot(true);
-                        } else {
-                            console.log(response);
-                            alert("Error flagging plot as bad. See console for details.");
+            if (this.confirmFlag()) {
+                this.processModal(
+                    "Saving flagged plot",
+                    () => fetch(
+                        "/flag-plot",
+                        {
+                            method: "POST",
+                            headers: {
+                                "Accept": "application/json",
+                                "Content-Type": "application/json"
+                            },
+                            body: JSON.stringify({
+                                projectId: this.props.projectId,
+                                plotId: this.state.currentPlot.id,
+                                collectionStart: this.state.collectionStart,
+                                flaggedReason: this.state.currentPlot.flaggedReason
+                            })
                         }
-                    })
-            );
+                    )
+                        .then(response => {
+                            if (response.ok) {
+                                return this.navToNextPlot(true);
+                            } else {
+                                console.log(response);
+                                alert("Error flagging plot as bad. See console for details.");
+                            }
+                        })
+                );
+            }
         } else {
             this.processModal(
                 "Saving plot answers",
