@@ -596,43 +596,42 @@ class Collection extends React.Component {
         }
     };
 
-    hasAnswers = () =>
-        (Object.values(this.state.userSamples)
-            .reduce((acc, sample) => acc || (Object.keys(sample).length > 0), false)
-        || Object.values(this.state.originalUserSamples)
-            .reduce((acc, sample) => acc || (Object.keys(sample).length > 0), false));
+    hasAnswers = () => _.some(Object.values(this.state.userSamples), sample => !(_.isEmpty(sample)))
+        || _.some(Object.values(this.state.userSamples), sample => !(_.isEmpty(sample)));
 
     confirmFlag = () => !this.hasAnswers() || confirm("Flagging this plot will delete your previous answers. Are you sure you want to continue?");
 
     postValuesToDB = () => {
-        if (this.state.currentPlot.flagged && this.confirmFlag()) {
-            this.processModal(
-                "Saving flagged plot",
-                () => fetch(
-                    "/flag-plot",
-                    {
-                        method: "POST",
-                        headers: {
-                            "Accept": "application/json",
-                            "Content-Type": "application/json"
-                        },
-                        body: JSON.stringify({
-                            projectId: this.props.projectId,
-                            plotId: this.state.currentPlot.id,
-                            collectionStart: this.state.collectionStart,
-                            flaggedReason: this.state.currentPlot.flaggedReason
-                        })
-                    }
-                )
-                    .then(response => {
-                        if (response.ok) {
-                            return this.navToNextPlot(true);
-                        } else {
-                            console.log(response);
-                            alert("Error flagging plot as bad. See console for details.");
+        if (this.state.currentPlot.flagged) {
+            if (this.confirmFlag()) {
+                this.processModal(
+                    "Saving flagged plot",
+                    () => fetch(
+                        "/flag-plot",
+                        {
+                            method: "POST",
+                            headers: {
+                                "Accept": "application/json",
+                                "Content-Type": "application/json"
+                            },
+                            body: JSON.stringify({
+                                projectId: this.props.projectId,
+                                plotId: this.state.currentPlot.id,
+                                collectionStart: this.state.collectionStart,
+                                flaggedReason: this.state.currentPlot.flaggedReason
+                            })
                         }
-                    })
-            );
+                    )
+                        .then(response => {
+                            if (response.ok) {
+                                return this.navToNextPlot(true);
+                            } else {
+                                console.log(response);
+                                alert("Error flagging plot as bad. See console for details.");
+                            }
+                        })
+                );
+            }
         } else {
             this.processModal(
                 "Saving plot answers",
