@@ -45,6 +45,7 @@ class Collection extends React.Component {
             selectedQuestion: {id: 0, question: "", answers: []},
             selectedSampleId: -1,
             userSamples: {},
+            originalUserSamples: {},
             userImages: {},
             storedInterval: null,
             KMLFeatures: null,
