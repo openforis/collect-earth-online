@@ -38,7 +38,7 @@ export default class QualityControl extends React.Component {
         <div>
             {assignedSMEs.map(({id, email}) => (
                 <div key={id} className="form-row mt-1">
-                    <div className="col-5 offset-5">
+                    <div className="col-6 offset-5">
                         <div
                             style={{
                                 background: "white",
@@ -61,7 +61,7 @@ export default class QualityControl extends React.Component {
                             title={`Remove ${email}`}
                             type="button"
                         >
-                            <ButtonSvgIcon icon="minus" size="0.75rem"/>
+                            <ButtonSvgIcon icon="minus" size="0.9rem"/>
                         </button>
                     </div>
                 </div>

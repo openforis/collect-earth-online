@@ -79,7 +79,7 @@ export default class AssignPlots extends React.Component {
                                 </div>
                             )}
                         </div>
-                        <div className="col-5">
+                        <div className="col-6">
                             <div
                                 style={{
                                     background: "white",
@@ -102,7 +102,7 @@ export default class AssignPlots extends React.Component {
                                 title={`Remove ${email}`}
                                 type="button"
                             >
-                                <ButtonSvgIcon icon="minus" size="0.75rem"/>
+                                <ButtonSvgIcon icon="minus" size="0.9rem"/>
                             </button>
                         </div>
                     </div>

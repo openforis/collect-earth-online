@@ -29,7 +29,7 @@ export default function UserSelect({label, id, possibleUsers = [], addUser}) {
                     title="Add User"
                     type="button"
                 >
-                    <ButtonSvgIcon icon="plus" size="1rem"/>
+                    <ButtonSvgIcon icon="plus" size="0.9rem"/>
                 </button>
             </div>
         </div>
