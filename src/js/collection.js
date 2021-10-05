@@ -58,7 +58,7 @@ class Collection extends React.Component {
     }
 
     componentDidMount() {
-        window.name = "_ceocollection";
+        window.name = "_ceo_collection";
         window.addEventListener("beforeunload", this.unsavedWarning, {capture: true});
 
         fetch(
@@ -918,8 +918,8 @@ class Collection extends React.Component {
                         collectConfidence={this.state.currentProject.projectOptions?.collectConfidence}
                         currentPlot={this.state.currentPlot}
                         currentUserId={this.state.currentUserId}
-                        inReviewMode={this.state.inReviewMode}
                         hasAssignedPlots={this.state.currentProject.designSettings?.userAssignment?.userMethod !== "none"}
+                        inReviewMode={this.state.inReviewMode}
                         isProjectAdmin={this.state.currentProject.isProjectAdmin}
                         isQAQCEnabled={this.state.currentProject.designSettings?.qaqcAssignment?.qaqcMethod !== "none"}
                         loadingPlots={this.state.plotList.length === 0}

@@ -108,7 +108,7 @@ class SimpleCollection extends React.Component {
     }
 
     componentDidMount() {
-        window.name = "_ceocollection";
+        window.name = "_ceo_collection";
 
         fetch(
             `/release-plot-locks?projectId=${this.props.projectId}`,
