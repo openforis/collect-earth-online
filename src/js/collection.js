@@ -17,6 +17,7 @@ import {CollapsibleTitle} from "./components/FormComponents";
 import Modal from "./components/Modal";
 import Select from "./components/Select";
 import Switch from "./components/Switch";
+import {ButtonSvgIcon} from "./components/SvgIcon";
 
 import {UnicodeIcon, getQueryString, safeLength, isNumber, invertColor, asPercentage, isArray} from "./utils/generalUtils";
 import {getProjectPreferences, setProjectPreferences} from "./utils/preferences";
@@ -1127,14 +1128,14 @@ class PlotNavigation extends React.Component {
                 onClick={this.props.navToPrevPlot}
                 type="button"
             >
-                <UnicodeIcon icon="leftCaret"/>
+                <ButtonSvgIcon icon="leftArrow" size="0.9rem"/>
             </button>
             <button
                 className="btn btn-outline-lightgreen btn-sm mx-1"
                 onClick={() => this.props.navToNextPlot()}
                 type="button"
             >
-                <UnicodeIcon icon="rightCaret"/>
+                <ButtonSvgIcon icon="rightArrow" size="0.9rem"/>
             </button>
             <input
                 autoComplete="off"
@@ -1158,11 +1159,14 @@ class PlotNavigation extends React.Component {
     );
 
     reviewMode = (inReviewMode, setReviewMode) => (
-        <div className="d-flex my-2 mx-2 align-items-center justify-content-end">
-            <h4 className="mx-2 my-0">Review Mode:</h4>
-            <div style={{display: "inline-block"}}>
+        <div className="row my-2">
+            <div className="col-5 text-right">
+                <label htmlFor="review-mode">Review Mode:</label>
+            </div>
+            <div className="col-6 px-0">
                 <Switch
                     checked={inReviewMode}
+                    id="review-mode"
                     onChange={() => setReviewMode(!inReviewMode)}
                 />
             </div>
@@ -1170,18 +1174,22 @@ class PlotNavigation extends React.Component {
     );
 
     thresholdSlider = (label, threshold, setThreshold) => (
-        <div className="my-2 d-flex align-items-center">
-            <h3 className="w-100 mx-2 my-0">{label}:</h3>
-            <div className="d-flex">
+        <div className="row my-2">
+            <div className="col-5 text-right">
+                <label htmlFor="threshold">{label}:</label>
+            </div>
+            <div className="col-6 px-0 d-flex align-items-center">
                 <input
+                    id="threshold"
                     max="100"
                     min="0"
                     onChange={e => setThreshold(parseInt(e.target.value))}
                     step="5"
+                    style={{width: "80%"}}
                     type="range"
                     value={threshold}
                 />
-                <div className="ml-2" style={{fontSize: "0.8rem"}}>
+                <div className="ml-2" style={{fontSize: "0.8rem", width: "20%"}}>
                     {`${threshold}%`}
                 </div>
             </div>
@@ -1189,10 +1197,9 @@ class PlotNavigation extends React.Component {
     );
 
     selectUser = (users, currentUserId, onChange) => (
-        <div className="my-2 d-flex align-items-center justify-content-center form-inline">
+        <div className="row my-2 text-right">
             <Select
                 disabled={users.length <= 1}
-                inlined
                 label="User:"
                 labelKey="email"
                 onChange={e => onChange(parseInt(e.target.value))}
@@ -1223,12 +1230,15 @@ class PlotNavigation extends React.Component {
             threshold
         } = this.props;
         return (
-            <div className="mt-2">
+            <div className="mt-2 plot-navigation">
                 <div className="p-1" style={{border: "1px solid lightgray", borderRadius: "0.2rem"}}>
-                    <div className="d-flex align-items-center my-2">
-                        <h3 className="w-100 mx-2 my-0">Navigate Through:</h3>
+                    <div className="row my-2">
+                        <div className="col-5 text-right">
+                            <label htmlFor="navigate">Navigate:</label>
+                        </div>
                         <select
-                            className="form-control form-control-sm mr-2"
+                            className="form-control form-control-sm mr-2 col-6"
+                            id="navigate"
                             onChange={e => setNavigationMode(e.target.value)}
                             style={{flex: "1 1 auto"}}
                             value={navigationMode}
