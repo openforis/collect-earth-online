@@ -3,6 +3,7 @@
            java.util.Date
            java.util.UUID)
   (:require [clojure.string :as str]
+            [clojure.set    :as set]
             [triangulum.logging  :refer [log]]
             [triangulum.database :refer [call-sql
                                          sql-primitive
@@ -72,6 +73,22 @@
                             :percentComplete pct_complete})
                          (call-sql "select_institution_projects" user-id institution-id)))))
 
+(defn get-institution-project-stats [{:keys [params]}]
+  (let [user-id        (:userId params -1)
+        institution-id (tc/val->int (:institutionId params))]
+    (data-response (mapv (fn [{:keys [project_id name privacy_level pct_complete num_plots stats]}]
+                           {:id              project_id
+                            :name            name
+                            :numPlots        num_plots
+                            :privacyLevel    privacy_level
+                            :percentComplete pct_complete
+                            :stats           (-> stats
+                                                 (tc/jsonb->clj)
+                                                 (set/rename-keys {:analyzed_plots   :analyzedPlots
+                                                                   :flagged_plots    :flaggedPlots
+                                                                   :unanalyzed_plots :unanalyzedPlots}))})
+                         (call-sql "select_institution_project_stats" user-id institution-id)))))
+
 (defn get-template-projects [{:keys [params]}]
   (let [user-id (:userId params -1)]
     (data-response (mapv (fn [{:keys [project_id name]}]
@@ -140,7 +157,6 @@
     (data-response {:flaggedPlots    (:flagged_plots stats)
                     :analyzedPlots   (:analyzed_plots stats)
                     :unanalyzedPlots (:unanalyzed_plots stats)
-                    :members         (:members stats)
                     :contributors    (:contributors stats)
                     :createdDate     (str (:created_date stats))
                     :publishedDate   (str (:published_date stats))
