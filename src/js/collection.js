@@ -367,7 +367,7 @@ class Collection extends React.Component {
     };
 
     confirmUnsaved = () => !this.hasChanged()
-        || confirm("You have unsaved changes. Any answered questions will be lost. Are you sure you want to continue?");
+        || confirm("You have unsaved changes. Any unsaved responses will be lost. Are you sure you want to continue?");
 
     navToFirstPlot = () => this.getPlotData(-10000000, "next");
 
@@ -1678,7 +1678,7 @@ function QuitMenu({projectId, toggleQuitModal}) {
                         </button>
                     </div>
                     <div className="modal-body">
-                        <p>Are you sure you want to stop collecting data? Any answered questions will be lost.</p>
+                        <p>Are you sure you want to stop collecting data? Any unsaved responses will be lost.</p>
                     </div>
                     <div className="modal-footer">
                         <button
