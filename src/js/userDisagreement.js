@@ -8,8 +8,7 @@ class UserDisagreement extends React.Component {
         super(props);
         this.state = {
             questions: [],
-            plotters: [],
-            showQuestions: {}
+            plotters: []
         };
     }
 
@@ -23,7 +22,7 @@ class UserDisagreement extends React.Component {
         return fetch(`/get-plot-disagreement?projectId=${projectId}&plotId=${plotId}`)
             .then(response => (response.ok ? response.json() : Promise.reject(response)))
             .then(questions => {
-                this.setState({questions, showQuestions: Object.fromEntries(questions.map(q => [q.id, true]))});
+                this.setState({questions});
                 return Promise.resolve("resolved");
             });
     };
@@ -77,7 +76,7 @@ class UserDisagreement extends React.Component {
     };
 
     renderQuestion = thisQuestion => {
-        const {id, question, answers, disagreement, answerFrequencies} = thisQuestion;
+        const {question, answers, disagreement, answerFrequencies} = thisQuestion;
         return (
             <div
                 key={question}
@@ -89,7 +88,7 @@ class UserDisagreement extends React.Component {
                 }}
             >
                 <CollapsibleSectionBlock
-                    showContent={this.state.showQuestions[id]}
+                    showContent
                     title={`${question } - ${disagreement < 0 ? "N/A" : disagreement + "%"}`}
                 >
                     <div style={{display: "flex", flexWrap: "wrap", background: "white"}}>
