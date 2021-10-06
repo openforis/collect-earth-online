@@ -138,7 +138,6 @@ class ReviewInstitution extends React.Component {
                         )}
                     </div>
                 </div>
-
             </div>
         );
     }
