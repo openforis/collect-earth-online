@@ -1,4 +1,5 @@
 import React from "react";
+import _ from "lodash";
 import {UnicodeIcon} from "../utils/generalUtils";
 
 export function FormLayout({title, children}) {
@@ -29,8 +30,8 @@ export class CollapsibleSectionBlock extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
-            showContent: false,
-            height: "0px",
+            showContent: _.defaultTo(props.showContent, false),
+            height: props.showContent ? "auto" : "0px",
             myRef: null
         };
     }

@@ -1,7 +1,7 @@
 import React from "react";
 import ReactDOM from "react-dom";
 import {NavigationBar} from "./components/PageComponents";
-import {CollapsibleTitle} from "./components/FormComponents";
+import {CollapsibleSectionBlock} from "./components/FormComponents";
 
 class UserDisagreement extends React.Component {
     constructor(props) {
@@ -88,22 +88,14 @@ class UserDisagreement extends React.Component {
                     overflow: "hidden"
                 }}
             >
-                <CollapsibleTitle
-                    showGroup={this.state.showQuestions[id]}
-                    title={`${question } - ${disagreement < 0 ? "N\\A" : disagreement + "%"}`}
-                    toggleShow={() => {
-                        const showQuestions = {...this.state.showQuestions};
-                        showQuestions[id] = !showQuestions[id];
-                        console.log(showQuestions);
-                        this.setState({showQuestions});
-                    }}
-                />
-
-                {this.state.showQuestions[id] && (
+                <CollapsibleSectionBlock
+                    showContent={this.state.showQuestions[id]}
+                    title={`${question } - ${disagreement < 0 ? "N/A" : disagreement + "%"}`}
+                >
                     <div style={{display: "flex", flexWrap: "wrap", background: "white"}}>
                         {answerFrequencies.map(as => this.renderUser(as, answers))}
                     </div>
-                )}
+                </CollapsibleSectionBlock>
             </div>
         );
     };
