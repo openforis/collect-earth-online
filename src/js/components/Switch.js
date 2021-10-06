@@ -1,11 +1,11 @@
 import React from "react";
 
-export default function Switch({id, label, onChange, checked}) {
+export default function Switch({id, onChange, checked}) {
     return (
         <label className="switch mb-0">
             <input
-                id={id}
                 checked={checked}
+                id={id}
                 onChange={onChange}
                 type="checkbox"
             />

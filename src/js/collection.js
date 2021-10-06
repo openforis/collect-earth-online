@@ -1230,7 +1230,7 @@ class PlotNavigation extends React.Component {
             threshold
         } = this.props;
         return (
-            <div className="mt-2 plot-navigation">
+            <div className="mt-2">
                 <div className="p-1" style={{border: "1px solid lightgray", borderRadius: "0.2rem"}}>
                     <div className="row my-2">
                         <div className="col-5 text-right">
