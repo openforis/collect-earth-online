@@ -910,6 +910,7 @@ class Collection extends React.Component {
                     answerMode={this.state.answerMode}
                     currentPlot={this.state.currentPlot}
                     isProjectAdmin={this.state.currentProject.isProjectAdmin}
+                    inReviewMode={this.state.inReviewMode}
                     postValuesToDB={this.postValuesToDB}
                     projectId={this.props.projectId}
                     projectName={this.state.currentProject.name}
@@ -1029,17 +1030,18 @@ function ImageAnalysisPane({imageryAttribution}) {
 
 class SideBar extends React.Component {
     checkCanSave = () => {
-        const noneAnswered = this.props.surveyQuestions.every(sq => safeLength(sq.answered) === 0);
-        const hasSamples = safeLength(this.props.currentPlot.samples) > 0;
-        const allAnswered = this.props.surveyQuestions.every(sq => safeLength(sq.visible) === safeLength(sq.answered));
-        if (this.props.answerMode !== "question") {
+        const {answerMode, currentPlot, isProjectAdmin, inReviewMode, surveyQuestions} = this.props;
+        const noneAnswered = surveyQuestions.every(sq => safeLength(sq.answered) === 0);
+        const hasSamples = safeLength(currentPlot.samples) > 0;
+        const allAnswered = surveyQuestions.every(sq => safeLength(sq.visible) === safeLength(sq.answered));
+        if (answerMode !== "question") {
             alert("You must be in question mode to save the collection.");
             return false;
-        } else if (this.props.currentPlot.flagged) {
+        } else if (currentPlot.flagged) {
             return true;
-        } else if (this.props.isProjectAdmin) {
+        } else if (inReviewMode) {
             if (!(noneAnswered || allAnswered)) {
-                alert("Admins can only save the plot if all questions are answered or the answers are cleared.");
+                alert("In review mode, plots can only be saved if all questions are answered or the answers are cleared.");
                 return false;
             } else {
                 return true;
