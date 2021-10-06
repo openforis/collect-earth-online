@@ -40,7 +40,7 @@ class ReviewInstitution extends React.Component {
         // This is usually the longest API call so the loading modal should stay up until all is loaded.
         this.processModal(
             "Loading institution data",
-            () => fetch(`/get-institution-projects?institutionId=${this.props.institutionId}`)
+            fetch(`/get-institution-projects?institutionId=${this.props.institutionId}`)
                 .then(response => (response.ok ? response.json() : Promise.reject(response)))
                 .then(data => this.setState({projectList: data}))
                 .catch(response => {
@@ -75,11 +75,10 @@ class ReviewInstitution extends React.Component {
 
     /// Helpers
 
-    processModal = (message, callBack) => {
-        this.setState({modalMessage: message},
-                      () => callBack()
-                          .finally(() => this.setState({modalMessage: null})));
-    };
+    processModal = (message, promise) => this.setState(
+        {modalMessage: message},
+        () => promise.finally(() => this.setState({modalMessage: null}))
+    );
 
     /// Render Function
 
