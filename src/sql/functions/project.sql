@@ -519,6 +519,94 @@ CREATE OR REPLACE FUNCTION select_institution_projects(_user_id integer, _instit
 
 $$ LANGUAGE SQL;
 
+CREATE OR REPLACE FUNCTION select_short_project_stats(_project_id integer)
+ RETURNS table (
+    flagged_plots       integer,
+    analyzed_plots      integer,
+    unanalyzed_plots    integer,
+    contributors        integer
+ ) AS $$
+
+    WITH project_plots AS (
+        SELECT project_uid,
+            plot_uid,
+            (CASE WHEN collection_time IS NULL OR collection_start IS NULL THEN 0
+                ELSE EXTRACT(EPOCH FROM (collection_time - collection_start)) END) as seconds,
+            (CASE WHEN collection_time IS NULL OR collection_start IS NULL THEN 0 ELSE 1 END) as timed,
+            u.email as email
+        FROM user_plots up
+        INNER JOIN plots pl
+            ON up.plot_rid = plot_uid
+        INNER JOIN projects p
+            ON pl.project_rid = project_uid
+        INNER JOIN users u
+            ON up.user_rid = user_uid
+        WHERE project_uid = _project_id
+    ), plotsum AS (
+        SELECT SUM(coalesce(flagged::int, 0)) as flagged,
+            SUM((user_plot_uid IS NOT NULL)::int) as analyzed,
+            plot_uid
+        FROM projects prj
+        INNER JOIN plots pl
+          ON project_uid = pl.project_rid
+        LEFT JOIN user_plots up
+            ON up.plot_rid = pl.plot_uid
+        GROUP BY project_uid, plot_uid
+        HAVING project_uid = _project_id
+    ), sums AS (
+        SELECT MAX(prj.created_date) as created_date,
+            MAX(prj.published_date) as published_date,
+            MAX(prj.closed_date) as closed_date,
+            MAX(prj.archived_date) as archived_date,
+            (CASE WHEN SUM(ps.flagged::int) IS NULL THEN 0 ELSE SUM(ps.flagged::int) END) as flagged,
+            (CASE WHEN SUM(ps.analyzed::int) IS NULL THEN 0 ELSE SUM(ps.analyzed::int) END) as analyzed,
+            COUNT(distinct pl.plot_uid) as plots
+        FROM projects prj
+        INNER JOIN plots pl
+          ON project_uid = pl.project_rid
+        LEFT JOIN plotsum ps
+          ON ps.plot_uid = pl.plot_uid
+        WHERE project_uid = _project_id
+    ), users_count AS (
+        SELECT COUNT (DISTINCT user_rid) as users
+        FROM projects prj
+        INNER JOIN plots pl
+          ON project_uid = pl.project_rid
+            AND project_uid = _project_id
+        LEFT JOIN user_plots up
+          ON up.plot_rid = plot_uid
+    )
+
+    SELECT CAST(flagged as int) as flagged_plots,
+        CAST(analyzed as int) analyzed_plots,
+        CAST(GREATEST(0, (plots - flagged - analyzed)) as int) as unanalyzed_plots,
+        CAST(users_count.users as int) as contributors
+    FROM sums, users_count
+
+$$ LANGUAGE SQL;
+
+CREATE OR REPLACE FUNCTION select_institution_project_stats(_user_id integer, _institution_id integer)
+ RETURNS table (
+    project_id    integer,
+    name          text,
+    num_plots     integer,
+    stats         jsonb
+ ) AS $$
+
+    SELECT project_uid,
+        name,
+        num_plots,
+        row_to_json((SELECT select_short_project_stats(project_uid)))::jsonb
+    FROM projects as p
+    LEFT JOIN institution_users iu
+        ON user_rid = _user_id
+        AND p.institution_rid = iu.institution_rid
+    WHERE p.institution_rid = _institution_id
+        AND user_project(_user_id, role_rid, p.privacy_level, p.availability)
+    ORDER BY project_uid
+
+$$ LANGUAGE SQL;
+
 CREATE OR REPLACE FUNCTION select_template_projects(_user_id integer)
  RETURNS table (
      project_id    integer,
@@ -542,7 +630,6 @@ CREATE OR REPLACE FUNCTION select_template_projects(_user_id integer)
     ORDER BY project_uid
 
 $$ LANGUAGE SQL;
-
 
 -- Returns project statistics
 -- Overlapping queries, consider condensing. Query time is not an issue.

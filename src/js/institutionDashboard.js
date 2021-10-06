@@ -17,7 +17,6 @@ class InstitutionDashboard extends React.Component {
         this.processModal(
             "Loading project list",
             this.getProjectList()
-                .then(projectList => this.setState({projectList}))
                 .catch(response => {
                     console.error(response);
                     alert("Error retrieving the project list. See console for details.");
@@ -27,23 +26,10 @@ class InstitutionDashboard extends React.Component {
 
     /// API Calls
 
-    // TODO, These should probably be 1 API call on the backend to reduce the number of connections
-    getProjectList = () => fetch(`/get-institution-projects?institutionId=${this.props.institutionId}`)
-        .then(response => (response.ok ? response.json() : Promise.reject(response)))
-        .then(data => this.getProjectDetails(data));
-
-    getProjectDetails = projects => Promise.all(projects.map(proj => fetch(`/get-project-stats?projectId=${proj.id}`)
-        .then(response => (response.ok ? response.json() : Promise.reject(response)))
-        .then(data => ({
-            id: proj.id,
-            name: proj.name,
-            numPlots: proj.numPlots,
-            unanalyzedPlots: data.unanalyzedPlots,
-            analyzedPlots: data.analyzedPlots,
-            flaggedPlots: data.flaggedPlots,
-            contributors: data.contributors,
-            members: data.members
-        }))));
+    getProjectList = () =>
+        fetch(`/get-institution-project-stats?institutionId=${this.props.institutionId}`)
+            .then(response => (response.ok ? response.json() : Promise.reject(response)))
+            .then(data => this.setState({projectList: data}));
 
     /// Helpers
 
@@ -63,32 +49,34 @@ class InstitutionDashboard extends React.Component {
                 >
                     <h1>Institution Dashboard</h1>
                 </div>
-                <table id="srd" style={{width: "1000px", margin: "10px", color: "rgb(49, 186, 176)"}}>
-                    <thead>
-                        <tr>
-                            <th>Project Id</th>
-                            <th>Project Name</th>
-                            <th>Contributors</th>
-                            <th>Total Plots</th>
-                            <th>Flagged Plots</th>
-                            <th>Analyzed Plots</th>
-                            <th>Unanalyzed Plots</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {projectList.map(project => (
-                            <tr key={project.id}>
-                                <td>{project.id}</td>
-                                <td>{project.name}</td>
-                                <td>{project.contributors}</td>
-                                <td>{project.numPlots}</td>
-                                <td>{project.flaggedPlots}</td>
-                                <td>{project.analyzedPlots}</td>
-                                <td>{project.unanalyzedPlots}</td>
+                {projectList.length > 0 && (
+                    <table id="srd" style={{width: "1000px", margin: "10px", color: "rgb(49, 186, 176)"}}>
+                        <thead>
+                            <tr style={{whiteSpace: "nowrap"}}>
+                                <th className="pr-2">Project Id</th>
+                                <th className="pr-2">Project Name</th>
+                                <th className="pr-2">Contributors</th>
+                                <th className="pr-2">Total Plots</th>
+                                <th className="pr-2">Flagged Plots</th>
+                                <th className="pr-2">Analyzed Plots</th>
+                                <th className="pr-2">Unanalyzed Plots</th>
                             </tr>
-                        ))}
-                    </tbody>
-                </table>
+                        </thead>
+                        <tbody>
+                            {projectList && projectList.map(project => (
+                                <tr key={project.id}>
+                                    <td>{project.id}</td>
+                                    <td>{project.name}</td>
+                                    <td style={{textAlign: "center"}}>{project.stats.contributors}</td>
+                                    <td style={{textAlign: "center"}}>{project.numPlots}</td>
+                                    <td style={{textAlign: "center"}}>{project.stats.flaggedPlots}</td>
+                                    <td style={{textAlign: "center"}}>{project.stats.analyzedPlots}</td>
+                                    <td style={{textAlign: "center"}}>{project.stats.unanalyzedPlots}</td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                )}
             </div>
         );
     }
