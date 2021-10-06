@@ -26,22 +26,21 @@ class ReviewInstitution extends React.Component {
         };
     }
 
+    /// Lifecycle
+
     componentDidMount() {
         // Load the projectList
         this.getProjectList();
     }
 
-    processModal = (message, callBack) => {
-        this.setState({modalMessage: message},
-                      () => callBack()
-                          .finally(() => this.setState({modalMessage: null})));
-    };
+    /// API Calls
 
     getProjectList = () => {
-        // get projects
+        // TODO, move all API calls to this component to use Promise.all()
+        // This is usually the longest API call so the loading modal should stay up until all is loaded.
         this.processModal(
             "Loading institution data",
-            () => fetch(`/get-institution-projects?institutionId=${this.props.institutionId}`)
+            fetch(`/get-institution-projects?institutionId=${this.props.institutionId}`)
                 .then(response => (response.ok ? response.json() : Promise.reject(response)))
                 .then(data => this.setState({projectList: data}))
                 .catch(response => {
@@ -66,16 +65,27 @@ class ReviewInstitution extends React.Component {
         }
     };
 
+    /// Set State
+
     setImageryCount = newCount => this.setState({imageryCount: newCount});
 
     setUsersCount = newCount => this.setState({usersCount: newCount});
 
     setIsAdmin = isAdmin => this.setState({isAdmin});
 
+    /// Helpers
+
+    processModal = (message, promise) => this.setState(
+        {modalMessage: message},
+        () => promise.finally(() => this.setState({modalMessage: null}))
+    );
+
+    /// Render Function
+
     headerTab = (name, count, index, disabled = false) => (
-        <div className="col-lg-4 col-xs-12">
+        <div className="col-lg-4 col-xs-12 px-2">
             <div
-                className={disabled ? "disabled-group" : ""}
+                className={"px-3" + (disabled ? "disabled-group" : "")}
                 onClick={() => this.setState({selectedTab: index})}
             >
                 <h2
@@ -96,7 +106,8 @@ class ReviewInstitution extends React.Component {
 
     render() {
         return (
-            <div className="ReviewInstitution">
+            <div id="review-institution">
+                {this.state.modalMessage && <LoadingModal message={this.state.modalMessage}/>}
                 <InstitutionDescription
                     institutionId={this.props.institutionId}
                     isAdmin={this.state.isAdmin}
@@ -138,7 +149,6 @@ class ReviewInstitution extends React.Component {
                         )}
                     </div>
                 </div>
-                {this.state.modalMessage && <LoadingModal message={this.state.modalMessage}/>}
             </div>
         );
     }
@@ -1097,7 +1107,7 @@ class UserList extends React.Component {
         } else {
             this.props.processModal(
                 "Updating user",
-                () => fetch(
+                fetch(
                     "/update-user-institution-role",
                     {
                         method: "POST",
