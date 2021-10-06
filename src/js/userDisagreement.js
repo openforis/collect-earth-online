@@ -77,6 +77,7 @@ class UserDisagreement extends React.Component {
 
     renderQuestion = thisQuestion => {
         const {question, answers, disagreement, answerFrequencies} = thisQuestion;
+        const {threshold} = this.props;
         return (
             <div
                 key={question}
@@ -88,7 +89,7 @@ class UserDisagreement extends React.Component {
                 }}
             >
                 <CollapsibleSectionBlock
-                    showContent
+                    showContent={disagreement >= threshold}
                     title={`${question } - ${disagreement < 0 ? "N/A" : disagreement + "%"}`}
                 >
                     <div style={{display: "flex", flexWrap: "wrap", background: "white"}}>
@@ -121,6 +122,7 @@ export function pageInit(args) {
             <UserDisagreement
                 plotId={args.plotId}
                 projectId={args.projectId}
+                threshold={args.threshold}
                 visibleId={args.visibleId}
             />
         </NavigationBar>,
