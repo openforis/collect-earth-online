@@ -151,19 +151,21 @@ class ProjectDashboard extends React.Component {
 function ProjectStats(props) {
     const {
         stats: {
+            totalPlots,
+            plotAssignments,
+            usersAssigned,
             analyzedPlots,
+            partialPlots,
+            unanalyzedPlots,
+            flaggedPlots,
             closedDate,
             createdDate,
-            flaggedPlots,
             publishedDate,
-            unanalyzedPlots,
             userStats
         },
         isProjectAdmin,
         userName
     } = props;
-
-    const numPlots = flaggedPlots + analyzedPlots + unanalyzedPlots;
 
     const renderDate = (title, date) => (
         <div style={{alignItems: "center", display: "flex", marginRight: "1rem"}}>
@@ -183,7 +185,7 @@ function ProjectStats(props) {
     return (
         <div className="d-flex flex-column">
             <h2 className="header px-0">Project Stats</h2>
-            {analyzedPlots && (
+            {totalPlots > 0 && (
                 <div className="p-1" id="project-stats">
                     <div className="mb-4">
                         <h3>Project Dates:</h3>
@@ -196,9 +198,12 @@ function ProjectStats(props) {
                     <div className="mb-2">
                         <h3>Plot Stats:</h3>
                         <div style={{display: "flex", flexWrap: "wrap", padding: "0 .5rem"}}>
-                            {renderStat("Total Plots", numPlots)}
+                            {renderStat("Total Plots", totalPlots)}
+                            {plotAssignments > 0 && renderStat("Plot Assignments", plotAssignments)}
+                            {plotAssignments > 0 && renderStat("Users Assigned", usersAssigned)}
                             {renderStat("Flagged", flaggedPlots)}
                             {renderStat("Analyzed", analyzedPlots)}
+                            {plotAssignments > 0 && renderStat("Partial Plots", partialPlots)}
                             {renderStat("Unanalyzed", unanalyzedPlots)}
                         </div>
                     </div>
@@ -207,13 +212,13 @@ function ProjectStats(props) {
                             <h3>User Completed:</h3>
                             {userStats.map((user, idx) => (
                                 <StatsRow
-                                    key={user.user}
+                                    key={user.email}
                                     analysisTime={user.timedPlots > 0
                                         ? (user.seconds / user.timedPlots / 1.0).toFixed(2)
                                         : 0}
                                     plots={user.plots}
-                                    title={(isProjectAdmin || user.user === userName)
-                                        ? `${idx + 1}. ${user.user}`
+                                    title={(isProjectAdmin || user.email === userName)
+                                        ? `${idx + 1}. ${user.email}`
                                         : `User ${idx + 1}`}
                                 />
                             ))}

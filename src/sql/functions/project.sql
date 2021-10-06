@@ -526,12 +526,12 @@ CREATE OR REPLACE FUNCTION select_institution_project_stats(_project_id integer)
     unanalyzed_plots    integer,
     plot_assignments    integer,
     contributors        integer,
-    assigned_users      integer
+    users_assigned      integer
  ) AS $$
 
     WITH users_count AS (
         SELECT count(DISTINCT up.user_rid)::int as contributors,
-            count(DISTINCT pa.user_rid)::int as assigned_users
+            count(DISTINCT pa.user_rid)::int as users_assigned
         FROM plots pl
         LEFT JOIN user_plots up
             ON up.plot_rid = plot_uid
@@ -549,7 +549,7 @@ CREATE OR REPLACE FUNCTION select_institution_project_stats(_project_id integer)
             ON pa.plot_rid = pl.plot_uid
         LEFT JOIN user_plots up
             ON up.plot_rid = pl.plot_uid
-            AND (pa.user_rid = up.user_rid OR (SELECT assigned_users FROM users_count) = 0)
+            AND (pa.user_rid = up.user_rid OR (SELECT users_assigned FROM users_count) = 0)
         GROUP BY project_rid, plot_uid
         HAVING project_rid = _project_id
     ), project_sum as (
@@ -569,7 +569,7 @@ CREATE OR REPLACE FUNCTION select_institution_project_stats(_project_id integer)
         unanalyzed_plots,
         plot_assignments,
         contributors,
-        assigned_users
+        users_assigned
     FROM users_count, project_sum
 
 $$ LANGUAGE SQL;
@@ -618,93 +618,88 @@ CREATE OR REPLACE FUNCTION select_template_projects(_user_id integer)
 
 $$ LANGUAGE SQL;
 
--- Returns project statistics
--- Overlapping queries, consider condensing. Query time is not an issue.
+-- Returns project statistics for project dashboard
 CREATE OR REPLACE FUNCTION select_project_statistics(_project_id integer)
  RETURNS table (
+    total_plots         integer,
     flagged_plots       integer,
     analyzed_plots      integer,
+    partial_plots       integer,
     unanalyzed_plots    integer,
-    contributors        integer,
+    plot_assignments    integer,
+    users_assigned      integer,
     created_date        date,
     published_date      date,
     closed_date         date,
-    archived_date       date,
-    user_stats          text
+    user_stats          jsonb
  ) AS $$
 
-    WITH project_plots AS (
-        SELECT project_uid,
-            plot_uid,
+    WITH user_plot_times AS (
+        SELECT plot_uid,
             (CASE WHEN collection_time IS NULL OR collection_start IS NULL THEN 0
                 ELSE EXTRACT(EPOCH FROM (collection_time - collection_start)) END) as seconds,
             (CASE WHEN collection_time IS NULL OR collection_start IS NULL THEN 0 ELSE 1 END) as timed,
             u.email as email
-        FROM user_plots up
-        INNER JOIN plots pl
+        FROM plots pl
+        INNER JOIN user_plots up
             ON up.plot_rid = plot_uid
-        INNER JOIN projects p
-            ON pl.project_rid = project_uid
         INNER JOIN users u
             ON up.user_rid = user_uid
-        WHERE project_uid = _project_id
-    ), user_groups AS (
+        WHERE project_rid = _project_id
+    ), users_grouped AS (
         SELECT email,
             SUM(seconds)::int as seconds,
             COUNT(plot_uid) as plots,
-            SUM(timed):: int as timedPlots
-        FROM project_plots
+            SUM(timed):: int as timed_plots
+        FROM user_plot_times
         GROUP BY email
         ORDER BY email DESC
     ), user_agg as (
-        SELECT
-            format('[%s]',
-                   string_agg(
-                       format('{"user":"%s", "seconds":%s, "plots":%s, "timedPlots":%s}'
-                              , email, seconds, plots, timedPlots), ', ')) as user_stats
-        FROM user_groups
-    ), plotsum AS (
-        SELECT SUM(coalesce(flagged::int, 0)) as flagged,
-            SUM((user_plot_uid IS NOT NULL)::int) as analyzed,
-            plot_uid
-        FROM projects prj
-        INNER JOIN plots pl
-          ON project_uid = pl.project_rid
+        SELECT format('[%s]', string_agg(row_to_json(ug)::text, ','))::jsonb as user_stats
+        FROM users_grouped ug
+    ), users_count AS (
+        SELECT count(DISTINCT pa.user_rid)::int as users_assigned
+        FROM plots pl
+        LEFT JOIN plot_assignments pa
+            ON pa.plot_rid = plot_uid
+        WHERE project_rid = _project_id
+    ), plot_sum AS (
+        SELECT plot_uid,
+            coalesce(sum(flagged::int), 0) > 0 as flagged,
+            coalesce(count(user_plot_uid), 0) as analyzed,
+            coalesce(count(pa.user_rid), 0) as assigned,
+            greatest(coalesce(count(pa.user_rid), 0), 1) as needed
+        FROM users_count, plots pl
+        LEFT JOIN plot_assignments as pa
+            ON pa.plot_rid = pl.plot_uid
         LEFT JOIN user_plots up
             ON up.plot_rid = pl.plot_uid
-        GROUP BY project_uid, plot_uid
-        HAVING project_uid = _project_id
-    ), sums AS (
-        SELECT MAX(prj.created_date) as created_date,
-            MAX(prj.published_date) as published_date,
-            MAX(prj.closed_date) as closed_date,
-            MAX(prj.archived_date) as archived_date,
-            (CASE WHEN SUM(ps.flagged::int) IS NULL THEN 0 ELSE SUM(ps.flagged::int) END) as flagged,
-            (CASE WHEN SUM(ps.analyzed::int) IS NULL THEN 0 ELSE SUM(ps.analyzed::int) END) as analyzed,
-            COUNT(distinct pl.plot_uid) as plots
-        FROM projects prj
-        INNER JOIN plots pl
-          ON project_uid = pl.project_rid
-        LEFT JOIN plotsum ps
-          ON ps.plot_uid = pl.plot_uid
-        WHERE project_uid = _project_id
-    ), users_count AS (
-        SELECT COUNT (DISTINCT user_rid) as users
-        FROM projects prj
-        INNER JOIN plots pl
-          ON project_uid = pl.project_rid
-            AND project_uid = _project_id
-        LEFT JOIN user_plots up
-          ON up.plot_rid = plot_uid
+            AND (pa.user_rid = up.user_rid OR (SELECT users_assigned FROM users_count) = 0)
+        GROUP BY plot_uid
+        HAVING project_rid = _project_id
+    ), project_sum as (
+        SELECT count(*)::int as total_plots,
+            sum(ps.flagged::int)::int as flagged_plots,
+            sum((needed = analyzed)::int)::int as analyzed_plots,
+            sum((needed > analyzed and analyzed > 0)::int)::int as partial_plots,
+            sum((analyzed = 0)::int)::int as unanalyzed_plots,
+            sum(assigned)::int as plot_assignments
+        FROM plot_sum ps
     )
 
-    SELECT CAST(flagged as int) as flagged_plots,
-        CAST(analyzed as int) analyzed_plots,
-        CAST(GREATEST(0, (plots - flagged - analyzed)) as int) as unanalyzed_plots,
-        CAST(users_count.users as int) as contributors,
-        created_date, published_date, closed_date, archived_date,
+    SELECT total_plots,
+        flagged_plots,
+        analyzed_plots,
+        partial_plots,
+        unanalyzed_plots,
+        plot_assignments,
+        users_assigned,
+        created_date,
+        published_date,
+        closed_date,
         user_stats
-    FROM sums, users_count, user_agg
+    FROM projects, project_sum, users_count, user_agg
+    WHERE project_uid = _project_id
 
 $$ LANGUAGE SQL;
 
