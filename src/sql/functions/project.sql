@@ -540,52 +540,6 @@ CREATE OR REPLACE FUNCTION select_template_projects(_user_id integer)
 
 $$ LANGUAGE SQL;
 
--- Returns project users (SQL helper functions)
-CREATE OR REPLACE FUNCTION select_project_users(_project_id integer)
- RETURNS table (
-    user_uid integer
- ) AS $$
-
-    WITH matching_projects AS (
-        SELECT *
-        FROM projects
-        WHERE project_uid = _project_id
-    ), matching_institutions AS (
-        SELECT *
-        FROM projects p
-        INNER JOIN institutions i
-            ON p.institution_rid = institution_uid
-        WHERE project_uid = _project_id
-    ), matching_institution_users AS (
-        SELECT *
-        FROM matching_institutions mi
-        INNER JOIN institution_users ui
-            ON mi.institution_uid = ui.institution_rid
-        INNER JOIN users u
-            ON user_uid = ui.user_rid
-        INNER JOIN roles r
-            ON role_uid = ui.role_rid
-    )
-
-    SELECT user_uid
-    FROM matching_projects
-    CROSS JOIN users
-    WHERE privacy_level = 'public'
-
-    UNION ALL
-    SELECT user_uid
-    FROM matching_institution_users
-    WHERE privacy_level = 'private'
-        AND title = 'admin'
-
-    UNION ALL
-    SELECT user_uid
-    FROM matching_institution_users
-    WHERE privacy_level = 'institution'
-        AND availability = 'published'
-        AND title = 'member'
-
-$$ LANGUAGE SQL;
 
 -- Returns project statistics
 -- Overlapping queries, consider condensing. Query time is not an issue.
@@ -594,7 +548,6 @@ CREATE OR REPLACE FUNCTION select_project_statistics(_project_id integer)
     flagged_plots       integer,
     analyzed_plots      integer,
     unanalyzed_plots    integer,
-    members             integer,
     contributors        integer,
     created_date        date,
     published_date      date,
@@ -633,9 +586,6 @@ CREATE OR REPLACE FUNCTION select_project_statistics(_project_id integer)
                        format('{"user":"%s", "seconds":%s, "plots":%s, "timedPlots":%s}'
                               , email, seconds, plots, timedPlots), ', ')) as user_stats
         FROM user_groups
-    ), members AS (
-        SELECT COUNT(distinct user_uid) as members
-        FROM select_project_users(_project_id)
     ), plotsum AS (
         SELECT SUM(coalesce(flagged::int, 0)) as flagged,
             SUM((user_plot_uid IS NOT NULL)::int) as analyzed,
@@ -674,11 +624,10 @@ CREATE OR REPLACE FUNCTION select_project_statistics(_project_id integer)
     SELECT CAST(flagged as int) as flagged_plots,
         CAST(analyzed as int) analyzed_plots,
         CAST(GREATEST(0, (plots - flagged - analyzed)) as int) as unanalyzed_plots,
-        CAST(members as int) as members,
         CAST(users_count.users as int) as contributors,
         created_date, published_date, closed_date, archived_date,
         user_stats
-    FROM members, sums, users_count, user_agg
+    FROM sums, users_count, user_agg
 
 $$ LANGUAGE SQL;
 
