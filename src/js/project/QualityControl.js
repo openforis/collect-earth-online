@@ -146,7 +146,7 @@ export default class QualityControl extends React.Component {
                             <input
                                 className="col-5 form-control form-control-sm"
                                 id="reviews"
-                                max="100"
+                                max={Math.max(users.length, 2)}
                                 min="2"
                                 onChange={e => this.setTimesToReview(parseInt(e.target.value))}
                                 type="number"
