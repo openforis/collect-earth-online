@@ -153,8 +153,8 @@ export default class QualityControl extends React.Component {
                                 value={timesToReview}
                             />
                         </div>
-                        <p className="font-italic ml-2 mt-2 small">
-                            - Plots to review: {formatNumberWithCommas(plotsToReview)}
+                        <p className="font-italic mt-2 ml-2 small">
+                            {`- ${formatNumberWithCommas(plotsToReview)} plots will be reviewed ${timesToReview} times`}
                         </p>
                     </>
                 )}
