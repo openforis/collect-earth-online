@@ -553,7 +553,7 @@ CREATE OR REPLACE FUNCTION select_institution_project_stats(_project_id integer)
         GROUP BY project_rid, plot_uid
         HAVING project_rid = _project_id
     ), project_sum as (
-        SELECT count(*)::int as total,
+        SELECT count(*)::int as total_plots,
             sum(ps.flagged::int)::int as flagged_plots,
             sum((needed = analyzed)::int)::int as analyzed_plots,
             sum((needed > analyzed and analyzed > 0)::int)::int as partial_plots,
@@ -562,7 +562,7 @@ CREATE OR REPLACE FUNCTION select_institution_project_stats(_project_id integer)
         FROM plot_sum ps
     )
 
-    SELECT total,
+    SELECT total_plots,
         flagged_plots,
         analyzed_plots,
         partial_plots,
