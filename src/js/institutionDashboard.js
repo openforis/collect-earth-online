@@ -27,7 +27,7 @@ class InstitutionDashboard extends React.Component {
     /// API Calls
 
     getProjectList = () =>
-        fetch(`/get-institution-project-stats?institutionId=${this.props.institutionId}`)
+        fetch(`/get-institution-dash-projects?institutionId=${this.props.institutionId}`)
             .then(response => (response.ok ? response.json() : Promise.reject(response)))
             .then(data => this.setState({projectList: data}));
 
@@ -52,26 +52,32 @@ class InstitutionDashboard extends React.Component {
                 {projectList.length > 0 && (
                     <table id="srd" style={{width: "1000px", margin: "10px", color: "rgb(49, 186, 176)"}}>
                         <thead>
-                            <tr style={{whiteSpace: "nowrap"}}>
-                                <th className="pr-2">Project Id</th>
-                                <th className="pr-2">Project Name</th>
-                                <th className="pr-2">Contributors</th>
-                                <th className="pr-2">Total Plots</th>
-                                <th className="pr-2">Flagged Plots</th>
-                                <th className="pr-2">Analyzed Plots</th>
-                                <th className="pr-2">Unanalyzed Plots</th>
+                            <tr >
+                                <th style={{paddingRight: "1rem", whiteSpace: "nowrap"}}>Project Id</th>
+                                <th style={{paddingRight: "1rem", whiteSpace: "nowrap"}}>Project Name</th>
+                                <th style={{textAlign: "center", paddingRight: "1rem"}}>Assigned Users</th>
+                                <th style={{textAlign: "center", paddingRight: "1rem"}}>Contributors</th>
+                                <th style={{textAlign: "center", paddingRight: "1rem"}}>Total Plots</th>
+                                <th style={{textAlign: "center", paddingRight: "1rem"}}>Plot Assignments</th>
+                                <th style={{textAlign: "center", paddingRight: "1rem"}}>Flagged Plots</th>
+                                <th style={{textAlign: "center", paddingRight: "1rem"}}>Analyzed Plots</th>
+                                <th style={{textAlign: "center", paddingRight: "1rem"}}>Partial Plots</th>
+                                <th style={{textAlign: "center", paddingRight: "1rem"}}>Unanalyzed Plots</th>
                             </tr>
                         </thead>
                         <tbody>
-                            {projectList && projectList.map(project => (
-                                <tr key={project.id}>
-                                    <td>{project.id}</td>
-                                    <td>{project.name}</td>
-                                    <td style={{textAlign: "center"}}>{project.stats.contributors}</td>
-                                    <td style={{textAlign: "center"}}>{project.numPlots}</td>
-                                    <td style={{textAlign: "center"}}>{project.stats.flaggedPlots}</td>
-                                    <td style={{textAlign: "center"}}>{project.stats.analyzedPlots}</td>
-                                    <td style={{textAlign: "center"}}>{project.stats.unanalyzedPlots}</td>
+                            {projectList && projectList.map(({id, name, stats}) => (
+                                <tr key={id}>
+                                    <td>{id}</td>
+                                    <td style={{minWidth: "15rem"}}>{name}</td>
+                                    <td style={{textAlign: "center"}}>{stats.assignedUsers}</td>
+                                    <td style={{textAlign: "center"}}>{stats.contributors}</td>
+                                    <td style={{textAlign: "center"}}>{stats.totalPlots}</td>
+                                    <td style={{textAlign: "center"}}>{stats.plotAssignments}</td>
+                                    <td style={{textAlign: "center"}}>{stats.flaggedPlots}</td>
+                                    <td style={{textAlign: "center"}}>{stats.analyzedPlots}</td>
+                                    <td style={{textAlign: "center"}}>{stats.partialPlots}</td>
+                                    <td style={{textAlign: "center"}}>{stats.unanalyzedPlots}</td>
                                 </tr>
                             ))}
                         </tbody>

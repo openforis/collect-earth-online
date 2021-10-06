@@ -48,11 +48,11 @@ CREATE OR REPLACE FUNCTION select_plotters(_project_id integer, _plot_id integer
     FROM plots p
     LEFT JOIN user_plots up
         ON p.plot_uid = up.plot_rid
-    LEFT JOIN plot_assignments ap
-        ON p.plot_uid = ap.plot_rid
+    LEFT JOIN plot_assignments pa
+        ON p.plot_uid = pa.plot_rid
     INNER JOIN users u
         ON u.user_uid = up.user_rid
-        OR u.user_uid = ap.user_rid
+        OR u.user_uid = pa.user_rid
     WHERE p.project_rid = _project_id
         AND (plot_uid = _plot_id
              OR _plot_id = -1)
@@ -91,24 +91,24 @@ CREATE OR REPLACE FUNCTION select_unanalyzed_plots(_project_id integer, _user_id
         visible_id,
         ST_AsGeoJSON(plot_geom) as plot_geom,
         extra_plot_info,
-        ap.user_rid,
+        pa.user_rid,
         u.email
     FROM plots
-    LEFT JOIN plot_assignments ap
-        ON plot_uid = ap.plot_rid
+    LEFT JOIN plot_assignments pa
+        ON plot_uid = pa.plot_rid
     LEFT JOIN user_plots up
         ON plot_uid = up.plot_rid
-        AND (ap.user_rid = up.user_rid OR (select count from assigned_count) = 0)
+        AND (pa.user_rid = up.user_rid OR (SELECT count(*) FROM assigned_count) = 0)
     LEFT JOIN plot_locks pl
         ON plot_uid = pl.plot_rid
     LEFT JOIN users u
-        ON ap.user_rid = u.user_uid
+        ON pa.user_rid = u.user_uid
     WHERE project_rid = _project_id
         AND user_plot_uid IS NULL
-        AND ((ap.user_rid IS NULL
+        AND ((pa.user_rid IS NULL
                 AND (pl.lock_end IS NULL
                      OR localtimestamp > pl.lock_end)) -- unlocked
-             OR ap.user_rid = _user_id                 -- assigned
+             OR pa.user_rid = _user_id                 -- assigned
              OR _review_mode)                           -- admin TODO, CEO-208 should admin be able to visit a locked plot? probably.
     ORDER BY visible_id ASC
 
@@ -193,11 +193,11 @@ CREATE OR REPLACE FUNCTION select_qaqc_plots(_project_id integer)
  RETURNS setOf collection_return AS $$
 
     WITH assigned_count AS (
-        SELECT ap.plot_rid plot_rid, count(ap.user_rid) users
-        FROM plots, plot_assignments ap
+        SELECT pa.plot_rid plot_rid, count(pa.user_rid) users
+        FROM plots, plot_assignments pa
         WHERE project_rid = _project_id
-            AND plot_uid = ap.plot_rid
-        GROUP BY ap.plot_rid
+            AND plot_uid = pa.plot_rid
+        GROUP BY pa.plot_rid
     )
 
     SELECT plot_uid,
@@ -289,16 +289,16 @@ CREATE OR REPLACE FUNCTION select_plot_samples(_plot_id integer, _user_id intege
         ST_AsGeoJSON(sample_geom) as sample_geom,
         (CASE WHEN sv.saved_answers IS NULL THEN '{}' ELSE sv.saved_answers END)
     FROM samples s
-    LEFT JOIN plot_assignments ap
-        ON s.plot_rid = ap.plot_rid
+    LEFT JOIN plot_assignments pa
+        ON s.plot_rid = pa.plot_rid
     LEFT JOIN user_plots up
         ON s.plot_rid = up.plot_rid
-        AND (ap.user_rid = up.user_rid or (select count from assigned_count) = 0)
+        AND (pa.user_rid = up.user_rid or (select count from assigned_count) = 0)
     LEFT JOIN sample_values sv
         ON sample_uid = sv.sample_rid
         AND user_plot_uid = sv.user_plot_rid
     WHERE s.plot_rid = _plot_id
-        AND (ap.user_rid IS NULL OR ap.user_rid = _user_id)
+        AND (pa.user_rid IS NULL OR pa.user_rid = _user_id)
 
 $$ LANGUAGE SQL;
 
