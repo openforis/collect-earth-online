@@ -208,7 +208,8 @@ class Collection extends React.Component {
             if (project.id > 0 && project.availability !== "archived") {
                 this.setState({currentProject: project});
                 const {inReviewMode} = getProjectPreferences(project.id);
-                this.setReviewMode(project.isProjectAdmin && (inReviewMode || (project.availability === "published" && inReviewMode !== false)));
+                this.setReviewMode(project.isProjectAdmin
+                    && (inReviewMode || (project.availability === "closed" && inReviewMode !== false)));
                 return Promise.resolve("resolved");
             } else {
                 return Promise.reject(
