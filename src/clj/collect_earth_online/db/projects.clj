@@ -73,21 +73,22 @@
                             :percentComplete pct_complete})
                          (call-sql "select_institution_projects" user-id institution-id)))))
 
-(defn get-institution-project-stats [{:keys [params]}]
+(defn get-institution-dash-projects [{:keys [params]}]
   (let [user-id        (:userId params -1)
         institution-id (tc/val->int (:institutionId params))]
-    (data-response (mapv (fn [{:keys [project_id name privacy_level pct_complete num_plots stats]}]
-                           {:id              project_id
-                            :name            name
-                            :numPlots        num_plots
-                            :privacyLevel    privacy_level
-                            :percentComplete pct_complete
-                            :stats           (-> stats
-                                                 (tc/jsonb->clj)
-                                                 (set/rename-keys {:analyzed_plots   :analyzedPlots
-                                                                   :flagged_plots    :flaggedPlots
-                                                                   :unanalyzed_plots :unanalyzedPlots}))})
-                         (call-sql "select_institution_project_stats" user-id institution-id)))))
+    (data-response (mapv (fn [{:keys [project_id name stats]}]
+                           {:id    project_id
+                            :name  name
+                            :stats (-> stats
+                                       (tc/jsonb->clj)
+                                       (set/rename-keys {:total_plots      :totalPlots
+                                                         :flagged_plots    :flaggedPlots
+                                                         :analyzed_plots   :analyzedPlots
+                                                         :partial_plots    :partialPlots
+                                                         :unanalyzed_plots :unanalyzedPlots
+                                                         :plot_assignments :plotAssignments
+                                                         :assigned_users   :assignedUsers}))})
+                         (call-sql "select_institution_dash_projects" user-id institution-id)))))
 
 (defn get-template-projects [{:keys [params]}]
   (let [user-id (:userId params -1)]
