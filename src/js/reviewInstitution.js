@@ -106,7 +106,8 @@ class ReviewInstitution extends React.Component {
 
     render() {
         return (
-            <div className="ReviewInstitution">
+            <div id="review-institution">
+                {this.state.modalMessage && <LoadingModal message={this.state.modalMessage}/>}
                 <InstitutionDescription
                     institutionId={this.props.institutionId}
                     isAdmin={this.state.isAdmin}
@@ -148,7 +149,6 @@ class ReviewInstitution extends React.Component {
                         )}
                     </div>
                 </div>
-                {this.state.modalMessage && <LoadingModal message={this.state.modalMessage}/>}
             </div>
         );
     }
@@ -1107,7 +1107,7 @@ class UserList extends React.Component {
         } else {
             this.props.processModal(
                 "Updating user",
-                () => fetch(
+                fetch(
                     "/update-user-institution-role",
                     {
                         method: "POST",

@@ -159,6 +159,9 @@ h4 {font-size: 0.8rem;}
     border-width: 1.5px;
     font-weight: bold;
 }
+.btn > .svg-icon > svg {
+    vertical-align: top;
+}
 .btn-lightgray {
     background-color: #eceeef;
     -webkit-transition: background-color 50ms linear;

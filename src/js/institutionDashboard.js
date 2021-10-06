@@ -1,59 +1,62 @@
 import React from "react";
 import ReactDOM from "react-dom";
-import {NavigationBar} from "./components/PageComponents";
+import {LoadingModal, NavigationBar} from "./components/PageComponents";
 
 class InstitutionDashboard extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
-            details: []
+            projectList: [],
+            modalMessage: null
         };
     }
 
+    /// Lifecycle
+
     componentDidMount() {
-        this.getProjectList();
+        this.processModal(
+            "Loading project list",
+            this.getProjectList()
+                .then(projectList => this.setState({projectList}))
+                .catch(response => {
+                    console.error(response);
+                    alert("Error retrieving the project list. See console for details.");
+                })
+        );
     }
 
-    getProjectList = () => {
-        fetch(`/get-institution-projects?institutionId=${this.props.institutionId}`)
-            .then(response => (response.ok ? response.json() : Promise.reject(response)))
-            .then(data => {
-                this.setDetails(data);
-            })
-            .catch(response => {
-                console.log(response);
-                alert("Error retrieving the project info. See console for details.");
-            });
-    };
+    /// API Calls
 
-    setDetails = projects => {
-        const {details} = this.state;
-        projects.forEach(proj => {
-            fetch(`/get-project-stats?projectId=${proj.id}`)
-                .then(response => (response.ok ? response.json() : Promise.reject(response)))
-                .then(data => {
-                    details.push({
-                        id: proj.id,
-                        name: proj.name,
-                        numPlots: proj.numPlots,
-                        unanalyzedPlots: data.unanalyzedPlots,
-                        analyzedPlots: data.analyzedPlots,
-                        flaggedPlots: data.flaggedPlots,
-                        contributors: data.contributors,
-                        members: data.members
-                    });
-                    this.setState({details});
-                })
-                .catch(response => {
-                    console.log(response);
-                    alert("Error retrieving the project stats. See console for details.");
-                });
-        });
-    };
+    // TODO, These should probably be 1 API call on the backend to reduce the number of connections
+    getProjectList = () => fetch(`/get-institution-projects?institutionId=${this.props.institutionId}`)
+        .then(response => (response.ok ? response.json() : Promise.reject(response)))
+        .then(data => this.getProjectDetails(data));
+
+    getProjectDetails = projects => Promise.all(projects.map(proj => fetch(`/get-project-stats?projectId=${proj.id}`)
+        .then(response => (response.ok ? response.json() : Promise.reject(response)))
+        .then(data => ({
+            id: proj.id,
+            name: proj.name,
+            numPlots: proj.numPlots,
+            unanalyzedPlots: data.unanalyzedPlots,
+            analyzedPlots: data.analyzedPlots,
+            flaggedPlots: data.flaggedPlots,
+            contributors: data.contributors,
+            members: data.members
+        }))));
+
+    /// Helpers
+
+    processModal = (message, promise) => this.setState(
+        {modalMessage: message},
+        () => promise.finally(() => this.setState({modalMessage: null}))
+    );
 
     render() {
+        const {projectList} = this.state;
         return (
-            <div className="row justify-content-center">
+            <div className="row justify-content-center" id="institution-dashboard">
+                {this.state.modalMessage && <LoadingModal message={this.state.modalMessage}/>}
                 <div
                     className="bg-darkgreen mb-3 no-container-margin"
                     style={{width: "100%", margin: "0 10px 0 10px"}}
@@ -65,7 +68,6 @@ class InstitutionDashboard extends React.Component {
                         <tr>
                             <th>Project Id</th>
                             <th>Project Name</th>
-                            <th>Members</th>
                             <th>Contributors</th>
                             <th>Total Plots</th>
                             <th>Flagged Plots</th>
@@ -74,27 +76,22 @@ class InstitutionDashboard extends React.Component {
                         </tr>
                     </thead>
                     <tbody>
-                        <ProjectList details={this.state.details}/>
+                        {projectList.map(project => (
+                            <tr key={project.id}>
+                                <td>{project.id}</td>
+                                <td>{project.name}</td>
+                                <td>{project.contributors}</td>
+                                <td>{project.numPlots}</td>
+                                <td>{project.flaggedPlots}</td>
+                                <td>{project.analyzedPlots}</td>
+                                <td>{project.unanalyzedPlots}</td>
+                            </tr>
+                        ))}
                     </tbody>
                 </table>
             </div>
         );
     }
-}
-
-function ProjectList(props) {
-    return props.details.map(project => (
-        <tr key={project.id}>
-            <td>{project.id}</td>
-            <td>{project.name}</td>
-            <td>{project.members}</td>
-            <td>{project.contributors}</td>
-            <td>{project.numPlots}</td>
-            <td>{project.flaggedPlots}</td>
-            <td>{project.analyzedPlots}</td>
-            <td>{project.unanalyzedPlots}</td>
-        </tr>
-    ));
 }
 
 export function pageInit(args) {
