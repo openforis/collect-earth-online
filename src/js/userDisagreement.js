@@ -1,13 +1,15 @@
 import React from "react";
 import ReactDOM from "react-dom";
 import {NavigationBar} from "./components/PageComponents";
+import {CollapsibleTitle} from "./components/FormComponents";
 
 class UserDisagreement extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
             questions: [],
-            plotters: []
+            plotters: [],
+            showQuestions: {}
         };
     }
 
@@ -21,7 +23,7 @@ class UserDisagreement extends React.Component {
         return fetch(`/get-plot-disagreement?projectId=${projectId}&plotId=${plotId}`)
             .then(response => (response.ok ? response.json() : Promise.reject(response)))
             .then(questions => {
-                this.setState({questions});
+                this.setState({questions, showQuestions: Object.fromEntries(questions.map(q => [q.id, true]))});
                 return Promise.resolve("resolved");
             });
     };
@@ -55,11 +57,18 @@ class UserDisagreement extends React.Component {
                 <label>{this.findByKey(plotters, "userId", user.userId)?.email}</label>
                 <ul>
                     {Object.keys(user.answers).length > 0
-                        ? (Object.keys(user.answers).map(a => (
-                            <li key={a}>
-                                {`${this.findByKey(answers, "id", parseInt(a))?.answer} - ${user.answers[a]}`}
-                            </li>
-                        ))) : (
+                        ? (Object.keys(user.answers).map(a => {
+                            const answer = this.findByKey(answers, "id", parseInt(a));
+                            return (
+                                <div key={a} className="d-flex">
+                                    <div
+                                        className="circle mt-1 mr-3"
+                                        style={{backgroundColor: answer?.color, border: "solid 1px"}}
+                                    />
+                                    {`${answer?.answer} - ${user.answers[a]}`}
+                                </div>
+                            );
+                        })) : (
                             "This user did not answer"
                         )}
                 </ul>
@@ -68,32 +77,33 @@ class UserDisagreement extends React.Component {
     };
 
     renderQuestion = thisQuestion => {
-        const {question, answers, disagreement, answerFrequencies} = thisQuestion;
+        const {id, question, answers, disagreement, answerFrequencies} = thisQuestion;
         return (
             <div
                 key={question}
                 style={{
-                    border: "1px solid rgba(0, 0, 0, 0.2)",
-                    borderRadius: "6px",
-                    boxShadow: "0 0 2px 1px rgba(0, 0, 0, 0.2)",
-                    margin: ".5rem",
+                    border: "1px solid black",
+                    margin: "0 .5rem",
+                    background: "#31bab0",
                     overflow: "hidden"
                 }}
             >
-                <div
-                    className="bg-lightgreen"
-                    style={{
-                        display: "flex",
-                        justifyContent: "space-between",
-                        padding: "1rem"
+                <CollapsibleTitle
+                    showGroup={this.state.showQuestions[id]}
+                    title={`${question } - ${disagreement < 0 ? "N\\A" : disagreement + "%"}`}
+                    toggleShow={() => {
+                        const showQuestions = {...this.state.showQuestions};
+                        showQuestions[id] = !showQuestions[id];
+                        console.log(showQuestions);
+                        this.setState({showQuestions});
                     }}
-                >
-                    <h3 style={{margin: 0}}>{question}</h3>
-                    <h3 style={{margin: 0}}>{disagreement < 0 ? "N\\A" : disagreement + "%"}</h3>
-                </div>
-                <div style={{display: "flex"}}>
-                    {answerFrequencies.map(as => this.renderUser(as, answers))}
-                </div>
+                />
+
+                {this.state.showQuestions[id] && (
+                    <div style={{display: "flex", flexWrap: "wrap", background: "white"}}>
+                        {answerFrequencies.map(as => this.renderUser(as, answers))}
+                    </div>
+                )}
             </div>
         );
     };
