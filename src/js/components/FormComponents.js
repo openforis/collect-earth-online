@@ -29,8 +29,8 @@ export class CollapsibleSectionBlock extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
-            showContent: false,
-            height: "0px",
+            showContent: props.showContent || false,
+            height: props.showContent ? "auto" : "0px",
             myRef: null
         };
     }

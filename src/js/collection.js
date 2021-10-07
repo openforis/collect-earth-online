@@ -17,6 +17,7 @@ import {CollapsibleTitle} from "./components/FormComponents";
 import Modal from "./components/Modal";
 import Select from "./components/Select";
 import Switch from "./components/Switch";
+import {ButtonSvgIcon} from "./components/SvgIcon";
 
 import {UnicodeIcon, getQueryString, safeLength, isNumber, invertColor, asPercentage, isArray} from "./utils/generalUtils";
 import {getProjectPreferences, setProjectPreferences} from "./utils/preferences";
@@ -45,6 +46,7 @@ class Collection extends React.Component {
             selectedQuestion: {id: 0, question: "", answers: []},
             selectedSampleId: -1,
             userSamples: {},
+            originalUserSamples: {},
             userImages: {},
             storedInterval: null,
             KMLFeatures: null,
@@ -208,7 +210,8 @@ class Collection extends React.Component {
             if (project.id > 0 && project.availability !== "archived") {
                 this.setState({currentProject: project});
                 const {inReviewMode} = getProjectPreferences(project.id);
-                this.setReviewMode(project.isProjectAdmin && (inReviewMode || (project.availability === "published" && inReviewMode !== false)));
+                this.setReviewMode(project.isProjectAdmin
+                    && (inReviewMode || (project.availability === "closed" && inReviewMode !== false)));
                 return Promise.resolve("resolved");
             } else {
                 return Promise.reject(
@@ -367,7 +370,7 @@ class Collection extends React.Component {
     };
 
     confirmUnsaved = () => !this.hasChanged()
-        || confirm("You have unsaved changes. Any answered questions will be lost. Are you sure you want to continue?");
+        || confirm("You have unsaved changes. Any unsaved responses will be lost. Are you sure you want to continue?");
 
     navToFirstPlot = () => this.getPlotData(-10000000, "next");
 
@@ -907,7 +910,6 @@ class Collection extends React.Component {
                     answerMode={this.state.answerMode}
                     currentPlot={this.state.currentPlot}
                     inReviewMode={this.state.inReviewMode}
-                    isProjectAdmin={this.state.currentProject.isProjectAdmin}
                     postValuesToDB={this.postValuesToDB}
                     projectId={this.props.projectId}
                     projectName={this.state.currentProject.name}
@@ -1027,17 +1029,18 @@ function ImageAnalysisPane({imageryAttribution}) {
 
 class SideBar extends React.Component {
     checkCanSave = () => {
-        const noneAnswered = this.props.surveyQuestions.every(sq => safeLength(sq.answered) === 0);
-        const hasSamples = safeLength(this.props.currentPlot.samples) > 0;
-        const allAnswered = this.props.surveyQuestions.every(sq => safeLength(sq.visible) === safeLength(sq.answered));
-        if (this.props.answerMode !== "question") {
+        const {answerMode, currentPlot, inReviewMode, surveyQuestions} = this.props;
+        const noneAnswered = surveyQuestions.every(sq => safeLength(sq.answered) === 0);
+        const hasSamples = safeLength(currentPlot.samples) > 0;
+        const allAnswered = surveyQuestions.every(sq => safeLength(sq.visible) === safeLength(sq.answered));
+        if (answerMode !== "question") {
             alert("You must be in question mode to save the collection.");
             return false;
-        } else if (this.props.currentPlot.flagged) {
+        } else if (currentPlot.flagged) {
             return true;
-        } else if (this.props.isProjectAdmin) {
+        } else if (inReviewMode) {
             if (!(noneAnswered || allAnswered)) {
-                alert("Admins can only save the plot if all questions are answered or the answers are cleared.");
+                alert("In review mode, plots can only be saved if all questions are answered or the answers are cleared.");
                 return false;
             } else {
                 return true;
@@ -1141,14 +1144,14 @@ class PlotNavigation extends React.Component {
                 onClick={this.props.navToPrevPlot}
                 type="button"
             >
-                <UnicodeIcon icon="leftCaret"/>
+                <ButtonSvgIcon icon="leftArrow" size="0.9rem"/>
             </button>
             <button
                 className="btn btn-outline-lightgreen btn-sm mx-1"
                 onClick={() => this.props.navToNextPlot()}
                 type="button"
             >
-                <UnicodeIcon icon="rightCaret"/>
+                <ButtonSvgIcon icon="rightArrow" size="0.9rem"/>
             </button>
             <input
                 autoComplete="off"
@@ -1172,11 +1175,14 @@ class PlotNavigation extends React.Component {
     );
 
     reviewMode = (inReviewMode, setReviewMode) => (
-        <div className="d-flex my-2 mx-2 align-items-center justify-content-end">
-            <h4 className="mx-2 my-0">Review Mode:</h4>
-            <div style={{display: "inline-block"}}>
+        <div className="row my-2">
+            <div className="col-5 text-right">
+                <label htmlFor="review-mode">Review Mode:</label>
+            </div>
+            <div className="col-6 px-0">
                 <Switch
                     checked={inReviewMode}
+                    id="review-mode"
                     onChange={() => setReviewMode(!inReviewMode)}
                 />
             </div>
@@ -1184,18 +1190,22 @@ class PlotNavigation extends React.Component {
     );
 
     thresholdSlider = (label, threshold, setThreshold) => (
-        <div className="my-2 d-flex align-items-center">
-            <h3 className="w-100 mx-2 my-0">{label}:</h3>
-            <div className="d-flex">
+        <div className="row my-2">
+            <div className="col-5 text-right">
+                <label htmlFor="threshold">{label}:</label>
+            </div>
+            <div className="col-6 px-0 d-flex align-items-center">
                 <input
+                    id="threshold"
                     max="100"
                     min="0"
                     onChange={e => setThreshold(parseInt(e.target.value))}
                     step="5"
+                    style={{width: "80%"}}
                     type="range"
                     value={threshold}
                 />
-                <div className="ml-2" style={{fontSize: "0.8rem"}}>
+                <div className="ml-2" style={{fontSize: "0.8rem", width: "20%"}}>
                     {`${threshold}%`}
                 </div>
             </div>
@@ -1203,7 +1213,7 @@ class PlotNavigation extends React.Component {
     );
 
     selectUser = (users, currentUserId, onChange) => (
-        <div className="my-2 d-flex align-items-center justify-content-center">
+        <div className="row my-2 text-right">
             <Select
                 disabled={users.length <= 1}
                 label="User:"
@@ -1239,10 +1249,13 @@ class PlotNavigation extends React.Component {
         return (
             <div className="mt-2">
                 <div className="p-1" style={{border: "1px solid lightgray", borderRadius: "0.2rem"}}>
-                    <div className="d-flex align-items-center my-2">
-                        <h3 className="w-100 mx-2 my-0">Navigate Through:</h3>
+                    <div className="row my-2">
+                        <div className="col-5 text-right">
+                            <label htmlFor="navigate">Navigate:</label>
+                        </div>
                         <select
-                            className="form-control form-control-sm mr-2"
+                            className="form-control form-control-sm mr-2 col-6"
+                            id="navigate"
                             onChange={e => setNavigationMode(e.target.value)}
                             style={{flex: "1 1 auto"}}
                             value={navigationMode}
@@ -1272,7 +1285,7 @@ class PlotNavigation extends React.Component {
                                 className="btn btn-secondary btn-sm"
                                 onClick={() =>
                                     window.open(
-                                        `/user-disagreement?projectId=${projectId}&plotId=${currentPlot.id}`,
+                                        `/user-disagreement?projectId=${projectId}&plotId=${currentPlot.id}&threshold=${threshold}`,
                                         `disagreement_${projectId}`
                                     )}
                                 type="button"
@@ -1808,7 +1821,7 @@ function QuitMenu({projectId, toggleQuitModal}) {
                         </button>
                     </div>
                     <div className="modal-body">
-                        <p>Are you sure you want to stop collecting data? Any answered questions will be lost.</p>
+                        <p>Are you sure you want to stop collecting data? Any unsaved responses will be lost.</p>
                     </div>
                     <div className="modal-footer">
                         <button

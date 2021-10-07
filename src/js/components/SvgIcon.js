@@ -243,6 +243,21 @@ const editIcon = (
     </svg>
 );
 
+const plus = (
+    <svg viewBox="0 0 512 512">
+        <path d="m467 211h-166v-166c0-24.853-20.147-45-45-45s-45 20.147-45 45v166h-166c-24.853 0-45 20.147-45 45s20.147 45 45 45h166v166c0 24.853 20.147 45 45 45s45-20.147 45-45v-166h166c24.853 0 45-20.147 45-45s-20.147-45-45-45z"/>
+    </svg>
+);
+
+const minus = (
+    <svg viewBox="0 0 512 512" x="0px" y="0px">
+        <path
+            d="M467,211L45,211C20.147,211 0,231.147 0,256C0,280.853 20.147,301 45,301L467,301C491.853,301 512,280.853 512,256C512,231.147 491.853,211 467,211Z"
+            style={{"fill-rule": "nonzero"}}
+        />
+    </svg>
+);
+
 const iconMap = {
     "check": checkIcon,
     "close": closeIcon,
@@ -252,6 +267,8 @@ const iconMap = {
     "leftArrow": leftArrowIcon,
     "leftDouble": leftDoubleIcon,
     "lineString": lineStringIcon,
+    "minus": minus,
+    "plus": plus,
     "point": pointIcon,
     "polygon": polygonIcon,
     "question": questionIcon,
@@ -266,6 +283,24 @@ export default function SvgIcon({icon, color, size}) {
             style={{
                 color: color || "black",
                 fill: color || "black",
+                height: size,
+                maxHeight: size,
+                maxWidth: size,
+                cursor: "pointer",
+                width: size
+            }}
+        >
+            {iconMap[icon]}
+        </div>
+    );
+}
+
+export function ButtonSvgIcon({icon, size}) {
+    return (
+        <div
+            className="svg-icon"
+            style={{
+                fill: "currentColor",
                 height: size,
                 maxHeight: size,
                 maxWidth: size,

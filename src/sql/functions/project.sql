@@ -443,7 +443,7 @@ CREATE OR REPLACE FUNCTION user_project(_user_id integer, _role_id integer, _pri
                     OR (_user_id > 0 AND _privacy_level = 'users')
                     OR (_role_id = 2 AND _privacy_level = 'institution')))
 
-$$ LANGUAGE SQL IMMUTABLE;
+$$ LANGUAGE SQL STABLE;
 
 -- Returns all projects the user can see. This is used only on the home page
 CREATE OR REPLACE FUNCTION select_user_home_projects(_user_id integer)
@@ -479,14 +479,17 @@ CREATE OR REPLACE FUNCTION project_percent_complete(_project_id integer)
  RETURNS real AS $$
 
     SELECT (
-        CASE WHEN count(distinct(plot_uid)) > 0
-        THEN (100.0 * count(user_plot_uid) / count(distinct(plot_uid))::real)
+        CASE WHEN count(plot_uid) > 0
+        THEN (100.0 * count(user_plot_uid) / count(plot_uid)::real)
         ELSE 0
         END
     )::real
     FROM plots
-    LEFT JOIN user_plots
-        ON plot_uid = plot_rid
+    LEFT JOIN user_plots up
+        ON plot_uid = up.plot_rid
+    LEFT JOIN plot_assignments pa
+        ON plot_uid = pa.plot_rid
+        AND up.user_rid = pa.user_rid
     WHERE project_rid = _project_id
 
 $$ LANGUAGE SQL;

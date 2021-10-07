@@ -1,6 +1,7 @@
 import React from "react";
 import ReactDOM from "react-dom";
 import {NavigationBar} from "./components/PageComponents";
+import {CollapsibleSectionBlock} from "./components/FormComponents";
 
 class UserDisagreement extends React.Component {
     constructor(props) {
@@ -55,11 +56,18 @@ class UserDisagreement extends React.Component {
                 <label>{this.findByKey(plotters, "userId", user.userId)?.email}</label>
                 <ul>
                     {Object.keys(user.answers).length > 0
-                        ? (Object.keys(user.answers).map(a => (
-                            <li key={a}>
-                                {`${this.findByKey(answers, "id", parseInt(a))?.answer} - ${user.answers[a]}`}
-                            </li>
-                        ))) : (
+                        ? (Object.keys(user.answers).map(a => {
+                            const answer = this.findByKey(answers, "id", parseInt(a));
+                            return (
+                                <div key={a} className="d-flex">
+                                    <div
+                                        className="circle mt-1 mr-3"
+                                        style={{backgroundColor: answer?.color, border: "solid 1px"}}
+                                    />
+                                    {`${answer?.answer} - ${user.answers[a]}`}
+                                </div>
+                            );
+                        })) : (
                             "This user did not answer"
                         )}
                 </ul>
@@ -69,31 +77,25 @@ class UserDisagreement extends React.Component {
 
     renderQuestion = thisQuestion => {
         const {question, answers, disagreement, answerFrequencies} = thisQuestion;
+        const {threshold} = this.props;
         return (
             <div
                 key={question}
                 style={{
-                    border: "1px solid rgba(0, 0, 0, 0.2)",
-                    borderRadius: "6px",
-                    boxShadow: "0 0 2px 1px rgba(0, 0, 0, 0.2)",
-                    margin: ".5rem",
+                    border: "1px solid black",
+                    margin: "0 .5rem",
+                    background: "#31bab0",
                     overflow: "hidden"
                 }}
             >
-                <div
-                    className="bg-lightgreen"
-                    style={{
-                        display: "flex",
-                        justifyContent: "space-between",
-                        padding: "1rem"
-                    }}
+                <CollapsibleSectionBlock
+                    showContent={disagreement >= threshold}
+                    title={`${question } - ${disagreement < 0 ? "N/A" : disagreement + "%"}`}
                 >
-                    <h3 style={{margin: 0}}>{question}</h3>
-                    <h3 style={{margin: 0}}>{disagreement < 0 ? "N\\A" : disagreement + "%"}</h3>
-                </div>
-                <div style={{display: "flex"}}>
-                    {answerFrequencies.map(as => this.renderUser(as, answers))}
-                </div>
+                    <div style={{display: "flex", flexWrap: "wrap", background: "white"}}>
+                        {answerFrequencies.map(as => this.renderUser(as, answers))}
+                    </div>
+                </CollapsibleSectionBlock>
             </div>
         );
     };
@@ -120,6 +122,7 @@ export function pageInit(args) {
             <UserDisagreement
                 plotId={args.plotId}
                 projectId={args.projectId}
+                threshold={args.threshold}
                 visibleId={args.visibleId}
             />
         </NavigationBar>,
