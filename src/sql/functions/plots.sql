@@ -19,11 +19,10 @@ $$ LANGUAGE SQL;
 -- TODO, CEO-32 update to only show users available plots
 CREATE OR REPLACE FUNCTION select_limited_project_plots(_project_id integer, _maximum integer)
  RETURNS table (
-    plot_id     integer,
-    center      text,
-    flagged     boolean,
-    analyzed    boolean,
-    partial     boolean
+    plot_id    integer,
+    center     text,
+    flagged    boolean,
+    status     text
  ) AS $$
 
     WITH plot_sums AS (
@@ -46,8 +45,13 @@ CREATE OR REPLACE FUNCTION select_limited_project_plots(_project_id integer, _ma
     SELECT plot_uid,
         center,
         flagged,
-        (assigned = 0 AND collected = 1) OR (assigned = collected),
-        assigned > collected AND collected > 1
+        CASE WHEN (assigned = 0 AND collected = 1) OR (assigned = collected)
+            THEN 'analyzed'
+        WHEN assigned > collected AND collected > 1
+            THEN 'partial'
+        ELSE
+            'unanalyzed'
+        END
     FROM plot_sums
 
 $$ LANGUAGE SQL;
