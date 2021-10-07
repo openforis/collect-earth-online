@@ -880,6 +880,7 @@ const ceoMapPresets = {
     black: "#000000",
     blue: "#23238b",
     green: "green",
+    lightBlue: "#2dccff",
     orange: "#ffcc33",
     red: "#8b2323",
     white: "#ffffff",
@@ -1006,8 +1007,14 @@ mercator.addPlotOverviewLayers = (mapConfig, plots) => {
     );
     mercator.addVectorLayer(
         mapConfig,
+        "analyzedPlots",
+        mercator.plotsToVectorSource(plots.filter(plot => plot.partial && !plot.flagged)),
+        mercator.ceoMapStyles("overview", "lightBlue")
+    );
+    mercator.addVectorLayer(
+        mapConfig,
         "unanalyzedPlots",
-        mercator.plotsToVectorSource(plots.filter(plot => !plot.analyzed && !plot.flagged)),
+        mercator.plotsToVectorSource(plots.filter(plot => !plot.analyzed && !plot.flagged && !plot.partial)),
         mercator.ceoMapStyles("overview", "yellow")
     );
     return mapConfig;
