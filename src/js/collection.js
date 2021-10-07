@@ -1758,14 +1758,14 @@ class ProjectStats extends React.Component {
                                         </tr>
                                     ) : (
                                         <tr>
-                                            <td className="small pl-4">-- Total contributors</td>
+                                            <td className="small pl-4">-- Total Contributors</td>
                                             <td className="small">
                                                 {stats.userStats?.length}
                                             </td>
                                         </tr>
                                     )}
                                 <tr>
-                                    <td className="small pl-4">-- Users Average time</td>
+                                    <td className="small pl-4">-- Users Average Time</td>
                                     <td className="small">
                                         {aveTime > 0
                                             ? `${aveTime.toFixed(2)} secs`
