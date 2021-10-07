@@ -850,7 +850,7 @@ mercator.getCircleStyle = (radius, fillColor, border) =>
             fill: new Fill({color: fillColor || "rgba(255, 255, 255, 0)"}),
             stroke: new Stroke({
                 color: border || "black",
-                width: border ? 3 : 1
+                width: border ? 3 : 2
             })
         })
     });
