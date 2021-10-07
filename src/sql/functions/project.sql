@@ -205,12 +205,12 @@ CREATE OR REPLACE FUNCTION update_project_counts(_project_id integer)
     SET num_plots = plots,
         samples_per_plot = samples
     FROM (
-        SELECT COUNT(DISTINCT plot_uid) as plots,
+        SELECT COUNT(DISTINCT plot_uid) AS plots,
             (CASE WHEN COUNT(DISTINCT plot_uid) = 0 THEN
                 0
             ELSE
                 COUNT(sample_uid) / COUNT(DISTINCT plot_uid)
-            END) as samples
+            END) AS samples
         FROM project_plots
     ) a
     WHERE project_uid = _project_id
@@ -223,7 +223,7 @@ CREATE OR REPLACE FUNCTION set_boundary(_project_id integer, _m_buffer real)
 
     UPDATE projects SET boundary = b
     FROM (
-        SELECT ST_Envelope(ST_Buffer(ST_SetSRID(ST_Extent(plot_geom) , 4326)::geography , _m_buffer)::geometry) as b
+        SELECT ST_Envelope(ST_Buffer(ST_SetSRID(ST_Extent(plot_geom) , 4326)::geography , _m_buffer)::geometry) AS b
         FROM plots
         WHERE project_rid = _project_id
     ) bb
@@ -239,8 +239,8 @@ CREATE OR REPLACE FUNCTION copy_project_plots_samples(_old_project_id integer, _
         SELECT plot_geom,
             visible_id,
             extra_plot_info,
-            plot_uid as plid_old,
-            row_number() OVER(order by plot_uid) as rowid
+            plot_uid AS plid_old,
+            row_number() OVER(order by plot_uid) AS rowid
         FROM projects p
         INNER JOIN plots pl
             ON project_rid = project_uid
@@ -250,9 +250,9 @@ CREATE OR REPLACE FUNCTION copy_project_plots_samples(_old_project_id integer, _
             (project_rid, plot_geom, visible_id, extra_plot_info)
         SELECT _new_project_id, plot_geom, visible_id, extra_plot_info
         FROM project_plots
-        RETURNING plot_uid as plid
+        RETURNING plot_uid AS plid
     ), new_ordered AS (
-        SELECT plid, row_number() OVER(order by plid) as rowid FROM inserting
+        SELECT plid, row_number() OVER(order by plid) AS rowid FROM inserting
     ), combined AS (
         SELECT * from new_ordered inner join project_plots USING (rowid)
     ), inserting_samples AS (
@@ -464,7 +464,7 @@ CREATE OR REPLACE FUNCTION select_user_home_projects(_user_id integer)
         ST_AsGeoJSON(ST_Centroid(boundary)),
         num_plots,
         (CASE WHEN role_rid IS NULL THEN FALSE ELSE role_rid = 1 END) AS editable
-    FROM projects as p
+    FROM projects AS p
     LEFT JOIN institution_users iu
         ON user_rid = _user_id
         AND p.institution_rid = iu.institution_rid
@@ -506,7 +506,7 @@ CREATE OR REPLACE FUNCTION select_institution_projects(_user_id integer, _instit
         num_plots,
         privacy_level,
         (SELECT project_percent_complete(project_uid))
-    FROM projects as p
+    FROM projects AS p
     LEFT JOIN institution_users iu
         ON user_rid = _user_id
         AND p.institution_rid = iu.institution_rid
@@ -530,8 +530,8 @@ CREATE OR REPLACE FUNCTION select_institution_project_stats(_project_id integer)
  ) AS $$
 
     WITH users_count AS (
-        SELECT count(DISTINCT up.user_rid)::int as contributors,
-            count(DISTINCT pa.user_rid)::int as users_assigned
+        SELECT count(DISTINCT up.user_rid)::int AS contributors,
+            count(DISTINCT pa.user_rid)::int AS users_assigned
         FROM plots pl
         LEFT JOIN user_plots up
             ON up.plot_rid = plot_uid
@@ -540,25 +540,25 @@ CREATE OR REPLACE FUNCTION select_institution_project_stats(_project_id integer)
         WHERE project_rid = _project_id
     ), plot_sum AS (
         SELECT plot_uid,
-            coalesce(sum(flagged::int), 0) > 0 as flagged,
-            coalesce(count(user_plot_uid), 0) as analyzed,
-            coalesce(count(pa.user_rid), 0) as assigned,
-            greatest(coalesce(count(pa.user_rid), 0), 1) as needed
+            coalesce(sum(flagged::int), 0) > 0 AS flagged,
+            coalesce(count(user_plot_uid), 0) AS analyzed,
+            coalesce(count(pa.user_rid), 0) AS assigned,
+            greatest(coalesce(count(pa.user_rid), 0), 1) AS needed
         FROM users_count, plots pl
-        LEFT JOIN plot_assignments as pa
+        LEFT JOIN plot_assignments AS pa
             ON pa.plot_rid = pl.plot_uid
         LEFT JOIN user_plots up
             ON up.plot_rid = pl.plot_uid
             AND (pa.user_rid = up.user_rid OR (SELECT users_assigned FROM users_count) = 0)
         GROUP BY project_rid, plot_uid
         HAVING project_rid = _project_id
-    ), project_sum as (
-        SELECT count(*)::int as total_plots,
-            sum(ps.flagged::int)::int as flagged_plots,
-            sum((needed = analyzed)::int)::int as analyzed_plots,
-            sum((needed > analyzed and analyzed > 0)::int)::int as partial_plots,
-            sum((analyzed = 0)::int)::int as unanalyzed_plots,
-            sum(assigned)::int as plot_assignments
+    ), project_sum AS (
+        SELECT count(*)::int AS total_plots,
+            sum(ps.flagged::int)::int AS flagged_plots,
+            sum((needed = analyzed)::int)::int AS analyzed_plots,
+            sum((needed > analyzed and analyzed > 0)::int)::int AS partial_plots,
+            sum((analyzed = 0)::int)::int AS unanalyzed_plots,
+            sum(assigned)::int AS plot_assignments
         FROM plot_sum ps
     )
 
@@ -584,7 +584,7 @@ CREATE OR REPLACE FUNCTION select_institution_dash_projects(_user_id integer, _i
     SELECT project_uid,
         name,
         row_to_json((SELECT select_institution_project_stats(project_uid)))::jsonb
-    FROM projects as p
+    FROM projects AS p
     LEFT JOIN institution_users iu
         ON user_rid = _user_id
         AND p.institution_rid = iu.institution_rid
@@ -601,7 +601,7 @@ CREATE OR REPLACE FUNCTION select_template_projects(_user_id integer)
  ) AS $$
 
     SELECT project_uid, name
-    FROM projects as p
+    FROM projects AS p
     LEFT JOIN institution_users iu
         ON user_rid = _user_id
         AND p.institution_rid = iu.institution_rid
@@ -637,9 +637,9 @@ CREATE OR REPLACE FUNCTION select_project_statistics(_project_id integer)
     WITH user_plot_times AS (
         SELECT plot_uid,
             (CASE WHEN collection_time IS NULL OR collection_start IS NULL THEN 0
-                ELSE EXTRACT(EPOCH FROM (collection_time - collection_start)) END) as seconds,
-            (CASE WHEN collection_time IS NULL OR collection_start IS NULL THEN 0 ELSE 1 END) as timed,
-            u.email as email
+                ELSE EXTRACT(EPOCH FROM (collection_time - collection_start)) END) AS seconds,
+            (CASE WHEN collection_time IS NULL OR collection_start IS NULL THEN 0 ELSE 1 END) AS timed,
+            u.email AS email
         FROM plots pl
         INNER JOIN user_plots up
             ON up.plot_rid = plot_uid
@@ -648,42 +648,42 @@ CREATE OR REPLACE FUNCTION select_project_statistics(_project_id integer)
         WHERE project_rid = _project_id
     ), users_grouped AS (
         SELECT email,
-            SUM(seconds)::int as seconds,
-            COUNT(plot_uid) as plots,
-            SUM(timed):: int as timed_plots
+            SUM(seconds)::int AS seconds,
+            COUNT(plot_uid) AS plots,
+            SUM(timed):: int AS timed_plots
         FROM user_plot_times
         GROUP BY email
         ORDER BY email DESC
-    ), user_agg as (
-        SELECT format('[%s]', string_agg(row_to_json(ug)::text, ','))::jsonb as user_stats
+    ), user_agg AS (
+        SELECT format('[%s]', string_agg(row_to_json(ug)::text, ','))::jsonb AS user_stats
         FROM users_grouped ug
     ), users_count AS (
-        SELECT count(DISTINCT pa.user_rid)::int as users_assigned
+        SELECT count(DISTINCT pa.user_rid)::int AS users_assigned
         FROM plots pl
         LEFT JOIN plot_assignments pa
             ON pa.plot_rid = plot_uid
         WHERE project_rid = _project_id
     ), plot_sum AS (
         SELECT plot_uid,
-            coalesce(sum(flagged::int), 0) > 0 as flagged,
-            coalesce(count(user_plot_uid), 0) as analyzed,
-            coalesce(count(pa.user_rid), 0) as assigned,
-            greatest(coalesce(count(pa.user_rid), 0), 1) as needed
+            coalesce(sum(flagged::int), 0) > 0 AS flagged,
+            coalesce(count(user_plot_uid), 0) AS analyzed,
+            coalesce(count(pa.user_rid), 0) AS assigned,
+            greatest(coalesce(count(pa.user_rid), 0), 1) AS needed
         FROM users_count, plots pl
-        LEFT JOIN plot_assignments as pa
+        LEFT JOIN plot_assignments AS pa
             ON pa.plot_rid = pl.plot_uid
         LEFT JOIN user_plots up
             ON up.plot_rid = pl.plot_uid
             AND (pa.user_rid = up.user_rid OR (SELECT users_assigned FROM users_count) = 0)
         GROUP BY plot_uid
         HAVING project_rid = _project_id
-    ), project_sum as (
-        SELECT count(*)::int as total_plots,
-            sum(ps.flagged::int)::int as flagged_plots,
-            sum((needed = analyzed)::int)::int as analyzed_plots,
-            sum((needed > analyzed and analyzed > 0)::int)::int as partial_plots,
-            sum((analyzed = 0)::int)::int as unanalyzed_plots,
-            sum(assigned)::int as plot_assignments
+    ), project_sum AS (
+        SELECT count(*)::int AS total_plots,
+            sum(ps.flagged::int)::int AS flagged_plots,
+            sum((needed = analyzed)::int)::int AS analyzed_plots,
+            sum((needed > analyzed and analyzed > 0)::int)::int AS partial_plots,
+            sum((analyzed = 0)::int)::int AS unanalyzed_plots,
+            sum(assigned)::int AS plot_assignments
         FROM plot_sum ps
     )
 
@@ -700,6 +700,71 @@ CREATE OR REPLACE FUNCTION select_project_statistics(_project_id integer)
         user_stats
     FROM projects, project_sum, users_count, user_agg
     WHERE project_uid = _project_id
+
+$$ LANGUAGE SQL;
+
+-- Returns project user statistics for collection page
+CREATE OR REPLACE FUNCTION select_project_user_stats(_project_id integer, _user_id integer)
+ RETURNS table (
+    total_plots       integer,
+    flagged_plots     integer,
+    analyzed_plots    integer,
+    user_assigned     integer,
+    user_stats        jsonb
+ ) AS $$
+
+    WITH user_plot_times AS (
+        SELECT plot_uid,
+            (CASE WHEN collection_time IS NULL OR collection_start IS NULL THEN 0
+                ELSE EXTRACT(EPOCH FROM (collection_time - collection_start)) END) AS seconds,
+            (CASE WHEN collection_time IS NULL OR collection_start IS NULL THEN 0 ELSE 1 END) AS timed,
+            u.email AS email
+        FROM plots pl
+        INNER JOIN user_plots up
+            ON up.plot_rid = plot_uid
+        INNER JOIN users u
+            ON up.user_rid = user_uid
+        WHERE project_rid = _project_id
+            AND user_rid = _user_id
+    ), user_stats AS (
+        SELECT jsonb_build_object(
+            'seconds', SUM(seconds)::int,
+            'plots', COUNT(plot_uid),
+            'timed_plots', SUM(timed):: int
+        ) as user_stats
+        FROM user_plot_times
+    ), user_count AS (
+        SELECT count(pa.user_rid)::int AS user_assigned
+        FROM plots pl
+        LEFT JOIN plot_assignments pa
+            ON pa.plot_rid = plot_uid
+        WHERE project_rid = _project_id
+            AND pa.user_rid = _user_id
+    ), plot_sum AS (
+        SELECT plot_uid,
+            coalesce(flagged, false) as flagged,
+            user_plot_uid IS NOT NULL AS analyzed
+        FROM plots pl
+        LEFT JOIN plot_assignments AS pa
+            ON pa.plot_rid = pl.plot_uid
+            AND pa.user_rid = _user_id
+        LEFT JOIN user_plots up
+            ON up.plot_rid = pl.plot_uid
+            AND up.user_rid = _user_id
+        WHERE project_rid = _project_id
+    ), project_sum AS (
+        SELECT count(*)::int as total_plots,
+            sum(flagged::int)::int AS flagged_plots,
+            sum(analyzed::int)::int AS analyzed_plots
+        FROM plot_sum
+    )
+
+    SELECT total_plots,
+        flagged_plots,
+        analyzed_plots,
+        user_assigned,
+        user_stats
+    FROM project_sum, user_stats, user_count
 
 $$ LANGUAGE SQL;
 

@@ -87,6 +87,7 @@
    [:get  "/get-home-projects"]              {:handler     projects/get-home-projects}
    [:get  "/get-institution-projects"]       {:handler     projects/get-institution-projects}
    [:get  "/get-institution-dash-projects"]  {:handler     projects/get-institution-dash-projects}
+   [:get  "/get-project-user-stats"]         {:handler     projects/get-project-user-stats}
    [:get  "/get-project-by-id"]              {:handler     projects/get-project-by-id}
    [:get  "/get-template-projects"]          {:handler     projects/get-template-projects}
    [:get  "/get-template-by-id"]             {:handler     projects/get-template-by-id}

@@ -906,6 +906,7 @@ class Collection extends React.Component {
                 <SideBar
                     answerMode={this.state.answerMode}
                     currentPlot={this.state.currentPlot}
+                    inReviewMode={this.state.inReviewMode}
                     isProjectAdmin={this.state.currentProject.isProjectAdmin}
                     postValuesToDB={this.postValuesToDB}
                     projectId={this.props.projectId}
@@ -1082,6 +1083,7 @@ class SideBar extends React.Component {
                 style={{overflowY: "scroll", overflowX: "hidden"}}
             >
                 <ProjectTitle
+                    inReviewMode={this.props.inReviewMode}
                     projectId={this.props.projectId}
                     projectName={this.props.projectName || ""}
                     userName={this.props.userName}
@@ -1516,7 +1518,7 @@ class ProjectTitle extends React.Component {
     }
 
     render() {
-        const {props} = this;
+        const {projectName, inReviewMode, projectId, userName} = this.props;
         return (
             <div
                 onClick={() => this.setState({showStats: !this.state.showStats})}
@@ -1525,16 +1527,125 @@ class ProjectTitle extends React.Component {
                 <h2
                     className="header overflow-hidden text-truncate"
                     style={{height: "100%", marginBottom: "0"}}
-                    title={props.projectName}
+                    title={projectName}
                 >
-                    <UnicodeIcon icon="downCaret"/>{" " + props.projectName}
+                    <UnicodeIcon icon="downCaret"/>{" " + projectName}
                 </h2>
-                {this.state.showStats && (
-                    <ProjectStats
-                        projectId={this.props.projectId}
-                        userName={this.props.userName}
-                    />
+                {this.state.showStats && (inReviewMode
+                    ? (
+                        <ProjectStats
+                            projectId={projectId}
+                            userName={userName}
+                        />
+                    ) : (
+                        <UserProjectStats
+                            projectId={projectId}
+                            userName={userName}
+                        />
+                    )
+
                 )}
+            </div>
+        );
+    }
+}
+
+class UserProjectStats extends React.Component {
+    constructor(props) {
+        super(props);
+        this.state = {
+            stats: {}
+        };
+    }
+
+    componentDidMount() {
+        this.getProjectStats();
+    }
+
+    getProjectStats() {
+        fetch(`/get-project-user-stats?projectId=${this.props.projectId}`)
+            .then(response => (response.ok ? response.json() : Promise.reject(response)))
+            .then(data => this.setState({stats: data}))
+            .catch(response => {
+                console.error(response);
+                alert("Error getting project stats. See console for details.");
+            });
+    }
+
+    renderPercent = (val, total) => (
+        <span>
+            {`${val} (${asPercentage(val, total)}%)`}
+        </span>
+    );
+
+    render() {
+        const {stats} = this.state;
+        const aveTime = stats.userStats?.timedPlots > 0
+            ? (stats.userStats?.seconds
+                / stats.userStats?.timedPlots
+                / 1.0)
+            : 0;
+        const numPlots = stats.userAssigned > 0 ? stats.userAssigned : stats.totalPlots;
+
+        return (
+            <div
+                className="row"
+                style={{
+                    backgroundColor: "#f1f1f1",
+                    boxShadow: "0px 8px 16px 0px rgba(0,0,0,0.2)",
+                    cursor: "default",
+                    marginLeft: "2rem",
+                    overflow: "auto",
+                    position: "absolute",
+                    zIndex: "10"
+                }}
+            >
+                <div className="col-lg-12">
+                    <fieldset className="projNoStats" id="projStats">
+                        <table className="table table-sm">
+                            <tbody>
+                                <tr>
+                                    <td className="small pl-4">My Plots Completed</td>
+                                </tr>
+                                <tr>
+                                    <td className="small pl-4">-- {stats.userAssigned > 0
+                                        ? "Assigned to Me" : "Total Project Plots"}
+                                    </td>
+                                    <td className="small">
+                                        {numPlots}
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td className="small pl-4">-- Analyzed</td>
+                                    <td className="small">
+                                        {this.renderPercent(stats.analyzedPlots, numPlots)}
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td className="small pl-4">-- Unanalyzed</td>
+                                    <td className="small">
+                                        {this.renderPercent(numPlots - stats.analyzedPlots, numPlots)}
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td className="small pl-4">-- Flagged</td>
+                                    <td className="small">
+                                        {this.renderPercent(stats.flaggedPlots, numPlots)}
+                                    </td>
+                                </tr>
+
+                                <tr>
+                                    <td className="small pl-4">-- My Average Time</td>
+                                    <td className="small">
+                                        {aveTime > 0
+                                            ? `${aveTime.toFixed(2)} secs`
+                                            : "untimed"}
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </fieldset>
+                </div>
             </div>
         );
     }
@@ -1557,15 +1668,26 @@ class ProjectStats extends React.Component {
             .then(response => (response.ok ? response.json() : Promise.reject(response)))
             .then(data => this.setState({stats: data}))
             .catch(response => {
-                console.log(response);
+                console.error(response);
                 alert("Error getting project stats. See console for details.");
             });
     }
 
+    renderPercent = (val, total) => (
+        <span>
+            {`${val} (${asPercentage(val, total)}%)`}
+        </span>
+    );
+
     render() {
         const {stats} = this.state;
-        const userStats = stats.userStats && stats.userStats.find(user => user.user === this.props.userName);
-        const numPlots = stats.flaggedPlots + stats.analyzedPlots + stats.unanalyzedPlots;
+        const numTimedPlots = stats.userStats ? stats.userStats.reduce((p, c) => p + c.timedPlots, 0) : 0;
+        const aveTime = numTimedPlots > 0
+            ? (stats.userStats.reduce((p, c) => p + c.seconds, 0)
+                / stats.userStats.reduce((p, c) => p + c.timedPlots, 0)
+                / 1.0)
+            : 0;
+
         return (
             <div
                 className="row"
@@ -1584,62 +1706,70 @@ class ProjectStats extends React.Component {
                         <table className="table table-sm">
                             <tbody>
                                 <tr>
-                                    <td className="small pl-4">My Plots Completed</td>
-                                    <td className="small">
-                                        {(userStats && userStats.plots) || "0"}
-                                        ({asPercentage((userStats && userStats.plots) || 0, numPlots)}%)
-                                    </td>
+                                    <td className="small pl-4">Project Plots</td>
                                 </tr>
                                 <tr>
-                                    <td className="small pl-4">-- My Average Time</td>
+                                    <td className="small pl-4">-- Total</td>
                                     <td className="small">
-                                        {userStats && userStats.timedPlots
-                                            ? `${(userStats.seconds / userStats.timedPlots / 1.0).toFixed(2)} secs`
-                                            : "untimed"}
+                                        {stats.totalPlots}
                                     </td>
                                 </tr>
-                                <tr>
-                                    <td className="small pl-4">Project Plots Completed</td>
-                                    <td className="small">
-                                        {stats.analyzedPlots + stats.flaggedPlots || ""}
-                                        ({asPercentage(stats.analyzedPlots + stats.flaggedPlots, numPlots)}%)
-                                    </td>
-                                </tr>
+                                {stats.plotAssignments > 0 && (
+                                    <tr>
+                                        <td className="small pl-4">-- Plot Assignments</td>
+                                        <td className="small">
+                                            {stats.plotAssignments}
+                                        </td>
+                                    </tr>
+                                )}
                                 <tr>
                                     <td className="small pl-4">-- Analyzed</td>
                                     <td className="small">
-                                        {stats.analyzedPlots || ""}
-                                        ({asPercentage(stats.analyzedPlots, numPlots)}%)
+                                        {this.renderPercent(stats.analyzedPlots, stats.totalPlots)}
+                                    </td>
+                                </tr>
+                                {stats.plotAssignments > 0 && (
+                                    <tr>
+                                        <td className="small pl-4">-- Partial</td>
+                                        <td className="small">
+                                            {this.renderPercent(stats.partialPlots, stats.totalPlots)}
+                                        </td>
+                                    </tr>
+                                )}
+                                <tr>
+                                    <td className="small pl-4">-- Unanalyzed</td>
+                                    <td className="small">
+                                        {this.renderPercent(stats.unanalyzedPlots, stats.totalPlots)}
                                     </td>
                                 </tr>
                                 <tr>
                                     <td className="small pl-4">-- Flagged</td>
                                     <td className="small">
-                                        {stats.flaggedPlots || ""}
-                                        ({asPercentage(stats.flaggedPlots, numPlots)}%)
+                                        {this.renderPercent(stats.flaggedPlots, stats.totalPlots)}
                                     </td>
                                 </tr>
-                                <tr>
-                                    <td className="small pl-4">-- Total contributors</td>
-                                    <td className="small">
-                                        {stats.userStats ? stats.userStats.length : 0}
-                                    </td>
-                                </tr>
+                                {stats.usersAssigned > 0
+                                    ? (
+                                        <tr>
+                                            <td className="small pl-4">-- Users Assigned</td>
+                                            <td className="small">
+                                                {stats.usersAssigned}
+                                            </td>
+                                        </tr>
+                                    ) : (
+                                        <tr>
+                                            <td className="small pl-4">-- Total contributors</td>
+                                            <td className="small">
+                                                {stats.userStats?.length}
+                                            </td>
+                                        </tr>
+                                    )}
                                 <tr>
                                     <td className="small pl-4">-- Users Average time</td>
                                     <td className="small">
-                                        {stats.userStats
-                                            && stats.userStats.reduce((p, c) => p + c.timedPlots, 0) > 0
-                                            ? `${(stats.userStats.reduce((p, c) => p + c.seconds, 0)
-                                                    / stats.userStats.reduce((p, c) => p + c.timedPlots, 0)
-                                                    / 1.0).toFixed(2)} secs`
+                                        {aveTime > 0
+                                            ? `${aveTime.toFixed(2)} secs`
                                             : "untimed"}
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td className="small pl-4">Project Plots Total</td>
-                                    <td className="small">
-                                        {numPlots || ""}
                                     </td>
                                 </tr>
                             </tbody>
