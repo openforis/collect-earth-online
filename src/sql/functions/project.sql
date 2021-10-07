@@ -834,6 +834,76 @@ CREATE OR REPLACE FUNCTION dump_project_plot_data(_project_id integer)
 
 $$ LANGUAGE SQL;
 
+-- Returns project aggregate QA/QC data
+CREATE OR REPLACE FUNCTION dump_project_plot_qaqc_data(_project_id integer)
+ RETURNS table (
+    plot_id                    integer,
+    center_lon                 double precision,
+    center_lat                 double precision,
+    size_m                     text,
+    shape                      real,
+    email                      text,
+    flagged                    boolean,
+    flagged_reason             text,
+    confidence                 integer,
+    collection_time            timestamp,
+    analysis_duration          numeric,
+    samples                    text,
+    common_securewatch_date    text,
+    total_securewatch_dates    integer,
+    extra_plot_info            jsonb
+ ) AS $$
+
+    WITH assigned_count AS (
+        SELECT pa.plot_rid AS plot_rid, count(pa.user_rid) users
+        FROM plots, plot_assignments pa
+        WHERE project_rid = _project_id
+            AND plot_uid = pa.plot_rid
+        GROUP BY pa.plot_rid
+    )
+
+    SELECT plot_uid,
+        ST_X(ST_Centroid(plot_geom)) AS lon,
+        ST_Y(ST_Centroid(plot_geom)) AS lat,
+        plot_shape,
+        plot_size,
+        email,
+        flagged,
+        flagged_reason,
+        confidence,
+        collection_time,
+        ROUND(EXTRACT(EPOCH FROM (collection_time - collection_start))::numeric, 1) AS analysis_duration,
+        FORMAT('[%s]', STRING_AGG(
+            (CASE WHEN saved_answers IS NULL THEN
+                FORMAT('{"%s":"%s"}', 'id', sample_uid)
+            ELSE
+                FORMAT('{"%s":"%s", "%s":%s}', 'id', sample_uid, 'saved_answers', saved_answers)
+            END),', '
+        )) AS samples,
+        MODE() WITHIN GROUP (ORDER BY imagery_attributes->>'imagerySecureWatchDate') AS common_securewatch_date,
+        COUNT(DISTINCT(imagery_attributes->>'imagerySecureWatchDate'))::int AS total_securewatch_dates,
+        extra_plot_info
+    FROM projects p
+    INNER JOIN plots pl
+        ON project_uid = pl.project_rid
+    INNER JOIN assigned_count ac
+        ON pl.plot_uid = ac.plot_rid
+    INNER JOIN samples s
+        ON s.plot_rid = pl.plot_uid
+    LEFT JOIN user_plots up
+        ON up.plot_rid = pl.plot_uid
+    LEFT JOIN sample_values sv
+        ON sv.sample_rid = s.sample_uid
+        AND user_plot_uid = sv.user_plot_rid
+    LEFT JOIN users u
+        ON u.user_uid = up.user_rid
+    WHERE project_rid = _project_id
+        AND ac.users > 1
+    GROUP BY project_uid, plot_uid, user_plot_uid, email, extra_plot_info
+    ORDER BY plot_uid
+
+$$ LANGUAGE SQL;
+
 -- Returns project raw data
 CREATE OR REPLACE FUNCTION dump_project_sample_data(_project_id integer)
  RETURNS table (
