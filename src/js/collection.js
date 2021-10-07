@@ -909,7 +909,6 @@ class Collection extends React.Component {
                 <SideBar
                     answerMode={this.state.answerMode}
                     currentPlot={this.state.currentPlot}
-                    isProjectAdmin={this.state.currentProject.isProjectAdmin}
                     inReviewMode={this.state.inReviewMode}
                     postValuesToDB={this.postValuesToDB}
                     projectId={this.props.projectId}
@@ -1030,7 +1029,7 @@ function ImageAnalysisPane({imageryAttribution}) {
 
 class SideBar extends React.Component {
     checkCanSave = () => {
-        const {answerMode, currentPlot, isProjectAdmin, inReviewMode, surveyQuestions} = this.props;
+        const {answerMode, currentPlot, inReviewMode, surveyQuestions} = this.props;
         const noneAnswered = surveyQuestions.every(sq => safeLength(sq.answered) === 0);
         const hasSamples = safeLength(currentPlot.samples) > 0;
         const allAnswered = surveyQuestions.every(sq => safeLength(sq.visible) === safeLength(sq.answered));
