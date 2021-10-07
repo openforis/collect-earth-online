@@ -33,11 +33,7 @@
 (defn get-project-plots [{:keys [params]}]
   (let [project-id (tc/val->int (:projectId params))
         max-plots  (tc/val->int (:max params) 100000)] ; 100000 loads in ~1.5 seconds.
-    (data-response (mapv (fn [{:keys [plot_id center flagged analyzed]}]
-                           {:id       plot_id
-                            :center   center
-                            :flagged  flagged
-                            :analyzed analyzed})
+    (data-response (mapv #(set/rename-keys % {:plot_id :id})
                          (call-sql "select_limited_project_plots" project-id max-plots)))))
 
 (defn get-plotters

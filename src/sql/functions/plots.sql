@@ -5,25 +5,54 @@
 --  PLOT FUNCTIONS
 --
 
+CREATE OR REPLACE FUNCTION project_has_assigned(_project_id integer)
+ RETURNS boolean AS $$
+
+    SELECT count(*) > 0
+    FROM plots, plot_assignments
+    WHERE project_rid = _project_id
+        AND plot_uid = plot_rid
+
+$$ LANGUAGE SQL;
+
 -- Select plots but only return a maximum number
 -- TODO, CEO-32 update to only show users available plots
 CREATE OR REPLACE FUNCTION select_limited_project_plots(_project_id integer, _maximum integer)
  RETURNS table (
-    plot_id     integer,
-    center      text,
-    flagged     boolean,
-    analyzed    boolean
+    plot_id    integer,
+    center     text,
+    flagged    boolean,
+    status     text
  ) AS $$
 
+    WITH plot_sums AS (
+        SELECT plot_uid,
+            ST_AsGeoJSON(ST_Centroid(plot_geom)) AS center,
+            sum(coalesce(flagged, false)::int) > 0 AS flagged,
+            sum((pa.user_rid IS NOT NULL)::int) AS assigned,
+            sum((up.user_rid IS NOT NULL)::int) AS collected
+        FROM plots pl
+        LEFT JOIN plot_assignments AS pa
+                ON pa.plot_rid = pl.plot_uid
+        LEFT JOIN user_plots up
+            ON up.plot_rid = pl.plot_uid
+            AND (pa.user_rid = up.user_rid OR NOT (project_has_assigned(_project_id)))
+        GROUP BY plot_uid
+        HAVING project_rid = _project_id
+        LIMIT _maximum
+    )
+
     SELECT plot_uid,
-        ST_AsGeoJSON(ST_Centroid(plot_geom)) as center,
-        CASE WHEN flagged IS NULL THEN FALSE ELSE flagged END,
-        CASE WHEN user_plot_uid IS NULL THEN FALSE ELSE TRUE END
-    FROM plots
-    LEFT JOIN user_plots
-        ON plot_uid = plot_rid
-    WHERE project_rid = _project_id
-    LIMIT _maximum;
+        center,
+        flagged,
+        CASE WHEN (assigned = 0 AND collected = 1) OR (assigned = collected)
+            THEN 'analyzed'
+        WHEN assigned > collected AND collected > 1
+            THEN 'partial'
+        ELSE
+            'unanalyzed'
+        END
+    FROM plot_sums
 
 $$ LANGUAGE SQL;
 
@@ -77,13 +106,6 @@ CREATE TYPE collection_return AS (
 CREATE OR REPLACE FUNCTION select_unanalyzed_plots(_project_id integer, _user_id integer, _review_mode boolean)
  RETURNS setOf collection_return AS $$
 
-    WITH assigned_count AS (
-        SELECT count(*)
-        FROM plots, plot_assignments
-        WHERE project_rid = _project_id
-            AND plot_uid = plot_rid
-    )
-
     SELECT plot_uid,
         flagged,
         flagged_reason,
@@ -98,7 +120,7 @@ CREATE OR REPLACE FUNCTION select_unanalyzed_plots(_project_id integer, _user_id
         ON plot_uid = pa.plot_rid
     LEFT JOIN user_plots up
         ON plot_uid = up.plot_rid
-        AND (pa.user_rid = up.user_rid OR (SELECT count(*) FROM assigned_count) = 0)
+        AND (pa.user_rid = up.user_rid OR NOT (project_has_assigned(_project_id)))
     LEFT JOIN plot_locks pl
         ON plot_uid = pl.plot_rid
     LEFT JOIN users u
@@ -193,7 +215,7 @@ CREATE OR REPLACE FUNCTION select_qaqc_plots(_project_id integer)
  RETURNS setOf collection_return AS $$
 
     WITH assigned_count AS (
-        SELECT pa.plot_rid plot_rid, count(pa.user_rid) users
+        SELECT pa.plot_rid AS plot_rid, count(pa.user_rid) users
         FROM plots, plot_assignments pa
         WHERE project_rid = _project_id
             AND plot_uid = pa.plot_rid
@@ -280,20 +302,20 @@ CREATE OR REPLACE FUNCTION select_plot_samples(_plot_id integer, _user_id intege
  ) AS $$
 
     WITH assigned_count AS (
-        SELECT count(*)
+        SELECT count(*) as user_count
         FROM plot_assignments
         WHERE plot_rid = _plot_id
     )
 
     SELECT sample_uid,
-        ST_AsGeoJSON(sample_geom) as sample_geom,
+        ST_AsGeoJSON(sample_geom) AS sample_geom,
         (CASE WHEN sv.saved_answers IS NULL THEN '{}' ELSE sv.saved_answers END)
     FROM samples s
     LEFT JOIN plot_assignments pa
         ON s.plot_rid = pa.plot_rid
     LEFT JOIN user_plots up
         ON s.plot_rid = up.plot_rid
-        AND (pa.user_rid = up.user_rid or (select count from assigned_count) = 0)
+        AND (pa.user_rid = up.user_rid OR (SELECT user_count FROM assigned_count) = 0)
     LEFT JOIN sample_values sv
         ON sample_uid = sv.sample_rid
         AND user_plot_uid = sv.user_plot_rid

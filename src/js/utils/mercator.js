@@ -843,14 +843,14 @@ mercator.getClusterStyle = (radius, fillColor, borderColor, borderWidth, text) =
 
 // [Pure] Returns a style object that displays a solid point with
 // the specified radius and fillColor.
-mercator.getCircleStyle = (radius, fillColor) =>
+mercator.getCircleStyle = (radius, fillColor, border) =>
     new Style({
         image: new CircleStyle({
             radius,
             fill: new Fill({color: fillColor || "rgba(255, 255, 255, 0)"}),
             stroke: new Stroke({
-                color: "black",
-                width: 1
+                color: border || "black",
+                width: border ? 3 : 1
             })
         })
     });
@@ -878,8 +878,9 @@ mercator.getGeomStyle = (lineColor, lineWidth, pointColor, pointRadius, pointFil
 
 const ceoMapPresets = {
     black: "#000000",
-    blue: "#23238b",
+    blue: "#2c7fb8",
     green: "green",
+    lightBlue: "#7fcdbb",
     orange: "#ffcc33",
     red: "#8b2323",
     white: "#ffffff",
@@ -890,7 +891,7 @@ const ceoMapStyleFunctions = {
     geom: color => mercator.getGeomStyle(color, 4, color, 6),
     answered: color => mercator.getGeomStyle(color, 6, color, 6, color),
     draw: color => mercator.getGeomStyle(color, 4, color, 6, null, "rgba(255, 255, 255, 0.2)"),
-    overview: color => mercator.getCircleStyle(5, color),
+    overview: ({color, border}) => mercator.getCircleStyle(6, color, border),
     cluster: numPlots => mercator.getClusterStyle(10, "#3399cc", "#ffffff", 1, numPlots)
 };
 
@@ -989,27 +990,50 @@ mercator.plotsToVectorSource = plots =>
         }))
     });
 
-// [Side Effects] Adds three vector layers to the mapConfig's map object:
-// "flaggedPlots" in red, "analyzedPlots" in green, and "unanalyzedPlots" in yellow.
+// [Side Effects] Adds vector layers to the mapConfig's map based on plot
+// status and gives the flagged plots a red border.
 mercator.addPlotOverviewLayers = (mapConfig, plots) => {
-    mercator.addVectorLayer(
-        mapConfig,
-        "flaggedPlots",
-        mercator.plotsToVectorSource(plots.filter(plot => plot.flagged)),
-        mercator.ceoMapStyles("overview", "red")
-    );
-    mercator.addVectorLayer(
-        mapConfig,
-        "analyzedPlots",
-        mercator.plotsToVectorSource(plots.filter(plot => plot.analyzed && !plot.flagged)),
-        mercator.ceoMapStyles("overview", "green")
-    );
-    mercator.addVectorLayer(
-        mapConfig,
-        "unanalyzedPlots",
-        mercator.plotsToVectorSource(plots.filter(plot => !plot.analyzed && !plot.flagged)),
-        mercator.ceoMapStyles("overview", "yellow")
-    );
+    const notFlagged = plots.filter(p => !p.flagged);
+    const flagged = plots.filter(p => p.flagged);
+
+    const layers = [
+        {
+            id: "analyzed",
+            layerPlots: notFlagged.filter(plot => plot.status === "analyzed"),
+            color: "blue"
+        },
+        {
+            id: "partial",
+            layerPlots: notFlagged.filter(plot => plot.status === "partial"),
+            color: "lightBlue"
+        },
+        {
+            id: "unanalyzed",
+            layerPlots: notFlagged.filter(plot => plot.status === "unanalyzed"),
+            color: "yellow"
+        },
+        {
+            id: "flaggedAnalyzed",
+            layerPlots: flagged.filter(plot => plot.status === "analyzed"),
+            color: "blue",
+            border: "red"
+        },
+        {
+            id: "flaggedPartial",
+            layerPlots: flagged.filter(plot => plot.status === "partial"),
+            color: "lightBlue",
+            border: "red"
+        }
+    ];
+
+    layers.forEach(({id, layerPlots, color, border}) =>
+        mercator.addVectorLayer(
+            mapConfig,
+            id,
+            mercator.plotsToVectorSource(layerPlots),
+            mercator.ceoMapStyles("overview", {color, border})
+        ));
+
     return mapConfig;
 };
 
