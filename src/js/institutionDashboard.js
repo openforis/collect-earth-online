@@ -55,7 +55,7 @@ class InstitutionDashboard extends React.Component {
                             <tr >
                                 <th style={{paddingRight: "1rem", whiteSpace: "nowrap"}}>Project Id</th>
                                 <th style={{paddingRight: "1rem", whiteSpace: "nowrap"}}>Project Name</th>
-                                <th style={{textAlign: "center", paddingRight: "1rem"}}>Assigned Users</th>
+                                <th style={{textAlign: "center", paddingRight: "1rem"}}>Users Assigned</th>
                                 <th style={{textAlign: "center", paddingRight: "1rem"}}>Contributors</th>
                                 <th style={{textAlign: "center", paddingRight: "1rem"}}>Total Plots</th>
                                 <th style={{textAlign: "center", paddingRight: "1rem"}}>Plot Assignments</th>
@@ -70,7 +70,7 @@ class InstitutionDashboard extends React.Component {
                                 <tr key={id}>
                                     <td>{id}</td>
                                     <td style={{minWidth: "15rem"}}>{name}</td>
-                                    <td style={{textAlign: "center"}}>{stats.assignedUsers}</td>
+                                    <td style={{textAlign: "center"}}>{stats.usersAssigned}</td>
                                     <td style={{textAlign: "center"}}>{stats.contributors}</td>
                                     <td style={{textAlign: "center"}}>{stats.totalPlots}</td>
                                     <td style={{textAlign: "center"}}>{stats.plotAssignments}</td>
