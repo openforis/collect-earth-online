@@ -1018,9 +1018,9 @@ function Project({project, isAdmin, deleteProject}) {
                 </div>
             </div>
             <div className="col overflow-hidden">
-                <button
+                <a
                     className="btn btn-sm btn-outline-lightgreen btn-block text-truncate"
-                    onClick={() => window.location.assign(`/collection?projectId=${project.id}`)}
+                    href={`/collection?projectId=${project.id}`}
                     style={{
                         boxShadow: project.percentComplete === 0.0
                             ? "0px 0px 6px 1px red inset"
@@ -1028,11 +1028,9 @@ function Project({project, isAdmin, deleteProject}) {
                                 ? "0px 0px 6px 2px #3bb9d6 inset"
                                 : "0px 0px 6px 1px yellow inset"
                     }}
-                    title={project.name}
-                    type="button"
                 >
                     {project.name}
-                </button>
+                </a>
             </div>
             {isAdmin
                 && (
