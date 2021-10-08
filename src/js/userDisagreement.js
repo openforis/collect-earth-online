@@ -39,8 +39,26 @@ class UserDisagreement extends React.Component {
 
     findByKey = (array, keyId, matchVal) => array.find(e => e[keyId] === matchVal);
 
-    renderUser = (user, answers) => {
-        const {plotters} = this.state;
+    renderAnswers = (userAnswers, answers) => (
+        <div style={{display: "flex", flexDirection: "column", alignItems: "flex-start"}}>
+            {Object.keys(userAnswers).map(a => {
+                const answer = this.findByKey(answers, "id", parseInt(a));
+                return (
+                    <div key={a} className="d-flex">
+                        <div
+                            className="circle mt-1 mr-3"
+                            style={{backgroundColor: answer?.color, border: "solid 1px"}}
+                        />
+                        {`${answer?.answer} - ${userAnswers[a]}`}
+                    </div>
+                );
+            })}
+        </div>
+    );
+
+    renderUser = (user, userPlotInfo, answers) => {
+        const plotInfo = this.findByKey(userPlotInfo, "userId", user.userId);
+        const answered = Object.keys(plotInfo?.answers || {}).length > 0;
         return (
             <div
                 key={user.userId}
@@ -49,45 +67,50 @@ class UserDisagreement extends React.Component {
                     borderRadius: "6px",
                     boxShadow: "0 0 2px 1px rgba(0, 0, 0, 0.2)",
                     display: "flex",
-                    margin: ".5rem",
-                    padding: ".5rem"
+                    flexDirection: "column",
+                    padding: ".25rem",
+                    alignItems: "center"
                 }}
             >
-                <label>{this.findByKey(plotters, "userId", user.userId)?.email}</label>
-                <ul>
-                    {Object.keys(user.answers).length > 0
-                        ? (Object.keys(user.answers).map(a => {
-                            const answer = this.findByKey(answers, "id", parseInt(a));
-                            return (
-                                <div key={a} className="d-flex">
-                                    <div
-                                        className="circle mt-1 mr-3"
-                                        style={{backgroundColor: answer?.color, border: "solid 1px"}}
-                                    />
-                                    {`${answer?.answer} - ${user.answers[a]}`}
-                                </div>
-                            );
-                        })) : (
-                            "This user did not answer"
-                        )}
-                </ul>
+                <div style={{display: "flex", alignItems: "center", width: "100%", padding: ".5rem"}}>
+                    {/* TODO, dynamically size this based on the longest email */}
+                    <span style={{width: "40%"}}>{user.email}</span>
+                    {plotInfo?.flagged
+                        ? (
+                            "This user flagged the plot"
+                        ) : answered
+                            ? (this.renderAnswers(plotInfo.answers, answers)) : (
+                                "This user did not answer"
+                            )}
+                </div>
+                {plotInfo?.confidence && answered && (
+                    <div>Confidence: {plotInfo.confidence}</div>
+                )}
             </div>
         );
     };
 
     renderQuestion = (thisQuestion, questions, level) => {
-        const {id, question, answers, disagreement, answerFrequencies} = thisQuestion;
-        const children = questions.filter(q => q.parentQuestion === id);
+        const {plotters} = this.state;
         const {threshold} = this.props;
-
+        const {id, question, answers, disagreement, userPlotInfo} = thisQuestion;
+        const children = questions.filter(q => q.parentQuestion === id);
         return (
             <>
                 <CollapsibleSectionBlock
                     showContent={disagreement >= threshold}
-                    title={`${disagreement < 0 ? "N/A" : disagreement + "%"} - ${question}`}
+                    title={`${disagreement < 0 ? "N/A" : disagreement.toFixed(1) + "%"} - ${question}`}
                 >
-                    <div style={{display: "flex", flexWrap: "wrap", padding: "0 .5rem"}}>
-                        {answerFrequencies.map(as => this.renderUser(as, answers))}
+                    <div
+                        style={{
+                            background: "white",
+                            display: "flex",
+                            flexDirection: "column",
+                            gap: ".5rem",
+                            padding: "1rem"
+                        }}
+                    >
+                        {plotters.map(user => this.renderUser(user, userPlotInfo, answers))}
                     </div>
                 </CollapsibleSectionBlock>
                 {children.length > 0 && children.map(q => this.renderQuestion(q, questions, level + 1))}
