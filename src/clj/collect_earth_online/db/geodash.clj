@@ -4,7 +4,7 @@
             [clj-http.client :as client]
             [triangulum.database :refer [call-sql]]
             [triangulum.type-conversion :as tc]
-            [triangulum.utils :refer [data-response]]))
+            [collect-earth-online.views :refer [data-response]]))
 
 ;;; TODO, we no longer need dashboardID, projectId should be sufficient
 

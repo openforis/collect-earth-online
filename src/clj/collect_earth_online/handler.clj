@@ -20,11 +20,10 @@
             [ring.middleware.x-headers          :refer [wrap-frame-options wrap-content-type-options wrap-xss-protection]]
             [ring.util.response                 :refer [redirect]]
             [ring.util.codec                    :refer [url-encode url-decode]]
-            [triangulum.logging         :refer [log-str]]
-            [triangulum.type-conversion :refer [val->int]]
-            [triangulum.utils           :refer [data-response]]
+            [triangulum.logging :refer [log-str]]
+            [triangulum.type-conversion :as tc]
             [collect-earth-online.routing          :refer [routes]]
-            [collect-earth-online.views            :refer [not-found-page]]
+            [collect-earth-online.views            :refer [not-found-page data-response]]
             [collect-earth-online.db.projects      :refer [can-collect? is-proj-admin?]]
             [collect-earth-online.db.institutions  :refer [is-inst-admin?]]))
 
@@ -53,8 +52,8 @@
 (defn authenticated-routing-handler [{:keys [uri request-method params headers] :as request}]
   (let [{:keys [auth-type auth-action handler] :as route} (get routes [request-method uri])
         user-id        (:userId params -1)
-        institution-id (val->int (:institutionId params))
-        project-id     (val->int (:projectId params))
+        institution-id (tc/val->int (:institutionId params))
+        project-id     (tc/val->int (:projectId params))
         next-handler   (if route
                          (if (condp = auth-type
                                :user     (pos? user-id)

@@ -10,8 +10,9 @@
                                          p-insert-rows!
                                          insert-rows!]]
             [triangulum.type-conversion :as tc]
-            [triangulum.utils :refer [data-response mapm]]
+            [triangulum.utils           :as u]
             [collect-earth-online.utils.part-utils :as pu]
+            [collect-earth-online.views      :refer [data-response]]
             [collect-earth-online.utils.geom :refer [make-geo-json-polygon]]
             [collect-earth-online.generators.clj-point     :refer [generate-point-plots generate-point-samples]]
             [collect-earth-online.generators.external-file :refer [generate-file-plots generate-file-samples]]))
@@ -727,9 +728,9 @@
        (mapv #(str prefix (name %)))))
 
 (defn- prefix-keys [prefix in-map]
-  (mapm (fn [[key val]]
-          [(str prefix (name key)) val])
-        in-map))
+  (u/mapm (fn [[key val]]
+            [(str prefix (name key)) val])
+          in-map))
 
 (defn- map->csv [row-map key-set default]
   (reduce (fn [acc cur]
@@ -766,9 +767,9 @@
                         (get group :answers)))))))
 
 (defn- count-answer [sample-size question-answers]
-  (mapm (fn [[question answers]]
-          [question (* 100.0 (count answers) (/ sample-size))])
-        (group-by str question-answers)))
+  (u/mapm (fn [[question answers]]
+            [question (* 100.0 (count answers) (/ sample-size))])
+          (group-by str question-answers)))
 
 (defn- get-value-distribution
   "Count the answers given, and return a map of {'question:answers' count}"
