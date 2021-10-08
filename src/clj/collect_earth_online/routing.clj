@@ -50,7 +50,9 @@
                                               :auth-type   :admin
                                               :auth-action :redirect}
    [:get  "/support"]                        {:handler     (render-page "/support")}
-   [:get  "/user-disagreement"]              {:handler     (render-page "/user-disagreement")}
+   [:get  "/user-disagreement"]              {:handler     (render-page "/user-disagreement")
+                                              :auth-type   :admin
+                                              :auth-action :redirect}
    [:get  "/terms-of-service"]               {:handler     (render-page "/terms-of-service")}
    [:get  "/widget-layout-editor"]           {:handler     (render-page "/widget-layout-editor")
                                               :auth-type   :admin
