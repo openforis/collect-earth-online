@@ -1266,7 +1266,7 @@ class PlotNavigation extends React.Component {
                             <option value="flagged">Flagged plots</option>
                             {collectConfidence && (<option value="confidence">Low Confidence</option>)}
                             {inReviewMode && (<option value="user">By User</option>)}
-                            {inReviewMode && isQAQCEnabled && (<option value="qaqc">QA/QC</option>)}
+                            {inReviewMode && isQAQCEnabled && (<option value="qaqc">Disagreement</option>)}
                         </select>
                     </div>
                     {isProjectAdmin && this.reviewMode(inReviewMode, setReviewMode)}
