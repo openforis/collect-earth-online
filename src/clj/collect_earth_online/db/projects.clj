@@ -112,9 +112,11 @@
      :plotSpacing        (:plot_spacing project)
      :plotShape          (:plot_shape project)
      :plotSize           (:plot_size project)
+     :plotFileName       (:plot_file_name project)
      :sampleDistribution (:sample_distribution project)
      :samplesPerPlot     (:samples_per_plot project)
      :sampleResolution   (:sample_resolution project)
+     :sampleFileName     (:sample_file_name project)
      :allowDrawnSamples  (:allow_drawn_samples project)
      :surveyQuestions    (tc/jsonb->clj (:survey_questions project) [])
      :surveyRules        (tc/jsonb->clj (:survey_rules project) [])
@@ -143,9 +145,11 @@
                     :plotSpacing        (:plot_spacing project)
                     :plotShape          (:plot_shape project)
                     :plotSize           (:plot_size project)
+                    :plotFileName       (:plot_file_name project)
                     :sampleDistribution (:sample_distribution project)
                     :samplesPerPlot     (:samples_per_plot project)
                     :sampleResolution   (:sample_resolution project)
+                    :sampleFileName     (:sample_file_name project)
                     :allowDrawnSamples  (:allow_drawn_samples project)
                     :surveyQuestions    (tc/jsonb->clj (:survey_questions project) [])
                     :surveyRules        (tc/jsonb->clj (:survey_rules project) [])
@@ -439,9 +443,11 @@
                                                       plot-spacing
                                                       plot-shape
                                                       plot-size
+                                                      plot-file-name
                                                       sample-distribution
                                                       samples-per-plot
                                                       sample-resolution
+                                                      sample-file-name
                                                       allow-drawn-samples?
                                                       survey-questions
                                                       survey-rules
@@ -669,9 +675,11 @@
                   plot-spacing
                   plot-shape
                   plot-size
+                  plot-file-name
                   sample-distribution
                   samples-per-plot
                   sample-resolution
+                  sample-file-name
                   allow-drawn-samples?
                   survey-questions
                   survey-rules
