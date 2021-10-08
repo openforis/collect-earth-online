@@ -1,8 +1,8 @@
 (ns collect-earth-online.db.imagery
   (:require [triangulum.database :refer [call-sql sql-primitive]]
             [triangulum.type-conversion :as tc]
-            [collect-earth-online.db.institutions :refer [is-inst-admin?]]
-            [collect-earth-online.views :refer [data-response]]))
+            [triangulum.utils :refer [data-response]]
+            [collect-earth-online.db.institutions :refer [is-inst-admin?]]))
 
 (defn- clean-source [source-config]
   (let [image-type (:type source-config)]

@@ -2,7 +2,7 @@
   (:require [clojure.string :as str]
             [triangulum.database :refer [call-sql sql-primitive]]
             [triangulum.type-conversion :as tc]
-            [collect-earth-online.views :refer [data-response]]))
+            [triangulum.utils :refer [data-response]]))
 
 ;;; Constants
 

@@ -4,9 +4,8 @@
             [clojure.data.json :refer [read-str]]
             [triangulum.type-conversion :as tc]
             [triangulum.database :refer [call-sql sql-primitive]]
-            [triangulum.utils    :refer [filterm]]
-            [collect-earth-online.db.projects :refer [is-proj-admin?]]
-            [collect-earth-online.views       :refer [data-response]]))
+            [triangulum.utils    :refer [filterm data-response]]
+            [collect-earth-online.db.projects :refer [is-proj-admin?]]))
 
 ;;;
 ;;; Helpers
