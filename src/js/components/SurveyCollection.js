@@ -537,8 +537,19 @@ class SurveyQuestionTree extends React.Component {
                 ? "0px 0px 6px 5px #3bb9d6 inset"
                 : "0px 0px 6px 4px yellow inset";
 
+        const isSelected = (surveyNode.id === selectedQuestion.id);
+
         return (
-            <fieldset className="mb-1 justify-content-center text-center">
+            <fieldset
+                className="mb-1 justify-content-center text-center"
+                style={{
+                    border: "1px solid rgba(0, 0, 0, 0.2)",
+                    borderRadius: "6px",
+                    boxShadow: `0 0 2px 1px rgba(0, 0, 0, ${isSelected ? "0.8" : "0.2"})`,
+                    margin: ".5rem",
+                    padding: ".5rem"
+                }}
+            >
                 <div className="SurveyQuestionTree__question-buttons btn-block my-2 d-flex">
                     <button
                         className="text-center btn btn-outline-lightgreen btn-sm text-bold px-3 py-2 mr-1"
@@ -552,10 +563,7 @@ class SurveyQuestionTree extends React.Component {
                         className="text-center btn btn-outline-lightgreen btn-sm col overflow-hidden text-truncate"
                         onClick={() => setSelectedQuestion(surveyNode)}
                         style={{
-                            boxShadow: `${(surveyNode.id === selectedQuestion.id)
-                                ? "0px 0px 2px 2px black inset,"
-                                : ""}
-                                    ${shadowColor}`
+                            boxShadow: `${isSelected ? "0px 0px 2px 2px black inset," : ""} ${shadowColor}`
                         }}
                         title={removeEnumerator(surveyNode.question)}
                         type="button"
