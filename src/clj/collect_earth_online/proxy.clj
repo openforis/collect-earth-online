@@ -2,7 +2,7 @@
   (:require [clojure.string  :as str]
             [clj-http.client :as client]
             [triangulum.type-conversion :as tc]
-            [collect-earth-online.utils.part-utils      :as pu]
+            [triangulum.utils           :as u]
             [collect-earth-online.db.imagery :refer [get-imagery-source-config]]))
 
 (defn- planet-url [source-config query-params]
@@ -27,11 +27,11 @@
   [(keyword (str/upper-case (name key))) val])
 
 (defn- wms-url [source-config query-params]
-  (let [geoserver-params (pu/mapm upcase-key (:geoserverParams source-config))
+  (let [geoserver-params (u/mapm upcase-key (:geoserverParams source-config))
         source-url       (:geoserverUrl source-config)]
     (str source-url
          (when-not (str/ends-with? source-url "?") "?")
-         (as-> (pu/mapm upcase-key query-params) new-query-params
+         (as-> (u/mapm upcase-key query-params) new-query-params
            (remove-extra-params new-query-params)
            (merge new-query-params geoserver-params)
            (apply-default-styles new-query-params)

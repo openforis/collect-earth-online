@@ -6,13 +6,6 @@
 
 ;;; General
 
-(defn mapm [f coll]
-  (persistent!
-   (reduce (fn [acc cur]
-             (conj! acc (f cur)))
-           (transient {})
-           coll)))
-
 (defn remove-vector-items [coll & items]
   (->> coll
        (remove (set items))
