@@ -79,23 +79,37 @@
               sv))
        users-samples))
 
+(defn- sample-disagreement [& answers]
+  (let [mode-count (->> answers
+                        (frequencies)
+                        (filterm (fn [[k _]] (not (nil? k))))
+                        (vals)
+                        (apply max))]
+    (if (= 1 mode-count)
+      100.0
+      (->> (/ mode-count
+              (count answers))
+           (- 1)
+           (* 100.0)))))
+
 (defn- question-disagreement [sample-answers]
-  (if (->> sample-answers
-           (map #(every? nil? %))
-           (some true?))
-    -1 ; set flag when one or more users did not answer the question.
+  (if (< 1 (->> sample-answers
+                (remove #(every? nil? %))
+                (count)))
     (average (apply map
-                    (fn [& sa]
-                      (if (apply = sa) 0.0 100.0)) ; sample disagreement
-                    sample-answers))))
+                    sample-disagreement
+                    sample-answers))
+    -1))
+
 
 (defn- filter-plot-disagreement [project-id grouped-plots threshold]
   (let [survey-questions (get-survey-questions project-id)]
     (filterm (fn [[_ plots]]
                (let [plot-id       (-> plots (first) :plot_id)
-                     users-samples (map (fn [plot]
-                                          (get-samples-answer-array plot-id (:user_id plot)))
-                                        plots)]
+                     users-samples (keep (fn [plot]
+                                           (when-let [user-id (:user_id plot)]
+                                             (get-samples-answer-array plot-id user-id)))
+                                         plots)]
                  (->> survey-questions
                       (map (fn [{:keys [question]}]
                              (->> question
@@ -111,21 +125,23 @@
   [{:keys [params]}]
   (let [plot-id       (tc/val->int (:plotId params))
         project-id    (tc/val->int (:projectId params))
-        plotters      (call-sql "select_plotters" project-id -1)
+        user_plots    (call-sql "select_user_plots_info" plot-id)
         users-samples (map (fn [user]
                              (get-samples-answer-array plot-id (:user_id user)))
-                           plotters)]
+                           user_plots)]
     (data-response (->> (get-survey-questions project-id)
                         (map (fn [{:keys [question] :as sq}]
                                (let [sample-answers (users-samples->answers users-samples question)]
                                  (assoc sq
                                         :disagreement      (question-disagreement sample-answers)
-                                        :answerFrequencies (map (fn [user ans]
-                                                                  {:userId  (:user_id user)
-                                                                   :answers (-> (frequencies ans)
-                                                                                (dissoc nil))})
-                                                                plotters
-                                                                sample-answers)))))))))
+                                        :userPlotInfo (map (fn [user ans]
+                                                             {:userId     (:user_id user)
+                                                              :flagged    (:flagged user)
+                                                              :confidence (:confidence user)
+                                                              :answers    (-> (frequencies ans)
+                                                                              (dissoc nil))})
+                                                           user_plots
+                                                           sample-answers)))))))))
 
 ;;;
 ;;; Plot Collection

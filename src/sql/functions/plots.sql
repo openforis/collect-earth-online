@@ -85,7 +85,23 @@ CREATE OR REPLACE FUNCTION select_plotters(_project_id integer, _plot_id integer
     WHERE p.project_rid = _project_id
         AND (plot_uid = _plot_id
              OR _plot_id = -1)
-    ORDER BY user_id
+    ORDER BY u.email
+
+$$ LANGUAGE SQL;
+
+-- Get user plots for a plot
+CREATE OR REPLACE FUNCTION select_user_plots_info( _plot_id integer)
+ RETURNS table (
+    user_id       integer,
+    flagged       boolean,
+    confidence    integer
+ ) AS $$
+
+    SELECT user_rid,
+        flagged,
+        confidence
+    FROM user_plots
+    WHERE plot_rid = _plot_id
 
 $$ LANGUAGE SQL;
 
