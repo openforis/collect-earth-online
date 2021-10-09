@@ -216,7 +216,7 @@
                           [])
         grouped-plots   (into (sorted-map) (group-by :visible_id proj-plots))
         final-plots     (if (= navigation-mode "qaqc")
-                          (time (filter-plot-disagreement project-id grouped-plots threshold))
+                          (filter-plot-disagreement project-id grouped-plots threshold)
                           grouped-plots)
         plots-info      (case direction
                           "next"     (or (some (fn [[visible-id plots]]
