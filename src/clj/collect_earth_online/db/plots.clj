@@ -82,7 +82,7 @@
 (defn- sample-disagreement [& answers]
   (let [mode-count (->> answers
                         (frequencies)
-                        (filterm (fn [[k _]] (not (nil? k))))
+                        (filterm (fn [[k _]] (some? k)))
                         (vals)
                         (apply max))]
     (if (= 1 mode-count)
