@@ -93,7 +93,7 @@
     },
     "scripts": {
         "build-db-all": "clojure -M:build-db build-all",
-        "build-db-functions": "clojure -M:build-db only-functions",
+        "build-db-functions": "clojure -M:build-db functions",
         "webpack-dev": "webpack --config webpack.config.js --env.dev",
         "webpack-prod": "webpack --config webpack.config.js --env.prod",
         "server-dev": "clojure -M:run-server -p 8080 -m dev",
