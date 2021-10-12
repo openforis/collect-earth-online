@@ -795,7 +795,7 @@
                         :common_securewatch_date
                         :total_securewatch_dates])
 
-(defn plots->csv-response [project-info plots data-type]
+(defn plots->csv-response [project-info plots filename]
   (let [survey-questions (tc/jsonb->clj (:survey_questions project-info))
         confidence?      (-> project-info
                              (:options)
@@ -827,25 +827,21 @@
                               plots)]
     {:headers {"Content-Type" "text/csv"
                "Content-Disposition" (str "attachment; filename="
-                                          (prepare-file-name (:name project-info) data-type)
+                                          filename
                                           ".csv")}
      :body (str/join "\n" (cons headers-out data-rows))}))
 
-(defn dump-project-aggregate-qaqc-data! [{:keys [params]}]
+(defn dump-project-aggregate-data! [{:keys [params]}]
   (let [project-id (tc/val->int (:projectId params))]
     (if-let [project-info (first (call-sql "select_project_by_id" project-id))]
-      (let [plots (call-sql "dump_project_plot_qaqc_data" project-id)]
-        (plots->csv-response project-info plots "qaqc"))
+      (if (tc/val->bool (:qaqcOnly params))
+        (plots->csv-response project-info
+                             (call-sql "dump_project_plot_qaqc_data" project-id)
+                             (prepare-file-name (:name project-info) "qaqc"))
+        (plots->csv-response project-info
+                             (call-sql "dump_project_plot_data" project-id)
+                             (prepare-file-name (:name project-info) "plot")))
       (data-response "Project not found."))))
-
-(defn dump-project-aggregate-data! [{:keys [params] :as request}]
-  (if (tc/val->bool (:qaqcOnly params))
-    (dump-project-aggregate-qaqc-data! request)
-    (let [project-id (tc/val->int (:projectId params))]
-      (if-let [project-info (first (call-sql "select_project_by_id" project-id))]
-        (let [plots (call-sql "dump_project_plot_data" project-id)]
-          (plots->csv-response project-info plots "plot"))
-        (data-response "Project not found.")))))
 
 ;;;
 ;;; Dump raw
