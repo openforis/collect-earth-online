@@ -804,44 +804,52 @@
                         :common_securewatch_date
                         :total_securewatch_dates])
 
+(defn plots->csv-response [project-info plots filename]
+  (let [survey-questions (tc/jsonb->clj (:survey_questions project-info))
+        confidence?      (-> project-info
+                             (:options)
+                             (tc/jsonb->clj)
+                             (:collectConfidence))
+        text-headers     (concat (pu/remove-vector-items plot-base-headers
+                                                         (when-not confidence? :confidence))
+                                 (get-ext-headers plots :extra_plot_info "pl_"))
+        number-headers   (get-value-distribution-headers survey-questions)
+        headers-out      (->> (concat text-headers number-headers)
+                              (map #(-> % name csv-quotes))
+                              (str/join ",")
+                              (str "\uFEFF")) ; Prefix headers with a UTF-8 tag
+        data-rows        (map (fn [row]
+                                (let [samples         (tc/jsonb->clj (:samples row))
+                                      extra-plot-info (tc/jsonb->clj (:extra_plot_info row))]
+                                  (str/join ","
+                                            (concat (map->csv (merge (-> row
+                                                                         (assoc  :sample_points
+                                                                                (count samples))
+                                                                         (update :collection_time format-time)
+                                                                         (update :analysis_duration #(when % (str % " secs"))))
+                                                                     (prefix-keys "pl_" extra-plot-info))
+                                                              text-headers
+                                                              "")
+                                                    (map->csv (get-value-distribution samples)
+                                                              number-headers
+                                                              0)))))
+                              plots)]
+    {:headers {"Content-Type" "text/csv"
+               "Content-Disposition" (str "attachment; filename="
+                                          filename
+                                          ".csv")}
+     :body (str/join "\n" (cons headers-out data-rows))}))
+
 (defn dump-project-aggregate-data! [{:keys [params]}]
   (let [project-id (tc/val->int (:projectId params))]
     (if-let [project-info (first (call-sql "select_project_by_id" project-id))]
-      (let [plots            (call-sql "dump_project_plot_data" project-id)
-            survey-questions (tc/jsonb->clj (:survey_questions project-info))
-            confidence?      (-> project-info
-                                 (:options)
-                                 (tc/jsonb->clj)
-                                 (:collectConfidence))
-            text-headers     (concat (pu/remove-vector-items plot-base-headers
-                                                             (when-not confidence? :confidence))
-                                     (get-ext-headers plots :extra_plot_info "pl_"))
-            number-headers   (get-value-distribution-headers survey-questions)
-            headers-out      (->> (concat text-headers number-headers)
-                                  (map #(-> % name csv-quotes))
-                                  (str/join ",")
-                                  (str "\uFEFF")) ; Prefix headers with a UTF-8 tag
-            data-rows        (map (fn [row]
-                                    (let [samples         (tc/jsonb->clj (:samples row))
-                                          extra-plot-info (tc/jsonb->clj (:extra_plot_info row))]
-                                      (str/join ","
-                                                (concat (map->csv (merge (-> row
-                                                                             (assoc  :sample_points
-                                                                                     (count samples))
-                                                                             (update :collection_time format-time)
-                                                                             (update :analysis_duration #(when % (str % " secs"))))
-                                                                         (prefix-keys "pl_" extra-plot-info))
-                                                                  text-headers
-                                                                  "")
-                                                        (map->csv (get-value-distribution samples)
-                                                                  number-headers
-                                                                  0)))))
-                                  plots)]
-        {:headers {"Content-Type" "text/csv"
-                   "Content-Disposition" (str "attachment; filename="
-                                              (prepare-file-name (:name project-info) "plot")
-                                              ".csv")}
-         :body (str/join "\n" (cons headers-out data-rows))})
+      (if (tc/val->bool (:qaqcOnly params))
+        (plots->csv-response project-info
+                             (call-sql "dump_project_plot_qaqc_data" project-id)
+                             (prepare-file-name (:name project-info) "qaqc"))
+        (plots->csv-response project-info
+                             (call-sql "dump_project_plot_data" project-id)
+                             (prepare-file-name (:name project-info) "plot")))
       (data-response "Project not found."))))
 
 ;;;

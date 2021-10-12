@@ -186,6 +186,17 @@ class ProjectManagement extends React.Component {
 
     render() {
         const {button, update, description, canEdit} = this.projectStates[this.context.availability] || {};
+        const {
+            availability,
+            createdDate,
+            closedDate,
+            id,
+            institution,
+            designSettings: {qaqcAssignment: {qaqcMethod}},
+            publishedDate,
+            setContextState
+        } = this.context;
+
         return (
             <div className="d-flex flex-column" id="project-management">
                 <div className="d-flex">
@@ -195,28 +206,24 @@ class ProjectManagement extends React.Component {
                                 <div>
                                     Date Created
                                     <span className="badge badge-pill bg-lightgreen ml-3">
-                                        {this.context.createdDate || "Unknown"}
+                                        {createdDate || "Unknown"}
                                     </span>
                                 </div>
                                 <div>
                                     Date Published
                                     <span className="badge badge-pill bg-lightgreen ml-3">
-                                        {this.context.publishedDate || (this.context.availability === "unpublished"
-                                            ? "Draft"
-                                            : "Unknown")}
+                                        {publishedDate || (availability === "unpublished" ? "Draft" : "Unknown")}
                                     </span>
                                 </div>
                                 <div>
                                     Date Closed
                                     <span className="badge badge-pill bg-lightgreen ml-3">
-                                        {this.context.closedDate || (["archived", "closed"].includes(this.context.availability)
-                                            ? "Unknown"
-                                            : "Open")}
+                                        {closedDate || (["archived", "closed"].includes(availability) ? "Unknown" : "Open")}
                                     </span>
                                 </div>
                             </div>
                         </div>
-                        <p>This project is <b>{this.context.availability === "unpublished" ? "in draft mode" : this.context.availability}</b>. {description}</p>
+                        <p>This project is <b>{availability === "unpublished" ? "in draft mode" : availability}</b>. {description}</p>
                     </div>
                     <div className="col-5 d-flex flex-column align-items-center">
                         <h3 className="my-2">Modify Project Details</h3>
@@ -230,7 +237,7 @@ class ProjectManagement extends React.Component {
                             className="btn btn-outline-red btn-sm w-100"
                             onClick={() => {
                                 if (canEdit) {
-                                    this.context.setContextState({designMode: "wizard"});
+                                    setContextState({designMode: "wizard"});
                                 } else {
                                     alert("You cannot edit a closed project.");
                                 }
@@ -249,34 +256,42 @@ class ProjectManagement extends React.Component {
                             className="btn btn-outline-lightgreen btn-sm w-100"
                             onClick={() => window.open(
                                 "/widget-layout-editor?editable=true&" // TODO, drop unused 'editable'
-                                    + `institutionId=${this.context.institution}`
-                                    + `&projectId=${this.context.id}`
+                                    + `institutionId=${institution}`
+                                    + `&projectId=${id}`
                             )}
                             type="button"
                             value="Configure Geo-Dash"
                         />
                         <input
                             className="btn btn-outline-lightgreen btn-sm w-100"
-                            onClick={() => window.open(`/collection?projectId=${this.context.id}`)}
+                            onClick={() => window.open(`/collection?projectId=${id}`)}
                             type="button"
                             value="Collect"
                         />
                         <input
                             className="btn btn-outline-lightgreen btn-sm w-100"
-                            onClick={() => window.open(`/project-dashboard?projectId=${this.context.id}`)}
+                            onClick={() => window.open(`/project-dashboard?projectId=${id}`)}
                             type="button"
                             value="Project Dashboard"
                         />
                         <h3 className="my-2">Export Data</h3>
                         <input
                             className="btn btn-outline-lightgreen btn-sm w-100"
-                            onClick={() => window.open(`/dump-project-aggregate-data?projectId=${this.context.id}`, "_blank")}
+                            onClick={() => window.open(`/dump-project-aggregate-data?projectId=${id}`, "_blank")}
                             type="button"
                             value="Download Plot Data"
                         />
+                        {qaqcMethod !== "none" && (
+                            <input
+                                className="btn btn-outline-lightgreen btn-sm w-100"
+                                onClick={() => window.open(`/dump-project-aggregate-data?projectId=${id}&qaqcOnly=true`, "_blank")}
+                                type="button"
+                                value="Download QA/QC Data"
+                            />
+                        )}
                         <input
                             className="btn btn-outline-lightgreen btn-sm w-100"
-                            onClick={() => window.open(`/dump-project-raw-data?projectId=${this.context.id}`, "_blank")}
+                            onClick={() => window.open(`/dump-project-raw-data?projectId=${id}`, "_blank")}
                             type="button"
                             value="Download Sample Data"
                         />
