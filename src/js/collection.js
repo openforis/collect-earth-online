@@ -249,10 +249,7 @@ class Collection extends React.Component {
         .then(response => (response.ok ? response.json() : Promise.reject(response)))
         .then(data => {
             if (isArray(data)) {
-                this.setState({
-                    plotters: data,
-                    currentUserId: (data[0]?.userId || -1)
-                });
+                this.setState({plotters: data});
                 return Promise.resolve("resolved");
             } else {
                 return Promise.reject("Error getting plotter data.");
@@ -344,6 +341,7 @@ class Collection extends React.Component {
                         this.setState({
                             userPlotList: data,
                             currentPlot: data[0],
+                            currentUserId: data[0].userId,
                             ...this.newPlotValues(data[0]),
                             answerMode: "question"
                         });
