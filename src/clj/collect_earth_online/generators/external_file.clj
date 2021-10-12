@@ -4,6 +4,7 @@
             [clojure.java.io    :as io]
             [clojure.java.shell :as sh]
             [triangulum.type-conversion :as tc]
+            [triangulum.utils :refer [parse-as-sh-cmd]]
             [collect-earth-online.utils.part-utils :as pu]
             [collect-earth-online.utils.geom    :refer [make-wkt-point]]
             [collect-earth-online.utils.project :refer [check-plot-limits check-sample-limits]]))
@@ -26,19 +27,6 @@
        (remove #(= folder-name %))
        (filter #(= ext (peek (str/split % #"\."))))
        (first)))
-
-(defn- parse-as-sh-cmd
-  "Split string into an array for use with clojure.java.shell/sh."
-  [s]
-  (loop [chars (seq s)
-         acc   []]
-    (if (empty? chars)
-      acc
-      (if (= \` (first chars))
-        (recur (->> chars (rest) (drop-while #(not= \` %)) (rest))
-               (->> chars (rest) (take-while #(not= \` %)) (apply str) (str/trim) (conj acc)))
-        (recur (->> chars (drop-while #(not= \` %)))
-               (->> chars (take-while #(not= \` %)) (apply str) (str/trim) (#(str/split % #" ")) (remove str/blank?) (into acc)))))))
 
 (defn- sh-wrapper [dir env & commands]
   (sh/with-sh-dir dir
