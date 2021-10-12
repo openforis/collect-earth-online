@@ -926,6 +926,17 @@ mercator.setLayerVisibilityByLayerId = (mapConfig, layerId, visibility) => {
     return mapConfig;
 };
 
+mercator.getFeatureCenter = feature => {
+    try {
+        const extent = feature.getGeometry().getExtent();
+        const x = extent[0] + (extent[2] - extent[0]) / 2;
+        const y = extent[1] + (extent[3] - extent[1]) / 2;
+        return [x, y];
+    } catch {
+        return [0, 0];
+    }
+};
+
 // [Pure] Returns a geometry object representing the shape described
 // in the passed in GeoJSON string. If reprojectToMap is true,
 // reproject the created geometry from WGS84 to Web Mercator before returning.
