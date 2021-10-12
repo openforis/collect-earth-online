@@ -93,9 +93,17 @@ class UserDisagreement extends React.Component {
                 }}
             >
                 <div>
+                    {isParent && (
+                        <h2
+                            className="header px-0"
+                            style={{fontSize: "1.25rem", padding: ".75rem", textAlign: "center"}}
+                        >
+                            {`Survey Card Number ${id}`}
+                        </h2>
+                    )}
                     <CollapsibleSectionBlock
                         showContent={disagreement >= threshold}
-                        title={`${isParent ? `Survey Card Number ${id} - ` : ""}${question} - ${disagreement < 0 ? "N/A" : disagreement + "%"}`}
+                        title={`${question} - ${disagreement < 0 ? "N/A" : disagreement + "%"}`}
                     >
                         <div style={{display: "flex", flexWrap: "wrap", padding: "0 .5rem"}}>
                             {answerFrequencies.map(as => this.renderUser(as, answers))}
