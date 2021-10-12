@@ -540,46 +540,48 @@ class SurveyQuestionTree extends React.Component {
         const isSelected = (surveyNode.id === selectedQuestion.id);
 
         return (
-            <fieldset
-                className="mb-1 justify-content-center text-center"
-                style={{
-                    border: "1px solid rgba(0, 0, 0, 0.2)",
-                    borderRadius: "6px",
-                    boxShadow: `0 0 2px 1px rgba(0, 0, 0, ${isSelected ? "0.8" : "0.2"})`,
-                    margin: ".5rem",
-                    padding: ".5rem"
-                }}
-            >
-                <div className="SurveyQuestionTree__question-buttons btn-block my-2 d-flex">
-                    <button
-                        className="text-center btn btn-outline-lightgreen btn-sm text-bold px-3 py-2 mr-1"
-                        onClick={this.toggleShowAnswers}
-                        type="button"
-                    >
-                        {showAnswers ? <span>-</span> : <span>+</span>}
-                    </button>
-                    <RulesCollectionModal surveyNodeId={surveyNode.id} surveyRules={surveyRules}/>
-                    <button
-                        className="text-center btn btn-outline-lightgreen btn-sm col overflow-hidden text-truncate"
-                        onClick={() => setSelectedQuestion(surveyNode)}
-                        style={{
-                            boxShadow: `${isSelected ? "0px 0px 2px 2px black inset," : ""} ${shadowColor}`
-                        }}
-                        title={removeEnumerator(surveyNode.question)}
-                        type="button"
-                    >
-                        {hierarchyLabel + removeEnumerator(surveyNode.question)}
-                    </button>
-                </div>
+            <>
+                <fieldset
+                    className="mb-1 justify-content-center text-center"
+                    style={{
+                        border: "1px solid rgba(0, 0, 0, 0.2)",
+                        borderRadius: "6px",
+                        boxShadow: `0 0 2px 1px rgba(0, 0, 0, ${isSelected ? "1" : "0.2"})`,
+                        margin: ".5rem",
+                        padding: ".5rem"
+                    }}
+                >
+                    <div className="SurveyQuestionTree__question-buttons btn-block my-2 d-flex">
+                        <button
+                            className="text-center btn btn-outline-lightgreen btn-sm text-bold px-3 py-2 mr-1"
+                            onClick={this.toggleShowAnswers}
+                            type="button"
+                        >
+                            {showAnswers ? <span>-</span> : <span>+</span>}
+                        </button>
+                        <RulesCollectionModal surveyNodeId={surveyNode.id} surveyRules={surveyRules}/>
+                        <button
+                            className="text-center btn btn-outline-lightgreen btn-sm col overflow-hidden text-truncate"
+                            onClick={() => setSelectedQuestion(surveyNode)}
+                            style={{
+                                boxShadow: shadowColor
+                            }}
+                            title={removeEnumerator(surveyNode.question)}
+                            type="button"
+                        >
+                            {hierarchyLabel + removeEnumerator(surveyNode.question)}
+                        </button>
+                    </div>
 
-                {showAnswers && (
-                    <SurveyAnswers
-                        selectedSampleId={selectedSampleId}
-                        surveyNode={surveyNode}
-                        surveyQuestions={surveyQuestions}
-                        validateAndSetCurrentValue={validateAndSetCurrentValue}
-                    />
-                )}
+                    {showAnswers && (
+                        <SurveyAnswers
+                            selectedSampleId={selectedSampleId}
+                            surveyNode={surveyNode}
+                            surveyQuestions={surveyQuestions}
+                            validateAndSetCurrentValue={validateAndSetCurrentValue}
+                        />
+                    )}
+                </fieldset>
                 {childNodes.map(childNode => (
                     <Fragment key={childNode.id}>
                         {surveyQuestions.find(sq => sq.id === childNode.id).visible.length > 0
@@ -596,7 +598,7 @@ class SurveyQuestionTree extends React.Component {
                         )}
                     </Fragment>
                 ))}
-            </fieldset>
+            </>
         );
     }
 }
