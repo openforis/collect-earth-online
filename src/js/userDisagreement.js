@@ -79,39 +79,19 @@ class UserDisagreement extends React.Component {
         const {id, question, answers, disagreement, answerFrequencies} = thisQuestion;
         const children = questions.filter(q => q.parentQuestion === id);
         const {threshold} = this.props;
-        const isParent = level === 0;
 
         return (
-            <div
-                key={id}
-                style={{
-                    border: isParent ? "1px solid rgba(0, 0, 0, 0.2)" : "",
-                    borderRadius: isParent ? "6px" : "",
-                    boxShadow: isParent ? "0 0 2px 1px rgba(0, 0, 0, 0.2)" : "",
-                    marginTop: isParent ? "1.5rem" : "",
-                    overflow: "hidden"
-                }}
-            >
-                <div>
-                    {isParent && (
-                        <h2
-                            className="header px-0"
-                            style={{fontSize: "1.25rem", padding: ".75rem", textAlign: "center"}}
-                        >
-                            {`Survey Card Number ${id}`}
-                        </h2>
-                    )}
-                    <CollapsibleSectionBlock
-                        showContent={disagreement >= threshold}
-                        title={`${question} - ${disagreement < 0 ? "N/A" : disagreement + "%"}`}
-                    >
-                        <div style={{display: "flex", flexWrap: "wrap", padding: "0 .5rem"}}>
-                            {answerFrequencies.map(as => this.renderUser(as, answers))}
-                        </div>
-                    </CollapsibleSectionBlock>
-                </div>
+            <>
+                <CollapsibleSectionBlock
+                    showContent={disagreement >= threshold}
+                    title={`${disagreement < 0 ? "N/A" : disagreement + "%"} - ${question}`}
+                >
+                    <div style={{display: "flex", flexWrap: "wrap", padding: "0 .5rem"}}>
+                        {answerFrequencies.map(as => this.renderUser(as, answers))}
+                    </div>
+                </CollapsibleSectionBlock>
                 {children.length > 0 && children.map(q => this.renderQuestion(q, questions, level + 1))}
-            </div>
+            </>
         );
     };
 
@@ -121,7 +101,22 @@ class UserDisagreement extends React.Component {
         return (
             <div style={{display: "flex", justifyContent: "center", width: "100%"}}>
                 <div style={{display: "flex", flexDirection: "column", margin: "1rem", width: "50%"}}>
-                    {parentQuestions.map(q => this.renderQuestion(q, questions, 0))}
+                    {parentQuestions.map((q, idx) => (
+                        // eslint-disable-next-line react/no-array-index-key
+                        <div key={idx}>
+                            <h2 className="m-3">{`Survey Card Number ${idx + 1}`}</h2>
+                            <div
+                                style={{
+                                    border: "1px solid rgba(0, 0, 0, 0.2)",
+                                    borderRadius: "6px",
+                                    boxShadow: "0 0 2px 1px rgba(0, 0, 0, 0.2)",
+                                    overflow: "hidden"
+                                }}
+                            >
+                                {this.renderQuestion(q, questions, 0)}
+                            </div>
+                        </div>
+                    ))}
                 </div>
             </div>
         );
