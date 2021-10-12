@@ -86,7 +86,9 @@ CREATE TABLE projects (
     options                jsonb NOT NULL DEFAULT '{}'::jsonb,
     imagery_rid            integer REFERENCES imagery (imagery_uid),
     allow_drawn_samples    boolean,
-    design_settings        jsonb NOT NULL DEFAULT '{}'::jsonb
+    design_settings        jsonb NOT NULL DEFAULT '{}'::jsonb,
+    plot_file_name         varchar(511),
+    sample_file_name       varchar(511)
 );
 
 -- Stores project imagery
