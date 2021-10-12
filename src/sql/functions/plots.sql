@@ -340,6 +340,28 @@ CREATE OR REPLACE FUNCTION select_plot_samples(_plot_id integer, _user_id intege
 
 $$ LANGUAGE SQL;
 
+-- Select samples for a plot.
+CREATE OR REPLACE FUNCTION select_qaqc_plot_samples(_plot_id integer)
+ RETURNS table (
+    user_id          integer,
+    sample_id        integer,
+    saved_answers    jsonb
+ ) AS $$
+
+
+    SELECT up.user_rid,
+        sample_uid,
+        (CASE WHEN sv.saved_answers IS NULL THEN '{}' ELSE sv.saved_answers END)
+    FROM samples s
+    LEFT JOIN user_plots up
+        ON s.plot_rid = up.plot_rid
+    LEFT JOIN sample_values sv
+        ON sample_uid = sv.sample_rid
+        AND user_plot_uid = sv.user_plot_rid
+    WHERE s.plot_rid = _plot_id
+
+$$ LANGUAGE SQL;
+
 -- Select just sample geoms.
 CREATE OR REPLACE FUNCTION select_plot_sample_geoms(_plot_id integer)
  RETURNS table (sample_geom text) AS $$
