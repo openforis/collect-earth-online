@@ -1,6 +1,5 @@
 import React from "react";
 import ReactDOM from "react-dom";
-import _ from "lodash";
 import {NavigationBar} from "./components/PageComponents";
 import {CollapsibleSectionBlock} from "./components/FormComponents";
 
@@ -76,46 +75,45 @@ class UserDisagreement extends React.Component {
         );
     };
 
-    renderQuestion = (thisQuestion, childrenQuestions, level) => {
+    renderQuestion = (thisQuestion, questions, level) => {
         const {id, question, answers, disagreement, answerFrequencies} = thisQuestion;
-        const children = childrenQuestions.filter(q => q.parentQuestion === id);
+        const children = questions.filter(q => q.parentQuestion === id);
         const {threshold} = this.props;
+        const isParent = level === 0;
+
         return (
             <div
                 key={id}
                 style={{
-                    borderLeft: "1px solid rgba(0,0,0,0.2)",
-                    borderRight: level === 0 ? "1px solid rgba(0,0,0,0.2)" : "",
-                    borderBottom: level === 0 ? "1px solid rgba(0,0,0,0.2)" : "",
-                    marginLeft: level > 0 ? "0.75rem" : "",
-                    marginTop: level === 0 ? "1.5rem" : ""
+                    border: isParent ? "1px solid rgba(0, 0, 0, 0.2)" : "",
+                    borderRadius: isParent ? "6px" : "",
+                    boxShadow: isParent ? "0 0 2px 1px rgba(0, 0, 0, 0.2)" : "",
+                    marginTop: isParent ? "1.5rem" : "",
+                    overflow: "hidden"
                 }}
             >
-                <div
-                    style={{overflow: "hidden"}}
-                >
+                <div>
                     <CollapsibleSectionBlock
                         showContent={disagreement >= threshold}
-                        title={`${question } - ${disagreement < 0 ? "N/A" : disagreement + "%"}`}
+                        title={`${isParent ? `Survey Card Number ${id} - ` : ""}${question} - ${disagreement < 0 ? "N/A" : disagreement + "%"}`}
                     >
                         <div style={{display: "flex", flexWrap: "wrap", padding: "0 .5rem"}}>
                             {answerFrequencies.map(as => this.renderUser(as, answers))}
                         </div>
                     </CollapsibleSectionBlock>
                 </div>
-                {children.length > 0 && children.map(q => this.renderQuestion(q, childrenQuestions, level + 1))}
+                {children.length > 0 && children.map(q => this.renderQuestion(q, questions, level + 1))}
             </div>
         );
     };
 
     render() {
         const {questions} = this.state;
-        const [topQuestions, childrenQuestions] = _.partition(questions, q => q.parentQuestion < 0);
-        // this.sortQuestions(questions);
+        const parentQuestions = questions.filter(q => q.parentQuestion < 0);
         return (
             <div style={{display: "flex", justifyContent: "center", width: "100%"}}>
                 <div style={{display: "flex", flexDirection: "column", margin: "1rem", width: "50%"}}>
-                    {topQuestions.map(q => this.renderQuestion(q, childrenQuestions, 0))}
+                    {parentQuestions.map(q => this.renderQuestion(q, questions, 0))}
                 </div>
             </div>
         );
