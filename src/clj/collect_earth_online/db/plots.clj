@@ -80,11 +80,11 @@
        users-samples))
 
 (defn- sample-disagreement [& answers]
-  (let [mode-count (->> answers
-                        (frequencies)
-                        (filterm (fn [[k _]] (some? k)))
-                        (vals)
-                        (apply max))]
+  (let [mode-count (as-> answers %
+                     (frequencies %)
+                     (assoc % nil 1)
+                     (vals %)
+                     (apply max %))]
     (if (= 1 mode-count)
       100.0
       (->> (/ mode-count
@@ -93,13 +93,9 @@
            (* 100.0)))))
 
 (defn- question-disagreement [sample-answers]
-  (if (< 1 (->> sample-answers
-                (remove #(every? nil? %))
-                (count)))
-    (average (apply map
-                    sample-disagreement
-                    sample-answers))
-    -1))
+  (->> sample-answers
+       (apply map sample-disagreement)
+       (average)))
 
 (defn- filter-plot-disagreement [project-id grouped-plots threshold]
   (let [survey-questions (get-survey-questions project-id)]
