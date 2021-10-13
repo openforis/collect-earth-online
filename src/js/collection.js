@@ -319,7 +319,7 @@ class Collection extends React.Component {
         }
     };
 
-    getPlotData = (visibleId, direction) => {
+    getPlotData = (visibleId, direction, forcedNavMode = null) => {
         const {currentUserId, navigationMode, inReviewMode, threshold} = this.state;
         const {projectId} = this.props;
         this.processModal(
@@ -327,7 +327,7 @@ class Collection extends React.Component {
             () => fetch("/get-collection-plot?" + getQueryString({
                 visibleId,
                 projectId,
-                navigationMode,
+                navigationMode: forcedNavMode || navigationMode,
                 direction,
                 inReviewMode,
                 threshold,
@@ -370,7 +370,11 @@ class Collection extends React.Component {
     confirmUnsaved = () => !this.hasChanged()
         || confirm("You have unsaved changes. Any unsaved responses will be lost. Are you sure you want to continue?");
 
-    navToFirstPlot = () => this.getPlotData(-10000000, "next");
+    navToFirstPlot = () => this.getPlotData(
+        -10000000,
+        "next",
+        this.state.navigationMode === "natural" && "unanalyzed"
+    );
 
     navToNextPlot = ignoreCheck => {
         if (ignoreCheck || this.confirmUnsaved()) {
