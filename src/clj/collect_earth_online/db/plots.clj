@@ -82,7 +82,7 @@
 (defn- sample-disagreement [& answers]
   (let [mode-count (->> answers
                         (frequencies)
-                        (filterm (fn [[k _]] (not (nil? k))))
+                        (filterm (fn [[k _]] (some? k)))
                         (vals)
                         (apply max))]
     (if (= 1 mode-count)
@@ -101,22 +101,21 @@
                     sample-answers))
     -1))
 
-
 (defn- filter-plot-disagreement [project-id grouped-plots threshold]
   (let [survey-questions (get-survey-questions project-id)]
     (filterm (fn [[_ plots]]
                (let [plot-id       (-> plots (first) :plot_id)
-                     users-samples (keep (fn [plot]
-                                           (when-let [user-id (:user_id plot)]
-                                             (get-samples-answer-array plot-id user-id)))
-                                         plots)]
-                 (->> survey-questions
-                      (map (fn [{:keys [question]}]
-                             (->> question
-                                  (users-samples->answers users-samples)
-                                  (question-disagreement))))
-                      (apply max)
-                      (<= threshold))))
+                     users-samples (->> (call-sql "select_qaqc_plot_samples" {:log? false} plot-id)
+                                        (group-by :user_id)
+                                        (mapv (fn [[_ samples]]
+                                                (map (fn [{:keys [:saved_answers]}] (jsonb->clj-str saved_answers))
+                                                     samples))))]
+                 (some (fn [{:keys [question]}]
+                         (->> question
+                              (users-samples->answers users-samples)
+                              (question-disagreement)
+                              (<= threshold)))
+                       survey-questions)))
              grouped-plots)))
 
 (defn get-plot-disagreement
@@ -165,7 +164,7 @@
           {:id           sample_id
            :sampleGeom   sample_geom
            :savedAnswers (tc/jsonb->clj saved_answers)})
-        (call-sql "select_plot_samples" plot-id user-id)))
+        (call-sql "select_plot_samples" {:log? false} plot-id user-id)))
 
 (defn- build-collection-plot [plot-info user-id review-mode?]
   (let [{:keys [plot_id
