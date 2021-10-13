@@ -93,9 +93,11 @@
            (* 100.0)))))
 
 (defn- question-disagreement [sample-answers]
-  (->> sample-answers
-       (apply map sample-disagreement)
-       (average)))
+  (if (every? #(every? nil? %) sample-answers)
+    -1
+    (->> sample-answers
+         (apply map sample-disagreement)
+         (average))))
 
 (defn- filter-plot-disagreement [project-id grouped-plots threshold]
   (let [survey-questions (get-survey-questions project-id)]
@@ -210,30 +212,31 @@
                           "user"       (call-sql "select_analyzed_plots" project-id current-user-id false)
                           "qaqc"       (call-sql "select_qaqc_plots" project-id)
                           [])
-        grouped-plots   (into (sorted-map) (group-by :visible_id proj-plots))
-        final-plots     (if (= navigation-mode "qaqc")
-                          (filter-plot-disagreement project-id grouped-plots threshold)
-                          grouped-plots)
+        grouped-plots   (group-by :visible_id proj-plots)
+        sorted-plots    (->> (if (= navigation-mode "qaqc")
+                               (filter-plot-disagreement project-id grouped-plots threshold)
+                               grouped-plots)
+                             (sort-by first))
         plots-info      (case direction
                           "next"     (or (some (fn [[visible-id plots]]
                                                  (and (> visible-id old-visible-id)
                                                       plots))
-                                               final-plots)
-                                         (->> final-plots
+                                               sorted-plots)
+                                         (->> sorted-plots
                                               (first)
                                               (second)))
-                          "previous" (or (->> final-plots
+                          "previous" (or (->> sorted-plots
                                               (sort-by first #(compare %2 %1))
                                               (some (fn [[visible-id plots]]
                                                       (and (< visible-id old-visible-id)
                                                            plots))))
-                                         (->> final-plots
+                                         (->> sorted-plots
                                               (last)
                                               (second)))
                           "id"       (some (fn [[visible-id plots]]
                                              (and (= visible-id old-visible-id)
                                                   plots))
-                                           final-plots))]
+                                           sorted-plots))]
     (if plots-info
       (do
         (unlock-plots user-id)
