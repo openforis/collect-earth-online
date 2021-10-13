@@ -75,37 +75,48 @@ class UserDisagreement extends React.Component {
         );
     };
 
-    renderQuestion = thisQuestion => {
-        const {question, answers, disagreement, answerFrequencies} = thisQuestion;
+    renderQuestion = (thisQuestion, questions, level) => {
+        const {id, question, answers, disagreement, answerFrequencies} = thisQuestion;
+        const children = questions.filter(q => q.parentQuestion === id);
         const {threshold} = this.props;
+
         return (
-            <div
-                key={question}
-                style={{
-                    border: "1px solid black",
-                    margin: "0 .5rem",
-                    background: "#31bab0",
-                    overflow: "hidden"
-                }}
-            >
+            <>
                 <CollapsibleSectionBlock
                     showContent={disagreement >= threshold}
-                    title={`${question } - ${disagreement < 0 ? "N/A" : disagreement + "%"}`}
+                    title={`${disagreement < 0 ? "N/A" : disagreement + "%"} - ${question}`}
                 >
-                    <div style={{display: "flex", flexWrap: "wrap", background: "white"}}>
+                    <div style={{display: "flex", flexWrap: "wrap", padding: "0 .5rem"}}>
                         {answerFrequencies.map(as => this.renderUser(as, answers))}
                     </div>
                 </CollapsibleSectionBlock>
-            </div>
+                {children.length > 0 && children.map(q => this.renderQuestion(q, questions, level + 1))}
+            </>
         );
     };
 
     render() {
         const {questions} = this.state;
+        const parentQuestions = questions.filter(q => q.parentQuestion < 0);
         return (
             <div style={{display: "flex", justifyContent: "center", width: "100%"}}>
                 <div style={{display: "flex", flexDirection: "column", margin: "1rem", width: "50%"}}>
-                    {questions.map(q => this.renderQuestion(q))}
+                    {parentQuestions.map((q, idx) => (
+                        // eslint-disable-next-line react/no-array-index-key
+                        <div key={idx}>
+                            <h2 className="m-3">{`Survey Card Number ${idx + 1}`}</h2>
+                            <div
+                                style={{
+                                    border: "1px solid rgba(0, 0, 0, 0.2)",
+                                    borderRadius: "6px",
+                                    boxShadow: "0 0 2px 1px rgba(0, 0, 0, 0.2)",
+                                    overflow: "hidden"
+                                }}
+                            >
+                                {this.renderQuestion(q, questions, 0)}
+                            </div>
+                        </div>
+                    ))}
                 </div>
             </div>
         );
