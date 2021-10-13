@@ -1246,7 +1246,14 @@ class PlotNavigation extends React.Component {
         } = this.props;
         return (
             <div className="mt-2">
-                <div className="p-1" style={{border: "1px solid lightgray", borderRadius: "0.2rem"}}>
+                <div
+                    className="p-1"
+                    style={{
+                        border: "1px solid lightgray",
+                        borderRadius: "6px",
+                        boxShadow: "0 0 2px 1px rgba(0, 0, 0, 0.15)"
+                    }}
+                >
                     <div className="row my-2">
                         <div className="col-5 text-right">
                             <label htmlFor="navigate">Navigate:</label>
