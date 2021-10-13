@@ -85,7 +85,23 @@ CREATE OR REPLACE FUNCTION select_plotters(_project_id integer, _plot_id integer
     WHERE p.project_rid = _project_id
         AND (plot_uid = _plot_id
              OR _plot_id = -1)
-    ORDER BY user_id
+    ORDER BY u.email
+
+$$ LANGUAGE SQL;
+
+-- Get user plots for a plot
+CREATE OR REPLACE FUNCTION select_user_plots_info( _plot_id integer)
+ RETURNS table (
+    user_id       integer,
+    flagged       boolean,
+    confidence    integer
+ ) AS $$
+
+    SELECT user_rid,
+        flagged,
+        confidence
+    FROM user_plots
+    WHERE plot_rid = _plot_id
 
 $$ LANGUAGE SQL;
 
@@ -321,6 +337,28 @@ CREATE OR REPLACE FUNCTION select_plot_samples(_plot_id integer, _user_id intege
         AND user_plot_uid = sv.user_plot_rid
     WHERE s.plot_rid = _plot_id
         AND (pa.user_rid IS NULL OR pa.user_rid = _user_id)
+
+$$ LANGUAGE SQL;
+
+-- Select samples for a plot.
+CREATE OR REPLACE FUNCTION select_qaqc_plot_samples(_plot_id integer)
+ RETURNS table (
+    user_id          integer,
+    sample_id        integer,
+    saved_answers    jsonb
+ ) AS $$
+
+
+    SELECT up.user_rid,
+        sample_uid,
+        (CASE WHEN sv.saved_answers IS NULL THEN '{}' ELSE sv.saved_answers END)
+    FROM samples s
+    LEFT JOIN user_plots up
+        ON s.plot_rid = up.plot_rid
+    LEFT JOIN sample_values sv
+        ON sample_uid = sv.sample_rid
+        AND user_plot_uid = sv.user_plot_rid
+    WHERE s.plot_rid = _plot_id
 
 $$ LANGUAGE SQL;
 
