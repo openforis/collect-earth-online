@@ -58,7 +58,11 @@ class UserDisagreement extends React.Component {
 
     renderUser = (user, userPlotInfo, answers) => {
         const plotInfo = this.findByKey(userPlotInfo, "userId", user.userId);
-        const answered = Object.keys(plotInfo?.answers || {}).length > 0;
+        const unanswered = !plotInfo
+            ? "plot"
+            : Object.keys(plotInfo?.answers || {}).length === 0
+                ? "question"
+                : null;
         return (
             <div
                 key={user.userId}
@@ -78,12 +82,11 @@ class UserDisagreement extends React.Component {
                     {plotInfo?.flagged
                         ? (
                             "This user flagged the plot"
-                        ) : answered
-                            ? (this.renderAnswers(plotInfo.answers, answers)) : (
-                                "This user did not answer"
-                            )}
+                        ) : unanswered
+                            ? ("This user did not answer this " + unanswered)
+                            : (this.renderAnswers(plotInfo.answers, answers))}
                 </div>
-                {plotInfo?.confidence && answered && (
+                {plotInfo?.confidence && !unanswered && (
                     <div>Confidence: {plotInfo.confidence}</div>
                 )}
             </div>
