@@ -183,8 +183,8 @@
                     :flaggedPlots  (:flagged_plots stats)
                     :analyzedPlots (:analyzed_plots stats)
                     :userStats     (-> (:user_stats stats)
-                                         (tc/jsonb->clj)
-                                         (set/rename-keys {:timed_plots :timedPlots}))})))
+                                       (tc/jsonb->clj)
+                                       (set/rename-keys {:timed_plots :timedPlots}))})))
 
 ;;;
 ;;; Create project helper functions
@@ -824,7 +824,7 @@
                                   (str/join ","
                                             (concat (map->csv (merge (-> row
                                                                          (assoc  :sample_points
-                                                                                (count samples))
+                                                                                 (count samples))
                                                                          (update :collection_time format-time)
                                                                          (update :analysis_duration #(when % (str % " secs"))))
                                                                      (prefix-keys "pl_" extra-plot-info))
