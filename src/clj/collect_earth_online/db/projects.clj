@@ -181,7 +181,7 @@
                                              sample-distribution
                                              samples-per-plot
                                              sample-resolution))]
-    (p-insert-rows! "samples" samples)
+    (when (seq samples) (p-insert-rows! "samples" samples))
     (if allow-drawn-samples?
       (when (#{"csv" "shp"} sample-distribution)
         (p-insert-rows! "ext_samples" samples))
