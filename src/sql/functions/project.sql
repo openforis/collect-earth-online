@@ -860,7 +860,7 @@ $$ LANGUAGE SQL;
 -- Returns project aggregate QA/QC data
 CREATE OR REPLACE FUNCTION dump_project_plot_qaqc_data(_project_id integer)
  RETURNS table (
-    plot_id                    integer,
+    plotid                     integer,
     center_lon                 double precision,
     center_lat                 double precision,
     shape                      text,
@@ -930,8 +930,8 @@ $$ LANGUAGE SQL;
 -- Returns project raw data
 CREATE OR REPLACE FUNCTION dump_project_sample_data(_project_id integer)
  RETURNS table (
-        plot_id               integer,
-        sample_id             integer,
+        plotid                integer,
+        sampleid              integer,
         lon                   double precision,
         lat                   double precision,
         email                 text,
@@ -946,8 +946,8 @@ CREATE OR REPLACE FUNCTION dump_project_sample_data(_project_id integer)
         extra_sample_info     jsonb
  ) AS $$
 
-    SELECT plot_uid,
-        sample_uid,
+    SELECT pl.visible_id,
+        s.visible_id,
         ST_X(ST_Centroid(sample_geom)) AS lon,
         ST_Y(ST_Centroid(sample_geom)) AS lat,
         email,

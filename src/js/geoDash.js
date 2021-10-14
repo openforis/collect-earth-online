@@ -395,9 +395,9 @@ class Widget extends React.Component {
             return (
                 <div className="front">
                     <GraphWidget
-                        getParameterByName={this.props.getParameterByName}
                         initCenter={this.props.initCenter}
                         projPairAOI={this.props.projPairAOI}
+                        vectorSource={this.props.vectorSource}
                         widget={widget}
                     />
                 </div>
@@ -522,10 +522,10 @@ class DegradationWidget extends React.Component {
                             <div className="front">
                                 <GraphWidget
                                     degDataType={this.state.degDataType}
-                                    getParameterByName={this.props.getParameterByName}
                                     handleSelectDate={this.handleSelectDate}
                                     initCenter={this.props.initCenter}
                                     projPairAOI={this.props.projPairAOI}
+                                    vectorSource={this.props.vectorSource}
                                     widget={this.props.widget}
                                 />
                             </div>
@@ -1260,7 +1260,7 @@ class GraphWidget extends React.Component {
 
     loadGraph = () => {
         const {chartDataSeriesLandsat, chartDataSeriesSar, selectSarGraphBand, graphRef} = this.state;
-        const {widget, degDataType, getParameterByName, projPairAOI, handleSelectDate} = this.props;
+        const {widget, degDataType, projPairAOI, handleSelectDate, vectorSource} = this.props;
 
         if (degDataType === "landsat" && chartDataSeriesLandsat.length > 0) {
             graphRef.update({series: _.cloneDeep(chartDataSeriesLandsat)});
@@ -1269,7 +1269,7 @@ class GraphWidget extends React.Component {
             && chartDataSeriesSar[selectSarGraphBand].length > 0) {
             graphRef.update({series: _.cloneDeep(chartDataSeriesSar[selectSarGraphBand])});
         } else {
-            const centerPoint = JSON.parse(getParameterByName("bcenter")).coordinates;
+            const centerPoint = mercator.getFeatureCenter(vectorSource);
             const widgetType = widget.type || "";
             const collectionName = widget.properties[1];
             const indexName = widget.properties[4];

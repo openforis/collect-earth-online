@@ -322,7 +322,7 @@
                                              sample-distribution
                                              samples-per-plot
                                              sample-resolution))]
-    (p-insert-rows! "samples" samples)
+    (when (seq samples) (p-insert-rows! "samples" samples))
     (if allow-drawn-samples?
       (when (#{"csv" "shp"} sample-distribution)
         (p-insert-rows! "ext_samples" samples))
@@ -789,7 +789,7 @@
                                (:saved_answers sample)))
                         samples)))
 
-(def plot-base-headers [:plot_id
+(def plot-base-headers [:plotid
                         :center_lon
                         :center_lat
                         :size_m
@@ -861,8 +861,8 @@
     (reduce (fn [acc [k v]] (merge acc {(name k) (:answer v)})) {} value)
     ""))
 
-(def sample-base-headers [:plot_id
-                          :sample_id
+(def sample-base-headers [:plotid
+                          :sampleid
                           :lon
                           :lat
                           :email

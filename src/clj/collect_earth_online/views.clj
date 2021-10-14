@@ -1,6 +1,7 @@
 (ns collect-earth-online.views
   (:require [clojure.data.json :as json]
-            [clojure.string :as str]
+            [clojure.string    :as str]
+            [clojure.java.io   :as io]
             [cognitect.transit :as transit]
             [hiccup.page :refer [html5 include-js include-css]]
             [collect-earth-online.git :refer [current-version]])
@@ -35,12 +36,51 @@
 (defn js-init [page params]
   (let [js-params (json/write-str params)]
     [:script {:type "text/javascript"}
-     (str "window.onload = function () { " page ".pageInit(" js-params "); };")]))
+     (str "window.onload = function () {
+           setTimeout (function () {document.getElementById ('banner') .style.display='none'}, 10000);
+           " page ".pageInit(" js-params "); };")]))
 
 (defn find-webpack-files [page]
   (as-> (slurp "target/entry-points.json") wp
     (json/read-str wp)
     (get wp page)))
+
+(defn- announcement-banner []
+  (let [announcement (slurp "announcement.txt")] ; TODO This will be moved to the front end for better UX.
+    (when (pos? (count announcement))
+      [:div#banner {:style {:background-color "#f96841"
+                            :box-shadow       "3px 1px 4px 0 rgb(0, 0, 0, 0.25)"
+                            :color            "#ffffff"
+                            :margin           "0px"
+                            :padding          "5px"
+                            :position         "fixed"
+                            :text-align       "center"
+                            :top              "0"
+                            :right            "0"
+                            :left             "0"
+                            :width            "100vw"
+                            :z-index          "10000"}}
+       [:p {:style {:font-size   "18px"
+                    :font-weight "bold"
+                    :margin      "0 30px 0 0"}}
+        announcement]
+       [:button {:style   {:background-color "transparent"
+                           :border-color     "#ffffff"
+                           :border-radius    "50%"
+                           :border-style     "solid"
+                           :border-width     "2px"
+                           :cursor           "pointer"
+                           :display          "flex"
+                           :height           "25px"
+                           :padding          "0"
+                           :position         "fixed"
+                           :right            "10px"
+                           :top              "5px"
+                           :width            "25px"}
+                 :onClick "document.getElementById('banner').style.display='none'"}
+        [:svg {:viewBox "0 0 48 48" :fill "#ffffff"}
+         [:path {:d "M38 12.83l-2.83-2.83-11.17 11.17-11.17-11.17-2.83 2.83 11.17 11.17-11.17 11.17 2.83 2.83
+                     11.17-11.17 11.17 11.17 2.83-2.83-11.17-11.17z"}]]]])))
 
 (defn render-page [uri]
   (fn [request]
@@ -53,20 +93,11 @@
                  [:body {:style {:padding-top "60px"}}
                   (if (seq webpack-files)
                     [:section {:id "content" :class "container-fluid"}
+                     ;; TODO These will be moved to the front end for better UX.
                      (when-let [flash-message (get-in request [:params :flash_message])]
-                       [:p {:class "alert"} flash-message])            ; TODO This will be moved to the front end for better UX.
-                     (let [announcement (slurp "announcement.txt")]    ; TODO This will be moved to the front end for better UX.
-                       (when (and (= page "home") (pos? (count announcement)))
-                         [:p {:style {:color            "#eec922"
-                                      :background-color "#e63232"
-                                      :text-align       "center"
-                                      :padding          "5px"
-                                      :margin           "0px"
-                                      :position         "fixed"
-                                      :top              "61px"
-                                      :width            "100vw"
-                                      :z-index          100}}
-                          announcement]))
+                       [:p {:class "alert"} flash-message])
+                     (when (.exists (io/as-file "announcement.txt"))
+                       (announcement-banner))
                      [:div#app]]
                     [:label "No webpack files found. Check if webpack is running, or wait for it to finish compiling."])
                   (js-init page (assoc (:params request)

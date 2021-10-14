@@ -720,6 +720,7 @@ class AnswerInput extends React.Component {
     render() {
         const {surveyNode, surveyNode: {answers, dataType}, validateAndSetCurrentValue} = this.props;
         const {newInput} = this.state;
+        const required = false;
         return answers[0]
             ? (
                 <div className="d-inline-flex">
@@ -732,23 +733,37 @@ class AnswerInput extends React.Component {
                             }}
                         />
                     </div>
-                    <RequiredInput
-                        key={answers[0].answer + "_" + answers[0].id}
-                        className="form-control mr-2"
-                        id={answers[0].answer + "_" + answers[0].id}
-                        onChange={e => this.updateInputValue(dataType === "number"
-                            ? Number(e.target.value)
-                            : e.target.value)}
-                        placeholder={answers[0].answer}
-                        type={dataType}
-                        value={newInput}
-                    />
+                    {required ? (
+                        <RequiredInput
+                            key={answers[0].answer + "_" + answers[0].id}
+                            className="form-control mr-2"
+                            id={answers[0].answer + "_" + answers[0].id}
+                            onChange={e => this.updateInputValue(dataType === "number"
+                                ? Number(e.target.value)
+                                : e.target.value)}
+                            placeholder={answers[0].answer}
+                            type={dataType}
+                            value={newInput}
+                        />
+                    ) : (
+                        <input
+                            className="form-control mr-2"
+                            id={answers[0].answer + "_" + answers[0].id}
+                            name={answers[0].answer + "_" + answers[0].id}
+                            onChange={e => this.updateInputValue(dataType === "number"
+                                ? Number(e.target.value)
+                                : e.target.value)}
+                            placeholder={answers[0].answer}
+                            type={dataType}
+                            value={newInput}
+                        />
+                    )}
                     <button
                         className="text-center btn btn-outline-lightgreen btn-sm ml-2"
                         id="save-input"
                         name="save-input"
                         onClick={() => {
-                            if (newInput) validateAndSetCurrentValue(surveyNode, answers[0].id, newInput);
+                            if (!required || newInput) validateAndSetCurrentValue(surveyNode, answers[0].id, newInput);
                         }}
                         style={{height: "2.5rem"}}
                         type="button"
