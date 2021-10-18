@@ -5,7 +5,7 @@
 Closes CEO-###
 
 ## Submission Checklist
-- [ ] Commits include the JIRA issue and the `#review` hashtag (e.g. `CEO-### #review <comment>`)
+- [ ] Included Jira issue in the PR title (e.g. `CEO-### <title>`)
 - [ ] Code passes linter rules (`npm run eslint`/`clj-kondo --lint src`)
 
 ## Testing
