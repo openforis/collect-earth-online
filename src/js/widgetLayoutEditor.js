@@ -12,12 +12,13 @@ class WidgetLayoutEditor extends React.PureComponent {
     constructor(props) {
         super(props);
         this.state = {
+            // This is just a list of widget layouts
             layout: [],
             widgets: [],
             imagery: [],
             widgetBasemap: -1,
             selectedProjectId: 0,
-            projectList: [],
+            projectTemplateList: [],
             projectFilter:"",
             selectedWidgetType: "-1",
             selectedDataType: "-1",
@@ -58,15 +59,29 @@ class WidgetLayoutEditor extends React.PureComponent {
         };
     }
 
+    /// Lifecycle
+
     componentDidMount() {
-        this.fetchProject(this.state.projectId, true)
-            .catch(response => {
-                console.log(response);
-                alert("Error downloading the widget list. See console for details.");
-            });
+        this.fetchProject(this.state.projectId, true);
         this.getInstitutionImagery(this.state.institutionID);
-        this.getProjectList();
+        this.getProjectTemplateList();
     }
+
+    /// API Calls
+
+    fetchProject = (id, setDashboardID) => fetch(this.state.theURI + "/get-by-projid?projectId=" + id)
+        .then(response => (response.ok ? response.json() : Promise.reject(response)))
+        .then(data => {
+            this.setState({
+                dashboardID: setDashboardID ? data.dashboardID : this.state.dashboardID,
+                widgets: data.widgets,
+                layout: data.widgets.map(dw => ({...dw.layout, minW: 3, w: Math.max(dw.layout.w, 3)}))
+            });
+        })
+        .catch(response => {
+            console.log(response);
+            alert("Error downloading the widget list. See console for details.");
+        });
 
     getInstitutionImagery = institutionId => {
         fetch(`/get-institution-imagery?institutionId=${institutionId}`)
@@ -83,20 +98,47 @@ class WidgetLayoutEditor extends React.PureComponent {
             });
     };
 
-    getParameterByName = (name, url) => {
-        const regex = new RegExp("[?&]" + name.replace(/[[\]]/g, "\\$&") + "(=([^&#]*)|&|#|$)");
-        const results = regex.exec(decodeURIComponent(url || window.location.href)); // regex.exec(url);
-        return results
-            ? results[2]
-                ? decodeURIComponent(results[2].replace(/\+/g, " "))
-                : ""
-            : null;
+    getProjectTemplateList = () => {
+        fetch("/get-template-projects")
+            .then(response => (response.ok ? response.json() : Promise.reject(response)))
+            .then(data => this.setState({projectTemplateList: data}))
+            .catch(response => {
+                console.log(response);
+                alert("Error retrieving the project list. See console for details.");
+            });
     };
 
-    getImageByType = imageType => (imageType === "getStats" ? "/img/geodash/statssample.gif"
-        : (!imageType || imageType.toLowerCase().includes("image")) ? "/img/geodash/mapsample.gif"
-            : (imageType.toLowerCase().includes("degradationtool")) ? "/img/geodash/degsample.gif"
-                : "/img/geodash/graphsample.gif");
+    getBandsFromGateway = (isDual, isCollection) => {
+        const value = isDual ? this.state.imageCollectionDual : this.state.imageCollection;
+        if (value !== "") {
+            const postObject = {
+                path: "getAvailableBands",
+                ...(isCollection ? {imageCollection: value} : {image: value})
+            };
+            fetch("/geo-dash/gateway-request", {
+                method: "POST",
+                headers: {
+                    "Accept": "application/json",
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(postObject)
+            })
+                .then(res => (res.ok ? res.json() : Promise.reject()))
+                .then(data => {
+                    if (data.hasOwnProperty("bands")) {
+                        if (isDual) {
+                            this.setState({
+                                availableBandsDual: data.bands.join(", ")
+                            });
+                        } else {
+                            this.setState({
+                                availableBands: data.bands.join(", ")
+                            });
+                        }
+                    }
+                });
+        }
+    };
 
     serveItUp = (url, widget) => {
         fetch(
@@ -124,33 +166,39 @@ class WidgetLayoutEditor extends React.PureComponent {
         this.serveItUp(`${this.state.theURI}/delete-widget?widgetId=${widget.id}`, widget);
     };
 
-    generateDOM = () => {
-        const x = "x";
-        return _.map(this.state.widgets, widget => (
-            <div
-                key={widget.layout.i}
-                className="front widgetEditor-widgetBackground"
-                data-grid={widget.layout}
-                onDragEnd={this.onDragEnd}
-                onDragStart={this.onDragStart}
-                style={{backgroundImage: "url(" + this.getImageByType(widget.properties[0]) + ")"}}
-            >
-                <h3 className="widgetEditor title">{widget.name}
-                    <span
-                        className="remove"
-                        onClick={e => {
-                            e.stopPropagation();
-                            this.onRemoveItem(widget.layout.i);
-                        }}
-                        onMouseDown={e => e.stopPropagation()}
-                    >
-                        {x}
-                    </span>
-                </h3>
-                <span className="text text-danger">Sample Image</span>
-            </div>
-        ));
+    getWidgetTemplateByProjectId = id => {
+        this.fetchProject(id)
+            .then(() => {
+                this.state.widgets.forEach(widget => {
+                    this.addTemplateWidget(widget);
+                });
+            })
+            .catch(response => {
+                console.log(response);
+                alert("Error downloading the widget list. See console for details.");
+            });
     };
+
+    addTemplateWidget = widget => {
+        fetch(this.state.theURI + "/create-widget",
+              {
+                  method: "POST",
+                  headers: {
+                      "Accept": "application/json",
+                      "Content-Type": "application/json"
+                  },
+                  body: JSON.stringify({
+                      projectId: this.state.projectId,
+                      dashID: this.state.dashboardID,
+                      widgetJSON: JSON.stringify(widget)
+                  })
+              })
+            .catch(response => {
+                console.log(response);
+            });
+    };
+
+    /// State
 
     onWidgetTypeSelectChanged = event => {
         this.setState({
@@ -190,50 +238,6 @@ class WidgetLayoutEditor extends React.PureComponent {
             availableBands:"",
             availableBandsDual:""
         });
-    };
-
-    onDragStart = e => {
-        e.preventDefault();
-        e.stopPropagation();
-        this.props.onMouseDown(e);
-    };
-
-    onDragEnd = e => {
-        e.preventDefault();
-        e.stopPropagation();
-        this.props.onMouseUp(e);
-    };
-
-    getBandsFromGateway = (isDual, isCollection) => {
-        const value = isDual ? this.state.imageCollectionDual : this.state.imageCollection;
-        if (value !== "") {
-            const postObject = {
-                path: "getAvailableBands",
-                ...(isCollection ? {imageCollection: value} : {image: value})
-            };
-            fetch("/geo-dash/gateway-request", {
-                method: "POST",
-                headers: {
-                    "Accept": "application/json",
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify(postObject)
-            })
-                .then(res => (res.ok ? res.json() : Promise.reject()))
-                .then(data => {
-                    if (data.hasOwnProperty("bands")) {
-                        if (isDual) {
-                            this.setState({
-                                availableBandsDual: data.bands.join(", ")
-                            });
-                        } else {
-                            this.setState({
-                                availableBands: data.bands.join(", ")
-                            });
-                        }
-                    }
-                });
-        }
     };
 
     onDataTypeSelectChanged = event => {
@@ -280,14 +284,6 @@ class WidgetLayoutEditor extends React.PureComponent {
             availableBands:"",
             availableBandsDual:""
         });
-    };
-
-    onNextWizardStep = () => {
-        this.setState({wizardStep: 2});
-    };
-
-    onPrevWizardStep = () => {
-        this.setState({wizardStep: 1});
     };
 
     onCreateNewWidget = () => {
@@ -485,6 +481,53 @@ class WidgetLayoutEditor extends React.PureComponent {
             });
     };
 
+    onRemoveItem = i => {
+        const removedWidget = _.filter(this.state.widgets, w => w.layout.i === i.toString());
+        this.deleteWidgetFromServer(removedWidget[0]);
+        this.setState({
+            widgets: _.reject(this.state.widgets, widget => widget.layout.i === i.toString()),
+            layout: _.reject(this.state.layout, layout => layout.i === i.toString())
+        });
+    };
+
+    sameLayout = (layout1, layout2) => layout1.x === layout2.x
+        && layout1.y === layout2.y
+        && layout1.h === layout2.h
+        && layout1.w === layout2.w;
+
+    onLayoutChange = layout => {
+        const newWidgets = this.state.widgets.map((stateWidget, idx) => {
+            if (this.sameLayout(stateWidget.layout, layout[idx])) {
+                return stateWidget;
+            } else {
+                const {x, y, h, w, i} = layout[idx];
+                const newWidget = {...stateWidget, layout: {x, y, h, w, i}};
+                this.serveItUp(`${this.state.theURI}/update-widget?widgetId=${newWidget.id}`, newWidget);
+                return newWidget;
+            }
+        });
+        this.setState({
+            widgets: newWidgets,
+            layout
+        });
+    };
+
+    setWidgetLayoutTemplate = id => {
+        this.setState({selectedProjectId: id});
+        this.state.widgets.forEach(widget => {
+            this.deleteWidgetFromServer(widget);
+        });
+        this.getWidgetTemplateByProjectId(id);
+    };
+
+    onNextWizardStep = () => {
+        this.setState({wizardStep: 2});
+    };
+
+    onPrevWizardStep = () => {
+        this.setState({wizardStep: 1});
+    };
+
     onDataBasemapSelectChanged = event => {
         this.setState({widgetBasemap: parseInt(event.target.value)});
     };
@@ -527,7 +570,7 @@ class WidgetLayoutEditor extends React.PureComponent {
         this.setState({imageParams: event.target.value.replace(/\s/g, "")});
     };
 
-    onswipeAsDefaultChange = event => {
+    onSwipeAsDefaultChange = event => {
         this.setState({swipeAsDefault: event.target.checked});
     };
 
@@ -647,64 +690,63 @@ class WidgetLayoutEditor extends React.PureComponent {
         }, this.setFormStateByDates);
     };
 
-    getProjectList = () => {
-        fetch("/get-template-projects")
-            .then(response => (response.ok ? response.json() : Promise.reject(response)))
-            .then(data => this.setState({projectList: data}))
-            .catch(response => {
-                console.log(response);
-                alert("Error retrieving the project list. See console for details.");
-            });
+    /// Helpers
+
+    getParameterByName = (name, url) => {
+        const regex = new RegExp("[?&]" + name.replace(/[[\]]/g, "\\$&") + "(=([^&#]*)|&|#|$)");
+        const results = regex.exec(decodeURIComponent(url || window.location.href)); // regex.exec(url);
+        return results
+            ? results[2]
+                ? decodeURIComponent(results[2].replace(/\+/g, " "))
+                : ""
+            : null;
     };
 
-    setWidgetLayoutTemplate = id => {
-        this.setState({selectedProjectId: id});
-        this.state.widgets.forEach(widget => {
-            this.deleteWidgetFromServer(widget);
-        });
-        this.getWidgetTemplateByProjectId(id);
+    getImageByType = imageType => (imageType === "getStats" ? "/img/geodash/statssample.gif"
+        : (!imageType || imageType.toLowerCase().includes("image")) ? "/img/geodash/mapsample.gif"
+            : (imageType.toLowerCase().includes("degradationtool")) ? "/img/geodash/degsample.gif"
+                : "/img/geodash/graphsample.gif");
+
+    onDragStart = e => {
+        e.preventDefault();
+        e.stopPropagation();
+        this.props.onMouseDown(e);
     };
 
-    fetchProject = (id, setDashboardID) => fetch(this.state.theURI + "/get-by-projid?projectId=" + id)
-        .then(response => (response.ok ? response.json() : Promise.reject(response)))
-        .then(data => {
-            this.setState({
-                dashboardID: setDashboardID ? data.dashboardID : this.state.dashboardID,
-                widgets: data.widgets,
-                layout: data.widgets.map(dw => ({...dw.layout, minW: 3, w: Math.max(dw.layout.w, 3)}))
-            });
-        });
-
-    getWidgetTemplateByProjectId = id => {
-        this.fetchProject(id)
-            .then(() => {
-                this.state.widgets.forEach(widget => {
-                    this.addTemplateWidget(widget);
-                });
-            })
-            .catch(response => {
-                console.log(response);
-                alert("Error downloading the widget list. See console for details.");
-            });
+    onDragEnd = e => {
+        e.preventDefault();
+        e.stopPropagation();
+        this.props.onMouseUp(e);
     };
 
-    addTemplateWidget = widget => {
-        fetch(this.state.theURI + "/create-widget",
-              {
-                  method: "POST",
-                  headers: {
-                      "Accept": "application/json",
-                      "Content-Type": "application/json"
-                  },
-                  body: JSON.stringify({
-                      projectId: this.state.projectId,
-                      dashID: this.state.dashboardID,
-                      widgetJSON: JSON.stringify(widget)
-                  })
-              })
-            .catch(response => {
-                console.log(response);
-            });
+    /// Render
+
+    generateDOM = () => {
+        const x = "x";
+        return _.map(this.state.widgets, widget => (
+            <div
+                key={widget.layout.i}
+                className="front widgetEditor-widgetBackground"
+                data-grid={widget.layout}
+                onDragEnd={this.onDragEnd}
+                onDragStart={this.onDragStart}
+                style={{backgroundImage: "url(" + this.getImageByType(widget.properties[0]) + ")"}}
+            >
+                <h3 className="widgetEditor title">{widget.name}
+                    <span
+                        className="remove"
+                        onClick={e => {
+                            e.stopPropagation();
+                            this.onRemoveItem(widget.layout.i);
+                        }}
+                        onMouseDown={e => e.stopPropagation()}
+                    >
+                        {x}
+                    </span>
+                </h3>
+                <span className="text text-danger">Sample Image</span>
+            </div>
+        ));
     };
 
     getNewWidgetForm = () => (this.props.addDialog
@@ -855,7 +897,7 @@ class WidgetLayoutEditor extends React.PureComponent {
                                                 value={this.state.selectedProjectId}
                                             >
                                                 <option key={0} value={0}>None</option>
-                                                {this.state.projectList
+                                                {this.state.projectTemplateList
                                                     .filter(({id, name}) => (id + name.toLocaleLowerCase())
                                                         .includes(this.state.projectFilter.toLocaleLowerCase()))
                                                     .map(({id, name}) =>
@@ -1092,7 +1134,7 @@ class WidgetLayoutEditor extends React.PureComponent {
                     checked={this.state.swipeAsDefault}
                     className="form-control widgetWizardCheckbox"
                     id="SwipeOpacityDefault"
-                    onChange={this.onswipeAsDefaultChange}
+                    onChange={this.onSwipeAsDefaultChange}
                     type="checkbox"
                 />
             </div>
@@ -1774,37 +1816,6 @@ class WidgetLayoutEditor extends React.PureComponent {
                 </>
             );
         }
-    };
-
-    onRemoveItem = i => {
-        const removedWidget = _.filter(this.state.widgets, w => w.layout.i === i.toString());
-        this.deleteWidgetFromServer(removedWidget[0]);
-        this.setState({
-            widgets: _.reject(this.state.widgets, widget => widget.layout.i === i.toString()),
-            layout: _.reject(this.state.layout, layout => layout.i === i.toString())
-        });
-    };
-
-    sameLayout = (layout1, layout2) => layout1.x === layout2.x
-        && layout1.y === layout2.y
-        && layout1.h === layout2.h
-        && layout1.w === layout2.w;
-
-    onLayoutChange = layout => {
-        const newWidgets = this.state.widgets.map((stateWidget, idx) => {
-            if (this.sameLayout(stateWidget.layout, layout[idx])) {
-                return stateWidget;
-            } else {
-                const {x, y, h, w, i} = layout[idx];
-                const newWidget = {...stateWidget, layout: {x, y, h, w, i}};
-                this.serveItUp(`${this.state.theURI}/update-widget?widgetId=${newWidget.id}`, newWidget);
-                return newWidget;
-            }
-        });
-        this.setState({
-            widgets: newWidgets,
-            layout
-        });
     };
 
     render() {
