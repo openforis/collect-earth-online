@@ -23,8 +23,8 @@
            :systemd          {:main-opts ["-m" "triangulum.systemd"]}
            :rebel            {:extra-deps {com.bhauman/rebel-readline {:mvn/version "0.1.4"}}
                               :main-opts  ["-m" "rebel-readline.main"]}
-           :production       {:jvm-opts  ["-Xmx4096m" "-XX:+PrintFlagsFinal"]}
-           :run-server       {:main-opts ["-m" "collect-earth-online.server"]}
+           :run-server       {:main-opts ["-m" "collect-earth-online.server"]
+                              :jvm-opts  ["-XX:+PrintFlagsFinal"]}
            :check-reflection {:main-opts ["-e" "(do,(set!,*warn-on-reflection*,true),nil)"
                                           "-e" "(require,'collect-earth-online.server)"]}
            :check-deps       {:extra-deps {olical/depot {:mvn/version "1.8.4"}}
