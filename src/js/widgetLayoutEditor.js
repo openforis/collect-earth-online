@@ -12,14 +12,16 @@ class WidgetLayoutEditor extends React.PureComponent {
     constructor(props) {
         super(props);
         this.state = {
-            // This is just a list of widget layouts
-            layout: [],
+            // Page state
+            layout: [], // This is just a list of widget layouts, todo probably not needed
             widgets: [],
             imagery: [],
             widgetBasemap: -1,
-            selectedProjectId: 0,
+            // Templates, todo make own component
             projectTemplateList: [],
+            selectedProjectId: 0,
             projectFilter:"",
+            // Widget specific state
             selectedWidgetType: "-1",
             selectedDataType: "-1",
             widgetTitle: "",
@@ -50,26 +52,21 @@ class WidgetLayoutEditor extends React.PureComponent {
             widgetMaxDual: "",
             widgetCloudScoreDual: "",
             formReady: false,
-            wizardStep: 1,
-            projectId: this.getParameterByName("projectId"),
-            institutionID: this.getParameterByName("institutionId")
-                ? this.getParameterByName("institutionId")
-                : "1",
-            theURI: "/geo-dash"
+            wizardStep: 1
         };
     }
 
     /// Lifecycle
 
     componentDidMount() {
-        this.fetchProject(this.state.projectId, true);
-        this.getInstitutionImagery(this.state.institutionID);
+        this.fetchProject(this.props.projectId, true);
+        this.getInstitutionImagery(this.props.institutionId);
         this.getProjectTemplateList();
     }
 
     /// API Calls
 
-    fetchProject = (id, setDashboardID) => fetch(this.state.theURI + "/get-by-projid?projectId=" + id)
+    fetchProject = (id, setDashboardID) => fetch("/geo-dash/get-by-projid?projectId=" + id)
         .then(response => (response.ok ? response.json() : Promise.reject(response)))
         .then(data => {
             this.setState({
@@ -163,7 +160,7 @@ class WidgetLayoutEditor extends React.PureComponent {
     };
 
     deleteWidgetFromServer = widget => {
-        this.serveItUp(`${this.state.theURI}/delete-widget?widgetId=${widget.id}`, widget);
+        this.serveItUp(`/geo-dash/delete-widget?widgetId=${widget.id}`, widget);
     };
 
     getWidgetTemplateByProjectId = id => {
@@ -180,7 +177,7 @@ class WidgetLayoutEditor extends React.PureComponent {
     };
 
     addTemplateWidget = widget => {
-        fetch(this.state.theURI + "/create-widget",
+        fetch("/geo-dash/create-widget",
               {
                   method: "POST",
                   headers: {
@@ -188,7 +185,7 @@ class WidgetLayoutEditor extends React.PureComponent {
                       "Content-Type": "application/json"
                   },
                   body: JSON.stringify({
-                      projectId: this.state.projectId,
+                      projectId: this.props.projectId,
                       dashID: this.state.dashboardID,
                       widgetJSON: JSON.stringify(widget)
                   })
@@ -433,7 +430,7 @@ class WidgetLayoutEditor extends React.PureComponent {
         }
 
         fetch(
-            this.state.theURI + "/create-widget",
+            "/geo-dash/create-widget",
             {
                 method: "POST",
                 headers: {
@@ -441,7 +438,7 @@ class WidgetLayoutEditor extends React.PureComponent {
                     "Content-Type": "application/json"
                 },
                 body: JSON.stringify({
-                    projectId: this.state.projectId,
+                    projectId: this.props.projectId,
                     dashID: this.state.dashboardID,
                     widgetJSON: JSON.stringify(widget)
                 })
@@ -502,7 +499,7 @@ class WidgetLayoutEditor extends React.PureComponent {
             } else {
                 const {x, y, h, w, i} = layout[idx];
                 const newWidget = {...stateWidget, layout: {x, y, h, w, i}};
-                this.serveItUp(`${this.state.theURI}/update-widget?widgetId=${newWidget.id}`, newWidget);
+                this.serveItUp(`/geo-dash/update-widget?widgetId=${newWidget.id}`, newWidget);
                 return newWidget;
             }
         });
@@ -692,16 +689,6 @@ class WidgetLayoutEditor extends React.PureComponent {
 
     /// Helpers
 
-    getParameterByName = (name, url) => {
-        const regex = new RegExp("[?&]" + name.replace(/[[\]]/g, "\\$&") + "(=([^&#]*)|&|#|$)");
-        const results = regex.exec(decodeURIComponent(url || window.location.href)); // regex.exec(url);
-        return results
-            ? results[2]
-                ? decodeURIComponent(results[2].replace(/\+/g, " "))
-                : ""
-            : null;
-    };
-
     getImageByType = imageType => (imageType === "getStats" ? "/img/geodash/statssample.gif"
         : (!imageType || imageType.toLowerCase().includes("image")) ? "/img/geodash/mapsample.gif"
             : (imageType.toLowerCase().includes("degradationtool")) ? "/img/geodash/degsample.gif"
@@ -876,7 +863,8 @@ class WidgetLayoutEditor extends React.PureComponent {
                                         <div className="form-group">
                                             <label
                                                 htmlFor="project-filter"
-                                            >Template Filter (Name or ID)
+                                            >
+                                                Template Filter (Name or ID)
                                             </label>
                                             <input
                                                 className="form-control form-control-sm"
@@ -961,7 +949,7 @@ class WidgetLayoutEditor extends React.PureComponent {
                         <label htmlFor="widgetIndicesSelect">Basemap</label>
                         <button
                             className="btn btn-sm btn-secondary mb-1"
-                            onClick={() => this.getInstitutionImagery(this.state.institutionID)}
+                            onClick={() => this.getInstitutionImagery(this.props.institutionId)}
                             type="button"
                         >
                             Refresh
@@ -1157,9 +1145,9 @@ class WidgetLayoutEditor extends React.PureComponent {
 
     getInstitutionImageryInfo = () => (
         <div>
-        Adding imagery to basemaps is available on the&nbsp;
-            <a href={`/review-institution?institutionId=${this.state.institutionID}`} rel="noreferrer noopener" target="_blank">
-            institution review page
+            Adding imagery to basemaps is available on the&nbsp;
+            <a href={`/review-institution?institutionId=${this.props.institutionId}`} rel="noreferrer noopener" target="_blank">
+                institution review page
             </a>
         &nbsp;in the imagery tab.
         </div>
@@ -1849,6 +1837,8 @@ export function pageInit(args) {
                     addDialog={addDialog}
                     closeDialogs={closeDialogs}
                     copyDialog={copyDialog}
+                    institutionId={args.institutionId}
+                    projectId={args.projectId}
                 />
             )}
             userName={args.userName || ""}
