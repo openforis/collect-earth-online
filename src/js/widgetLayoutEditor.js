@@ -1760,12 +1760,9 @@ class WidgetLayoutEditor extends React.PureComponent {
             <div>
                 {this.getNewWidgetForm()}
                 <ReactGridLayout
-                    className="layout"
                     cols={12}
-                    graphReducer="Min"
                     isDraggable
                     isResizable
-                    items={0}
                     onLayoutChange={this.onLayoutChange}
                     rowHeight={300}
                 >
