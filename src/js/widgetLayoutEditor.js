@@ -18,7 +18,7 @@ class WidgetLayoutEditor extends React.PureComponent {
             widgetBasemap: -1,
             // Templates, todo make own component
             projectTemplateList: [],
-            selectedProjectId: 0,
+            templateProjectId: 0,
             projectFilter:"",
             // Widget specific state
             selectedWidgetType: "-1",
@@ -69,7 +69,7 @@ class WidgetLayoutEditor extends React.PureComponent {
         .then(response => (response.ok ? response.json() : Promise.reject(response)))
         .then(data => this.setState({widgets: data}))
         .catch(response => {
-            console.log(response);
+            console.error(response);
             alert("Error downloading the widget list. See console for details.");
         });
 
@@ -83,7 +83,7 @@ class WidgetLayoutEditor extends React.PureComponent {
                 });
             })
             .catch(response => {
-                console.log(response);
+                console.error(response);
                 alert("Error downloading the imagery list. See console for details.");
             });
     };
@@ -93,7 +93,7 @@ class WidgetLayoutEditor extends React.PureComponent {
             .then(response => (response.ok ? response.json() : Promise.reject(response)))
             .then(data => this.setState({projectTemplateList: data}))
             .catch(response => {
-                console.log(response);
+                console.error(response);
                 alert("Error retrieving the project list. See console for details.");
             });
     };
@@ -145,10 +145,11 @@ class WidgetLayoutEditor extends React.PureComponent {
                 })
             }
         )
-            .then(response => {
-                if (!response.ok) {
-                    console.log(response);
-                }
+            .then(response => (response.ok ? response.json() : Promise.reject(response)))
+            .then(data => this.setState({widgets: data}))
+            .catch(error => {
+                console.error(error);
+                alert("Error loading updating widgets. See console for details.");
             });
     };
 
@@ -156,34 +157,26 @@ class WidgetLayoutEditor extends React.PureComponent {
         this.serveItUp("delete-widget", widget);
     };
 
-    getWidgetTemplateByProjectId = id => {
-        this.fetchProject(id)
-            .then(() => {
-                this.state.widgets.forEach(widget => {
-                    this.addTemplateWidget(widget);
-                });
-            })
+    copyProjectWidgets = () => {
+        fetch(
+            "/geo-dash/copy-project-widgets",
+            {
+                method: "POST",
+                headers: {
+                    "Accept": "application/json",
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    projectId: this.props.projectId,
+                    fromProjectId: this.state.templateProjectId
+                })
+            }
+        )
+            .then(response => (response.ok ? response.json() : Promise.reject(response)))
+            .then(data => this.setState({widgets: data}))
             .catch(error => {
                 console.error(error);
-                alert("Error downloading the widget list. See console for details.");
-            });
-    };
-
-    addTemplateWidget = widget => {
-        fetch("/geo-dash/create-widget",
-              {
-                  method: "POST",
-                  headers: {
-                      "Accept": "application/json",
-                      "Content-Type": "application/json"
-                  },
-                  body: JSON.stringify({
-                      projectId: this.props.projectId,
-                      widgetJSON: JSON.stringify(widget)
-                  })
-              })
-            .catch(error => {
-                console.error(error);
+                alert("Error loading template widgets. See console for details.");
             });
     };
 
@@ -435,37 +428,38 @@ class WidgetLayoutEditor extends React.PureComponent {
                 })
             }
         )
-            .then(response => {
-                if (response.ok) {
-                    this.props.closeDialogs();
-                    this.setState({
-                        widgets: [...this.state.widgets, widget],
-                        selectedWidgetType: "-1",
-                        selectedDataTypeDual: "-1",
-                        selectedDataType: "-1",
-                        widgetTitle: "",
-                        imageCollection: "",
-                        featureCollection: "",
-                        matchField: "",
-                        graphBand: "",
-                        graphBandDeg: "NDFI",
-                        graphReducer: "Min",
-                        imageParams: "",
-                        dualLayer: false,
-                        swipeAsDefault: false,
-                        startDate:"",
-                        endDate:"",
-                        startDate2:"",
-                        endDate2:"",
-                        widgetBands:"",
-                        widgetMin:"",
-                        widgetMax:"",
-                        widgetCloudScore:"",
-                        formReady: false
-                    });
-                } else {
-                    console.log("Error adding custom imagery to institution. See console for details.");
-                }
+            .then(response => (response.ok ? response.json() : Promise.reject(response)))
+            .then(data => {
+                this.props.closeDialogs();
+                this.setState({
+                    widgets: data,
+                    selectedWidgetType: "-1",
+                    selectedDataTypeDual: "-1",
+                    selectedDataType: "-1",
+                    widgetTitle: "",
+                    imageCollection: "",
+                    featureCollection: "",
+                    matchField: "",
+                    graphBand: "",
+                    graphBandDeg: "NDFI",
+                    graphReducer: "Min",
+                    imageParams: "",
+                    dualLayer: false,
+                    swipeAsDefault: false,
+                    startDate:"",
+                    endDate:"",
+                    startDate2:"",
+                    endDate2:"",
+                    widgetBands:"",
+                    widgetMin:"",
+                    widgetMax:"",
+                    widgetCloudScore:"",
+                    formReady: false
+                });
+            })
+            .catch(error => {
+                console.error(error);
+                alert("Error creating widget. See console for details.");
             });
     };
 
@@ -473,7 +467,6 @@ class WidgetLayoutEditor extends React.PureComponent {
         const {widgets} = this.state;
         const removedWidget = widgets.find(w => w.id === parseInt(widgetId));
         this.deleteWidgetFromServer(removedWidget);
-        this.setState({widgets: _.reject(widgets, widget => widget.id === parseInt(widgetId))});
     };
 
     sameLayout = (layout1, layout2) => layout1.x === layout2.x
@@ -481,26 +474,17 @@ class WidgetLayoutEditor extends React.PureComponent {
         && layout1.h === layout2.h
         && layout1.w === layout2.w;
 
-    onLayoutChange = layout => {
-        const newWidgets = this.state.widgets.map((stateWidget, idx) => {
-            if (this.sameLayout(stateWidget.layout, layout[idx])) {
-                return stateWidget;
-            } else {
-                const {x, y, h, w} = layout[idx];
-                const newWidget = {...stateWidget, layout: {x, y, h, w}};
-                this.serveItUp("update-widget", newWidget);
-                return newWidget;
-            }
-        });
-        this.setState({widgets: newWidgets});
-    };
+    onLayoutChange = layout => this.state.widgets.forEach((stateWidget, idx) => {
+        if (!this.sameLayout(stateWidget.layout, layout[idx])) {
+            const {x, y, h, w} = layout[idx];
+            const newWidget = {...stateWidget, layout: {x, y, h, w}};
+            this.serveItUp("update-widget", newWidget);
+            return newWidget;
+        }
+    });
 
     setWidgetLayoutTemplate = id => {
-        this.setState({selectedProjectId: id});
-        this.state.widgets.forEach(widget => {
-            this.deleteWidgetFromServer(widget);
-        });
-        this.getWidgetTemplateByProjectId(id);
+        this.setState({templateProjectId: id});
     };
 
     onNextWizardStep = () => {
@@ -828,7 +812,7 @@ class WidgetLayoutEditor extends React.PureComponent {
                                                 name="project-template"
                                                 onChange={e => this.setWidgetLayoutTemplate(parseInt(e.target.value))}
                                                 size="1"
-                                                value={this.state.selectedProjectId}
+                                                value={this.state.templateProjectId}
                                             >
                                                 <option key={0} value={0}>None</option>
                                                 {this.state.projectTemplateList
@@ -838,21 +822,24 @@ class WidgetLayoutEditor extends React.PureComponent {
                                                         <option key={id} value={id}>{id} - {name}</option>)}
                                             </select>
                                         </div>
-                                        <div className="form-group">
-                                            <span>
-                                                Warning, selecting a template project will overwrite
-                                                existing widgets immediately.
-                                            </span>
-                                        </div>
                                     </form>
                                 </div>
                                 <div className="modal-footer">
+                                    <button
+                                        className="btn btn-secondary btn-warning"
+                                        data-dismiss="modal"
+                                        onClick={this.copyProjectWidgets}
+                                        type="button"
+                                    >
+                                        Copy
+                                    </button>
                                     <button
                                         className="btn btn-secondary"
                                         data-dismiss="modal"
                                         onClick={this.onCancelNewWidget}
                                         type="button"
-                                    >Close
+                                    >
+                                        Close
                                     </button>
                                 </div>
                             </div>
