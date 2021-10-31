@@ -6,8 +6,15 @@
             [collect-earth-online.views :refer [data-response]]))
 
 (defn- return-widgets [project-id]
-  {:widgets (mapv #(-> % (:widget) (tc/jsonb->clj))
-                  (call-sql "get_project_widgets_by_project_id" project-id))})
+  (mapv (fn [{:keys [widget_id widget]}]
+          (-> widget
+              (tc/jsonb->clj)
+              (assoc :id widget_id)))
+        (call-sql "get_project_widgets_by_project_id" project-id)))
+
+(defn- split-widget-json [widget-json]
+  (let [widget (tc/json->clj widget-json)]
+    [(:id widget) (-> widget (dissoc :id) (tc/clj->jsonb))]))
 
 (defn get-project-widgets [{:keys [params]}]
   (let [project-id (tc/val->int (:projectId params))]
@@ -23,20 +30,14 @@
 
 (defn update-dashboard-widget-by-id [{:keys [params]}]
   (let [project-id (tc/val->int (:projectId params))
-        widget-id  (tc/val->int (:widgetId params))
-        widget     (tc/json->jsonb (:widgetJSON params))]
-    (call-sql "update_project_widget_by_widget_id"
-              project-id
-              widget-id
-              widget)
+        [widget-id widget] (split-widget-json (:widgetJSON params))]
+    (call-sql "update_project_widget_by_widget_id" widget-id widget)
     (data-response (return-widgets project-id))))
 
 (defn delete-dashboard-widget-by-id [{:keys [params]}]
   (let [project-id (tc/val->int (:projectId params))
-        widget-id  (tc/val->int (:widgetId params))]
-    (call-sql "delete_project_widget_by_widget_id"
-              project-id
-              widget-id)
+        [widget-id _] (split-widget-json (:widgetJSON params))]
+    (call-sql "delete_project_widget_by_widget_id" widget-id)
     (data-response (return-widgets project-id))))
 
 (defn gateway-request [{:keys [params json-params server-name]}]

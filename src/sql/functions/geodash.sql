@@ -31,24 +31,21 @@ CREATE OR REPLACE FUNCTION add_project_widget(_project_id integer, _widget jsonb
 $$ LANGUAGE SQL;
 
 -- Updates a project_widget from the database
-CREATE OR REPLACE FUNCTION update_project_widget_by_widget_id(_project_id integer, _widget_id integer, _widget jsonb)
- RETURNS integer AS $$
+CREATE OR REPLACE FUNCTION update_project_widget_by_widget_id(_widget_id integer, _widget jsonb)
+ RETURNS void AS $$
 
     UPDATE project_widgets
     SET widget = _widget
-    WHERE CAST(jsonb_extract_path_text(widget, 'id') as int) = _widget_id
-        AND project_rid = _project_id
-    RETURNING widget_uid
+    WHERE widget_uid = _widget_id
 
 $$ LANGUAGE SQL;
 
 -- Deletes a project_widget from the database
-CREATE OR REPLACE FUNCTION delete_project_widget_by_widget_id(_project_id integer, _widget_id integer)
+CREATE OR REPLACE FUNCTION delete_project_widget_by_widget_id( _widget_id integer)
  RETURNS void AS $$
 
     DELETE FROM project_widgets
-    WHERE project_rid = _project_id
-        AND CAST(jsonb_extract_path_text(widget, 'id') as int) = _widget_id
+    WHERE widget_uid = _widget_id
 
 $$ LANGUAGE SQL;
 
