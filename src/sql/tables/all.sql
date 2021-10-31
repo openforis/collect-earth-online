@@ -176,14 +176,10 @@ CREATE TABLE plot_assignments (
 -- Stores widget information for a project
 -- 1 project -> many widgets
 CREATE TABLE project_widgets (
-    widget_uid      SERIAL PRIMARY KEY,
-    project_rid     integer NOT NULL REFERENCES projects (project_uid) ON DELETE CASCADE ON UPDATE CASCADE,
-    dashboard_id    uuid,
-    widget          jsonb
+    widget_uid     SERIAL PRIMARY KEY,
+    project_rid    integer NOT NULL REFERENCES projects (project_uid) ON DELETE CASCADE ON UPDATE CASCADE,
+    widget         jsonb
 );
-
--- Indices
-CREATE INDEX project_widgets_dashboard_id      ON project_widgets (dashboard_id);
 
 -- Indices on FK
 CREATE INDEX plots_projects_rid                ON plots (project_rid);

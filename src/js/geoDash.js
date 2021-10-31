@@ -87,7 +87,7 @@ class Geodash extends React.Component {
         .then(response => (response.ok ? response.json() : Promise.reject(response)))
         .then(data => this.setState({imageryList: data}));
 
-    getWidgetsByProjectId = () => fetch(`/geo-dash/get-by-projid?projectId=${this.props.projectId}`)
+    getWidgetsByProjectId = () => fetch(`/geo-dash/get-project-widgets?projectId=${this.props.projectId}`)
         .then(response => (response.ok ? response.json() : Promise.reject(response)))
         .then(data => data.widgets.map(widget => {
             widget.isFull = false;
