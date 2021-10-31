@@ -558,8 +558,8 @@ class Collection extends React.Component {
                     + `&plotId=${currentPlot.id}`
                     + `&aoi=${encodeURIComponent(`[${mercator.getViewExtent(mapConfig)}]`)}`
                     + `&plotShape=${currentPlot.plotGeom.includes("Point") ? currentProject.plotShape : "polygon"}`
-                    + `&bcenter=${currentPlot.plotGeom.includes("Point") ? currentPlot.plotGeom : ""}`
-                    + `&bradius=${plotRadius}`,
+                    + `&center=${currentPlot.plotGeom.includes("Point") ? currentPlot.plotGeom : ""}`
+                    + `&radius=${plotRadius}`,
                     `_geo-dash_${this.props.projectId}`);
     };
 
