@@ -13,7 +13,6 @@ class WidgetLayoutEditor extends React.PureComponent {
         super(props);
         this.state = {
             // Page state
-            layout: [], // This is just a list of widget layouts, todo probably not needed
             widgets: [],
             imagery: [],
             widgetBasemap: -1,
@@ -68,12 +67,7 @@ class WidgetLayoutEditor extends React.PureComponent {
 
     fetchProject = projectId => fetch(`/geo-dash/get-project-widgets?projectId=${projectId}`)
         .then(response => (response.ok ? response.json() : Promise.reject(response)))
-        .then(data => {
-            this.setState({
-                widgets: data.widgets,
-                layout: data.widgets.map(dw => ({...dw.layout, minW: 3, w: Math.max(dw.layout.w, 3)}))
-            });
-        })
+        .then(data => this.setState({widgets: data}))
         .catch(response => {
             console.log(response);
             alert("Error downloading the widget list. See console for details.");
@@ -146,7 +140,6 @@ class WidgetLayoutEditor extends React.PureComponent {
                     "Content-Type": "application/json"
                 },
                 body: JSON.stringify({
-                    widgetId: widget.id,
                     projectId: this.props.projectId,
                     widgetJSON: JSON.stringify(widget)
                 })
@@ -476,13 +469,11 @@ class WidgetLayoutEditor extends React.PureComponent {
             });
     };
 
-    onRemoveItem = i => {
-        const removedWidget = _.filter(this.state.widgets, w => w.layout.i === i.toString());
-        this.deleteWidgetFromServer(removedWidget[0]);
-        this.setState({
-            widgets: _.reject(this.state.widgets, widget => widget.layout.i === i.toString()),
-            layout: _.reject(this.state.layout, layout => layout.i === i.toString())
-        });
+    onRemoveItem = widgetId => {
+        const {widgets} = this.state;
+        const removedWidget = widgets.find(w => w.id === parseInt(widgetId));
+        this.deleteWidgetFromServer(removedWidget);
+        this.setState({widgets: _.reject(widgets, widget => widget.id === parseInt(widgetId))});
     };
 
     sameLayout = (layout1, layout2) => layout1.x === layout2.x
@@ -495,16 +486,13 @@ class WidgetLayoutEditor extends React.PureComponent {
             if (this.sameLayout(stateWidget.layout, layout[idx])) {
                 return stateWidget;
             } else {
-                const {x, y, h, w, i} = layout[idx];
-                const newWidget = {...stateWidget, layout: {x, y, h, w, i}};
+                const {x, y, h, w} = layout[idx];
+                const newWidget = {...stateWidget, layout: {x, y, h, w}};
                 this.serveItUp("update-widget", newWidget);
                 return newWidget;
             }
         });
-        this.setState({
-            widgets: newWidgets,
-            layout
-        });
+        this.setState({widgets: newWidgets});
     };
 
     setWidgetLayoutTemplate = id => {
@@ -692,47 +680,7 @@ class WidgetLayoutEditor extends React.PureComponent {
             : (imageType.toLowerCase().includes("degradationtool")) ? "/img/geodash/degsample.gif"
                 : "/img/geodash/graphsample.gif");
 
-    onDragStart = e => {
-        e.preventDefault();
-        e.stopPropagation();
-        this.props.onMouseDown(e);
-    };
-
-    onDragEnd = e => {
-        e.preventDefault();
-        e.stopPropagation();
-        this.props.onMouseUp(e);
-    };
-
     /// Render
-
-    generateDOM = () => {
-        const x = "x";
-        return _.map(this.state.widgets, widget => (
-            <div
-                key={widget.layout.i}
-                className="front widgetEditor-widgetBackground"
-                data-grid={widget.layout}
-                onDragEnd={this.onDragEnd}
-                onDragStart={this.onDragStart}
-                style={{backgroundImage: "url(" + this.getImageByType(widget.properties[0]) + ")"}}
-            >
-                <h3 className="widgetEditor title">{widget.name}
-                    <span
-                        className="remove"
-                        onClick={e => {
-                            e.stopPropagation();
-                            this.onRemoveItem(widget.layout.i);
-                        }}
-                        onMouseDown={e => e.stopPropagation()}
-                    >
-                        {x}
-                    </span>
-                </h3>
-                <span className="text text-danger">Sample Image</span>
-            </div>
-        ));
-    };
 
     getNewWidgetForm = () => (this.props.addDialog
         ? (
@@ -921,14 +869,16 @@ class WidgetLayoutEditor extends React.PureComponent {
                 data-dismiss="modal"
                 onClick={this.onCancelNewWidget}
                 type="button"
-            >Cancel
+            >
+                Cancel
             </button>
             <button
                 className="btn btn-primary"
                 disabled={!this.state.formReady}
                 onClick={this.onCreateNewWidget}
                 type="button"
-            >Create
+            >
+                Create
             </button>
         </>
     );
@@ -1805,9 +1755,10 @@ class WidgetLayoutEditor extends React.PureComponent {
     };
 
     render() {
-        const {layout} = this.state;
+        const {widgets} = this.state;
         return (
-            <>
+            <div>
+                {this.getNewWidgetForm()}
                 <ReactGridLayout
                     className="layout"
                     cols={12}
@@ -1815,14 +1766,38 @@ class WidgetLayoutEditor extends React.PureComponent {
                     isDraggable
                     isResizable
                     items={0}
-                    layout={layout}
                     onLayoutChange={this.onLayoutChange}
                     rowHeight={300}
                 >
-                    {this.generateDOM()}
+                    {widgets.map(widget => (
+                        <div
+                            key={widget.id}
+                            data-grid={{...widget.layout, minW: 3, w: Math.max(widget.layout.w, 3)}}
+                            style={{backgroundImage: "url(" + this.getImageByType(widget.properties[0]) + ")"}}
+                        >
+                            <h3
+                                className="px-2 d-flex justify-content-between"
+                                style={{
+                                    backgroundColor: "#31bab0",
+                                    color: "white",
+                                    lineHeight:" 26px",
+                                    minHeight: "26px"
+                                }}
+                            >
+                                {widget.name}
+                                <span
+                                    onClick={() => this.onRemoveItem(widget.id)}
+                                    style={{cursor: "pointer"}}
+                                >
+                                    X
+                                </span>
+                            </h3>
+                            <span className="text text-danger text-center">Sample Image</span>
+                        </div>
+                    ))}
                 </ReactGridLayout>
-                {this.getNewWidgetForm()}
-            </>
+
+            </div>
         );
     }
 }

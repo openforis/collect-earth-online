@@ -89,7 +89,7 @@ class Geodash extends React.Component {
 
     getWidgetsByProjectId = () => fetch(`/geo-dash/get-project-widgets?projectId=${this.props.projectId}`)
         .then(response => (response.ok ? response.json() : Promise.reject(response)))
-        .then(data => data.widgets.map(widget => {
+        .then(data => data.map(widget => {
             widget.isFull = false;
             widget.opacity = 0.9;
             widget.sliderType = widget.swipeAsDefault ? "swipe" : "opacity";

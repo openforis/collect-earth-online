@@ -119,17 +119,6 @@
 .rowSpan3 {
     height:1182px;
 }
-.widgetEditor.title {
-    background-color: #31bab0;
-    color: white;
-    line-height: 26px;
-    min-height: 26px;
-}
-.widgetEditor .remove {
-    float: right;
-    margin-right: 10px;
-    cursor: pointer;
-}
 .widgetWizardCheckbox {
     display: inline-block;
     margin-left: 10px;
@@ -389,11 +378,6 @@ a.list-inline.panel-actions.panel-fullscreen {
 }
 .list-inline {
     margin-bottom: 0px;
-}
-@media (max-width: 990px) {
-    .container-fluid.widgetEditor {
-        width: 100%;
-    }
 }
 @media (max-width: 600px) {
     #geodash .row {
