@@ -277,21 +277,15 @@ class WidgetLayoutEditor extends React.PureComponent {
 
     onCreateNewWidget = () => {
         const widget = {};
-        const id = this.state.widgets.length > 0
-            ? (Math.max(...this.state.widgets.map(o => o.id))) + 1
-            : 0;
         const name = this.state.widgetTitle;
-        widget.id = id;
         widget.name = name;
         const maxY = Math.max(...this.state.widgets.map(o => (o.layout.y || 0)));
-        const yval = maxY > -1 ? maxY + 1 : 0;
+        const yval = maxY > -1 ? maxY + 1 : 0; // puts it at the bottom
         widget.layout = {
-            i: id.toString(),
             x: 0,
-            y: yval, // puts it at the bottom
+            y: yval,
             w: 3,
-            h: 1,
-            minW: 3
+            h: 1
         };
         if (this.state.selectedWidgetType === "DualImageCollection") {
             widget.properties = ["", "", "", "", ""];
