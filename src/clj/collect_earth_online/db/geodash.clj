@@ -41,10 +41,10 @@
     (data-response (return-widgets project-id))))
 
 (defn copy-project-widgets [{:keys [params]}]
-  (let [project-id      (tc/val->int (:projectId params))
-        from-project-id (tc/val->int (:fromProjectId params))]
+  (let [project-id  (tc/val->int (:projectId params))
+        template-id (tc/val->int (:templateId params))]
     (call-sql "delete_project_widgets" project-id)
-    (call-sql "copy_project_widgets" from-project-id project-id)
+    (call-sql "copy_project_widgets" template-id project-id)
     (data-response (return-widgets project-id))))
 
 (defn gateway-request [{:keys [params json-params server-name]}]
