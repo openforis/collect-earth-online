@@ -44,27 +44,11 @@ function getGatewayPath(widget, collectionName) {
 class Geodash extends React.Component {
     constructor(props) {
         super(props);
-        this.state = {
-            widgets: [],
-            callbackComplete: false,
-            left: 0,
-            ptop: 0,
-            institutionId: this.getParameterByName("institutionId") ? this.getParameterByName("institutionId") : "3",
-            projAOI: this.getParameterByName("aoi"),
-            projPairAOI: "",
-            projectId: this.getParameterByName("projectId"),
-            mapCenter:null,
-            mapZoom:null,
-            imageryList:[],
-            initCenter:null,
-            initZoom:null,
-            vectorSource: null
-        };
-        const theSplit = decodeURI(this.state.projAOI)
+        const theSplit = decodeURI(this.props.aoi)
             .replace("[", "")
             .replace("]", "")
             .split(",");
-        this.state.projPairAOI = "[["
+        const projPairAOI = "[["
             + theSplit[0] + ","
             + theSplit[1] + "],["
             + theSplit[2] + ","
@@ -75,6 +59,19 @@ class Geodash extends React.Component {
             + theSplit[3] + "],["
             + theSplit[0] + ","
             + theSplit[1] + "]]";
+        this.state = {
+            widgets: [],
+            callbackComplete: false,
+            left: 0,
+            ptop: 0,
+            mapCenter:null,
+            mapZoom:null,
+            imageryList:[],
+            initCenter:null,
+            initZoom:null,
+            vectorSource: null,
+            projPairAOI // TODO, dont need to store derived state.
+        };
     }
 
     componentDidMount() {
@@ -86,11 +83,11 @@ class Geodash extends React.Component {
             });
     }
 
-    getInstitutionImagery = () => fetch(`/get-institution-imagery?institutionId=${this.state.institutionId}`)
+    getInstitutionImagery = () => fetch(`/get-institution-imagery?institutionId=${this.props.institutionId}`)
         .then(response => (response.ok ? response.json() : Promise.reject(response)))
         .then(data => this.setState({imageryList: data}));
 
-    getWidgetsByProjectId = () => fetch(`/geo-dash/get-by-projid?projectId=${this.state.projectId}`)
+    getWidgetsByProjectId = () => fetch(`/geo-dash/get-by-projid?projectId=${this.props.projectId}`)
         .then(response => (response.ok ? response.json() : Promise.reject(response)))
         .then(data => data.widgets.map(widget => {
             widget.isFull = false;
@@ -101,15 +98,12 @@ class Geodash extends React.Component {
         }));
 
     getVectorSource = () => {
-        const plotShape = this.getParameterByName("plotShape");
-        const radius = parseInt(this.getParameterByName("bradius") || 0);
-        const center = this.getParameterByName("bcenter");
-        const plotId = this.getParameterByName("plotId");
+        const {plotShape, radius, center, plotId} = this.props;
         if (plotShape === "polygon") {
             return fetch(`/get-plot-sample-geom?plotId=${plotId}`)
                 .then(response => (response.ok ? response.json() : Promise.reject(response)))
                 .then(plotJsonObject => {
-                    const features = [plotJsonObject.plotGeom, ...(plotJsonObject.samplesGeoms || [])] // FIXME, samplesGeoms should be sampleGeoms
+                    const features = [plotJsonObject.plotGeom, ...(plotJsonObject.sampleGeoms || [])]
                         .filter(e => e)
                         .map(geom => new Feature({geometry: mercator.parseGeoJson(geom, true)}));
                     return Promise.resolve(new Vector({features}));
@@ -130,8 +124,6 @@ class Geodash extends React.Component {
                 ))]
             }));
         } else if (plotShape === "circle") {
-            console.log(radius);
-            console.log(projTransform(JSON.parse(center).coordinates, "EPSG:4326", "EPSG:3857"));
             return Promise.resolve(
                 new Vector({
                     features: [
@@ -145,16 +137,6 @@ class Geodash extends React.Component {
         } else {
             return Promise.resolve(new Vector({features: []}));
         }
-    };
-
-    getParameterByName = (name, url) => {
-        const regex = new RegExp("[?&]" + name.replace(/[[\]]/g, "\\$&") + "(=([^&#]*)|&|#|$)");
-        const results = regex.exec(decodeURIComponent(url || window.location.href));
-        return results
-            ? results[2]
-                ? decodeURIComponent(results[2].replace(/\+/g, " "))
-                : ""
-            : null;
     };
 
     handleFullScreen = widget => {
@@ -224,7 +206,6 @@ class Geodash extends React.Component {
             <div className="container-fluid">
                 <Widgets
                     callbackComplete={this.state.callbackComplete}
-                    getParameterByName={this.getParameterByName}
                     imageryList={this.state.imageryList}
                     initCenter={this.mapCenter}
                     mapCenter={this.state.mapCenter}
@@ -232,11 +213,12 @@ class Geodash extends React.Component {
                     onFullScreen={this.handleFullScreen}
                     onSliderChange={this.handleSliderChange}
                     onSwipeChange={this.handleSwipeChange}
-                    projAOI={this.state.projAOI}
+                    projAOI={this.props.aoi}
                     projPairAOI={this.state.projPairAOI}
                     resetCenterAndZoom={this.resetCenterAndZoom}
                     setCenterAndZoom={this.setCenterAndZoom}
                     vectorSource={this.state.vectorSource}
+                    visiblePlotId={this.props.visiblePlotId}
                     widgets={this.state.widgets}
                 />
             </div>
@@ -251,7 +233,6 @@ const Widgets = props => {
                 {props.widgets.map(widget => (
                     <Widget
                         key={widget.id}
-                        getParameterByName={props.getParameterByName}
                         id={widget.id}
                         imageryList={props.imageryList}
                         initCenter={props.initCenter}
@@ -265,6 +246,7 @@ const Widgets = props => {
                         resetCenterAndZoom={props.resetCenterAndZoom}
                         setCenterAndZoom={props.setCenterAndZoom}
                         vectorSource={props.vectorSource}
+                        visiblePlotId={props.visiblePlotId}
                         widget={widget}
                     />
                 ))}
@@ -375,7 +357,6 @@ class Widget extends React.Component {
             return (
                 <div className="front">
                     <MapWidget
-                        getParameterByName={this.props.getParameterByName}
                         imageryList={this.props.imageryList}
                         mapCenter={this.props.mapCenter}
                         mapZoom={this.props.mapZoom}
@@ -387,6 +368,7 @@ class Widget extends React.Component {
                         setCenterAndZoom={this.props.setCenterAndZoom}
                         syncMapWidgets={this.syncMapWidgets}
                         vectorSource={this.props.vectorSource}
+                        visiblePlotId={this.props.visiblePlotId}
                         widget={widget}
                     />
                 </div>
@@ -415,7 +397,6 @@ class Widget extends React.Component {
             return (
                 <div className="front">
                     <DegradationWidget
-                        getParameterByName={this.props.getParameterByName}
                         imageryList={this.props.imageryList}
                         initCenter={this.props.initCenter}
                         mapCenter={this.props.mapCenter}
@@ -428,6 +409,7 @@ class Widget extends React.Component {
                         setCenterAndZoom={this.props.setCenterAndZoom}
                         syncMapWidgets={this.syncMapWidgets}
                         vectorSource={this.props.vectorSource}
+                        visiblePlotId={this.props.visiblePlotId}
                         widget={widget}
                     />
                 </div>
@@ -497,7 +479,6 @@ class DegradationWidget extends React.Component {
                             <div className="front">
                                 <MapWidget
                                     degDataType={this.state.degDataType}
-                                    getParameterByName={this.props.getParameterByName}
                                     handleDegDataType={this.handleDegDataType}
                                     imageryList={this.props.imageryList}
                                     isDegradation
@@ -512,6 +493,7 @@ class DegradationWidget extends React.Component {
                                     setCenterAndZoom={this.props.setCenterAndZoom}
                                     syncMapWidgets={this.syncMapWidgets}
                                     vectorSource={this.props.vectorSource}
+                                    visiblePlotId={this.props.visiblePlotId}
                                     widget={this.props.widget}
                                 />
                             </div>
@@ -732,7 +714,7 @@ class MapWidget extends React.Component {
             path = getGatewayPath(widget, collectionName);
             postObject.visParams = this.getImageParams(widget);
             postObject.featureCollection = widget.featureCollection;
-            postObject.matchID = this.props.getParameterByName("visiblePlotId");
+            postObject.matchID = this.props.visiblePlotId;
             postObject.field = widget.field;
 
             if (postObject.visParams.cloudLessThan) {
@@ -1711,7 +1693,7 @@ class StatsWidget extends React.Component {
 export function pageInit(args) {
     ReactDOM.render(
         <GeoDashNavigationBar
-            page={() => <Geodash/>}
+            page={() => <Geodash {...args}/>}
             userName={args.userName || "guest"}
             visiblePlotId={args.visiblePlotId ? parseInt(args.visiblePlotId) : -1}
         />,

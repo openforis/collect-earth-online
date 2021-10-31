@@ -1837,8 +1837,8 @@ export function pageInit(args) {
                     addDialog={addDialog}
                     closeDialogs={closeDialogs}
                     copyDialog={copyDialog}
-                    institutionId={args.institutionId}
-                    projectId={args.projectId}
+                    institutionId={parseInt(args.institutionId || -1)}
+                    projectId={parseInt(args.projectId || -1)}
                 />
             )}
             userName={args.userName || ""}
