@@ -49,6 +49,14 @@ CREATE OR REPLACE FUNCTION delete_project_widget_by_widget_id( _widget_id intege
 
 $$ LANGUAGE SQL;
 
+CREATE OR REPLACE FUNCTION delete_project_widgets(_project_id integer)
+ RETURNS void AS $$
+
+    DELETE FROM project_widgets
+    WHERE project_rid = _project_id
+
+$$ LANGUAGE SQL;
+
 CREATE OR REPLACE FUNCTION copy_project_widgets(_from_project_id integer, _to_project_id integer)
  RETURNS void AS $$
 

@@ -40,6 +40,13 @@
     (call-sql "delete_project_widget_by_widget_id" widget-id)
     (data-response (return-widgets project-id))))
 
+(defn copy-project-widgets [{:keys [params]}]
+  (let [project-id      (tc/val->int (:projectId params))
+        from-project-id (tc/val->int (:fromProjectId params))]
+    (call-sql "delete_project_widgets" project-id)
+    (call-sql "copy_project_widgets" from-project-id project-id)
+    (data-response (return-widgets project-id))))
+
 (defn gateway-request [{:keys [params json-params server-name]}]
   (let [path (:path params)
         url  (if (str/starts-with? server-name "local")
