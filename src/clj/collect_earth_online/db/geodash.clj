@@ -1,55 +1,43 @@
 (ns collect-earth-online.db.geodash
-  (:import java.util.UUID)
   (:require [clojure.string  :as str]
             [clj-http.client :as client]
             [triangulum.database :refer [call-sql]]
             [triangulum.type-conversion :as tc]
             [collect-earth-online.views :refer [data-response]]))
 
-;;; TODO, we no longer need dashboardID, projectId should be sufficient
+(defn- return-widgets [project-id]
+  {:widgets (mapv #(-> % (:widget) (tc/jsonb->clj))
+                  (call-sql "get_project_widgets_by_project_id" project-id))})
 
-;; TODO, this function name is not clear
-(defn geodash-id [{:keys [params]}]
-  (let [project-id (tc/val->int (:projectId params))
-        dashboard  (call-sql "get_project_widgets_by_project_id" project-id)]
-    ;; TODO, we should not need to pass back projectId
-    (data-response {:projectId   project-id
-                    :dashboardID (if (seq dashboard)
-                                   (str (:dashboard_id (first dashboard)))
-                                   (str (UUID/randomUUID)))
-                    :widgets     (mapv #(tc/jsonb->clj (:widget %)) dashboard)})))
+(defn get-project-widgets [{:keys [params]}]
+  (let [project-id (tc/val->int (:projectId params))]
+    (data-response (return-widgets project-id))))
 
 (defn create-dashboard-widget-by-id [{:keys [params]}]
-  (let [project-id         (tc/val->int (:projectId params))
-        dashboard-id       (tc/str->pg (:dashID params) "uuid")
-        widget-json-string (tc/json->jsonb (:widgetJSON params))]
+  (let [project-id (tc/val->int (:projectId params))
+        widget     (tc/json->jsonb (:widgetJSON params))]
     (call-sql "add_project_widget"
               project-id
-              dashboard-id
-              widget-json-string)
-    (data-response "")))
+              widget)
+    (data-response (return-widgets project-id))))
 
-;; TODO this route is called way too many times from the front end.
-;;      Preferred for me is to change the workflow to have a save button save
-;;      the entire layout at once. If we keep the same workflow, limit the live edit
-;;      calls by only updating the one widget that moves.
 (defn update-dashboard-widget-by-id [{:keys [params]}]
-  (let [widget-id          (tc/val->int (:widgetId params))
-        dashboard-id       (tc/str->pg (:dashID params) "uuid")
-        widget-json-string (tc/json->jsonb (:widgetJSON params))]
+  (let [project-id (tc/val->int (:projectId params))
+        widget-id  (tc/val->int (:widgetId params))
+        widget     (tc/json->jsonb (:widgetJSON params))]
     (call-sql "update_project_widget_by_widget_id"
+              project-id
               widget-id
-              dashboard-id
-              widget-json-string)
-    (data-response "")))
+              widget)
+    (data-response (return-widgets project-id))))
 
 (defn delete-dashboard-widget-by-id [{:keys [params]}]
-  (let [widget-id    (tc/val->int (:widgetId params))
-        dashboard-id (tc/str->pg (:dashID params) "uuid")]
+  (let [project-id (tc/val->int (:projectId params))
+        widget-id  (tc/val->int (:widgetId params))]
     (call-sql "delete_project_widget_by_widget_id"
-              widget-id
-              dashboard-id)
-    (data-response "")))
+              project-id
+              widget-id)
+    (data-response (return-widgets project-id))))
 
 (defn gateway-request [{:keys [params json-params server-name]}]
   (let [path (:path params)

@@ -66,11 +66,10 @@ class WidgetLayoutEditor extends React.PureComponent {
 
     /// API Calls
 
-    fetchProject = (id, setDashboardID) => fetch("/geo-dash/get-by-projid?projectId=" + id)
+    fetchProject = projectId => fetch(`/geo-dash/get-project-widgets?projectId=${projectId}`)
         .then(response => (response.ok ? response.json() : Promise.reject(response)))
         .then(data => {
             this.setState({
-                dashboardID: setDashboardID ? data.dashboardID : this.state.dashboardID,
                 widgets: data.widgets,
                 layout: data.widgets.map(dw => ({...dw.layout, minW: 3, w: Math.max(dw.layout.w, 3)}))
             });
@@ -137,9 +136,9 @@ class WidgetLayoutEditor extends React.PureComponent {
         }
     };
 
-    serveItUp = (url, widget) => {
+    serveItUp = (route, widget) => {
         fetch(
-            url,
+            `/geo-dash/${route}`,
             {
                 method: "POST",
                 headers: {
@@ -147,7 +146,8 @@ class WidgetLayoutEditor extends React.PureComponent {
                     "Content-Type": "application/json"
                 },
                 body: JSON.stringify({
-                    dashID: this.state.dashboardID,
+                    widgetId: widget.id,
+                    projectId: this.props.projectId,
                     widgetJSON: JSON.stringify(widget)
                 })
             }
@@ -160,7 +160,7 @@ class WidgetLayoutEditor extends React.PureComponent {
     };
 
     deleteWidgetFromServer = widget => {
-        this.serveItUp(`/geo-dash/delete-widget?widgetId=${widget.id}`, widget);
+        this.serveItUp("delete-widget", widget);
     };
 
     getWidgetTemplateByProjectId = id => {
@@ -170,8 +170,8 @@ class WidgetLayoutEditor extends React.PureComponent {
                     this.addTemplateWidget(widget);
                 });
             })
-            .catch(response => {
-                console.log(response);
+            .catch(error => {
+                console.error(error);
                 alert("Error downloading the widget list. See console for details.");
             });
     };
@@ -186,12 +186,11 @@ class WidgetLayoutEditor extends React.PureComponent {
                   },
                   body: JSON.stringify({
                       projectId: this.props.projectId,
-                      dashID: this.state.dashboardID,
                       widgetJSON: JSON.stringify(widget)
                   })
               })
-            .catch(response => {
-                console.log(response);
+            .catch(error => {
+                console.error(error);
             });
     };
 
@@ -439,7 +438,6 @@ class WidgetLayoutEditor extends React.PureComponent {
                 },
                 body: JSON.stringify({
                     projectId: this.props.projectId,
-                    dashID: this.state.dashboardID,
                     widgetJSON: JSON.stringify(widget)
                 })
             }
@@ -499,7 +497,7 @@ class WidgetLayoutEditor extends React.PureComponent {
             } else {
                 const {x, y, h, w, i} = layout[idx];
                 const newWidget = {...stateWidget, layout: {x, y, h, w, i}};
-                this.serveItUp(`/geo-dash/update-widget?widgetId=${newWidget.id}`, newWidget);
+                this.serveItUp("update-widget", newWidget);
                 return newWidget;
             }
         });

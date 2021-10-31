@@ -160,7 +160,7 @@
                                               :auth-type   :admin
                                               :auth-action :block}
    ;; GeoDash API
-   [:get  "/geo-dash/get-by-projid"]         {:handler     geodash/geodash-id}
+   [:get  "/geo-dash/get-project-widgets"]   {:handler     geodash/get-project-widgets}
    [:post "/geo-dash/create-widget"]         {:handler     geodash/create-dashboard-widget-by-id}
    [:post "/geo-dash/delete-widget"]         {:handler     geodash/delete-dashboard-widget-by-id}
    [:post "/geo-dash/gateway-request"]       {:handler     geodash/gateway-request}

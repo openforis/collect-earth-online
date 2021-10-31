@@ -481,16 +481,11 @@
       ;; Save project imagery
       (if-let [imagery-list (:projectImageryList params)]
         (insert-project-imagery! project-id imagery-list)
-        (call-sql "add_all_institution_imagery" project-id)) ; API backwards compatibility
+        ;; API backwards compatibility
+        (call-sql "add_all_institution_imagery" project-id))
       ;; Copy template widgets
-      ;; TODO this can be a simple SQL query once we drop the dashboard ID
       (when (and (pos? project-template) use-template-widgets)
-        (let [new-uuid (tc/str->pg (str (UUID/randomUUID)) "uuid")]
-          (doseq [{:keys [widget]} (call-sql "get_project_widgets_by_project_id" project-template)]
-            (call-sql "add_project_widget"
-                      project-id
-                      new-uuid
-                      widget))))
+        (call-sql "copy_project_widgets" project-template project-id))
       ;; Return new ID and token
       (data-response {:projectId project-id
                       :tokenKey  token-key})
