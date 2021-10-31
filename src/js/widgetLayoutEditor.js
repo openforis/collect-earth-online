@@ -1,12 +1,121 @@
 import "../css/geo-dash.css";
 
-import React from "react";
+import React, {useState} from "react";
 import ReactDOM from "react-dom";
-import _ from "lodash";
 import RGL, {WidthProvider} from "react-grid-layout";
 import {GeoDashNavigationBar} from "./components/PageComponents";
 
 const ReactGridLayout = WidthProvider(RGL);
+
+function GeoDashModal({title, body, footer, closeDialogs}) {
+    return (
+        <div>
+            <div className="modal fade show" style={{display: "block"}}>
+                <div className="modal-dialog" role="document">
+                    <div className="modal-content">
+                        <div className="modal-header">
+                            <h5
+                                className="modal-title"
+                                id="exampleModalLabel"
+                            >
+                                {title}
+                            </h5>
+                            <button
+                                aria-label="Close"
+                                className="close"
+                                data-dismiss="modal"
+                                onClick={closeDialogs}
+                                type="button"
+                            >
+                                <span aria-hidden="true">X</span>
+                            </button>
+                        </div>
+                        <div className="modal-body">
+                            {body}
+                        </div>
+                        <div className="modal-footer">
+                            {footer}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div className="modal-backdrop fade show"> </div>
+        </div>
+    );
+}
+
+function CopyDialog(props) {
+    const [projectFilter, setProjectFilter] = useState("");
+    const [templateId, setTemplateId] = useState(0);
+
+    const {projectTemplateList, copyProjectWidgets, closeDialogs} = props;
+
+    const dialogBody = (
+        <form>
+            <div className="form-group">
+                <label
+                    htmlFor="project-filter"
+                >
+                    Template Filter (Name or ID)
+                </label>
+                <input
+                    className="form-control form-control-sm"
+                    id="project-filter"
+                    onChange={e => setProjectFilter(e.target.value)}
+                    type="text"
+                    value={projectFilter}
+                />
+            </div>
+            <div className="form-group">
+                <label htmlFor="project-template">From Project</label>
+                <select
+                    className="form-control form-control-sm"
+                    id="project-template"
+                    name="project-template"
+                    onChange={e => setTemplateId(parseInt(e.target.value))}
+                    size="1"
+                    value={templateId}
+                >
+                    <option key={0} value={0}>None</option>
+                    {projectTemplateList
+                        .filter(({id, name}) => (id + name.toLocaleLowerCase())
+                            .includes(projectFilter.toLocaleLowerCase()))
+                        .map(({id, name}) =>
+                            <option key={id} value={id}>{id} - {name}</option>)}
+                </select>
+            </div>
+        </form>
+    );
+
+    const dialogButtons = (
+        <>
+            <button
+                className="btn btn-secondary btn-warning"
+                data-dismiss="modal"
+                onClick={() => copyProjectWidgets(templateId)}
+                type="button"
+            >
+                Copy
+            </button>
+            <button
+                className="btn btn-secondary"
+                data-dismiss="modal"
+                onClick={closeDialogs}
+                type="button"
+            >
+                Close
+            </button>
+        </>
+    );
+    return (
+        <GeoDashModal
+            body={dialogBody}
+            closeDialogs={closeDialogs}
+            footer={dialogButtons}
+            title="Copy Widget Layout"
+        />
+    );
+}
 
 class WidgetLayoutEditor extends React.PureComponent {
     constructor(props) {
@@ -18,8 +127,6 @@ class WidgetLayoutEditor extends React.PureComponent {
             widgetBasemap: -1,
             // Templates, todo make own component
             projectTemplateList: [],
-            templateProjectId: 0,
-            projectFilter:"",
             // Widget specific state
             selectedWidgetType: "-1",
             selectedDataType: "-1",
@@ -157,7 +264,7 @@ class WidgetLayoutEditor extends React.PureComponent {
         this.serveItUp("delete-widget", widget);
     };
 
-    copyProjectWidgets = () => {
+    copyProjectWidgets = templateId => {
         fetch(
             "/geo-dash/copy-project-widgets",
             {
@@ -168,7 +275,7 @@ class WidgetLayoutEditor extends React.PureComponent {
                 },
                 body: JSON.stringify({
                     projectId: this.props.projectId,
-                    fromProjectId: this.state.templateProjectId
+                    templateId
                 })
             }
         )
@@ -182,45 +289,43 @@ class WidgetLayoutEditor extends React.PureComponent {
 
     /// State
 
-    onWidgetTypeSelectChanged = event => {
-        this.setState({
-            selectedWidgetType: event.target.value,
-            selectedDataType: "-1",
-            widgetTitle: "",
-            imageCollection: event.target.value === "ImageElevation" ? "USGS/SRTMGL1_003" : "",
-            featureCollection: "",
-            matchField: "",
-            graphBand: "",
-            graphBandDeg: "NDFI",
-            graphReducer: "Min",
-            imageParams: "",
-            dualLayer: false,
-            swipeAsDefault: false,
-            startDate:"",
-            endDate:"",
-            startDate2:"",
-            endDate2:"",
-            widgetBands:"",
-            widgetMin:"",
-            widgetMax:"",
-            widgetCloudScore:"",
-            imageCollectionDual: "",
-            imageParamsDual: "",
-            startDateDual:"",
-            endDateDual:"",
-            widgetBandsDual:"",
-            widgetMinDual:"",
-            widgetMaxDual:"",
-            widgetCloudScoreDual:"",
-            formReady: event.target.value === "statistics"
-                || event.target.value === "imageAsset"
-                || event.target.value === "imageCollectionAsset"
-                || event.target.value === "ImageElevation",
-            wizardStep: 1,
-            availableBands:"",
-            availableBandsDual:""
-        });
-    };
+    updateWidgetType = newWidgetType => this.setState({
+        selectedWidgetType: newWidgetType,
+        selectedDataType: "-1",
+        widgetTitle: "",
+        imageCollection: newWidgetType === "ImageElevation" ? "USGS/SRTMGL1_003" : "",
+        featureCollection: "",
+        matchField: "",
+        graphBand: "",
+        graphBandDeg: "NDFI",
+        graphReducer: "Min",
+        imageParams: "",
+        dualLayer: false,
+        swipeAsDefault: false,
+        startDate:"",
+        endDate:"",
+        startDate2:"",
+        endDate2:"",
+        widgetBands:"",
+        widgetMin:"",
+        widgetMax:"",
+        widgetCloudScore:"",
+        imageCollectionDual: "",
+        imageParamsDual: "",
+        startDateDual:"",
+        endDateDual:"",
+        widgetBandsDual:"",
+        widgetMinDual:"",
+        widgetMaxDual:"",
+        widgetCloudScoreDual:"",
+        formReady: newWidgetType === "statistics"
+            || newWidgetType === "imageAsset"
+            || newWidgetType === "imageCollectionAsset"
+            || newWidgetType === "ImageElevation",
+        wizardStep: 1,
+        availableBands:"",
+        availableBandsDual:""
+    });
 
     onDataTypeSelectChanged = event => {
         this.setState({
@@ -463,6 +568,8 @@ class WidgetLayoutEditor extends React.PureComponent {
             });
     };
 
+    // ReactGridLayout
+
     onRemoveItem = widgetId => {
         const {widgets} = this.state;
         const removedWidget = widgets.find(w => w.id === parseInt(widgetId));
@@ -483,9 +590,7 @@ class WidgetLayoutEditor extends React.PureComponent {
         }
     });
 
-    setWidgetLayoutTemplate = id => {
-        this.setState({templateProjectId: id});
-    };
+    // Single state updates
 
     onNextWizardStep = () => {
         this.setState({wizardStep: 2});
@@ -665,210 +770,6 @@ class WidgetLayoutEditor extends React.PureComponent {
                 : "/img/geodash/graphsample.gif");
 
     /// Render
-
-    getNewWidgetForm = () => (this.props.addDialog
-        ? (
-            <>
-                <div className="modal fade show" style={{display: "block"}}>
-                    <div className="modal-dialog" role="document">
-                        <div className="modal-content">
-                            <div className="modal-header">
-                                <h5 className="modal-title" id="exampleModalLabel">Create Widget</h5>
-                                <button
-                                    aria-label="Close"
-                                    className="close"
-                                    data-dismiss="modal"
-                                    onClick={this.onCancelNewWidget}
-                                    type="button"
-                                >
-                                    <span aria-hidden="true">×</span>
-                                </button>
-                            </div>
-                            <div className="modal-body">
-                                <form>
-                                    <div className="form-group">
-                                        <label htmlFor="widgetTypeSelect">Type</label>
-                                        <select
-                                            className="form-control"
-                                            id="widgetTypeSelect"
-                                            name="widgetTypeSelect"
-                                            onChange={e => this.onWidgetTypeSelectChanged(e, "i am anything")}
-                                            value={this.state.selectedWidgetType}
-                                        >
-                                            <option value="-1">Please select type</option>
-                                            <option
-                                                label="Image Collection"
-                                                value="ImageCollection"
-                                            >
-                                                    Image Collection
-                                            </option>
-                                            <option
-                                                label="Time Series Graph"
-                                                value="TimeSeries"
-                                            >
-                                                    Time Series Graph
-                                            </option>
-                                            <option
-                                                label="Statistics"
-                                                value="statistics"
-                                            >
-                                                    Statistics
-                                            </option>
-                                            <option
-                                                label="Dual Image Collection"
-                                                value="DualImageCollection"
-                                            >
-                                                    Dual Image Collection
-                                            </option>
-                                            <option
-                                                label="Image Asset"
-                                                value="imageAsset"
-                                            >
-                                                    Image Asset
-                                            </option>
-                                            <option
-                                                label="Image Collection Asset"
-                                                value="imageCollectionAsset"
-                                            >
-                                                    Image Collection Asset
-                                            </option>
-                                            <option
-                                                label="SRTM Digital Elevation Data 30m"
-                                                value="ImageElevation"
-                                            >
-                                                    SRTM Digital Elevation Data 30m
-                                            </option>
-                                            <option
-                                                label="Degradation Tool"
-                                                value="DegradationTool"
-                                            >
-                                                    Degradation Tool
-                                            </option>
-                                            <option
-                                                label="Polygon Compare"
-                                                value="polygonCompare"
-                                            >
-                                                    Polygon Compare
-                                            </option>
-                                        </select>
-                                    </div>
-                                    {this.getBasemapSelector()}
-                                    {this.getDataTypeSelectionControl()}
-                                    {this.getSwipeOpacityDefault()}
-                                    {this.getDataForm()}
-                                </form>
-                            </div>
-                            <div className="modal-footer">
-                                {this.getFormButtons()}
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div className="modal-backdrop fade show"> </div>
-            </>
-        ) : this.props.copyDialog
-            ? (
-                <>
-                    <div className="modal fade show" style={{display: "block"}}>
-                        <div className="modal-dialog" role="document">
-                            <div className="modal-content">
-                                <div className="modal-header">
-                                    <h5
-                                        className="modal-title"
-                                        id="exampleModalLabel"
-                                    >Copy Widget Layout
-                                    </h5>
-                                    <button
-                                        aria-label="Close"
-                                        className="close"
-                                        data-dismiss="modal"
-                                        onClick={this.onCancelNewWidget}
-                                        type="button"
-                                    >
-                                        <span aria-hidden="true">×</span>
-                                    </button>
-                                </div>
-                                <div className="modal-body">
-                                    <form>
-                                        <div className="form-group">
-                                            <label
-                                                htmlFor="project-filter"
-                                            >
-                                                Template Filter (Name or ID)
-                                            </label>
-                                            <input
-                                                className="form-control form-control-sm"
-                                                id="project-filter"
-                                                onChange={e => this.setState({projectFilter: e.target.value})}
-                                                type="text"
-                                                value={this.state.projectFilter}
-                                            />
-                                        </div>
-                                        <div className="form-group">
-                                            <label htmlFor="project-template">From Project</label>
-                                            <select
-                                                className="form-control form-control-sm"
-                                                id="project-template"
-                                                name="project-template"
-                                                onChange={e => this.setWidgetLayoutTemplate(parseInt(e.target.value))}
-                                                size="1"
-                                                value={this.state.templateProjectId}
-                                            >
-                                                <option key={0} value={0}>None</option>
-                                                {this.state.projectTemplateList
-                                                    .filter(({id, name}) => (id + name.toLocaleLowerCase())
-                                                        .includes(this.state.projectFilter.toLocaleLowerCase()))
-                                                    .map(({id, name}) =>
-                                                        <option key={id} value={id}>{id} - {name}</option>)}
-                                            </select>
-                                        </div>
-                                    </form>
-                                </div>
-                                <div className="modal-footer">
-                                    <button
-                                        className="btn btn-secondary btn-warning"
-                                        data-dismiss="modal"
-                                        onClick={this.copyProjectWidgets}
-                                        type="button"
-                                    >
-                                        Copy
-                                    </button>
-                                    <button
-                                        className="btn btn-secondary"
-                                        data-dismiss="modal"
-                                        onClick={this.onCancelNewWidget}
-                                        type="button"
-                                    >
-                                        Close
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div className="modal-backdrop fade show"> </div>
-                </>
-            ) : "");
-
-    getFormButtons = () => (
-        <>
-            <button
-                className="btn btn-secondary"
-                data-dismiss="modal"
-                onClick={this.onCancelNewWidget}
-                type="button"
-            >
-                Cancel
-            </button>
-            <button
-                className="btn btn-primary"
-                disabled={!this.state.formReady}
-                onClick={this.onCreateNewWidget}
-                type="button"
-            >
-                Create
-            </button>
-        </>
-    );
 
     getBasemapSelector = () => {
         if (["ImageCollection",
@@ -1741,11 +1642,81 @@ class WidgetLayoutEditor extends React.PureComponent {
         }
     };
 
+    // Create new widget main form
+
+    dialogButtons = () => (
+        <>
+            <button
+                className="btn btn-secondary"
+                data-dismiss="modal"
+                onClick={this.onCancelNewWidget}
+                type="button"
+            >
+                Cancel
+            </button>
+            <button
+                className="btn btn-primary"
+                disabled={!this.state.formReady}
+                onClick={this.onCreateNewWidget}
+                type="button"
+            >
+                Create
+            </button>
+        </>
+    );
+
+    dialogBody = () => (
+        <form>
+            <div className="form-group">
+                <label htmlFor="widgetTypeSelect">Widget Type</label>
+                <select
+                    className="form-control"
+                    id="widgetTypeSelect"
+                    name="widgetTypeSelect"
+                    onChange={e => this.updateWidgetType(e.target.value)}
+                    value={this.state.selectedWidgetType}
+                >
+                    <option value="-1">Please select type</option>
+                    <option value="ImageCollection">Image Collection</option>
+                    <option value="TimeSeries">Time Series Graph</option>
+                    <option value="statistics">Statistics</option>
+                    <option value="DualImageCollection">Dual Image Collection</option>
+                    <option value="imageAsset">Image Asset</option>
+                    <option value="imageCollectionAsset">Image Collection Asset</option>
+                    <option value="ImageElevation">SRTM Digital Elevation Data 30m</option>
+                    <option value="DegradationTool">Degradation Tool</option>
+                    <option value="polygonCompare">Polygon Compare</option>
+                </select>
+            </div>
+            {this.getBasemapSelector()}
+            {this.getDataTypeSelectionControl()}
+            {this.getSwipeOpacityDefault()}
+            {this.getDataForm()}
+        </form>
+    );
+
+    renderCreateDialog = () => (
+        <GeoDashModal
+            body={this.dialogBody()}
+            closeDialogs={this.props.closeDialogs}
+            footer={this.dialogButtons()}
+            title="Create Widget"
+        />
+    );
+
     render() {
-        const {widgets} = this.state;
+        const {widgets, projectTemplateList} = this.state;
+        const {addDialog, copyDialog, closeDialogs} = this.props;
         return (
             <div>
-                {this.getNewWidgetForm()}
+                {addDialog && this.renderCreateDialog()}
+                {copyDialog && (
+                    <CopyDialog
+                        closeDialogs={closeDialogs}
+                        copyProjectWidgets={this.copyProjectWidgets}
+                        projectTemplateList={projectTemplateList}
+                    />
+                )}
                 <ReactGridLayout
                     cols={12}
                     isDraggable
@@ -1780,7 +1751,6 @@ class WidgetLayoutEditor extends React.PureComponent {
                         </div>
                     ))}
                 </ReactGridLayout>
-
             </div>
         );
     }

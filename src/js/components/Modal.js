@@ -9,7 +9,7 @@ import requiredIf from "react-required-if";
  * @component
  * @example
  * function MyComponent() {
- *     const [state, setState] = useState({showModal: true});
+ *     const [showModal, setShowModal] = useState(true);
  *     const title = "Completed"
  *     return (
  *        {state.showModal && (
