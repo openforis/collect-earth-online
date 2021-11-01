@@ -1,121 +1,14 @@
 import "../css/geo-dash.css";
 
-import React, {useState} from "react";
+import React from "react";
 import ReactDOM from "react-dom";
 import RGL, {WidthProvider} from "react-grid-layout";
-import {GeoDashNavigationBar} from "./components/PageComponents";
+
+import CopyDialog from "./geodash/CopyDialog";
+import GeoDashModal from "./geodash/GeoDashModal";
+import GeoDashNav from "./geodash/GeoDashNav";
 
 const ReactGridLayout = WidthProvider(RGL);
-
-function GeoDashModal({title, body, footer, closeDialogs}) {
-    return (
-        <div>
-            <div className="modal fade show" style={{display: "block"}}>
-                <div className="modal-dialog" role="document">
-                    <div className="modal-content">
-                        <div className="modal-header">
-                            <h5
-                                className="modal-title"
-                                id="exampleModalLabel"
-                            >
-                                {title}
-                            </h5>
-                            <button
-                                aria-label="Close"
-                                className="close"
-                                data-dismiss="modal"
-                                onClick={closeDialogs}
-                                type="button"
-                            >
-                                <span aria-hidden="true">X</span>
-                            </button>
-                        </div>
-                        <div className="modal-body">
-                            {body}
-                        </div>
-                        <div className="modal-footer">
-                            {footer}
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div className="modal-backdrop fade show"> </div>
-        </div>
-    );
-}
-
-function CopyDialog(props) {
-    const [projectFilter, setProjectFilter] = useState("");
-    const [templateId, setTemplateId] = useState(0);
-
-    const {projectTemplateList, copyProjectWidgets, closeDialogs} = props;
-
-    const dialogBody = (
-        <form>
-            <div className="form-group">
-                <label
-                    htmlFor="project-filter"
-                >
-                    Template Filter (Name or ID)
-                </label>
-                <input
-                    className="form-control form-control-sm"
-                    id="project-filter"
-                    onChange={e => setProjectFilter(e.target.value)}
-                    type="text"
-                    value={projectFilter}
-                />
-            </div>
-            <div className="form-group">
-                <label htmlFor="project-template">From Project</label>
-                <select
-                    className="form-control form-control-sm"
-                    id="project-template"
-                    name="project-template"
-                    onChange={e => setTemplateId(parseInt(e.target.value))}
-                    size="1"
-                    value={templateId}
-                >
-                    <option key={0} value={0}>None</option>
-                    {projectTemplateList
-                        .filter(({id, name}) => (id + name.toLocaleLowerCase())
-                            .includes(projectFilter.toLocaleLowerCase()))
-                        .map(({id, name}) =>
-                            <option key={id} value={id}>{id} - {name}</option>)}
-                </select>
-            </div>
-        </form>
-    );
-
-    const dialogButtons = (
-        <>
-            <button
-                className="btn btn-secondary btn-warning"
-                data-dismiss="modal"
-                onClick={() => copyProjectWidgets(templateId)}
-                type="button"
-            >
-                Copy
-            </button>
-            <button
-                className="btn btn-secondary"
-                data-dismiss="modal"
-                onClick={closeDialogs}
-                type="button"
-            >
-                Close
-            </button>
-        </>
-    );
-    return (
-        <GeoDashModal
-            body={dialogBody}
-            closeDialogs={closeDialogs}
-            footer={dialogButtons}
-            title="Copy Widget Layout"
-        />
-    );
-}
 
 class WidgetLayoutEditor extends React.PureComponent {
     constructor(props) {
@@ -1758,7 +1651,7 @@ class WidgetLayoutEditor extends React.PureComponent {
 
 export function pageInit(args) {
     ReactDOM.render(
-        <GeoDashNavigationBar
+        <GeoDashNav
             page={(addDialog, copyDialog, closeDialogs) => (
                 <WidgetLayoutEditor
                     addDialog={addDialog}
