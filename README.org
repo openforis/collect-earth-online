@@ -178,45 +178,8 @@ server details to the file, replacing the values with your own.
 
 *** Enabling HTTPS
 
-If you have not already created a SSL certificate, you must start the server
-without a https port specified.
-
-#+begin_src sh
-clojure -M:run-server
-#+end_src
-
-To automatically create an SSL certificate signed by [[https://letsencrypt.org][Let's Encrypt]],
-simply run the following command from your shell:
-
-#+begin_src sh
-clojure -M:https --certbot-init -d mydomain.com [-p certbot-dir]
-#+end_src
-
-Note: If your certbot installation stores its config files in a
-directory other than /etc/letsencrypt, you should specify it with the
-optional certbot-dir argument to certbot-init.
-
-The certbot-init command will first create a shell script in the
-directory containing this README, called certbot-deploy-hook.sh. Next,
-it sends a request to the Let's Encrypt servers for a new signed SSL
-certificate and sets certbot-deploy-hook.sh to run automatically when
-the new certificate is received. When executed, this script will
-repackage the new certificate into a format that can be understood by
-our web server.
-
-While there should be no need to do so, if you ever want to perform
-this repackaging step manually, simply run this command from your
-shell:
-
-#+begin_src sh
-clojure -M:https --package-cert -d mydomain.com [-p certbot-dir]
-#+end_src
-
-Certbot runs as a background task every 12 hours and will renew any
-certificate that is set to expire in 30 days or less. Each time the
-certificate is renewed, certbot-deploy-hook.sh will be run
-automatically to repackage the updated certificate into the correct
-format.
+View the [[https://github.com/sig-gis/triangulum#triangulumhttps][Triangulum HTTPS]]
+page for further instructions on enabling HTTPS.
 
 *** Building GEE-Gateway
 
@@ -244,6 +207,11 @@ port can be specified with -P. In dev mode, server-side exceptions
 will be displayed in the browser and Clojure source files will be
 reloaded whenever you refresh the page. These features are disabled in
 prod mode. If -m is unspecified, it will default to prod mode.
+
+*** Running the Web Server as a System Service
+
+View the [[https://github.com/sig-gis/triangulum#triangulumsystemd][Triangulum Systemd]]
+page for further instructions on enabling the app as a system service.
 
 *** Maintaining Daily Logs
 
