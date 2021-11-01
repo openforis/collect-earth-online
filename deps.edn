@@ -20,11 +20,11 @@
 
  :aliases {:build-db         {:main-opts ["-m" "triangulum.build-db"]}
            :https            {:main-opts ["-m" "triangulum.https"]}
+           :server           {:main-opts ["-m" "collect-earth-online.server"]}
            :systemd          {:main-opts ["-m" "triangulum.systemd"]}
            :rebel            {:extra-deps {com.bhauman/rebel-readline {:mvn/version "0.1.4"}}
                               :main-opts  ["-m" "rebel-readline.main"]}
            :show-config      {:jvm-opts  ["-XX:+PrintFlagsFinal"]}
-           :run-server       {:main-opts ["-m" "collect-earth-online.server"]}
            :check-reflection {:main-opts ["-e" "(do,(set!,*warn-on-reflection*,true),nil)"
                                           "-e" "(require,'collect-earth-online.server)"]}
            :check-deps       {:extra-deps {olical/depot {:mvn/version "1.8.4"}}
