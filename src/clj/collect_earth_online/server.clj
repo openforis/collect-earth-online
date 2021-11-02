@@ -86,8 +86,7 @@
     (with-open [conn (repl/connect :port port)]
       (-> (repl/client conn 1000)
           (repl/message {:op :eval :code code })
-          repl/response-values
-          println))))
+          repl/response-values))))
 
 (defn stop-server! []
   (set-log-path! "")
@@ -98,7 +97,9 @@
     (send-to-nrepl-server! "(require '[collect-earth-online.server :as server]) (server/stop-server!)"))
   (when @server
     (.stop @server)
+    (nrepl/stop-server @nrepl-server)
     (reset! server nil)
+    (reset! nrepl-server nil)
     (System/exit 0)))
 
 (defn -main [& args]
