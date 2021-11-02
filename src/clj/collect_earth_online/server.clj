@@ -59,7 +59,7 @@
 
 (defn start-server! [{:keys [port https-port mode output-dir repl]}]
   (when repl
-    (println "Staring REPL server on port 5555")
+    (println "Starting REPL server on port 5555")
     (reset! repl-server (start-server {:name :ceo-repl :port 5555 :accept 'clojure.core.server/repl})))
   (let [has-key?   (.exists (io/file "./.key/keystore.pkcs12"))
         ssl?       (and has-key? https-port)
