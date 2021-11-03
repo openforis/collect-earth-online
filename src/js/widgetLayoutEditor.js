@@ -50,7 +50,7 @@ class WidgetLayoutEditor extends React.PureComponent {
                 title: "Image Asset",
                 WidgetDesigner: ImageAssetDesigner
             },
-            imageCollection: {
+            preImageCollection: {
                 title: "Preloaded Image Collections",
                 WidgetDesigner: ImageCollectionDesigner
             },
@@ -273,6 +273,13 @@ class WidgetLayoutEditor extends React.PureComponent {
             widget.eeType = "Image";
             widget.assetName = assetName;
             widget.visParams = JSON.parse(visParams || "{}");
+        } else if (type === "degradationTool") {
+            const {graphBand, startDate, endDate} = widgetDesign;
+            widget.basemapId = basemapId;
+            widget.graphBand = graphBand || "NDFI"; // FIXME, make sure this is the default or check for error
+            widget.startDate = startDate;
+            widget.endDate = endDate;
+        } else if (type === "DualImageCollection") {
             widget.properties = ["", "", "", "", ""];
             widget.filterType = "";
             widget.visParams = {};
@@ -332,14 +339,6 @@ class WidgetLayoutEditor extends React.PureComponent {
             widget.filterType = "";
             widget.visParams = JSON.parse(this.state.visParams);
             widget.ImageCollectionAsset = this.state.imageCollection;
-            widget.basemapId = this.state.basemapId;
-        } else if (type === "DegradationTool") {
-            widget.type = "DegradationTool";
-            widget.properties = ["DegradationTool", "", "", "", ""];
-            widget.filterType = "";
-            widget.startDate = this.state.startDate;
-            widget.endDate = this.state.endDate;
-            widget.graphBand = this.state.graphBandDeg === "" ? "NDFI" : this.state.graphBandDeg;
             widget.basemapId = this.state.basemapId;
         } else if (type === "polygonCompare") {
             widget.properties = ["featureCollection", "", "", "", ""];
