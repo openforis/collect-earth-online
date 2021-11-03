@@ -553,16 +553,12 @@ h2.header {
 .modal-content {
     max-height: calc(100vh - 50px);
 }
-.input-group-addon {
-    margin: 8px;
-}
 .modal-body {
     overflow-y: auto;
 }
 .modal-header {
     color: white;
     background: #31bab0;
-    margin: 0 0px 10px 0px;;
     padding: 1rem;
     min-height: 57px;
 }

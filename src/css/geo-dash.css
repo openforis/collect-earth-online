@@ -109,15 +109,6 @@
 .rowSpan3 {
     height:1182px;
 }
-.widgetWizardCheckbox {
-    display: inline-block;
-    margin-left: 10px;
-    width: 20px;
-    height: 20px;
-    margin-top: 5px;
-    top: 5px;
-    position: relative;
-}
 .mapRange.dual {
     width: calc(100% - 85px);
 }
