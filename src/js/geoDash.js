@@ -1203,38 +1203,55 @@ class GraphWidget extends React.Component {
     }
 
     componentDidMount() {
-        this.loadGraph();
+        const {widget: {type}} = this.props;
+        if (type === "degradationTool") {
+            this.loadDegradation();
+        } else if (type === "timeSeries") {
+            this.loadTimeSeries();
+        } else {
+            console.error("Incorrect widget type passed to the graph widget");
+        }
     }
 
     componentDidUpdate(prevProps, prevState) {
         if (this.props.degDataType
             && (prevProps.degDataType !== this.props.degDataType
                 || prevState.selectSarGraphBand !== this.state.selectSarGraphBand)) {
-            this.loadGraph();
+            this.loadDegradation();
         }
         this.handleResize();
+        window.addEventListener("resize", this.handleResize);
     }
 
-    loadGraph = () => {
-        const {chartDataSeriesLandsat, chartDataSeriesSar, selectSarGraphBand, graphRef} = this.state;
-        const {widget, degDataType, plotExtentPolygon, handleSelectDate, vectorSource} = this.props;
+    componentWillUnmount() {
+        window.removeEventListener("resize", this.handleResize);
+    }
 
-        // For degradation
+    invalidData = data => {
+        if (data.errMsg) {
+            return data.errMsg;
+        } else if (!data.hasOwnProperty("timeseries")) {
+            return "Wrong Data Returned";
+        } else if (data.timeseries.length === 0) {
+            return "No data steps";
+        } else {
+            return null;
+        }
+    };
+
+    loadDegradation = () => {
+        const {chartDataSeriesLandsat, chartDataSeriesSar, selectSarGraphBand, graphRef} = this.state;
+        const {widget, degDataType, plotExtentPolygon, handleSelectDate} = this.props;
+
+        // Try to load existing data first.
+        // TODO, do we need this.  My thought is that getChartOptions is called again when the state updates.
         if (degDataType === "landsat" && chartDataSeriesLandsat.length > 0) {
             graphRef.update({series: _.cloneDeep(chartDataSeriesLandsat)});
-        // For degradation
         } else if (degDataType === "sar"
             && chartDataSeriesSar.hasOwnProperty(selectSarGraphBand)
             && chartDataSeriesSar[selectSarGraphBand].length > 0) {
             graphRef.update({series: _.cloneDeep(chartDataSeriesSar[selectSarGraphBand])});
         } else {
-            const {type, indexName} = widget;
-            const centerPoint = mercator.getFeatureCenter(vectorSource);
-            const path = type === "degradationTool"
-                ? "getImagePlotDegradation"
-                : indexName === "Custom"
-                    ? "timeSeriesByAsset"
-                    : "timeSeriesByIndex";
             fetch("/geo-dash/gateway-request", {
                 method: "POST",
                 headers: {
@@ -1242,96 +1259,119 @@ class GraphWidget extends React.Component {
                     "Content-Type": "application/json"
                 },
                 body: JSON.stringify({
-                    path,
+                    path:  "getImagePlotDegradation",
                     ...widget,
-                    geometry: plotExtentPolygon,
-                    scale: 30,
-                    point: centerPoint
+                    geometry: plotExtentPolygon
                 })
             })
-                .then(res => res.json())
-                .then(res => {
-                    if (res.errMsg) {
-                        console.warn(res.errMsg);
-                    } else if (res.hasOwnProperty("timeseries")) {
-                        if (res.timeseries.length === 0) {
-                            console.log("no data");
-                        } else if (Object.keys(res.timeseries[0][1]).length === 0) {
-                            const thisDataSeries = {
-                                type: "area",
-                                name: widget.graphBand || indexName,
-                                data: res.timeseries
-                                    .filter(v => v[0]).map(v => [v[0], v[1]]).sort((a, b) => a[0] - b[0]),
-                                color: "#31bab0"
-                            };
-                            this.setState({nonDegChartData : [thisDataSeries]});
-                        } else {
-                            // this is where degData ends up
-                            const theKeys = Object.keys(res.timeseries[0][1]);
-                            const compiledData = [];
-                            res.timeseries.forEach(d => {
-                                for (let i = 0; i < theKeys.length; i += 1) {
-                                    const tempData = [];
-                                    const anObject = {};
-                                    anObject[theKeys[i]] = d[1][theKeys[i]];
-                                    tempData.push(d[0]);
-                                    tempData.push(anObject);
-                                    if (compiledData.length - 1 < i) {
-                                        compiledData[i] = [];
-                                    }
-                                    compiledData[i].push(tempData);
-                                }
-                            });
-                            compiledData.forEach((d, index) => {
-                                const cdata = this.convertData(d);
-                                const mSortData = this.sortMultiData(cdata);
-                                const thisDataSeries = {
-                                    type: "scatter",
-                                    name: theKeys[index],
-                                    data: mSortData,
-                                    valueDecimals: 20,
-                                    connectNulls: true,
-                                    color: "#31bab0",
-                                    allowPointSelect: true,
-                                    point: {
-                                        cursor: "pointer",
-                                        events: {
-                                            select: e => {
-                                                handleSelectDate(formatDateISO(new Date(e.target.x)));
-                                            }
-                                        }
-                                    },
-                                    tooltip: {
-                                        pointFormat: "<span style=\"color:{series.color}\">{point.x:%Y-%m-%d}</span>: <b>{point.y:.6f}</b><br/>",
-                                        valueDecimals: 20,
-                                        split: false,
-                                        xDateFormat: "%Y-%m-%d"
-                                    }
-                                };
-                                if (degDataType === "landsat") {
-                                    this.setState({
-                                        chartDataSeriesLandsat: [
-                                            ...this.state.chartDataSeriesLandsat,
-                                            thisDataSeries
-                                        ]
-                                    });
-                                } else {
-                                    this.setState({
-                                        chartDataSeriesSar: {
-                                            ...this.state.chartDataSeriesSar,
-                                            [theKeys[index]]: [thisDataSeries]
-                                        }
-                                    });
-                                }
-                            });
-                        }
+                .then(res => (res.ok ? res.json() : Promise.reject()))
+                .then(data => {
+                    const invalidCheck = this.invalidData(data);
+                    if (invalidCheck) {
+                        console.warn(invalidCheck);
                     } else {
-                        console.warn("Wrong Data Returned");
+                        // TODO, nested loops is a no-no
+                        const theKeys = Object.keys(data.timeseries[0][1]);
+                        const compiledData = [];
+                        data.timeseries.forEach(d => {
+                            for (let i = 0; i < theKeys.length; i += 1) {
+                                const tempData = [];
+                                const anObject = {};
+                                anObject[theKeys[i]] = d[1][theKeys[i]];
+                                tempData.push(d[0]);
+                                tempData.push(anObject);
+                                if (compiledData.length - 1 < i) {
+                                    compiledData[i] = [];
+                                }
+                                compiledData[i].push(tempData);
+                            }
+                        });
+                        // TODO, this can definitely be a .map.
+                        compiledData.forEach((d, index) => {
+                            const cdata = this.convertData(d);
+                            const mSortData = this.sortMultiData(cdata);
+                            const thisDataSeries = {
+                                type: "scatter",
+                                name: theKeys[index],
+                                data: mSortData,
+                                valueDecimals: 20,
+                                connectNulls: true,
+                                color: "#31bab0",
+                                allowPointSelect: true,
+                                point: {
+                                    cursor: "pointer",
+                                    events: {
+                                        select: e => {
+                                            handleSelectDate(formatDateISO(new Date(e.target.x)));
+                                        }
+                                    }
+                                },
+                                tooltip: {
+                                    pointFormat: "<span style=\"color:{series.color}\">{point.x:%Y-%m-%d}</span>: <b>{point.y:.6f}</b><br/>",
+                                    valueDecimals: 20,
+                                    split: false,
+                                    xDateFormat: "%Y-%m-%d"
+                                }
+                            };
+                            if (degDataType === "landsat") {
+                                this.setState({
+                                    chartDataSeriesLandsat: [
+                                        ...this.state.chartDataSeriesLandsat,
+                                        thisDataSeries
+                                    ]
+                                });
+                            } else {
+                                this.setState({
+                                    chartDataSeriesSar: {
+                                        ...this.state.chartDataSeriesSar,
+                                        [theKeys[index]]: [thisDataSeries]
+                                    }
+                                });
+                            }
+                        });
                     }
                 })
                 .catch(error => console.log(error));
-            window.addEventListener("resize", this.handleResize);
         }
+    };
+
+    loadTimeSeries = () => {
+        const {widget, plotExtentPolygon} = this.props;
+
+        const {indexName} = widget;
+        const path = indexName === "Custom"
+            ? "timeSeriesByAsset"
+            : "timeSeriesByIndex";
+        fetch("/geo-dash/gateway-request", {
+            method: "POST",
+            headers: {
+                "Accept": "application/json",
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                path,
+                ...widget,
+                geometry: plotExtentPolygon,
+                scale: 30
+            })
+        })
+            .then(res => (res.ok ? res.json() : Promise.reject()))
+            .then(data => {
+                const invalidCheck = this.invalidData(data);
+                if (invalidCheck) {
+                    console.warn(invalidCheck);
+                } else {
+                    const thisDataSeries = {
+                        type: "area",
+                        name: widget.graphBand || indexName,
+                        data: data.timeseries
+                            .filter(v => v[0]).map(v => [v[0], v[1]]).sort((a, b) => a[0] - b[0]),
+                        color: "#31bab0"
+                    };
+                    this.setState({nonDegChartData : [thisDataSeries]});
+                }
+            })
+            .catch(error => console.log(error));
     };
 
     multiComparator = (a, b) => ((a[0] < b[0]) ? -1
@@ -1380,9 +1420,22 @@ class GraphWidget extends React.Component {
         );
     };
 
-    getChartOptions = () => {
+    getChartData = () => {
         const {widget, degDataType} = this.props;
-        const {chartDataSeriesLandsat, chartDataSeriesSar, selectSarGraphBand, nonDegChartData} = this.state;
+        const {chartDataSeriesSar, chartDataSeriesLandsat, selectSarGraphBand, nonDegChartData} = this.state;
+        return (widget.type === "degradationTool"
+                && degDataType === "sar"
+                && chartDataSeriesSar.hasOwnProperty(selectSarGraphBand)
+                && chartDataSeriesSar[selectSarGraphBand])
+            || (widget.type === "degradationTool"
+                && degDataType === "landsat"
+                && chartDataSeriesLandsat)
+            || nonDegChartData
+            || [];
+    };
+
+    getChartOptions = () => {
+        const {widget} = this.props;
         return {
             chart: {zoomType: "x"},
             title: {text: ""},
@@ -1429,32 +1482,16 @@ class GraphWidget extends React.Component {
                 split: false,
                 xDateFormat: "%Y-%m-%d"
             },
-            series:
-                widget.type === "degradationTool"
-                    ? degDataType === "landsat" && chartDataSeriesLandsat.length > 0
-                        ? _.cloneDeep(chartDataSeriesLandsat)
-                        : degDataType === "sar" && chartDataSeriesSar.hasOwnProperty(selectSarGraphBand)
-                            && chartDataSeriesSar[selectSarGraphBand].length > 0
-                            ? _.cloneDeep(chartDataSeriesSar[selectSarGraphBand])
-                            : []
-                    : _.cloneDeep(nonDegChartData)
+            series: _.cloneDeep(this.getChartData)
         };
     };
 
     render() {
-        const {widget, degDataType} = this.props;
-        const {chartDataSeriesSar, chartDataSeriesLandsat, selectSarGraphBand, nonDegChartData} = this.state;
+        const {widget} = this.props;
         return (
             <div className="minmapwidget" id={"widgetgraph_" + widget.id}>
                 <div className="minmapwidget graphwidget normal" id={"graphcontainer_" + widget.id}>
-                    {(widget.type === "degradationTool"
-                        && degDataType === "sar"
-                        && chartDataSeriesSar.hasOwnProperty(selectSarGraphBand)
-                        && chartDataSeriesSar[selectSarGraphBand].length > 0)
-                    || (widget.type === "degradationTool"
-                        && degDataType === "landsat"
-                        && chartDataSeriesLandsat.length > 0)
-                    || nonDegChartData.length > 0
+                    {this.getChartData.length > 0
                         ? (
                             <HighchartsReact
                                 callback={thisChart => this.setState({graphRef: thisChart})}
@@ -1473,7 +1510,9 @@ class GraphWidget extends React.Component {
                             />
                         )}
                 </div>
-                <h3 id={"widgettitle_" + widget.id}>{widget.properties[4]}</h3>
+                <h3 id={"widgettitle_" + widget.id}>
+                    {widget.indexName === "Custom" ? widget.graphBand : widget.indexName}
+                </h3>
                 {this.getSarBandOption()}
             </div>
         );
