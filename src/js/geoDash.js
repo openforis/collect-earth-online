@@ -386,7 +386,7 @@ class Widget extends React.Component {
                     />
                 </div>
             );
-        } else if (widget.properties[0] === "DegradationTool") {
+        } else if (widget.type === "degradationTool") {
             return (
                 <div className="front">
                     <DegradationWidget
@@ -614,11 +614,12 @@ class MapWidget extends React.Component {
             path = getGatewayPath(widget, collectionName);
             const {assetName, visParams} = widget;
             postObject = {assetName, visParams};
+        } else if (widget.type === "degradationTool") {
             postObject.imageDate = this.props.selectedDate;
             postObject.stretch = this.props.degDataType && this.props.degDataType === "landsat"
                 ? this.state.stretch
                 : "SAR";
-            path = "getDegraditionTileUrl";
+            path = "getDegradationTileUrl";
         } else if (widget.dualImageCollection) {
             const firstImage = widget.dualImageCollection[0];
             const secondImage = widget.dualImageCollection[1];
@@ -751,14 +752,14 @@ class MapWidget extends React.Component {
         if (this.props.selectedDate !== prevProps.selectedDate
             || this.state.stretch !== prevState.stretch
             || this.props.degDataType !== prevProps.degDataType) {
-            if (this.props.widget.properties[0] === "DegradationTool" && this.props.selectedDate !== "") {
+            if (this.props.widget.type === "degradationTool" && this.props.selectedDate !== "") {
                 const postObject = {};
                 postObject.imageDate = this.props.selectedDate;
                 postObject.stretch = this.props.degDataType && this.props.degDataType === "landsat"
                     ? this.state.stretch
                     : "SAR";
                 postObject.dataType = this.props.degDataType;
-                postObject.path = "getDegraditionTileUrl";
+                postObject.path = "getDegradationTileUrl";
                 postObject.geometry = this.props.plotExtentPolygon;
                 const map = this.state.mapRef;
                 try {
@@ -813,7 +814,7 @@ class MapWidget extends React.Component {
     };
 
     fetchMapInfo = (postObject, url, widget, dualImageObject) => {
-        if (postObject.path === "getDegraditionTileUrl" && url.trim() === "") {
+        if (postObject.path === "getDegradationTileUrl" && url.trim() === "") {
             return;
         }
         fetch(url, {
@@ -1230,12 +1231,14 @@ class GraphWidget extends React.Component {
             graphRef.update({series: _.cloneDeep(chartDataSeriesSar[selectSarGraphBand])});
         } else {
             const centerPoint = mercator.getFeatureCenter(vectorSource);
-            const widgetType = widget.type || "";
             const collectionName = widget.properties[1];
             const indexName = widget.properties[4];
-            const path = widgetType === "DegradationTool" ? "getImagePlotDegradition"
-                : collectionName.trim() === "timeSeriesAssetForPoint" ? "timeSeriesAssetForPoint"
-                    : collectionName.trim().length > 0 ? "timeSeriesIndex"
+            const path = widget.type === "degradationTool"
+                ? "getImagePlotDegradation"
+                : collectionName.trim() === "timeSeriesAssetForPoint"
+                    ? "timeSeriesAssetForPoint"
+                    : collectionName.trim().length > 0
+                        ? "timeSeriesIndex"
                         : "timeSeriesIndex2";
             fetch("/geo-dash/gateway-request", {
                 method: "POST",
@@ -1383,7 +1386,7 @@ class GraphWidget extends React.Component {
                 onChange={evt => this.onSelectSarGraphBand(evt.target.value)}
                 style={{
                     maxWidth: "85%",
-                    display: this.props.widget.type === "DegradationTool" && this.props.degDataType === "sar"
+                    display: this.props.widget.type === "degradationTool" && this.props.degDataType === "sar"
                         ? "inline-block" : "none",
                     fontSize: ".9rem",
                     height: "30px"
@@ -1444,7 +1447,7 @@ class GraphWidget extends React.Component {
                 xDateFormat: "%Y-%m-%d"
             },
             series:
-                widget.type === "DegradationTool"
+                widget.type === "degradationTool"
                     ? degDataType === "landsat" && chartDataSeriesLandsat.length > 0
                         ? _.cloneDeep(chartDataSeriesLandsat)
                         : degDataType === "sar" && chartDataSeriesSar.hasOwnProperty(selectSarGraphBand)
@@ -1461,11 +1464,11 @@ class GraphWidget extends React.Component {
         return (
             <div className="minmapwidget" id={"widgetgraph_" + widget.id}>
                 <div className="minmapwidget graphwidget normal" id={"graphcontainer_" + widget.id}>
-                    {(widget.type === "DegradationTool"
+                    {(widget.type === "degradationTool"
                         && degDataType === "sar"
                         && chartDataSeriesSar.hasOwnProperty(selectSarGraphBand)
                         && chartDataSeriesSar[selectSarGraphBand].length > 0)
-                    || (widget.type === "DegradationTool"
+                    || (widget.type === "degradationTool"
                         && degDataType === "landsat"
                         && chartDataSeriesLandsat.length > 0)
                     || nonDegChartData.length > 0
