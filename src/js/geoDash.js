@@ -26,19 +26,22 @@ function getGatewayPath(widget, collectionName) {
         "LANDSAT8": "Landsat8Filtered",
         "Sentinel2": "FilteredSentinel"
     };
-    return (widget.filterType && widget.filterType.length > 0)
-        ? fts[widget.filterType]
-        : (widget.ImageAsset && widget.ImageAsset.length > 0)
-            ? "image"
-            : (widget.ImageCollectionAsset && widget.ImageCollectionAsset.length > 0)
-                ? "ImageCollectionAsset"
-                : (widget.featureCollection && widget.featureCollection.length > 0)
-                    ? "getTileUrlFromFeatureCollection"
-                    : (widget.properties && widget.properties[0] === "ImageCollectionCustom")
-                        ? "meanImageByMosaicCollections"
-                        : (collectionName.trim().length > 0)
-                            ? "cloudMaskImageByMosaicCollection"
-                            : "ImageCollectionbyIndex";
+    if (widget.filterType && widget.filterType.length > 0) {
+        return fts[widget.filterType];
+    } else if (widget.eeType === "image") {
+        return "image";
+    } else if (widget.ImageCollectionAsset && widget.ImageCollectionAsset.length > 0) {
+        return "ImageCollectionAsset";
+    } else if (widget.featureCollection && widget.featureCollection.length > 0) {
+        return "getTileUrlFromFeatureCollection";
+    } else if (widget.properties && widget.properties[0] === "ImageCollectionCustom") {
+        return "meanImageByMosaicCollections";
+    } else if (collectionName.trim().length > 0) {
+        return "cloudMaskImageByMosaicCollection";
+    } else {
+        // FIXME, dont have a default, all paths should exist
+        return "ImageCollectionbyIndex";
+    }
 }
 
 class Geodash extends React.Component {
@@ -260,7 +263,7 @@ class Geodash extends React.Component {
 class Widget extends React.Component {
     constructor(props) {
         super(props);
-        this.imageCollectionList = ["ImageElevation",
+        this.imageCollectionList = ["imageElevation",
                                     "ImageCollectionCustom",
                                     "addImageCollection",
                                     "ndviImageCollection",
@@ -419,7 +422,7 @@ class Widget extends React.Component {
 
     isMapWidget = widget => this.imageCollectionList.includes(widget.properties[0])
         || (widget.dualImageCollection)
-        || (widget.ImageAsset && widget.ImageAsset.length > 0)
+        || (widget.assetName && widget.assetName.length > 0)
         || (widget.ImageCollectionAsset && widget.ImageCollectionAsset.length > 0)
         || (widget.featureCollection && widget.featureCollection.length > 0);
 
@@ -593,12 +596,11 @@ class MapWidget extends React.Component {
             mapRef: map
         });
 
-        const postObject = {};
+        let postObject = {};
         let collectionName = "";
         let dateFrom = "";
         let dateTo = "";
         let requestedIndex = "";
-        let url = "";
         let path = "";
         let dualImageObject = null;
         let bands = "";
@@ -607,7 +609,11 @@ class MapWidget extends React.Component {
         }
         widget.bands = bands;
 
-        if (widget.properties[0] === "DegradationTool") {
+        if (widget.eeType === "Image") {
+            // Should be type imageAsset or imageElevation
+            path = getGatewayPath(widget, collectionName);
+            const {assetName, visParams} = widget;
+            postObject = {assetName, visParams};
             postObject.imageDate = this.props.selectedDate;
             postObject.stretch = this.props.degDataType && this.props.degDataType === "landsat"
                 ? this.state.stretch
@@ -626,9 +632,8 @@ class MapWidget extends React.Component {
             shortWidget.filterType = firstImage.filterType;
             shortWidget.properties = [];
             shortWidget.properties.push(collectionName);
-            shortWidget.ImageAsset = firstImage.imageAsset;
+            shortWidget.assetName = firstImage.assetName;
             shortWidget.ImageCollectionAsset = firstImage.ImageCollectionAsset;
-            url = "/geo-dash/gateway-request";
             path = getGatewayPath(shortWidget, collectionName);
             shortWidget.visParams = firstImage.visParams;
             shortWidget.min = firstImage.min != null ? firstImage.min : "";
@@ -655,9 +660,8 @@ class MapWidget extends React.Component {
             shortWidget2.filterType = secondImage.filterType;
             shortWidget2.properties = [];
             shortWidget2.properties.push(dualImageObject.collectionName);
-            shortWidget2.ImageAsset = secondImage.imageAsset;
+            shortWidget2.assetName = secondImage.assetName;
             shortWidget2.ImageCollectionAsset = secondImage.ImageCollectionAsset;
-            dualImageObject.url = "/geo-dash/gateway-request";
             dualImageObject.path = getGatewayPath(shortWidget2, dualImageObject.collectionName);
             shortWidget2.visParams = secondImage.visParams;
             shortWidget2.min = secondImage.min != null ? secondImage.min : "";
@@ -671,15 +675,15 @@ class MapWidget extends React.Component {
             }
 
             dualImageObject.visParams = this.getImageParams(shortWidget2);
-            // work on image asset here there will be a variable imageAsset in the dualImageCollection in which case we should call the gateway /image with imageParams
-            if (firstImage.imageAsset) {
-                postObject.ImageAsset = firstImage.imageAsset;
-                postObject.imageName = firstImage.imageAsset;
+            // work on image asset here there will be a variable assetName in the dualImageCollection in which case we should call the gateway /image with imageParams
+            if (firstImage.assetName) {
+                postObject.assetName = firstImage.assetName;
+                postObject.imageName = firstImage.assetName;
                 postObject.visParams = firstImage.visParams;
             }
-            if (secondImage.imageAsset) {
-                dualImageObject.ImageAsset = secondImage.imageAsset;
-                dualImageObject.imageName = secondImage.imageAsset;
+            if (secondImage.assetName) {
+                dualImageObject.assetName = secondImage.assetName;
+                dualImageObject.imageName = secondImage.assetName;
                 dualImageObject.visParams = secondImage.visParams;
             }
             if (firstImage.ImageCollectionAsset) {
@@ -697,10 +701,6 @@ class MapWidget extends React.Component {
             dateFrom = widget.properties[2].trim() ? widget.properties[2].trim() : widget.startDate;
             dateTo = widget.properties[3].trim() ? widget.properties[3].trim() : widget.endDate;
             requestedIndex = this.getRequestedIndex(widget.properties[0]);
-            if (widget.properties[0] === "ImageElevation") {
-                widget.ImageAsset = "USGS/SRTMGL1_003";
-            }
-            url = "/geo-dash/gateway-request";
             path = getGatewayPath(widget, collectionName);
             postObject.visParams = this.getImageParams(widget);
             postObject.featureCollection = widget.featureCollection;
@@ -713,9 +713,9 @@ class MapWidget extends React.Component {
                 postObject.max = postObject.visParams.max;
                 postObject.cloudLessThan = parseInt(postObject.visParams.cloudLessThan);
             }
-            if (widget.ImageAsset) {
-                postObject.imageName = widget.ImageAsset;
-                postObject.ImageAsset = widget.ImageAsset;
+            if (widget.assetName) {
+                postObject.imageName = widget.assetName;
+                postObject.ImageAsset = widget.assetName;
             } else if (widget.ImageCollectionAsset) {
                 postObject.ImageCollectionAsset = widget.ImageCollectionAsset;
                 postObject.imageName = widget.ImageCollectionAsset;
@@ -734,7 +734,7 @@ class MapWidget extends React.Component {
         if (typeof (Storage) !== "undefined"
             && (this.checkForCache(postObject, widget, false)
                 || (widget.dualImageCollection && dualImageObject && this.checkForCache(dualImageObject, widget, true)))) {
-            this.fetchMapInfo(postObject, url, widget, dualImageObject);
+            this.fetchMapInfo(postObject, "/geo-dash/gateway-request", widget, dualImageObject);
         }
         window.addEventListener("resize", this.handleResize);
     }
@@ -779,8 +779,8 @@ class MapWidget extends React.Component {
 
     checkForCache = (postObject, widget, isSecond) => {
         const visParams = JSON.stringify(postObject.visParams);
-        return (localStorage.getItem(postObject.ImageAsset + visParams)
-            ? this.createTileServerFromCache(postObject.ImageAsset + visParams, widget.id, isSecond)
+        return (localStorage.getItem(postObject.assetName + visParams)
+            ? this.createTileServerFromCache(postObject.assetName + visParams, widget.id, isSecond)
             : localStorage.getItem(postObject.ImageCollectionAsset + visParams)
                 ? this.createTileServerFromCache(postObject.ImageCollectionAsset + visParams, widget.id, isSecond)
                 : postObject.index && localStorage.getItem(postObject.index + visParams + postObject.dateFrom + postObject.dateTo)
@@ -795,8 +795,8 @@ class MapWidget extends React.Component {
     setCache = (postObject, data) => {
         data.lastGatewayUpdate = new Date();
         const visParams = JSON.stringify(postObject.visParams);
-        if (postObject.ImageAsset && visParams) {
-            localStorage.setItem(postObject.ImageAsset + visParams, JSON.stringify(data));
+        if (postObject.assetName && visParams) {
+            localStorage.setItem(postObject.assetName + visParams, JSON.stringify(data));
         } else if (postObject.ImageCollectionAsset && visParams) {
             localStorage.setItem(postObject.ImageCollectionAsset + visParams, JSON.stringify(data));
         } else if (postObject.index && visParams + postObject.dateFrom + postObject.dateTo) {

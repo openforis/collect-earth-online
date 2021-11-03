@@ -521,8 +521,7 @@ class Collection extends React.Component {
                 id: cur.get("sampleId") || getMax(acc) + 1,
                 visibleId: cur.get("visibleId"),
                 sampleGeom: mercator.geometryToGeoJSON(cur.getGeometry(), "EPSG:4326", "EPSG:3857")
-            }
-        ], []);
+            }], []);
 
         this.setState({
             currentPlot: {...currentPlot, samples: newSamples},
