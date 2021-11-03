@@ -12,11 +12,11 @@ export default function TimeSeriesDesigner() {
     return (
         <>
             <GDSelect
-                dataKey="dataType"
+                dataKey="indexName"
                 items={["NDVI", "EVI", "EVI 2", "NDMI", "NDWI", "Custom"]}
                 title="Data Type"
             />
-            {widgetDesign.dataType === "Custom" && (
+            {widgetDesign.indexName === "Custom" && (
                 <>
                     <GetBands
                         asset={widgetDesign.imageCollection}
@@ -25,9 +25,9 @@ export default function TimeSeriesDesigner() {
                         setBands={setBands}
                         type="imageCollection"
                     />
-                    <GDSelect dataKey="graphBand" items={bands} title="Band to graph"/>
-                    {/* FIXME, this key is not graphBand */}
-                    <GDSelect dataKey="graphBand" items={["Min", "Max", "Mean"]} title="Reducer"/>
+                    <GDSelect dataKey="graphBand" disabled items={bands} title="Band to graph"/>
+                    {/* FIXME why does not custom use median, but its not a choice here*/}
+                    <GDSelect dataKey="graphReducer" items={["Min", "Max", "Mean"]} title="Reducer"/>
                 </>
             )}
             <GDDateRange/>

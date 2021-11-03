@@ -287,61 +287,20 @@ class WidgetLayoutEditor extends React.PureComponent {
             widget.assetName = assetName;
             widget.field = field;
             widget.visParams = visParams;
-        } else if (type === "DualImageCollection") {
-            widget.properties = ["", "", "", "", ""];
-            widget.filterType = "";
-            widget.visParams = {};
-            widget.dualImageCollection = [];
-            widget.swipeAsDefault = this.state.swipeAsDefault;
+        } else if (type === "timeSeries") {
+            const {startDate, endDate, indexName, assetName, graphBand, graphReducer} = widgetDesign;
             widget.basemapId = this.state.basemapId;
-            const img1 = {};
-            const img2 = {};
-            img1.collectionType = "ImageCollection" + this.state.selectedDataType;
-            img2.collectionType = "ImageCollection" + this.state.selectedDataTypeDual;
-            img1.startDate = this.state.startDate;
-            img1.endDate = this.state.endDate;
-            img2.startDate = this.state.startDateDual;
-            img2.endDate = this.state.endDateDual;
-            if (["LANDSAT5", "LANDSAT7", "LANDSAT8", "Sentinel2"].includes(this.state.selectedDataType)) {
-                img1.filterType = this.state.selectedDataType !== null ? this.state.selectedDataType : "";
-                img1.visParams = {
-                    bands: this.state.widgetBands,
-                    min: this.state.widgetMin,
-                    max: this.state.widgetMax,
-                    cloudLessThan: this.state.widgetCloudScore
-                };
-            }
-            if (["LANDSAT5", "LANDSAT7", "LANDSAT8", "Sentinel2"].includes(this.state.selectedDataTypeDual)) {
-                img2.filterType = this.state.selectedDataTypeDual !== null ? this.state.selectedDataTypeDual : "";
-                img2.visParams = {
-                    bands: this.state.widgetBandsDual,
-                    min: this.state.widgetMinDual,
-                    max: this.state.widgetMaxDual,
-                    cloudLessThan: this.state.widgetCloudScoreDual
-                };
-            }
-            if (this.state.selectedDataType === "imageAsset") {
-                // add image asset parameters
-                img1.visParams = JSON.parse(this.state.visParams);
-                img1.imageAsset = this.state.imageCollection;
-            }
-            if (this.state.selectedDataType === "imageCollectionAsset") {
-                // add image asset parameters
-                img1.visParams = JSON.parse(this.state.visParams);
-                img1.ImageCollectionAsset = this.state.imageCollection;
-            }
-            if (this.state.selectedDataTypeDual === "imageAsset") {
-                // add dual image asset parameters
-                img2.visParams = JSON.parse(this.state.visParamsDual);
-                img2.imageAsset = this.state.imageCollectionDual;
-            }
-            if (this.state.selectedDataTypeDual === "imageCollectionAsset") {
-                // add dual image asset parameters
-                img2.visParams = JSON.parse(this.state.visParamsDual);
-                img2.ImageCollectionAsset = this.state.imageCollectionDual;
-            }
-            widget.dualImageCollection.push(img1);
-            widget.dualImageCollection.push(img2);
+            widget.indexName = indexName;
+            widget.assetName = assetName;
+            widget.graphBand = graphBand;
+            widget.graphReducer = graphReducer;
+            widget.startDate = startDate;
+            widget.endDate = endDate;
+        } else if (type === "DualImageCollection") {
+            // FIXME, this is a stub.  Will need to get each image.
+            const {img1, img2} = widget;
+            widget.img1 = img1;
+            widget.img2 = img2;
         } else if (type === "imageCollectionAsset") {
             widget.properties = ["", "", "", "", ""];
             widget.filterType = "";
@@ -349,26 +308,13 @@ class WidgetLayoutEditor extends React.PureComponent {
             widget.ImageCollectionAsset = this.state.imageCollection;
             widget.basemapId = this.state.basemapId;
         } else {
-            const wType = type === "TimeSeries"
-                ? this.state.selectedDataType.toLowerCase() + type
-                : type === "ImageCollection"
-                    ? type + this.state.selectedDataType
-                    : "custom"; // This never happens
-            let prop1 = "";
             const properties = [];
             const prop4 = this.state.selectedDataType !== null ? this.state.selectedDataType : "";
-            if (this.state.selectedDataType === "Custom") {
-                // more work to do to label the type and add
-                prop1 = this.state.imageCollection;
-                widget.visParams = this.state.visParams;
-                widget.graphBand = this.state.graphBand;
-                widget.graphReducer = this.state.graphReducer;
-            }
-            if (["ImageCollection", "ImageElevation"].includes(type)) {
+            if (["ImageCollection"].includes(type)) {
                 widget.basemapId = this.state.basemapId;
             }
-            properties[0] = wType;
-            properties[1] = prop1;
+            properties[0] = type;
+            properties[1] = "";
             properties[2] = this.state.startDate;
             properties[3] = this.state.endDate;
             properties[4] = prop4;
