@@ -253,14 +253,17 @@ class WidgetLayoutEditor extends React.PureComponent {
 
     onCreateNewWidget = () => {
         const {widgetTitle: name, widgetType: type} = this.state;
-        const widget = {name, type};
         const maxY = Math.max(...this.state.widgets.map(o => (o.layout.y || 0)));
-        const yval = maxY > -1 ? maxY + 1 : 0;
-        widget.layout = {
-            x: 0,
-            y: yval, // puts it at the bottom
-            w: 3,
-            h: 1
+        const yval = maxY > -1 ? maxY + 1 : 0; // puts it at the bottom
+        const widget = {
+            name,
+            type,
+            layout:{
+                x: 0,
+                y: yval,
+                w: 3,
+                h: 1
+            }
         };
         if (type === "DualImageCollection") {
             widget.properties = ["", "", "", "", ""];
@@ -343,16 +346,16 @@ class WidgetLayoutEditor extends React.PureComponent {
             widget.visParams = this.state.visParams;
             widget.field = this.state.matchField;
             widget.basemapId = this.state.basemapId;
+        } else if (type === "statistics") {
+            // Do nothing
         } else {
             const wType = type === "TimeSeries"
                 ? this.state.selectedDataType.toLowerCase() + type
                 : type === "ImageCollection"
                     ? type + this.state.selectedDataType
-                    : type === "statistics"
-                        ? "getStats"
-                        : type === "ImageElevation"
-                            ? "ImageElevation"
-                            : "custom";
+                    : type === "ImageElevation"
+                        ? "ImageElevation"
+                        : "custom";
             let prop1 = "";
             const properties = [];
             const prop4 = this.state.selectedDataType !== null ? this.state.selectedDataType : "";
