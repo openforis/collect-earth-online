@@ -9,18 +9,18 @@ export default function PolygonDesigner() {
         <>
             <BaseMapSelector/>
             <GDInput
-                dataKey="featureCollection"
+                dataKey="assetName"
                 placeholder="users/username/collectionName"
                 title="GEE Feature Collection Asset"
             />
             <GDInput
-                dataKey="matchField"
+                dataKey="field"
                 placeholder="OBJECTID"
                 title="Field to match PLOTID"
             />
             <GDTextArea
                 dataKey="visParams"
-                placeholder={"{\"bands\": \"B4, B3, B2\", \n\"min\":0, \n\"max\": 0.3}"}
+                defaultText={"{\"max\": 1, \"palette\": [\"red\"]}"}
                 title="Image Parameters (json format)"
             />
         </>

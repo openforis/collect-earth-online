@@ -264,21 +264,29 @@ class WidgetLayoutEditor extends React.PureComponent {
                 h: 1
             }
         };
+        // FIXME, use immutable design, and spread widgetDesign
         if (type === "statistics") {
             // Do nothing
         } else if (type === "imageAsset" || type === "imageElevation") {
             // image elevation is a specific image asset
-            const {visParams, assetName} = widgetDesign;
+            const {visParams, assetName} = widgetDesign; // FIXME
             widget.basemapId = basemapId;
             widget.eeType = "Image";
             widget.assetName = assetName;
-            widget.visParams = JSON.parse(visParams || "{}");
+            widget.visParams = JSON.parse(visParams || "{}"); // FIXME, why do some need to be parsed
         } else if (type === "degradationTool") {
             const {graphBand, startDate, endDate} = widgetDesign;
             widget.basemapId = basemapId;
             widget.graphBand = graphBand || "NDFI"; // FIXME, make sure this is the default or check for error
             widget.startDate = startDate;
             widget.endDate = endDate;
+        } else if (type === "polygonCompare") {
+            const {assetName, visParams, field} = widgetDesign;
+            widget.basemapId = this.state.basemapId;
+            widget.eeType = "FeatureCollection";
+            widget.assetName = assetName;
+            widget.field = field;
+            widget.visParams = visParams;
         } else if (type === "DualImageCollection") {
             widget.properties = ["", "", "", "", ""];
             widget.filterType = "";
@@ -339,12 +347,6 @@ class WidgetLayoutEditor extends React.PureComponent {
             widget.filterType = "";
             widget.visParams = JSON.parse(this.state.visParams);
             widget.ImageCollectionAsset = this.state.imageCollection;
-            widget.basemapId = this.state.basemapId;
-        } else if (type === "polygonCompare") {
-            widget.properties = ["featureCollection", "", "", "", ""];
-            widget.featureCollection = this.state.featureCollection;
-            widget.visParams = this.state.visParams;
-            widget.field = this.state.matchField;
             widget.basemapId = this.state.basemapId;
         } else {
             const wType = type === "TimeSeries"
@@ -481,7 +483,7 @@ class WidgetLayoutEditor extends React.PureComponent {
     );
 
     dialogBody = () => {
-        const {title, WidgetDesigner} = this.widgetTypes[this.state.selectedWidgetType] || {};
+        const {WidgetDesigner} = this.widgetTypes[this.state.selectedWidgetType] || {};
         console.log(this.widgetTypes[this.state.selectedWidgetType]);
         return (
             <form>

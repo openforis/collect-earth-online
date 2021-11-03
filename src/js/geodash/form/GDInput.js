@@ -4,9 +4,9 @@ import {EditorContext} from "../constants";
 
 export default function GDInput({title, placeholder, dataKey, disabled, defaultText}) {
     const {setWidgetDesign, widgetDesign} = useContext(EditorContext);
-    useEffect(() => {
-        if (defaultText) setWidgetDesign(dataKey, defaultText);
-    });
+    // useEffect(() => {
+    //     if (defaultText) setWidgetDesign(dataKey, defaultText);
+    // });
 
     return (
         <div className="form-group">

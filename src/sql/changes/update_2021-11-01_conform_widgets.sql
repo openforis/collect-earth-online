@@ -49,8 +49,25 @@ SET widget = jsonb_build_object(
 )
 WHERE widget->'properties'->>0 = 'DegradationTool';
 
+-- Update Polygon widgets
+UPDATE project_widgets
+SET widget = jsonb_build_object(
+    'type', 'polygonCompare',
+    'name', widget->>'name',
+    'layout', widget->'layout',
+    'basemapId', widget->'basemapId',
+    'assetName', widget->'featureCollection',
+    'field', widget->'field',
+    'visParams', widget->'visParams'
+)
+WHERE widget->'properties'->>0 = 'featureCollection';
+
 -- Clean up missing basemapId
 -- FIXME, set to OSM
 UPDATE project_widgets
 SET widget = widget - 'basemapId'
 WHERE widget->>'basemapId' IS NULL;
+
+-- Change name -> title to match
+UPDATE project_widgets
+SET widget = jsonb_set(widget, '{"title"}', widget->'name') - 'name';

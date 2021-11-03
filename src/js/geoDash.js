@@ -28,12 +28,8 @@ function getGatewayPath(widget, collectionName) {
     };
     if (widget.filterType && widget.filterType.length > 0) {
         return fts[widget.filterType];
-    } else if (widget.eeType === "image") {
-        return "image";
     } else if (widget.ImageCollectionAsset && widget.ImageCollectionAsset.length > 0) {
         return "ImageCollectionAsset";
-    } else if (widget.featureCollection && widget.featureCollection.length > 0) {
-        return "getTileUrlFromFeatureCollection";
     } else if (widget.properties && widget.properties[0] === "ImageCollectionCustom") {
         return "meanImageByMosaicCollections";
     } else if (collectionName.trim().length > 0) {
@@ -524,7 +520,7 @@ class MapWidget extends React.Component {
     }
 
     componentDidMount() {
-        const {plotExtentPolygon, widget} = this.props;
+        const {widget} = this.props;
         let {plotExtent} = this.props;
 
         const {sourceConfig, id, attribution, isProxied} = this.props.imageryList.find(imagery =>
@@ -609,18 +605,35 @@ class MapWidget extends React.Component {
         }
         widget.bands = bands;
 
+        // FIXME, post object should spread widget or {name, type, eeType, layout, ...payload}
         if (widget.eeType === "Image") {
             // Should be type imageAsset or imageElevation
-            path = getGatewayPath(widget, collectionName);
             const {assetName, visParams} = widget;
-            postObject = {assetName, visParams};
+            postObject = {
+                path: "image",
+                assetName,
+                visParams
+            };
         } else if (widget.type === "degradationTool") {
-            postObject.imageDate = this.props.selectedDate;
-            postObject.stretch = this.props.degDataType && this.props.degDataType === "landsat"
-                ? this.state.stretch
-                : "SAR";
-            path = "getDegradationTileUrl";
+            const {stretch} = this.state;
+            const {selectedDate, degDataType, plotExtentPolygon} = this.props;
+            postObject = {
+                path: "getDegradationTileUrl",
+                imageDate: selectedDate,
+                stretch: degDataType === "landsat" ? stretch : "SAR",
+                geometry: plotExtentPolygon
+            };
+        } else if (widget.type === "polygonCompare") {
+            const {assetName, field, visParams} = widget;
+            postObject = {
+                path: "getTileUrlFromFeatureCollection",
+                assetName,
+                field,
+                visParams: visParams || {},
+                matchID: this.props.visiblePlotId
+            };
         } else if (widget.dualImageCollection) {
+            const {plotExtentPolygon} = this.props;
             const firstImage = widget.dualImageCollection[0];
             const secondImage = widget.dualImageCollection[1];
             collectionName = firstImage.collectionType;
@@ -704,9 +717,6 @@ class MapWidget extends React.Component {
             requestedIndex = this.getRequestedIndex(widget.properties[0]);
             path = getGatewayPath(widget, collectionName);
             postObject.visParams = this.getImageParams(widget);
-            postObject.featureCollection = widget.featureCollection;
-            postObject.matchID = this.props.visiblePlotId;
-            postObject.field = widget.field;
 
             if (postObject.visParams.cloudLessThan) {
                 postObject.bands = postObject.visParams.bands;
@@ -714,10 +724,7 @@ class MapWidget extends React.Component {
                 postObject.max = postObject.visParams.max;
                 postObject.cloudLessThan = parseInt(postObject.visParams.cloudLessThan);
             }
-            if (widget.assetName) {
-                postObject.imageName = widget.assetName;
-                postObject.ImageAsset = widget.assetName;
-            } else if (widget.ImageCollectionAsset) {
+            if (widget.ImageCollectionAsset) {
                 postObject.ImageCollectionAsset = widget.ImageCollectionAsset;
                 postObject.imageName = widget.ImageCollectionAsset;
             }
@@ -726,15 +733,14 @@ class MapWidget extends React.Component {
         postObject.collectionName = collectionName;
         postObject.dateFrom = dateFrom;
         postObject.dateTo = dateTo;
-        postObject.geometry = plotExtentPolygon;
         postObject.index = requestedIndex;
         postObject.path = path;
         // see if we need to fetch or just add the tile server
-        const currentDate = new Date();
-        currentDate.setDate(currentDate.getDate() - 1);
         if (typeof (Storage) !== "undefined"
             && (this.checkForCache(postObject, widget, false)
-                || (widget.dualImageCollection && dualImageObject && this.checkForCache(dualImageObject, widget, true)))) {
+                || (widget.dualImageCollection
+                    && dualImageObject
+                    && this.checkForCache(dualImageObject, widget, true)))) {
             this.fetchMapInfo(postObject, "/geo-dash/gateway-request", widget, dualImageObject);
         }
         window.addEventListener("resize", this.handleResize);
@@ -889,6 +895,7 @@ class MapWidget extends React.Component {
             .catch(error => console.error(error));
     };
 
+    // FIXME, parse all visParams in widgetLayoutEditor
     getImageParams = widget => {
         if (widget.visParams) {
             if (typeof widget.visParams === "string") {
@@ -900,8 +907,6 @@ class MapWidget extends React.Component {
             } else {
                 return widget.visParams;
             }
-        } else if (widget.type === "polygonCompare") {
-            return {};
         } else {
             return {
                 min: (widget.min && widget.min > 0) ? widget.min : null,
