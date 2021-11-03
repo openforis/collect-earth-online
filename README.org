@@ -140,11 +140,12 @@ project directory and run:
 npm install
 npm run webpack-dev
 clojure -M:build-db functions
-clojure -M:run-server -m dev [-p 8080] [-P 8443]
+clojure -M:server start [-m dev] [-p 8080] [-P 8443]
 #+end_src
 
 The website will then be available at http://localhost:8080 unless a
-port is specified. An http port can be specified with -p and an https
+port is specified. These can also be configured using the ~:server~ section in
+your ~config.edn~ file. An http port can be specified with -p and an https
 port can be specified with -P. In dev mode, server-side exceptions
 will be displayed in the browser and Clojure source files will be
 reloaded whenever you refresh the page.
@@ -198,11 +199,12 @@ project directory and run:
 npm install
 npm run webpack-prod
 clojure -M:build-db functions -d ceo
-clojure -M:run-server -m [dev|prod] [-p 8080] [-P 8443]
+clojure -M:server start -m [dev|prod] [-p 8080] [-P 8443]
 #+end_src
 
 The website will then be available at http://localhost:8080 unless a
-port is specified. An http port can be specified with -p and an https
+port is specified. These can also be configured using the ~:server~ section in
+your ~config.edn~ file. An http port can be specified with -p and an https
 port can be specified with -P. In dev mode, server-side exceptions
 will be displayed in the browser and Clojure source files will be
 reloaded whenever you refresh the page. These features are disabled in

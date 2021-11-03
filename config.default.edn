@@ -8,4 +8,8 @@
             :pass     "<pass>"
             :tls      true
             :port     587
-            :base-url "https://my.domain/"}}
+            :base-url "https://my.domain/"}
+ :server   {:port       8080
+            :https-port nil
+            :mode       "prod"
+            :output-dir "logs"}}
