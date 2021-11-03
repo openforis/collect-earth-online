@@ -2,11 +2,23 @@ import "../css/geo-dash.css";
 
 import React from "react";
 import ReactDOM from "react-dom";
+import _ from "lodash";
 import RGL, {WidthProvider} from "react-grid-layout";
 
 import CopyDialog from "./geodash/CopyDialog";
+import DegradationDesigner from "./geodash/DegradationDesigner";
+import DualImageryDesigner from "./geodash/DualImageryDesigner";
 import GeoDashModal from "./geodash/GeoDashModal";
-import GeoDashNav from "./geodash/GeoDashNav";
+import GeoDashNavigationBar from "./geodash/GeoDashNavigationBar";
+import ImageAssetDesigner from "./geodash/ImageAssetDesigner";
+import ImageCollectionAssetDesigner from "./geodash/ImageCollectionAssetDesigner";
+import ImageCollectionDesigner from "./geodash/ImageCollectionDesigner";
+import ImageElevationDesigner from "./geodash/ImageElevationDesigner";
+import StatsDesigner from "./geodash/StatsDesigner";
+import TimeSeriesDesigner from "./geodash/TimeSeriesDesigner";
+import PolygonDesigner from "./geodash/PolygonDesigner";
+
+import {EditorContext} from "./geodash/constants";
 
 const ReactGridLayout = WidthProvider(RGL);
 
@@ -17,73 +29,87 @@ class WidgetLayoutEditor extends React.PureComponent {
             // Page state
             widgets: [],
             imagery: [],
-            widgetBasemap: -1,
-            // Templates, todo make own component
+            basemapId: -1,
             projectTemplateList: [],
             // Widget specific state
-            selectedWidgetType: "-1",
-            selectedDataType: "-1",
+            selectedWidgetType: -1,
             widgetTitle: "",
-            imageCollection: "",
-            featureCollection: "",
-            matchField: "",
-            graphBand: "",
-            graphBandDeg: "NDFI",
-            graphReducer: "Min",
-            imageParams: "",
-            dualLayer: false,
-            swipeAsDefault: false,
-            startDate: "",
-            endDate: "",
-            startDate2: "",
-            endDate2: "",
-            widgetBands: "",
-            widgetMin: "",
-            widgetMax: "",
-            widgetCloudScore: "",
-            imageCollectionDual: "",
-            selectedDataTypeDual: "-1",
-            imageParamsDual: "",
-            startDateDual: "",
-            endDateDual: "",
-            widgetBandsDual: "",
-            widgetMinDual: "",
-            widgetMaxDual: "",
-            widgetCloudScoreDual: "",
+            widgetDesign: {},
             formReady: false,
-            wizardStep: 1
+            // consider defaults
+            graphBandDeg: "NDFI",
+            graphReducer: "Min"
+        };
+
+        this.widgetTypes = {
+            statistics: {
+                title: "Statistics",
+                WidgetDesigner: StatsDesigner
+            },
+            imageAsset: {
+                title: "Image Asset",
+                WidgetDesigner: ImageAssetDesigner
+            },
+            imageCollection: {
+                title: "Preloaded Image Collections",
+                WidgetDesigner: ImageCollectionDesigner
+            },
+            imageCollectionAsset: {
+                title: "Image Collection Asset",
+                WidgetDesigner: ImageCollectionAssetDesigner
+            },
+            dualImagery: {
+                title: "Dual Imagery",
+                WidgetDesigner: DualImageryDesigner
+            },
+            imageElevation: {
+                title: "SRTM Digital Elevation Data 30m",
+                WidgetDesigner: ImageElevationDesigner
+            },
+            timeSeries: {
+                title: "Time Series Graph",
+                WidgetDesigner: TimeSeriesDesigner
+            },
+            degradationTool: {
+                title: "Degradation Tool",
+                WidgetDesigner: DegradationDesigner
+            },
+            polygonCompare: {
+                title: "Polygon Compare",
+                WidgetDesigner: PolygonDesigner
+            }
         };
     }
 
     /// Lifecycle
 
     componentDidMount() {
-        this.fetchProject(this.props.projectId, true);
-        this.getInstitutionImagery(this.props.institutionId);
+        this.fetchProject();
+        this.getInstitutionImagery();
         this.getProjectTemplateList();
     }
 
     /// API Calls
 
-    fetchProject = projectId => fetch(`/geo-dash/get-project-widgets?projectId=${projectId}`)
+    fetchProject = () => fetch(`/geo-dash/get-project-widgets?projectId=${this.props.projectId}`)
         .then(response => (response.ok ? response.json() : Promise.reject(response)))
         .then(data => this.setState({widgets: data}))
-        .catch(response => {
-            console.error(response);
+        .catch(error => {
+            console.error(error);
             alert("Error downloading the widget list. See console for details.");
         });
 
-    getInstitutionImagery = institutionId => {
-        fetch(`/get-institution-imagery?institutionId=${institutionId}`)
+    getInstitutionImagery = () => {
+        fetch(`/get-institution-imagery?institutionId=${this.props.institutionId}`)
             .then(response => (response.ok ? response.json() : Promise.reject(response)))
             .then(data => {
                 this.setState({
                     imagery: data,
-                    widgetBasemap: data[0].id
+                    basemapId: data[0].id
                 });
             })
-            .catch(response => {
-                console.error(response);
+            .catch(error => {
+                console.error(error);
                 alert("Error downloading the imagery list. See console for details.");
             });
     };
@@ -92,18 +118,14 @@ class WidgetLayoutEditor extends React.PureComponent {
         fetch("/get-template-projects")
             .then(response => (response.ok ? response.json() : Promise.reject(response)))
             .then(data => this.setState({projectTemplateList: data}))
-            .catch(response => {
-                console.error(response);
-                alert("Error retrieving the project list. See console for details.");
-            });
+            .catch(error => console.error(error));
     };
 
-    getBandsFromGateway = (isDual, isCollection) => {
-        const value = isDual ? this.state.imageCollectionDual : this.state.imageCollection;
-        if (value !== "") {
+    getBandsFromGateway = (assetName, assetType, callback) => {
+        if (assetName && assetName !== "") {
             const postObject = {
                 path: "getAvailableBands",
-                ...(isCollection ? {imageCollection: value} : {image: value})
+                [assetType]: assetName
             };
             fetch("/geo-dash/gateway-request", {
                 method: "POST",
@@ -116,16 +138,16 @@ class WidgetLayoutEditor extends React.PureComponent {
                 .then(res => (res.ok ? res.json() : Promise.reject()))
                 .then(data => {
                     if (data.hasOwnProperty("bands")) {
-                        if (isDual) {
-                            this.setState({
-                                availableBandsDual: data.bands.join(", ")
-                            });
-                        } else {
-                            this.setState({
-                                availableBands: data.bands.join(", ")
-                            });
-                        }
+                        callback(data.bands);
+                    } else if (data.hasOwnProperty("errMsg")) {
+                        callback(data.errMsg);
+                    } else {
+                        callback(null);
                     }
+                })
+                .catch(error => {
+                    console.error(error);
+                    callback(null);
                 });
         }
     };
@@ -182,42 +204,39 @@ class WidgetLayoutEditor extends React.PureComponent {
 
     /// State
 
+    resetWidgetDesign = () => {
+        this.setState({
+            selectedDataType: "-1",
+            widgetTitle: "",
+            widgetDesign: {}
+        });
+    };
+
+    // TODO, add middleware conditions
+    // type change
+    // -  imageCollection: newWidgetType === "ImageElevation" ? "USGS/SRTMGL1_003" : ""
+    // -  reset bands?
+    setWidgetDesign = (dataKey, val) => {
+        this.setState({widgetDesign: {...this.state.widgetDesign, [dataKey]: val}});
+    };
+
+    onDataBasemapSelectChanged = event => {
+        this.setState({basemapId: parseInt(event.target.value)});
+    };
+
+    onWidgetTitleChange = event => {
+        this.setState({widgetTitle: event.target.value});
+    };
+
     updateWidgetType = newWidgetType => this.setState({
         selectedWidgetType: newWidgetType,
-        selectedDataType: "-1",
+        selectedDataType: -1,
         widgetTitle: "",
-        imageCollection: newWidgetType === "ImageElevation" ? "USGS/SRTMGL1_003" : "",
-        featureCollection: "",
-        matchField: "",
-        graphBand: "",
-        graphBandDeg: "NDFI",
-        graphReducer: "Min",
-        imageParams: "",
-        dualLayer: false,
-        swipeAsDefault: false,
-        startDate:"",
-        endDate:"",
-        startDate2:"",
-        endDate2:"",
-        widgetBands:"",
-        widgetMin:"",
-        widgetMax:"",
-        widgetCloudScore:"",
-        imageCollectionDual: "",
-        imageParamsDual: "",
-        startDateDual:"",
-        endDateDual:"",
-        widgetBandsDual:"",
-        widgetMinDual:"",
-        widgetMaxDual:"",
-        widgetCloudScoreDual:"",
+        widgetDesign: {},
         formReady: newWidgetType === "statistics"
             || newWidgetType === "imageAsset"
             || newWidgetType === "imageCollectionAsset"
-            || newWidgetType === "ImageElevation",
-        wizardStep: 1,
-        availableBands:"",
-        availableBandsDual:""
+            || newWidgetType === "ImageElevation"
     });
 
     onDataTypeSelectChanged = event => {
@@ -229,68 +248,27 @@ class WidgetLayoutEditor extends React.PureComponent {
 
     onCancelNewWidget = () => {
         this.props.closeDialogs();
-        this.setState({
-            selectedWidgetType: "-1",
-            selectedDataTypeDual: "-1",
-            selectedDataType: "-1",
-            widgetTitle: "",
-            imageCollection: "",
-            featureCollection: "",
-            matchField: "",
-            graphBand: "",
-            graphBandDeg: "NDFI",
-            graphReducer: "Min",
-            imageParams: "",
-            dualLayer: false,
-            swipeAsDefault: false,
-            startDate:"",
-            endDate:"",
-            startDate2:"",
-            endDate2:"",
-            widgetBands:"",
-            widgetMin:"",
-            widgetMax:"",
-            widgetCloudScore:"",
-            imageCollectionDual: "",
-            imageParamsDual: "",
-            startDateDual:"",
-            endDateDual:"",
-            widgetBandsDual:"",
-            widgetMinDual:"",
-            widgetMaxDual:"",
-            widgetCloudScoreDual:"",
-            formReady: false,
-            wizardStep: 1,
-            availableBands:"",
-            availableBandsDual:""
-        });
+        this.resetWidgetDesign();
     };
 
     onCreateNewWidget = () => {
-        const widget = {};
-        const id = this.state.widgets.length > 0
-            ? (Math.max(...this.state.widgets.map(o => o.id))) + 1
-            : 0;
-        const name = this.state.widgetTitle;
-        widget.id = id;
-        widget.name = name;
+        const {widgetTitle: name, widgetType: type} = this.state;
+        const widget = {name, type};
         const maxY = Math.max(...this.state.widgets.map(o => (o.layout.y || 0)));
         const yval = maxY > -1 ? maxY + 1 : 0;
         widget.layout = {
-            i: id.toString(),
             x: 0,
             y: yval, // puts it at the bottom
             w: 3,
-            h: 1,
-            minW: 3
+            h: 1
         };
-        if (this.state.selectedWidgetType === "DualImageCollection") {
+        if (type === "DualImageCollection") {
             widget.properties = ["", "", "", "", ""];
             widget.filterType = "";
             widget.visParams = {};
             widget.dualImageCollection = [];
             widget.swipeAsDefault = this.state.swipeAsDefault;
-            widget.basemapId = this.state.widgetBasemap;
+            widget.basemapId = this.state.basemapId;
             const img1 = {};
             const img2 = {};
             img1.collectionType = "ImageCollection" + this.state.selectedDataType;
@@ -319,61 +297,60 @@ class WidgetLayoutEditor extends React.PureComponent {
             }
             if (this.state.selectedDataType === "imageAsset") {
                 // add image asset parameters
-                img1.visParams = JSON.parse(this.state.imageParams);
+                img1.visParams = JSON.parse(this.state.visParams);
                 img1.imageAsset = this.state.imageCollection;
             }
             if (this.state.selectedDataType === "imageCollectionAsset") {
                 // add image asset parameters
-                img1.visParams = JSON.parse(this.state.imageParams);
+                img1.visParams = JSON.parse(this.state.visParams);
                 img1.ImageCollectionAsset = this.state.imageCollection;
             }
             if (this.state.selectedDataTypeDual === "imageAsset") {
                 // add dual image asset parameters
-                img2.visParams = JSON.parse(this.state.imageParamsDual);
+                img2.visParams = JSON.parse(this.state.visParamsDual);
                 img2.imageAsset = this.state.imageCollectionDual;
             }
             if (this.state.selectedDataTypeDual === "imageCollectionAsset") {
                 // add dual image asset parameters
-                img2.visParams = JSON.parse(this.state.imageParamsDual);
+                img2.visParams = JSON.parse(this.state.visParamsDual);
                 img2.ImageCollectionAsset = this.state.imageCollectionDual;
             }
             widget.dualImageCollection.push(img1);
             widget.dualImageCollection.push(img2);
-        } else if (this.state.selectedWidgetType === "imageAsset" || this.state.selectedWidgetType === "ImageElevation") {
+        } else if (type === "imageAsset" || type === "ImageElevation") {
             widget.properties = ["", "", "", "", ""];
             widget.filterType = "";
-            widget.visParams = this.state.imageParams === "" ? {} : JSON.parse(this.state.imageParams);
+            widget.visParams = this.state.visParams === "" ? {} : JSON.parse(this.state.visParams);
             widget.ImageAsset = this.state.imageCollection;
-            widget.basemapId = this.state.widgetBasemap;
-        } else if (this.state.selectedWidgetType === "imageCollectionAsset") {
+            widget.basemapId = this.state.basemapId;
+        } else if (type === "imageCollectionAsset") {
             widget.properties = ["", "", "", "", ""];
             widget.filterType = "";
-            widget.visParams = JSON.parse(this.state.imageParams);
+            widget.visParams = JSON.parse(this.state.visParams);
             widget.ImageCollectionAsset = this.state.imageCollection;
-            widget.basemapId = this.state.widgetBasemap;
-        } else if (this.state.selectedWidgetType === "DegradationTool") {
+            widget.basemapId = this.state.basemapId;
+        } else if (type === "DegradationTool") {
             widget.type = "DegradationTool";
             widget.properties = ["DegradationTool", "", "", "", ""];
             widget.filterType = "";
             widget.startDate = this.state.startDate;
             widget.endDate = this.state.endDate;
             widget.graphBand = this.state.graphBandDeg === "" ? "NDFI" : this.state.graphBandDeg;
-            widget.basemapId = this.state.widgetBasemap;
-        } else if (this.state.selectedWidgetType === "polygonCompare") {
-            widget.type = "polygonCompare";
+            widget.basemapId = this.state.basemapId;
+        } else if (type === "polygonCompare") {
             widget.properties = ["featureCollection", "", "", "", ""];
             widget.featureCollection = this.state.featureCollection;
             widget.visParams = this.state.visParams;
             widget.field = this.state.matchField;
-            widget.basemapId = this.state.widgetBasemap;
+            widget.basemapId = this.state.basemapId;
         } else {
-            const wType = this.state.selectedWidgetType === "TimeSeries"
-                ? this.state.selectedDataType.toLowerCase() + this.state.selectedWidgetType
-                : this.state.selectedWidgetType === "ImageCollection"
-                    ? this.state.selectedWidgetType + this.state.selectedDataType
-                    : this.state.selectedWidgetType === "statistics"
+            const wType = type === "TimeSeries"
+                ? this.state.selectedDataType.toLowerCase() + type
+                : type === "ImageCollection"
+                    ? type + this.state.selectedDataType
+                    : type === "statistics"
                         ? "getStats"
-                        : this.state.selectedWidgetType === "ImageElevation"
+                        : type === "ImageElevation"
                             ? "ImageElevation"
                             : "custom";
             let prop1 = "";
@@ -382,12 +359,12 @@ class WidgetLayoutEditor extends React.PureComponent {
             if (this.state.selectedDataType === "Custom") {
                 // more work to do to label the type and add
                 prop1 = this.state.imageCollection;
-                widget.visParams = this.state.imageParams;
+                widget.visParams = this.state.visParams;
                 widget.graphBand = this.state.graphBand;
                 widget.graphReducer = this.state.graphReducer;
             }
-            if (["ImageCollection", "ImageElevation"].includes(this.state.selectedWidgetType)) {
-                widget.basemapId = this.state.widgetBasemap;
+            if (["ImageCollection", "ImageElevation"].includes(type)) {
+                widget.basemapId = this.state.basemapId;
             }
             properties[0] = wType;
             properties[1] = prop1;
@@ -430,30 +407,9 @@ class WidgetLayoutEditor extends React.PureComponent {
             .then(data => {
                 this.props.closeDialogs();
                 this.setState({
-                    widgets: data,
-                    selectedWidgetType: "-1",
-                    selectedDataTypeDual: "-1",
-                    selectedDataType: "-1",
-                    widgetTitle: "",
-                    imageCollection: "",
-                    featureCollection: "",
-                    matchField: "",
-                    graphBand: "",
-                    graphBandDeg: "NDFI",
-                    graphReducer: "Min",
-                    imageParams: "",
-                    dualLayer: false,
-                    swipeAsDefault: false,
-                    startDate:"",
-                    endDate:"",
-                    startDate2:"",
-                    endDate2:"",
-                    widgetBands:"",
-                    widgetMin:"",
-                    widgetMax:"",
-                    widgetCloudScore:"",
-                    formReady: false
+                    widgets: data
                 });
+                this.resetWidgetDesign();
             })
             .catch(error => {
                 console.error(error);
@@ -461,7 +417,7 @@ class WidgetLayoutEditor extends React.PureComponent {
             });
     };
 
-    // ReactGridLayout
+    /// ReactGridLayout
 
     onRemoveItem = widgetId => {
         const {widgets} = this.state;
@@ -479,486 +435,15 @@ class WidgetLayoutEditor extends React.PureComponent {
             const {x, y, h, w} = layout[idx];
             const newWidget = {...stateWidget, layout: {x, y, h, w}};
             this.serveItUp("update-widget", newWidget);
-            return newWidget;
         }
     });
 
-    // Single state updates
-
-    onNextWizardStep = () => {
-        this.setState({wizardStep: 2});
-    };
-
-    onPrevWizardStep = () => {
-        this.setState({wizardStep: 1});
-    };
-
-    onDataBasemapSelectChanged = event => {
-        this.setState({widgetBasemap: parseInt(event.target.value)});
-    };
-
-    onWidgetTitleChange = event => {
-        this.setState({widgetTitle: event.target.value});
-    };
-
-    onImageCollectionChange = event => {
-        this.setState({
-            imageCollection: event.target.value,
-            availableBands: ""
-        });
-    };
-
-    onFeatureCollectionChange = event => {
-        this.setState({featureCollection: event.target.value});
-    };
-
-    onMatchFieldChange = event => {
-        this.setState({
-            matchField: event.target.value,
-            formReady: true
-        });
-    };
-
-    onGraphBandChange = event => {
-        this.setState({graphBand: event.target.value});
-    };
-
-    onGraphBandDegChange = event => {
-        this.setState({graphBandDeg: event.target.value});
-    };
-
-    onGraphReducerChanged = event => {
-        this.setState({graphReducer: event.target.value});
-    };
-
-    onImageParamsChange = event => {
-        this.setState({imageParams: event.target.value.replace(/\s/g, "")});
-    };
-
-    onSwipeAsDefaultChange = event => {
-        this.setState({swipeAsDefault: event.target.checked});
-    };
-
-    onWidgetDualLayerChange = event => {
-        this.setState({dualLayer: event.target.checked});
-    };
-
-    onWidgetBandsChange = event => {
-        this.setState({widgetBands: event.target.value.replace(/\s/g, "")});
-    };
-
-    onWidgetMinChange = event => {
-        this.setState({widgetMin: event.target.value});
-    };
-
-    onWidgetMaxChange = event => {
-        this.setState({widgetMax: event.target.value});
-    };
-
-    onStartDateChanged = event => {
-        this.setState({
-            startDate: event.target ? event.target.value : ""
-        }, this.setFormStateByDates);
-    };
-
-    onEndDateChanged = event => {
-        this.setState({
-            endDate: event.target ? event.target.value : ""
-        }, this.setFormStateByDates);
-    };
-
-    onWidgetCloudScoreChange = event => {
-        this.setState({widgetCloudScore: event.target.value});
-    };
-
-    onImageCollectionChangeDual = event => {
-        this.setState({
-            imageCollectionDual: event.target.value,
-            availableBandsDual: ""
-        });
-    };
-
-    onImageParamsChangeDual = event => {
-        this.setState({imageParamsDual: event.target.value.replace(/\s/g, "")});
-    };
-
-    onWidgetBandsChangeDual = event => {
-        this.setState({widgetBandsDual: event.target.value.replace(/\s/g, "")});
-    };
-
-    onWidgetMinChangeDual = event => {
-        this.setState({widgetMinDual: event.target.value});
-    };
-
-    onWidgetMaxChangeDual = event => {
-        this.setState({widgetMaxDual: event.target.value});
-    };
-
-    onWidgetCloudScoreChangeDual = event => {
-        this.setState({widgetCloudScoreDual: event.target.value});
-    };
-
-    onStartDateChangedDual = event => {
-        this.setState({
-            startDateDual: event.target ? event.target.value : ""
-        }, () => this.setFormStateByDates(true));
-    };
-
-    onEndDateChangedDual = event => {
-        this.setState({
-            endDateDual: event.target ? event.target.value : ""
-        }, () => this.setFormStateByDates(true));
-    };
-
-    onDataTypeSelectChangedDual = event => {
-        this.setState({
-            availableBandsDual: "",
-            selectedDataTypeDual: event.target.value.trim(),
-            formReady: true
-        });
-    };
-
-    setFormStateByDates = isDual => {
-        const ed = isDual ? new Date(this.state.endDateDual) : new Date(this.state.endDate);
-        const sd = isDual ? new Date(this.state.startDateDual) : new Date(this.state.startDate);
-        let isFormReady = null;
-        if (!this.state.dualLayer) {
-            isFormReady = ed > sd && this.state.formReady !== true
-                ? true
-                : ed < sd && this.state.formReady === true
-                    ? false : null;
-        } else {
-            const ed2 = new Date(this.state.endDate2);
-            const sd2 = new Date(this.state.startDate2);
-            isFormReady = ed > sd
-                && ed2 > sd2
-                && this.state.formReady !== true
-                ? true
-                : (ed < sd || ed2 < sd2)
-                        && this.state.formReady === true
-                    ? false : null;
-        }
-        if (isFormReady !== null) {
-            this.setState({formReady: isFormReady});
-        }
-    };
-
-    onStartDate2Changed = event => {
-        this.setState({
-            startDate2: event.target ? event.target.value : ""
-        }, this.setFormStateByDates);
-    };
-
-    onEndDate2Changed = event => {
-        this.setState({
-            endDate2: event.target ? event.target.value : ""
-        }, this.setFormStateByDates);
-    };
-
-    /// Helpers
+    /// Render
 
     getImageByType = imageType => (imageType === "getStats" ? "/img/geodash/statssample.gif"
         : (!imageType || imageType.toLowerCase().includes("image")) ? "/img/geodash/mapsample.gif"
             : (imageType.toLowerCase().includes("degradationtool")) ? "/img/geodash/degsample.gif"
                 : "/img/geodash/graphsample.gif");
-
-    /// Render
-
-    getBasemapSelector = () => {
-        if (["ImageCollection",
-             "DualImageCollection",
-             "imageAsset",
-             "imageCollectionAsset",
-             "ImageElevation",
-             "DegradationTool",
-             "polygonCompare"].includes(this.state.selectedWidgetType)) {
-            return (
-                <div className="form-group">
-                    <div style={{display: "flex", justifyContent: "space-between", alignItems: "center"}}>
-                        <label htmlFor="widgetIndicesSelect">Basemap</label>
-                        <button
-                            className="btn btn-sm btn-secondary mb-1"
-                            onClick={() => this.getInstitutionImagery(this.props.institutionId)}
-                            type="button"
-                        >
-                            Refresh
-                        </button>
-                    </div>
-                    <select
-                        className="form-control"
-                        id="widgetIndicesSelect"
-                        name="widgetIndicesSelect"
-                        onChange={this.onDataBasemapSelectChanged}
-                        value={this.state.widgetBasemap}
-                    >
-                        {this.state.imagery && this.state.imagery
-                            .map(({id, title}) => <option key={id} value={id}>{title}</option>)}
-                    </select>
-                </div>
-            );
-        }
-    };
-
-    getDataTypeSelectionControl = () => {
-        if (["-1", "imageAsset", "imageCollectionAsset", "ImageElevation", "DegradationTool"].includes(this.state.selectedWidgetType)) {
-            return <br/>;
-        } else if (this.state.selectedWidgetType === "statistics") {
-            return (
-                <div className="form-group">
-                    <label htmlFor="widgetTitle">Title</label>
-                    <input
-                        className="form-control"
-                        id="widgetTitle"
-                        name="widgetTitle"
-                        onChange={this.onWidgetTitleChange}
-                        placeholder="Enter title"
-                        type="text"
-                        value={this.state.widgetTitle}
-                    />
-                </div>
-            );
-        } else if (this.state.selectedWidgetType === "ImageCollection") {
-            return (
-                <>
-                    <label htmlFor="widgetIndicesSelect">Data</label>
-                    <select
-                        className="form-control"
-                        id="widgetIndicesSelect"
-                        name="widgetIndicesSelect"
-                        onChange={this.onDataTypeSelectChanged}
-                        value={this.state.selectedDataType}
-                    >
-                        <option className="" value="-1">Please select type</option>
-                        <option label="NDVI" value="NDVI">NDVI</option>
-                        <option label="EVI" value="EVI">EVI</option>
-                        <option label="EVI 2" value="EVI2">EVI 2</option>
-                        <option label="NDMI" value="NDMI">NDMI</option>
-                        <option label="NDWI" value="NDWI">NDWI</option>
-                        <option label="LANDSAT 5" value="LANDSAT5">LANDSAT 5</option>
-                        <option label="LANDSAT 7" value="LANDSAT7">LANDSAT 7</option>
-                        <option label="LANDSAT 8" value="LANDSAT8">LANDSAT 8</option>
-                        <option label="Sentinel-2" value="Sentinel2">Sentinel-2</option>
-                        <option label="Custom widget" value="Custom">Custom widget</option>
-                    </select>
-                </>
-            );
-        } else if (this.state.selectedWidgetType === "DualImageCollection") {
-            if (this.state.wizardStep === 1) {
-                return (
-                    <>
-                        <h3 className="mt-4 text-center text-info">Dual imageCollection Step 1</h3>
-                        <label htmlFor="widgetIndicesSelect">Data</label>
-                        <select
-                            className="form-control"
-                            id="widgetIndicesSelect"
-                            name="widgetIndicesSelect"
-                            onChange={this.onDataTypeSelectChanged}
-                            value={this.state.selectedDataType}
-                        >
-                            <option className="" value="-1">Please select type</option>
-                            <option label="NDVI" value="NDVI">NDVI</option>
-                            <option label="EVI" value="EVI">EVI</option>
-                            <option label="EVI 2" value="EVI2">EVI 2</option>
-                            <option label="NDMI" value="NDMI">NDMI</option>
-                            <option label="NDWI" value="NDWI">NDWI</option>
-                            <option label="LANDSAT 5" value="LANDSAT5">LANDSAT 5</option>
-                            <option label="LANDSAT 7" value="LANDSAT7">LANDSAT 7</option>
-                            <option label="LANDSAT 8" value="LANDSAT8">LANDSAT 8</option>
-                            <option label="Sentinel-2" value="Sentinel2">Sentinel-2</option>
-                            <option label="Image Asset" value="imageAsset">Image Asset</option>
-                            <option label="Image Collection Asset" value="imageCollectionAsset">Image Collection Asset</option>
-                            <option label="Custom widget" value="Custom">Custom widget</option>
-                        </select>
-                    </>
-                );
-            } else {
-                return (
-                    <>
-
-                        <h3 className="mt-4 text-center text-info">Dual imageCollection Step 2</h3>
-                        <label htmlFor="widgetIndicesSelect2">Data 2</label>
-                        <select
-                            className="form-control"
-                            id="widgetIndicesSelect"
-                            name="widgetIndicesSelect2"
-                            onChange={this.onDataTypeSelectChangedDual}
-                            value={this.state.selectedDataTypeDual}
-                        >
-                            <option className="" value="-1">Please select type</option>
-                            <option label="NDVI" value="NDVI">NDVI 2</option>
-                            <option label="EVI" value="EVI">EVI</option>
-                            <option label="EVI 2" value="EVI2">EVI 2</option>
-                            <option label="NDMI" value="NDMI">NDMI</option>
-                            <option label="NDWI" value="NDWI">NDWI</option>
-                            <option label="LANDSAT 5" value="LANDSAT5">LANDSAT 5</option>
-                            <option label="LANDSAT 7" value="LANDSAT7">LANDSAT 7</option>
-                            <option label="LANDSAT 8" value="LANDSAT8">LANDSAT 8</option>
-                            <option label="Sentinel-2" value="Sentinel2">Sentinel-2</option>
-                            <option label="Image Asset" value="imageAsset">Image Asset</option>
-                            <option label="Image Collection Asset" value="imageCollectionAsset">Image Collection Asset</option>
-                            <option label="Custom widget" value="Custom">Custom widget</option>
-                        </select>
-
-                    </>
-                );
-            }
-        } else if (this.state.selectedWidgetType === "polygonCompare") {
-            return "";
-        } else {
-            return (
-                <>
-                    <label htmlFor="widgetIndicesSelect">Data</label>
-                    <select
-                        className="form-control"
-                        id="widgetIndicesSelect"
-                        name="widgetIndicesSelect"
-                        onChange={this.onDataTypeSelectChanged}
-                        value={this.state.selectedDataType}
-                    >
-                        <option className="" value="-1">Please select type</option>
-                        <option label="NDVI" value="NDVI">NDVI</option>
-                        <option label="EVI" value="EVI">EVI</option>
-                        <option label="EVI 2" value="EVI2">EVI 2</option>
-                        <option label="NDMI" value="NDMI">NDMI</option>
-                        <option label="NDWI" value="NDWI">NDWI</option>
-                        <option label="Custom widget" value="Custom">Custom widget</option>
-                    </select>
-                </>
-            );
-        }
-    };
-
-    getTitleBlock = () => (
-        <div className="form-group">
-            <label htmlFor="widgetTitle">Title</label>
-            <input
-                className="form-control"
-                id="widgetTitle"
-                name="widgetTitle"
-                onChange={this.onWidgetTitleChange}
-                placeholder="Enter title"
-                type="text"
-                value={this.state.widgetTitle}
-            />
-        </div>
-    );
-
-    getSwipeOpacityDefault = () => (this.state.selectedWidgetType === "DualImageCollection"
-        ? (
-            <div className="form-group">
-                <label htmlFor="SwipeOpacityDefault">Swipe as default</label>
-                <input
-                    checked={this.state.swipeAsDefault}
-                    className="form-control widgetWizardCheckbox"
-                    id="SwipeOpacityDefault"
-                    onChange={this.onSwipeAsDefaultChange}
-                    type="checkbox"
-                />
-            </div>
-        )
-        : "");
-
-    getImageParamsBlock = () => (
-        <div className="form-group">
-            <label htmlFor="imageParams">Image Parameters (json format)</label>
-            <textarea
-                className="form-control"
-                onChange={this.onImageParamsChange}
-                placeholder={"{\"bands\": \"B4, B3, B2\", \n\"min\":0, \n\"max\": 0.3}"}
-                rows="4"
-                style={{overflow: "hidden", overflowWrap: "break-word", resize: "vertical"}}
-                value={this.state.imageParams}
-            />
-        </div>
-    );
-
-    getInstitutionImageryInfo = () => (
-        <div>
-            Adding imagery to basemaps is available on the&nbsp;
-            <a href={`/review-institution?institutionId=${this.props.institutionId}`} rel="noreferrer noopener" target="_blank">
-                institution review page
-            </a>
-        &nbsp;in the imagery tab.
-        </div>
-    );
-
-    getNextStepButton = () => (this.state.selectedWidgetType === "DualImageCollection"
-        ? (
-            <button
-                className="btn btn-secondary"
-                data-dismiss="modal"
-                onClick={this.onNextWizardStep}
-                type="button"
-            >
-                Step 2 &rArr;
-            </button>
-        ) : "");
-
-    getDualImageCollectionTimeSpanOption = () => {
-        if (this.state.selectedWidgetType === "DualImageCollection") {
-            return (
-                <div className="form-group">
-                    <label htmlFor="widgetDualLayer">Dual time span</label>
-                    <input
-                        checked={this.state.dualLayer}
-                        className="form-control widgetWizardCheckbox"
-                        id="widgetDualLayer"
-                        name="widgetDualLayer"
-                        onChange={this.onWidgetDualLayerChange}
-                        type="checkbox"
-                    />
-                </div>
-            );
-        }
-    };
-
-    getDateRangeControl = () => (
-        <div className="input-group input-daterange" id="range_new_cooked">
-            <input
-                className="form-control"
-                id="sDate_new_cooked"
-                onChange={this.onStartDateChanged}
-                placeholder="YYYY-MM-DD"
-                type="date"
-                value={this.state.startDate}
-            />
-            <div className="input-group-addon">to</div>
-            <input
-                className="form-control"
-                id="eDate_new_cooked"
-                onChange={this.onEndDateChanged}
-                placeholder="YYYY-MM-DD"
-                type="date"
-                value={this.state.endDate}
-            />
-        </div>
-    );
-
-    getDualLayerDateRangeControl = () => ((this.state.dualLayer === true)
-        ? (
-            <div>
-                <label>Select the Date Range for the top layer</label>
-                <div className="input-group input-daterange" id="range_new_cooked2">
-                    <input
-                        className="form-control"
-                        id="sDate_new_cooked2"
-                        onChange={this.onStartDate2Changed}
-                        placeholder="YYYY-MM-DD"
-                        type="date"
-                        value={this.state.startDate2}
-                    />
-                    <div className="input-group-addon">to</div>
-                    <input
-                        className="form-control"
-                        id="eDate_new_cooked2"
-                        onChange={this.onEndDate2Changed}
-                        placeholder="YYYY-MM-DD"
-                        type="date"
-                        value={this.state.endDate2}
-                    />
-                </div>
-            </div>
-        ) : "");
 
     getAvailableBandsControl = (isDual, isCollection) => (
         <>
@@ -972,568 +457,6 @@ class WidgetLayoutEditor extends React.PureComponent {
             </label>
         </>
     );
-
-    getDataForm = () => {
-        if (this.state.selectedWidgetType === "ImageElevation") {
-            return (
-                <>
-                    {this.getTitleBlock()}
-                    {this.getImageParamsBlock()}
-                </>
-            );
-        }
-        if (this.state.selectedWidgetType === "polygonCompare") {
-            return (
-                <>
-                    {this.getTitleBlock()}
-                    <div className="form-group">
-                        <label htmlFor="featureCollection">GEE Feature Collection Asset</label>
-                        <input
-                            className="form-control"
-                            id="featureCollection"
-                            name="featureCollection"
-                            onChange={this.onFeatureCollectionChange}
-                            placeholder="users/username/collectionName"
-                            type="text"
-                            value={this.state.featureCollection}
-                        />
-                    </div>
-                    <div className="form-group">
-                        <label htmlFor="matchField">Field to match PLOTID</label>
-                        <input
-                            className="form-control"
-                            id="matchField"
-                            name="matchField"
-                            onChange={this.onMatchFieldChange}
-                            placeholder="OBJECTID"
-                            type="text"
-                            value={this.state.matchField}
-                        />
-                    </div>
-                    {this.getImageParamsBlock()}
-                </>
-            );
-        }
-        if (this.state.selectedWidgetType === "DegradationTool") {
-            return (
-                <>
-                    {this.getTitleBlock()}
-                    <div>
-                        <label>Available Bands: </label><br/>
-                        <label>SWIR1,NIR,RED,GREEN,BLUE,SWIR2,NDFI</label>
-                    </div>
-                    <div className="form-group">
-                        <label htmlFor="graphBand">Band to graph</label>
-                        <select
-                            className="form-control"
-                            id="graphBandDegSelect"
-                            name="graphBandDeg"
-                            onChange={this.onGraphBandDegChange}
-                            value={this.state.graphBandDeg}
-                        >
-                            <option label="NDFI" value="NDFI">NDFI</option>
-                            <option label="SWIR1" value="SWIR1">SWIR1</option>
-                            <option label="NIR" value="NIR">NIR</option>
-                            <option label="RED" value="RED">RED</option>
-                            <option label="GREEN" value="GREEN">GREEN</option>
-                            <option label="BLUE" value="BLUE">BLUE</option>
-                            <option label="SWIR2" value="SWIR2">SWIR2</option>
-                        </select>
-                    </div>
-                    <label>Select the Date Range you would like</label>
-                    {this.getDateRangeControl()}
-                </>
-            );
-        }
-        if (this.state.selectedWidgetType === "imageAsset" || this.state.selectedWidgetType === "imageCollectionAsset") {
-            const [label, placeholder, isCollection] = this.state.selectedWidgetType === "imageAsset"
-                ? ["GEE Image Asset", "LANDSAT/LC8_L1T_TOA/LC81290502015036LGN00", false]
-                : ["GEE Collection Image Asset", "LANDSAT/LC8_L1T_TOA", true];
-            return (
-                <>
-                    {this.getTitleBlock()}
-                    <div className="form-group">
-                        <label htmlFor="imageCollection">{label}</label>
-                        <input
-                            className="form-control"
-                            id="imageCollection"
-                            name="imageCollection"
-                            onChange={this.onImageCollectionChange}
-                            placeholder={placeholder}
-                            type="text"
-                            value={this.state.imageCollection}
-                        />
-                    </div>
-                    {this.getAvailableBandsControl(false, isCollection)}
-                    {this.getImageParamsBlock()}
-                    {this.getInstitutionImageryInfo()}
-                </>
-            );
-        } else if (this.state.selectedDataType === "-1") {
-            return "";
-        } else if (["LANDSAT5", "LANDSAT7", "LANDSAT8", "Sentinel2"].includes(this.state.selectedDataType) && this.state.wizardStep === 1) {
-            // need to get available bands
-            return (
-                <>
-                    {this.getTitleBlock()}
-                    <label>Select the Date Range you would like</label>
-                    {this.getDateRangeControl()}
-                    {this.getDualImageCollectionTimeSpanOption()}
-                    {this.getDualLayerDateRangeControl()}
-                    {this.getAvailableBandsControl(false, true)}
-                    <div className="form-group">
-                        <label htmlFor="widgetBands">Bands</label>
-                        <input
-                            className="form-control"
-                            id="widgetBands"
-                            name="widgetBands"
-                            onChange={this.onWidgetBandsChange}
-                            placeholder="xx,xx,xx"
-                            type="text"
-                            value={this.state.widgetBands}
-                        />
-                    </div>
-
-                    <div className="form-group">
-                        <label htmlFor="widgetMin">Min</label>
-                        <input
-                            className="form-control"
-                            id="widgetMin"
-                            name="widgetMin"
-                            onChange={this.onWidgetMinChange}
-                            placeholder="-1"
-                            type="text"
-                            value={this.state.widgetMin}
-                        />
-                    </div>
-                    <div className="form-group">
-                        <label htmlFor="widgetMax">Max</label>
-                        <input
-                            className="form-control"
-                            id="widgetMax"
-                            name="widgetMax"
-                            onChange={this.onWidgetMaxChange}
-                            placeholder="100"
-                            type="text"
-                            value={this.state.widgetMax}
-                        />
-                    </div>
-                    <div className="form-group">
-                        <label htmlFor="widgetCloudScore">Cloud Score</label>
-                        <input
-                            className="form-control"
-                            id="widgetCloudScore"
-                            name="widgetCloudScore"
-                            onChange={this.onWidgetCloudScoreChange}
-                            placeholder="90"
-                            type="text"
-                            value={this.state.widgetCloudScore}
-                        />
-                    </div>
-                    {this.getNextStepButton()}
-                </>
-            );
-        } else if (["LANDSAT5", "LANDSAT7", "LANDSAT8", "Sentinel2"].includes(this.state.selectedDataTypeDual) && this.state.wizardStep === 2) {
-            return (
-                <>
-                    <label>Select the Date Range you would like</label>
-                    <div className="input-group input-daterange" id="range_new_cooked">
-                        <input
-                            className="form-control"
-                            id="sDate_new_cookedDual"
-                            onChange={this.onStartDateChangedDual}
-                            placeholder="YYYY-MM-DD"
-                            type="date"
-                            value={this.state.startDateDual}
-                        />
-                        <div className="input-group-addon">to</div>
-                        <input
-                            className="form-control"
-                            id="eDate_new_cookedDual"
-                            onChange={this.onEndDateChangedDual}
-                            placeholder="YYYY-MM-DD"
-                            type="date"
-                            value={this.state.endDateDual}
-                        />
-                    </div>
-                    {this.getAvailableBandsControl(true, true)}
-                    <div className="form-group">
-                        <label htmlFor="widgetBands">Bands</label>
-                        <input
-                            className="form-control"
-                            id="widgetBands"
-                            name="widgetBands"
-                            onChange={this.onWidgetBandsChangeDual}
-                            type="text"
-                            value={this.state.widgetBandsDual}
-                        />
-                    </div>
-                    <div className="form-group">
-                        <label htmlFor="widgetMin">Min</label>
-                        <input
-                            className="form-control"
-                            id="widgetMin"
-                            name="widgetMin"
-                            onChange={this.onWidgetMinChangeDual}
-                            type="text"
-                            value={this.state.widgetMinDual}
-                        />
-                    </div>
-                    <div className="form-group">
-                        <label htmlFor="widgetMax">Max</label>
-                        <input
-                            className="form-control"
-                            id="widgetMax"
-                            name="widgetMax"
-                            onChange={this.onWidgetMaxChangeDual}
-                            type="text"
-                            value={this.state.widgetMaxDual}
-                        />
-                    </div>
-                    <div className="form-group">
-                        <label htmlFor="widgetCloudScore">Cloud Score</label>
-                        <input
-                            className="form-control"
-                            id="widgetCloudScore"
-                            name="widgetCloudScore"
-                            onChange={this.onWidgetCloudScoreChangeDual}
-                            type="text"
-                            value={this.state.widgetCloudScoreDual}
-                        />
-                    </div>
-                    <button
-                        className="btn btn-secondary"
-                        data-dismiss="modal"
-                        onClick={this.onPrevWizardStep}
-                        type="button"
-                    >
-                        &lArr; Step 1
-                    </button>
-                </>
-            );
-        } else if (((this.state.selectedDataType === "imageCollectionAsset"
-                        || this.state.selectedDataType === "imageAsset")
-                        && this.state.selectedWidgetType === "DualImageCollection")
-                        && this.state.wizardStep === 1) {
-            const [label, placeholder, isCollection] = this.state.selectedWidgetType === "imageAsset"
-                ? ["GEE Image Asset", "LANDSAT/LC8_L1T_TOA/LC81290502015036LGN00", false]
-                : ["GEE Collection Image Asset", "LANDSAT/LC8_L1T_TOA", true];
-            return (
-                <>
-                    {this.getTitleBlock()}
-                    <div className="form-group">
-                        <label htmlFor="imageCollection">{label}</label>
-                        <input
-                            className="form-control"
-                            id="imageCollection"
-                            name="imageCollection"
-                            onChange={this.onImageCollectionChange}
-                            placeholder={placeholder}
-                            type="text"
-                            value={this.state.imageCollection}
-                        />
-                    </div>
-                    {this.getAvailableBandsControl(false, isCollection)}
-                    <div className="form-group">
-                        <label htmlFor="imageParams">Image Parameters (json format)</label>
-                        <textarea
-                            className="form-control"
-                            onChange={this.onImageParamsChange}
-                            placeholder={"{\"bands\": \"B4, B3, B2\", \n\"min\":0, \n\"max\": 0.3}"}
-                            rows="4"
-                            style={{overflow: "hidden", overflowWrap: "break-word", resize: "vertical"}}
-                            value={this.state.imageParams}
-                        />
-                    </div>
-                    {this.getInstitutionImageryInfo()}
-                    {this.getNextStepButton()}
-                </>
-            );
-        } else if (((this.state.selectedDataTypeDual === "imageCollectionAsset"
-                        || this.state.selectedDataTypeDual === "imageAsset")
-                        && this.state.selectedWidgetType === "DualImageCollection")
-                        && this.state.wizardStep === 2) {
-            const [label, placeholder, isCollection] = this.state.selectedWidgetType === "imageAsset"
-                ? ["GEE Image Asset", "LANDSAT/LC8_L1T_TOA/LC81290502015036LGN00", false]
-                : ["GEE Collection Image Asset", "LANDSAT/LC8_L1T_TOA", true];
-            return (
-                <>
-                    <div className="form-group">
-                        <label htmlFor="imageCollection">{label}</label>
-                        <input
-                            className="form-control"
-                            id="imageCollection"
-                            name="imageCollection"
-                            onChange={this.onImageCollectionChangeDual}
-                            placeholder={placeholder}
-                            type="text"
-                            value={this.state.imageCollectionDual}
-                        />
-                    </div>
-                    {this.getAvailableBandsControl(true, isCollection)}
-                    <div className="form-group">
-                        <label htmlFor="imageParams">Image Parameters (json format)</label>
-                        <textarea
-                            className="form-control"
-                            onChange={this.onImageParamsChangeDual}
-                            placeholder={"{\"bands\": \"B4, B3, B2\", \n\"min\":0, \n\"max\": 0.3}"}
-                            rows="4"
-                            style={{overflow: "hidden", overflowWrap: "break-word", resize: "vertical"}}
-                            value={this.state.imageParamsDual}
-                        />
-                    </div>
-                    {this.getInstitutionImageryInfo()}
-                    <button
-                        className="btn btn-secondary"
-                        data-dismiss="modal"
-                        onClick={this.onPrevWizardStep}
-                        type="button"
-                    >
-                        &lArr; Step 1
-                    </button>
-                </>
-            );
-        } else if ((this.state.selectedWidgetType === "ImageCollection"
-                        || this.state.selectedWidgetType === "DualImageCollection")
-                        && this.state.selectedDataType === "Custom"
-                        && this.state.wizardStep === 1) {
-            return (
-                <>
-                    {this.getTitleBlock()}
-                    <div className="form-group">
-                        <label htmlFor="imageCollection">GEE Image Collection</label>
-                        <input
-                            className="form-control"
-                            id="imageCollection"
-                            name="imageCollection"
-                            onChange={this.onImageCollectionChange}
-                            placeholder="LANDSAT/LC8_L1T_TOA"
-                            type="text"
-                            value={this.state.imageCollection}
-                        />
-                    </div>
-                    {this.getAvailableBandsControl(false, true)}
-                    <div className="form-group">
-                        <label htmlFor="imageParams">Image Parameters (json format)</label>
-                        <textarea
-                            className="form-control"
-                            onChange={this.onImageParamsChange}
-                            placeholder={"{\"bands\": \"B4, B3, B2\", \n\"min\":0, \n\"max\": 0.3}"}
-                            rows="4"
-                            style={{overflow: "hidden", overflowWrap: "break-word", resize: "vertical"}}
-                            value={this.state.imageParams}
-                        />
-
-                    </div>
-                    <label>Select the Date Range you would like</label>
-                    {this.getDateRangeControl()}
-                    {this.getInstitutionImageryInfo()}
-                    {this.getNextStepButton()}
-                </>
-            );
-        } else if ((this.state.selectedWidgetType === "ImageCollection"
-                        || this.state.selectedWidgetType === "DualImageCollection")
-                        && this.state.selectedDataTypeDual === "Custom"
-                        && this.state.wizardStep === 2) {
-            return (
-                <>
-                    <div className="form-group">
-                        <label htmlFor="imageCollection">GEE Image Collection</label>
-                        <input
-                            className="form-control"
-                            id="imageCollection"
-                            name="imageCollection"
-                            onChange={this.onImageCollectionChangeDual}
-                            placeholder="LANDSAT/LC8_L1T_TOA"
-                            type="text"
-                            value={this.state.imageCollectionDual}
-                        />
-                    </div>
-                    {this.getAvailableBandsControl(true, true)}
-                    <div className="form-group">
-                        <label htmlFor="imageParams">Image Parameters (json format)</label>
-                        <textarea
-                            className="form-control"
-                            onChange={this.onImageParamsChangeDual}
-                            placeholder={"{\"bands\": \"B4, B3, B2\", \n\"min\":0, \n\"max\": 0.3}"}
-                            rows="4"
-                            style={{overflow: "hidden", overflowWrap: "break-word", resize: "vertical"}}
-                            value={this.state.imageParamsDual}
-                        />
-
-                    </div>
-                    <label>Select the Date Range you would like</label>
-                    <div className="input-group input-daterange form-group" id="range_new_cooked">
-                        <input
-                            className="form-control"
-                            id="sDate_new_cookedDual"
-                            onChange={this.onStartDateChangedDual}
-                            placeholder="YYYY-MM-DD"
-                            type="date"
-                            value={this.state.startDateDual}
-                        />
-                        <div className="input-group-addon">to</div>
-                        <input
-                            className="form-control"
-                            id="eDate_new_cookedDual"
-                            onChange={this.onEndDateChangedDual}
-                            placeholder="YYYY-MM-DD"
-                            type="date"
-                            value={this.state.endDateDual}
-                        />
-                    </div>
-                    {this.getInstitutionImageryInfo()}
-                    <button
-                        className="btn btn-secondary"
-                        data-dismiss="modal"
-                        onClick={this.onPrevWizardStep}
-                        type="button"
-                    >
-                        &lArr; Step 1
-                    </button>
-                </>
-            );
-        } else if ((this.state.selectedWidgetType === "ImageCollection"
-                        || this.state.selectedWidgetType === "DualImageCollection")
-                        && this.state.wizardStep === 1) {
-            if (this.state.dualLayer === true) {
-                return (
-                    <>
-                        {this.getTitleBlock()}
-                        <label>Select the Date Range you would like</label>
-                        {this.getDateRangeControl()}
-                        {this.getDualImageCollectionTimeSpanOption()}
-                        <div>
-                            <label>Select the Date Range you would like</label>
-                            <div className="input-group input-daterange" id="range_new_cooked2">
-                                <input
-                                    className="form-control"
-                                    id="sDate_new_cooked2"
-                                    onChange={this.onStartDate2Changed}
-                                    placeholder="YYYY-MM-DD"
-                                    type="date"
-                                    value={this.state.startDate2}
-                                />
-                                <div className="input-group-addon">to</div>
-                                <input
-                                    className="form-control"
-                                    id="eDate_new_cooked2"
-                                    onChange={this.onEndDate2Changed}
-                                    placeholder="YYYY-MM-DD"
-                                    type="date"
-                                    value={this.state.endDate2}
-                                />
-                            </div>
-                        </div>
-                        {this.getNextStepButton()}
-                    </>
-                );
-            } else {
-                return (
-                    <>
-                        {this.getTitleBlock()}
-                        <label>Select the Date Range you would like</label>
-                        {this.getDateRangeControl()}
-                        {this.getDualImageCollectionTimeSpanOption()}
-                        {this.getNextStepButton()}
-                    </>
-                );
-            }
-        } else if ((this.state.selectedWidgetType === "ImageCollection"
-                        || this.state.selectedWidgetType === "DualImageCollection")
-                        && this.state.wizardStep === 2) {
-            return (
-                <>
-                    <label>Select the Date Range you would like</label>
-                    <div className="input-group input-daterange form-group" id="range_new_cooked">
-                        <input
-                            className="form-control"
-                            id="sDate_new_cookedDual"
-                            onChange={this.onStartDateChangedDual}
-                            placeholder="YYYY-MM-DD"
-                            type="date"
-                            value={this.state.startDateDual}
-                        />
-                        <div className="input-group-addon">to</div>
-                        <input
-                            className="form-control"
-                            id="eDate_new_cookedDual"
-                            onChange={this.onEndDateChangedDual}
-                            placeholder="YYYY-MM-DD"
-                            type="date"
-                            value={this.state.endDateDual}
-                        />
-                    </div>
-                    <button
-                        className="btn btn-secondary"
-                        data-dismiss="modal"
-                        onClick={this.onPrevWizardStep}
-                        type="button"
-                    >
-                        &lArr; Step 1
-                    </button>
-                </>
-            );
-        } else if (this.state.selectedWidgetType === "TimeSeries" && this.state.selectedDataType === "Custom") {
-            return (
-                <>
-                    {this.getTitleBlock()}
-                    <div className="form-group">
-                        <label htmlFor="imageCollection">GEE Image Collection</label>
-                        <input
-                            className="form-control"
-                            id="imageCollection"
-                            name="imageCollection"
-                            onChange={this.onImageCollectionChange}
-                            placeholder="LANDSAT/LC8_L1T_TOA"
-                            type="text"
-                            value={this.state.imageCollection}
-                        />
-                    </div>
-                    {this.getAvailableBandsControl(false, true)}
-                    <div className="form-group">
-                        <label htmlFor="graphBand">Band to graph</label>
-                        <input
-                            className="form-control"
-                            id="graphBand"
-                            name="graphBand"
-                            onChange={this.onGraphBandChange}
-                            placeholder="B5"
-                            type="text"
-                            value={this.state.graphBand}
-                        />
-                    </div>
-                    <div className="form-group">
-                        <label htmlFor="graphReducer">Reducer</label>
-                        <select
-                            className="form-control"
-                            id="widgetIndicesSelect"
-                            name="graphReducer"
-                            onChange={this.onGraphReducerChanged}
-                            value={this.state.graphReducer}
-                        >
-                            <option label="Min" value="Min">Min</option>
-                            <option label="Max" value="Max">Max</option>
-                            <option label="Mean" value="Mean">Mean</option>
-                        </select>
-                    </div>
-                    <label>Select the Date Range you would like</label>
-                    {this.getDateRangeControl()}
-                </>
-            );
-        } else if (this.state.wizardStep === 2) {
-            return <p>Secondary data form here</p>;
-        } else {
-            console.log("nothing doing!");
-            return (
-                <>
-                    {this.getTitleBlock()}
-                    <label>Select the Date Range you would like</label>
-                    {this.getDateRangeControl()}
-                </>
-            );
-        }
-    };
 
     // Create new widget main form
 
@@ -1558,100 +481,119 @@ class WidgetLayoutEditor extends React.PureComponent {
         </>
     );
 
-    dialogBody = () => (
-        <form>
-            <div className="form-group">
-                <label htmlFor="widgetTypeSelect">Widget Type</label>
-                <select
-                    className="form-control"
-                    id="widgetTypeSelect"
-                    name="widgetTypeSelect"
-                    onChange={e => this.updateWidgetType(e.target.value)}
-                    value={this.state.selectedWidgetType}
-                >
-                    <option value="-1">Please select type</option>
-                    <option value="ImageCollection">Image Collection</option>
-                    <option value="TimeSeries">Time Series Graph</option>
-                    <option value="statistics">Statistics</option>
-                    <option value="DualImageCollection">Dual Image Collection</option>
-                    <option value="imageAsset">Image Asset</option>
-                    <option value="imageCollectionAsset">Image Collection Asset</option>
-                    <option value="ImageElevation">SRTM Digital Elevation Data 30m</option>
-                    <option value="DegradationTool">Degradation Tool</option>
-                    <option value="polygonCompare">Polygon Compare</option>
-                </select>
-            </div>
-            {this.getBasemapSelector()}
-            {this.getDataTypeSelectionControl()}
-            {this.getSwipeOpacityDefault()}
-            {this.getDataForm()}
-        </form>
-    );
-
-    renderCreateDialog = () => (
-        <GeoDashModal
-            body={this.dialogBody()}
-            closeDialogs={this.props.closeDialogs}
-            footer={this.dialogButtons()}
-            title="Create Widget"
-        />
-    );
+    dialogBody = () => {
+        const {title, WidgetDesigner} = this.widgetTypes[this.state.selectedWidgetType] || {};
+        console.log(this.widgetTypes[this.state.selectedWidgetType]);
+        return (
+            <form>
+                <div className="form-group">
+                    <label htmlFor="widgetTypeSelect">Widget Type</label>
+                    <select
+                        className="form-control"
+                        id="widgetTypeSelect"
+                        name="widgetTypeSelect"
+                        onChange={e => this.updateWidgetType(e.target.value)}
+                        value={this.state.selectedWidgetType}
+                    >
+                        <option value="-1">Please select type</option>
+                        {_.map(this.widgetTypes,
+                               ({title}, key) => (
+                                   <option key={key} value={key}>{title}</option>
+                               ))}
+                    </select>
+                </div>
+                <div className="form-group">
+                    <label htmlFor="widgetTitle">Title</label>
+                    <input
+                        className="form-control"
+                        id="widgetTitle"
+                        name="widgetTitle"
+                        onChange={this.onWidgetTitleChange}
+                        placeholder="Enter title"
+                        type="text"
+                        value={this.state.widgetTitle}
+                    />
+                </div>
+                {WidgetDesigner && <WidgetDesigner/>}
+            </form>
+        );
+    };
 
     render() {
         const {widgets, projectTemplateList} = this.state;
         const {addDialog, copyDialog, closeDialogs} = this.props;
         return (
-            <div>
-                {addDialog && this.renderCreateDialog()}
-                {copyDialog && (
-                    <CopyDialog
-                        closeDialogs={closeDialogs}
-                        copyProjectWidgets={this.copyProjectWidgets}
-                        projectTemplateList={projectTemplateList}
-                    />
-                )}
-                <ReactGridLayout
-                    cols={12}
-                    isDraggable
-                    isResizable
-                    onLayoutChange={this.onLayoutChange}
-                    rowHeight={300}
-                >
-                    {widgets.map(widget => (
-                        <div
-                            key={widget.id}
-                            data-grid={{...widget.layout, minW: 3, w: Math.max(widget.layout.w, 3)}}
-                            style={{backgroundImage: "url(" + this.getImageByType(widget.properties[0]) + ")"}}
-                        >
-                            <h3
-                                className="px-2 d-flex justify-content-between"
-                                style={{
-                                    backgroundColor: "#31bab0",
-                                    color: "white",
-                                    lineHeight:" 26px",
-                                    minHeight: "26px"
-                                }}
+            <EditorContext.Provider
+                value={{
+                    projectId: this.props.projectId,
+                    institutionId: this.props.institutionId,
+                    setWidgetDesign: this.setWidgetDesign,
+                    widgetDesign: this.state.widgetDesign,
+                    imagery: this.state.imagery,
+                    getInstitutionImagery: this.getInstitutionImagery,
+                    getBandsFromGateway: this.getBandsFromGateway
+                }}
+            >
+                <div>
+                    {addDialog && (
+                        <GeoDashModal
+                            body={this.dialogBody()}
+                            closeDialogs={this.props.closeDialogs}
+                            footer={this.dialogButtons()}
+                            title="Create Widget"
+                        />
+                    )}
+                    {copyDialog && (
+                        <CopyDialog
+                            closeDialogs={closeDialogs}
+                            copyProjectWidgets={this.copyProjectWidgets}
+                            projectTemplateList={projectTemplateList}
+                        />
+                    )}
+                    <ReactGridLayout
+                        cols={12}
+                        isDraggable
+                        isResizable
+                        onLayoutChange={this.onLayoutChange}
+                        rowHeight={300}
+                    >
+                        {widgets.map(widget => (
+                            <div
+                                key={widget.id}
+                                data-grid={{...widget.layout, minW: 3, w: Math.max(widget.layout.w, 3)}}
+                                style={{backgroundImage: "url(" + this.getImageByType(widget.properties[0]) + ")"}}
                             >
-                                {widget.name}
-                                <span
-                                    onClick={() => this.onRemoveItem(widget.id)}
-                                    style={{cursor: "pointer"}}
+                                <h3
+                                    className="px-2 d-flex justify-content-between"
+                                    style={{
+                                        backgroundColor: "#31bab0",
+                                        color: "white",
+                                        lineHeight:" 26px",
+                                        minHeight: "26px"
+                                    }}
                                 >
+                                    {widget.name}
+                                    <span
+                                        onClick={() => this.onRemoveItem(widget.id)}
+                                        style={{cursor: "pointer"}}
+                                    >
                                     X
-                                </span>
-                            </h3>
-                            <span className="text text-danger text-center">Sample Image</span>
-                        </div>
-                    ))}
-                </ReactGridLayout>
-            </div>
+                                    </span>
+                                </h3>
+                                <span className="text text-danger text-center">Sample Image</span>
+                            </div>
+                        ))}
+                    </ReactGridLayout>
+                </div>
+            </EditorContext.Provider>
         );
     }
 }
 
 export function pageInit(args) {
     ReactDOM.render(
-        <GeoDashNav
+        <GeoDashNavigationBar
+            editor
             page={(addDialog, copyDialog, closeDialogs) => (
                 <WidgetLayoutEditor
                     addDialog={addDialog}
