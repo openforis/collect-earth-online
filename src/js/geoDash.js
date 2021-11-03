@@ -45,14 +45,13 @@ class Geodash extends React.Component {
         super(props);
         this.state = {
             widgets: [],
-            callbackComplete: false,
             left: 0,
             ptop: 0,
-            mapCenter:null,
-            mapZoom:null,
-            imageryList:[],
-            initCenter:null,
-            initZoom:null,
+            mapCenter: null,
+            mapZoom: null,
+            imageryList: [],
+            initCenter: null,
+            initZoom: null,
             vectorSource: null
         };
     }
@@ -61,7 +60,7 @@ class Geodash extends React.Component {
 
     componentDidMount() {
         Promise.all([this.getInstitutionImagery(), this.getWidgetsByProjectId(), this.getVectorSource()])
-            .then(data => this.setState({widgets: data[1], vectorSource: data[2], callbackComplete: true}))
+            .then(data => this.setState({widgets: data[1], vectorSource: data[2]}))
             .catch(response => {
                 console.log(response);
                 alert("Error initializing Geo-Dash. See console for details.");
@@ -227,7 +226,6 @@ class Geodash extends React.Component {
                     ? (widgets.map(widget => (
                         <Widget
                             key={widget.id}
-                            callbackComplete={this.state.callbackComplete}
                             imageryList={this.state.imageryList}
                             initCenter={this.mapCenter}
                             mapCenter={this.state.mapCenter}
@@ -272,14 +270,7 @@ class Widget extends React.Component {
                                     "ImageCollectionLANDSAT7",
                                     "ImageCollectionLANDSAT8",
                                     "ImageCollectionSentinel2"];
-        this.graphControlList = ["customTimeSeries",
-                                 "timeSeriesGraph",
-                                 "ndviTimeSeries",
-                                 "ndwiTimeSeries",
-                                 "eviTimeSeries",
-                                 "evi2TimeSeries",
-                                 "ndmiTimeSeries",
-                                 "mekong_tc_l_c"];
+        this.graphControlList = ["timeSeries"];
     }
 
     generateGridColumn = (x, w) => (x + 1) + " / span " + w;
@@ -362,7 +353,7 @@ class Widget extends React.Component {
                     />
                 </div>
             );
-        } else if (this.graphControlList.includes(widget.properties[0])) {
+        } else if (this.graphControlList.includes(widget.type)) {
             return (
                 <div className="front">
                     <GraphWidget
@@ -1228,23 +1219,22 @@ class GraphWidget extends React.Component {
         const {chartDataSeriesLandsat, chartDataSeriesSar, selectSarGraphBand, graphRef} = this.state;
         const {widget, degDataType, plotExtentPolygon, handleSelectDate, vectorSource} = this.props;
 
+        // For degradation
         if (degDataType === "landsat" && chartDataSeriesLandsat.length > 0) {
             graphRef.update({series: _.cloneDeep(chartDataSeriesLandsat)});
+        // For degradation
         } else if (degDataType === "sar"
             && chartDataSeriesSar.hasOwnProperty(selectSarGraphBand)
             && chartDataSeriesSar[selectSarGraphBand].length > 0) {
             graphRef.update({series: _.cloneDeep(chartDataSeriesSar[selectSarGraphBand])});
         } else {
+            const {type, indexName} = widget;
             const centerPoint = mercator.getFeatureCenter(vectorSource);
-            const collectionName = widget.properties[1];
-            const indexName = widget.properties[4];
-            const path = widget.type === "degradationTool"
+            const path = type === "degradationTool"
                 ? "getImagePlotDegradation"
-                : collectionName.trim() === "timeSeriesAssetForPoint"
-                    ? "timeSeriesAssetForPoint"
-                    : collectionName.trim().length > 0
-                        ? "timeSeriesIndex"
-                        : "timeSeriesIndex2";
+                : indexName === "Custom"
+                    ? "timeSeriesByAsset"
+                    : "timeSeriesByIndex";
             fetch("/geo-dash/gateway-request", {
                 method: "POST",
                 headers: {
@@ -1252,23 +1242,11 @@ class GraphWidget extends React.Component {
                     "Content-Type": "application/json"
                 },
                 body: JSON.stringify({
-                    collectionNameTimeSeries: collectionName,
-                    geometry: plotExtentPolygon,
-                    indexName: widget.graphBand || indexName,
-                    dateFromTimeSeries: widget.properties[2].trim().length === 10
-                        ? widget.properties[2].trim()
-                        : "2000-01-01",
-                    dateToTimeSeries: widget.properties[3].trim().length === 10
-                        ? widget.properties[3].trim()
-                        : formatDateISO(new Date()),
-                    reducer: widget.graphReducer != null ? widget.graphReducer.toLowerCase() : "",
-                    scale: 30,
                     path,
-                    point: centerPoint,
-                    start: widget.startDate || "",
-                    end: widget.endDate || "",
-                    band: widget.graphBand || "",
-                    dataType: degDataType || ""
+                    ...widget,
+                    geometry: plotExtentPolygon,
+                    scale: 30,
+                    point: centerPoint
                 })
             })
                 .then(res => res.json())
@@ -1415,13 +1393,13 @@ class GraphWidget extends React.Component {
             },
             xAxis: {type: "datetime"},
             yAxis: {
-                title: {text: widget.properties[4]}
+                title: {text: widget.indexName}
             },
             legend: {enabled: true},
             credits: {enabled: false},
             plotOptions: {
                 area: {
-                    connectNulls: widget.properties[4].toLowerCase() === "custom",
+                    connectNulls: widget.indexName.toLowerCase() === "custom",
                     fillColor: {
                         linearGradient: {
                             x1: 0,
