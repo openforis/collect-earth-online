@@ -6,7 +6,7 @@
             [triangulum.cli     :refer [get-cli-options]]
             [triangulum.config  :refer [get-config]]
             [triangulum.logging :refer [log-str set-log-path!]]
-            [collect-earth-online.sockets :refer [send-to-server!]]
+            [triangulum.sockets :refer [send-to-server! socket-open?]]
             [collect-earth-online.handler :refer [create-handler-stack]]))
 
 (defonce ^:private server           (atom nil))
@@ -93,11 +93,18 @@
     (reset! server nil)
     (System/exit 0)))
 
+(defn send-to-repl-server! [msg & {:keys [host port] :or {host "127.0.0.1" port 5555}}]
+  (if (socket-open? host port)
+    (do (send-to-server! host port msg)
+        (System/exit 0))
+    (do (println (format "Unable to connect to REPL server at %s:%s. Restart the server with the '-r/--repl' flag." host port))
+        (System/exit 1))))
+
 (defn stop-running-server! []
-  (send-to-server! "127.0.0.1" 5555 "(do (require '[collect-earth-online.server :as server]) (server/stop-server!))"))
+  (send-to-repl-server! "(do (require '[collect-earth-online.server :as server]) (server/stop-server!))"))
 
 (defn reload-running-server! []
-  (send-to-server! "127.0.0.1" 5555 "(require 'collect-earth-online.server :reload-all)"))
+  (send-to-repl-server! "(require 'collect-earth-online.server :reload-all)"))
 
 (defn -main [& args]
   (let [{:keys [action options]} (get-cli-options args cli-options cli-actions "server" (get-config :server))]
