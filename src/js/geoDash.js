@@ -44,21 +44,6 @@ function getGatewayPath(widget, collectionName) {
 class Geodash extends React.Component {
     constructor(props) {
         super(props);
-        const theSplit = decodeURI(this.props.aoi)
-            .replace("[", "")
-            .replace("]", "")
-            .split(",");
-        const projPairAOI = "[["
-            + theSplit[0] + ","
-            + theSplit[1] + "],["
-            + theSplit[2] + ","
-            + theSplit[1] + "],["
-            + theSplit[2] + ","
-            + theSplit[3] + "],["
-            + theSplit[0] + ","
-            + theSplit[3] + "],["
-            + theSplit[0] + ","
-            + theSplit[1] + "]]";
         this.state = {
             widgets: [],
             callbackComplete: false,
@@ -69,10 +54,11 @@ class Geodash extends React.Component {
             imageryList:[],
             initCenter:null,
             initZoom:null,
-            vectorSource: null,
-            projPairAOI // TODO, dont need to store derived state.
+            vectorSource: null
         };
     }
+
+    /// Lifecycle
 
     componentDidMount() {
         Promise.all([this.getInstitutionImagery(), this.getWidgetsByProjectId(), this.getVectorSource()])
@@ -82,6 +68,8 @@ class Geodash extends React.Component {
                 alert("Error initializing Geo-Dash. See console for details.");
             });
     }
+
+    /// API
 
     getInstitutionImagery = () => fetch(`/get-institution-imagery?institutionId=${this.props.institutionId}`)
         .then(response => (response.ok ? response.json() : Promise.reject(response)))
@@ -138,6 +126,8 @@ class Geodash extends React.Component {
             return Promise.resolve(new Vector({features: []}));
         }
     };
+
+    /// State
 
     handleFullScreen = widget => {
         const widgets = [...this.state.widgets];
@@ -205,6 +195,31 @@ class Geodash extends React.Component {
         }
     };
 
+    /// Helpers
+
+    extentToPolygon = extent => {
+        // FIXME, probably dont need to decode.
+        // TODO, does the geodash link need to add []?
+        const theSplit = decodeURI(extent)
+            .replace("[", "")
+            .replace("]", "")
+            .split(",");
+        // FIXME, I can probably just build the array here
+        return JSON.parse("[["
+        + theSplit[0] + ","
+        + theSplit[1] + "],["
+        + theSplit[2] + ","
+        + theSplit[1] + "],["
+        + theSplit[2] + ","
+        + theSplit[3] + "],["
+        + theSplit[0] + ","
+        + theSplit[3] + "],["
+        + theSplit[0] + ","
+        + theSplit[1] + "]]");
+    };
+
+    /// Render
+
     render() {
         const {widgets} = this.state;
         return (
@@ -221,8 +236,8 @@ class Geodash extends React.Component {
                             onFullScreen={this.handleFullScreen}
                             onSliderChange={this.handleSliderChange}
                             onSwipeChange={this.handleSwipeChange}
-                            projAOI={this.props.aoi}
-                            projPairAOI={this.state.projPairAOI}
+                            plotExtent={this.props.plotExtent}
+                            plotExtentPolygon={this.extentToPolygon(this.props.plotExtent)}
                             resetCenterAndZoom={this.resetCenterAndZoom}
                             setCenterAndZoom={this.setCenterAndZoom}
                             vectorSource={this.state.vectorSource}
@@ -337,8 +352,8 @@ class Widget extends React.Component {
                         mapZoom={this.props.mapZoom}
                         onSliderChange={onSliderChange}
                         onSwipeChange={onSwipeChange}
-                        projAOI={this.props.projAOI}
-                        projPairAOI={this.props.projPairAOI}
+                        plotExtent={this.props.plotExtent}
+                        plotExtentPolygon={this.props.plotExtentPolygon}
                         resetCenterAndZoom={this.props.resetCenterAndZoom}
                         setCenterAndZoom={this.props.setCenterAndZoom}
                         syncMapWidgets={this.syncMapWidgets}
@@ -353,7 +368,7 @@ class Widget extends React.Component {
                 <div className="front">
                     <GraphWidget
                         initCenter={this.props.initCenter}
-                        projPairAOI={this.props.projPairAOI}
+                        plotExtentPolygon={this.props.plotExtentPolygon}
                         vectorSource={this.props.vectorSource}
                         widget={widget}
                     />
@@ -363,7 +378,7 @@ class Widget extends React.Component {
             return (
                 <div className="front">
                     <StatsWidget
-                        projPairAOI={this.props.projPairAOI}
+                        plotExtentPolygon={this.props.plotExtentPolygon}
                         widget={widget}
                     />
                 </div>
@@ -378,8 +393,8 @@ class Widget extends React.Component {
                         mapZoom={this.props.mapZoom}
                         onSliderChange={onSliderChange}
                         onSwipeChange={onSwipeChange}
-                        projAOI={this.props.projAOI}
-                        projPairAOI={this.props.projPairAOI}
+                        plotExtent={this.props.plotExtent}
+                        plotExtentPolygon={this.props.plotExtentPolygon}
                         resetCenterAndZoom={this.props.resetCenterAndZoom}
                         setCenterAndZoom={this.props.setCenterAndZoom}
                         syncMapWidgets={this.syncMapWidgets}
@@ -461,8 +476,8 @@ class DegradationWidget extends React.Component {
                                     mapZoom={this.props.mapZoom}
                                     onSliderChange={this.props.onSliderChange}
                                     onSwipeChange={this.props.onSwipeChange}
-                                    projAOI={this.props.projAOI}
-                                    projPairAOI={this.props.projPairAOI}
+                                    plotExtent={this.props.plotExtent}
+                                    plotExtentPolygon={this.props.plotExtentPolygon}
                                     resetCenterAndZoom={this.props.resetCenterAndZoom}
                                     selectedDate={this.state.selectedDate}
                                     setCenterAndZoom={this.props.setCenterAndZoom}
@@ -481,7 +496,7 @@ class DegradationWidget extends React.Component {
                                     degDataType={this.state.degDataType}
                                     handleSelectDate={this.handleSelectDate}
                                     initCenter={this.props.initCenter}
-                                    projPairAOI={this.props.projPairAOI}
+                                    plotExtentPolygon={this.props.plotExtentPolygon}
                                     vectorSource={this.props.vectorSource}
                                     widget={this.props.widget}
                                 />
@@ -506,8 +521,8 @@ class MapWidget extends React.Component {
     }
 
     componentDidMount() {
-        const {projPairAOI, widget} = this.props;
-        let {projAOI} = this.props;
+        const {plotExtentPolygon, widget} = this.props;
+        let {plotExtent} = this.props;
 
         const {sourceConfig, id, attribution, isProxied} = this.props.imageryList.find(imagery =>
             imagery.id === widget.basemapId)
@@ -556,16 +571,16 @@ class MapWidget extends React.Component {
             this.resumeGeeLayer(e);
         });
 
-        if (projAOI === "") {
-            projAOI = [-108.30322265625, 21.33544921875, -105.347900390625, 23.53271484375];
-        } else if (typeof projAOI === "string") {
-            projAOI = JSON.parse(projAOI);
+        if (plotExtent === "") {
+            plotExtent = [-108.30322265625, 21.33544921875, -105.347900390625, 23.53271484375];
+        } else if (typeof plotExtent === "string") {
+            plotExtent = JSON.parse(plotExtent);
         }
         map.getView().fit(
             projTransform(
-                [projAOI[0], projAOI[1]], "EPSG:4326", "EPSG:3857"
+                [plotExtent[0], plotExtent[1]], "EPSG:4326", "EPSG:3857"
             ).concat(projTransform(
-                [projAOI[2], projAOI[3]], "EPSG:4326", "EPSG:3857"
+                [plotExtent[2], plotExtent[3]], "EPSG:4326", "EPSG:3857"
             )),
             map.getSize()
         );
@@ -634,7 +649,7 @@ class MapWidget extends React.Component {
             dualImageObject.collectionName = this.convertCollectionName(dualImageObject.collectionName);
             dualImageObject.dateFrom = secondImage.startDate;
             dualImageObject.dateTo = secondImage.endDate;
-            dualImageObject.geometry = JSON.parse(projPairAOI);
+            dualImageObject.geometry = plotExtentPolygon;
 
             const shortWidget2 = {};
             shortWidget2.filterType = secondImage.filterType;
@@ -710,7 +725,7 @@ class MapWidget extends React.Component {
         postObject.collectionName = collectionName;
         postObject.dateFrom = dateFrom;
         postObject.dateTo = dateTo;
-        postObject.geometry = JSON.parse(projPairAOI);
+        postObject.geometry = plotExtentPolygon;
         postObject.index = requestedIndex;
         postObject.path = path;
         // see if we need to fetch or just add the tile server
@@ -744,7 +759,7 @@ class MapWidget extends React.Component {
                     : "SAR";
                 postObject.dataType = this.props.degDataType;
                 postObject.path = "getDegraditionTileUrl";
-                postObject.geometry = JSON.parse(this.props.projPairAOI);
+                postObject.geometry = this.props.plotExtentPolygon;
                 const map = this.state.mapRef;
                 try {
                     map.getLayers().getArray()
@@ -1205,7 +1220,7 @@ class GraphWidget extends React.Component {
 
     loadGraph = () => {
         const {chartDataSeriesLandsat, chartDataSeriesSar, selectSarGraphBand, graphRef} = this.state;
-        const {widget, degDataType, projPairAOI, handleSelectDate, vectorSource} = this.props;
+        const {widget, degDataType, plotExtentPolygon, handleSelectDate, vectorSource} = this.props;
 
         if (degDataType === "landsat" && chartDataSeriesLandsat.length > 0) {
             graphRef.update({series: _.cloneDeep(chartDataSeriesLandsat)});
@@ -1230,7 +1245,7 @@ class GraphWidget extends React.Component {
                 },
                 body: JSON.stringify({
                     collectionNameTimeSeries: collectionName,
-                    geometry: JSON.parse(projPairAOI),
+                    geometry: plotExtentPolygon,
                     indexName: widget.graphBand || indexName,
                     dateFromTimeSeries: widget.properties[2].trim().length === 10
                         ? widget.properties[2].trim()
@@ -1486,7 +1501,7 @@ class StatsWidget extends React.Component {
     }
 
     componentDidMount() {
-        const {projPairAOI} = this.props;
+        const {plotExtentPolygon} = this.props;
         fetch("/geo-dash/gateway-request", {
             method: "POST",
             headers: {
@@ -1494,7 +1509,7 @@ class StatsWidget extends React.Component {
                 "Content-Type": "application/json"
             },
             body: JSON.stringify({
-                paramValue: JSON.parse(projPairAOI),
+                paramValue: plotExtentPolygon,
                 path: "getStats"
             })
         })
@@ -1505,7 +1520,7 @@ class StatsWidget extends React.Component {
                 } else {
                     this.setState({
                         totalPop: this.numberWithCommas(data.pop),
-                        area: this.numberWithCommas(this.calculateArea(JSON.parse(projPairAOI)), 2) + " ha",
+                        area: this.numberWithCommas(this.calculateArea(plotExtentPolygon), 2) + " ha",
                         elevation: this.numberWithCommas(data.minElev)
                             + " - "
                             + this.numberWithCommas(data.maxElev)
