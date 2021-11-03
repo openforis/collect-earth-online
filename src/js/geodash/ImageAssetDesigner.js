@@ -14,14 +14,13 @@ export default function ImageAssetDesigner() {
     return (
         <>
             <BaseMapSelector/>
-            {/* FIXME this key should be asset name */}
             <GDInput
-                dataKey="imageCollection"
+                dataKey="assetName"
                 placeholder="LANDSAT/LC8_L1T_TOA/LC81290502015036LGN00"
                 title="GEE Image Asset Name"
             />
             <GetBands
-                asset={widgetDesign.imageCollection}
+                asset={widgetDesign.assetName}
                 bands={bands}
                 setBands={setBands}
                 type="image"

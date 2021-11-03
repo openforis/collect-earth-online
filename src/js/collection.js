@@ -515,23 +515,12 @@ class Collection extends React.Component {
         const allFeatures = mercator.getAllFeatures(mapConfig, "drawLayer") || [];
         const existingIds = allFeatures.map(f => f.get("sampleId")).filter(id => id);
         const getMax = samples => Math.max(0, ...existingIds, ...samples.map(s => s.id));
-        const newSamples = allFeatures.reduce((acc, cur) => {
-            const sampleId = cur.get("sampleId");
-            if (sampleId) {
-                return [...acc,
-                        {
-                            id: sampleId,
-                            sampleGeom: mercator.geometryToGeoJSON(cur.getGeometry(), "EPSG:4326", "EPSG:3857")
-                        }];
-            } else {
-                const nextId = getMax(acc) + 1;
-                return [...acc,
-                        {
-                            id: nextId,
-                            sampleGeom: mercator.geometryToGeoJSON(cur.getGeometry(), "EPSG:4326", "EPSG:3857")
-                        }];
-            }
-        }, []);
+        const newSamples = allFeatures.reduce((acc, cur) => [
+            ...acc,
+            {
+                id: cur.get("sampleId") || getMax(acc) + 1,
+                sampleGeom: mercator.geometryToGeoJSON(cur.getGeometry(), "EPSG:4326", "EPSG:3857")
+            }], []);
 
         this.setState({
             currentPlot: {...currentPlot, samples: newSamples},

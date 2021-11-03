@@ -214,7 +214,6 @@ class WidgetLayoutEditor extends React.PureComponent {
 
     // TODO, add middleware conditions
     // type change
-    // -  imageCollection: newWidgetType === "ImageElevation" ? "USGS/SRTMGL1_003" : ""
     // -  reset bands?
     setWidgetDesign = (dataKey, val) => {
         this.setState({widgetDesign: {...this.state.widgetDesign, [dataKey]: val}});
@@ -252,12 +251,12 @@ class WidgetLayoutEditor extends React.PureComponent {
     };
 
     onCreateNewWidget = () => {
-        const {widgetTitle: name, widgetType: type} = this.state;
+        const {widgetTitle: name, widgetType: type, widgetDesign, basemapId} = this.state;
         const maxY = Math.max(...this.state.widgets.map(o => (o.layout.y || 0)));
         const yval = maxY > -1 ? maxY + 1 : 0; // puts it at the bottom
         const widget = {
-            name,
             type,
+            name,
             layout:{
                 x: 0,
                 y: yval,
@@ -265,7 +264,15 @@ class WidgetLayoutEditor extends React.PureComponent {
                 h: 1
             }
         };
-        if (type === "DualImageCollection") {
+        if (type === "statistics") {
+            // Do nothing
+        } else if (type === "imageAsset" || type === "imageElevation") {
+            // image elevation is a specific image asset
+            const {visParams, assetName} = widgetDesign;
+            widget.basemapId = basemapId;
+            widget.eeType = "Image";
+            widget.assetName = assetName;
+            widget.visParams = JSON.parse(visParams || "{}");
             widget.properties = ["", "", "", "", ""];
             widget.filterType = "";
             widget.visParams = {};
@@ -320,12 +327,6 @@ class WidgetLayoutEditor extends React.PureComponent {
             }
             widget.dualImageCollection.push(img1);
             widget.dualImageCollection.push(img2);
-        } else if (type === "imageAsset" || type === "ImageElevation") {
-            widget.properties = ["", "", "", "", ""];
-            widget.filterType = "";
-            widget.visParams = this.state.visParams === "" ? {} : JSON.parse(this.state.visParams);
-            widget.ImageAsset = this.state.imageCollection;
-            widget.basemapId = this.state.basemapId;
         } else if (type === "imageCollectionAsset") {
             widget.properties = ["", "", "", "", ""];
             widget.filterType = "";
@@ -346,16 +347,12 @@ class WidgetLayoutEditor extends React.PureComponent {
             widget.visParams = this.state.visParams;
             widget.field = this.state.matchField;
             widget.basemapId = this.state.basemapId;
-        } else if (type === "statistics") {
-            // Do nothing
         } else {
             const wType = type === "TimeSeries"
                 ? this.state.selectedDataType.toLowerCase() + type
                 : type === "ImageCollection"
                     ? type + this.state.selectedDataType
-                    : type === "ImageElevation"
-                        ? "ImageElevation"
-                        : "custom";
+                    : "custom"; // This never happens
             let prop1 = "";
             const properties = [];
             const prop4 = this.state.selectedDataType !== null ? this.state.selectedDataType : "";
