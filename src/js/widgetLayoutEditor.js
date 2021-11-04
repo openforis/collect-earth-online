@@ -17,6 +17,7 @@ import ImageElevationDesigner from "./geodash/ImageElevationDesigner";
 import StatsDesigner from "./geodash/StatsDesigner";
 import TimeSeriesDesigner from "./geodash/TimeSeriesDesigner";
 import PolygonDesigner from "./geodash/PolygonDesigner";
+import PreImageCollectionDesigner from "./geodash/PreImageCollectionDesigner";
 
 import {EditorContext} from "./geodash/constants";
 
@@ -32,7 +33,7 @@ class WidgetLayoutEditor extends React.PureComponent {
             basemapId: -1,
             projectTemplateList: [],
             // Widget specific state
-            selectedWidgetType: -1,
+            selectedWidgetType: "-1",
             widgetTitle: "",
             widgetDesign: {},
             formReady: false,
@@ -42,29 +43,37 @@ class WidgetLayoutEditor extends React.PureComponent {
         };
 
         this.widgetTypes = {
-            statistics: {
-                title: "Statistics",
-                WidgetDesigner: StatsDesigner
-            },
-            imageAsset: {
-                title: "Image Asset",
-                WidgetDesigner: ImageAssetDesigner
-            },
-            preImageCollection: {
-                title: "Preloaded Image Collections",
-                WidgetDesigner: ImageCollectionDesigner
-            },
-            imageCollectionAsset: {
-                title: "Image Collection Asset",
-                WidgetDesigner: ImageCollectionAssetDesigner
+            degradationTool: {
+                title: "Degradation Tool",
+                WidgetDesigner: DegradationDesigner
             },
             dualImagery: {
                 title: "Dual Imagery",
                 WidgetDesigner: DualImageryDesigner
             },
+            imageAsset: {
+                title: "Image Asset",
+                WidgetDesigner: ImageAssetDesigner
+            },
+            imageCollectionAsset: {
+                title: "Image Collection Asset",
+                WidgetDesigner: ImageCollectionAssetDesigner
+            },
+            polygonCompare: {
+                title: "Polygon Compare",
+                WidgetDesigner: PolygonDesigner
+            },
+            preImageCollection: {
+                title: "Preloaded Image Collections",
+                WidgetDesigner: PreImageCollectionDesigner
+            },
             imageElevation: {
                 title: "SRTM Digital Elevation Data 30m",
                 WidgetDesigner: ImageElevationDesigner
+            },
+            statistics: {
+                title: "Statistics",
+                WidgetDesigner: StatsDesigner
             },
             timeSeries: {
                 title: "Time Series Graph",
@@ -122,6 +131,7 @@ class WidgetLayoutEditor extends React.PureComponent {
     };
 
     getBandsFromGateway = (assetName, assetType, callback) => {
+        // FIXME, test if assetType can be proper case the the ee object
         if (assetName && assetName !== "") {
             const postObject = {
                 path: "getAvailableBands",
@@ -206,7 +216,7 @@ class WidgetLayoutEditor extends React.PureComponent {
 
     resetWidgetDesign = () => {
         this.setState({
-            selectedDataType: "-1",
+            selectedWidgetType: "-1",
             widgetTitle: "",
             widgetDesign: {}
         });
@@ -229,21 +239,9 @@ class WidgetLayoutEditor extends React.PureComponent {
 
     updateWidgetType = newWidgetType => this.setState({
         selectedWidgetType: newWidgetType,
-        selectedDataType: -1,
         widgetTitle: "",
-        widgetDesign: {},
-        formReady: newWidgetType === "statistics"
-            || newWidgetType === "imageAsset"
-            || newWidgetType === "imageCollectionAsset"
-            || newWidgetType === "ImageElevation"
+        widgetDesign: {}
     });
-
-    onDataTypeSelectChanged = event => {
-        this.setState({
-            availableBands: "",
-            selectedDataType: event.target.value
-        });
-    };
 
     onCancelNewWidget = () => {
         this.props.closeDialogs();
@@ -254,7 +252,7 @@ class WidgetLayoutEditor extends React.PureComponent {
         const {widgetTitle: name, widgetType: type, widgetDesign, basemapId} = this.state;
         const maxY = Math.max(...this.state.widgets.map(o => (o.layout.y || 0)));
         const yval = maxY > -1 ? maxY + 1 : 0; // puts it at the bottom
-        const widget = {
+        let widget = {
             type,
             name,
             layout:{
@@ -266,14 +264,13 @@ class WidgetLayoutEditor extends React.PureComponent {
         };
         // FIXME, use immutable design, and spread widgetDesign
         if (type === "statistics") {
-            // Do nothing
+            widget = {...widget};
         } else if (type === "imageAsset" || type === "imageElevation") {
             // image elevation is a specific image asset
             const {visParams, assetName} = widgetDesign; // FIXME
             widget.basemapId = basemapId;
-            widget.eeType = "Image";
             widget.assetName = assetName;
-            widget.visParams = JSON.parse(visParams || "{}"); // FIXME, why do some need to be parsed
+            widget.visParams = JSON.parse(visParams || "{}"); // FIXME, verify that parsed is good.
         } else if (type === "degradationTool") {
             const {graphBand, startDate, endDate} = widgetDesign;
             widget.basemapId = basemapId;
@@ -283,20 +280,27 @@ class WidgetLayoutEditor extends React.PureComponent {
         } else if (type === "polygonCompare") {
             const {assetName, visParams, field} = widgetDesign;
             widget.basemapId = this.state.basemapId;
-            widget.eeType = "FeatureCollection";
             widget.assetName = assetName;
             widget.field = field;
-            widget.visParams = visParams;
+            widget.visParams = JSON.parse(visParams || "{}");
         } else if (type === "timeSeries") {
             const {startDate, endDate, indexName, assetName, graphBand, graphReducer} = widgetDesign;
-            widget.basemapId = this.state.basemapId;
             widget.indexName = indexName;
             widget.assetName = assetName;
             widget.graphBand = graphBand;
             widget.graphReducer = graphReducer;
             widget.startDate = startDate;
             widget.endDate = endDate;
-        } else if (type === "DualImageCollection") {
+        } else if (type === "preImageCollection") {
+            const {startDate, endDate, indexName, bands, min, max, cloudLessThan} = widgetDesign;
+            widget.basemapId = basemapId;
+            widget.indexName = indexName;
+            widget.bands = bands;
+            widget.min = min;
+            widget.max = max;
+            widget.cloudLessThan = cloudLessThan;
+            widget.startDate = startDate;
+            widget.endDate = endDate;
             // FIXME, this is a stub.  Will need to get each image.
             const {img1, img2} = widget;
             widget.img1 = img1;

@@ -1,5 +1,5 @@
 -- Drop archived projects with odd widgets
-SELECT delete_project(project_uid) FROM projects WHERE project_uid IN (4998);
+SELECT delete_project(project_uid) FROM projects WHERE project_uid IN (4998, 1057, 1054, 1080);
 
 -- Update Stats widgets
 UPDATE project_widgets
@@ -17,7 +17,6 @@ SET widget = jsonb_build_object(
     'name', widget->'name',
     'layout', widget->'layout',
     'basemapId', widget->'basemapId',
-    'eeType', 'Image',
     'assetName', widget->>'ImageAsset',
     'visParams', widget->'visParams'
 )
@@ -78,6 +77,43 @@ SET widget = jsonb_build_object(
     'endTime', TRIM(widget->'properties'->>3)
 )
 WHERE widget->'properties'->>0 ilike '%timeseries%';
+
+-- Update Pre Image Collection -> emodis widgets
+UPDATE project_widgets
+SET widget = jsonb_build_object(
+    'type', 'preImageCollection',
+    'name', widget->>'name',
+    'layout', widget->'layout',
+    'indexName', widget->'properties'->4,
+    'startTime', TRIM(widget->'properties'->>2),
+    'endTime', TRIM(widget->'properties'->>3)
+)
+WHERE widget->'properties'->>0 in (
+    'ImageCollectionNDVI',
+    'ImageCollectionEVI',
+    'ImageCollectionEVI2',
+    'ImageCollectionNDWI',
+    'ImageCollectionNDMI'
+);
+
+-- Update Pre Image Collection -> landsat / sentinel widgets
+-- FIXME, flatten visParams or update route and designer
+UPDATE project_widgets
+SET widget = jsonb_build_object(
+    'type', 'preImageCollection',
+    'name', widget->>'name',
+    'layout', widget->'layout',
+    'indexName', widget->'properties'->>4,
+    'visParams', widget->'visParams',
+    'startTime', TRIM(widget->'properties'->>2),
+    'endTime', TRIM(widget->'properties'->>3)
+)
+WHERE widget->'properties'->>0 in (
+    'ImageCollectionLANDSAT5',
+    'ImageCollectionLANDSAT7',
+    'ImageCollectionLANDSAT8',
+    'ImageCollectionSentinel2'
+);
 
 -- Clean up missing basemapId
 -- FIXME, set to OSM
