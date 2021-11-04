@@ -7,13 +7,13 @@ import GDSelect from "./form/GDSelect";
 
 import {EditorContext} from "./constants";
 
-export default function ImageCollectionDesigner() {
+export default function PreImageCollectionDesigner() {
     const {widgetDesign} = useContext(EditorContext);
     return (
         <>
             <BaseMapSelector/>
             <GDSelect
-                dataKey="dataType"
+                dataKey="indexName"
                 items={[
                     "NDVI",
                     "EVI",
@@ -23,15 +23,14 @@ export default function ImageCollectionDesigner() {
                     "LANDSAT 5",
                     "LANDSAT 7",
                     "LANDSAT 8",
-                    "Sentinel-2",
-                    "Custom"]}
+                    "Sentinel-2"]}
                 title="Data Type"
             />
             <GDDateRange/>
-            {/* FIXME These need to be a path visParams.bands */}
-            {["LANDSAT5", "LANDSAT7", "LANDSAT8", "Sentinel-2"].includes(widgetDesign.dataType) && (
+            {["LANDSAT5", "LANDSAT7", "LANDSAT8", "Sentinel-2"].includes(widgetDesign.indexName) && (
                 <>
                     <GDInput dataKey="bands" placeholder="XX,XX,XX" title="Bands"/>
+                    {/* TODO set these to number inputs */}
                     <GDInput dataKey="min" placeholder="-1" title="Min"/>
                     <GDInput dataKey="max" placeholder="100" title="Max"/>
                     <GDInput dataKey="cloudLessThan" placeholder="90" title="Cloud Score"/>

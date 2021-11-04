@@ -259,17 +259,8 @@ class Widget extends React.Component {
         super(props);
         this.imageCollectionList = ["imageElevation",
                                     "ImageCollectionCustom",
-                                    "addImageCollection",
-                                    "ndviImageCollection",
-                                    "ImageCollectionNDVI",
-                                    "ImageCollectionEVI",
-                                    "ImageCollectionEVI2",
-                                    "ImageCollectionNDWI",
-                                    "ImageCollectionNDMI",
-                                    "ImageCollectionLANDSAT5",
-                                    "ImageCollectionLANDSAT7",
-                                    "ImageCollectionLANDSAT8",
-                                    "ImageCollectionSentinel2"];
+                                    "addImageCollection", // first gen ImageCollectionCustom
+                                    "preImageCollection"];
         this.graphControlList = ["timeSeries"];
     }
 
@@ -407,7 +398,7 @@ class Widget extends React.Component {
         }
     };
 
-    isMapWidget = widget => this.imageCollectionList.includes(widget.properties[0])
+    isMapWidget = widget => this.imageCollectionList.includes(widget.type)
         || (widget.dualImageCollection)
         || (widget.assetName && widget.assetName.length > 0)
         || (widget.ImageCollectionAsset && widget.ImageCollectionAsset.length > 0)
@@ -597,7 +588,7 @@ class MapWidget extends React.Component {
         widget.bands = bands;
 
         // FIXME, post object should spread widget or {name, type, eeType, layout, ...payload}
-        if (widget.eeType === "Image") {
+        if (widget.type === "imageAsset" || widget.type === "imageElevation") {
             // Should be type imageAsset or imageElevation
             const {assetName, visParams} = widget;
             postObject = {
@@ -622,6 +613,23 @@ class MapWidget extends React.Component {
                 field,
                 visParams: visParams || {},
                 matchID: this.props.visiblePlotId
+            };
+        } else if (widget.type === "preImageCollection") {
+            const {indexName, startDate, endDate, bands, min, max, cloudLessThan} = widget;
+            const path = ["LANDSAT5", "LANDSAT7", "LANDSAT8"].includes(indexName)
+                ? "filteredLandsat"
+                : indexName === "Sentinel2"
+                    ? "filteredSentinel2"
+                    : "imageCollectionByIndex";
+            postObject = {
+                path,
+                indexName,
+                bands,
+                min,
+                max,
+                cloudLessThan,
+                startDate,
+                endDate
             };
         } else if (widget.dualImageCollection) {
             const {plotExtentPolygon} = this.props;

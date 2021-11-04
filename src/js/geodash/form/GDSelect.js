@@ -14,7 +14,7 @@ export default function GDSelect({title, items, dataKey, intKeys = false}) {
                 value={widgetDesign[dataKey]}
             >
                 <option className="" value="-1">Please select type</option>
-                {items.map(i => <option key={i} value={i.replace(" ", "")}>{i}</option>)}
+                {items.map(i => <option key={i} value={i.replace(/ |-/, "")}>{i}</option>)}
             </select>
         </div>
     );
