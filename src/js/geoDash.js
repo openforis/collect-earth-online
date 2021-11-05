@@ -480,10 +480,161 @@ class MapWidget extends React.Component {
         };
     }
 
-    componentDidMount() {
-        const {widget} = this.props;
-        let {plotExtent} = this.props;
+    /// Lifecycle
 
+    componentDidMount() {
+        this.initMap();
+        const {widget} = this.props;
+
+        this.loadWidgetSource(widget);
+
+        window.addEventListener("resize", this.handleResize);
+    }
+
+    componentDidUpdate(prevProps, prevState) {
+        if (this.props.widget.isFull !== prevProps.widget.isFull) {
+            this.state.mapRef.updateSize();
+        }
+
+        if (this.props.mapCenter !== prevProps.mapCenter || this.props.mapZoom !== prevProps.mapZoom) {
+            this.centerAndZoomMap(this.props.mapCenter, this.props.mapZoom);
+        }
+
+        if (this.props.selectedDate !== prevProps.selectedDate
+            || this.state.stretch !== prevState.stretch
+            || this.props.degDataType !== prevProps.degDataType) {
+            if (this.props.widget.type === "degradationTool" && this.props.selectedDate !== "") {
+                const postObject = this.getPostObject(this.props.widget);
+                const map = this.state.mapRef;
+                // TODO just update source
+                try {
+                    map.getLayers().getArray()
+                        .filter(layer => layer.get("id") !== undefined
+                            && layer.get("id") === "widgetmap_" + this.props.widget.id)
+                        .forEach(layer => map.removeLayer(layer));
+                } catch (e) {
+                    console.log("removal error");
+                }
+                if (typeof (Storage) !== "undefined"
+                    && this.checkForCache(postObject, this.props.widget, false)) {
+                    this.fetchMapInfo(postObject, "/geo-dash/gateway-request", this.props.widget, null);
+                }
+            }
+        }
+    }
+
+    componentWillUnmount() {
+        window.removeEventListener("resize", this.handleResize);
+    }
+
+    /// API
+
+    fetchSourceUrl = async postObject => {
+        // Why even get degradation params if you just exit here?
+        if (postObject.path === "getDegradationTileUrl") {
+            return;
+        }
+        return fetch("/geo-dash/gateway-request", {
+            method: "POST",
+            headers: {
+                "Accept": "application/json",
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(postObject)
+        })
+            .then(res => (res.ok ? res.json() : Promise.reject()))
+            .then(data => {
+                // FIXME, what other fields are in data that I can just save URL?
+                if (data && data.hasOwnProperty("url")) {
+                    this.setCache(postObject, data);
+                    return data.url;
+                } else {
+                    console.warn("Wrong Data Returned");
+                    return false;
+                }
+            })
+            .catch(err => console.error(err));
+    };
+
+    /// State
+
+    setStretch = evt => this.setState({stretch: parseInt(evt.target.value)});
+
+    toggleDegDataType = checked => this.props.handleDegDataType(checked ? "sar" : "landsat");
+
+    onOpacityChange = newOpacity => {
+        try {
+            this.setState({opacity: newOpacity});
+            this.state.mapRef.getLayers().forEach(lyr => {
+                if (lyr.get("id") && lyr.get("id").includes(this.props.widget.id)) {
+                    lyr.setOpacity(newOpacity);
+                }
+            });
+        } catch (e) {
+            console.log(e.message);
+        }
+    };
+
+    /// Helpers
+
+    // TODO update widget to {name, type, params}
+    getPostObject = widget => {
+        if (widget.type === "imageAsset" || widget.type === "imageElevation") {
+            return {path: "image", ...widget};
+        } else if (widget.type === "degradationTool") {
+            const {stretch} = this.state;
+            const {selectedDate, degDataType, plotExtentPolygon} = this.props;
+            return {
+                path: "getDegradationTileUrl",
+                imageDate: selectedDate,
+                stretch: degDataType === "landsat" ? stretch : "SAR",
+                geometry: plotExtentPolygon
+            };
+        } else if (widget.type === "polygonCompare") {
+            return {path: "getTileUrlFromFeatureCollection", ...widget};
+        } else if (widget.type === "preImageCollection") {
+            const {indexName} = widget;
+            const path = ["LANDSAT5", "LANDSAT7", "LANDSAT8"].includes(indexName)
+                ? "filteredLandsat"
+                : indexName === "Sentinel2"
+                    ? "filteredSentinel2"
+                    : "imageCollectionByIndex";
+            return {path, ...widget};
+        } else if (widget.type === "imageCollectionAsset") {
+            return {path: "imageCollection", ...widget};
+        } else {
+            return {};
+        }
+    };
+
+    wrapCache = widget => {
+        const postObject = this.getPostObject(widget);
+        const cacheUrl = this.checkForCache(postObject);
+        if (cacheUrl) {
+            return Promise.resolve(cacheUrl);
+        } else {
+            this.fetchSourceUrl(widget);
+        }
+    };
+
+    loadWidgetSource = async widget => {
+        const {type} = widget;
+        if (type === "dualImageCollection") {
+            // FIXME, use the actual dual image
+            const [url1, url2] = await Promise.all([this.wrapCache(widget), this.wrapCache(widget)]);
+            this.addTileServer(url1, widget.id);
+            this.addSecondTileServer(url2, widget.id);
+        } else {
+            const url = await this.wrapCache(widget);
+            this.addTileServer(url, widget.id);
+        }
+    };
+
+    /// OpenLayers
+
+    initMap = () => {
+        const {widget} = this.props;
+        const {plotExtent} = this.props;
         const {sourceConfig, id, attribution, isProxied} = this.props.imageryList.find(imagery =>
             imagery.id === widget.basemapId)
             || this.props.imageryList.find(imagery => imagery.title === "Open Street Map")
@@ -531,11 +682,6 @@ class MapWidget extends React.Component {
             this.resumeGeeLayer(e);
         });
 
-        if (plotExtent === "") {
-            plotExtent = [-108.30322265625, 21.33544921875, -105.347900390625, 23.53271484375];
-        } else if (typeof plotExtent === "string") {
-            plotExtent = JSON.parse(plotExtent);
-        }
         map.getView().fit(
             projTransform(
                 [plotExtent[0], plotExtent[1]], "EPSG:4326", "EPSG:3857"
@@ -552,227 +698,20 @@ class MapWidget extends React.Component {
         this.setState({
             mapRef: map
         });
+    };
 
-        let postObject = {};
+    centerAndZoomMap = (center, zoom) => {
+        const map = this.state.mapRef;
+        map.getView().setCenter(center);
+        map.getView().setZoom(zoom);
+    };
 
-        // FIXME, post object should spread widget or {name, type, eeType, layout, ...payload}
-        if (widget.type === "imageAsset" || widget.type === "imageElevation") {
-            const {assetName, visParams} = widget;
-            postObject = {
-                path: "image",
-                assetName,
-                visParams
-            };
-        } else if (widget.type === "degradationTool") {
-            const {stretch} = this.state;
-            const {selectedDate, degDataType, plotExtentPolygon} = this.props;
-            postObject = {
-                path: "getDegradationTileUrl",
-                imageDate: selectedDate,
-                stretch: degDataType === "landsat" ? stretch : "SAR",
-                geometry: plotExtentPolygon
-            };
-        } else if (widget.type === "polygonCompare") {
-            const {assetName, field, visParams} = widget;
-            postObject = {
-                path: "getTileUrlFromFeatureCollection",
-                assetName,
-                field,
-                visParams: visParams || {},
-                matchID: this.props.visiblePlotId
-            };
-        } else if (widget.type === "preImageCollection") {
-            const {indexName, startDate, endDate, bands, min, max, cloudLessThan} = widget;
-            const path = ["LANDSAT5", "LANDSAT7", "LANDSAT8"].includes(indexName)
-                ? "filteredLandsat"
-                : indexName === "Sentinel2"
-                    ? "filteredSentinel2"
-                    : "imageCollectionByIndex";
-            postObject = {
-                path,
-                indexName,
-                bands,
-                min,
-                max,
-                cloudLessThan,
-                startDate,
-                endDate
-            };
-        } else if (widget.type === "imageCollectionAsset") {
-            const {assetName, reducer, visParams, startDate, endDate} = widget;
-            postObject = {
-                path: "imageCollection",
-                assetName,
-                reducer,
-                visParams,
-                startDate,
-                endDate
-            };
-        } else if (widget.dualImageCollection) {
-            // TODO, for dual image call this function twice
-        } else {
-            postObject = {};
-        }
-
-        // see if we need to fetch or just add the tile server
-        const dualImageObject = widget.type === "imageAsset";
-        if (typeof (Storage) !== "undefined"
-            && (this.checkForCache(postObject, widget, false)
-                || (widget.dualImageCollection
-                    && dualImageObject
-                    && this.checkForCache(dualImageObject, widget, true)))) {
-            this.fetchMapInfo(postObject, "/geo-dash/gateway-request", widget, dualImageObject);
-        }
-        window.addEventListener("resize", this.handleResize);
-    }
-
-    componentDidUpdate(prevProps, prevState) {
-        if (this.props.widget.isFull !== prevProps.widget.isFull) {
+    handleResize = () => {
+        try {
             this.state.mapRef.updateSize();
+        } catch (e) {
+            console.log("resize issue");
         }
-
-        if (this.props.mapCenter !== prevProps.mapCenter || this.props.mapZoom !== prevProps.mapZoom) {
-            this.centerAndZoomMap(this.props.mapCenter, this.props.mapZoom);
-        }
-
-        if (this.props.selectedDate !== prevProps.selectedDate
-            || this.state.stretch !== prevState.stretch
-            || this.props.degDataType !== prevProps.degDataType) {
-            if (this.props.widget.type === "degradationTool" && this.props.selectedDate !== "") {
-                const postObject = {};
-                postObject.imageDate = this.props.selectedDate;
-                postObject.stretch = this.props.degDataType && this.props.degDataType === "landsat"
-                    ? this.state.stretch
-                    : "SAR";
-                postObject.dataType = this.props.degDataType;
-                postObject.path = "getDegradationTileUrl";
-                postObject.geometry = this.props.plotExtentPolygon;
-                const map = this.state.mapRef;
-                try {
-                    map.getLayers().getArray()
-                        .filter(layer => layer.get("id") !== undefined
-                            && layer.get("id") === "widgetmap_" + this.props.widget.id)
-                        .forEach(layer => map.removeLayer(layer));
-                } catch (e) {
-                    console.log("removal error");
-                }
-                if (typeof (Storage) !== "undefined"
-                    && this.checkForCache(postObject, this.props.widget, false)) {
-                    this.fetchMapInfo(postObject, "/geo-dash/gateway-request", this.props.widget, null);
-                }
-            }
-        }
-    }
-
-    checkForCache = (postObject, widget, isSecond) => {
-        const visParams = JSON.stringify(postObject.visParams);
-        return (localStorage.getItem(postObject.assetName + visParams)
-            ? this.createTileServerFromCache(postObject.assetName + visParams, widget.id, isSecond)
-            : localStorage.getItem(postObject.ImageCollectionAsset + visParams)
-                ? this.createTileServerFromCache(postObject.ImageCollectionAsset + visParams, widget.id, isSecond)
-                : postObject.index && localStorage.getItem(postObject.index + visParams + postObject.dateFrom + postObject.dateTo)
-                    ? this.createTileServerFromCache(postObject.index + visParams + postObject.dateFrom + postObject.dateTo, widget.id, isSecond)
-                    : postObject.path && localStorage.getItem(postObject.path + visParams + postObject.dateFrom + postObject.dateTo)
-                        ? this.createTileServerFromCache(postObject.path + visParams + postObject.dateFrom + postObject.dateTo, widget.id, isSecond)
-                        : localStorage.getItem(JSON.stringify(postObject))
-                            ? this.createTileServerFromCache(JSON.stringify(postObject), widget.id, isSecond)
-                            : true);
-    };
-
-    setCache = (postObject, data) => {
-        data.lastGatewayUpdate = new Date();
-        const visParams = JSON.stringify(postObject.visParams);
-        if (postObject.assetName && visParams) {
-            localStorage.setItem(postObject.assetName + visParams, JSON.stringify(data));
-        } else if (postObject.ImageCollectionAsset && visParams) {
-            localStorage.setItem(postObject.ImageCollectionAsset + visParams, JSON.stringify(data));
-        } else if (postObject.index && visParams + postObject.dateFrom + postObject.dateTo) {
-            localStorage.setItem(
-                postObject.index + visParams + postObject.dateFrom + postObject.dateTo, JSON.stringify(data)
-            );
-        } else if (postObject.path && visParams + postObject.dateFrom + postObject.dateTo) {
-            localStorage.setItem(
-                postObject.path + visParams + postObject.dateFrom + postObject.dateTo, JSON.stringify(data)
-            );
-        } else {
-            localStorage.setItem(JSON.stringify(postObject), JSON.stringify(data));
-        }
-    };
-
-    fetchMapInfo = (postObject, url, widget, dualImageObject) => {
-        if (postObject.path === "getDegradationTileUrl" && url.trim() === "") {
-            return;
-        }
-        fetch(url, {
-            method: "POST",
-            headers: {
-                "Accept": "application/json",
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify(postObject)
-        })
-            .then(res => (res.ok ? res.json() : Promise.reject()))
-            .then(data => {
-                if (data && data.hasOwnProperty("url")) {
-                    this.setCache(postObject, data);
-                    this.addTileServer(data.url, "widgetmap_" + widget.id);
-                    return true;
-                } else {
-                    console.warn("Wrong Data Returned");
-                    return false;
-                }
-            })
-            .then(isValid => {
-                if (isValid) {
-                    if (widget.dualLayer) {
-                        postObject.dateFrom = widget.dualStart;
-                        postObject.dateTo = widget.dualEnd;
-
-                        fetch(url, {
-                            method: "POST",
-                            headers: {
-                                "Accept": "application/json",
-                                "Content-Type": "application/json"
-                            },
-                            body: JSON.stringify(postObject)
-                        })
-                            .then(res => res.json())
-                            .then(data => {
-                                if (data.hasOwnProperty("url")) {
-                                    this.setCache(postObject, data);
-                                    this.addDualLayer(data.url, data.token, "widgetmap_" + widget.id);
-                                }
-                            });
-                    } else if (dualImageObject) {
-                        let workingObject;
-                        try {
-                            workingObject = JSON.parse(dualImageObject);
-                        } catch (e) {
-                            workingObject = dualImageObject;
-                        }
-                        if (workingObject != null) {
-                            fetch(workingObject.url, {
-                                method: "POST",
-                                headers: {
-                                    "Accept": "application/json",
-                                    "Content-Type": "application/json"
-                                },
-                                body: JSON.stringify(workingObject)
-                            })
-                                .then(res => res.json())
-                                .then(data => {
-                                    if (data.hasOwnProperty("url")) {
-                                        this.setCache(postObject, data);
-                                        this.addDualLayer(data.url, data.token, "widgetmap_" + widget.id);
-                                    } else {
-                                        console.warn("Wrong Data Returned");
-                                    }
-                                });
-                        }
-                    }
-                }
-            })
-            .catch(error => console.error(error));
     };
 
     pauseGeeLayer = e => {
@@ -784,38 +723,105 @@ class MapWidget extends React.Component {
         });
     };
 
-    addSecondMapLayer = (url, token, widgetid) => {
-        if (this.state.mapRef) {
-            this.addDualLayer(url, token, widgetid);
-        } else {
-            setTimeout(() => {
-                this.addDualLayer(url, token, widgetid);
-            }, 1000);
+    resumeGeeLayer = e => {
+        try {
+            if (this.state && this.state.geeTimeOut) {
+                window.clearTimeout(this.state.geeTimeOut);
+                this.setState({geeTimeOut: null});
+            }
+            this.setState({
+                geeTimeOut: window.setTimeout(() => {
+                    const layers = e.target.getLayers().getArray();
+                    layers.forEach(lyr => {
+                        if (lyr.get("id") && lyr.get("id").indexOf("widget") === 0) {
+                            lyr.setVisible(true);
+                        }
+                    });
+                }, Math.floor(Math.random() * (1250 - 950 + 1) + 950))
+            });
+        } catch (err) {
+            console.log(err.message);
         }
     };
 
-    centerAndZoomMap = (center, zoom) => {
-        const map = this.state.mapRef;
-        map.getView().setCenter(center);
-        map.getView().setZoom(zoom);
+    addTileServer = (url, widgetId) => {
+        window.setTimeout(() => {
+            const source = new XYZ({
+                url
+            });
+            source.on("tileloaderror", error => {
+                try {
+                    window.setTimeout(() => {
+                        error.tile.attempt = error.tile.attempt ? error.tile.attempt + 1 : 1;
+                        if (error.tile.attempt < 5) error.tile.load();
+                    }, Math.floor(Math.random() * (1250 - 950 + 1) + 950));
+                } catch (e) {
+                    console.log(e.message);
+                }
+            });
+            this.state.mapRef.addLayer(new TileLayer({
+                source,
+                id: "widgetmap_" + widgetId
+            }));
+        }, Math.floor(Math.random() * (300 - 200 + 1) + 200));
     };
 
-    createTileServerFromCache = (storageItem, widgetId, isSecond) => {
+    addSecondTileServer = (url, widgetId) => {
+        const googleLayer = new TileLayer({
+            source: new XYZ({
+                url
+            }),
+            id: "widgetmap_" + widgetId + "_dual"
+        });
+        this.state.mapRef.addLayer(googleLayer);
+        const swipe = document.getElementById("swipeWidget_" + widgetId);
+        googleLayer.on("prerender", event => {
+            const ctx = event.context;
+            const width = ctx.canvas.width * (swipe.value);
+            ctx.save();
+            ctx.beginPath();
+            ctx.rect(width, 0, ctx.canvas.width - width, ctx.canvas.height);
+            ctx.clip();
+        });
+
+        googleLayer.on("postrender", event => {
+            const ctx = event.context;
+            ctx.restore();
+        });
+        // TODO, move to swipe component
+        swipe.addEventListener("input", () => {
+            this.state.mapRef.render();
+        }, false);
+    };
+
+    /// Cache
+
+    checkForCache = postObject => {
+        const jsonKey = JSON.stringify(postObject);
+        const {url, lastGatewayUpdate} = JSON.parse(localStorage.getItem(jsonKey));
         const currentDate = new Date();
         currentDate.setDate(currentDate.getDate() - 1);
-        const mapinfo = JSON.parse(localStorage.getItem(storageItem));
-        if (new Date(mapinfo.lastGatewayUpdate) > currentDate) {
-            if (isSecond) {
-                this.addSecondMapLayer(mapinfo.url, mapinfo.token, "widgetmap_" + widgetId);
-            } else {
-                this.addTileServer(mapinfo.url, "widgetmap_" + widgetId);
-            }
-            return false;
+        if (!url || new Date(lastGatewayUpdate) > currentDate) {
+            localStorage.removeItem(jsonKey);
+            return null;
+        } else {
+            return url;
         }
-        return true;
     };
 
-    getSliderControl = () => {
+    setCache = (postObject, data) => {
+        localStorage.setItem(
+            JSON.stringify(postObject),
+            JSON.stringify({
+                ...data,
+                lastGatewayUpdate: new Date()
+            })
+        );
+    };
+
+    /// Render functions
+
+    renderSliderControl = () => {
         const {widget, onSliderChange, onSwipeChange} = this.props;
 
         if (widget.dualLayer || widget.dualImageCollection) {
@@ -853,7 +859,7 @@ class MapWidget extends React.Component {
                         id={"rangeWidget_" + widget.id}
                         max="1"
                         min="0"
-                        onChange={evt => this.onOpacityChange(evt)}
+                        onChange={e => this.onOpacityChange(parseInt(e.target.value))}
                         step=".01"
                         style={{display: widget.sliderType === "opacity" ? "block" : "none"}}
                         type="range"
@@ -879,7 +885,7 @@ class MapWidget extends React.Component {
                     id={"rangeWidget_" + widget.id}
                     max="1"
                     min="0"
-                    onChange={evt => this.onOpacityChange(evt)}
+                    onChange={e => this.onOpacityChange(parseInt(e.target.value))}
                     step=".01"
                     type="range"
                     value={this.state.opacity}
@@ -888,141 +894,8 @@ class MapWidget extends React.Component {
         }
     };
 
-    onOpacityChange = evt => {
-        try {
-            const opacity = Number(evt.target.value);
-            this.setState({opacity});
-            this.state.mapRef.getLayers().forEach(lyr => {
-                if (lyr.get("id") && lyr.get("id").includes(this.props.widget.id)) {
-                    lyr.setOpacity(opacity);
-                }
-            });
-        } catch (e) {
-            console.log(e.message);
-        }
-    };
-
-    handleResize = () => {
-        try {
-            this.state.mapRef.updateSize();
-        } catch (e) {
-            console.log("resize issue");
-        }
-    };
-
-    resumeGeeLayer = e => {
-        try {
-            if (this.state && this.state.geeTimeOut) {
-                window.clearTimeout(this.state.geeTimeOut);
-                this.setState({geeTimeOut: null});
-            }
-            this.setState({
-                geeTimeOut: window.setTimeout(() => {
-                    const layers = e.target.getLayers().getArray();
-                    layers.forEach(lyr => {
-                        if (lyr.get("id") && lyr.get("id").indexOf("widget") === 0) {
-                            lyr.setVisible(true);
-                        }
-                    });
-                }, Math.floor(Math.random() * (1250 - 950 + 1) + 950))
-            });
-        } catch (err) {
-            console.log(err.message);
-        }
-    };
-
-    addTileServer = (url, mapdiv) => {
-        window.setTimeout(() => {
-            const source = new XYZ({
-                url
-            });
-            source.on("tileloaderror", error => {
-                try {
-                    window.setTimeout(() => {
-                        error.tile.attempt = error.tile.attempt ? error.tile.attempt + 1 : 1;
-                        if (error.tile.attempt < 5) error.tile.load();
-                    }, Math.floor(Math.random() * (1250 - 950 + 1) + 950));
-                } catch (e) {
-                    console.log(e.message);
-                }
-            });
-            this.state.mapRef.addLayer(new TileLayer({
-                source,
-                id: mapdiv
-            }));
-        }, Math.floor(Math.random() * (300 - 200 + 1) + 200));
-    };
-
-    addDualLayer = (url, token, mapdiv) => {
-        const googleLayer = new TileLayer({
-            source: new XYZ({
-                url
-            }),
-            id: mapdiv + "_dual"
-        });
-        this.state.mapRef.addLayer(googleLayer);
-        const swipe = document.getElementById("swipeWidget_" + mapdiv.replace("widgetmap_", ""));
-        googleLayer.on("prerender", event => {
-            const ctx = event.context;
-            const width = ctx.canvas.width * (swipe.value);
-            ctx.save();
-            ctx.beginPath();
-            ctx.rect(width, 0, ctx.canvas.width - width, ctx.canvas.height);
-            ctx.clip();
-        });
-
-        googleLayer.on("postrender", event => {
-            const ctx = event.context;
-            ctx.restore();
-        });
-        swipe.addEventListener("input", () => {
-            this.state.mapRef.render();
-        }, false);
-    };
-
-    setStretch = evt => this.setState({stretch: parseInt(evt.target.value)});
-
-    toggleDegDataType = checked => this.props.handleDegDataType(checked ? "sar" : "landsat");
-
-    getStretchToggle = () => (this.props.degDataType === "landsat"
-        ? (
-            <div className="col-6">
-                <span className="ctrl-text font-weight-bold">Bands: </span>
-                <select
-                    className="form-control"
-                    onChange={evt => this.setStretch(evt)}
-                    style={{
-                        maxWidth: "65%",
-                        display: "inline-block",
-                        fontSize: ".8rem",
-                        height: "30px"
-                    }}
-                >
-                    <option value={321}>R,G,B</option>
-                    <option value={543}>SWIR,NIR,R</option>
-                    <option value={453}>NIR,SWIR,R</option>
-                </select>
-            </div>
-        )
-        : this.props.isDegradation
-            ? (
-                <div className="col-6">
-                    <span className="ctrl-text font-weight-bold">Band Combination: </span>
-                    <span className="ctrl-text">VV, VH, VV/VH </span>
-                </div>
-            )
-            : "");
-
-    getDegDataTypeToggle = () => (
-        <div className="col-6" style={{display: this.props.isDegradation ? "block" : "none"}}>
-            <span className="ctrl-text font-weight-bold">Data: </span>
-            <span className="ctrl-text">LANDSAT </span>
-            <Switch onChange={evt => this.toggleDegDataType(evt.target.checked)}/>
-            <span className="ctrl-text"> SAR</span>
-        </div>
-    );
-
     render() {
+        const {isDegradation} = this.props;
         return (
             <>
                 <div
@@ -1030,10 +903,44 @@ class MapWidget extends React.Component {
                     id={"widgetmap_" + this.props.widget.id}
                     style={{width:"100%", minHeight:"200px"}}
                 />
-                {this.getSliderControl()}
+                {this.renderSliderControl()}
                 <div className="row">
-                    {this.getStretchToggle()}
-                    {this.getDegDataTypeToggle()}
+                    {isDegradation && (
+                        <>
+                            {this.props.degDataType === "landsat"
+                                ? (
+                                    <div className="col-6">
+                                        <span className="ctrl-text font-weight-bold">Bands: </span>
+                                        <select
+                                            className="form-control"
+                                            onChange={evt => this.setStretch(evt)}
+                                            style={{
+                                                maxWidth: "65%",
+                                                display: "inline-block",
+                                                fontSize: ".8rem",
+                                                height: "30px"
+                                            }}
+                                        >
+                                            <option value={321}>R,G,B</option>
+                                            <option value={543}>SWIR,NIR,R</option>
+                                            <option value={453}>NIR,SWIR,R</option>
+                                        </select>
+                                    </div>
+                                ) : (
+                                    <div className="col-6">
+                                        <span className="ctrl-text font-weight-bold">Band Combination: </span>
+                                        <span className="ctrl-text">VV, VH, VV/VH </span>
+                                    </div>
+                                )}
+                            <div className="col-6">
+                                <span className="ctrl-text font-weight-bold">Data: </span>
+                                <span className="ctrl-text">LANDSAT </span>
+                                <Switch onChange={e => this.toggleDegDataType(e.target.checked)}/>
+                                <span className="ctrl-text"> SAR</span>
+                            </div>
+                        </>
+                    )}
+                    {this.renderStretchToggle()}
                 </div>
             </>
         );
@@ -1051,6 +958,8 @@ class GraphWidget extends React.Component {
             nonDegChartData: []
         };
     }
+
+    /// Lifecycle
 
     componentDidMount() {
         const {widget: {type}} = this.props;
@@ -1076,6 +985,8 @@ class GraphWidget extends React.Component {
     componentWillUnmount() {
         window.removeEventListener("resize", this.handleResize);
     }
+
+    /// API
 
     invalidData = data => {
         if (data.errMsg) {
@@ -1224,6 +1135,8 @@ class GraphWidget extends React.Component {
             .catch(error => console.log(error));
     };
 
+    /// Helpers
+
     multiComparator = (a, b) => ((a[0] < b[0]) ? -1
         : (a[0] > b[0])
             ? 1
@@ -1245,30 +1158,7 @@ class GraphWidget extends React.Component {
         }
     };
 
-    onSelectSarGraphBand = newValue => this.setState({selectSarGraphBand: newValue});
-
-    getSarBandOption = () => {
-        const selectOptions = [
-            {label: "VV", value: "VV"},
-            {label: "VH", value: "VH"},
-            {label: "VV/VH", value: "VV/VH"}
-        ];
-        return (
-            <select
-                className="form-control"
-                onChange={evt => this.onSelectSarGraphBand(evt.target.value)}
-                style={{
-                    maxWidth: "85%",
-                    display: this.props.widget.type === "degradationTool" && this.props.degDataType === "sar"
-                        ? "inline-block" : "none",
-                    fontSize: ".9rem",
-                    height: "30px"
-                }}
-            >
-                {selectOptions.map(el => <option key={el.value} value={el.value}>{el.label}</option>)}
-            </select>
-        );
-    };
+    /// High Charts
 
     getChartData = () => {
         const {widget, degDataType} = this.props;
@@ -1336,6 +1226,31 @@ class GraphWidget extends React.Component {
         };
     };
 
+    /// Render functions
+
+    renderSarBandOption = () => {
+        const selectOptions = [
+            {label: "VV", value: "VV"},
+            {label: "VH", value: "VH"},
+            {label: "VV/VH", value: "VV/VH"}
+        ];
+        return (
+            <select
+                className="form-control"
+                onChange={e => this.setState({selectSarGraphBand: e.target.value})}
+                style={{
+                    maxWidth: "85%",
+                    display: this.props.widget.type === "degradationTool" && this.props.degDataType === "sar"
+                        ? "inline-block" : "none",
+                    fontSize: ".9rem",
+                    height: "30px"
+                }}
+            >
+                {selectOptions.map(el => <option key={el.value} value={el.value}>{el.label}</option>)}
+            </select>
+        );
+    };
+
     render() {
         const {widget} = this.props;
         return (
@@ -1363,7 +1278,7 @@ class GraphWidget extends React.Component {
                 <h3 id={"widgettitle_" + widget.id}>
                     {widget.indexName === "Custom" ? widget.graphBand : widget.indexName}
                 </h3>
-                {this.getSarBandOption()}
+                {this.renderSarBandOption()}
             </div>
         );
     }
