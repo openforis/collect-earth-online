@@ -25,7 +25,7 @@ export default function TimeSeriesDesigner() {
                         setBands={setBands}
                         type="imageCollection"
                     />
-                    <GDSelect dataKey="graphBand" disabled items={bands} title="Band to graph"/>
+                    <GDSelect dataKey="band" disabled items={bands} title="Band to graph"/>
                     <GDSelect dataKey="reducer" items={["Min", "Max", "Mean"]} title="Reducer"/>
                 </>
             )}
