@@ -26,8 +26,7 @@ export default function TimeSeriesDesigner() {
                         type="imageCollection"
                     />
                     <GDSelect dataKey="graphBand" disabled items={bands} title="Band to graph"/>
-                    {/* FIXME why does not custom use median, but its not a choice here*/}
-                    <GDSelect dataKey="graphReducer" items={["Min", "Max", "Mean"]} title="Reducer"/>
+                    <GDSelect dataKey="reducer" items={["Min", "Max", "Mean"]} title="Reducer"/>
                 </>
             )}
             <GDDateRange/>

@@ -7,6 +7,7 @@ import GDTextArea from "./form/GDTextArea";
 import GetBands from "./form/GetBands";
 
 import {EditorContext} from "./constants";
+import GDSelect from "./form/GDSelect";
 
 export default function ImageCollectionAssetDesigner() {
     const [bands, setBands] = useState(null);
@@ -16,15 +17,20 @@ export default function ImageCollectionAssetDesigner() {
             <BaseMapSelector/>
             {/* FIXME this key should be asset name */}
             <GDInput
-                dataKey="imageCollection"
+                dataKey="assetName"
                 placeholder="LANDSAT/LC8_L1T_TOA"
                 title="GEE Image Collection Asset Name"
             />
             <GetBands
-                asset={widgetDesign.imageCollection}
+                asset={widgetDesign.assetName}
                 bands={bands}
                 setBands={setBands}
                 type="imageCollection"
+            />
+            <GDSelect
+                dataKey="reducer"
+                items={["Median", "Mosaic"]}
+                title="Collection Reducer"
             />
             <GDTextArea
                 dataKey="visParams"
