@@ -1,8 +1,6 @@
 -- Drop archived projects with odd widgets
+-- This includes all widgets that were "dualLayer", ie the precursor to dualImageWidget
 SELECT delete_project(project_uid) FROM projects WHERE project_uid IN (4998, 1057, 1054, 1080);
-
--- FIXME, rename graphBand to band
--- double check that there are no dualLayer
 
 -- Update Stats widgets
 UPDATE project_widgets
@@ -46,7 +44,7 @@ SET widget = jsonb_build_object(
     'name', widget->'name',
     'layout', widget->'layout',
     'basemapId', widget->'basemapId',
-    'graphBand', widget->'graphBand',
+    'band', widget->'graphBand',
     'startDate', widget->'startDate',
     'endDate', widget->'endDate'
 )
@@ -73,7 +71,7 @@ SET widget = jsonb_build_object(
     'layout', widget->'layout',
     'indexName', widget->'properties'->4,
     'assetName', widget->'properties'->1,
-    'graphBand', widget->'graphBand',
+    'band', widget->'graphBand',
     'reducer', widget->'graphReducer',
     'startDate', TRIM(widget->'properties'->>2),
     'endDate', TRIM(widget->'properties'->>3)

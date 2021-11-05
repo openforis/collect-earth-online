@@ -18,6 +18,7 @@ import {UnicodeIcon, formatDateISO} from "./utils/generalUtils";
 import GeoDashNavigationBar from "./geodash/GeoDashNavigationBar";
 import Switch from "./components/Switch";
 import StatsWidget from "./geodash/StatsWidget";
+import {graphWidgetList, mapWidgetList} from "./geodash/constants";
 
 class Geodash extends React.Component {
     constructor(props) {
@@ -234,135 +235,65 @@ class Geodash extends React.Component {
 }
 
 class Widget extends React.Component {
-    constructor(props) {
-        super(props);
-        this.imageCollectionList = ["imageElevation",
-                                    "ImageCollectionCustom",
-                                    "addImageCollection", // first gen ImageCollectionCustom
-                                    "preImageCollection"];
-        this.graphControlList = ["timeSeries"];
-    }
+    /// Render functions
 
     generateGridColumn = (x, w) => (x + 1) + " / span " + w;
 
     generateGridRow = (y, h) => (y + 1) + " / span " + h;
 
-    getWidgetHtml = (widget, onSliderChange, onSwipeChange) => (
-        <div
-            className={`placeholder columnSpan3 rowSpan${widget.layout.h} ${widget.isFull && "fullwidget"}`}
-            style={{
-                gridColumn: this.generateGridColumn(widget.layout.x, widget.layout.w),
-                gridRow: this.generateGridRow(widget.layout.y, widget.layout.h)
-            }}
-        >
-            {this.getCommonWidgetLayout(widget, onSliderChange, onSwipeChange)}
-        </div>
-    );
-
-    getCommonWidgetLayout = (widget, onSliderChange, onSwipeChange) => (
-        <div className="panel panel-default" id={"widget_" + widget.id}>
-            <div className="panel-heading">
-                <ul className="list-inline panel-actions pull-right">
-                    <li style={{display: "inline"}}>{widget.name}</li>
-                    <li style={{display: "inline"}}>
-                        <button
-                            className="list-inline panel-actions panel-fullscreen"
-                            onClick={() => this.props.onFullScreen(this.props.widget)}
-                            style={{color: "#31BAB0"}}
-                            title="Toggle Fullscreen"
-                            type="button"
-                        >
-                            {widget.isFull ? <UnicodeIcon icon="collapse"/> : <UnicodeIcon icon="expand"/>}
-                        </button>
-                    </li>
-                    {this.getResetMapButton(widget)}
-                </ul>
-            </div>
-            <div className="widget-container" id={"widget-container_" + widget.id}>
-                {this.getWidgetInnerHtml(widget, onSliderChange, onSwipeChange)}
-            </div>
-        </div>
-    );
-
-    getResetMapButton = widget => {
-        if (this.isMapWidget(widget)) {
+    getWidgetComponent = widget => {
+        if (mapWidgetList.includes(widget.type)) {
             return (
-                <li style={{display: "inline"}}>
-                    <button
-                        className="list-inline panel-actions panel-fullscreen"
-                        onClick={() => this.props.resetCenterAndZoom()}
-                        style={{marginRight: "10px"}}
-                        title="Recenter"
-                        type="button"
-                    >
-                        <img alt="Collect Earth Online" src="img/geodash/ceoicon.png"/>
-                    </button>
-                </li>
+                <MapWidget
+                    imageryList={this.props.imageryList}
+                    mapCenter={this.props.mapCenter}
+                    mapZoom={this.props.mapZoom}
+                    onSliderChange={this.props.onSliderChange}
+                    onSwipeChange={this.props.onSwipeChange}
+                    plotExtent={this.props.plotExtent}
+                    plotExtentPolygon={this.props.plotExtentPolygon}
+                    resetCenterAndZoom={this.props.resetCenterAndZoom}
+                    setCenterAndZoom={this.props.setCenterAndZoom}
+                    syncMapWidgets={this.syncMapWidgets}
+                    vectorSource={this.props.vectorSource}
+                    visiblePlotId={this.props.visiblePlotId}
+                    widget={widget}
+                />
             );
-        }
-    };
-
-    getWidgetInnerHtml = (widget, onSliderChange, onSwipeChange) => {
-        if (this.isMapWidget(widget)) {
+        } else if (graphWidgetList.includes(widget.type)) {
             return (
-                <div className="front">
-                    <MapWidget
-                        imageryList={this.props.imageryList}
-                        mapCenter={this.props.mapCenter}
-                        mapZoom={this.props.mapZoom}
-                        onSliderChange={onSliderChange}
-                        onSwipeChange={onSwipeChange}
-                        plotExtent={this.props.plotExtent}
-                        plotExtentPolygon={this.props.plotExtentPolygon}
-                        resetCenterAndZoom={this.props.resetCenterAndZoom}
-                        setCenterAndZoom={this.props.setCenterAndZoom}
-                        syncMapWidgets={this.syncMapWidgets}
-                        vectorSource={this.props.vectorSource}
-                        visiblePlotId={this.props.visiblePlotId}
-                        widget={widget}
-                    />
-                </div>
-            );
-        } else if (this.graphControlList.includes(widget.type)) {
-            return (
-                <div className="front">
-                    <GraphWidget
-                        initCenter={this.props.initCenter}
-                        plotExtentPolygon={this.props.plotExtentPolygon}
-                        vectorSource={this.props.vectorSource}
-                        widget={widget}
-                    />
-                </div>
+                <GraphWidget
+                    initCenter={this.props.initCenter}
+                    plotExtentPolygon={this.props.plotExtentPolygon}
+                    vectorSource={this.props.vectorSource}
+                    widget={widget}
+                />
             );
         } else if (widget.type === "statistics") {
             return (
-                <div className="front">
-                    <StatsWidget
-                        plotExtentPolygon={this.props.plotExtentPolygon}
-                        widgetId={widget.id}
-                    />
-                </div>
+                <StatsWidget
+                    plotExtentPolygon={this.props.plotExtentPolygon}
+                    widgetId={widget.id}
+                />
             );
         } else if (widget.type === "degradationTool") {
             return (
-                <div className="front">
-                    <DegradationWidget
-                        imageryList={this.props.imageryList}
-                        initCenter={this.props.initCenter}
-                        mapCenter={this.props.mapCenter}
-                        mapZoom={this.props.mapZoom}
-                        onSliderChange={onSliderChange}
-                        onSwipeChange={onSwipeChange}
-                        plotExtent={this.props.plotExtent}
-                        plotExtentPolygon={this.props.plotExtentPolygon}
-                        resetCenterAndZoom={this.props.resetCenterAndZoom}
-                        setCenterAndZoom={this.props.setCenterAndZoom}
-                        syncMapWidgets={this.syncMapWidgets}
-                        vectorSource={this.props.vectorSource}
-                        visiblePlotId={this.props.visiblePlotId}
-                        widget={widget}
-                    />
-                </div>
+                <DegradationWidget
+                    imageryList={this.props.imageryList}
+                    initCenter={this.props.initCenter}
+                    mapCenter={this.props.mapCenter}
+                    mapZoom={this.props.mapZoom}
+                    onSliderChange={this.props.onSliderChange}
+                    onSwipeChange={this.props.onSwipeChange}
+                    plotExtent={this.props.plotExtent}
+                    plotExtentPolygon={this.props.plotExtentPolygon}
+                    resetCenterAndZoom={this.props.resetCenterAndZoom}
+                    setCenterAndZoom={this.props.setCenterAndZoom}
+                    syncMapWidgets={this.syncMapWidgets}
+                    vectorSource={this.props.vectorSource}
+                    visiblePlotId={this.props.visiblePlotId}
+                    widget={widget}
+                />
             );
         } else {
             return (
@@ -377,19 +308,54 @@ class Widget extends React.Component {
         }
     };
 
-    isMapWidget = widget => this.imageCollectionList.includes(widget.type)
-        || (widget.dualImageCollection)
-        || (widget.assetName && widget.assetName.length > 0)
-        || (widget.ImageCollectionAsset && widget.ImageCollectionAsset.length > 0)
-        || (widget.featureCollection && widget.featureCollection.length > 0);
-
     render() {
-        const {widget} = this.props;
+        const {widget, onSliderChange, onSwipeChange} = this.props;
         // TODO this probably can be return this.getWidgetHtml()
         return (
-            <>
-                {this.getWidgetHtml(widget, this.props.onSliderChange, this.props.onSwipeChange)}
-            </>
+            <div
+                className={`placeholder columnSpan3 rowSpan${widget.layout.h} ${widget.isFull && "fullwidget"}`}
+                style={{
+                    gridColumn: this.generateGridColumn(widget.layout.x, widget.layout.w),
+                    gridRow: this.generateGridRow(widget.layout.y, widget.layout.h)
+                }}
+            >
+                <div className="panel panel-default" id={"widget_" + widget.id}>
+                    <div className="panel-heading">
+                        <ul className="list-inline panel-actions pull-right">
+                            <li style={{display: "inline"}}>{widget.name}</li>
+                            <li style={{display: "inline"}}>
+                                <button
+                                    className="list-inline panel-actions panel-fullscreen"
+                                    onClick={() => this.props.onFullScreen(this.props.widget)}
+                                    style={{color: "#31BAB0"}}
+                                    title="Toggle Fullscreen"
+                                    type="button"
+                                >
+                                    {widget.isFull ? <UnicodeIcon icon="collapse"/> : <UnicodeIcon icon="expand"/>}
+                                </button>
+                            </li>
+                            {this.isMapWidget(widget) && (
+                                <li style={{display: "inline"}}>
+                                    <button
+                                        className="list-inline panel-actions panel-fullscreen"
+                                        onClick={() => this.props.resetCenterAndZoom()}
+                                        style={{marginRight: "10px"}}
+                                        title="Recenter"
+                                        type="button"
+                                    >
+                                        <img alt="Collect Earth Online" src="img/geodash/ceoicon.png"/>
+                                    </button>
+                                </li>
+                            )}
+                        </ul>
+                    </div>
+                    <div className="widget-container" id={"widget-container_" + widget.id}>
+                        <div className="front">
+                            {this.getWidgetComponent(widget, onSliderChange, onSwipeChange)}
+                        </div>
+                    </div>
+                </div>
+            </div>
         );
     }
 }
@@ -619,7 +585,7 @@ class MapWidget extends React.Component {
 
     loadWidgetSource = async widget => {
         const {type} = widget;
-        if (type === "dualImageCollection") {
+        if (type === "dualImagery") {
             // FIXME, use the actual dual image
             const [url1, url2] = await Promise.all([this.wrapCache(widget), this.wrapCache(widget)]);
             this.addTileServer(url1, widget.id);
@@ -824,7 +790,7 @@ class MapWidget extends React.Component {
     renderSliderControl = () => {
         const {widget, onSliderChange, onSwipeChange} = this.props;
 
-        if (widget.dualLayer || widget.dualImageCollection) {
+        if (widget.type === "dualImagery") {
             return (
                 <div>
                     <div className="toggleSwitchContainer">

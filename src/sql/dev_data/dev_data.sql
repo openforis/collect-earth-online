@@ -148,6 +148,7 @@ VALUES
     (3, ST_SetSRID(ST_GeomFromGeoJSON('{"type":"Point","coordinates":[106.717809924561,13.7458799404487]}'), 4326), 45);
 
 -- Add 2 widgets
+-- FIXME update widget information
 INSERT INTO project_widgets
     (project_rid, dashboard_id, widget)
 VALUES

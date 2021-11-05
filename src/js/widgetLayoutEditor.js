@@ -18,7 +18,7 @@ import TimeSeriesDesigner from "./geodash/TimeSeriesDesigner";
 import PolygonDesigner from "./geodash/PolygonDesigner";
 import PreImageCollectionDesigner from "./geodash/PreImageCollectionDesigner";
 
-import {EditorContext} from "./geodash/constants";
+import {EditorContext, graphWidgetList, mapWidgetList} from "./geodash/constants";
 
 const ReactGridLayout = WidthProvider(RGL);
 
@@ -32,8 +32,8 @@ class WidgetLayoutEditor extends React.PureComponent {
             basemapId: -1,
             projectTemplateList: [],
             // Widget specific state
-            selectedWidgetType: "-1",
-            widgetTitle: "",
+            type: "-1",
+            title: "",
             widgetDesign: {}
         };
 
@@ -203,8 +203,8 @@ class WidgetLayoutEditor extends React.PureComponent {
 
     resetWidgetDesign = () => {
         this.setState({
-            selectedWidgetType: "-1",
-            widgetTitle: "",
+            type: "-1",
+            title: "",
             widgetDesign: {}
         });
     };
@@ -216,30 +216,26 @@ class WidgetLayoutEditor extends React.PureComponent {
         this.setState({widgetDesign: {...this.state.widgetDesign, [dataKey]: val}});
     };
 
-    onDataBasemapSelectChanged = event => {
-        this.setState({basemapId: parseInt(event.target.value)});
+    updateTitle = newTitle => {
+        this.setState({title: newTitle});
     };
 
-    onWidgetTitleChange = event => {
-        this.setState({widgetTitle: event.target.value});
-    };
-
-    updateWidgetType = newWidgetType => this.setState({
-        selectedWidgetType: newWidgetType,
-        widgetTitle: "",
+    updateType = newType => this.setState({
+        type: newType,
+        title: "",
         widgetDesign: {}
     });
 
-    onCancelNewWidget = () => {
+    cancelNewWidget = () => {
         this.props.closeDialogs();
         this.resetWidgetDesign();
     };
 
-    onCreateNewWidget = () => {
-        const {widgetTitle: name, widgetType: type, widgetDesign, basemapId} = this.state;
+    generateNewWidget = () => {
+        const {title: name, type, widgetDesign, basemapId} = this.state;
         const maxY = Math.max(...this.state.widgets.map(o => (o.layout.y || 0)));
-        const yval = maxY > -1 ? maxY + 1 : 0; // puts it at the bottom
-        let widget = {
+        const yval = maxY > -1 ? maxY + 1 : 0; // This yval add the new widget to the bottom
+        const baseWidget = {
             type,
             name,
             layout:{
@@ -249,94 +245,82 @@ class WidgetLayoutEditor extends React.PureComponent {
                 h: 1
             }
         };
-        // FIXME, use immutable design, and spread widgetDesign
-        if (type === "statistics") {
-            widget = {...widget};
-        } else if (type === "imageAsset" || type === "imageElevation") {
-            // image elevation is a specific image asset
-            const {visParams, assetName} = widgetDesign;
-            widget.basemapId = basemapId;
-            widget.assetName = assetName;
-            widget.visParams = JSON.parse(visParams || "{}");
-        } else if (type === "degradationTool") {
-            const {graphBand, startDate, endDate} = widgetDesign;
-            widget.basemapId = basemapId;
-            widget.graphBand = graphBand || "NDFI"; // FIXME, make sure this is the default or check for error
-            widget.startDate = startDate;
-            widget.endDate = endDate;
-        } else if (type === "polygonCompare") {
-            const {assetName, visParams, field} = widgetDesign;
-            widget.basemapId = this.state.basemapId;
-            widget.assetName = assetName;
-            widget.field = field;
-            widget.visParams = JSON.parse(visParams || "{}");
-        } else if (type === "timeSeries") {
-            const {startDate, endDate, indexName, assetName, graphBand, reducer} = widgetDesign;
-            widget.indexName = indexName;
-            widget.assetName = assetName;
-            widget.graphBand = graphBand;
-            widget.reducer = reducer;
-            widget.startDate = startDate;
-            widget.endDate = endDate;
-        } else if (type === "preImageCollection") {
-            const {startDate, endDate, indexName, bands, min, max, cloudLessThan} = widgetDesign;
-            widget.basemapId = basemapId;
-            widget.indexName = indexName;
-            widget.bands = bands;
-            widget.min = min;
-            widget.max = max;
-            widget.cloudLessThan = cloudLessThan;
-            widget.startDate = startDate;
-            widget.endDate = endDate;
-        } else if (type === "imageCollectionAsset") {
-            const {assetName, reducer, visParams, startDate, endDate} = widgetDesign;
-            widget.basemapId = basemapId;
-            widget.assetName = assetName;
-            widget.visParams = JSON.parse(visParams || "{}");
-            widget.reducer = reducer;
-            widget.startDate = startDate;
-            widget.endDate = endDate;
-        } else if (type === "dualImageCollection") {
-            // FIXME, this is a stub.  Will need to get each image.
-            const {img1, img2} = widget;
-            widget.img1 = img1;
-            widget.img2 = img2;
-        } else {
-            console.error("Invalid widget type.");
-            widget = {};
-        }
+        // FIXME, keep widgetDesign as its own key
+        // FIXME, potential reduction in this logic if we save the parse visParams when checking.
 
-        fetch(
-            "/geo-dash/create-widget",
-            {
-                method: "POST",
-                headers: {
-                    "Accept": "application/json",
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify({
-                    projectId: this.props.projectId,
-                    widgetJSON: JSON.stringify(widget)
+        // Base widget + widget design
+        if (["statistics", "timeSeries"].includes(type)) {
+            return {
+                ...baseWidget,
+                ...widgetDesign
+            };
+        // Base widget + basemap + widget design
+        } else if (["degradationTool", "preImageCollection", "dualImagery"].includes(type)) {
+            return {
+                ...baseWidget,
+                basemapId,
+                ...widgetDesign
+            };
+        // Base widget + widget design, vixParams parsed
+        } else if (["imageAsset", "imageElevation"].includes(type)) {
+            const {visParams} = widgetDesign;
+            return {
+                ...baseWidget,
+                ...widgetDesign,
+                visParams: JSON.parse(visParams || "{}")
+            };
+        // Base widget + basemap + widget design, vixParams parsed
+        } else if (["polygonCompare", "imageCollectionAsset"].includes(type)) {
+            const {visParams} = widgetDesign;
+            return {
+                ...baseWidget,
+                basemapId,
+                ...widgetDesign,
+                visParams: JSON.parse(visParams || "{}")
+            };
+        } else {
+            return null;
+        }
+    };
+
+    createNewWidget = () => {
+        // FIXME, verify widget design first
+        const newWidget = this.generateNewWidget();
+        if (newWidget) {
+            fetch(
+                "/geo-dash/create-widget",
+                {
+                    method: "POST",
+                    headers: {
+                        "Accept": "application/json",
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        projectId: this.props.projectId,
+                        widgetJSON: JSON.stringify(newWidget)
+                    })
+                }
+            )
+                .then(response => (response.ok ? response.json() : Promise.reject(response)))
+                .then(data => {
+                    this.setState({
+                        widgets: data
+                    });
+                    this.props.closeDialogs();
+                    this.resetWidgetDesign();
                 })
-            }
-        )
-            .then(response => (response.ok ? response.json() : Promise.reject(response)))
-            .then(data => {
-                this.props.closeDialogs();
-                this.setState({
-                    widgets: data
+                .catch(error => {
+                    console.error(error);
+                    alert("Error creating widget. See console for details.");
                 });
-                this.resetWidgetDesign();
-            })
-            .catch(error => {
-                console.error(error);
-                alert("Error creating widget. See console for details.");
-            });
+        } else {
+            alert("Invalid selection, unable to generate new widget.");
+        }
     };
 
     /// ReactGridLayout
 
-    onRemoveItem = widgetId => {
+    removeLayoutItem = widgetId => {
         const {widgets} = this.state;
         const removedWidget = widgets.find(w => w.id === parseInt(widgetId));
         this.deleteWidgetFromServer(removedWidget);
@@ -357,23 +341,19 @@ class WidgetLayoutEditor extends React.PureComponent {
 
     /// Render
 
-    getImageByType = imageType => (imageType === "getStats" ? "/img/geodash/statssample.gif"
-        : (!imageType || imageType.toLowerCase().includes("image")) ? "/img/geodash/mapsample.gif"
-            : (imageType.toLowerCase().includes("degradationtool")) ? "/img/geodash/degsample.gif"
-                : "/img/geodash/graphsample.gif");
-
-    getAvailableBandsControl = (isDual, isCollection) => (
-        <>
-            <div style={{display: "flex", justifyContent: "space-between", alignItems: "center"}}>
-                <label>Available Bands</label>
-                <button className="btn btn-sm btn-secondary mb-1" onClick={() => this.getBandsFromGateway(isDual, isCollection)} type="button">Refresh</button>
-            </div>
-            <label>{isDual
-                ? this.state.availableBandsDual || "Click on refresh to see the Available Bands."
-                : this.state.availableBands || "Click on refresh to see the Available Bands."}
-            </label>
-        </>
-    );
+    getImageByType = widgetType => {
+        if (widgetType === "statistics") {
+            return "/img/geodash/statssample.gif";
+        } else if (widgetType === "degradationTool") {
+            return "/img/geodash/degsample.gif";
+        } else if (mapWidgetList.includes(widgetType)) {
+            return "/img/geodash/mapsample.gif";
+        } else if (graphWidgetList.includes(widgetType)) {
+            return "/img/geodash/graphsample.gif";
+        } else {
+            return "";
+        }
+    };
 
     // Create new widget main form
 
@@ -382,15 +362,14 @@ class WidgetLayoutEditor extends React.PureComponent {
             <button
                 className="btn btn-secondary"
                 data-dismiss="modal"
-                onClick={this.onCancelNewWidget}
+                onClick={this.cancelNewWidget}
                 type="button"
             >
                 Cancel
             </button>
             <button
                 className="btn btn-primary"
-                disabled={!this.state.formReady}
-                onClick={this.onCreateNewWidget}
+                onClick={this.createNewWidget}
                 type="button"
             >
                 Create
@@ -399,8 +378,8 @@ class WidgetLayoutEditor extends React.PureComponent {
     );
 
     dialogBody = () => {
-        const {WidgetDesigner} = this.widgetTypes[this.state.selectedWidgetType] || {};
-        console.log(this.widgetTypes[this.state.selectedWidgetType]);
+        const {WidgetDesigner} = this.widgetTypes[this.state.type] || {};
+        console.log(this.widgetTypes[this.state.type]);
         return (
             <form>
                 <div className="form-group">
@@ -410,7 +389,7 @@ class WidgetLayoutEditor extends React.PureComponent {
                         id="widgetTypeSelect"
                         name="widgetTypeSelect"
                         onChange={e => this.updateWidgetType(e.target.value)}
-                        value={this.state.selectedWidgetType}
+                        value={this.state.type}
                     >
                         <option value="-1">Please select type</option>
                         {_.map(this.widgetTypes,
@@ -425,10 +404,10 @@ class WidgetLayoutEditor extends React.PureComponent {
                         className="form-control"
                         id="widgetTitle"
                         name="widgetTitle"
-                        onChange={this.onWidgetTitleChange}
+                        onChange={e => this.updateTitle(e.target.value)}
                         placeholder="Enter title"
                         type="text"
-                        value={this.state.widgetTitle}
+                        value={this.state.title}
                     />
                 </div>
                 {WidgetDesigner && <WidgetDesigner/>}
@@ -491,13 +470,13 @@ class WidgetLayoutEditor extends React.PureComponent {
                                 >
                                     {widget.name}
                                     <span
-                                        onClick={() => this.onRemoveItem(widget.id)}
+                                        onClick={() => this.removeLayoutItem(widget.id)}
                                         style={{cursor: "pointer"}}
                                     >
-                                    X
+                                        X
                                     </span>
                                 </h3>
-                                <span className="text text-danger text-center">Sample Image</span>
+                                <span className="text text-danger text-center w-100">Sample Image</span>
                             </div>
                         ))}
                     </ReactGridLayout>
