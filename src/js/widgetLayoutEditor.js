@@ -12,7 +12,6 @@ import GeoDashModal from "./geodash/GeoDashModal";
 import GeoDashNavigationBar from "./geodash/GeoDashNavigationBar";
 import ImageAssetDesigner from "./geodash/ImageAssetDesigner";
 import ImageCollectionAssetDesigner from "./geodash/ImageCollectionAssetDesigner";
-import ImageCollectionDesigner from "./geodash/ImageCollectionDesigner";
 import ImageElevationDesigner from "./geodash/ImageElevationDesigner";
 import StatsDesigner from "./geodash/StatsDesigner";
 import TimeSeriesDesigner from "./geodash/TimeSeriesDesigner";
@@ -35,11 +34,7 @@ class WidgetLayoutEditor extends React.PureComponent {
             // Widget specific state
             selectedWidgetType: "-1",
             widgetTitle: "",
-            widgetDesign: {},
-            formReady: false,
-            // consider defaults
-            graphBandDeg: "NDFI",
-            graphReducer: "Min"
+            widgetDesign: {}
         };
 
         this.widgetTypes = {
@@ -78,14 +73,6 @@ class WidgetLayoutEditor extends React.PureComponent {
             timeSeries: {
                 title: "Time Series Graph",
                 WidgetDesigner: TimeSeriesDesigner
-            },
-            degradationTool: {
-                title: "Degradation Tool",
-                WidgetDesigner: DegradationDesigner
-            },
-            polygonCompare: {
-                title: "Polygon Compare",
-                WidgetDesigner: PolygonDesigner
             }
         };
     }
@@ -267,10 +254,10 @@ class WidgetLayoutEditor extends React.PureComponent {
             widget = {...widget};
         } else if (type === "imageAsset" || type === "imageElevation") {
             // image elevation is a specific image asset
-            const {visParams, assetName} = widgetDesign; // FIXME
+            const {visParams, assetName} = widgetDesign;
             widget.basemapId = basemapId;
             widget.assetName = assetName;
-            widget.visParams = JSON.parse(visParams || "{}"); // FIXME, verify that parsed is good.
+            widget.visParams = JSON.parse(visParams || "{}");
         } else if (type === "degradationTool") {
             const {graphBand, startDate, endDate} = widgetDesign;
             widget.basemapId = basemapId;
@@ -284,11 +271,11 @@ class WidgetLayoutEditor extends React.PureComponent {
             widget.field = field;
             widget.visParams = JSON.parse(visParams || "{}");
         } else if (type === "timeSeries") {
-            const {startDate, endDate, indexName, assetName, graphBand, graphReducer} = widgetDesign;
+            const {startDate, endDate, indexName, assetName, graphBand, reducer} = widgetDesign;
             widget.indexName = indexName;
             widget.assetName = assetName;
             widget.graphBand = graphBand;
-            widget.graphReducer = graphReducer;
+            widget.reducer = reducer;
             widget.startDate = startDate;
             widget.endDate = endDate;
         } else if (type === "preImageCollection") {
@@ -301,43 +288,22 @@ class WidgetLayoutEditor extends React.PureComponent {
             widget.cloudLessThan = cloudLessThan;
             widget.startDate = startDate;
             widget.endDate = endDate;
+        } else if (type === "imageCollectionAsset") {
+            const {assetName, reducer, visParams, startDate, endDate} = widgetDesign;
+            widget.basemapId = basemapId;
+            widget.assetName = assetName;
+            widget.visParams = JSON.parse(visParams || "{}");
+            widget.reducer = reducer;
+            widget.startDate = startDate;
+            widget.endDate = endDate;
+        } else if (type === "dualImageCollection") {
             // FIXME, this is a stub.  Will need to get each image.
             const {img1, img2} = widget;
             widget.img1 = img1;
             widget.img2 = img2;
-        } else if (type === "imageCollectionAsset") {
-            widget.properties = ["", "", "", "", ""];
-            widget.filterType = "";
-            widget.visParams = JSON.parse(this.state.visParams);
-            widget.ImageCollectionAsset = this.state.imageCollection;
-            widget.basemapId = this.state.basemapId;
         } else {
-            const properties = [];
-            const prop4 = this.state.selectedDataType !== null ? this.state.selectedDataType : "";
-            if (["ImageCollection"].includes(type)) {
-                widget.basemapId = this.state.basemapId;
-            }
-            properties[0] = type;
-            properties[1] = "";
-            properties[2] = this.state.startDate;
-            properties[3] = this.state.endDate;
-            properties[4] = prop4;
-
-            widget.properties = properties;
-            if (["LANDSAT5", "LANDSAT7", "LANDSAT8", "Sentinel2"].includes(this.state.selectedDataType)) {
-                widget.filterType = this.state.selectedDataType;
-                widget.visParams = {
-                    bands: this.state.widgetBands,
-                    min: this.state.widgetMin,
-                    max: this.state.widgetMax,
-                    cloudLessThan: this.state.widgetCloudScore
-                };
-            }
-            widget.dualLayer = this.state.dualLayer;
-            if (widget.dualLayer) {
-                widget.dualStart = this.state.startDate2;
-                widget.dualEnd = this.state.endDate2;
-            }
+            console.error("Invalid widget type.");
+            widget = {};
         }
 
         fetch(

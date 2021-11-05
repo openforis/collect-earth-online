@@ -19,27 +19,6 @@ import GeoDashNavigationBar from "./geodash/GeoDashNavigationBar";
 import Switch from "./components/Switch";
 import StatsWidget from "./geodash/StatsWidget";
 
-function getGatewayPath(widget, collectionName) {
-    const fts = {
-        "LANDSAT5": "Landsat5Filtered",
-        "LANDSAT7": "Landsat7Filtered",
-        "LANDSAT8": "Landsat8Filtered",
-        "Sentinel2": "FilteredSentinel"
-    };
-    if (widget.filterType && widget.filterType.length > 0) {
-        return fts[widget.filterType];
-    } else if (widget.ImageCollectionAsset && widget.ImageCollectionAsset.length > 0) {
-        return "ImageCollectionAsset";
-    } else if (widget.properties && widget.properties[0] === "ImageCollectionCustom") {
-        return "meanImageByMosaicCollections";
-    } else if (collectionName.trim().length > 0) {
-        return "cloudMaskImageByMosaicCollection";
-    } else {
-        // FIXME, dont have a default, all paths should exist
-        return "ImageCollectionbyIndex";
-    }
-}
-
 class Geodash extends React.Component {
     constructor(props) {
         super(props);
@@ -575,21 +554,9 @@ class MapWidget extends React.Component {
         });
 
         let postObject = {};
-        let collectionName = "";
-        let dateFrom = "";
-        let dateTo = "";
-        let requestedIndex = "";
-        let path = "";
-        let dualImageObject = null;
-        let bands = "";
-        if (widget.properties.length === 5) {
-            bands = widget.properties[4];
-        }
-        widget.bands = bands;
 
         // FIXME, post object should spread widget or {name, type, eeType, layout, ...payload}
         if (widget.type === "imageAsset" || widget.type === "imageElevation") {
-            // Should be type imageAsset or imageElevation
             const {assetName, visParams} = widget;
             postObject = {
                 path: "image",
@@ -631,110 +598,24 @@ class MapWidget extends React.Component {
                 startDate,
                 endDate
             };
+        } else if (widget.type === "imageCollectionAsset") {
+            const {assetName, reducer, visParams, startDate, endDate} = widget;
+            postObject = {
+                path: "imageCollection",
+                assetName,
+                reducer,
+                visParams,
+                startDate,
+                endDate
+            };
         } else if (widget.dualImageCollection) {
-            const {plotExtentPolygon} = this.props;
-            const firstImage = widget.dualImageCollection[0];
-            const secondImage = widget.dualImageCollection[1];
-            collectionName = firstImage.collectionType;
-            requestedIndex = this.getRequestedIndex(collectionName);
-            collectionName = this.convertCollectionName(collectionName);
-
-            dateFrom = firstImage.startDate;
-            dateTo = firstImage.endDate;
-            const shortWidget = {};
-            shortWidget.filterType = firstImage.filterType;
-            shortWidget.properties = [];
-            shortWidget.properties.push(collectionName);
-            shortWidget.assetName = firstImage.assetName;
-            shortWidget.ImageCollectionAsset = firstImage.ImageCollectionAsset;
-            path = getGatewayPath(shortWidget, collectionName);
-            shortWidget.visParams = firstImage.visParams;
-            shortWidget.min = firstImage.min != null ? firstImage.min : "";
-            shortWidget.max = firstImage.max != null ? firstImage.max : "";
-            shortWidget.band = firstImage.band != null ? firstImage.band : "";
-            postObject.visParams = this.getImageParams(shortWidget);
-
-            if (postObject.visParams.cloudLessThan) {
-                postObject.bands = postObject.visParams.bands;
-                postObject.min = postObject.visParams.min;
-                postObject.max = postObject.visParams.max;
-                postObject.cloudLessThan = parseInt(postObject.visParams.cloudLessThan);
-            }
-            // Create the fetch object for the second call here
-            dualImageObject = {};
-            dualImageObject.collectionName = secondImage.collectionType;
-            dualImageObject.index = this.getRequestedIndex(dualImageObject.collectionName);
-            dualImageObject.collectionName = this.convertCollectionName(dualImageObject.collectionName);
-            dualImageObject.dateFrom = secondImage.startDate;
-            dualImageObject.dateTo = secondImage.endDate;
-            dualImageObject.geometry = plotExtentPolygon;
-
-            const shortWidget2 = {};
-            shortWidget2.filterType = secondImage.filterType;
-            shortWidget2.properties = [];
-            shortWidget2.properties.push(dualImageObject.collectionName);
-            shortWidget2.assetName = secondImage.assetName;
-            shortWidget2.ImageCollectionAsset = secondImage.ImageCollectionAsset;
-            dualImageObject.path = getGatewayPath(shortWidget2, dualImageObject.collectionName);
-            shortWidget2.visParams = secondImage.visParams;
-            shortWidget2.min = secondImage.min != null ? secondImage.min : "";
-            shortWidget2.max = secondImage.max != null ? secondImage.max : "";
-            shortWidget2.band = secondImage.band != null ? secondImage.band : "";
-            if (shortWidget2.visParams && shortWidget2.visParams.cloudLessThan != null) {
-                dualImageObject.bands = shortWidget2.visParams.bands;
-                dualImageObject.min = shortWidget2.visParams.min;
-                dualImageObject.max = shortWidget2.visParams.max;
-                dualImageObject.cloudLessThan = parseInt(shortWidget2.visParams.cloudLessThan);
-            }
-
-            dualImageObject.visParams = this.getImageParams(shortWidget2);
-            // work on image asset here there will be a variable assetName in the dualImageCollection in which case we should call the gateway /image with imageParams
-            if (firstImage.assetName) {
-                postObject.assetName = firstImage.assetName;
-                postObject.imageName = firstImage.assetName;
-                postObject.visParams = firstImage.visParams;
-            }
-            if (secondImage.assetName) {
-                dualImageObject.assetName = secondImage.assetName;
-                dualImageObject.imageName = secondImage.assetName;
-                dualImageObject.visParams = secondImage.visParams;
-            }
-            if (firstImage.ImageCollectionAsset) {
-                postObject.ImageCollectionAsset = firstImage.ImageCollectionAsset;
-                postObject.imageName = firstImage.ImageCollectionAsset;
-                postObject.visParams = firstImage.visParams;
-            }
-            if (secondImage.ImageCollectionAsset) {
-                dualImageObject.ImageCollectionAsset = secondImage.ImageCollectionAsset;
-                dualImageObject.imageName = secondImage.ImageCollectionAsset;
-                dualImageObject.visParams = secondImage.visParams;
-            }
+            // TODO, for dual image call this function twice
         } else {
-            collectionName = widget.properties[1];
-            dateFrom = widget.properties[2].trim() ? widget.properties[2].trim() : widget.startDate;
-            dateTo = widget.properties[3].trim() ? widget.properties[3].trim() : widget.endDate;
-            requestedIndex = this.getRequestedIndex(widget.properties[0]);
-            path = getGatewayPath(widget, collectionName);
-            postObject.visParams = this.getImageParams(widget);
-
-            if (postObject.visParams.cloudLessThan) {
-                postObject.bands = postObject.visParams.bands;
-                postObject.min = postObject.visParams.min;
-                postObject.max = postObject.visParams.max;
-                postObject.cloudLessThan = parseInt(postObject.visParams.cloudLessThan);
-            }
-            if (widget.ImageCollectionAsset) {
-                postObject.ImageCollectionAsset = widget.ImageCollectionAsset;
-                postObject.imageName = widget.ImageCollectionAsset;
-            }
+            postObject = {};
         }
 
-        postObject.collectionName = collectionName;
-        postObject.dateFrom = dateFrom;
-        postObject.dateTo = dateTo;
-        postObject.index = requestedIndex;
-        postObject.path = path;
         // see if we need to fetch or just add the tile server
+        const dualImageObject = widget.type === "imageAsset";
         if (typeof (Storage) !== "undefined"
             && (this.checkForCache(postObject, widget, false)
                 || (widget.dualImageCollection
@@ -894,27 +775,6 @@ class MapWidget extends React.Component {
             .catch(error => console.error(error));
     };
 
-    // FIXME, parse all visParams in widgetLayoutEditor
-    getImageParams = widget => {
-        if (widget.visParams) {
-            if (typeof widget.visParams === "string") {
-                try {
-                    return JSON.parse(widget.visParams);
-                } catch (e) {
-                    return widget.visParams;
-                }
-            } else {
-                return widget.visParams;
-            }
-        } else {
-            return {
-                min: (widget.min && widget.min > 0) ? widget.min : null,
-                max: (widget.max && widget.max > 0) ? widget.max : null,
-                bands: widget.bands
-            };
-        }
-    };
-
     pauseGeeLayer = e => {
         const layers = e.target.getLayers().getArray();
         layers.forEach(lyr => {
@@ -923,24 +783,6 @@ class MapWidget extends React.Component {
             }
         });
     };
-
-    getRequestedIndex = collectionName => (
-        ["ImageCollectionNDVI",
-         "ImageCollectionEVI",
-         "ImageCollectionEVI2",
-         "ImageCollectionNDMI",
-         "ImageCollectionNDWI"].includes(collectionName)
-            ? collectionName.replace("ImageCollection", "")
-            : "");
-
-    convertCollectionName = collectionName => (
-        ["ImageCollectionNDVI",
-         "ImageCollectionEVI",
-         "ImageCollectionEVI2",
-         "ImageCollectionNDMI",
-         "ImageCollectionNDWI"].includes(collectionName)
-            ? ""
-            : collectionName);
 
     addSecondMapLayer = (url, token, widgetid) => {
         if (this.state.mapRef) {
