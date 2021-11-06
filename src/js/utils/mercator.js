@@ -257,8 +257,8 @@ mercator.createSource = (sourceConfig,
         const theJson = {
             path: "getPlanetTile",
             apiKey: sourceConfig.accessToken,
-            dateFrom: sourceConfig.startDate,
-            dateTo: sourceConfig.endDate,
+            startDate: sourceConfig.startDate,
+            endDate: sourceConfig.endDate,
             layerCount: 20, // FIXME: what should this optimally be?
             geometry: extent
         };

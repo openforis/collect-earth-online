@@ -549,12 +549,14 @@ class MapWidget extends React.Component {
             return {path: "image", ...widget};
         } else if (widget.type === "degradationTool") {
             const {stretch} = this.state;
+            // FIXME, it looks like stretch is calculated by type + stretch.  A bit redundant logic here.
             const {selectedDate, degDataType, plotExtentPolygon} = this.props;
             return {
                 path: "getDegradationTileUrl",
                 imageDate: selectedDate,
                 stretch: degDataType === "landsat" ? stretch : "SAR",
-                geometry: plotExtentPolygon
+                geometry: plotExtentPolygon,
+                degDataType
             };
         } else if (widget.type === "polygonCompare") {
             return {path: "getTileUrlFromFeatureCollection", ...widget};

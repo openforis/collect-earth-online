@@ -122,7 +122,8 @@ class WidgetLayoutEditor extends React.PureComponent {
         if (assetName && assetName !== "") {
             const postObject = {
                 path: "getAvailableBands",
-                [assetType]: assetName
+                assetName,
+                assetType
             };
             fetch("/geo-dash/gateway-request", {
                 method: "POST",
