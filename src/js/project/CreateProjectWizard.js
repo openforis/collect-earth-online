@@ -301,7 +301,7 @@ export default class CreateProjectWizard extends React.Component {
                 && "# of Reviews must be at least 2.",
             (qaqcMethod === "overlap" && timesToReview > users.length && users.length > 1)
                 && "# of Reviews cannot be greater than the number of assigned users.",
-            (userMethod !== "none" && qaqcMethod === "sme" && (_.union(users, smes)).length > 0)
+            (userMethod !== "none" && qaqcMethod === "sme" && (_.intersection(users, smes)).length > 0)
                 && "Users cannot be an Assigned User and an SME. Please remove the duplicate users."
 
         ];
