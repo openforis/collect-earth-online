@@ -389,7 +389,7 @@ class WidgetLayoutEditor extends React.PureComponent {
                         className="form-control"
                         id="widgetTypeSelect"
                         name="widgetTypeSelect"
-                        onChange={e => this.updateWidgetType(e.target.value)}
+                        onChange={e => this.updateType(e.target.value)}
                         value={this.state.type}
                     >
                         <option value="-1">Please select type</option>
