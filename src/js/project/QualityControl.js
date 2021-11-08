@@ -120,7 +120,6 @@ export default class QualityControl extends React.Component {
                             <label className="col-5" htmlFor="percent">Percent:</label>
                             <div className="col-5 d-flex align-items-center">
                                 <input
-                                    className="form-control"
                                     id="percent"
                                     max="100"
                                     min="0"
