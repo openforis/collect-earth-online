@@ -497,7 +497,7 @@ class MapWidget extends React.Component {
 
     fetchSourceUrl = async postObject => {
         // Why even get degradation params if you just exit here?
-        if (postObject.path === "getDegradationTileUrl") {
+        if (postObject.path === "degradationTileUrl") {
             return;
         }
         return fetch("/geo-dash/gateway-request", {
@@ -552,14 +552,14 @@ class MapWidget extends React.Component {
             // FIXME, it looks like stretch is calculated by type + stretch.  A bit redundant logic here.
             const {selectedDate, degDataType, plotExtentPolygon} = this.props;
             return {
-                path: "getDegradationTileUrl",
+                path: "degradationTileUrl",
                 imageDate: selectedDate,
                 stretch: degDataType === "landsat" ? stretch : "SAR",
                 geometry: plotExtentPolygon,
                 degDataType
             };
         } else if (widget.type === "polygonCompare") {
-            return {path: "getTileUrlFromFeatureCollection", ...widget};
+            return {path: "featureCollection", ...widget};
         } else if (widget.type === "preImageCollection") {
             const {indexName} = widget;
             const path = ["LANDSAT5", "LANDSAT7", "LANDSAT8"].includes(indexName)
@@ -988,7 +988,7 @@ class GraphWidget extends React.Component {
                     "Content-Type": "application/json"
                 },
                 body: JSON.stringify({
-                    path:  "getImagePlotDegradation",
+                    path:  "degradationTimeSeries",
                     ...widget,
                     geometry: plotExtentPolygon
                 })
