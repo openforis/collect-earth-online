@@ -75,7 +75,7 @@ export default class GraphWidget extends React.Component {
                     "Content-Type": "application/json"
                 },
                 body: JSON.stringify({
-                    path:  "getImagePlotDegradation",
+                    path:  "degradationTimeSeries",
                     ...widget,
                     geometry: plotExtentPolygon
                 })

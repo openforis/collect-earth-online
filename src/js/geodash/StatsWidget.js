@@ -19,7 +19,7 @@ export default class StatsWidget extends React.Component {
             },
             body: JSON.stringify({
                 extent: plotExtentPolygon,
-                path: "getStats"
+                path: "statistics"
             })
         })
             .then(res => res.json())

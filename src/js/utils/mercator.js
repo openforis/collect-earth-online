@@ -351,7 +351,7 @@ mercator.createSource = (sourceConfig,
 
         const endDate = new Date(sourceConfig.year, sourceConfig.month, 0);
         const theJson = {
-            path: sourceConfig.type === "Sentinel2" ? "FilteredSentinel" : "FilteredSentinelSAR",
+            path: sourceConfig.type === "Sentinel2" ? "FilteredSentinel2" : "FilteredSentinelSAR",
             bands,
             min: sourceConfig.min,
             max: sourceConfig.max,
