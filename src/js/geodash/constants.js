@@ -7,6 +7,8 @@ export const mapWidgetList = [
     "imageElevation",
     "imageCollectionAsset",
     "dualImagery",
-    "polygonCompare"
+    "polygonCompare",
+    "preImageCollection"
 ];
+
 export const graphWidgetList = ["timeSeries"];
