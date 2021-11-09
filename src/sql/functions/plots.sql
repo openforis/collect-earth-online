@@ -45,7 +45,7 @@ CREATE OR REPLACE FUNCTION select_limited_project_plots(_project_id integer, _ma
     SELECT plot_uid,
         center,
         flagged,
-        CASE WHEN (assigned = 0 AND collected = 1) OR (assigned = collected)
+        CASE WHEN (assigned = 0 AND collected = 1) OR (assigned > 0 AND assigned = collected)
             THEN 'analyzed'
         WHEN assigned > collected AND collected > 1
             THEN 'partial'
