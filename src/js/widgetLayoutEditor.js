@@ -118,7 +118,6 @@ class WidgetLayoutEditor extends React.PureComponent {
     };
 
     getBandsFromGateway = (assetName, assetType, callback) => {
-        // FIXME, test if assetType can be proper case the the ee object
         if (assetName && assetName !== "") {
             const postObject = {
                 path: "getAvailableBands",
