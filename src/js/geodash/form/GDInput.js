@@ -2,11 +2,9 @@ import React, {useContext, useEffect} from "react";
 
 import {EditorContext} from "../constants";
 
-export default function GDInput({title, placeholder, dataKey, disabled, defaultText}) {
+export default function GDInput({title, placeholder, dataKey, disabled, defaultText = ""}) {
     const {setWidgetDesign, widgetDesign} = useContext(EditorContext);
-    // useEffect(() => {
-    //     if (defaultText) setWidgetDesign(dataKey, defaultText);
-    // });
+    useEffect(() => setWidgetDesign(dataKey, defaultText), []);
 
     return (
         <div className="form-group">
@@ -18,7 +16,7 @@ export default function GDInput({title, placeholder, dataKey, disabled, defaultT
                 onChange={e => setWidgetDesign(dataKey, e.target.value)}
                 placeholder={placeholder}
                 type="text"
-                value={defaultText || widgetDesign[dataKey]}
+                value={widgetDesign[dataKey]}
             />
         </div>
     );

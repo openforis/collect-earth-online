@@ -5,6 +5,7 @@ import GDSelect from "./form/GDSelect";
 import GetBands from "./form/GetBands";
 
 import {EditorContext} from "./constants";
+import GDInput from "./form/GDInput";
 
 export default function TimeSeriesDesigner() {
     const [bands, setBands] = useState(null);
@@ -13,11 +14,17 @@ export default function TimeSeriesDesigner() {
         <>
             <GDSelect
                 dataKey="indexName"
+                defaultSelection="NDVI"
                 items={["NDVI", "EVI", "EVI 2", "NDMI", "NDWI", "Custom"]}
                 title="Data Type"
             />
             {widgetDesign.indexName === "Custom" && (
                 <>
+                    <GDInput
+                        dataKey="assetName"
+                        placeholder="LANDSAT/LC8_L1T_TOA"
+                        title="GEE Image Collection Asset Name"
+                    />
                     <GetBands
                         asset={widgetDesign.imageCollection}
                         bands={bands}
@@ -26,7 +33,13 @@ export default function TimeSeriesDesigner() {
                         type="imageCollection"
                     />
                     <GDSelect dataKey="band" disabled items={bands} title="Band to graph"/>
-                    <GDSelect dataKey="reducer" items={["Min", "Max", "Mean"]} title="Reducer"/>
+                    <GDSelect
+                        dataKey="reducer"
+                        defaultSelection="min"
+                        items={["Min", "Max", "Mean"]}
+                        lowerCase
+                        title="Reducer"
+                    />
                 </>
             )}
             <GDDateRange/>

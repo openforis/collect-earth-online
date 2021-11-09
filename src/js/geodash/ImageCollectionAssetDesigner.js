@@ -15,7 +15,6 @@ export default function ImageCollectionAssetDesigner() {
     return (
         <>
             <BaseMapSelector/>
-            {/* FIXME this key should be asset name */}
             <GDInput
                 dataKey="assetName"
                 placeholder="LANDSAT/LC8_L1T_TOA"
@@ -29,7 +28,9 @@ export default function ImageCollectionAssetDesigner() {
             />
             <GDSelect
                 dataKey="reducer"
+                defaultSelection="median"
                 items={["Median", "Mosaic"]}
+                lowerCase
                 title="Collection Reducer"
             />
             <GDTextArea
