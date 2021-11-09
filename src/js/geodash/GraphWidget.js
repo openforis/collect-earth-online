@@ -12,11 +12,14 @@ export default class GraphWidget extends React.Component {
         this.state = {
             graphRef: null,
             selectSarGraphBand: "VV",
+            // TODO, this can be a single map with keys that match the possible types.
             chartDataSeriesLandsat: [],
             chartDataSeriesSar: [],
             nonDegChartData: []
         };
     }
+
+    /// Lifecycle
 
     componentDidMount() {
         const {widget: {type}} = this.props;
@@ -43,6 +46,8 @@ export default class GraphWidget extends React.Component {
         window.removeEventListener("resize", this.handleResize);
     }
 
+    /// API
+
     invalidData = data => {
         if (data.errMsg) {
             return data.errMsg;
@@ -60,7 +65,7 @@ export default class GraphWidget extends React.Component {
         const {widget, degDataType, plotExtentPolygon, handleSelectDate} = this.props;
 
         // Try to load existing data first.
-        // TODO, do we need this.  My thought is that getChartOptions is called again when the state updates.
+        // TODO, do we need the cloneDeep here?  My thought is that getChartOptions is called again when the state updates.
         if (degDataType === "landsat" && chartDataSeriesLandsat.length > 0) {
             graphRef.update({series: _.cloneDeep(chartDataSeriesLandsat)});
         } else if (degDataType === "sar"
@@ -190,6 +195,8 @@ export default class GraphWidget extends React.Component {
             .catch(error => console.log(error));
     };
 
+    /// Helpers
+
     multiComparator = (a, b) => ((a[0] < b[0]) ? -1
         : (a[0] > b[0])
             ? 1
@@ -210,6 +217,8 @@ export default class GraphWidget extends React.Component {
             console.log(e.message);
         }
     };
+
+    /// High Charts
 
     getChartData = () => {
         const {widget, degDataType} = this.props;
