@@ -2,11 +2,9 @@ import React, {useContext, useEffect} from "react";
 
 import {EditorContext} from "../constants";
 
-export default function GDTextArea({title, placeholder, dataKey, defaultText}) {
+export default function GDTextArea({title, placeholder, dataKey, defaultText = ""}) {
     const {setWidgetDesign, widgetDesign} = useContext(EditorContext);
-    // useEffect(() => {
-    //     if (defaultText) setWidgetDesign(dataKey, defaultText);
-    // });
+    useEffect(() => setWidgetDesign(dataKey, defaultText), []);
 
     return (
         <div className="form-group">

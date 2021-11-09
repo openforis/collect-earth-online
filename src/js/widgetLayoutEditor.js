@@ -457,7 +457,7 @@ class WidgetLayoutEditor extends React.PureComponent {
                             <div
                                 key={widget.id}
                                 data-grid={{...widget.layout, minW: 3, w: Math.max(widget.layout.w, 3)}}
-                                style={{backgroundImage: "url(" + this.getImageByType(widget.properties[0]) + ")"}}
+                                style={{backgroundImage: "url(" + this.getImageByType(widget.type) + ")"}}
                             >
                                 <h3
                                     className="px-2 d-flex justify-content-between"
