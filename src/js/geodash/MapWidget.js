@@ -14,9 +14,11 @@ export default class MapWidget extends React.Component {
         super(props);
         this.state = {
             mapRef: null,
-            opacity: 0.9, // FIXME, opacity is being kept separately here even though it is also part of widget
             geeTimeOut: null,
-            stretch: 321
+            stretch: 321,
+            opacity: 0.9,
+            sliderType: this.props.widget.swipeAsDefault ? "swipe" : "opacity",
+            swipeValue: 1.0
         };
     }
 
@@ -98,11 +100,10 @@ export default class MapWidget extends React.Component {
 
     /// State
 
-    setStretch = evt => this.setState({stretch: parseInt(evt.target.value)});
-
+    // TODO, move to degradation widget
     toggleDegDataType = checked => this.props.handleDegDataType(checked ? "sar" : "landsat");
 
-    onOpacityChange = newOpacity => {
+    setOpacity = newOpacity => {
         try {
             this.setState({opacity: newOpacity});
             this.state.mapRef.getLayers().forEach(lyr => {
@@ -133,7 +134,8 @@ export default class MapWidget extends React.Component {
                 degDataType
             };
         } else if (widget.type === "polygonCompare") {
-            return {path: "featureCollection", ...widget};
+            const {visiblePlotId} = this.props;
+            return {path: "featureCollection", matchID: visiblePlotId, ...widget};
         } else if (widget.type === "preImageCollection") {
             const {indexName} = widget;
             const path = ["LANDSAT5", "LANDSAT7", "LANDSAT8"].includes(indexName)
@@ -207,8 +209,8 @@ export default class MapWidget extends React.Component {
             }),
             id: "widgetmapobject_" + widget.id
         });
-        map.getView().on("propertychange", onpropertychange);
 
+        // TODO, what is this doing?
         function onpropertychange() {
             map.dispatchEvent("movestart");
             const view = map.getView();
@@ -217,6 +219,8 @@ export default class MapWidget extends React.Component {
                 view.on("propertychange", onpropertychange);
             });
         }
+
+        map.getView().on("propertychange", onpropertychange);
 
         map.on("movestart", this.pauseGeeLayer);
         map.on("moveend", e => {
@@ -364,7 +368,8 @@ export default class MapWidget extends React.Component {
     /// Render functions
 
     renderSliderControl = () => {
-        const {widget, onSliderChange, onSwipeChange} = this.props;
+        const {sliderType, opacity, swipeValue} = this.state;
+        const {widget} = this.props;
 
         if (widget.type === "dualImagery") {
             return (
@@ -373,10 +378,10 @@ export default class MapWidget extends React.Component {
                         <img
                             alt="Opacity"
                             height="20px"
-                            onClick={() => onSliderChange(widget)}
+                            onClick={() => this.setState({sliderType: "opacity"})}
                             src="img/geodash/opacity.png"
                             style={{
-                                opacity: widget.sliderType === "opacity" ? "1.0" : "0.25",
+                                opacity: sliderType === "opacity" ? "1.0" : "0.25",
                                 cursor: "pointer"
                             }}
                             title="Opacity"
@@ -386,10 +391,10 @@ export default class MapWidget extends React.Component {
                         <img
                             alt="Swipe"
                             height="20px"
-                            onClick={() => onSliderChange(widget)}
+                            onClick={() => this.setState({sliderType: "opacity"})}
                             src="img/geodash/swipe.png"
                             style={{
-                                opacity: widget.sliderType === "swipe" ? "1.0" : "0.25",
+                                opacity: sliderType === "swipe" ? "1.0" : "0.25",
                                 cursor: "pointer"
                             }}
                             title="Swipe"
@@ -401,22 +406,22 @@ export default class MapWidget extends React.Component {
                         id={"rangeWidget_" + widget.id}
                         max="1"
                         min="0"
-                        onChange={e => this.onOpacityChange(parseInt(e.target.value))}
+                        onChange={e => this.setOpacity(parseInt(e.target.value))}
                         step=".01"
-                        style={{display: widget.sliderType === "opacity" ? "block" : "none"}}
+                        style={{display: sliderType === "opacity" ? "block" : "none"}}
                         type="range"
-                        value={this.state.opacity}
+                        value={opacity}
                     />
                     <input
                         className="mapRange dual"
                         id={"swipeWidget_" + widget.id}
                         max="1"
                         min="0"
-                        onChange={evt => onSwipeChange(widget, evt)}
+                        onChange={e => this.setState({swipeValue: parseInt(e.target.value)})}
                         step=".01"
-                        style={{display: widget.sliderType === "swipe" ? "block" : "none"}}
+                        style={{display: sliderType === "swipe" ? "block" : "none"}}
                         type="range"
-                        value={this.props.widget.swipeValue}
+                        value={swipeValue}
                     />
                 </div>
             );
@@ -427,10 +432,10 @@ export default class MapWidget extends React.Component {
                     id={"rangeWidget_" + widget.id}
                     max="1"
                     min="0"
-                    onChange={e => this.onOpacityChange(parseInt(e.target.value))}
+                    onChange={e => this.setOpacity(parseInt(e.target.value))}
                     step=".01"
                     type="range"
-                    value={this.state.opacity}
+                    value={opacity}
                 />
             );
         }
@@ -455,7 +460,7 @@ export default class MapWidget extends React.Component {
                                         <span className="ctrl-text font-weight-bold">Bands: </span>
                                         <select
                                             className="form-control"
-                                            onChange={evt => this.setStretch(evt)}
+                                            onChange={e => this.setState({stretch: parseInt(e.target.value)})}
                                             style={{
                                                 maxWidth: "65%",
                                                 display: "inline-block",
