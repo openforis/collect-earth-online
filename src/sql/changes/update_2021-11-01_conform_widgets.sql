@@ -63,7 +63,20 @@ SET widget = jsonb_build_object(
 )
 WHERE widget->'properties'->>0 = 'featureCollection';
 
--- Update Time Series widgets
+-- Update Time Series widgets not custom
+UPDATE project_widgets
+SET widget = jsonb_build_object(
+    'type', 'timeSeries',
+    'name', widget->'name',
+    'layout', widget->'layout',
+    'indexName', widget->'properties'->4,
+    'startDate', TRIM(widget->'properties'->>2),
+    'endDate', TRIM(widget->'properties'->>3)
+)
+WHERE widget->'properties'->>0 ilike '%timeseries%';
+    AND widget->'properties'->>4 <> 'Custom'
+
+-- Update Time Series widgets custom
 UPDATE project_widgets
 SET widget = jsonb_build_object(
     'type', 'timeSeries',
@@ -72,11 +85,12 @@ SET widget = jsonb_build_object(
     'indexName', widget->'properties'->4,
     'assetName', widget->'properties'->1,
     'band', widget->'graphBand',
-    'reducer', widget->'graphReducer',
+    'reducer', LOWER(widget->>'graphReducer'),
     'startDate', TRIM(widget->'properties'->>2),
     'endDate', TRIM(widget->'properties'->>3)
 )
 WHERE widget->'properties'->>0 ilike '%timeseries%';
+    AND widget->'properties'->>4 = 'Custom'
 
 -- Update Pre Image Collection -> emodis widgets
 UPDATE project_widgets
@@ -84,6 +98,7 @@ SET widget = jsonb_build_object(
     'type', 'preImageCollection',
     'name', widget->>'name',
     'layout', widget->'layout',
+    'basemapId', widget->'basemapId',
     'indexName', widget->'properties'->4,
     'startDate', TRIM(widget->'properties'->>2),
     'endDate', TRIM(widget->'properties'->>3)
@@ -97,12 +112,12 @@ WHERE widget->'properties'->>0 in (
 );
 
 -- Update Pre Image Collection -> landsat / sentinel widgets
--- FIXME, flatten visParams
 UPDATE project_widgets
 SET widget = jsonb_build_object(
     'type', 'preImageCollection',
     'name', widget->>'name',
     'layout', widget->'layout',
+    'basemapId', widget->'basemapId',
     'indexName', widget->'properties'->>4,
     'bands', widget->'visParams'->'bands',
     'min', widget->'visParams'->'min',
@@ -124,6 +139,7 @@ SET widget = jsonb_build_object(
     'type', 'imageCollectionAsset',
     'name', widget->>'name',
     'layout', widget->'layout',
+    'basemapId', widget->'basemapId',
     'assetName', widget->'properties'->>1,
     'reducer', 'cloud',
     'visParams', CASE WHEN widget->'min' IS NULL
@@ -148,6 +164,7 @@ SET widget = jsonb_build_object(
     'type', 'imageCollectionAsset',
     'name', widget->>'name',
     'layout', widget->'layout',
+    'basemapId', widget->'basemapId',
     'assetName', widget->'properties'->>1,
     'reducer', 'mean',
     'visParams', widget->'visParams',
@@ -172,6 +189,18 @@ SET widget = jsonb_build_object(
 WHERE widget->'ImageCollectionAsset' IS NOT NULL
     AND widget->>'ImageCollectionAsset' <> '';
 
+-- Update Dual Imagery widgets, step 1
+UPDATE project_widgets
+SET widget = jsonb_build_object(
+    'type', 'dualImagery',
+    'name', widget->>'name',
+    'layout', widget->'layout',
+    'basemapId', widget->'basemapId',
+    'swipeAsDefault', coalesce(widget->>'swipeAsDefault', 'false')::jsonb,
+    'image1', widget->'dualImageCollection'->0,
+    'image2', widget->'dualImageCollection'->1
+)
+WHERE widget->>'dualImageCollection' IS NOT NULL;
 
 -- Clean visParams
 CREATE OR REPLACE FUNCTION clean_json_string(_str text)

@@ -27,12 +27,12 @@ export default function PreImageCollectionDesigner() {
                 title="Data Type"
             />
             <GDDateRange/>
-            {["LANDSAT5", "LANDSAT7", "LANDSAT8", "Sentinel-2"].includes(widgetDesign.indexName) && (
+            {["LANDSAT5", "LANDSAT7", "LANDSAT8", "Sentinel2"].includes(widgetDesign.indexName) && (
                 <>
+                    {/* FIXME set to defaults */}
                     <GDInput dataKey="bands" placeholder="XX,XX,XX" title="Bands"/>
-                    {/* TODO set these to number inputs */}
-                    <GDInput dataKey="min" placeholder="-1" title="Min"/>
-                    <GDInput dataKey="max" placeholder="100" title="Max"/>
+                    <GDInput dataKey="min" placeholder="-1,0.5,0.7" title="Min"/>
+                    <GDInput dataKey="max" placeholder="10,11,15" title="Max"/>
                     <GDInput dataKey="cloudLessThan" placeholder="90" title="Cloud Score"/>
                 </>
             )}

@@ -76,26 +76,27 @@ export default class MapWidget extends React.Component {
         if (postObject.path === "degradationTileUrl") {
             return;
         }
-        return fetch("/geo-dash/gateway-request", {
-            method: "POST",
-            headers: {
-                "Accept": "application/json",
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify(postObject)
-        })
-            .then(res => (res.ok ? res.json() : Promise.reject()))
-            .then(data => {
-                // FIXME, what other fields are in data that I can just save URL?
-                if (data && data.hasOwnProperty("url")) {
-                    this.setCache(postObject, data);
-                    return data.url;
-                } else {
-                    console.warn("Wrong Data Returned");
-                    return false;
-                }
-            })
-            .catch(err => console.error(err));
+        try {
+            const res = await fetch("/geo-dash/gateway-request", {
+                method: "POST",
+                headers: {
+                    "Accept": "application/json",
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(postObject)
+            });
+            const data = await (res.ok ? res.json() : Promise.reject());
+            // FIXME, what other fields are in data that I can just save URL?
+            if (data && data.hasOwnProperty("url")) {
+                this.setCache(postObject, data);
+                return data.url;
+            } else {
+                console.warn("Wrong Data Returned");
+                return false;
+            }
+        } catch (err) {
+            return console.error(err);
+        }
     };
 
     /// State
@@ -103,20 +104,12 @@ export default class MapWidget extends React.Component {
     // TODO, move to degradation widget
     toggleDegDataType = checked => this.props.handleDegDataType(checked ? "sar" : "landsat");
 
-    setOpacity = newOpacity => {
-        try {
-            this.setState({opacity: newOpacity});
-            this.state.mapRef.getLayers().forEach(lyr => {
-                if (lyr.get("id") && lyr.get("id").includes(this.props.widget.id)) {
-                    lyr.setOpacity(newOpacity);
-                }
-            });
-        } catch (e) {
-            console.log(e.message);
-        }
+    updateOpacity = newOpacity => {
+        this.setState({opacity: newOpacity});
+        this.setOpacity(newOpacity);
     };
 
-    /// Helpers
+    /// Get widget URL
 
     // TODO update widget to {name, type, params}
     getPostObject = widget => {
@@ -151,13 +144,14 @@ export default class MapWidget extends React.Component {
         }
     };
 
-    wrapCache = widget => {
+    wrapCache = async widget => {
         const postObject = this.getPostObject(widget);
         const cacheUrl = this.checkForCache(postObject);
-        if (cacheUrl) {
-            return Promise.resolve(cacheUrl);
+        if (false && cacheUrl) {
+            return cacheUrl;
         } else {
-            this.fetchSourceUrl(widget);
+            const url = await this.fetchSourceUrl(postObject);
+            return url;
         }
     };
 
@@ -165,13 +159,37 @@ export default class MapWidget extends React.Component {
         const {type} = widget;
         if (type === "dualImagery") {
             // FIXME, use the actual dual image
-            const [url1, url2] = await Promise.all([this.wrapCache(widget), this.wrapCache(widget)]);
+            const [url1, url2] = await Promise.all([this.wrapCache(widget.image1), this.wrapCache(widget.image2)]);
             this.addTileServer(url1, widget.id);
             this.addSecondTileServer(url2, widget.id);
         } else {
             const url = await this.wrapCache(widget);
             this.addTileServer(url, widget.id);
         }
+    };
+
+    /// Cache
+
+    checkForCache = postObject => {
+        const msPerDay = 24 * 60 * 60 * 1000;
+        const jsonKey = JSON.stringify(postObject);
+        const {url, lastGatewayUpdate} = JSON.parse(localStorage.getItem(jsonKey)) || {};
+        if (url && new Date() - new Date(lastGatewayUpdate) < msPerDay) {
+            return url;
+        } else {
+            localStorage.removeItem(jsonKey);
+            return null;
+        }
+    };
+
+    setCache = (postObject, data) => {
+        localStorage.setItem(
+            JSON.stringify(postObject),
+            JSON.stringify({
+                ...data,
+                lastGatewayUpdate: new Date()
+            })
+        );
     };
 
     /// OpenLayers
@@ -291,25 +309,27 @@ export default class MapWidget extends React.Component {
     };
 
     addTileServer = (url, widgetId) => {
-        window.setTimeout(() => {
-            const source = new XYZ({
-                url
-            });
-            source.on("tileloaderror", error => {
-                try {
-                    window.setTimeout(() => {
-                        error.tile.attempt = error.tile.attempt ? error.tile.attempt + 1 : 1;
-                        if (error.tile.attempt < 5) error.tile.load();
-                    }, Math.floor(Math.random() * (1250 - 950 + 1) + 950));
-                } catch (e) {
-                    console.log(e.message);
-                }
-            });
-            this.state.mapRef.addLayer(new TileLayer({
-                source,
-                id: "widgetmap_" + widgetId
-            }));
-        }, Math.floor(Math.random() * (300 - 200 + 1) + 200));
+        if (url) {
+            window.setTimeout(() => {
+                const source = new XYZ({
+                    url
+                });
+                source.on("tileloaderror", error => {
+                    try {
+                        window.setTimeout(() => {
+                            error.tile.attempt = error.tile.attempt ? error.tile.attempt + 1 : 1;
+                            if (error.tile.attempt < 5) error.tile.load();
+                        }, Math.floor(Math.random() * (1250 - 950 + 1) + 950));
+                    } catch (e) {
+                        console.log(e.message);
+                    }
+                });
+                this.state.mapRef.addLayer(new TileLayer({
+                    source,
+                    id: "widgetmap_" + widgetId
+                }));
+            }, Math.floor(Math.random() * (300 - 200 + 1) + 200));
+        }
     };
 
     addSecondTileServer = (url, widgetId) => {
@@ -340,29 +360,16 @@ export default class MapWidget extends React.Component {
         }, false);
     };
 
-    /// Cache
-
-    checkForCache = postObject => {
-        const jsonKey = JSON.stringify(postObject);
-        const {url, lastGatewayUpdate} = JSON.parse(localStorage.getItem(jsonKey));
-        const currentDate = new Date();
-        currentDate.setDate(currentDate.getDate() - 1);
-        if (!url || new Date(lastGatewayUpdate) > currentDate) {
-            localStorage.removeItem(jsonKey);
-            return null;
-        } else {
-            return url;
+    setOpacity = newOpacity => {
+        try {
+            this.state.mapRef.getLayers().forEach(lyr => {
+                if (lyr.get("id") && lyr.get("id").includes(this.props.widget.id)) {
+                    lyr.setOpacity(newOpacity);
+                }
+            });
+        } catch (e) {
+            console.log(e.message);
         }
-    };
-
-    setCache = (postObject, data) => {
-        localStorage.setItem(
-            JSON.stringify(postObject),
-            JSON.stringify({
-                ...data,
-                lastGatewayUpdate: new Date()
-            })
-        );
     };
 
     /// Render functions
@@ -406,8 +413,8 @@ export default class MapWidget extends React.Component {
                         id={"rangeWidget_" + widget.id}
                         max="1"
                         min="0"
-                        onChange={e => this.setOpacity(parseInt(e.target.value))}
-                        step=".01"
+                        onChange={e => this.updateOpacity(parseFloat(e.target.value))}
+                        step=".05"
                         style={{display: sliderType === "opacity" ? "block" : "none"}}
                         type="range"
                         value={opacity}
@@ -417,8 +424,8 @@ export default class MapWidget extends React.Component {
                         id={"swipeWidget_" + widget.id}
                         max="1"
                         min="0"
-                        onChange={e => this.setState({swipeValue: parseInt(e.target.value)})}
-                        step=".01"
+                        onChange={e => this.setState({swipeValue: parseFloat(e.target.value)})}
+                        step=".05"
                         style={{display: sliderType === "swipe" ? "block" : "none"}}
                         type="range"
                         value={swipeValue}
@@ -432,8 +439,8 @@ export default class MapWidget extends React.Component {
                     id={"rangeWidget_" + widget.id}
                     max="1"
                     min="0"
-                    onChange={e => this.setOpacity(parseInt(e.target.value))}
-                    step=".01"
+                    onChange={e => this.updateOpacity(parseFloat(e.target.value))}
+                    step=".05"
                     type="range"
                     value={opacity}
                 />
@@ -442,19 +449,19 @@ export default class MapWidget extends React.Component {
     };
 
     render() {
-        const {isDegradation} = this.props;
+        const {widget, degDataType, isDegradation} = this.props;
         return (
             <>
                 <div
                     className="minmapwidget"
-                    id={"widgetmap_" + this.props.widget.id}
+                    id={"widgetmap_" + widget.id}
                     style={{width:"100%", minHeight:"200px"}}
                 />
                 {this.renderSliderControl()}
                 <div className="row">
                     {isDegradation && (
                         <>
-                            {this.props.degDataType === "landsat"
+                            {degDataType === "landsat"
                                 ? (
                                     <div className="col-6">
                                         <span className="ctrl-text font-weight-bold">Bands: </span>
@@ -487,7 +494,6 @@ export default class MapWidget extends React.Component {
                             </div>
                         </>
                     )}
-                    {this.renderStretchToggle()}
                 </div>
             </>
         );

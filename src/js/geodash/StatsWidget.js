@@ -66,7 +66,7 @@ export default class StatsWidget extends React.Component {
     };
 
     render() {
-        const {area, elevation, totalPop: {stats}} = this.state;
+        const {area, elevation, totalPop} = this.state;
         const {widgetId} = this.props;
         return (
             <div className="minmapwidget" id={"widgetstats_" + widgetId} style={{padding: "20px"}}>
@@ -100,7 +100,7 @@ export default class StatsWidget extends React.Component {
                                     paddingTop: "12px"
                                 }}
                             >
-                                {stats}
+                                {totalPop}
                             </h3>
                         </div>
                     </div>

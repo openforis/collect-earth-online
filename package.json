@@ -56,6 +56,7 @@
     },
     "private": true,
     "dependencies": {
+        "@babel/plugin-transform-runtime": "^7.16.0",
         "@ckeditor/ckeditor5-build-classic": "^19.0.0",
         "@ckeditor/ckeditor5-react": "^2.1.0",
         "highcharts": "^9.1.0",
@@ -96,7 +97,7 @@
         "build-db-functions": "clojure -M:build-db functions",
         "webpack-dev": "webpack --config webpack.config.js --env.dev",
         "webpack-prod": "webpack --config webpack.config.js --env.prod",
-        "server-dev": "clojure -M:run-server -p 8080 -m dev",
+        "start": "clojure -M:run-server -p 8080 -m dev",
         "server-prod": "clojure -M:production:run-server -P 8443 -m prod",
         "lint": "./node_modules/.bin/eslint 'src/js/**/*' --fix"
     }

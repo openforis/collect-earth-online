@@ -9,7 +9,7 @@ import {transform as projTransform} from "ol/proj";
 import {Vector} from "ol/source";
 
 import {mercator} from "./utils/mercator";
-import {UnicodeIcon} from "./utils/generalUtils";
+import {isArray, isNumber, UnicodeIcon} from "./utils/generalUtils";
 import GeoDashNavigationBar from "./geodash/GeoDashNavigationBar";
 import StatsWidget from "./geodash/StatsWidget";
 import {graphWidgetList, mapWidgetList} from "./geodash/constants";
@@ -123,7 +123,8 @@ class Widget extends React.Component {
                                     {widget.isFull ? <UnicodeIcon icon="collapse"/> : <UnicodeIcon icon="expand"/>}
                                 </button>
                             </li>
-                            {this.isMapWidget(widget) && (
+                            {/* TODO move to bottom "map control" */}
+                            {mapWidgetList.includes(widget.type) && (
                                 <li style={{display: "inline"}}>
                                     <button
                                         className="list-inline panel-actions panel-fullscreen ml-2 p-0"
@@ -279,7 +280,8 @@ class Geodash extends React.Component {
             return [
                 new Feature(
                     new Circle(
-                        projTransform(JSON.parse(center).coordinates, "EPSG:4326", "EPSG:3857"), radius
+                        projTransform(JSON.parse(center).coordinates, "EPSG:4326", "EPSG:3857"),
+                        Number(radius)
                     )
                 )];
         } else {
@@ -287,23 +289,25 @@ class Geodash extends React.Component {
         }
     };
 
-    getVectorSource = () => Promise.resolve(new Vector({features: this.getFeatures()}));
+    getVectorSource = async () => new Vector({features: await this.getFeatures()});
 
     /// State
 
     setCenterAndZoom = (center, zoom) => {
-        if (this.state.initCenter) {
-            this.setState({
-                mapCenter: center,
-                mapZoom: zoom
-            });
-        } else {
-            this.setState({
-                initCenter: center,
-                initZoom: zoom,
-                mapCenter: center,
-                mapZoom: zoom
-            });
+        if (isArray(center) && isNumber(zoom)) {
+            if (this.state.initCenter) {
+                this.setState({
+                    mapCenter: center,
+                    mapZoom: zoom
+                });
+            } else {
+                this.setState({
+                    initCenter: center,
+                    initZoom: zoom,
+                    mapCenter: center,
+                    mapZoom: zoom
+                });
+            }
         }
     };
 
@@ -359,7 +363,7 @@ class Geodash extends React.Component {
     render() {
         const {widgets} = this.state;
         return (
-            <div className="container-fluid">
+            <div className="placeholders container-fluid">
                 {widgets.length > 0
                     ? (widgets.map(widget => (
                         <Widget
@@ -368,7 +372,7 @@ class Geodash extends React.Component {
                             initCenter={this.mapCenter}
                             mapCenter={this.state.mapCenter}
                             mapZoom={this.state.mapZoom}
-                            plotExtent={this.props.plotExtent}
+                            plotExtent={JSON.parse(this.props.plotExtent)}
                             plotExtentPolygon={this.extentToPolygon(this.props.plotExtent)}
                             resetCenterAndZoom={this.resetCenterAndZoom}
                             setCenterAndZoom={this.setCenterAndZoom}
