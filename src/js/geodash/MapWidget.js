@@ -7,7 +7,6 @@ import {XYZ} from "ol/source";
 import {Style, Stroke} from "ol/style";
 
 import {mercator} from "../utils/mercator";
-import Switch from "../components/Switch";
 
 export default class MapWidget extends React.Component {
     constructor(props) {
@@ -29,12 +28,10 @@ export default class MapWidget extends React.Component {
         const {widget} = this.props;
 
         this.loadWidgetSource(widget);
-
-        window.addEventListener("resize", this.handleResize);
     }
 
     componentDidUpdate(prevProps, prevState) {
-        if (this.props.widget.isFull !== prevProps.widget.isFull) {
+        if (this.props.isFullScreen !== prevProps.isFullScreen) {
             this.state.mapRef.updateSize();
         }
 
@@ -63,10 +60,6 @@ export default class MapWidget extends React.Component {
                 }
             }
         }
-    }
-
-    componentWillUnmount() {
-        window.removeEventListener("resize", this.handleResize);
     }
 
     /// API
@@ -270,14 +263,6 @@ export default class MapWidget extends React.Component {
         map.getView().setZoom(zoom);
     };
 
-    handleResize = () => {
-        try {
-            this.state.mapRef.updateSize();
-        } catch (e) {
-            console.log("resize issue");
-        }
-    };
-
     pauseGeeLayer = e => {
         const layers = e.target.getLayers().getArray();
         layers.forEach(lyr => {
@@ -380,7 +365,7 @@ export default class MapWidget extends React.Component {
 
         if (widget.type === "dualImagery") {
             return (
-                <div>
+                <div style={{flex: 0}}>
                     <div className="toggleSwitchContainer">
                         <img
                             alt="Opacity"
@@ -449,52 +434,14 @@ export default class MapWidget extends React.Component {
     };
 
     render() {
-        const {widget, degDataType, isDegradation} = this.props;
+        const {widget} = this.props;
         return (
             <>
                 <div
-                    className="minmapwidget"
                     id={"widgetmap_" + widget.id}
-                    style={{width:"100%", minHeight:"200px"}}
+                    style={{flex: 1}}
                 />
                 {this.renderSliderControl()}
-                <div className="row">
-                    {isDegradation && (
-                        <>
-                            {degDataType === "landsat"
-                                ? (
-                                    <div className="col-6">
-                                        <span className="ctrl-text font-weight-bold">Bands: </span>
-                                        <select
-                                            className="form-control"
-                                            onChange={e => this.setState({stretch: parseInt(e.target.value)})}
-                                            style={{
-                                                maxWidth: "65%",
-                                                display: "inline-block",
-                                                fontSize: ".8rem",
-                                                height: "30px"
-                                            }}
-                                        >
-                                            <option value={321}>R,G,B</option>
-                                            <option value={543}>SWIR,NIR,R</option>
-                                            <option value={453}>NIR,SWIR,R</option>
-                                        </select>
-                                    </div>
-                                ) : (
-                                    <div className="col-6">
-                                        <span className="ctrl-text font-weight-bold">Band Combination: </span>
-                                        <span className="ctrl-text">VV, VH, VV/VH </span>
-                                    </div>
-                                )}
-                            <div className="col-6">
-                                <span className="ctrl-text font-weight-bold">Data: </span>
-                                <span className="ctrl-text">LANDSAT </span>
-                                <Switch onChange={e => this.toggleDegDataType(e.target.checked)}/>
-                                <span className="ctrl-text"> SAR</span>
-                            </div>
-                        </>
-                    )}
-                </div>
             </>
         );
     }

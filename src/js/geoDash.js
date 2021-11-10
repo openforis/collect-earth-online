@@ -15,18 +15,15 @@ import StatsWidget from "./geodash/StatsWidget";
 import {graphWidgetList, mapWidgetList} from "./geodash/constants";
 import GraphWidget from "./geodash/GraphWidget";
 import MapWidget from "./geodash/MapWidget";
+import DegradationWidget from "./geodash/DegradationWidget";
 
-class Widget extends React.Component {
+class WidgetContainer extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
-            isFull: false
+            isFullScreen: false
         };
     }
-
-    /// State
-
-    toggleFullScreen = () => this.setState({isFull: !this.state.isFull});
 
     /// Render functions
 
@@ -39,6 +36,7 @@ class Widget extends React.Component {
             return (
                 <MapWidget
                     imageryList={this.props.imageryList}
+                    isFullScreen={this.state.isFullScreen}
                     mapCenter={this.props.mapCenter}
                     mapZoom={this.props.mapZoom}
                     plotExtent={this.props.plotExtent}
@@ -55,6 +53,7 @@ class Widget extends React.Component {
             return (
                 <GraphWidget
                     initCenter={this.props.initCenter}
+                    isFullScreen={this.state.isFullScreen}
                     plotExtentPolygon={this.props.plotExtentPolygon}
                     vectorSource={this.props.vectorSource}
                     widget={widget}
@@ -72,6 +71,7 @@ class Widget extends React.Component {
                 <DegradationWidget
                     imageryList={this.props.imageryList}
                     initCenter={this.props.initCenter}
+                    isFullScreen={this.state.isFullScreen}
                     mapCenter={this.props.mapCenter}
                     mapZoom={this.props.mapZoom}
                     plotExtent={this.props.plotExtent}
@@ -97,125 +97,60 @@ class Widget extends React.Component {
     };
 
     render() {
-        const {isFull} = this.state;
+        const {isFullScreen} = this.state;
         const {widget} = this.props;
         // TODO this probably can be return this.getWidgetHtml()
         return (
-            <div
-                className={`placeholder columnSpan3 rowSpan${widget.layout.h} ${isFull && "fullwidget"}`}
-                style={{
-                    gridColumn: this.generateGridColumn(widget.layout.x, widget.layout.w),
-                    gridRow: this.generateGridRow(widget.layout.y, widget.layout.h)
-                }}
-            >
-                <div className="panel panel-default" id={"widget_" + widget.id}>
-                    <div className="panel-heading">
-                        <ul className="list-inline panel-actions pull-right">
-                            <li style={{display: "inline"}}>{widget.name}</li>
-                            <li style={{display: "inline"}}>
-                                <button
-                                    className="list-inline panel-actions panel-fullscreen"
-                                    onClick={this.toggleFullScreen}
-                                    style={{color: "#31BAB0"}}
-                                    title="Toggle Fullscreen"
-                                    type="button"
-                                >
-                                    {widget.isFull ? <UnicodeIcon icon="collapse"/> : <UnicodeIcon icon="expand"/>}
-                                </button>
-                            </li>
-                            {/* TODO move to bottom "map control" */}
-                            {mapWidgetList.includes(widget.type) && (
-                                <li style={{display: "inline"}}>
+            <>
+                {isFullScreen && (
+                    <div className="full-screen"/>
+                )}
+                <div
+                    className={`grid-item ${widget.layout.h} ${isFullScreen && "full-widget"}`}
+                    id={"widget_" + widget.id}
+                    style={{
+                        gridColumn: this.generateGridColumn(widget.layout.x, widget.layout.w),
+                        gridRow: this.generateGridRow(widget.layout.y, widget.layout.h)
+                    }}
+                >
+                    <div className="widget-container" >
+                        <div className="widget-container-heading">
+                            <label style={{margin: 0}}>{widget.name}</label>
+                            {/* TODO, use SVG */}
+                            <div style={{right: "1rem", position: "absolute"}}>
+                                {mapWidgetList.includes(widget.type) && (
                                     <button
-                                        className="list-inline panel-actions panel-fullscreen ml-2 p-0"
+                                        className="btn ml-2 p-0"
                                         onClick={() => this.props.resetCenterAndZoom()}
+                                        style={{left: "1rem"}}
                                         title="Recenter"
                                         type="button"
                                     >
-                                        <img alt="Collect Earth Online" src="img/geodash/ceoicon.png"/>
+                                        <img
+                                            alt="Collect Earth Online"
+                                            src="img/geodash/ceoicon.png"
+                                            style={{height: "1.5rem"}}
+                                        />
                                     </button>
-                                </li>
-                            )}
-                        </ul>
-                    </div>
-                    <div className="widget-container" id={"widget-container_" + widget.id}>
-                        <div className="front">
+                                )}
+                                <button
+                                    className="btn ml-2 p-0"
+                                    onClick={() => this.setState({isFullScreen: !this.state.isFullScreen})}
+                                    style={{color: "inherit"}}
+                                    title="Toggle Fullscreen"
+                                    type="button"
+                                >
+                                    {isFullScreen ? <UnicodeIcon icon="collapse"/> : <UnicodeIcon icon="expand"/>}
+                                </button>
+                            </div>
+
+                        </div>
+                        <div className="widget-container-body">
                             {this.getWidgetComponent(widget)}
                         </div>
                     </div>
                 </div>
-            </div>
-        );
-    }
-}
-
-class DegradationWidget extends React.Component {
-    constructor(props) {
-        super(props);
-        this.state = {
-            selectedDate: "",
-            degDataType: "landsat"
-        };
-    }
-
-    handleDegDataType = dataType => {
-        this.setState({
-            degDataType: dataType
-        });
-    };
-
-    handleSelectDate = date => {
-        this.setState({selectedDate: date});
-    };
-
-    render() {
-        return (
-            <div id={"degradation_" + this.props.widget.id} style={{width: "100%", minHeight: "200px"}}>
-                <div
-                    style={{
-                        display: "table",
-                        position: "absolute",
-                        width: "100%",
-                        height: "calc(100% - 45px)"
-                    }}
-                >
-                    <div style={{display: "table-row", height: "65%"}}>
-                        <div style={{display: "table-cell", position: "relative"}}>
-                            <div className="front">
-                                <MapWidget
-                                    degDataType={this.state.degDataType}
-                                    handleDegDataType={this.handleDegDataType}
-                                    imageryList={this.props.imageryList}
-                                    isDegradation
-                                    mapCenter={this.props.mapCenter}
-                                    mapZoom={this.props.mapZoom}
-                                    plotExtent={this.props.plotExtent}
-                                    plotExtentPolygon={this.props.plotExtentPolygon}
-                                    resetCenterAndZoom={this.props.resetCenterAndZoom}
-                                    selectedDate={this.state.selectedDate}
-                                    setCenterAndZoom={this.props.setCenterAndZoom}
-                                    vectorSource={this.props.vectorSource}
-                                    widget={this.props.widget}
-                                />
-                            </div>
-                        </div>
-                    </div>
-                    <div style={{display: "table-row"}}>
-                        <div style={{display: "table-cell", position: "relative"}}>
-                            <div className="front">
-                                <GraphWidget
-                                    degDataType={this.state.degDataType}
-                                    handleSelectDate={this.handleSelectDate}
-                                    initCenter={this.props.initCenter}
-                                    plotExtentPolygon={this.props.plotExtentPolygon}
-                                    vectorSource={this.props.vectorSource}
-                                    widget={this.props.widget}
-                                />
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
+            </>
         );
     }
 }
@@ -225,8 +160,6 @@ class Geodash extends React.Component {
         super(props);
         this.state = {
             widgets: [],
-            left: 0,
-            ptop: 0,
             mapCenter: null,
             mapZoom: null,
             imageryList: [],
@@ -315,26 +248,6 @@ class Geodash extends React.Component {
         this.setCenterAndZoom(this.state.initCenter, this.state.initZoom);
     };
 
-    updateSize = which => {
-        if (which.isFull) {
-            document.body.classList.remove("bodyfull");
-        } else {
-            document.body.classList.add("bodyfull");
-        }
-        const doc = document.documentElement;
-        if ((window.pageXOffset || doc.scrollLeft) - (doc.clientLeft || 0) === 0
-                && (window.pageYOffset || doc.scrollTop) - (doc.clientTop || 0) === 0) {
-            window.scrollTo(this.state.left, this.state.ptop);
-            this.setState({left: 0, ptop: 0});
-        } else {
-            this.setState({
-                left: (window.pageXOffset || doc.scrollLeft) - (doc.clientLeft || 0),
-                ptop: (window.pageYOffset || doc.scrollTop) - (doc.clientTop || 0)
-            });
-            window.scrollTo(0, 0);
-        }
-    };
-
     /// Helpers
 
     extentToPolygon = extent => {
@@ -363,10 +276,10 @@ class Geodash extends React.Component {
     render() {
         const {widgets} = this.state;
         return (
-            <div className="placeholders container-fluid">
+            <div className="grid-layout container-fluid">
                 {widgets.length > 0
                     ? (widgets.map(widget => (
-                        <Widget
+                        <WidgetContainer
                             key={widget.id}
                             imageryList={this.state.imageryList}
                             initCenter={this.mapCenter}

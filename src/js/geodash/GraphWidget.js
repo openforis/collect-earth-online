@@ -11,7 +11,6 @@ export default class GraphWidget extends React.Component {
         super(props);
         this.state = {
             graphRef: null,
-            selectSarGraphBand: "VV",
             // TODO, this can be a single map with keys that match the possible types.
             chartDataSeriesLandsat: [],
             chartDataSeriesSar: [],
@@ -35,15 +34,12 @@ export default class GraphWidget extends React.Component {
     componentDidUpdate(prevProps, prevState) {
         if (this.props.degDataType
             && (prevProps.degDataType !== this.props.degDataType
-                || prevState.selectSarGraphBand !== this.state.selectSarGraphBand)) {
+                || prevProps.selectSarGraphBand !== this.props.selectSarGraphBand)) {
             this.loadDegradation();
         }
-        this.handleResize();
-        window.addEventListener("resize", this.handleResize);
-    }
-
-    componentWillUnmount() {
-        window.removeEventListener("resize", this.handleResize);
+        if (prevProps.isFullScreen !== this.props.isFullScreen) {
+            if (this.state.graphRef) this.state.graphRef.reflow();
+        }
     }
 
     /// API
@@ -61,8 +57,8 @@ export default class GraphWidget extends React.Component {
     };
 
     loadDegradation = () => {
-        const {chartDataSeriesLandsat, chartDataSeriesSar, selectSarGraphBand, graphRef} = this.state;
-        const {widget, degDataType, plotExtentPolygon, handleSelectDate} = this.props;
+        const {chartDataSeriesLandsat, chartDataSeriesSar, graphRef} = this.state;
+        const {widget, degDataType, plotExtentPolygon, handleSelectDate, selectSarGraphBand} = this.props;
 
         // Try to load existing data first.
         // TODO, do we need the cloneDeep here?  My thought is that getChartOptions is called again when the state updates.
@@ -82,6 +78,7 @@ export default class GraphWidget extends React.Component {
                 body: JSON.stringify({
                     path:  "degradationTimeSeries",
                     ...widget,
+                    dataType: degDataType,
                     geometry: plotExtentPolygon
                 })
             })
@@ -109,12 +106,11 @@ export default class GraphWidget extends React.Component {
                         });
                         // TODO, this can definitely be a .map.
                         compiledData.forEach((d, index) => {
-                            const cdata = this.convertData(d);
-                            const mSortData = this.sortMultiData(cdata);
+                            const cdata = this.convertData(d).sort((a, b) => a[0] - b[0]);
                             const thisDataSeries = {
                                 type: "scatter",
                                 name: theKeys[index],
-                                data: mSortData,
+                                data: cdata,
                                 valueDecimals: 20,
                                 connectNulls: true,
                                 color: "#31bab0",
@@ -196,26 +192,7 @@ export default class GraphWidget extends React.Component {
 
     /// Helpers
 
-    multiComparator = (a, b) => ((a[0] < b[0]) ? -1
-        : (a[0] > b[0])
-            ? 1
-            : 0);
-
-    sortMultiData = data => data.sort(this.multiComparator);
-
     convertData = data => data.map(d => [d[0], d[1][Object.keys(d[1])[0]]]);
-
-    handleResize = () => {
-        try {
-            if (this.state.graphRef && this.state.graphRef.bounds) {
-                const gwidget = document.getElementById("widgetgraph_" + this.props.widget.id);
-                this.state.graphRef.setSize(gwidget.clientWidth, gwidget.clientHeight, true);
-            }
-        } catch (e) {
-            console.log("handleResize error:");
-            console.log(e.message);
-        }
-    };
 
     /// High Charts
 
@@ -287,51 +264,26 @@ export default class GraphWidget extends React.Component {
     };
 
     render() {
-        const {widget, degDataType} = this.props;
-        const selectOptions = [
-            {label: "VV", value: "VV"},
-            {label: "VH", value: "VH"},
-            {label: "VV/VH", value: "VV/VH"}
-        ];
+        const {widget} = this.props;
         return (
-            <div className="minmapwidget" id={"widgetgraph_" + widget.id}>
-                <div className="minmapwidget graphwidget normal" id={"graphcontainer_" + widget.id}>
-                    {this.getChartData().length > 0
-                        ? (
-                            <HighchartsReact
-                                callback={thisChart => this.setState({graphRef: thisChart})}
-                                highcharts={Highcharts}
-                                options={this.getChartOptions()}
-                            />
-                        ) : (
-                            <img
-                                alt="Loading"
-                                src="img/geodash/ceo-loading.gif"
-                                style={{
-                                    position: "absolute",
-                                    bottom: "50%",
-                                    left: "50%"
-                                }}
-                            />
-                        )}
-                </div>
-                <h3 id={"widgettitle_" + widget.id}>
-                    {widget.indexName === "Custom" ? widget.band : widget.indexName}
-                </h3>
-                {/* Move deg HTML to deg widget */}
-                {(widget.type === "degradationTool" && degDataType === "sar") && (
-                    <select
-                        className="form-control"
-                        onChange={e => this.setState({selectSarGraphBand: e.target.value})}
-                        style={{
-                            maxWidth: "85%",
-                            fontSize: ".9rem",
-                            height: "30px"
-                        }}
-                    >
-                        {selectOptions.map(el => <option key={el.value} value={el.value}>{el.label}</option>)}
-                    </select>
-                )}
+            <div
+                id={"widget-graph_" + widget.id}
+                style={{flex: 1, alignItems: "center", justifyContent: "center", display: "flex", minHeight: 0}}
+            >
+                {this.getChartData().length > 0
+                    ? (
+                        <HighchartsReact
+                            callback={thisChart => this.setState({graphRef: thisChart})}
+                            containerProps={{style: {height: "100%", width: "100%"}}}
+                            highcharts={Highcharts}
+                            options={this.getChartOptions()}
+                        />
+                    ) : (
+                        <img
+                            alt="Loading"
+                            src="img/geodash/ceo-loading.gif"
+                        />
+                    )}
             </div>
         );
     }

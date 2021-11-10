@@ -65,111 +65,43 @@ export default class StatsWidget extends React.Component {
         }
     };
 
+    renderRow = (label, value, image) => (
+        <div className="d-flex align-items-center mb-3">
+            <img
+                alt={label + " icon"}
+                src={image}
+                style={{
+                    width: "50px",
+                    height: "50px",
+                    borderRadius: "25px",
+                    backgroundColor: "#31bab0"
+                }}
+            />
+            <div>
+                <label style={{color: "#787878", margin: "0 0 0 .5rem"}} >
+                    {label}:
+                </label>
+                <label
+                    style={{
+                        color: "#606060",
+                        fontWeight: "bold",
+                        margin: "0 0 0 .51rem"
+                    }}
+                >
+                    {value}
+                </label>
+            </div>
+        </div>
+    );
+
     render() {
         const {area, elevation, totalPop} = this.state;
         const {widgetId} = this.props;
         return (
             <div className="minmapwidget" id={"widgetstats_" + widgetId} style={{padding: "20px"}}>
-                <div>
-                    <div className="form-group">
-                        <div className="input-group">
-                            <div className="input-group-addon">
-                                <img
-                                    alt="Population"
-                                    src="img/geodash/icon-population.png"
-                                    style={{
-                                        width: "50px",
-                                        height: "50px",
-                                        borderRadius: "25px",
-                                        backgroundColor: "#31bab0"
-                                    }}
-                                />
-                            </div>
-                            <label
-                                htmlFor={"totalPop_" + widgetId}
-                                style={{color: "#787878", padding: "10px 20px"}}
-                            >
-                                Total population
-                            </label>
-                            <h3
-                                id={"totalPop_" + widgetId}
-                                style={{
-                                    color: "#606060",
-                                    fontSize: "16px",
-                                    fontWeight: "bold",
-                                    paddingTop: "12px"
-                                }}
-                            >
-                                {totalPop}
-                            </h3>
-                        </div>
-                    </div>
-                    <div className="form-group">
-                        <div className="input-group">
-                            <div className="input-group-addon">
-                                <img
-                                    alt="Area"
-                                    src="img/geodash/icon-area.png"
-                                    style={{
-                                        width: "50px",
-                                        height: "50px",
-                                        borderRadius: "25px",
-                                        backgroundColor: "#31bab0"
-                                    }}
-                                />
-                            </div>
-                            <label
-                                htmlFor={"totalArea_" + widgetId}
-                                style={{color: "#787878", padding: "10px 20px"}}
-                            >
-                                Area
-                            </label>
-                            <h3
-                                id={"totalArea_" + widgetId}
-                                style={{
-                                    color: "#606060",
-                                    fontSize: "16px",
-                                    fontWeight: "bold",
-                                    paddingTop: "12px"
-                                }}
-                            >{area}
-                            </h3>
-                        </div>
-                    </div>
-                    <div className="form-group">
-                        <div className="input-group">
-                            <div className="input-group-addon">
-                                <img
-                                    alt="Elevation"
-                                    src="img/geodash/icon-elevation.png"
-                                    style={{
-                                        width: "50px",
-                                        height: "50px",
-                                        borderRadius: "25px",
-                                        backgroundColor: "#31bab0"
-                                    }}
-                                />
-                            </div>
-                            <label
-                                htmlFor={"elevationRange_" + widgetId}
-                                style={{color: "#787878", padding: "10px 20px"}}
-                            >
-                                Elevation
-                            </label>
-                            <h3
-                                id={"elevationRange_" + widgetId}
-                                style={{
-                                    color: "#606060",
-                                    fontSize: "16px",
-                                    fontWeight: "bold",
-                                    paddingTop: "12px"
-                                }}
-                            >
-                                {elevation}
-                            </h3>
-                        </div>
-                    </div>
-                </div>
+                {this.renderRow("Total population", totalPop, "img/geodash/icon-population.png")}
+                {this.renderRow("Area", area, "img/geodash/icon-area.png")}
+                {this.renderRow("Elevation", elevation, "img/geodash/icon-elevation.png")}
             </div>
         );
     }
