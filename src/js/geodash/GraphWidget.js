@@ -1,6 +1,6 @@
 import React from "react";
 
-import _ from "lodash";
+import _, {isArray} from "lodash";
 import Highcharts from "highcharts";
 import HighchartsReact from "highcharts-react-official";
 
@@ -180,13 +180,12 @@ export default class GraphWidget extends React.Component {
             .then(data => {
                 const invalidCheck = this.invalidData(data);
                 if (invalidCheck) {
-                    console.warn(invalidCheck);
+                    console.error(invalidCheck);
                 } else {
                     const thisDataSeries = {
                         type: "area",
-                        name: widget.graphBand || indexName,
-                        data: data.timeseries
-                            .filter(v => v[0]).map(v => [v[0], v[1]]).sort((a, b) => a[0] - b[0]),
+                        name: widget.band || indexName,
+                        data: data.timeseries.filter(v => v[0]).sort((a, b) => a[0] - b[0]),
                         color: "#31bab0"
                     };
                     this.setState({nonDegChartData : [thisDataSeries]});
@@ -220,17 +219,18 @@ export default class GraphWidget extends React.Component {
 
     /// High Charts
 
+    validArray = arr => ((isArray(arr) && arr.length > 0) ? arr : null);
+
     getChartData = () => {
         const {widget, degDataType} = this.props;
         const {chartDataSeriesSar, chartDataSeriesLandsat, selectSarGraphBand, nonDegChartData} = this.state;
         return (widget.type === "degradationTool"
                 && degDataType === "sar"
-                && chartDataSeriesSar.hasOwnProperty(selectSarGraphBand)
-                && chartDataSeriesSar[selectSarGraphBand])
+                && this.validArray(chartDataSeriesSar[selectSarGraphBand]))
             || (widget.type === "degradationTool"
                 && degDataType === "landsat"
-                && chartDataSeriesLandsat)
-            || nonDegChartData
+                && this.validArray(chartDataSeriesLandsat))
+            || this.validArray(nonDegChartData)
             || [];
     };
 
@@ -252,7 +252,7 @@ export default class GraphWidget extends React.Component {
             credits: {enabled: false},
             plotOptions: {
                 area: {
-                    connectNulls: widget.indexName.toLowerCase() === "custom",
+                    connectNulls: widget.indexName && widget.indexName.toLowerCase() === "custom",
                     fillColor: {
                         linearGradient: {
                             x1: 0,
@@ -282,7 +282,7 @@ export default class GraphWidget extends React.Component {
                 split: false,
                 xDateFormat: "%Y-%m-%d"
             },
-            series: _.cloneDeep(this.getChartData)
+            series: _.cloneDeep(this.getChartData())
         };
     };
 
@@ -296,7 +296,7 @@ export default class GraphWidget extends React.Component {
         return (
             <div className="minmapwidget" id={"widgetgraph_" + widget.id}>
                 <div className="minmapwidget graphwidget normal" id={"graphcontainer_" + widget.id}>
-                    {this.getChartData.length > 0
+                    {this.getChartData().length > 0
                         ? (
                             <HighchartsReact
                                 callback={thisChart => this.setState({graphRef: thisChart})}
@@ -316,8 +316,9 @@ export default class GraphWidget extends React.Component {
                         )}
                 </div>
                 <h3 id={"widgettitle_" + widget.id}>
-                    {widget.indexName === "Custom" ? widget.graphBand : widget.indexName}
+                    {widget.indexName === "Custom" ? widget.band : widget.indexName}
                 </h3>
+                {/* Move deg HTML to deg widget */}
                 {(widget.type === "degradationTool" && degDataType === "sar") && (
                     <select
                         className="form-control"

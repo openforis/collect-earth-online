@@ -48,11 +48,8 @@
     (data-response (return-widgets project-id))))
 
 (defn gateway-request [{:keys [params json-params server-name]}]
-  (let [path (:path params)
-        url  (if (str/starts-with? server-name "local")
-               "https://ceodev.servirglobal.net:8888/"
-               "http://localhost:8881/")]
-    (client/post (str url path)
+  (let [path (:path params)]
+    (client/post (str "http://" server-name ":8888/" path)
                  {:body (tc/clj->json json-params)
                   :content-type :json
                   :accept :json})))
