@@ -9,8 +9,9 @@ export default class DegradationWidget extends React.Component {
         super(props);
         this.state = {
             selectedDate: "",
+            stretch: 321,
             degDataType: "landsat",
-            selectSarGraphBand: "VV"
+            sarGraphBand: "VV"
         };
     }
 
@@ -43,47 +44,80 @@ export default class DegradationWidget extends React.Component {
                     plotExtent={this.props.plotExtent}
                     plotExtentPolygon={this.props.plotExtentPolygon}
                     resetCenterAndZoom={this.props.resetCenterAndZoom}
+                    sarGraphBand={this.state.sarGraphBand}
                     selectedDate={this.state.selectedDate}
-                    selectSarGraphBand={this.state.selectSarGraphBand}
                     setCenterAndZoom={this.props.setCenterAndZoom}
+                    stretch={this.state.stretch}
                     vectorSource={this.props.vectorSource}
                     widget={this.props.widget}
                 />
 
-                <div className="d-flex justify-content-between">
+                <div className="settings-block">
                     {degDataType === "landsat"
                         ? (
-                            <div className="col-6">
-                                <span className="ctrl-text font-weight-bold">Map Bands: </span>
-                                <select
-                                    className="form-control"
-                                    onChange={e => this.setState({stretch: parseInt(e.target.value)})}
-                                    style={{
-                                        maxWidth: "65%",
-                                        display: "inline-block",
-                                        fontSize: ".8rem",
-                                        height: "30px"
-                                    }}
-                                >
-                                    <option value={321}>R,G,B</option>
-                                    <option value={543}>SWIR,NIR,R</option>
-                                    <option value={453}>NIR,SWIR,R</option>
-                                </select>
-                            </div>
+                            <>
+                                <div className="settings-item">
+                                    <label className="font-weight-bold" htmlFor="map-select">
+                                        Map Bands:
+                                    </label>
+                                    <select
+                                        className="form-control"
+                                        id="map-select"
+                                        onChange={e => this.setState({stretch: parseInt(e.target.value)})}
+                                        style={{
+                                            maxWidth: "65%",
+                                            display: "inline-block",
+                                            fontSize: ".8rem",
+                                            height: "30px"
+                                        }}
+                                        value={this.state.stretch}
+                                    >
+                                        <option value={321}>R,G,B</option>
+                                        <option value={543}>SWIR,NIR,R</option>
+                                        <option value={453}>NIR,SWIR,R</option>
+                                    </select>
+                                </div>
+                                <div className="settings-item">
+                                    <label className="font-weight-bold">
+                                        {`Graph Band: ${widget.band}`}
+                                    </label>
+                                </div>
+
+                            </>
                         ) : (
-                            <div className="col-6">
-                                <span className="ctrl-text font-weight-bold">Map Band Combination: </span>
-                                <span className="ctrl-text">VV, VH, VV/VH </span>
-                            </div>
+                            <>
+                                <div className="settings-item">
+                                    <label className="settings-item font-weight-bold">
+                                    Map Bands: VV, VH, VV/VH
+                                    </label>
+                                </div>
+                                <div className="settings-item">
+                                    <label className="font-weight-bold" html-for="graph-select">Graph Band: </label>
+                                    <select
+                                        className="form-control"
+                                        id="graph-select"
+                                        onChange={e => this.setState({sarGraphBand: e.target.value})}
+                                        style={{
+                                            maxWidth: "85%",
+                                            fontSize: ".9rem",
+                                            height: "30px"
+                                        }}
+                                    >
+                                        {selectOptions.map(el => (
+                                            <option key={el.value} value={el.value}>{el.label}</option>
+                                        ))}
+                                    </select>
+                                </div>
+                            </>
                         )}
-                    <div className="col-6">
-                        <span className="ctrl-text font-weight-bold">Data: </span>
-                        <span className="ctrl-text mr-1">LANDSAT</span>
+                    <div className="settings-item">
+                        <span className="font-weight-bold">Data: </span>
+                        <span className="mx-2">LANDSAT</span>
                         <Switch
                             check={degDataType === "sar"}
                             onChange={e => this.setState({degDataType: e.target.checked ? "sar" : "landsat"})}
                         />
-                        <span className="ctrl-text mr-2">SAR</span>
+                        <span className="mr-2">SAR</span>
                     </div>
                 </div>
 
@@ -93,25 +127,10 @@ export default class DegradationWidget extends React.Component {
                     initCenter={this.props.initCenter}
                     isFullScreen={this.props.isFullScreen}
                     plotExtentPolygon={this.props.plotExtentPolygon}
+                    sarGraphBand={this.state.sarGraphBand}
                     vectorSource={this.props.vectorSource}
                     widget={this.props.widget}
                 />
-                {degDataType === "sar" && (
-                    <div className="d-flex">
-                        <span className="ctrl-text font-weight-bold">Graph Band: </span>
-                        <select
-                            className="form-control"
-                            onChange={e => this.setState({selectSarGraphBand: e.target.value})}
-                            style={{
-                                maxWidth: "85%",
-                                fontSize: ".9rem",
-                                height: "30px"
-                            }}
-                        >
-                            {selectOptions.map(el => <option key={el.value} value={el.value}>{el.label}</option>)}
-                        </select>
-                    </div>
-                )}
             </div>
         );
     }

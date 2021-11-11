@@ -457,7 +457,10 @@ class WidgetLayoutEditor extends React.PureComponent {
                             <div
                                 key={widget.id}
                                 data-grid={{...widget.layout, minW: 3, w: Math.max(widget.layout.w, 3)}}
-                                style={{backgroundImage: "url(" + this.getImageByType(widget.type) + ")"}}
+                                style={{
+                                    backgroundImage: "url(" + this.getImageByType(widget.type) + ")",
+                                    backgroundSize: "cover"
+                                }}
                             >
                                 <h3
                                     className="px-2 d-flex justify-content-between"
@@ -469,14 +472,16 @@ class WidgetLayoutEditor extends React.PureComponent {
                                     }}
                                 >
                                     {widget.name}
-                                    <span
+                                    <div
                                         onClick={() => this.removeLayoutItem(widget.id)}
                                         style={{cursor: "pointer"}}
                                     >
                                         X
-                                    </span>
+                                    </div>
                                 </h3>
-                                <span className="text text-danger text-center w-100">Sample Image</span>
+                                <div className="text text-danger text-center w-100 font-weight-bold">
+                                    Sample Image
+                                </div>
                             </div>
                         ))}
                     </ReactGridLayout>

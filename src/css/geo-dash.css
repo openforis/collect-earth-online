@@ -1,9 +1,6 @@
 #content {
     overflow-x: auto;
 }
-.ctrl-text {
-    font-size: .75rem;
-}
 
 /*
  * React grid layout
@@ -271,6 +268,35 @@
 .mapRange:focus::-ms-fill-upper {
     background: #367ebd;
 }
+
+/*
+ * Degradation Widget
+ */
+
+.settings-block {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    padding: 0 1rem;
+}
+.settings-block input {
+    padding: 0 .25rem;
+}
+.settings-block label {
+    margin-bottom: 0;
+}
+.settings-item {
+    align-items: center;
+    justify-content: center;
+    display: flex;
+    font-weight: bold;
+    font-size: .85rem;
+    height: 2rem;
+    white-space: nowrap;
+}
+
+
 .btn.btn-primary {
     backface-visibility: unset !important;
 }

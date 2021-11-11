@@ -43,6 +43,7 @@ export default class MapWidget extends React.Component {
             || this.state.stretch !== prevState.stretch
             || this.props.degDataType !== prevProps.degDataType) {
             if (this.props.widget.type === "degradationTool" && this.props.selectedDate !== "") {
+                // TODO add stretch, imageDate, degDataType
                 const postObject = this.getPostObject(this.props.widget);
                 const map = this.state.mapRef;
                 // TODO just update source
