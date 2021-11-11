@@ -6,15 +6,14 @@ import HighchartsReact from "highcharts-react-official";
 
 import {formatDateISO} from "../utils/generalUtils";
 
+window.Highcharts = Highcharts;
+
 export default class GraphWidget extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
             graphRef: null,
-            // TODO, this can be a single map with keys that match the possible types.
-            chartDataSeriesLandsat: [],
-            chartDataSeriesSar: [],
-            nonDegChartData: []
+            chartData: {}
         };
     }
 
@@ -34,7 +33,7 @@ export default class GraphWidget extends React.Component {
     componentDidUpdate(prevProps, prevState) {
         if (this.props.degDataType
             && (prevProps.degDataType !== this.props.degDataType
-                || prevProps.selectSarGraphBand !== this.props.selectSarGraphBand)) {
+                || prevProps.sarGraphBand !== this.props.sarGraphBand)) {
             this.loadDegradation();
         }
         if (prevProps.isFullScreen !== this.props.isFullScreen) {
@@ -57,18 +56,13 @@ export default class GraphWidget extends React.Component {
     };
 
     loadDegradation = () => {
-        const {chartDataSeriesLandsat, chartDataSeriesSar, graphRef} = this.state;
-        const {widget, degDataType, plotExtentPolygon, handleSelectDate, selectSarGraphBand} = this.props;
+        const {widget, degDataType, plotExtentPolygon, sarGraphBand} = this.props;
 
         // Try to load existing data first.
-        // TODO, do we need the cloneDeep here?  My thought is that getChartOptions is called again when the state updates.
-        if (degDataType === "landsat" && chartDataSeriesLandsat.length > 0) {
-            graphRef.update({series: _.cloneDeep(chartDataSeriesLandsat)});
-        } else if (degDataType === "sar"
-            && chartDataSeriesSar.hasOwnProperty(selectSarGraphBand)
-            && chartDataSeriesSar[selectSarGraphBand].length > 0) {
-            graphRef.update({series: _.cloneDeep(chartDataSeriesSar[selectSarGraphBand])});
-        } else {
+        const chartKey = degDataType === "landsat" ? widget.band : sarGraphBand;
+        const chartData = this.getChartData(chartKey);
+
+        if (!this.validArray(chartData)) {
             fetch("/geo-dash/gateway-request", {
                 method: "POST",
                 headers: {
@@ -88,64 +82,13 @@ export default class GraphWidget extends React.Component {
                     if (invalidCheck) {
                         console.warn(invalidCheck);
                     } else {
-                        // TODO, nested loops is a no-no
-                        const theKeys = Object.keys(data.timeseries[0][1]);
-                        const compiledData = [];
-                        data.timeseries.forEach(d => {
-                            for (let i = 0; i < theKeys.length; i += 1) {
-                                const tempData = [];
-                                const anObject = {};
-                                anObject[theKeys[i]] = d[1][theKeys[i]];
-                                tempData.push(d[0]);
-                                tempData.push(anObject);
-                                if (compiledData.length - 1 < i) {
-                                    compiledData[i] = [];
-                                }
-                                compiledData[i].push(tempData);
-                            }
-                        });
-                        // TODO, this can definitely be a .map.
-                        compiledData.forEach((d, index) => {
-                            const cdata = this.convertData(d).sort((a, b) => a[0] - b[0]);
-                            const thisDataSeries = {
-                                type: "scatter",
-                                name: theKeys[index],
-                                data: cdata,
-                                valueDecimals: 20,
-                                connectNulls: true,
-                                color: "#31bab0",
-                                allowPointSelect: true,
-                                point: {
-                                    cursor: "pointer",
-                                    events: {
-                                        select: e => {
-                                            handleSelectDate(formatDateISO(new Date(e.target.x)));
-                                        }
-                                    }
-                                },
-                                tooltip: {
-                                    pointFormat: "<span style=\"color:{series.color}\">{point.x:%Y-%m-%d}</span>: <b>{point.y:.6f}</b><br/>",
-                                    valueDecimals: 20,
-                                    split: false,
-                                    xDateFormat: "%Y-%m-%d"
-                                }
-                            };
-                            if (degDataType === "landsat") {
-                                this.setState({
-                                    chartDataSeriesLandsat: [
-                                        ...this.state.chartDataSeriesLandsat,
-                                        thisDataSeries
-                                    ]
-                                });
-                            } else {
-                                this.setState({
-                                    chartDataSeriesSar: {
-                                        ...this.state.chartDataSeriesSar,
-                                        [theKeys[index]]: [thisDataSeries]
-                                    }
-                                });
-                            }
-                        });
+                        const objChartData = data.timeseries.reduce((acc, cur) => {
+                            const [time, values] = cur;
+                            return _.reduce(values, (acc2, value, key) => (
+                                {...acc2, [key]: [...(acc2[key] || []), [time, value]]}
+                            ), acc);
+                        }, {});
+                        this.setState({chartData: {...this.state.chartData, ...objChartData}});
                     }
                 })
                 .catch(error => console.log(error));
@@ -154,9 +97,7 @@ export default class GraphWidget extends React.Component {
 
     loadTimeSeries = () => {
         const {widget, plotExtentPolygon} = this.props;
-
-        const {indexName} = widget;
-        const path = indexName === "Custom"
+        const path = this.widgetIsCustom()
             ? "timeSeriesByAsset"
             : "timeSeriesByIndex";
         fetch("/geo-dash/gateway-request", {
@@ -178,13 +119,13 @@ export default class GraphWidget extends React.Component {
                 if (invalidCheck) {
                     console.error(invalidCheck);
                 } else {
-                    const thisDataSeries = {
-                        type: "area",
-                        name: widget.band || indexName,
-                        data: data.timeseries.filter(v => v[0]).sort((a, b) => a[0] - b[0]),
-                        color: "#31bab0"
-                    };
-                    this.setState({nonDegChartData : [thisDataSeries]});
+                    const timeSeries = data.timeseries.filter(v => v[0]).sort((a, b) => a[0] - b[0]);
+                    this.setState({
+                        chartData: {
+                            ...this.state.chartData,
+                            [this.getChartKey()]: timeSeries
+                        }
+                    });
                 }
             })
             .catch(error => console.log(error));
@@ -194,24 +135,65 @@ export default class GraphWidget extends React.Component {
 
     convertData = data => data.map(d => [d[0], d[1][Object.keys(d[1])[0]]]);
 
+    widgetIsCustom = () => this.props.widget.indexName === "Custom";
+
+    getChartKey = () => {
+        const {widget, degDataType, sarGraphBand} = this.props;
+        if (this.widgetIsCustom() || degDataType === "landsat") {
+            return widget.band;
+        } else if (degDataType === "sar") {
+            return sarGraphBand;
+        } else {
+            return widget.indexName;
+        }
+    };
+
     /// High Charts
 
     validArray = arr => ((isArray(arr) && arr.length > 0) ? arr : null);
 
-    getChartData = () => {
-        const {widget, degDataType} = this.props;
-        const {chartDataSeriesSar, chartDataSeriesLandsat, selectSarGraphBand, nonDegChartData} = this.state;
-        return (widget.type === "degradationTool"
-                && degDataType === "sar"
-                && this.validArray(chartDataSeriesSar[selectSarGraphBand]))
-            || (widget.type === "degradationTool"
-                && degDataType === "landsat"
-                && this.validArray(chartDataSeriesLandsat))
-            || this.validArray(nonDegChartData)
-            || [];
+    getChartData = chartKey => {
+        const {chartData} = this.state;
+        return chartData[chartKey];
     };
 
-    getChartOptions = () => {
+    getChartSeries = chartKey => {
+        const {widget: {type}, handleSelectDate} = this.props;
+        if (type === "degradationTool") {
+            return {
+                type: "scatter",
+                name: chartKey,
+                data: _.cloneDeep(this.getChartData(chartKey)),
+                valueDecimals: 20,
+                connectNulls: true,
+                color: "#31bab0",
+                allowPointSelect: true,
+                point: {
+                    cursor: "pointer",
+                    events: {
+                        select: e => {
+                            handleSelectDate(formatDateISO(new Date(e.target.x)));
+                        }
+                    }
+                },
+                tooltip: {
+                    pointFormat: "<span style=\"color:{series.color}\">{point.x:%Y-%m-%d}</span>: <b>{point.y:.6f}</b><br/>",
+                    valueDecimals: 20,
+                    split: false,
+                    xDateFormat: "%Y-%m-%d"
+                }
+            };
+        } else {
+            return {
+                type: "area",
+                name: chartKey,
+                data: this.getChartData(chartKey),
+                color: "#31bab0"
+            };
+        }
+    };
+
+    getChartOptions = chartKey => {
         const {widget} = this.props;
         return {
             chart: {zoomType: "x"},
@@ -222,9 +204,7 @@ export default class GraphWidget extends React.Component {
                     : "Pinch the chart to zoom in"
             },
             xAxis: {type: "datetime"},
-            yAxis: {
-                title: {text: widget.indexName}
-            },
+            yAxis: {title: ""},
             legend: {enabled: true},
             credits: {enabled: false},
             plotOptions: {
@@ -259,24 +239,25 @@ export default class GraphWidget extends React.Component {
                 split: false,
                 xDateFormat: "%Y-%m-%d"
             },
-            series: _.cloneDeep(this.getChartData())
+            series: [this.getChartSeries(chartKey)]
         };
     };
 
     render() {
         const {widget} = this.props;
+        const chartKey = this.getChartKey();
         return (
             <div
                 id={"widget-graph_" + widget.id}
                 style={{flex: 1, alignItems: "center", justifyContent: "center", display: "flex", minHeight: 0}}
             >
-                {this.getChartData().length > 0
+                {this.validArray(this.getChartData(chartKey))
                     ? (
                         <HighchartsReact
                             callback={thisChart => this.setState({graphRef: thisChart})}
                             containerProps={{style: {height: "100%", width: "100%"}}}
                             highcharts={Highcharts}
-                            options={this.getChartOptions()}
+                            options={this.getChartOptions(chartKey)}
                         />
                     ) : (
                         <img
