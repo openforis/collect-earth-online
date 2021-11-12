@@ -35,6 +35,7 @@ class WidgetContainer extends React.Component {
         if (mapWidgetList.includes(widget.type)) {
             return (
                 <MapWidget
+                    idx={this.props.idx}
                     imageryList={this.props.imageryList}
                     isFullScreen={this.state.isFullScreen}
                     mapCenter={this.props.mapCenter}
@@ -69,6 +70,7 @@ class WidgetContainer extends React.Component {
         } else if (widget.type === "degradationTool") {
             return (
                 <DegradationWidget
+                    idx={this.props.idx}
                     imageryList={this.props.imageryList}
                     initCenter={this.props.initCenter}
                     isFullScreen={this.state.isFullScreen}
@@ -278,9 +280,10 @@ class Geodash extends React.Component {
         return (
             <div className="grid-layout container-fluid">
                 {widgets.length > 0
-                    ? (widgets.map(widget => (
+                    ? (widgets.map((widget, idx) => (
                         <WidgetContainer
                             key={widget.id}
+                            idx={idx}
                             imageryList={this.state.imageryList}
                             initCenter={this.mapCenter}
                             mapCenter={this.state.mapCenter}
