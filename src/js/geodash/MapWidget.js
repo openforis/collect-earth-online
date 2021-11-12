@@ -13,9 +13,8 @@ export default class MapWidget extends React.Component {
         super(props);
         this.state = {
             mapRef: null,
-            geeTimeOut: null,
-            stretch: 321,
-            opacity: 0.9,
+            updateTimeOutRefs: [],
+            opacity: 1.0,
             sliderType: this.props.widget.swipeAsDefault ? "swipe" : "opacity",
             swipeValue: 1.0
         };
@@ -25,71 +24,48 @@ export default class MapWidget extends React.Component {
 
     componentDidMount() {
         this.initMap();
-        const {widget} = this.props;
-
-        this.loadWidgetSource(widget);
     }
 
     componentDidUpdate(prevProps, prevState) {
-        if (this.props.isFullScreen !== prevProps.isFullScreen) {
+        if (!prevState.mapRef && this.state.mapRef) {
+            if (this.props.widget.type !== "degradationTool") this.loadWidgetSource();
+        }
+
+        if (prevProps.isFullScreen !== this.props.isFullScreen) {
             this.state.mapRef.updateSize();
         }
 
-        if (this.props.mapCenter !== prevProps.mapCenter || this.props.mapZoom !== prevProps.mapZoom) {
+        if (prevProps.mapCenter !== this.props.mapCenter || prevProps.mapZoom !== this.props.mapZoom) {
             this.centerAndZoomMap(this.props.mapCenter, this.props.mapZoom);
         }
 
-        if (this.props.selectedDate !== prevProps.selectedDate
-            || this.state.stretch !== prevState.stretch
-            || this.props.degDataType !== prevProps.degDataType) {
-            if (this.props.widget.type === "degradationTool" && this.props.selectedDate !== "") {
-                // TODO add stretch, imageDate, degDataType
-                const postObject = this.getPostObject(this.props.widget);
-                const map = this.state.mapRef;
-                // TODO just update source
-                try {
-                    map.getLayers().getArray()
-                        .filter(layer => layer.get("id") !== undefined
-                            && layer.get("id") === "widgetmap_" + this.props.widget.id)
-                        .forEach(layer => map.removeLayer(layer));
-                } catch (e) {
-                    console.log("removal error");
-                }
-                if (typeof (Storage) !== "undefined"
-                    && this.checkForCache(postObject, this.props.widget, false)) {
-                    this.fetchMapInfo(postObject, "/geo-dash/gateway-request", this.props.widget, null);
-                }
-            }
+        if (this.props.widget.type === "degradationTool"
+            && (prevProps.imageDate !== this.props.imageDate
+                || prevProps.stretch !== this.props.stretch
+                || prevProps.degDataType !== this.props.degDataType)) {
+            this.pauseGeeLayer();
+            if (this.props.imageDate !== "") this.loadWidgetSource();
         }
     }
 
     /// API
 
     fetchSourceUrl = async postObject => {
-        // Why even get degradation params if you just exit here?
-        if (postObject.path === "degradationTileUrl") {
-            return;
-        }
-        try {
-            const res = await fetch("/geo-dash/gateway-request", {
-                method: "POST",
-                headers: {
-                    "Accept": "application/json",
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify(postObject)
-            });
-            const data = await (res.ok ? res.json() : Promise.reject());
-            // FIXME, what other fields are in data that I can just save URL?
-            if (data && data.hasOwnProperty("url")) {
-                this.setCache(postObject, data);
-                return data.url;
-            } else {
-                console.warn("Wrong Data Returned");
-                return false;
-            }
-        } catch (err) {
-            return console.error(err);
+        const res = await fetch("/geo-dash/gateway-request", {
+            method: "POST",
+            headers: {
+                "Accept": "application/json",
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(postObject)
+        });
+        const data = await (res.ok ? res.json() : Promise.reject());
+        if (data && data.hasOwnProperty("url")) {
+            this.setCache(postObject, data);
+            return data.url;
+        } else {
+            console.warn("Wrong Data Returned");
+            return false;
         }
     };
 
@@ -110,15 +86,14 @@ export default class MapWidget extends React.Component {
         if (widget.type === "imageAsset" || widget.type === "imageElevation") {
             return {path: "image", ...widget};
         } else if (widget.type === "degradationTool") {
-            const {stretch} = this.state;
-            // FIXME, it looks like stretch is calculated by type + stretch.  A bit redundant logic here.
-            const {selectedDate, degDataType, plotExtentPolygon} = this.props;
+            const {stretch, imageDate, degDataType, plotExtentPolygon} = this.props;
             return {
                 path: "degradationTileUrl",
-                imageDate: selectedDate,
-                stretch: degDataType === "landsat" ? stretch : "SAR",
                 geometry: plotExtentPolygon,
-                degDataType
+                stretch,
+                degDataType,
+                imageDate,
+                ...widget
             };
         } else if (widget.type === "polygonCompare") {
             const {visiblePlotId} = this.props;
@@ -141,7 +116,7 @@ export default class MapWidget extends React.Component {
     wrapCache = async widget => {
         const postObject = this.getPostObject(widget);
         const cacheUrl = this.checkForCache(postObject);
-        if (false && cacheUrl) {
+        if (cacheUrl) {
             return cacheUrl;
         } else {
             const url = await this.fetchSourceUrl(postObject);
@@ -149,17 +124,18 @@ export default class MapWidget extends React.Component {
         }
     };
 
-    loadWidgetSource = async widget => {
-        const {type} = widget;
-        if (type === "dualImagery") {
-            // FIXME, use the actual dual image
+    loadWidgetSource = async () => {
+        const {widget, idx} = this.props;
+        if (widget.type === "dualImagery") {
             const [url1, url2] = await Promise.all([this.wrapCache(widget.image1), this.wrapCache(widget.image2)]);
-            this.addTileServer(url1, widget.id);
-            this.addSecondTileServer(url2, widget.id);
+            this.upsertTileSource(url1, widget.id, idx);
+            this.upsertTileSource(url1, widget.id, idx);
+            this.addSecondTileServer(url2, widget.id, idx);
         } else {
             const url = await this.wrapCache(widget);
-            this.addTileServer(url, widget.id);
+            this.upsertTileSource(url, widget.id, idx);
         }
+        this.resumeGeeLayer();
     };
 
     /// Cache
@@ -210,7 +186,7 @@ export default class MapWidget extends React.Component {
             zIndex: 100
         });
 
-        const mapdiv = "widgetmap_" + widget.id;
+        const mapdiv = "widget-map_" + widget.id;
         const map = new Map({
             layers: [basemapLayer, plotSampleLayer],
             target: mapdiv,
@@ -218,22 +194,10 @@ export default class MapWidget extends React.Component {
                 center: [0, 0],
                 projection: "EPSG:3857",
                 zoom: 4
-            }),
-            id: "widgetmapobject_" + widget.id
+            })
         });
 
-        // TODO, what is this doing?
-        function onpropertychange() {
-            map.dispatchEvent("movestart");
-            const view = map.getView();
-            view.un("propertychange", onpropertychange);
-            map.on("moveend", () => {
-                view.on("propertychange", onpropertychange);
-            });
-        }
-
-        map.getView().on("propertychange", onpropertychange);
-
+        // TODO, this also fires when the props change.  setCenterAndZoom is redundant and circular
         map.on("movestart", this.pauseGeeLayer);
         map.on("moveend", e => {
             this.props.setCenterAndZoom(e.map.getView().getCenter(), e.map.getView().getZoom());
@@ -259,103 +223,112 @@ export default class MapWidget extends React.Component {
     };
 
     centerAndZoomMap = (center, zoom) => {
-        const map = this.state.mapRef;
-        map.getView().setCenter(center);
-        map.getView().setZoom(zoom);
+        const {mapRef} = this.state;
+        mapRef.getView().setCenter(center);
+        mapRef.getView().setZoom(zoom);
     };
 
-    pauseGeeLayer = e => {
-        const layers = e.target.getLayers().getArray();
-        layers.forEach(lyr => {
-            if (lyr.get("id") && lyr.get("id").indexOf("widget") === 0) {
-                lyr.setVisible(false);
-            }
-        });
+    getLayerById = layerId => {
+        const {mapRef} = this.state;
+        return mapRef && mapRef.getLayers().getArray().find(layer => layer.get("layerId") === layerId);
     };
 
-    resumeGeeLayer = e => {
-        try {
-            if (this.state && this.state.geeTimeOut) {
-                window.clearTimeout(this.state.geeTimeOut);
-                this.setState({geeTimeOut: null});
-            }
-            this.setState({
-                geeTimeOut: window.setTimeout(() => {
-                    const layers = e.target.getLayers().getArray();
-                    layers.forEach(lyr => {
-                        if (lyr.get("id") && lyr.get("id").indexOf("widget") === 0) {
-                            lyr.setVisible(true);
-                        }
-                    });
-                }, Math.floor(Math.random() * (1250 - 950 + 1) + 950))
+    pauseGeeLayer = () => {
+        const {mapRef, updateTimeOutRefs} = this.state;
+        if (mapRef) {
+            updateTimeOutRefs.forEach(to => window.clearTimeout(to));
+            this.setState({updateTimeOutRefs: []});
+            mapRef.getLayers().forEach(lyr => { if (lyr.get("layerId")) lyr.setVisible(false); });
+        }
+    };
+
+    resumeGeeLayer = () => {
+        const {mapRef} = this.state;
+        if (mapRef) {
+            const layers = mapRef.getLayers().getArray();
+            const updateTimeOutRefs = layers.map(layer => {
+                const to = 10 * (layer.get("idx") || 0);
+                return window.setTimeout(() => { layer.setVisible(true); }, to);
             });
-        } catch (err) {
-            console.log(err.message);
+            this.setState({updateTimeOutRefs});
         }
     };
 
-    addTileServer = (url, widgetId) => {
-        if (url) {
-            window.setTimeout(() => {
-                const source = new XYZ({
-                    url
-                });
-                source.on("tileloaderror", error => {
-                    try {
-                        window.setTimeout(() => {
-                            error.tile.attempt = error.tile.attempt ? error.tile.attempt + 1 : 1;
-                            if (error.tile.attempt < 5) error.tile.load();
-                        }, Math.floor(Math.random() * (1250 - 950 + 1) + 950));
-                    } catch (e) {
-                        console.log(e.message);
-                    }
-                });
-                this.state.mapRef.addLayer(new TileLayer({
-                    source,
-                    id: "widgetmap_" + widgetId
-                }));
-            }, Math.floor(Math.random() * (300 - 200 + 1) + 200));
-        }
-    };
-
-    addSecondTileServer = (url, widgetId) => {
-        const googleLayer = new TileLayer({
-            source: new XYZ({
-                url
-            }),
-            id: "widgetmap_" + widgetId + "_dual"
+    addNewLayer = (url, layerId, idx = 0) => {
+        const source = new XYZ({
+            url
         });
-        this.state.mapRef.addLayer(googleLayer);
+        source.on("tileloaderror", error => {
+            if (!error.tile.attempted) {
+                window.setTimeout(() => {
+                    error.tile.attempted = true;
+                    error.tile.load();
+                }, 1000);
+            }
+        });
+        const layer = new TileLayer({
+            source,
+            layerId,
+            idx,
+            visible: false
+        });
+        return layer;
+    };
+
+    upsertTileSource = (url, widgetId, idx) => {
+        const {mapRef} = this.state;
+        const layerId = "layer-" + widgetId;
+        const existingLayer = this.getLayerById(layerId);
+        if (existingLayer) {
+            existingLayer.getSource().setUrl(url);
+        } else if (url) {
+            const layer = this.addNewLayer(url, layerId, idx);
+            mapRef.addLayer(layer);
+        }
+    };
+
+    addSecondTileServer = (url, widgetId, idx) => {
+        const {mapRef} = this.state;
+        const layerId = "layer-" + widgetId + "-2";
+        const existingLayer = this.getLayerById(layerId);
+        if (existingLayer) {
+            existingLayer.getSource().setUrl(url);
+        } else if (url) {
+            const layer = this.addNewLayer(url, layerId, idx);
+            const {swipe} = this.props;
+            layer.on("prerender", event => {
+                const ctx = event.context;
+                const width = ctx.canvas.width * swipe;
+                ctx.save();
+                ctx.beginPath();
+                ctx.rect(width, 0, ctx.canvas.width - width, ctx.canvas.height);
+                ctx.clip();
+            });
+
+            layer.on("postrender", event => {
+                const ctx = event.context;
+                ctx.restore();
+            });
+
+            mapRef.addLayer(layer);
+        }
+
+        // FIXME, move this to updateSwipe / consolidate to one updateFn and 1 slider
         const swipe = document.getElementById("swipeWidget_" + widgetId);
-        googleLayer.on("prerender", event => {
-            const ctx = event.context;
-            const width = ctx.canvas.width * (swipe.value);
-            ctx.save();
-            ctx.beginPath();
-            ctx.rect(width, 0, ctx.canvas.width - width, ctx.canvas.height);
-            ctx.clip();
-        });
-
-        googleLayer.on("postrender", event => {
-            const ctx = event.context;
-            ctx.restore();
-        });
-        // TODO, move to swipe component
         swipe.addEventListener("input", () => {
             this.state.mapRef.render();
         }, false);
     };
 
     setOpacity = newOpacity => {
-        try {
-            this.state.mapRef.getLayers().forEach(lyr => {
-                if (lyr.get("id") && lyr.get("id").includes(this.props.widget.id)) {
-                    lyr.setOpacity(newOpacity);
-                }
-            });
-        } catch (e) {
-            console.log(e.message);
-        }
+        this.state.mapRef.getLayers().forEach(lyr => {
+            // FIXME, this does not appear that it will work with dual layer
+            // Also just use mercator.getLayerById
+            const layerId = lyr.get("layerId") || "";
+            if (layerId.includes(this.props.widget.id)) {
+                lyr.setOpacity(newOpacity);
+            }
+        });
     };
 
     /// Render functions
@@ -439,7 +412,7 @@ export default class MapWidget extends React.Component {
         return (
             <>
                 <div
-                    id={"widgetmap_" + widget.id}
+                    id={"widget-map_" + widget.id}
                     style={{flex: 1}}
                 />
                 {this.renderSliderControl()}

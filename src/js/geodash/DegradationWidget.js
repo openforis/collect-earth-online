@@ -8,21 +8,22 @@ export default class DegradationWidget extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
-            selectedDate: "",
+            imageDate: "",
             stretch: 321,
             degDataType: "landsat",
             sarGraphBand: "VV"
         };
     }
 
-    handleDegDataType = dataType => {
+    toggleDegDataType = checked => {
         this.setState({
-            degDataType: dataType
+            imageDate: "",
+            degDataType: checked ? "sar" : "landsat"
         });
     };
 
     handleSelectDate = date => {
-        this.setState({selectedDate: date});
+        this.setState({imageDate: date});
     };
 
     render() {
@@ -37,6 +38,8 @@ export default class DegradationWidget extends React.Component {
             <div id={"degradation_" + widget.id} style={{flex: 1, display: "flex", flexDirection: "column"}}>
                 <MapWidget
                     degDataType={this.state.degDataType}
+                    idx={this.props.idx}
+                    imageDate={this.state.imageDate}
                     imageryList={this.props.imageryList}
                     isFullScreen={this.props.isFullScreen}
                     mapCenter={this.props.mapCenter}
@@ -45,7 +48,6 @@ export default class DegradationWidget extends React.Component {
                     plotExtentPolygon={this.props.plotExtentPolygon}
                     resetCenterAndZoom={this.props.resetCenterAndZoom}
                     sarGraphBand={this.state.sarGraphBand}
-                    selectedDate={this.state.selectedDate}
                     setCenterAndZoom={this.props.setCenterAndZoom}
                     stretch={this.state.stretch}
                     vectorSource={this.props.vectorSource}
@@ -115,7 +117,7 @@ export default class DegradationWidget extends React.Component {
                         <span className="mx-2">LANDSAT</span>
                         <Switch
                             check={degDataType === "sar"}
-                            onChange={e => this.setState({degDataType: e.target.checked ? "sar" : "landsat"})}
+                            onChange={e => this.toggleDegDataType(e.target.checked)}
                         />
                         <span className="mr-2">SAR</span>
                     </div>
