@@ -39,7 +39,7 @@
            (catch Exception _)))))
 
 (def ^:private cli-options
-  {:port       ["-p" "--http-port PORT"  "Port for http, default 8080"
+  {:http-port  ["-p" "--http-port PORT"  "Port for http, default 8080"
                 :parse-fn #(if (int? %) % (Integer/parseInt %))]
    :https-port ["-P" "--https-port PORT" "Port for https (e.g. 8443)"
                 :parse-fn #(if (int? %) % (Integer/parseInt %))]
